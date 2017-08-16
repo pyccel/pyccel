@@ -24,9 +24,11 @@ def test_2():
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "for i in range(0,10):" + "\n"
+    stmts += "x=1"                + "\n"
     stmts += "end"                   + "\n"
 
     stmts += "for j in range(a,b):" + "\n"
+    stmts += "x=1"                + "\n"
     stmts += "end"                   + "\n"
 
     ast = pyccel.parse(stmts)

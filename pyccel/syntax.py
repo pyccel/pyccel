@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from sympy import Symbol, sympify
-from symcc.types.ast import For
+from symcc.types.ast import For, Assign
 
 
 DEBUG = False
@@ -10,7 +10,9 @@ DEBUG = False
 __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
-           "Real" \
+           "Real", \
+           # statements
+           "AssignStmt", "ForStmt" \
            ]
 
 
@@ -60,17 +62,43 @@ class Real(object):
     def expr(self):
         return Symbol(self.name)
 
+class AssignStmt(object):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs = kwargs.pop('lhs')
+        self.rhs = kwargs.pop('rhs')
+
+#        namespace[self.iterable.name] = self.iterable
+
+    @property
+    def expr(self):
+        print self.lhs
+        print self.rhs
+        rhs = sympify(self.rhs)
+        lhs = sympify(self.lhs)
+
+
+#        try:
+#            rhs = self.rhs.expr
+#        except:
+#            rhs = sympify(self.rhs)
+
+        return Assign(lhs, rhs)
+
 class ForStmt(object):
-    """Class representing a Real number."""
+    """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.iterable = kwargs.pop('iterable')
         self.start    = kwargs.pop('start')
         self.end      = kwargs.pop('end')
+        self.body     = kwargs.pop('body')
+
         # TODO add step
         self.step     = 1
-        #kwargs.pop('step')
 
 #        namespace[self.iterable.name] = self.iterable
 
@@ -94,7 +122,8 @@ class ForStmt(object):
         except:
             s = int(self.step)
 
-        body = []
+        # TODO body must be parsed as a list
+        body = [self.body.expr]
         return For(i, (b,e,s), body)
 
 class ExpressionElement(object):

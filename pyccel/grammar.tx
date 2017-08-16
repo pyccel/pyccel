@@ -9,14 +9,28 @@ Declaration:
 ;
 
 Statement:
+  SimpleStmt | CompoundStmt 
+;
+
+// TODO
+SimpleStmt:
+  AssignStmt
+;
+
+CompoundStmt:
   ForStmt 
 ;
+
+SuiteStmt: 
+  SimpleStmt 
+//  | 
+//   NEWLINE INDENT stmt+ DEDENT
+;
+
 
 Real: 
   "Real" DEF name=ID
 ;
-
-
 
 Variable:
   ID
@@ -38,12 +52,21 @@ IdentifierOrNumber:
 //  LPAREN functions+=Variable[','] RPAREN
 //;
 
-//'for' exprlist 'in' testlist ':' suite End
-ForStmt: 
 //  'for' exprlist=ExprList 'in' testlist=ExprList ':' End
-  'for' iterable=ID 'in' 'range' LPAREN start=IdentifierOrNumber COMMA end=IdentifierOrNumber RPAREN ':' End
+ForStmt: 
+  'for' iterable=ID 'in' 
+  'range' LPAREN start=IdentifierOrNumber COMMA 
+                 end=IdentifierOrNumber RPAREN ':' 
+  body=SuiteStmt
+  End
 ;
 
+
+// TODO
+AssignStmt: 
+//  lhs=ID EQ rhs=Expression 
+  lhs=ID EQ rhs=NUMBER 
+;
 
 Expression: 
   op=Term (op=PlusOrMinus op=Term)* 

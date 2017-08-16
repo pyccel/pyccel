@@ -9,6 +9,7 @@ from pyccel.syntax import (Pyccel, \
                            FactorSigned, FactorUnary, FactorBinary, \
                            Real, \
                            # statements
+                           AssignStmt, \
                            ForStmt)
 
 from textx.metamodel import metamodel_from_str
@@ -141,6 +142,7 @@ class PyccelParser(Parser):
                    FactorSigned, FactorUnary, FactorBinary, \
                    Real, \
                    # statements
+                   AssignStmt, \
                    ForStmt
                    ]
 
