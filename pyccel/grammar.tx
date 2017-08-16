@@ -9,7 +9,8 @@ Statement:
 ;
 
 SimpleStmt:
-  AssignStmt
+//  AssignStmt
+  DeclarationStmt
 //  (DeclarationStmt | AssignStmt)
 ;
 
@@ -25,7 +26,9 @@ SuiteStmt:
 
 
 DeclarationStmt: 
-  datatype=DataType DEF name=ID
+//  datatype=DataType DEF name=ID
+  datatype=DataType name=ID
+  End
 ;
 
 DataType:
@@ -142,5 +145,5 @@ Comment:
 ;
 
 End:
-  'end'
+  'end' | ';'
 ;
