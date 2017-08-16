@@ -4,17 +4,13 @@ Pyccel:
   statements*=Statement
 ;
 
-Declaration:
-  Real
-;
-
 Statement:
-  SimpleStmt | CompoundStmt 
+  SimpleStmt | CompoundStmt
 ;
 
-// TODO
 SimpleStmt:
-  AssignStmt
+    DeclarationStmt 
+//  | AssignStmt
 ;
 
 CompoundStmt:
@@ -28,8 +24,12 @@ SuiteStmt:
 ;
 
 
-Real: 
-  "Real" DEF name=ID
+DeclarationStmt: 
+  datatype=DataType DEF name=ID
+;
+
+DataType:
+  ('real' | 'int')
 ;
 
 Variable:
@@ -37,22 +37,9 @@ Variable:
 ;
 
 IdentifierOrNumber:
-  NUMBER | ID
+  (NUMBER | ID)
 ;
 
-//ExprList:
-//  ExprListSep | ExprListParen
-//;
-//
-//ExprListSep:
-//  functions+=Variable[','] 
-//;
-//
-//ExprListParen:
-//  LPAREN functions+=Variable[','] RPAREN
-//;
-
-//  'for' exprlist=ExprList 'in' testlist=ExprList ':' End
 ForStmt: 
   'for' iterable=ID 'in' 
   'range' LPAREN start=IdentifierOrNumber COMMA 

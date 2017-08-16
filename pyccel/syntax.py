@@ -10,9 +10,8 @@ DEBUG = False
 __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
-           "Real", \
            # statements
-           "AssignStmt", "ForStmt" \
+           "AssignStmt", "ForStmt", "DeclarationStmt" \
            ]
 
 
@@ -39,8 +38,8 @@ class Pyccel(object):
         except:
             self.statements = []
 
-class Real(object):
-    """Class representing a Real number."""
+class DeclarationStmt(object):
+    """Class representing a ."""
     def __init__(self, **kwargs):
         """
         A Real number is defined by
@@ -54,7 +53,8 @@ class Real(object):
             "Real" DEF name=ID
             ;
         """
-        self.name  = kwargs.pop('name')
+        self.name     = kwargs.pop('name')
+        self.datatype = kwargs.pop('datatype')
 
         namespace[self.name] = self
 
@@ -74,11 +74,8 @@ class AssignStmt(object):
 
     @property
     def expr(self):
-        print self.lhs
-        print self.rhs
         rhs = sympify(self.rhs)
         lhs = sympify(self.lhs)
-
 
 #        try:
 #            rhs = self.rhs.expr

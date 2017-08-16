@@ -7,20 +7,37 @@ pyccel = PyccelParser()
 # ...
 
 # ...
-def test_1():
+def test_Declare():
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "Real :: s" + "\n"
+    stmts += "real :: x" + "\n"
+    stmts += "int  :: n" + "\n"
 
     ast = pyccel.parse(stmts)
 
-    token = get_by_name(ast, "s")
-    print token
+    for t in ["x", "n"]:
+        token = get_by_name(ast, t)
+        print token.expr, " of type ", token.datatype
     # ...
 # ...
 
 # ...
-def test_2():
+def test_Assign():
+    # ... parse the Pyccel code
+    stmts  = ""
+#    stmts += "Real :: a" + "\n"
+#    stmts += "Real :: b" + "\n"
+    stmts += "x=1"       + "\n"
+#    stmts += "y=2*a+b"   + "\n"
+
+    ast = pyccel.parse(stmts)
+    for stmt in ast.statements:
+        print stmt.expr
+    # ...
+# ...
+
+# ...
+def test_For():
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "for i in range(0,10):" + "\n"
@@ -43,5 +60,6 @@ def test_2():
 
 ######################################
 if __name__ == "__main__":
-#    test_1()
-    test_2()
+    test_Declare()
+#    test_Assign()
+#    test_For()

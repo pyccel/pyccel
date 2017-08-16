@@ -7,8 +7,8 @@ from vale.utilities import grad, d_var, inner, outer, cross, dot
 from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
                            FactorSigned, FactorUnary, FactorBinary, \
-                           Real, \
                            # statements
+                           DeclarationStmt, \
                            AssignStmt, \
                            ForStmt)
 
@@ -21,7 +21,11 @@ def get_by_name(ast, name):
     """
     Returns an object from the AST by giving its name.
     """
+    # TODO declarations is empty for the moment
     for token in ast.declarations:
+        if token.name == name:
+            return token
+    for token in ast.statements:
         if token.name == name:
             return token
     return None
@@ -140,8 +144,8 @@ class PyccelParser(Parser):
         classes = [Pyccel, \
                    Expression, Term, Operand, \
                    FactorSigned, FactorUnary, FactorBinary, \
-                   Real, \
                    # statements
+                   DeclarationStmt, \
                    AssignStmt, \
                    ForStmt
                    ]
