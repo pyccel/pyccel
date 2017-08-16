@@ -1,0 +1,99 @@
+Pyccel:
+  declarations*=Declaration
+;
+
+Declaration:
+  Real
+;
+
+Real: 
+  "Real" DEF name=ID
+;
+
+
+Expression: 
+  op=Term (op=PlusOrMinus op=Term)* 
+;
+
+Term: 
+  op=Factor (op=MulOrDiv op=Factor)*
+;
+
+Factor: 
+  FactorBinary | FactorUnary | FactorSigned
+;
+
+FactorSigned: 
+  (sign=PlusOrMinus)?  op=Operand
+;
+
+FactorUnary:
+  name=UnaryOp LPAREN op=Operand RPAREN
+;
+
+FactorBinary:
+  name=BinaryOp LPAREN op=Factor COMMA op=Factor RPAREN
+;
+
+// there is a problem with this rule, only on my laptop
+// it seems it can't parse a word like phi, and only returns "p"
+Operand: 
+  (op=NUMBER) | (op=ID) | (LPAREN op=Expression RPAREN)
+;
+
+UnaryOp:
+   ('grad'|'curl'|'div'|'dxx'|'dyy'|'dzz'|'dxy'|'dyz'|'dxz'|'dx'|'dy'|'dz')
+;
+
+BinaryOp:
+   ('dot'|'inner'|'outer'|'cross')
+;
+
+EQ:
+  "="
+;
+
+DEF:
+  "::" | ":="
+;
+
+IN:
+  "::"
+;
+
+COMMA:
+  ","
+;
+
+SUBSCRIPT:
+  '_'
+;
+
+LPAREN:
+  "("
+;
+
+RPAREN:
+  ")"
+;
+
+LTRIANGLE: 
+  '<'
+;
+
+RTRIANGLE:
+  '>'
+;
+
+PlusOrMinus: 
+  '+' | '-'
+;
+
+MulOrDiv: 
+  '*' | '/' 
+;
+
+Comment:
+  /#.*$/
+;
+
