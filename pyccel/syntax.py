@@ -74,13 +74,12 @@ class AssignStmt(object):
 
     @property
     def expr(self):
-        rhs = sympify(self.rhs)
-        lhs = sympify(self.lhs)
+        if isinstance(self.rhs, Expression):
+            rhs = sympify(self.rhs.expr)
+        else:
+            rhs = sympify(self.rhs)
 
-#        try:
-#            rhs = self.rhs.expr
-#        except:
-#            rhs = sympify(self.rhs)
+        lhs = sympify(self.lhs)
 
         return Assign(lhs, rhs)
 

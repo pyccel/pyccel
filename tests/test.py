@@ -25,12 +25,15 @@ def test_Declare():
 def test_Assign():
     # ... parse the Pyccel code
     stmts  = ""
-#    stmts += "Real :: a" + "\n"
-#    stmts += "Real :: b" + "\n"
-    stmts += "x=1"       + "\n"
+#    stmts += "real :: a" + "\n"
+#    stmts += "real :: b" + "\n"
+#    stmts += "x=1"       + "\n"
+    stmts += "y=2*3+1"   + "\n"
 #    stmts += "y=2*a+b"   + "\n"
 
     ast = pyccel.parse(stmts)
+    for stmt in ast.declarations:
+        print stmt.expr
     for stmt in ast.statements:
         print stmt.expr
     # ...
@@ -60,6 +63,6 @@ def test_For():
 
 ######################################
 if __name__ == "__main__":
-    test_Declare()
-#    test_Assign()
+#    test_Declare()
+    test_Assign()
 #    test_For()

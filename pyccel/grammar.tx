@@ -1,7 +1,7 @@
 Pyccel:
-//  declarations*=Declaration 
+//  (declarations*=DeclarationStmt)
 //  | 
-  statements*=Statement
+  (statements*=Statement)
 ;
 
 Statement:
@@ -9,8 +9,8 @@ Statement:
 ;
 
 SimpleStmt:
-    DeclarationStmt 
-//  | AssignStmt
+  AssignStmt
+//  (DeclarationStmt | AssignStmt)
 ;
 
 CompoundStmt:
@@ -51,8 +51,8 @@ ForStmt:
 
 // TODO
 AssignStmt: 
-//  lhs=ID EQ rhs=Expression 
-  lhs=ID EQ rhs=NUMBER 
+  lhs=ID EQ rhs=Expression 
+//  lhs=ID EQ rhs=NUMBER 
 ;
 
 Expression: 
