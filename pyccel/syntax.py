@@ -1,6 +1,8 @@
 # coding: utf-8
 
 from sympy import Symbol, sympify
+from symcc.types.ast import For
+
 
 DEBUG = False
 #DEBUG = True
@@ -26,7 +28,14 @@ class Pyccel(object):
         Constructor for Pyccel.
 
         """
-        self.declarations = kwargs.pop('declarations')
+        try:
+            self.declarations = kwargs.pop('declarations')
+        except:
+            self.declarations = []
+        try:
+            self.statements = kwargs.pop('statements')
+        except:
+            self.statements = []
 
 class Real(object):
     """Class representing a Real number."""
@@ -50,6 +59,43 @@ class Real(object):
     @property
     def expr(self):
         return Symbol(self.name)
+
+class ForStmt(object):
+    """Class representing a Real number."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.iterable = kwargs.pop('iterable')
+        self.start    = kwargs.pop('start')
+        self.end      = kwargs.pop('end')
+        # TODO add step
+        self.step     = 1
+        #kwargs.pop('step')
+
+#        namespace[self.iterable.name] = self.iterable
+
+    @property
+    def expr(self):
+
+        i = Symbol(self.iterable, integer=True)
+
+        try:
+            b = Symbol(self.start, integer=True)
+        except:
+            b = int(self.start)
+
+        try:
+            e = Symbol(self.end, integer=True)
+        except:
+            e = int(self.end)
+
+        try:
+            s = Symbol(self.step, integer=True)
+        except:
+            s = int(self.step)
+
+        body = []
+        return For(i, (b,e,s), body)
 
 class ExpressionElement(object):
     """Class representing an element of an expression."""

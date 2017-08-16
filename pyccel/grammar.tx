@@ -1,13 +1,47 @@
 Pyccel:
-  declarations*=Declaration
+//  declarations*=Declaration 
+//  | 
+  statements*=Statement
 ;
 
 Declaration:
   Real
 ;
 
+Statement:
+  ForStmt 
+;
+
 Real: 
   "Real" DEF name=ID
+;
+
+
+
+Variable:
+  ID
+;
+
+IdentifierOrNumber:
+  NUMBER | ID
+;
+
+//ExprList:
+//  ExprListSep | ExprListParen
+//;
+//
+//ExprListSep:
+//  functions+=Variable[','] 
+//;
+//
+//ExprListParen:
+//  LPAREN functions+=Variable[','] RPAREN
+//;
+
+//'for' exprlist 'in' testlist ':' suite End
+ForStmt: 
+//  'for' exprlist=ExprList 'in' testlist=ExprList ':' End
+  'for' iterable=ID 'in' 'range' LPAREN start=IdentifierOrNumber COMMA end=IdentifierOrNumber RPAREN ':' End
 ;
 
 
@@ -97,3 +131,6 @@ Comment:
   /#.*$/
 ;
 
+End:
+  'end'
+;

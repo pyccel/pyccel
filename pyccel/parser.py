@@ -7,7 +7,9 @@ from vale.utilities import grad, d_var, inner, outer, cross, dot
 from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
                            FactorSigned, FactorUnary, FactorBinary, \
-                           Real)
+                           Real, \
+                           # statements
+                           ForStmt)
 
 from textx.metamodel import metamodel_from_str
 
@@ -137,7 +139,9 @@ class PyccelParser(Parser):
         classes = [Pyccel, \
                    Expression, Term, Operand, \
                    FactorSigned, FactorUnary, FactorBinary, \
-                   Real \
+                   Real, \
+                   # statements
+                   ForStmt
                    ]
 
         try:
