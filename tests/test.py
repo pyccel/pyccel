@@ -7,7 +7,7 @@ from pyccel.syntax import ( \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, \
-                           ForStmt)
+                           IfStmt, ForStmt)
 
 # ... creates an instance of Pyccel parser
 pyccel = PyccelParser()
@@ -88,22 +88,31 @@ def test_Assign():
     # ...
 # ...
 
-# ...
+# ... TODO for the moment, intructions must be splitted by ";"
+#          => \n is not recognized
 def test_If():
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "real  a,b" + "\n"
-    stmts += "if a==1:"       + "\n"
-    stmts += "b=a+1"   + "\n"
+    stmts += "if a==1:"  + "\n"
+    stmts += "b=a+1;"    + "\n"
+#    stmts += "b=a+1; a=b+a"   + "\n"
 #    stmts += ";"   + "\n"
+    stmts += "a=b*a"     + "\n"
+    stmts += "else:"     + "\n"
+    stmts += "a=b*a"     + "\n"
+    stmts += "end"       + "\n"
+    print stmts
 
     ast = pyccel.parse(stmts)
     for stmt in ast.statements:
         print type(stmt)
-#        if isinstance(stmt, DeclarationStmt):
-#            print "declared variable : ", stmt.variables
-#        if isinstance(stmt, AssignStmt):
-#            print "lhs : ", stmt.lhs, "     rhs: ", stmt.rhs.expr
+        if isinstance(stmt, DeclarationStmt):
+            print "declared variable : ", stmt.variables
+        if isinstance(stmt, AssignStmt):
+            print "lhs : ", stmt.lhs, "     rhs: ", stmt.rhs.expr
+        if isinstance(stmt, IfStmt):
+            print "body_true : ", stmt.body_true, "     body_false: ", stmt.body_false
     # ...
 # ...
 

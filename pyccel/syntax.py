@@ -11,7 +11,9 @@ __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
            # statements
-           "AssignStmt", "ForStmt", "DeclarationStmt", \
+           "AssignStmt", "DeclarationStmt", \
+           # compound stmts
+           "ForStmt", "IfStmt", \
            # Flow statements
            "FlowStmt", "BreakStmt", "ContinueStmt", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
@@ -106,6 +108,20 @@ class PassStmt(object):
     @property
     def expr(self):
         return self.label
+
+
+class IfStmt(object):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.body_true  = kwargs.pop('body_true')
+        self.body_false = kwargs.pop('body_false')
+
+    @property
+    def expr(self):
+        print("not yet implemented")
+        return ""
 
 class AssignStmt(object):
     """Class representing a ."""
