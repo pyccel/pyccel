@@ -9,6 +9,8 @@ from pyccel.syntax import (Pyccel, \
                            FactorSigned, FactorUnary, FactorBinary, \
                            # statements
                            DeclarationStmt, \
+                           DelStmt, \
+                           PassStmt, \
                            AssignStmt, \
                            ForStmt)
 
@@ -147,6 +149,8 @@ class PyccelParser(Parser):
                    # statements
                    DeclarationStmt, \
                    AssignStmt, \
+                   DelStmt, \
+                   PassStmt, \
                    ForStmt
                    ]
 

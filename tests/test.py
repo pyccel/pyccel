@@ -1,6 +1,13 @@
 # coding: utf-8
 
 from pyccel.parser  import PyccelParser, get_by_name
+from pyccel.syntax import ( \
+                           # statements
+                           DeclarationStmt, \
+                           DelStmt, \
+                           PassStmt, \
+                           AssignStmt, \
+                           ForStmt)
 
 # ... creates an instance of Pyccel parser
 pyccel = PyccelParser()
@@ -10,14 +17,44 @@ pyccel = PyccelParser()
 def test_Declare():
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real x;" + "\n"
-    stmts += "int  n;" + "\n"
+    stmts += "real x,y" + "\n"
+    stmts += "real z" + "\n"
+    stmts += "int  n" + "\n"
 
     ast = pyccel.parse(stmts)
 
-    for t in ["x", "n"]:
-        token = get_by_name(ast, t)
-        print token.expr, " of type ", token.datatype
+    for stmt in ast.statements:
+        if isinstance(stmt, DeclarationStmt):
+            print stmt.variables
+    # ...
+# ...
+
+# ... TODO: not working
+def test_Pass():
+    # ... parse the Pyccel code
+    stmts  = ""
+    stmts += "pass " + "\n"  # KO
+
+    ast = pyccel.parse(stmts)
+    for stmt in ast.declarations:
+        print stmt.expr
+    for stmt in ast.statements:
+        print stmt.expr
+    # ...
+# ...
+
+# ...
+def test_Del():
+    # ... parse the Pyccel code
+    stmts  = ""
+#    stmts += "real  a;" + "\n"  # KO
+    stmts += "del b" + "\n"  # KO
+
+    ast = pyccel.parse(stmts)
+    for stmt in ast.declarations:
+        print stmt.expr
+    for stmt in ast.statements:
+        print stmt.expr
     # ...
 # ...
 
@@ -26,8 +63,7 @@ def test_Assign():
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "real  a;" + "\n"  # KO
-#    stmts += "real :: b" + "\n"  # KO
-    stmts += "x=1"       + "\n"  # OK
+#    stmts += "x=1"       + "\n"  # OK
 #    stmts += "y=2*3+1"   + "\n"  # OK
 #    stmts += "x=a"       + "\n"  # OK
 #    stmts += "y=2*a+b"   + "\n"   # KO
@@ -64,6 +100,8 @@ def test_For():
 
 ######################################
 if __name__ == "__main__":
-    test_Declare()
 #    test_Assign()
+    test_Declare()
+#    test_Del()
 #    test_For()
+#    test_Pass()

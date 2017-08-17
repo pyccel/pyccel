@@ -11,7 +11,8 @@ __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
            # statements
-           "AssignStmt", "ForStmt", "DeclarationStmt" \
+           "AssignStmt", "ForStmt", "DeclarationStmt", \
+           "DelStmt", "PassStmt" \
            ]
 
 
@@ -53,14 +54,62 @@ class DeclarationStmt(object):
             "Real" DEF name=ID
             ;
         """
-        self.name     = kwargs.pop('name')
+        self.variables = kwargs.pop('variables')
         self.datatype = kwargs.pop('datatype')
-
-        namespace[self.name] = self
 
     @property
     def expr(self):
-        return Symbol(self.name)
+        ls = []
+        for v in self.variables:
+            ls.append(Symbol(var))
+        return ls
+
+class DelStmt(object):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        A Real number is defined by
+
+        * name
+
+        .. note::
+            The grammar rule to define a Real is
+
+            Real:
+            "Real" DEF name=ID
+            ;
+        """
+        self.variables = kwargs.pop('variables')
+
+    @property
+    def expr(self):
+        lines = []
+        for var in self.variables:
+            line = "del " + str(var)
+            lines.append(line)
+        return lines
+
+# TODO not working
+class PassStmt(object):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        A Real number is defined by
+
+        * name
+
+        .. note::
+            The grammar rule to define a Real is
+
+            Real:
+            "Real" DEF name=ID
+            ;
+        """
+        self.name_stmt = kwargs.pop('name')
+
+    @property
+    def expr(self):
+        return self.name_stmt
 
 class AssignStmt(object):
     """Class representing a ."""

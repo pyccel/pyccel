@@ -1,34 +1,45 @@
 Pyccel:
-//  (declarations*=DeclarationStmt)
-//  | 
   (statements*=Statement)
 ;
 
 Statement:
-  SimpleStmt | CompoundStmt
+  (SimpleStmt | CompoundStmt)
 ;
 
 SimpleStmt:
+  SmallStmt (';' SmallStmt)* (End)?
+;
+
+SmallStmt:
 //  AssignStmt
-  DeclarationStmt
-//  (DeclarationStmt | AssignStmt)
+//  DeclarationStmt
+//  (PassStmt | DelStmt | DeclarationStmt | AssignStmt)
+  (PassStmt | DelStmt | DeclarationStmt )
+//  (PassStmt | DelStmt | AssignStmt)
 ;
 
 CompoundStmt:
   ForStmt 
 ;
 
-SuiteStmt: 
-  SimpleStmt 
-//  | 
-//   NEWLINE INDENT stmt+ DEDENT
+//SuiteStmt: 
+//  SimpleStmt 
+////  | 
+////   NEWLINE INDENT stmt+ DEDENT
+//;
+
+// not working
+PassStmt:
+ 'pass'
+;
+
+DelStmt:
+ 'del' variables*=ID[',']
 ;
 
 
 DeclarationStmt: 
-//  datatype=DataType DEF name=ID
-  datatype=DataType name=ID
-  End
+  datatype=DataType variables+=ID[',']
 ;
 
 DataType:
@@ -47,7 +58,7 @@ ForStmt:
   'for' iterable=ID 'in' 
   'range' LPAREN start=IdentifierOrNumber COMMA 
                  end=IdentifierOrNumber RPAREN ':' 
-  body=SuiteStmt
+//  body=SuiteStmt
   End
 ;
 
