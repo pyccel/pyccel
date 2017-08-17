@@ -119,8 +119,6 @@ class AssignStmt(object):
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
 
-#        namespace[self.iterable.name] = self.iterable
-
     @property
     def expr(self):
         if isinstance(self.rhs, Expression):
@@ -128,9 +126,11 @@ class AssignStmt(object):
         else:
             rhs = sympify(self.rhs)
 
-        lhs = sympify(self.lhs)
+        ls = []
+        for l in self.lhs:
+            ls.append(sympify(l))
 
-        return Assign(lhs, rhs)
+        return [Assign(l, rhs) for l in ls]
 
 class ForStmt(object):
     """Class representing a ."""

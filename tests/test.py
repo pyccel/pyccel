@@ -62,17 +62,19 @@ def test_Del():
 def test_Assign():
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real  a;" + "\n"  # KO
-#    stmts += "x=1"       + "\n"  # OK
-#    stmts += "y=2*3+1"   + "\n"  # OK
+    stmts += "real  a" + "\n"    # OK
+    stmts += "x=1"       + "\n"  # OK
+    stmts += "y=2*3+1"   + "\n"  # OK
 #    stmts += "x=a"       + "\n"  # OK
 #    stmts += "y=2*a+b"   + "\n"   # KO
 
     ast = pyccel.parse(stmts)
-    for stmt in ast.declarations:
-        print stmt.expr
     for stmt in ast.statements:
-        print stmt.expr
+        print stmt
+        if isinstance(stmt, DeclarationStmt):
+            print "declared variable : ", stmt.variables
+        if isinstance(stmt, AssignStmt):
+            print "lhs : ", stmt.lhs, "     rhs: ", stmt.rhs.expr
     # ...
 # ...
 
@@ -100,8 +102,8 @@ def test_For():
 
 ######################################
 if __name__ == "__main__":
-#    test_Assign()
-    test_Declare()
+    test_Assign()
+#    test_Declare()
 #    test_Del()
 #    test_For()
 #    test_Pass()

@@ -11,11 +11,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-//  AssignStmt
-//  DeclarationStmt
-//  (PassStmt | DelStmt | DeclarationStmt | AssignStmt)
-  (PassStmt | DelStmt | DeclarationStmt )
-//  (PassStmt | DelStmt | AssignStmt)
+  (PassStmt | DelStmt | DeclarationStmt | ExprStmt )
 ;
 
 CompoundStmt:
@@ -62,11 +58,12 @@ ForStmt:
   End
 ;
 
+ExprStmt: 
+  AssignStmt
+;
 
-// TODO
 AssignStmt: 
-  lhs=ID EQ rhs=Expression 
-//  lhs=ID EQ rhs=NUMBER 
+  lhs+=ID[','] '=' rhs=Expression 
 ;
 
 Expression: 
