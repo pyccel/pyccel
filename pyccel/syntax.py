@@ -39,45 +39,41 @@ class Pyccel(object):
         except:
             self.statements = []
 
+class Number(object):
+    """Class representing a number."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name     = kwargs.pop('name')
+        self.datatype = kwargs.pop('datatype')
+
+        namespace[self.name] = self
+
+    @property
+    def expr(self):
+        return Symbol(self.name)
+
 class DeclarationStmt(object):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
-        A Real number is defined by
-
-        * name
-
-        .. note::
-            The grammar rule to define a Real is
-
-            Real:
-            "Real" DEF name=ID
-            ;
         """
-        self.variables = kwargs.pop('variables')
+        self.variables_name = kwargs.pop('variables')
         self.datatype = kwargs.pop('datatype')
+
+        self.variables = []
+        for var in self.variables_name:
+            self.variables.append(Number(name=var, datatype=self.datatype))
 
     @property
     def expr(self):
-        ls = []
-        for v in self.variables:
-            ls.append(Symbol(var))
-        return ls
+        print ("not yet implemented")
+        return ""
 
 class DelStmt(object):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
-        A Real number is defined by
-
-        * name
-
-        .. note::
-            The grammar rule to define a Real is
-
-            Real:
-            "Real" DEF name=ID
-            ;
         """
         self.variables = kwargs.pop('variables')
 
@@ -94,16 +90,6 @@ class PassStmt(object):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
-        A Real number is defined by
-
-        * name
-
-        .. note::
-            The grammar rule to define a Real is
-
-            Real:
-            "Real" DEF name=ID
-            ;
         """
         self.name_stmt = kwargs.pop('name')
 
@@ -286,8 +272,7 @@ class Operand(ExpressionElement):
             # op is a list
             for O in op:
                 if O in namespace:
-                    # TODO use isinstance
-                    if type(namespace[O]) in [Real]:
+                    if isinstance(namespace[O], Number):
                         return namespace[O].expr
                     else:
                         return namespace[O]
@@ -305,8 +290,7 @@ class Operand(ExpressionElement):
                 print ">>> found local variables: " + op
             return Symbol(op)
         elif op in namespace:
-            # TODO use isinstance
-            if type(namespace[op]) in [Real]:
+            if isinstance(namespace[op], Number):
                 return namespace[op].expr
             else:
                 return namespace[op]
