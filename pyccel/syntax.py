@@ -142,7 +142,11 @@ class AssignStmt(object):
         for l in self.lhs:
             ls.append(sympify(l))
 
-        return [Assign(l, rhs) for l in ls]
+        ls = [Assign(l, rhs) for l in ls]
+        if len(ls) == 1:
+            return ls[0]
+        else:
+            return ls
 
 class ForStmt(object):
     """Class representing a ."""
@@ -179,8 +183,14 @@ class ForStmt(object):
         except:
             s = int(self.step)
 
-        # TODO body must be parsed as a list
-        body = [self.body.expr]
+        body = []
+        for stmt in self.body:
+            if isinstance(stmt, list):
+                body += stmt
+            else:
+                body.append(stmt)
+
+        body = [stmt.expr for stmt in body]
         return For(i, (b,e,s), body)
 
 class ExpressionElement(object):

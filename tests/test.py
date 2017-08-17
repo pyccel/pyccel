@@ -1,5 +1,11 @@
 # coding: utf-8
 
+"""
+.. todo:
+    - no need to declare a variable, if it is defined by assignment. ex: 'x=1'
+    means that x is of type real. this must be done automatically.
+"""
+
 from pyccel.parser  import PyccelParser, get_by_name
 from pyccel.syntax import ( \
                            # statements
@@ -120,20 +126,22 @@ def test_If():
 def test_For():
     # ... parse the Pyccel code
     stmts  = ""
+    stmts += "real  x" + "\n"
     stmts += "for i in range(0,10):" + "\n"
-    stmts += "x=1"                + "\n"
+    stmts += "x=1;"                  + "\n"
+    stmts += "x=x+1"                 + "\n"
     stmts += "end"                   + "\n"
 
-    stmts += "for j in range(a,b):" + "\n"
-    stmts += "x=1"                + "\n"
-    stmts += "end"                   + "\n"
+#    stmts += "for j in range(a,b):" + "\n"
+#    stmts += "x=1"                + "\n"
+#    stmts += "end"                   + "\n"
 
     ast = pyccel.parse(stmts)
     for stmt in ast.statements:
-        print stmt.expr
-
-#    token = get_by_name(ast, "s")
-#    print token
+        if isinstance(stmt, DeclarationStmt):
+            print "declared variable : ", stmt.variables
+        if isinstance(stmt, ForStmt):
+            print stmt.expr
     # ...
 # ...
 
@@ -144,6 +152,6 @@ if __name__ == "__main__":
 #    test_Declare()
 #    test_Del()
 #    test_Flow()
-    test_If()
-#    test_For() # KO
+#    test_If()
+    test_For()
 #    test_Pass()
