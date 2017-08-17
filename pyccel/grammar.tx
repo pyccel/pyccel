@@ -11,7 +11,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (PassStmt | DelStmt | DeclarationStmt | ExprStmt )
+  (PassStmt | FlowStmt | DelStmt | DeclarationStmt | ExprStmt )
 ;
 
 CompoundStmt:
@@ -26,11 +26,37 @@ CompoundStmt:
 
 // not working
 PassStmt:
- 'pass'
+  label='pass'
 ;
 
+FlowStmt:
+  (BreakStmt | ContinueStmt | ReturnStmt | RaiseStmt | YieldStmt)
+;
+
+BreakStmt:
+  label='break'
+;
+
+ContinueStmt:
+  label='continue'
+;
+
+ReturnStmt:
+  label='return'
+;
+
+RaiseStmt:
+  label='raise'
+;
+
+YieldStmt:
+  label='yield'
+;
+
+
+
 DelStmt:
- 'del' variables*=ID[',']
+  'del' variables*=ID[',']
 ;
 
 

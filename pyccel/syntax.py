@@ -12,6 +12,9 @@ __all__ = ["Pyccel", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
            # statements
            "AssignStmt", "ForStmt", "DeclarationStmt", \
+           # Flow statements
+           "FlowStmt", "BreakStmt", "ContinueStmt", \
+           "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt" \
            ]
 
@@ -81,21 +84,28 @@ class DelStmt(object):
     def expr(self):
         lines = []
         for var in self.variables:
+            if var in namespace:
+                namespace.pop(var)
+            elif var in stack:
+                stack.pop(var)
+            else:
+                raise Exception('Unknown variable "{}" at position {}'
+                                .format(var, self._tx_position))
+
             line = "del " + str(var)
             lines.append(line)
         return lines
 
-# TODO not working
 class PassStmt(object):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
-        self.name_stmt = kwargs.pop('name')
+        self.label = kwargs.pop('label')
 
     @property
     def expr(self):
-        return self.name_stmt
+        return self.label
 
 class AssignStmt(object):
     """Class representing a ."""
@@ -298,3 +308,50 @@ class Operand(ExpressionElement):
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
 
+class FlowStmt(object):
+    """
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        self.label = kwargs.pop('label')
+
+class BreakStmt(FlowStmt):
+    """
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        super(BreakStmt, self).__init__(**kwargs)
+
+class ContinueStmt(FlowStmt):
+    """
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        super(ContinueStmt, self).__init__(**kwargs)
+
+class ReturnStmt(FlowStmt):
+    """
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        super(ReturnStmt, self).__init__(**kwargs)
+
+class RaiseStmt(FlowStmt):
+    """
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        super(RaiseStmt, self).__init__(**kwargs)
+
+class YieldStmt(FlowStmt):
+    """
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        super(YieldStmt, self).__init__(**kwargs)

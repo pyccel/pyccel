@@ -18,8 +18,8 @@ def test_Declare():
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "real x,y" + "\n"
-    stmts += "real z" + "\n"
-    stmts += "int  n" + "\n"
+    stmts += "real z"   + "\n"
+    stmts += "int  n"   + "\n"
 
     ast = pyccel.parse(stmts)
 
@@ -29,17 +29,30 @@ def test_Declare():
     # ...
 # ...
 
-# ... TODO: not working
+# ...
 def test_Pass():
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "pass " + "\n"  # KO
+    stmts += "pass" + "\n"
 
     ast = pyccel.parse(stmts)
-    for stmt in ast.declarations:
-        print stmt.expr
     for stmt in ast.statements:
-        print stmt.expr
+        print type(stmt)
+    # ...
+# ...
+
+# ...
+def test_Flow():
+    # ... parse the Pyccel code
+    stmts  = ""
+    stmts += "return"   + "\n"
+    stmts += "raise"    + "\n"
+    stmts += "break"    + "\n"
+    stmts += "continue" + "\n"
+
+    ast = pyccel.parse(stmts)
+    for stmt in ast.statements:
+        print type(stmt)
     # ...
 # ...
 
@@ -47,12 +60,10 @@ def test_Pass():
 def test_Del():
     # ... parse the Pyccel code
     stmts  = ""
-#    stmts += "real  a;" + "\n"  # KO
-    stmts += "del b" + "\n"  # KO
+    stmts += "real b" + "\n"
+    stmts += "del b"   + "\n"
 
     ast = pyccel.parse(stmts)
-    for stmt in ast.declarations:
-        print stmt.expr
     for stmt in ast.statements:
         print stmt.expr
     # ...
@@ -101,8 +112,9 @@ def test_For():
 
 ######################################
 if __name__ == "__main__":
-    test_Assign()
+#    test_Assign()
 #    test_Declare()
-#    test_Del()
-#    test_For()
+    test_Del()
+#    test_Flow()
+#    test_For() # KO
 #    test_Pass()

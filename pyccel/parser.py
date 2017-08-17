@@ -12,6 +12,8 @@ from pyccel.syntax import (Pyccel, \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, \
+                           FlowStmt, BreakStmt, ContinueStmt, \
+                           RaiseStmt, YieldStmt, ReturnStmt, \
                            ForStmt)
 
 from textx.metamodel import metamodel_from_str
@@ -151,6 +153,8 @@ class PyccelParser(Parser):
                    AssignStmt, \
                    DelStmt, \
                    PassStmt, \
+                   FlowStmt, BreakStmt, ContinueStmt, \
+                   RaiseStmt, YieldStmt, ReturnStmt, \
                    ForStmt
                    ]
 
