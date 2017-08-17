@@ -15,14 +15,14 @@ SmallStmt:
 ;
 
 CompoundStmt:
-  ForStmt 
+  (IfStmt | ForStmt)
 ;
 
-//SuiteStmt: 
-//  SimpleStmt 
-////  | 
-////   NEWLINE INDENT stmt+ DEDENT
-//;
+SuiteStmt: 
+  SimpleStmt 
+//  | 
+//   NEWLINE INDENT stmt+ DEDENT
+;
 
 // not working
 PassStmt:
@@ -52,8 +52,6 @@ RaiseStmt:
 YieldStmt:
   label='yield'
 ;
-
-
 
 DelStmt:
   'del' variables*=ID[',']
@@ -90,6 +88,44 @@ ExprStmt:
 
 AssignStmt: 
   lhs+=ID[','] '=' rhs=Expression 
+;
+
+IfStmt: 
+  'if' Test ':' SuiteStmt 
+//  ('elif' test=Test ':' SuiteStmt)* 
+  ('else' ':' SuiteStmt)?
+;
+
+Test: 
+  OrTest ('if' OrTest 'else' Test)? 
+//  | lambdef
+;
+
+//test_nocond: or_test | lambdef_nocond;
+//lambdef: 'lambda' (varargslist)? ':' test;
+//lambdef_nocond: 'lambda' (varargslist)? ':' test_nocond;
+
+OrTest: 
+  AndTest ('or' AndTest)*
+;
+
+AndTest: 
+  NotTest ('and' NotTest)*
+;
+
+NotTest: 
+  'not' NotTest 
+  | Comparison
+;
+
+Comparison: 
+  Expression (CompOp Expression)*
+;
+
+// <> isn't actually a valid comparison operator in Python. It's here for the
+// sake of a __future__ import described in PEP 401 (which really works :-)
+CompOp: 
+  '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
 ;
 
 Expression: 

@@ -89,6 +89,25 @@ def test_Assign():
 # ...
 
 # ...
+def test_If():
+    # ... parse the Pyccel code
+    stmts  = ""
+    stmts += "real  a,b" + "\n"
+    stmts += "if a==1:"       + "\n"
+    stmts += "b=a+1"   + "\n"
+#    stmts += ";"   + "\n"
+
+    ast = pyccel.parse(stmts)
+    for stmt in ast.statements:
+        print type(stmt)
+#        if isinstance(stmt, DeclarationStmt):
+#            print "declared variable : ", stmt.variables
+#        if isinstance(stmt, AssignStmt):
+#            print "lhs : ", stmt.lhs, "     rhs: ", stmt.rhs.expr
+    # ...
+# ...
+
+# ...
 def test_For():
     # ... parse the Pyccel code
     stmts  = ""
@@ -114,7 +133,8 @@ def test_For():
 if __name__ == "__main__":
 #    test_Assign()
 #    test_Declare()
-    test_Del()
+#    test_Del()
 #    test_Flow()
+    test_If()
 #    test_For() # KO
 #    test_Pass()
