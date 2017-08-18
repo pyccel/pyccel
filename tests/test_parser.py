@@ -143,13 +143,13 @@ def test_If(verbose=False):
 
     if verbose:
         for stmt in ast.statements:
-            print type(stmt)
             if isinstance(stmt, DeclarationStmt):
                 print "declared variable : ", stmt.variables
             if isinstance(stmt, AssignStmt):
                 print "lhs : ", stmt.lhs, "     rhs: ", stmt.rhs.expr
             if isinstance(stmt, IfStmt):
-                print "body_true : ", stmt.body_true, "     body_false: ", stmt.body_false
+#                print "body_true : ", stmt.body_true, "     body_false: ", stmt.body_false
+                print stmt.expr
     # ...
 
     return ast
@@ -173,10 +173,10 @@ def test_Pass(verbose=False):
 
 ######################################
 if __name__ == "__main__":
-    test_Assign(verbose=True)
-    test_Declare(verbose=True)
-    test_Del(verbose=True)
-    test_Flow(verbose=True)
-    test_For(verbose=True)
+#    test_Assign(verbose=True)
+#    test_Declare(verbose=True)
+#    test_Del(verbose=True)
+#    test_Flow(verbose=True)
+#    test_For(verbose=True)
     test_If(verbose=True)
-    test_Pass(verbose=True)
+#    test_Pass(verbose=True)

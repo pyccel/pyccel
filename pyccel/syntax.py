@@ -1,6 +1,7 @@
 # coding: utf-8
 
-from sympy import Symbol, sympify
+from sympy import Symbol, sympify, Piecewise
+
 from symcc.types.ast import For, Assign, Declare
 from symcc.types.ast import InArgument, InOutArgument
 
@@ -127,11 +128,18 @@ class IfStmt(object):
         """
         self.body_true  = kwargs.pop('body_true')
         self.body_false = kwargs.pop('body_false')
+        self.test       = kwargs.pop('test')
 
     @property
     def expr(self):
-        print("not yet implemented")
-        return ""
+        test = self.test.expr
+        ls = [l.expr for l in self.body_true]
+        rs = [l.expr for l in self.body_false]
+
+        # TODO allow list of stmts
+#        e = Piecewise((ls[0], test), (rs[0], True))
+        e = Piecewise((ls, test), (rs, True))
+        return e
 
 class AssignStmt(object):
     """Class representing a ."""

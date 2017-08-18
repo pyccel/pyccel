@@ -59,12 +59,32 @@ def test_Flow():
 def test_For():
     from test_parser import test_For as test
     ast = test()
+
+    for stmt in ast.statements:
+        if isinstance(stmt, DeclarationStmt):
+            decs = stmt.expr
+            for dec in decs:
+                code = fcode(dec)
+                print code
+        if isinstance(stmt, ForStmt):
+            code = fcode(stmt.expr)
+            print code
 # ...
 
 # ...
 def test_If():
     from test_parser import test_If as test
     ast = test()
+
+    for stmt in ast.statements:
+        if isinstance(stmt, DeclarationStmt):
+            decs = stmt.expr
+            for dec in decs:
+                code = fcode(dec)
+                print code
+        if isinstance(stmt, IfStmt):
+            code = fcode(stmt.expr)
+            print code
 # ...
 
 # ...
@@ -76,10 +96,10 @@ def test_Pass():
 
 ######################################
 if __name__ == "__main__":
-    test_Assign()
+#    test_Assign()
 #    test_Declare()
 #    test_Del()
 #    test_Flow()
 #    test_For()
-#    test_If()
+    test_If()
 #    test_Pass()

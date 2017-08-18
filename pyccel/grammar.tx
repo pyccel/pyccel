@@ -91,7 +91,7 @@ AssignStmt:
 ;
 
 IfStmt: 
-  'if' Test ':' body_true+=SmallStmt[';']
+  'if' test=Test ':' body_true+=SmallStmt[';']
 //  ('elif' test=Test ':' SuiteStmt)* 
   ('else' ':' body_false+=SmallStmt[';'])?
   End
