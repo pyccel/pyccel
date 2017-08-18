@@ -18,6 +18,16 @@ from pyccel.syntax import ( \
 def test_Assign():
     from test_parser import test_Assign as test
     ast = test()
+
+    for stmt in ast.statements:
+        if isinstance(stmt, DeclarationStmt):
+            decs = stmt.expr
+            for dec in decs:
+                code = fcode(dec)
+                print code
+        if isinstance(stmt, AssignStmt):
+            code = fcode(stmt.expr)
+            print code
 # ...
 
 # ...
@@ -66,8 +76,8 @@ def test_Pass():
 
 ######################################
 if __name__ == "__main__":
-#    test_Assign()
-    test_Declare()
+    test_Assign()
+#    test_Declare()
 #    test_Del()
 #    test_Flow()
 #    test_For()

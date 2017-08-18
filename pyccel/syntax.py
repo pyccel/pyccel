@@ -141,6 +141,18 @@ class AssignStmt(object):
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
 
+        for l in self.lhs:
+            if not(l in namespace):
+                namespace[l] = sympify(l)
+                print("> Found new variable " + l)
+                print("  TODO: insert a declaration stmt.")
+                # TODO this is because we allow the use of an undeclared
+                #      variable as a lhs
+            else:
+#                raise Exception('Undeclared variable "{}" at position {}'
+#                                .format(l, self._tx_position))
+                print("  TODO: insert a declaration stmt.")
+
     @property
     def expr(self):
         if isinstance(self.rhs, Expression):
