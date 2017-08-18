@@ -3,6 +3,17 @@
 """
 """
 
+from symcc.printers import fcode
+
+from pyccel.syntax import ( \
+                           # statements
+                           DeclarationStmt, \
+                           DelStmt, \
+                           PassStmt, \
+                           AssignStmt, \
+                           IfStmt, ForStmt)
+
+
 # ...
 def test_Assign():
     from test_parser import test_Assign as test
@@ -13,6 +24,13 @@ def test_Assign():
 def test_Declare():
     from test_parser import test_Declare as test
     ast = test()
+
+    for stmt in ast.statements:
+        if isinstance(stmt, DeclarationStmt):
+            decs = stmt.expr
+            for dec in decs:
+                code = fcode(dec)
+                print code
 # ...
 
 # ...
@@ -48,8 +66,8 @@ def test_Pass():
 
 ######################################
 if __name__ == "__main__":
-    test_Assign()
-#    test_Declare()
+#    test_Assign()
+    test_Declare()
 #    test_Del()
 #    test_Flow()
 #    test_For()

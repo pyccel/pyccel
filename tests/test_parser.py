@@ -3,7 +3,7 @@
 """
 .. todo:
     - no need to declare a variable, if it is defined by assignment. ex: 'x=1'
-    means that x is of type real. this must be done automatically.
+    means that x is of type double. this must be done automatically.
 """
 
 from pyccel.parser  import PyccelParser, get_by_name
@@ -23,7 +23,7 @@ pyccel = PyccelParser()
 def test_Assign(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real  a,b" + "\n"
+    stmts += "double  a,b" + "\n"
     stmts += "x=1"       + "\n"
     stmts += "y=2*3+1"   + "\n"
     stmts += "x=a"       + "\n"
@@ -46,8 +46,8 @@ def test_Assign(verbose=False):
 def test_Declare(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real x,y" + "\n"
-    stmts += "real z"   + "\n"
+    stmts += "double x,y" + "\n"
+    stmts += "double z"   + "\n"
     stmts += "int  n"   + "\n"
 
     ast = pyccel.parse(stmts)
@@ -65,7 +65,7 @@ def test_Declare(verbose=False):
 def test_Del(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real b" + "\n"
+    stmts += "double b" + "\n"
     stmts += "del b"   + "\n"
 
     ast = pyccel.parse(stmts)
@@ -101,7 +101,7 @@ def test_Flow(verbose=False):
 def test_For(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real  x" + "\n"
+    stmts += "double  x" + "\n"
     stmts += "for i in range(0,10):" + "\n"
     stmts += "x=1;"                  + "\n"
     stmts += "x=x+1"                 + "\n"
@@ -129,7 +129,7 @@ def test_For(verbose=False):
 def test_If(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "real  a,b" + "\n"
+    stmts += "double  a,b" + "\n"
     stmts += "if a==1:"  + "\n"
     stmts += "b=a+1;"    + "\n"
 #    stmts += "b=a+1; a=b+a"   + "\n"

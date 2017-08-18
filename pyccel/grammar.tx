@@ -63,7 +63,7 @@ DeclarationStmt:
 ;
 
 DataType:
-  ('real' | 'int')
+  ('double' | 'int')
 ;
 
 Variable:

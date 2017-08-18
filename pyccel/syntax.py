@@ -1,7 +1,8 @@
 # coding: utf-8
 
 from sympy import Symbol, sympify
-from symcc.types.ast import For, Assign
+from symcc.types.ast import For, Assign, Declare
+from symcc.types.ast import InArgument, InOutArgument
 
 
 DEBUG = False
@@ -67,13 +68,22 @@ class DeclarationStmt(object):
         self.datatype = kwargs.pop('datatype')
 
         self.variables = []
+        # TODO create the appropriate type, not only Number
         for var in self.variables_name:
             self.variables.append(Number(name=var, datatype=self.datatype))
 
     @property
     def expr(self):
-        print ("not yet implemented")
-        return ""
+        """
+        """
+        datatype = str(self.datatype)
+        decs = []
+        # TODO depending on additional options from the grammar
+        for var in self.variables:
+            dec = InArgument(datatype, var.expr)
+            decs.append(Declare(datatype, dec))
+
+        return decs
 
 class DelStmt(object):
     """Class representing a ."""
