@@ -2,3 +2,6 @@
 
 def f(x,y):
     z = x+y
+
+def g(x,y):
+    z = x+y

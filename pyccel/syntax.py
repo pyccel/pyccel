@@ -519,4 +519,8 @@ class FunctionDefStmt(BasicStmt):
 
         results = []
 
+        for arg_name in self.args:
+            if (arg_name in namespace):
+                namespace.pop(arg_name)
+
         return FunctionDef(name, args, body, results)

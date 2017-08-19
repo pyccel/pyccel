@@ -89,7 +89,7 @@ def gencode(ast, printer):
         elif isinstance(stmt, IfStmt):
             lines += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            lines += fcode(stmt.expr) + "\n"
+            lines += fcode(stmt.expr) + "\n"+ "\n"
         else:
             raise Exception('Statement not yet handled.')
 
