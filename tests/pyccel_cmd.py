@@ -17,7 +17,11 @@ from pyccel.syntax import ( \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, \
-                           IfStmt, ForStmt, FunctionDefStmt)
+                           IfStmt, ForStmt, FunctionDefStmt, \
+                           # numpy statments
+                           NumpyZerosStmt, NumpyZerosLikeStmt, \
+                           NumpyOnesStmt, NumpyLinspaceStmt \
+                           )
 
 # ...
 def make_tmp_file(filename):
@@ -76,6 +80,13 @@ def gencode(ast, printer):
             decs = stmt.expr
             for dec in decs:
                 preludes += fcode(dec) + "\n"
+        elif isinstance(stmt, NumpyZerosStmt):
+            # TODO fix bug
+            stmt.expr
+#            lines += fcode(stmt.expr) + "\n"
+
+            for s in stmt.statements:
+                preludes += fcode(s) + "\n"
         elif isinstance(stmt, AssignStmt):
             lines += fcode(stmt.expr) + "\n"
 

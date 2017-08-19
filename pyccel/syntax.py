@@ -20,7 +20,10 @@ __all__ = ["Pyccel", \
            # Flow statements
            "FlowStmt", "BreakStmt", "ContinueStmt", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
-           "DelStmt", "PassStmt", "FunctionDefStmt" \
+           "DelStmt", "PassStmt", "FunctionDefStmt", \
+           # numpy statments
+           "NumpyZerosStmt", "NumpyZerosLikeStmt", \
+           "NumpyOnesStmt", "NumpyLinspaceStmt"
            ]
 
 
@@ -545,3 +548,86 @@ class FunctionDefStmt(BasicStmt):
                 namespace.pop(arg_name)
 
         return FunctionDef(name, args, body, results)
+
+class NumpyZerosStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs = kwargs.pop('lhs')
+        self.shape = kwargs.pop('shape')
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    def update(self):
+        for var_name in self.lhs:
+            if not(var_name in namespace):
+                if DEBUG:
+                    print("> Found new variable " + var_name)
+
+                var = Symbol(var_name)
+                namespace[var_name] = var
+                datatype = 'int'
+                # TODO define datatype
+                # TODO check if var is a return value
+
+                rank = 0
+                if type(self.shape) == int:
+                    rank = 1
+                else:
+                    raise Exception('Only rank=1 is available')
+
+                dec = Variable(datatype, var, rank=rank)
+                self.statements.append(Declare(datatype, dec))
+
+    @property
+    def expr(self):
+        self.update()
+        return ""
+
+class NumpyZerosLikeStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs = kwargs.pop('lhs')
+        self.rhs = kwargs.pop('rhs')
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return ""
+
+class NumpyOnesStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs = kwargs.pop('lhs')
+        self.shape = kwargs.pop('shape')
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return ""
+
+class NumpyLinspaceStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs   = kwargs.pop('lhs')
+        self.start = kwargs.pop('start')
+        self.end   = kwargs.pop('end')
+        self.size  = kwargs.pop('size')
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return ""
