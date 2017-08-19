@@ -7,7 +7,7 @@ Statement:
 ;
 
 SimpleStmt:
-  SmallStmt (';' SmallStmt)* (End)?
+  SmallStmt (';' SmallStmt)* (';')?
 ;
 
 SmallStmt:
@@ -21,7 +21,8 @@ CompoundStmt:
 SuiteStmt: 
   SimpleStmt 
 //  | 
-//   NEWLINE INDENT stmt+ DEDENT
+//  INDENT stmt+ DEDENT
+//  NEWLINE INDENT stmt+ DEDENT
 ;
 
 // not working
@@ -74,14 +75,6 @@ IdentifierOrNumber:
   (NUMBER | ID)
 ;
 
-ForStmt: 
-  'for' iterable=ID 'in' 
-  'range' LPAREN start=IdentifierOrNumber COMMA 
-                 end=IdentifierOrNumber RPAREN ':' 
-  body+=SmallStmt[';']
-  End
-;
-
 ExprStmt: 
   AssignStmt
 ;
@@ -90,11 +83,26 @@ AssignStmt:
   lhs+=ID[','] '=' rhs=Expression 
 ;
 
+ForStmt: 
+  'for' iterable=ID 'in' 
+  'range' LPAREN start=IdentifierOrNumber COMMA 
+                 end=IdentifierOrNumber RPAREN ':' 
+//  body+=SmallStmt[';']
+  INDENT
+  body+=Statement[';']
+  DEDENT
+;
+
 IfStmt: 
-  'if' test=Test ':' body_true+=SmallStmt[';']
+  'if' test=Test ':'
+  INDENT
+  body_true+=Statement[';']
+  DEDENT
 //  ('elif' test=Test ':' SuiteStmt)* 
-  ('else' ':' body_false+=SmallStmt[';'])?
-  End
+  ('else' ':'
+  INDENT
+  body_false+=Statement[';']
+  DEDENT)? 
 ;
 
 Test: 
@@ -215,6 +223,10 @@ Comment:
   /#.*$/
 ;
 
-End:
-  'end'
+INDENT:
+  'indent'
+;
+
+DEDENT:
+  'dedent'
 ;

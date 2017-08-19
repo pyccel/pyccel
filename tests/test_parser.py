@@ -102,9 +102,10 @@ def test_For(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "for i in range(0,10):" + "\n"
+    stmts += "indent"                + "\n"
     stmts += "x=1;"                  + "\n"
     stmts += "y=x+1"                 + "\n"
-    stmts += "end"                   + "\n"
+    stmts += "dedent"                + "\n"
 
 #    stmts += "for j in range(a,b):" + "\n"
 #    stmts += "x=1"                + "\n"
@@ -130,13 +131,16 @@ def test_If(verbose=False):
     stmts  = ""
     stmts += "double  a,b" + "\n"
     stmts += "if a==1:"  + "\n"
+    stmts += "indent"                + "\n"
     stmts += "b=a+1;"    + "\n"
 #    stmts += "b=a+1; a=b+a"   + "\n"
 #    stmts += ";"   + "\n"
     stmts += "a=b*a"     + "\n"
+    stmts += "dedent"                + "\n"
     stmts += "else:"     + "\n"
+    stmts += "indent"                + "\n"
     stmts += "a=b*a"     + "\n"
-    stmts += "end"       + "\n"
+    stmts += "dedent"                + "\n"
 
     ast = pyccel.parse(stmts)
 
@@ -172,10 +176,10 @@ def test_Pass(verbose=False):
 
 ######################################
 if __name__ == "__main__":
-#    test_Assign(verbose=True)
-#    test_Declare(verbose=True)
-#    test_Del(verbose=True)
-#    test_Flow(verbose=True)
-#    test_For(verbose=True)
+    test_Assign(verbose=True)
+    test_Declare(verbose=True)
+    test_Del(verbose=True)
+    test_Flow(verbose=True)
+    test_For(verbose=True)
     test_If(verbose=True)
-#    test_Pass(verbose=True)
+    test_Pass(verbose=True)
