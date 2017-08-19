@@ -124,6 +124,25 @@ def test_For(verbose=False):
     return ast
 # ...
 
+# ...
+def test_Function(verbose=False):
+    # ... parse the Pyccel code
+    stmts  = ""
+    stmts += "def f(x,y):"   + "\n"
+    stmts += "indent"        + "\n"
+    stmts += "z = x+y"       + "\n"
+    stmts += "dedent"        + "\n"
+
+    ast = pyccel.parse(stmts)
+
+    if verbose:
+        for stmt in ast.statements:
+            print type(stmt)
+    # ...
+
+    return ast
+# ...
+
 # ... TODO for the moment, intructions must be splitted by ";"
 #          => \n is not recognized
 def test_If(verbose=False):
@@ -176,10 +195,11 @@ def test_Pass(verbose=False):
 
 ######################################
 if __name__ == "__main__":
-    test_Assign(verbose=True)
-    test_Declare(verbose=True)
-    test_Del(verbose=True)
-    test_Flow(verbose=True)
-    test_For(verbose=True)
-    test_If(verbose=True)
-    test_Pass(verbose=True)
+#    test_Assign(verbose=True)
+#    test_Declare(verbose=True)
+#    test_Del(verbose=True)
+#    test_Flow(verbose=True)
+#    test_For(verbose=True)
+    test_Function(verbose=True)
+#    test_If(verbose=True)
+#    test_Pass(verbose=True)

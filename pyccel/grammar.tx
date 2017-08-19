@@ -15,7 +15,7 @@ SmallStmt:
 ;
 
 CompoundStmt:
-  (IfStmt | ForStmt)
+  (IfStmt | ForStmt | DecoratedStmt)
 ;
 
 SuiteStmt: 
@@ -25,7 +25,26 @@ SuiteStmt:
 //  NEWLINE INDENT stmt+ DEDENT
 ;
 
-// not working
+//DecoratorStmt: 
+//  '@' dotted_name ( '(' (arglist)? ')' )? NEWLINE
+//;
+//
+//DecoratorsStmt: 
+//  decorator+
+//;
+
+DecoratedStmt: 
+//  decorators (classdef | funcdef | async_funcdef)
+  FuncdefStmt
+;
+
+FuncdefStmt: 
+  'def' name=ID LPAREN args*=ID[','] RPAREN ':'
+  INDENT
+  body+=Statement[';']
+  DEDENT
+;
+
 PassStmt:
   label='pass'
 ;

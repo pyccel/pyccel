@@ -106,5 +106,6 @@ if __name__ == "__main__":
     test_Del()
     test_Flow()
     test_For()
+    test_Function()
     test_If()
     test_Pass()
