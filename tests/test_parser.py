@@ -101,10 +101,9 @@ def test_Flow(verbose=False):
 def test_For(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "double  x" + "\n"
     stmts += "for i in range(0,10):" + "\n"
     stmts += "x=1;"                  + "\n"
-    stmts += "x=x+1"                 + "\n"
+    stmts += "y=x+1"                 + "\n"
     stmts += "end"                   + "\n"
 
 #    stmts += "for j in range(a,b):" + "\n"

@@ -60,7 +60,14 @@ class Number(object):
     def expr(self):
         return Symbol(self.name)
 
-class DeclarationStmt(object):
+class BasicStmt(object):
+    def __init__(self, **kwargs):
+        self.statements = []
+
+    def update(self):
+        pass
+
+class DeclarationStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -73,6 +80,8 @@ class DeclarationStmt(object):
         for var in self.variables_name:
             self.variables.append(Number(name=var, datatype=self.datatype))
 
+        super(DeclarationStmt, self).__init__(**kwargs)
+
     @property
     def expr(self):
         """
@@ -84,14 +93,18 @@ class DeclarationStmt(object):
             dec = InArgument(datatype, var.expr)
             decs.append(Declare(datatype, dec))
 
+        self.update()
+
         return decs
 
-class DelStmt(object):
+class DelStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.variables = kwargs.pop('variables')
+
+        super(DelStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
@@ -107,21 +120,29 @@ class DelStmt(object):
 
             line = "del " + str(var)
             lines.append(line)
+
+        self.update()
+
         return lines
 
-class PassStmt(object):
+class PassStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.label = kwargs.pop('label')
 
+        super(PassStmt, self).__init__(**kwargs)
+
     @property
     def expr(self):
+
+        self.update()
+
         return self.label
 
 
-class IfStmt(object):
+class IfStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -129,6 +150,8 @@ class IfStmt(object):
         self.body_true  = kwargs.pop('body_true')
         self.body_false = kwargs.pop('body_false')
         self.test       = kwargs.pop('test')
+
+        super(IfStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
@@ -139,9 +162,12 @@ class IfStmt(object):
         # TODO allow list of stmts
 #        e = Piecewise((ls[0], test), (rs[0], True))
         e = Piecewise((ls, test), (rs, True))
+
+        self.update()
+
         return e
 
-class AssignStmt(object):
+class AssignStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -149,17 +175,21 @@ class AssignStmt(object):
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
 
-        for l in self.lhs:
-            if not(l in namespace):
-                namespace[l] = sympify(l)
-                print("> Found new variable " + l)
-                print("  TODO: insert a declaration stmt.")
-                # TODO this is because we allow the use of an undeclared
-                #      variable as a lhs
-            else:
-#                raise Exception('Undeclared variable "{}" at position {}'
-#                                .format(l, self._tx_position))
-                print("  TODO: insert a declaration stmt.")
+        super(AssignStmt, self).__init__(**kwargs)
+
+    def update(self):
+        for var_name in self.lhs:
+            if not(var_name in namespace):
+                if DEBUG:
+                    print("> Found new variable " + var_name)
+
+                var = Symbol(var_name)
+                namespace[var_name] = var
+                datatype = 'int'
+                # TODO define datatype
+                # TODO check if var is a return value
+                dec = Variable(datatype, var)
+                self.statements.append(Declare(datatype, dec))
 
     @property
     def expr(self):
@@ -173,12 +203,16 @@ class AssignStmt(object):
             ls.append(sympify(l))
 
         ls = [Assign(l, rhs) for l in ls]
+
+        self.update()
+
         if len(ls) == 1:
             return ls[0]
         else:
             return ls
 
-class ForStmt(object):
+
+class ForStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -191,20 +225,28 @@ class ForStmt(object):
         # TODO add step
         self.step     = 1
 
-        # TODO move to an abstract class
-        self.statements = []
+        namespace[self.iterable] = Symbol(self.iterable)
 
-#        namespace[self.iterable.name] = self.iterable
+        super(ForStmt, self).__init__(**kwargs)
 
     def update(self):
         i   = Symbol(self.iterable, integer=True)
         dec = Variable('int', i)
         self.statements.append(Declare('int', dec))
 
+        body = []
+        for stmt in self.body:
+            if isinstance(stmt, list):
+                body += stmt
+            else:
+                body.append(stmt)
+
+        for stmt in body:
+            e = stmt.expr
+            self.statements += stmt.statements
+
     @property
     def expr(self):
-        self.update()
-
         i = Symbol(self.iterable, integer=True)
 
         try:
@@ -228,6 +270,8 @@ class ForStmt(object):
                 body += stmt
             else:
                 body.append(stmt)
+
+        self.update()
 
         body = [stmt.expr for stmt in body]
         return For(i, (b,e,s), body)
@@ -373,7 +417,7 @@ class Operand(ExpressionElement):
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
 
-class FlowStmt(object):
+class FlowStmt(BasicStmt):
     """
     """
     def __init__(self, **kwargs):
