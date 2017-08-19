@@ -20,6 +20,55 @@ from pyccel.syntax import ( \
                            IfStmt, ForStmt)
 
 # ...
+def make_tmp_file(filename):
+    name = filename.split('.py')[0]
+    return name + ".pyccel"
+# ...
+
+# ...
+def preprocess(filename, filename_out):
+    f = open(filename)
+    lines = f.readlines()
+    f.close()
+
+    # to be sure that we dedent at the end
+    lines += "\n"
+
+    lines_new = ""
+
+    def delta(line):
+        l = line.lstrip(' ')
+        n = len(line) - len(l)
+        return n
+
+    tab   = 4
+    depth = 0
+    for i,line in enumerate(lines):
+        n = delta(line)
+
+        if n == depth * tab + tab:
+            depth += 1
+            lines_new += "indent" + "\n"
+            lines_new += line
+        else:
+
+            d = n // tab
+            if (d > 0) or (n==0):
+                old = delta(lines[i-1])
+                m = (old - n) // tab
+                depth -= m
+                for j in range(0, m):
+                    lines_new += "dedent" + "\n"
+
+            lines_new += line
+    print lines_new
+    f = open(filename_out, "w")
+    for line in lines_new:
+        f.write(line)
+    f.close()
+# ...
+
+# ...
 def gencode(ast, printer):
     preludes = ""
     lines    = ""
@@ -56,10 +105,14 @@ except:
 
 # ... creates an instance of Pyccel parser
 pyccel = PyccelParser()
-ast = pyccel.parse_from_file(filename)
-code = gencode(ast, fcode)
+
+filename_tmp = make_tmp_file(filename)
+preprocess(filename, filename_tmp)
+
+#ast = pyccel.parse_from_file(filename_tmp)
+#code = gencode(ast, fcode)
 # ...
 
 # ...
-print code
+#print code
 # ...
