@@ -11,7 +11,7 @@ from pyccel.syntax import ( \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, \
-                           IfStmt, ForStmt)
+                           IfStmt, ForStmt, FunctionDefStmt)
 
 
 # ...
@@ -77,6 +77,22 @@ def test_For():
 # ...
 
 # ...
+def test_FunctionDef():
+    from test_parser import test_FunctionDef as test
+    ast = test()
+
+    for stmt in ast.statements:
+        if isinstance(stmt, FunctionDefStmt):
+            code    = fcode(stmt.expr)
+
+            prelude = ""
+            for s in stmt.statements:
+                prelude += fcode(s) + "\n"
+#            print prelude
+            print code
+# ...
+
+# ...
 def test_If():
     from test_parser import test_If as test
     ast = test()
@@ -101,11 +117,11 @@ def test_Pass():
 
 ######################################
 if __name__ == "__main__":
-    test_Assign()
-    test_Declare()
-    test_Del()
-    test_Flow()
-    test_For()
-    test_Function()
-    test_If()
-    test_Pass()
+#    test_Assign()
+#    test_Declare()
+#    test_Del()
+#    test_Flow()
+#    test_For()
+    test_FunctionDef()
+#    test_If()
+#    test_Pass()

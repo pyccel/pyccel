@@ -17,7 +17,7 @@ from pyccel.syntax import ( \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, \
-                           IfStmt, ForStmt)
+                           IfStmt, ForStmt, FunctionDefStmt)
 
 # ...
 def make_tmp_file(filename):
@@ -87,6 +87,8 @@ def gencode(ast, printer):
             for s in stmt.statements:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, IfStmt):
+            lines += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, FunctionDefStmt):
             lines += fcode(stmt.expr) + "\n"
         else:
             raise Exception('Statement not yet handled.')

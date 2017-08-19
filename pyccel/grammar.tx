@@ -35,10 +35,10 @@ SuiteStmt:
 
 DecoratedStmt: 
 //  decorators (classdef | funcdef | async_funcdef)
-  FuncdefStmt
+  FunctionDefStmt
 ;
 
-FuncdefStmt: 
+FunctionDefStmt: 
   'def' name=ID LPAREN args*=ID[','] RPAREN ':'
   INDENT
   body+=Statement[';']

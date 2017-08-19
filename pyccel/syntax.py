@@ -3,8 +3,9 @@
 from sympy import Symbol, sympify, Piecewise
 
 from symcc.types.ast import For, Assign, Declare, Variable
-from symcc.types.ast import InArgument, InOutArgument
-
+from symcc.types.ast import Argument, InArgument, InOutArgument
+from symcc.types.ast import FunctionDef
+from symcc.types.routines import routine
 
 DEBUG = False
 #DEBUG = True
@@ -19,7 +20,7 @@ __all__ = ["Pyccel", \
            # Flow statements
            "FlowStmt", "BreakStmt", "ContinueStmt", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
-           "DelStmt", "PassStmt" \
+           "DelStmt", "PassStmt", "FunctionDefStmt" \
            ]
 
 
@@ -465,3 +466,57 @@ class YieldStmt(FlowStmt):
         """
         """
         super(YieldStmt, self).__init__(**kwargs)
+
+class FunctionDefStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        self.args = kwargs.pop('args')
+        self.body = kwargs.pop('body')
+
+        super(FunctionDefStmt, self).__init__(**kwargs)
+
+    def update(self):
+        for arg_name in self.args:
+            if not(arg_name in namespace):
+                if DEBUG:
+                    print("> Found new argument" + arg_name)
+
+                arg = Symbol(arg_name)
+                namespace[arg_name] = arg
+                datatype = 'int'
+                # TODO define datatype
+                # TODO check if arg is a return value
+                dec = InArgument(datatype, arg)
+                self.statements.append(Declare(datatype, dec))
+
+    @property
+    def expr(self):
+        name = str(self.name)
+
+        # TODO datatype
+        datatype = 'int'
+
+        args = [InArgument(datatype, v) for v in self.args]
+
+        body = []
+        for stmt in self.body:
+            if isinstance(stmt, list):
+                body += stmt
+            else:
+                body.append(stmt)
+
+        self.update()
+
+        body = [stmt.expr for stmt in body]
+
+        prelude  = self.statements
+        for stmt in self.body:
+            prelude += stmt.statements
+        body = prelude + body
+
+        results = []
+
+        return FunctionDef(name, args, body, results)

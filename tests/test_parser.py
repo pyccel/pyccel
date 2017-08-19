@@ -125,7 +125,7 @@ def test_For(verbose=False):
 # ...
 
 # ...
-def test_Function(verbose=False):
+def test_FunctionDef(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
     stmts += "def f(x,y):"   + "\n"
@@ -138,6 +138,7 @@ def test_Function(verbose=False):
     if verbose:
         for stmt in ast.statements:
             print type(stmt)
+            e = stmt.expr
     # ...
 
     return ast
@@ -200,6 +201,6 @@ if __name__ == "__main__":
 #    test_Del(verbose=True)
 #    test_Flow(verbose=True)
 #    test_For(verbose=True)
-    test_Function(verbose=True)
+    test_FunctionDef(verbose=True)
 #    test_If(verbose=True)
 #    test_Pass(verbose=True)

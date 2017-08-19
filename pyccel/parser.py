@@ -14,7 +14,7 @@ from pyccel.syntax import (Pyccel, \
                            AssignStmt, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
-                           IfStmt, ForStmt)
+                           IfStmt, ForStmt, FunctionDefStmt)
 
 from textx.metamodel import metamodel_from_str
 
@@ -155,7 +155,7 @@ class PyccelParser(Parser):
                    PassStmt, \
                    FlowStmt, BreakStmt, ContinueStmt, \
                    RaiseStmt, YieldStmt, ReturnStmt, \
-                   IfStmt, ForStmt \
+                   IfStmt, ForStmt, FunctionDefStmt \
                    ]
 
         try:
