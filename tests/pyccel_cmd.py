@@ -110,6 +110,12 @@ preprocess(filename, filename_tmp)
 
 ast = pyccel.parse_from_file(filename_tmp)
 code = gencode(ast, fcode)
+
+f90_file = filename.split(".py")[0] + ".f90"
+f = open(f90_file, "w")
+for line in code:
+    f.write(line)
+f.close()
 # ...
 
 # ...
