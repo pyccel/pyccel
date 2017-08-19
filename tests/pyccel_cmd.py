@@ -61,7 +61,6 @@ def preprocess(filename, filename_out):
                     lines_new += "dedent" + "\n"
 
             lines_new += line
-    print lines_new
     f = open(filename_out, "w")
     for line in lines_new:
         f.write(line)
@@ -109,10 +108,10 @@ pyccel = PyccelParser()
 filename_tmp = make_tmp_file(filename)
 preprocess(filename, filename_tmp)
 
-#ast = pyccel.parse_from_file(filename_tmp)
-#code = gencode(ast, fcode)
+ast = pyccel.parse_from_file(filename_tmp)
+code = gencode(ast, fcode)
 # ...
 
 # ...
-#print code
+print code
 # ...
