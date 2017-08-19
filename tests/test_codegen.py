@@ -101,10 +101,10 @@ def test_Pass():
 
 ######################################
 if __name__ == "__main__":
-    test_Assign()
-    test_Declare()
-    test_Del()
-    test_Flow()
-    test_For()
-#    test_If()
-    test_Pass()
+#    test_Assign()
+#    test_Declare()
+#    test_Del()
+#    test_Flow()
+#    test_For()
+    test_If()
+#    test_Pass()

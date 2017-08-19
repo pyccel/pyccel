@@ -176,6 +176,6 @@ if __name__ == "__main__":
 #    test_Declare(verbose=True)
 #    test_Del(verbose=True)
 #    test_Flow(verbose=True)
-    test_For(verbose=True)
-#    test_If(verbose=True)
+#    test_For(verbose=True)
+    test_If(verbose=True)
 #    test_Pass(verbose=True)

@@ -160,8 +160,9 @@ class IfStmt(BasicStmt):
         rs = [l.expr for l in self.body_false]
 
         # TODO allow list of stmts
-#        e = Piecewise((ls[0], test), (rs[0], True))
-        e = Piecewise((ls, test), (rs, True))
+        e = Piecewise((ls[0], test), (rs[0], True))
+        print "> IfStmt: TODO handle a list of statments"
+#        e = Piecewise((ls, test), (rs, True))
 
         self.update()
 
