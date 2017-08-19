@@ -67,7 +67,12 @@ def test_For():
                 code = fcode(dec)
                 print code
         if isinstance(stmt, ForStmt):
-            code = fcode(stmt.expr)
+            code    = fcode(stmt.expr)
+
+            prelude = ""
+            for s in stmt.statements:
+                prelude += fcode(s) + "\n"
+            print prelude
             print code
 # ...
 
@@ -100,6 +105,6 @@ if __name__ == "__main__":
 #    test_Declare()
 #    test_Del()
 #    test_Flow()
-#    test_For()
-    test_If()
+    test_For()
+#    test_If()
 #    test_Pass()

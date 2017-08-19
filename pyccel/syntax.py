@@ -2,7 +2,7 @@
 
 from sympy import Symbol, sympify, Piecewise
 
-from symcc.types.ast import For, Assign, Declare
+from symcc.types.ast import For, Assign, Declare, Variable
 from symcc.types.ast import InArgument, InOutArgument
 
 
@@ -191,10 +191,19 @@ class ForStmt(object):
         # TODO add step
         self.step     = 1
 
+        # TODO move to an abstract class
+        self.statements = []
+
 #        namespace[self.iterable.name] = self.iterable
+
+    def update(self):
+        i   = Symbol(self.iterable, integer=True)
+        dec = Variable('int', i)
+        self.statements.append(Declare('int', dec))
 
     @property
     def expr(self):
+        self.update()
 
         i = Symbol(self.iterable, integer=True)
 
