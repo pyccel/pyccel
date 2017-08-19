@@ -7,3 +7,5 @@
 *dist*
 
 doc/_build
+tests/*.pyccel
+tests/examples/*.pyccel
