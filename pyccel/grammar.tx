@@ -62,7 +62,7 @@ ContinueStmt:
 ;
 
 ReturnStmt:
-  label='return'
+  label='return' (variables*=ID[','])
 ;
 
 RaiseStmt:

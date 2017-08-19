@@ -3,7 +3,7 @@
 from sympy import Symbol, sympify, Piecewise
 
 from symcc.types.ast import For, Assign, Declare, Variable
-from symcc.types.ast import Argument, InArgument, InOutArgument
+from symcc.types.ast import Argument, InArgument, InOutArgument, Result
 from symcc.types.ast import FunctionDef
 from symcc.types.routines import routine
 
@@ -449,7 +449,25 @@ class ReturnStmt(FlowStmt):
     def __init__(self, **kwargs):
         """
         """
+        self.variables = kwargs.pop('variables')
+        print "ReturnStmt : ", self.variables
+
         super(ReturnStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        """
+        datatype = 'int'
+        decs = []
+        # TODO depending on additional options from the grammar
+        # TODO check that var is in namespace
+        for var in self.variables:
+            decs.append(Result(datatype, var))
+
+        self.update()
+
+        return decs
 
 class RaiseStmt(FlowStmt):
     """
@@ -503,21 +521,24 @@ class FunctionDefStmt(BasicStmt):
 
         body = []
         for stmt in self.body:
+            print type(stmt)
             if isinstance(stmt, list):
                 body += stmt
-            else:
+            elif not(isinstance(stmt, ReturnStmt)):
                 body.append(stmt)
 
         self.update()
 
         body = [stmt.expr for stmt in body]
 
-        prelude  = self.statements
-        for stmt in self.body:
-            prelude += stmt.statements
-        body = prelude + body
-
         results = []
+        prelude = self.statements
+        for stmt in self.body:
+            if not(isinstance(stmt, ReturnStmt)):
+                prelude += stmt.statements
+            else:
+                results += stmt.expr
+        body = prelude + body
 
         for arg_name in self.args:
             if (arg_name in namespace):

@@ -82,10 +82,10 @@ def test_Del(verbose=False):
 def test_Flow(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "return"   + "\n"
     stmts += "raise"    + "\n"
     stmts += "break"    + "\n"
     stmts += "continue" + "\n"
+    stmts += "return True"   + "\n"
 
     ast = pyccel.parse(stmts)
 
@@ -128,9 +128,15 @@ def test_For(verbose=False):
 def test_FunctionDef(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
+#    stmts += "def f(x,y):"   + "\n"
+#    stmts += "indent"        + "\n"
+#    stmts += "z = x+y"       + "\n"
+#    stmts += "dedent"        + "\n"
+
     stmts += "def f(x,y):"   + "\n"
     stmts += "indent"        + "\n"
-    stmts += "z = x+y"       + "\n"
+    stmts += "z = x+y;"       + "\n"
+    stmts += "return z"        + "\n"
     stmts += "dedent"        + "\n"
 
     ast = pyccel.parse(stmts)
@@ -199,8 +205,8 @@ if __name__ == "__main__":
 #    test_Assign(verbose=True)
 #    test_Declare(verbose=True)
 #    test_Del(verbose=True)
-#    test_Flow(verbose=True)
+    test_Flow(verbose=True)
 #    test_For(verbose=True)
-    test_FunctionDef(verbose=True)
+#    test_FunctionDef(verbose=True)
 #    test_If(verbose=True)
 #    test_Pass(verbose=True)
