@@ -556,8 +556,28 @@ class NumpyZerosStmt(AssignStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.lhs = kwargs.pop('lhs')
-        self.shape = kwargs.pop('shape')
+        self.lhs        = kwargs.pop('lhs')
+        self.parameters = kwargs.pop('parameters')
+
+        labels = [str(p.label) for p in self.parameters]
+        values = [p.value for p in self.parameters]
+        d = {}
+        for (label, value) in zip(labels, values):
+            d[label] = value
+        self.parameters = d
+
+        try:
+            self.datatype = self.parameters['dtype']
+        except:
+            self.datatype = 'int'
+
+        try:
+            self.shape = self.parameters['shape']
+            # TODO ARA fix in symcc
+            self.shape = int(self.shape)
+        except:
+            raise Exception('Expecting shape at position {}'
+                            .format(self._tx_position))
 
         super(AssignStmt, self).__init__(**kwargs)
 
@@ -567,14 +587,19 @@ class NumpyZerosStmt(AssignStmt):
                 if DEBUG:
                     print("> Found new variable " + var_name)
 
+                datatype = self.datatype
+                shape    = self.shape
+
                 var = Symbol(var_name)
                 namespace[var_name] = var
-                datatype = 'int'
-                # TODO define datatype
+                if datatype is None:
+                    if DEBUG:
+                        print("> No Datatype is specified, int will be used.")
+                    datatype = 'int'
                 # TODO check if var is a return value
 
                 rank = 0
-                if type(self.shape) == int:
+                if type(shape) == int:
                     rank = 1
                 else:
                     raise Exception('Only rank=1 is available')
@@ -586,11 +611,13 @@ class NumpyZerosStmt(AssignStmt):
     def expr(self):
         self.update()
 
+        shape = self.shape
+
         stmts = []
         for var_name in self.lhs:
             var = Symbol(var_name)
 
-            stmt = NumpyZeros(var, self.shape)
+            stmt = NumpyZeros(var, shape)
             stmts.append(stmt)
 
         return stmts

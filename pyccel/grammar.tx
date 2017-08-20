@@ -120,7 +120,11 @@ DeclarationStmt:
 ;
 
 DataType:
-  ('double' | 'int')
+  ('double' | 'float' | 'int')
+;
+
+ParameterTest:
+  ('shape' | 'dtype')
 ;
 
 Variable:
@@ -140,7 +144,11 @@ NumpyStmt:
 ;
 
 NumpyZerosStmt: 
-  lhs+=ID[','] '=' ZEROS LPAREN shape=INT RPAREN 
+  lhs+=ID[','] '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
+;
+
+ParameterSingle: 
+  label=ParameterTest '=' value=IdentifierOrNumber
 ;
 
 NumpyZerosLikeStmt: 

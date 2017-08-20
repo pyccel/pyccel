@@ -2,4 +2,5 @@
 
 from numpy import zeros
 
-a = zeros(4)
+a = zeros(shape=64, dtype=float)
+b = zeros(shape=8, dtype=int)
