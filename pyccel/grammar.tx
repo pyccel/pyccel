@@ -260,7 +260,8 @@ FactorBinary:
 
 // TODO see antlr
 Trailer: 
-  '[' args+=IdentifierOrNumber[','] ']'
+//  '[' args+=IdentifierOrNumber[','] ']'
+  '[' args+=Expression[','] ']'
 ;
 
 // there is a problem with this rule, only on my laptop

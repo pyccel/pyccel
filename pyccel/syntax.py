@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from sympy import Symbol, sympify, Piecewise
+from sympy import Symbol, sympify, Piecewise, Integer #, Float
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 
@@ -81,10 +81,14 @@ class BasicStmt(object):
         for a in trailer.args:
             if isinstance(a, str):
                 arg = Symbol(a, integer=True)
-            elif isinstance(a, Basic):
-                arg = a
+            elif isinstance(a, Expression):
+                arg = a.expr
+                if not(isinstance(arg, Symbol)):
+                    arg = Integer(arg)
+#            elif isinstance(a, Basic):
+#                arg = a
             else:
-                arg = int(a)
+                arg = Integer(a)
 
             # TODO treat n correctly
             n = Symbol('n', integer=True)
