@@ -10,4 +10,5 @@ d = c + 3 * a[2] + 1 - a[3]
 
 e = a # not working. e must be declared as an array
 
-x = zeros(shape=(2,8), dtype=int)
+x = zeros(shape=(2,8), dtype=float)
+y = x[0,2]
