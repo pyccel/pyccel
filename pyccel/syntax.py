@@ -183,6 +183,7 @@ class AssignStmt(BasicStmt):
         """
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
+        self.trailer = kwargs.pop('trailer', None)
 
         super(AssignStmt, self).__init__(**kwargs)
 
@@ -211,7 +212,8 @@ class AssignStmt(BasicStmt):
             var = Symbol(var_name)
             namespace[var_name] = var
             # TODO check if var is a return value
-            dec = Variable(datatype, var)
+            rank = 0
+            dec = Variable(datatype, var, rank=rank)
             self.statements.append(Declare(datatype, dec))
 
     @property
@@ -221,7 +223,19 @@ class AssignStmt(BasicStmt):
         else:
             rhs = sympify(self.rhs)
 
-        l = sympify(self.lhs)
+        if self.trailer is None:
+            l = sympify(self.lhs)
+        else:
+            args = []
+            for arg in self.trailer.args:
+                arg = int(arg)
+                if type(arg) == int:
+                    # TODO treat n correctly
+                    n = Symbol('n')
+                    i = Idx(arg, n)
+                    args.append(i)
+            l = IndexedBase(str(self.lhs))[args]
+
         l = Assign(l, rhs)
 
         self.update()

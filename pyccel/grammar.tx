@@ -176,7 +176,7 @@ NumpyLinspaceStmt:
 ;
 
 AssignStmt: 
-  lhs=ID '=' rhs=Expression
+  lhs=ID (trailer=Trailer)? '=' rhs=Expression
 ;
 
 ForStmt: 

@@ -5,6 +5,7 @@ from numpy import zeros
 a = zeros(shape=64, dtype=float)
 b = zeros(shape=8, dtype=int)
 
+a[1] = 1
 c = a[1]
 d = c + 3 * a[2] + 1 - a[3]
 
