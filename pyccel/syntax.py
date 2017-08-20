@@ -212,14 +212,7 @@ class IfStmt(BasicStmt):
         ls = [l.expr for l in self.body_true]
         rs = [l.expr for l in self.body_false]
 
-        # TODO allow list of stmts
-        print "======="
-        print test
-        print ls
-        print rs
-        e = Piecewise((ls[0], test), (rs[0], True))
-        print "> IfStmt: TODO handle a list of statments"
-#        e = Piecewise((ls, test), (rs, True))
+        e = Piecewise((ls, test), (rs, True))
 
         self.update()
 
@@ -547,7 +540,7 @@ class NotTest(ExpressionElement):
         return ret
 
 class Comparison(ExpressionElement):
-    # TODO ARA implement
+    # TODO ARA finish
     @property
     def expr(self):
         if DEBUG:

@@ -222,7 +222,11 @@ class FCodePrinter(CodePrinter):
                     lines.append("else")
                 else:
                     lines.append("else if (%s) then" % self._print(c))
-                lines.append(self._print(e))
+                if isinstance(e, list):
+                    for ee in e:
+                        lines.append(self._print(ee))
+                else:
+                    lines.append(self._print(e))
             lines.append("end if")
             return "\n".join(lines)
         else:
