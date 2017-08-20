@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from sympy import Symbol, sympify, Piecewise, Integer #, Float
+from sympy import Symbol, sympify, Piecewise, Integer, Float, Add, Mul
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 
@@ -84,6 +84,8 @@ class BasicStmt(object):
             elif isinstance(a, Expression):
                 arg = a.expr
                 if not(isinstance(arg, Symbol)):
+                    print "-----"
+                    print type(arg), arg
                     arg = Integer(arg)
 #            elif isinstance(a, Basic):
 #                arg = a
@@ -414,9 +416,9 @@ class Term(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             if operation == '*':
-                ret *= sympify(operand.expr)
+                ret *= operand.expr
             else:
-                ret /= sympify(operand.expr)
+                ret /= operand.expr
         return ret
 
 
@@ -428,9 +430,9 @@ class Expression(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             if operation == '+':
-                ret += sympify(operand.expr)
+                ret += operand.expr
             else:
-                ret -= sympify(operand.expr)
+                ret -= operand.expr
         return ret
 
 
@@ -443,8 +445,13 @@ class Operand(ExpressionElement):
             print self.op
 #        op = self.op[0]
         op = self.op
-        if type(op) in {int, float}:
-            return op
+        if type(op) == float:
+            if (op).is_integer():
+                print "> found int ",Integer(op)
+                return Integer(op)
+            else:
+                print "> found float ",Float(op)
+                return Float(op)
         elif type(op) == list:
             # op is a list
             for O in op:

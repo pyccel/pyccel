@@ -267,7 +267,7 @@ Trailer:
 // there is a problem with this rule, only on my laptop
 // it seems it can't parse a word like phi, and only returns "p"
 Operand: 
-  (op=NUMBER) | (op=ID) | (LPAREN op=Expression RPAREN)
+  (op=NUMBER) | (op=ID) //| (LPAREN op=Expression RPAREN)
 ;
 
 UnaryOp:
