@@ -5,6 +5,7 @@ from sympy import Symbol, sympify, Piecewise
 from symcc.types.ast import For, Assign, Declare, Variable
 from symcc.types.ast import Argument, InArgument, InOutArgument, Result
 from symcc.types.ast import FunctionDef
+from symcc.types.ast import NumpyZeros
 from symcc.types.routines import routine
 
 DEBUG = False
@@ -583,7 +584,15 @@ class NumpyZerosStmt(AssignStmt):
     @property
     def expr(self):
         self.update()
-        return ""
+
+        stmts = []
+        for var_name in self.lhs:
+            var = Symbol(var_name)
+
+            stmt = NumpyZeros(var, self.shape)
+            stmts.append(stmt)
+
+        return stmts
 
 class NumpyZerosLikeStmt(AssignStmt):
     """Class representing a ."""
