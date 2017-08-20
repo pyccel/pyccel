@@ -6,6 +6,6 @@ a = zeros(shape=64, dtype=float)
 b = zeros(shape=8, dtype=int)
 
 c = a[1]
-d = c + 3 * a[2] + 1
+d = c + 3 * a[2] + 1 - a[3]
 
 e = a # not working

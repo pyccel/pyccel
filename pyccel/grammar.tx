@@ -243,7 +243,7 @@ FactorSigned:
 ;
 
 FactorUnary:
-  name=UnaryOp LPAREN op=Operand Trailer* RPAREN
+  name=UnaryOp LPAREN op=Operand (trailer=Trailer)? RPAREN
 ;
 
 FactorBinary:

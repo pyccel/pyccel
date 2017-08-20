@@ -331,6 +331,7 @@ class FactorUnary(ExpressionElement):
     def __init__(self, **kwargs):
         # name of the unary operator
         self.name = kwargs['name']
+        self.trailer = kwargs.pop('trailer', None)
 
         super(FactorUnary, self).__init__(**kwargs)
 
@@ -339,7 +340,19 @@ class FactorUnary(ExpressionElement):
         if DEBUG:
             print "> FactorUnary "
         expr = self.op.expr
-        return expr
+        if self.trailer is None:
+            return expr
+        else:
+            args = []
+            for arg in self.trailer.args:
+                arg = int(arg)
+                if type(arg) == int:
+                    # TODO treat n correctly
+                    n = Symbol('n')
+                    i = Idx(arg, n)
+                    args.append(i)
+            expr = IndexedBase(str(expr))[args]
+            return expr
 
 
 class FactorBinary(ExpressionElement):
