@@ -135,6 +135,10 @@ IdentifierOrNumber:
   (NUMBER | ID)
 ;
 
+ArgList:
+  LPAREN args+=IdentifierOrNumber[','] RPAREN
+;
+
 ExprStmt: 
   (NumpyStmt | AssignStmt)
 ;
@@ -147,8 +151,12 @@ NumpyZerosStmt:
   lhs=ID '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
+ParameterValue:
+  (value=IdentifierOrNumber | value=ArgList)
+;
+
 ParameterSingle: 
-  label=ParameterTest '=' value=IdentifierOrNumber
+  label=ParameterTest '=' value=ParameterValue
 ;
 
 NumpyZerosLikeStmt: 

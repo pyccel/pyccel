@@ -589,7 +589,14 @@ class NumpyZerosStmt(AssignStmt):
         self.parameters = kwargs.pop('parameters')
 
         labels = [str(p.label) for p in self.parameters]
-        values = [p.value for p in self.parameters]
+#        values = [p.value.value for p in self.parameters]
+        values = []
+        for p in self.parameters:
+            try:
+                v = p.value.value.args
+            except:
+                v = p.value.value
+            values.append(v)
         d = {}
         for (label, value) in zip(labels, values):
             d[label] = value
@@ -602,8 +609,6 @@ class NumpyZerosStmt(AssignStmt):
 
         try:
             self.shape = self.parameters['shape']
-            # TODO ARA fix in symcc
-            self.shape = int(self.shape)
         except:
             raise Exception('Expecting shape at position {}'
                             .format(self._tx_position))
@@ -617,10 +622,22 @@ class NumpyZerosStmt(AssignStmt):
                 print("> Found new variable " + var_name)
 
             datatype = self.datatype
-            shape    = self.shape
+
+            rank = 0
+            if isinstance(self.shape, int):
+                shape = self.shape
+                rank = 1
+            elif isinstance(self.shape, float):
+                shape = int(self.shape)
+                rank = 1
+            elif isinstance(self.shape, list):
+                shape = [int(s) for s in self.shape]
+                rank = len(shape)
+            else:
+                raise Exception('Wrong instance for shape.')
+            self.shape = shape
 
             var = Symbol(var_name)
-#            var = IndexedBase(var_name)
 
             namespace[var_name] = var
             if datatype is None:
@@ -628,12 +645,6 @@ class NumpyZerosStmt(AssignStmt):
                     print("> No Datatype is specified, int will be used.")
                 datatype = 'int'
             # TODO check if var is a return value
-
-            rank = 0
-            if type(shape) == int:
-                rank = 1
-            else:
-                raise Exception('Only rank=1 is available')
 
             dec = Variable(datatype, var, rank=rank)
             self.statements.append(Declare(datatype, dec))
