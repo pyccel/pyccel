@@ -7,7 +7,7 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 
 1. Convert a *Python* code into a low-level target language (Fortran or C)
 
-2. Accelerate a selected *Python* code, by using a pre-process, where the original code is translated into a low-level language, then compiled usinf **f2py** for example.
+2. Accelerate a selected *Python* code, by using a pre-process, where the original code is translated into a low-level language, then compiled using **f2py** for example.
 
 In order to achieve these tasks, in **Pyccel** we deal with the following points:
 

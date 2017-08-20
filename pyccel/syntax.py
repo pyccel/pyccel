@@ -186,6 +186,18 @@ class AssignStmt(BasicStmt):
         super(AssignStmt, self).__init__(**kwargs)
 
     def update(self):
+        datatype = 'float'
+        if isinstance(self.rhs, Expression):
+            symbols = self.rhs.expr.free_symbols
+            for s in symbols:
+                if s.name in namespace:
+                    if s.is_integer:
+                        datatype = 'int'
+                        break
+                    elif s.is_Boolean:
+                        datatype = 'bool'
+                        break
+
         for var_name in self.lhs:
             if not(var_name in namespace):
                 if DEBUG:
@@ -193,8 +205,6 @@ class AssignStmt(BasicStmt):
 
                 var = Symbol(var_name)
                 namespace[var_name] = var
-                datatype = 'int'
-                # TODO define datatype
                 # TODO check if var is a return value
                 dec = Variable(datatype, var)
                 self.statements.append(Declare(datatype, dec))
@@ -233,7 +243,7 @@ class ForStmt(BasicStmt):
         # TODO add step
         self.step     = 1
 
-        namespace[self.iterable] = Symbol(self.iterable)
+        namespace[self.iterable] = Symbol(self.iterable, integer=True)
 
         super(ForStmt, self).__init__(**kwargs)
 
