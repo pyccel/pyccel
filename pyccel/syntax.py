@@ -84,25 +84,19 @@ class BasicStmt(object):
                 arg = Symbol(a, integer=True)
             elif isinstance(a, Expression):
                 arg = a.expr
-                if not(isinstance(arg, Symbol)):
-                    arg = Integer(arg)
-                else:
-                    arg = Symbol(arg.name, integer=True)
-#                try:
-#                    if not(isinstance(arg, Symbol)):
-#                        arg = Integer(a.expr)
-#                    else:
-#                        print("do_trailer warning.")
-#                        print a.expr
-#                        arg = Integer(a.expr)
-#                except:
-#                    rhs = a.expr
-#                    # TODO ARA
-#                    name = 'result_%d' % abs(hash(rhs))
-#                    arg = Symbol(name, integer=True)
-#                    var = Variable('int', arg)
-#                    self.declarations.append(Declare('int', var))
-#                    self.statements.append(Assign(arg, rhs))
+                try:
+                    if not(isinstance(arg, Symbol)):
+                        arg = Integer(arg)
+                    else:
+                        arg = Symbol(arg.name, integer=True)
+                except:
+                    rhs = a.expr
+                    # TODO ARA
+                    name = 'result_%d' % abs(hash(rhs))
+                    arg = Symbol(name, integer=True)
+                    var = Variable('int', arg)
+                    self.declarations.append(Declare('int', var))
+                    self.statements.append(Assign(arg, rhs))
 
 #                if not(isinstance(arg, Symbol)):
 #                    print "-----"
@@ -288,6 +282,7 @@ class ForStmt(BasicStmt):
         self.start    = kwargs.pop('start')
         self.end      = kwargs.pop('end')
         self.body     = kwargs.pop('body')
+        print ">>>>> len = ", len(self.body)
 
         # TODO add step
         self.step     = 1
