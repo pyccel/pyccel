@@ -185,7 +185,9 @@ ForStmt:
                  end=IdentifierOrNumber RPAREN ':' 
 //  body+=SmallStmt[';']
   INDENT
-  body+=Statement[';']
+//  body+=Statement[';']
+//  body+=SmallStmt[';']
+  (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
   DEDENT
 ;
 

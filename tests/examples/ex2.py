@@ -3,5 +3,6 @@
 x = 0
 for i in range(0,10):
     x = x + 1;
-#    y = 2*x;
-#    z = 2*y
+    y = 2*x
+    for j in range(0,4):
+        z = 2*y
