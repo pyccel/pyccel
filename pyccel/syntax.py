@@ -75,6 +75,23 @@ class BasicStmt(object):
     def update(self):
         pass
 
+    # TODO move somewhere else
+    def do_trailer(self, trailer):
+        args = []
+        for a in trailer.args:
+            if isinstance(a, str):
+                arg = Symbol(a, integer=True)
+            elif isinstance(a, Basic):
+                arg = a
+            else:
+                arg = int(a)
+
+            # TODO treat n correctly
+            n = Symbol('n', integer=True)
+            i = Idx(arg, n)
+            args.append(i)
+        return args
+
 class DeclarationStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -226,21 +243,7 @@ class AssignStmt(BasicStmt):
         if self.trailer is None:
             l = sympify(self.lhs)
         else:
-            args = []
-            for a in self.trailer.args:
-#                arg = sympify(a)
-                if isinstance(a, str):
-                    arg = Symbol(a, integer=True)
-                elif isinstance(a, Basic):
-                    arg = a
-                else:
-                    arg = int(a)
-
-                # TODO treat n correctly
-                n = Symbol('n', integer=True)
-                i = Idx(arg, n)
-                args.append(i)
-
+            args = self.do_trailer(self.trailer)
             l = IndexedBase(str(self.lhs))[args]
 
         l = Assign(l, rhs)
@@ -327,7 +330,7 @@ class ExpressionElement(object):
         super(ExpressionElement, self).__init__()
 
 
-class FactorSigned(ExpressionElement):
+class FactorSigned(ExpressionElement, BasicStmt):
     """Class representing a signed factor."""
     def __init__(self, **kwargs):
         self.sign    = kwargs.pop('sign', '+')
@@ -343,19 +346,12 @@ class FactorSigned(ExpressionElement):
         if self.trailer is None:
             return -expr if self.sign == '-' else expr
         else:
-            args = []
-            for arg in self.trailer.args:
-                arg = int(arg)
-                if type(arg) == int:
-                    # TODO treat n correctly
-                    n = Symbol('n')
-                    i = Idx(arg, n)
-                    args.append(i)
+            args = self.do_trailer(self.trailer)
             expr = IndexedBase(str(expr))[args]
             return -expr if self.sign == '-' else expr
 
 
-class FactorUnary(ExpressionElement):
+class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
@@ -372,14 +368,7 @@ class FactorUnary(ExpressionElement):
         if self.trailer is None:
             return expr
         else:
-            args = []
-            for arg in self.trailer.args:
-                arg = int(arg)
-                if type(arg) == int:
-                    # TODO treat n correctly
-                    n = Symbol('n')
-                    i = Idx(arg, n)
-                    args.append(i)
+            args = self.do_trailer(self.trailer)
             expr = IndexedBase(str(expr))[args]
             return expr
 
