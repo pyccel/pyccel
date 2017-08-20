@@ -2,6 +2,7 @@
 
 from sympy import Symbol, sympify, Piecewise
 from sympy.tensor import Idx, Indexed, IndexedBase
+from sympy.core.basic import Basic
 
 from pyccel.types.ast import For, Assign, Declare, Variable
 from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
@@ -188,7 +189,11 @@ class AssignStmt(BasicStmt):
     def update(self):
         datatype = 'float'
         if isinstance(self.rhs, Expression):
-            symbols = self.rhs.expr.free_symbols
+            expr = self.rhs.expr
+            symbols = set([])
+            if isinstance(expr, Basic):
+                symbols = expr.free_symbols
+
             for s in symbols:
                 if s.name in namespace:
                     if s.is_integer:
@@ -198,16 +203,16 @@ class AssignStmt(BasicStmt):
                         datatype = 'bool'
                         break
 
-        for var_name in self.lhs:
-            if not(var_name in namespace):
-                if DEBUG:
-                    print("> Found new variable " + var_name)
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
 
-                var = Symbol(var_name)
-                namespace[var_name] = var
-                # TODO check if var is a return value
-                dec = Variable(datatype, var)
-                self.statements.append(Declare(datatype, dec))
+            var = Symbol(var_name)
+            namespace[var_name] = var
+            # TODO check if var is a return value
+            dec = Variable(datatype, var)
+            self.statements.append(Declare(datatype, dec))
 
     @property
     def expr(self):
@@ -216,18 +221,11 @@ class AssignStmt(BasicStmt):
         else:
             rhs = sympify(self.rhs)
 
-        ls = []
-        for l in self.lhs:
-            ls.append(sympify(l))
-
-        ls = [Assign(l, rhs) for l in ls]
+        l = sympify(self.lhs)
+        l = Assign(l, rhs)
 
         self.update()
-
-        if len(ls) == 1:
-            return ls[0]
-        else:
-            return ls
+        return l
 
 
 class ForStmt(BasicStmt):

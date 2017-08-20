@@ -176,7 +176,7 @@ NumpyLinspaceStmt:
 ;
 
 AssignStmt: 
-  lhs+=ID[','] '=' rhs=Expression
+  lhs=ID '=' rhs=Expression
 ;
 
 ForStmt: 
