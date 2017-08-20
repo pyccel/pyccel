@@ -11,7 +11,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (PassStmt | FlowStmt | DelStmt | DeclarationStmt | ExprStmt )
+  (PassStmt | FlowStmt | DelStmt | ImportStmt | DeclarationStmt | ExprStmt )
 ;
 
 CompoundStmt:
@@ -77,6 +77,43 @@ DelStmt:
   'del' variables*=ID[',']
 ;
 
+
+ImportStmt: 
+  ImportNameStmt | ImportFromStmt 
+;
+
+ImportNameStmt: 
+  'import' DottedAsNames
+;
+
+// note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+ImportFromStmt: ('from' (('.' | '...')* dotted_name=DottedName | ('.' | '...')+)
+              'import' ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames));
+
+ImportAsName: 
+  ID ('as' ID)?
+;
+
+DottedAsName: 
+  DottedName ('as' ID)?
+;
+
+ImportAsNames: 
+//  ImportAsName (',' ImportAsName)* (',')?
+  names+=ImportAsName[','] 
+;
+
+DottedAsNames: 
+  DottedAsName (',' DottedAsName)*
+;
+
+DottedName: 
+  names+=ID['.'] 
+;
+
+//global_stmt: 'global' ID (',' ID)*;
+//nonlocal_stmt: 'nonlocal' ID (',' ID)*;
+//assert_stmt: 'assert' test (',' test)?;
 
 DeclarationStmt: 
   datatype=DataType variables+=ID[',']

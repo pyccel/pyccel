@@ -5,8 +5,8 @@ from sympy import Symbol, sympify, Piecewise
 from symcc.types.ast import For, Assign, Declare, Variable
 from symcc.types.ast import Argument, InArgument, InOutArgument, Result
 from symcc.types.ast import FunctionDef
+from symcc.types.ast import Import
 from symcc.types.ast import NumpyZeros
-from symcc.types.routines import routine
 
 DEBUG = False
 #DEBUG = True
@@ -22,6 +22,7 @@ __all__ = ["Pyccel", \
            "FlowStmt", "BreakStmt", "ContinueStmt", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
+           "ImportFromStmt", \
            # numpy statments
            "NumpyZerosStmt", "NumpyZerosLikeStmt", \
            "NumpyOnesStmt", "NumpyLinspaceStmt"
@@ -640,3 +641,22 @@ class NumpyLinspaceStmt(AssignStmt):
     def expr(self):
         self.update()
         return ""
+
+class ImportFromStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.dotted_name     = kwargs.pop('dotted_name')
+        self.import_as_names = kwargs.pop('import_as_names')
+
+        super(ImportFromStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+
+        # TODO how to handle dotted packages?
+        fil = self.dotted_name.names[0]
+        funcs = self.import_as_names.names
+        return Import(fil, funcs)

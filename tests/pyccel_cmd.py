@@ -18,6 +18,7 @@ from pyccel.syntax import ( \
                            PassStmt, \
                            AssignStmt, \
                            IfStmt, ForStmt, FunctionDefStmt, \
+                           ImportFromStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt \
@@ -73,10 +74,13 @@ def preprocess(filename, filename_out):
 
 # ...
 def gencode(ast, printer):
+    imports  = ""
     preludes = ""
     lines    = ""
     for stmt in ast.statements:
-        if isinstance(stmt, DeclarationStmt):
+        if isinstance(stmt, ImportFromStmt):
+            imports += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, DeclarationStmt):
             decs = stmt.expr
             for dec in decs:
                 preludes += fcode(dec) + "\n"
@@ -84,7 +88,6 @@ def gencode(ast, printer):
             ls = stmt.expr
             for l in ls:
                 lines += fcode(l) + "\n"
-
             for s in stmt.statements:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, AssignStmt):
@@ -104,7 +107,10 @@ def gencode(ast, printer):
         else:
             raise Exception('Statement not yet handled.')
 
-    code = preludes + "\n" + lines
+    code = imports + "\n"  \
+         + preludes + "\n" \
+         + lines
+
     return code
 # ...
 

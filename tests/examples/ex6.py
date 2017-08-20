@@ -1,3 +1,5 @@
 # coding: utf-8
 
-a=zeros(4)
+from numpy import zeros
+
+a = zeros(4)

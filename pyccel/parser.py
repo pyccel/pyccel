@@ -15,6 +15,7 @@ from pyccel.syntax import (Pyccel, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
                            IfStmt, ForStmt, FunctionDefStmt, \
+                           ImportFromStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt \
@@ -160,6 +161,7 @@ class PyccelParser(Parser):
                    FlowStmt, BreakStmt, ContinueStmt, \
                    RaiseStmt, YieldStmt, ReturnStmt, \
                    IfStmt, ForStmt, FunctionDefStmt, \
+                   ImportFromStmt, \
                    # numpy statments
                    NumpyZerosStmt, NumpyZerosLikeStmt, \
                    NumpyOnesStmt, NumpyLinspaceStmt

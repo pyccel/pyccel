@@ -185,6 +185,23 @@ def test_If(verbose=False):
 # ...
 
 # ...
+def test_Import(verbose=False):
+    # ... parse the Pyccel code
+    stmts  = ""
+    stmts += "from numpy import zeros" + "\n"
+
+    ast = pyccel.parse(stmts)
+
+    if verbose:
+        for stmt in ast.statements:
+            print type(stmt)
+            print stmt.dotted_name.names, stmt.import_as_names.names
+    # ...
+
+    return ast
+# ...
+
+# ...
 def test_Numpy(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
@@ -202,7 +219,6 @@ def test_Numpy(verbose=False):
 
     return ast
 # ...
-
 
 # ...
 def test_Pass(verbose=False):
@@ -229,5 +245,6 @@ if __name__ == "__main__":
 #    test_For(verbose=True)
 #    test_FunctionDef(verbose=True)
 #    test_If(verbose=True)
-    test_Numpy(verbose=True)
+    test_Import(verbose=True)
+#    test_Numpy(verbose=True)
 #    test_Pass(verbose=True)

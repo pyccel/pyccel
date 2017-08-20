@@ -11,7 +11,7 @@ from pyccel.syntax import ( \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, \
-                           IfStmt, ForStmt, FunctionDefStmt)
+                           IfStmt, ImportFromStmt, ForStmt, FunctionDefStmt)
 
 
 # ...
@@ -109,6 +109,17 @@ def test_If():
 # ...
 
 # ...
+def test_Import():
+    from test_parser import test_Import as test
+    ast = test()
+
+    for stmt in ast.statements:
+        if isinstance(stmt, ImportFromStmt):
+            code = fcode(stmt.expr)
+            print code
+# ...
+
+# ...
 def test_Pass():
     from test_parser import test_Pass as test
     ast = test()
@@ -122,6 +133,7 @@ if __name__ == "__main__":
 #    test_Del()
 #    test_Flow()
 #    test_For()
-    test_FunctionDef()
+#    test_FunctionDef()
 #    test_If()
+    test_Import()
 #    test_Pass()
