@@ -237,8 +237,9 @@ Factor:
   FactorBinary | FactorUnary | FactorSigned
 ;
 
+// TODO trailer must be a list 
 FactorSigned: 
-  (sign=PlusOrMinus)?  op=Operand Trailer*
+  (sign=PlusOrMinus)?  op=Operand (trailer=Trailer)?
 ;
 
 FactorUnary:

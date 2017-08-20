@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from sympy import Symbol, sympify, Piecewise
+from sympy.tensor import Idx, Indexed, IndexedBase
 
 from symcc.types.ast import For, Assign, Declare, Variable
 from symcc.types.ast import Argument, InArgument, InOutArgument, Result
@@ -300,7 +301,10 @@ class ExpressionElement(object):
 class FactorSigned(ExpressionElement):
     """Class representing a signed factor."""
     def __init__(self, **kwargs):
-        self.sign = kwargs.pop('sign', '+')
+        self.sign    = kwargs.pop('sign', '+')
+        self.trailer = kwargs.pop('trailer', [])
+#        print self.trailer.args
+
         super(FactorSigned, self).__init__(**kwargs)
 
     @property
@@ -591,6 +595,7 @@ class NumpyZerosStmt(AssignStmt):
                 shape    = self.shape
 
                 var = Symbol(var_name)
+
                 namespace[var_name] = var
                 if datatype is None:
                     if DEBUG:
@@ -616,6 +621,7 @@ class NumpyZerosStmt(AssignStmt):
         stmts = []
         for var_name in self.lhs:
             var = Symbol(var_name)
+            # var = IndexedBase(var_name)
 
             stmt = NumpyZeros(var, shape)
             stmts.append(stmt)
