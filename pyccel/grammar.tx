@@ -238,15 +238,20 @@ Factor:
 ;
 
 FactorSigned: 
-  (sign=PlusOrMinus)?  op=Operand
+  (sign=PlusOrMinus)?  op=Operand Trailer*
 ;
 
 FactorUnary:
-  name=UnaryOp LPAREN op=Operand RPAREN
+  name=UnaryOp LPAREN op=Operand Trailer* RPAREN
 ;
 
 FactorBinary:
   name=BinaryOp LPAREN op=Factor COMMA op=Factor RPAREN
+;
+
+// TODO see antlr
+Trailer: 
+  '[' args+=IdentifierOrNumber[','] ']'
 ;
 
 // there is a problem with this rule, only on my laptop
@@ -333,4 +338,8 @@ ONES:
 
 LINSPACE:
   'linspace'
+;
+
+AWAIT:
+  'await'
 ;

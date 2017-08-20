@@ -205,10 +205,11 @@ def test_Import(verbose=False):
 def test_Numpy(verbose=False):
     # ... parse the Pyccel code
     stmts  = ""
-    stmts += "x1 = zeros(3)"          + "\n"
-    stmts += "x2 = zeroslike(x1)"     + "\n"
-    stmts += "x3 = ones(3)"           + "\n"
-    stmts += "x4 = linspace(0,1,100)" + "\n"
+    stmts += "x1 = zeros(shape=3)"          + "\n"
+    stmts += "y = x1[1]"                    + "\n"
+#    stmts += "x2 = zeroslike(x1)"     + "\n"
+#    stmts += "x3 = ones(3)"           + "\n"
+#    stmts += "x4 = linspace(0,1,100)" + "\n"
 
     ast = pyccel.parse(stmts)
 
@@ -245,6 +246,6 @@ if __name__ == "__main__":
 #    test_For(verbose=True)
 #    test_FunctionDef(verbose=True)
 #    test_If(verbose=True)
-    test_Import(verbose=True)
-#    test_Numpy(verbose=True)
+#    test_Import(verbose=True)
+    test_Numpy(verbose=True)
 #    test_Pass(verbose=True)
