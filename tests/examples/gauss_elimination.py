@@ -1,5 +1,10 @@
 # coding: utf-8
 
+# TODO: indices like k+1:n
+# TODO: allow expressions in range
+# TODO: Ne relational
+# TODO: shape=(n,m) with n,m variables
+
 from numpy import zeros
 from numpy import dot
 
