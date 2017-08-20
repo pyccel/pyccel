@@ -87,17 +87,17 @@ def gencode(ast, printer):
         elif isinstance(stmt, NumpyZerosStmt):
             lines += fcode(stmt.expr) + "\n"
 
-            for s in stmt.statements:
+            for s in stmt.declarations:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, AssignStmt):
             lines += fcode(stmt.expr) + "\n"
 
-            for s in stmt.statements:
+            for s in stmt.declarations:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, ForStmt):
             lines += fcode(stmt.expr) + "\n"
 
-            for s in stmt.statements:
+            for s in stmt.declarations:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, IfStmt):
             lines += fcode(stmt.expr) + "\n"

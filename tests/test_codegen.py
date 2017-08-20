@@ -70,7 +70,7 @@ def test_For():
             code    = fcode(stmt.expr)
 
             prelude = ""
-            for s in stmt.statements:
+            for s in stmt.declarations:
                 prelude += fcode(s) + "\n"
             print prelude
             print code
@@ -86,7 +86,7 @@ def test_FunctionDef():
             code    = fcode(stmt.expr)
 
             prelude = ""
-            for s in stmt.statements:
+            for s in stmt.declarations:
                 prelude += fcode(s) + "\n"
 #            print prelude
             print code

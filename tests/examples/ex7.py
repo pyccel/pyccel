@@ -12,5 +12,6 @@ a = zeros(shape=(10,10), dtype=float)
 #    a[i,i] = 2.0
 
 for i in range(0,9):
-    a[i,i+1] = -1.0
+#    a[i,i+1] = -1.0
+    a[i,i] = -1.0
 #    a[i+1,i] = -1.0

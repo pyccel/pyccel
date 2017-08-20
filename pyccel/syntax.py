@@ -70,7 +70,8 @@ class Number(object):
 
 class BasicStmt(object):
     def __init__(self, **kwargs):
-        self.statements = []
+        self.declarations = []
+        self.statements   = []
 
     def update(self):
         pass
@@ -84,9 +85,29 @@ class BasicStmt(object):
             elif isinstance(a, Expression):
                 arg = a.expr
                 if not(isinstance(arg, Symbol)):
-                    print "-----"
-                    print type(arg), arg
                     arg = Integer(arg)
+                else:
+                    arg = Symbol(arg.name, integer=True)
+#                try:
+#                    if not(isinstance(arg, Symbol)):
+#                        arg = Integer(a.expr)
+#                    else:
+#                        print("do_trailer warning.")
+#                        print a.expr
+#                        arg = Integer(a.expr)
+#                except:
+#                    rhs = a.expr
+#                    # TODO ARA
+#                    name = 'result_%d' % abs(hash(rhs))
+#                    arg = Symbol(name, integer=True)
+#                    var = Variable('int', arg)
+#                    self.declarations.append(Declare('int', var))
+#                    self.statements.append(Assign(arg, rhs))
+
+#                if not(isinstance(arg, Symbol)):
+#                    print "-----"
+#                    print type(arg), arg
+#                    arg = Integer(arg)
 #            elif isinstance(a, Basic):
 #                arg = a
             else:
@@ -237,7 +258,7 @@ class AssignStmt(BasicStmt):
             # TODO check if var is a return value
             rank = 0
             dec = Variable(datatype, var, rank=rank)
-            self.statements.append(Declare(datatype, dec))
+            self.declarations.append(Declare(datatype, dec))
 
     @property
     def expr(self):
@@ -278,7 +299,7 @@ class ForStmt(BasicStmt):
     def update(self):
         i   = Symbol(self.iterable, integer=True)
         dec = Variable('int', i)
-        self.statements.append(Declare('int', dec))
+        self.declarations.append(Declare('int', dec))
 
         body = []
         for stmt in self.body:
@@ -289,7 +310,7 @@ class ForStmt(BasicStmt):
 
         for stmt in body:
             e = stmt.expr
-            self.statements += stmt.statements
+            self.declarations += stmt.declarations
 
     @property
     def expr(self):
@@ -447,10 +468,10 @@ class Operand(ExpressionElement):
         op = self.op
         if type(op) == float:
             if (op).is_integer():
-                print "> found int ",Integer(op)
+#                print "> found int ",Integer(op)
                 return Integer(op)
             else:
-                print "> found float ",Float(op)
+#                print "> found float ",Float(op)
                 return Float(op)
         elif type(op) == list:
             # op is a list
@@ -571,7 +592,7 @@ class FunctionDefStmt(BasicStmt):
                 # TODO define datatype
                 # TODO check if arg is a return value
                 dec = InArgument(datatype, arg)
-                self.statements.append(Declare(datatype, dec))
+                self.declarations.append(Declare(datatype, dec))
 
     @property
     def expr(self):
@@ -595,10 +616,10 @@ class FunctionDefStmt(BasicStmt):
         body = [stmt.expr for stmt in body]
 
         results = []
-        prelude = self.statements
+        prelude = self.declarations
         for stmt in self.body:
             if not(isinstance(stmt, ReturnStmt)):
-                prelude += stmt.statements
+                prelude += stmt.declarations
             else:
                 results += stmt.expr
         body = prelude + body
@@ -676,7 +697,7 @@ class NumpyZerosStmt(AssignStmt):
             # TODO check if var is a return value
 
             dec = Variable(datatype, var, rank=rank)
-            self.statements.append(Declare(datatype, dec))
+            self.declarations.append(Declare(datatype, dec))
 
     @property
     def expr(self):
