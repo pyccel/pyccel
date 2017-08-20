@@ -586,31 +586,31 @@ class NumpyZerosStmt(AssignStmt):
         super(AssignStmt, self).__init__(**kwargs)
 
     def update(self):
-        for var_name in self.lhs:
-            if not(var_name in namespace):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+            datatype = self.datatype
+            shape    = self.shape
+
+            var = Symbol(var_name)
+
+            namespace[var_name] = var
+            if datatype is None:
                 if DEBUG:
-                    print("> Found new variable " + var_name)
+                    print("> No Datatype is specified, int will be used.")
+                datatype = 'int'
+            # TODO check if var is a return value
 
-                datatype = self.datatype
-                shape    = self.shape
+            rank = 0
+            if type(shape) == int:
+                rank = 1
+            else:
+                raise Exception('Only rank=1 is available')
 
-                var = Symbol(var_name)
-
-                namespace[var_name] = var
-                if datatype is None:
-                    if DEBUG:
-                        print("> No Datatype is specified, int will be used.")
-                    datatype = 'int'
-                # TODO check if var is a return value
-
-                rank = 0
-                if type(shape) == int:
-                    rank = 1
-                else:
-                    raise Exception('Only rank=1 is available')
-
-                dec = Variable(datatype, var, rank=rank)
-                self.statements.append(Declare(datatype, dec))
+            dec = Variable(datatype, var, rank=rank)
+            self.statements.append(Declare(datatype, dec))
 
     @property
     def expr(self):
@@ -618,15 +618,13 @@ class NumpyZerosStmt(AssignStmt):
 
         shape = self.shape
 
-        stmts = []
-        for var_name in self.lhs:
-            var = Symbol(var_name)
-            # var = IndexedBase(var_name)
+        var_name = self.lhs
+        var = Symbol(var_name)
+        # var = IndexedBase(var_name)
 
-            stmt = NumpyZeros(var, shape)
-            stmts.append(stmt)
+        stmt = NumpyZeros(var, shape)
 
-        return stmts
+        return stmt
 
 class NumpyZerosLikeStmt(AssignStmt):
     """Class representing a ."""

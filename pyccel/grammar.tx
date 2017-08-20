@@ -144,7 +144,7 @@ NumpyStmt:
 ;
 
 NumpyZerosStmt: 
-  lhs+=ID[','] '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
+  lhs=ID '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
 ParameterSingle: 
@@ -152,19 +152,19 @@ ParameterSingle:
 ;
 
 NumpyZerosLikeStmt: 
-  lhs+=ID[','] '=' ZEROSLIKE LPAREN rhs=ID RPAREN 
+  lhs=ID '=' ZEROSLIKE LPAREN rhs=ID RPAREN 
 ;
 
 NumpyOnesStmt: 
-  lhs+=ID[','] '=' ONES LPAREN shape=INT RPAREN 
+  lhs=ID '=' ONES LPAREN shape=INT RPAREN 
 ;
 
 NumpyLinspaceStmt: 
-  lhs+=ID[','] '=' LINSPACE LPAREN 
-                                  start=IdentifierOrNumber COMMA
-                                  end=IdentifierOrNumber COMMA
-                                  size=INT
-                            RPAREN 
+  lhs=ID '=' LINSPACE LPAREN 
+                             start=IdentifierOrNumber COMMA
+                             end=IdentifierOrNumber COMMA
+                             size=INT
+                       RPAREN 
 ;
 
 AssignStmt: 

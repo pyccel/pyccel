@@ -85,9 +85,8 @@ def gencode(ast, printer):
             for dec in decs:
                 preludes += fcode(dec) + "\n"
         elif isinstance(stmt, NumpyZerosStmt):
-            ls = stmt.expr
-            for l in ls:
-                lines += fcode(l) + "\n"
+            lines += fcode(stmt.expr) + "\n"
+
             for s in stmt.statements:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, AssignStmt):
