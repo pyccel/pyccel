@@ -3,11 +3,11 @@
 from sympy import Symbol, sympify, Piecewise
 from sympy.tensor import Idx, Indexed, IndexedBase
 
-from symcc.types.ast import For, Assign, Declare, Variable
-from symcc.types.ast import Argument, InArgument, InOutArgument, Result
-from symcc.types.ast import FunctionDef
-from symcc.types.ast import Import
-from symcc.types.ast import NumpyZeros
+from pyccel.types.ast import For, Assign, Declare, Variable
+from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
+from pyccel.types.ast import FunctionDef
+from pyccel.types.ast import Import
+from pyccel.types.ast import NumpyZeros
 
 DEBUG = False
 #DEBUG = True

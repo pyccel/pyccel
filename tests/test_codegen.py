@@ -3,7 +3,7 @@
 """
 """
 
-from symcc.printers import fcode
+from pyccel.printers import fcode
 
 from pyccel.syntax import ( \
                            # statements

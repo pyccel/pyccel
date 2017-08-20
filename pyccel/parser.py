@@ -3,7 +3,6 @@
 import os
 from sympy import Symbol, sympify
 
-from vale.utilities import grad, d_var, inner, outer, cross, dot
 from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
                            FactorSigned, FactorUnary, FactorBinary, \

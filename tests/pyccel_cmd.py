@@ -8,7 +8,7 @@
 
 import sys
 import os
-from symcc.printers import fcode
+from pyccel.printers import fcode
 
 from pyccel.parser  import PyccelParser, get_by_name
 from pyccel.syntax import ( \
