@@ -183,10 +183,7 @@ ForStmt:
   'for' iterable=ID 'in' 
   'range' LPAREN start=IdentifierOrNumber COMMA 
                  end=IdentifierOrNumber RPAREN ':' 
-//  body+=SmallStmt[';']
   INDENT
-//  body+=Statement[';']
-//  body+=SmallStmt[';']
   (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
   DEDENT
 ;
@@ -194,12 +191,12 @@ ForStmt:
 IfStmt: 
   'if' test=Test ':'
   INDENT
-  body_true+=Statement[';']
+  (body_true+=SmallStmt[';'])? (body_true+=CompoundStmt)? 
   DEDENT
 //  ('elif' test=Test ':' SuiteStmt)* 
   ('else' ':'
   INDENT
-  body_false+=Statement[';']
+  (body_false+=SmallStmt[';'])? (body_false+=CompoundStmt)? 
   DEDENT)? 
 ;
 

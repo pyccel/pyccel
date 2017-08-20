@@ -282,7 +282,6 @@ class ForStmt(BasicStmt):
         self.start    = kwargs.pop('start')
         self.end      = kwargs.pop('end')
         self.body     = kwargs.pop('body')
-        print ">>>>> len = ", len(self.body)
 
         # TODO add step
         self.step     = 1
