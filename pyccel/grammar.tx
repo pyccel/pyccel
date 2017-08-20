@@ -201,35 +201,30 @@ IfStmt:
 ;
 
 Test: 
-  OrTest ('if' OrTest 'else' Test)? 
-//  | lambdef
+  op=OrTest ('if' OrTest 'else' Test)? 
 ;
 
-//test_nocond: or_test | lambdef_nocond;
-//lambdef: 'lambda' (varargslist)? ':' test;
-//lambdef_nocond: 'lambda' (varargslist)? ':' test_nocond;
-
 OrTest: 
-  AndTest ('or' AndTest)*
+  op=AndTest ('or' op=AndTest)*
 ;
 
 AndTest: 
-  NotTest ('and' NotTest)*
+//  op=NotTest ('and' op=NotTest)*
+  op=Comparison ('and' op=Comparison)*
 ;
 
-NotTest: 
-  'not' NotTest 
-  | Comparison
-;
+//NotTest: 
+//  (op='not')? op=Comparison
+//;
 
 Comparison: 
-  Expression (CompOp Expression)*
+  op=Expression (op=CompOp op=Expression)* 
 ;
 
 // <> isn't actually a valid comparison operator in Python. It's here for the
 // sake of a __future__ import described in PEP 401 (which really works :-)
 CompOp: 
-  '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+  '>='|'<='|'<'|'>'|'=='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
 ;
 
 Expression: 
@@ -266,15 +261,19 @@ Trailer:
 // there is a problem with this rule, only on my laptop
 // it seems it can't parse a word like phi, and only returns "p"
 Operand: 
-  (op=NUMBER) | (op=ID) //| (LPAREN op=Expression RPAREN)
+  (op=NUMBER) | (op=ID) | (op=BOOLEAN) //| (LPAREN op=Expression RPAREN)
+;
+
+BOOLEAN:
+   ('True'|'False')
 ;
 
 UnaryOp:
-   ('grad'|'curl'|'div'|'dxx'|'dyy'|'dzz'|'dxy'|'dyz'|'dxz'|'dx'|'dy'|'dz')
+   ('transpose')
 ;
 
 BinaryOp:
-   ('dot'|'inner'|'outer'|'cross')
+   ('sum')
 ;
 
 EQ:
@@ -303,14 +302,6 @@ LPAREN:
 
 RPAREN:
   ")"
-;
-
-LTRIANGLE: 
-  '<'
-;
-
-RTRIANGLE:
-  '>'
 ;
 
 PlusOrMinus: 

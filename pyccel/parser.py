@@ -17,7 +17,9 @@ from pyccel.syntax import (Pyccel, \
                            ImportFromStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
-                           NumpyOnesStmt, NumpyLinspaceStmt \
+                           NumpyOnesStmt, NumpyLinspaceStmt, \
+                           # test bool
+                           Test, OrTest, AndTest, NotTest, Comparison \
                            )
 
 from textx.metamodel import metamodel_from_str
@@ -163,7 +165,9 @@ class PyccelParser(Parser):
                    ImportFromStmt, \
                    # numpy statments
                    NumpyZerosStmt, NumpyZerosLikeStmt, \
-                   NumpyOnesStmt, NumpyLinspaceStmt
+                   NumpyOnesStmt, NumpyLinspaceStmt, \
+                   # test bool
+                   Test, OrTest, AndTest, NotTest, Comparison \
                    ]
 
         try:

@@ -1,8 +1,10 @@
 # coding: utf-8
 
 from sympy import Symbol, sympify, Piecewise, Integer, Float, Add, Mul
+from sympy import true, false
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 
 from pyccel.types.ast import For, Assign, Declare, Variable
 from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
@@ -27,7 +29,9 @@ __all__ = ["Pyccel", \
            "ImportFromStmt", \
            # numpy statments
            "NumpyZerosStmt", "NumpyZerosLikeStmt", \
-           "NumpyOnesStmt", "NumpyLinspaceStmt"
+           "NumpyOnesStmt", "NumpyLinspaceStmt", \
+           # Test
+           "Test", "OrTest", "AndTest", "NotTest", "Comparison"
            ]
 
 
@@ -37,6 +41,9 @@ stack     = {}
 settings  = {}
 
 operators = {}
+
+namespace["True"]  = true
+namespace["False"] = false
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -206,6 +213,10 @@ class IfStmt(BasicStmt):
         rs = [l.expr for l in self.body_false]
 
         # TODO allow list of stmts
+        print "======="
+        print test
+        print ls
+        print rs
         e = Piecewise((ls[0], test), (rs[0], True))
         print "> IfStmt: TODO handle a list of statments"
 #        e = Piecewise((ls, test), (rs, True))
@@ -496,6 +507,71 @@ class Operand(ExpressionElement):
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
+
+
+class Test(ExpressionElement):
+    @property
+    def expr(self):
+        if DEBUG:
+            print "> DEBUG "
+        ret = self.op.expr
+        return ret
+
+class OrTest(ExpressionElement):
+    @property
+    def expr(self):
+        if DEBUG:
+            print "> DEBUG "
+        ret = self.op[0].expr
+        for operation, operand in zip(self.op[1::2], self.op[2::2]):
+            ret = (ret or operand.expr)
+        return ret
+
+class AndTest(ExpressionElement):
+    @property
+    def expr(self):
+        if DEBUG:
+            print "> DEBUG "
+        ret = self.op[0].expr
+        for operation, operand in zip(self.op[1::2], self.op[2::2]):
+            ret = (ret and operand.expr)
+        return ret
+
+class NotTest(ExpressionElement):
+    @property
+    def expr(self):
+        if DEBUG:
+            print "> DEBUG "
+        ret = self.op.expr
+        ret = (not ret)
+        return ret
+
+class Comparison(ExpressionElement):
+    # TODO ARA implement
+    @property
+    def expr(self):
+        if DEBUG:
+            print "> Comparison "
+        ret = self.op[0].expr
+        for operation, operand in zip(self.op[1::2], self.op[2::2]):
+#            print "Comparison : ", ret, operation, operand.expr
+            if operation == "==":
+                ret = Eq(ret, operand.expr)
+            elif operation == ">":
+                ret = Gt(ret, operand.expr)
+            elif operation == ">=":
+                ret = Ge(ret, operand.expr)
+            elif operation == "<":
+                ret = Lt(ret, operand.expr)
+            elif operation == "<=":
+                ret = Le(ret, operand.expr)
+            elif operation == "not":
+                ret = Ne(ret, operand.expr)
+            else:
+                raise Exception('operation not yet available at position {}'
+                                .format(self._tx_position))
+        return ret
+
 
 class FlowStmt(BasicStmt):
     """
