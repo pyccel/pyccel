@@ -195,6 +195,9 @@ class FCodePrinter(CodePrinter):
             start, stop, step = expr.iterable.args
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
+        # decrement stop by 1 because of the python convention
+        stop = stop - 1
+
         body = '\n'.join(self._print(i) for i in expr.body)
         return ('do {target} = {start}, {stop}, {step}\n'
                 '{body}\n'

@@ -227,13 +227,20 @@ class AssignStmt(BasicStmt):
             l = sympify(self.lhs)
         else:
             args = []
-            for arg in self.trailer.args:
-                arg = int(arg)
-                if type(arg) == int:
-                    # TODO treat n correctly
-                    n = Symbol('n')
-                    i = Idx(arg, n)
-                    args.append(i)
+            for a in self.trailer.args:
+#                arg = sympify(a)
+                if isinstance(a, str):
+                    arg = Symbol(a, integer=True)
+                elif isinstance(a, Basic):
+                    arg = a
+                else:
+                    arg = int(a)
+
+                # TODO treat n correctly
+                n = Symbol('n', integer=True)
+                i = Idx(arg, n)
+                args.append(i)
+
             l = IndexedBase(str(self.lhs))[args]
 
         l = Assign(l, rhs)
