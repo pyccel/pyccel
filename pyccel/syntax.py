@@ -314,20 +314,29 @@ class ForStmt(BasicStmt):
     def expr(self):
         i = Symbol(self.iterable, integer=True)
 
-        try:
-            b = Symbol(self.start, integer=True)
-        except:
-            b = int(self.start)
+        if self.start in namespace:
+            b = namespace[self.start]
+        else:
+            try:
+                b = Symbol(self.start, integer=True)
+            except:
+                b = int(self.start)
 
-        try:
-            e = Symbol(self.end, integer=True)
-        except:
-            e = int(self.end)
+        if self.end in namespace:
+            e = namespace[self.end]
+        else:
+            try:
+                e = Symbol(self.end, integer=True)
+            except:
+                e = int(self.end)
 
-        try:
-            s = Symbol(self.step, integer=True)
-        except:
-            s = int(self.step)
+        if self.step in namespace:
+            s = namespace[self.step]
+        else:
+            try:
+                s = Symbol(self.step, integer=True)
+            except:
+                s = int(self.step)
 
         body = []
         for stmt in self.body:
@@ -558,7 +567,7 @@ class Comparison(ExpressionElement):
                 ret = Lt(ret, operand.expr)
             elif operation == "<=":
                 ret = Le(ret, operand.expr)
-            elif operation == "not":
+            elif operation == "<>":
                 ret = Ne(ret, operand.expr)
             else:
                 raise Exception('operation not yet available at position {}'

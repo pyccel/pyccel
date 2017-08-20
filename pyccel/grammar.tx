@@ -224,7 +224,7 @@ Comparison:
 // <> isn't actually a valid comparison operator in Python. It's here for the
 // sake of a __future__ import described in PEP 401 (which really works :-)
 CompOp: 
-  '>='|'<='|'<'|'>'|'=='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+  '>='|'<='|'<>'|'<'|'>'|'=='|'!='|'in'|'not' 'in'|'is'|'is' 'not'
 ;
 
 Expression: 
