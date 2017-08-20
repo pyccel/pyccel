@@ -302,8 +302,7 @@ class FactorSigned(ExpressionElement):
     """Class representing a signed factor."""
     def __init__(self, **kwargs):
         self.sign    = kwargs.pop('sign', '+')
-        self.trailer = kwargs.pop('trailer', [])
-#        print self.trailer.args
+        self.trailer = kwargs.pop('trailer', None)
 
         super(FactorSigned, self).__init__(**kwargs)
 
@@ -312,7 +311,20 @@ class FactorSigned(ExpressionElement):
         if DEBUG:
             print "> FactorSigned "
         expr = self.op.expr
-        return -expr if self.sign == '-' else expr
+        if self.trailer is None:
+            return -expr if self.sign == '-' else expr
+        else:
+            args = []
+            for arg in self.trailer.args:
+                arg = int(arg)
+                if type(arg) == int:
+                    # TODO treat n correctly
+                    n = Symbol('n')
+                    i = Idx(arg, n)
+                    args.append(i)
+            expr = IndexedBase(str(expr))[args]
+            return -expr if self.sign == '-' else expr
+
 
 class FactorUnary(ExpressionElement):
     """Class representing a unary factor."""
@@ -595,6 +607,7 @@ class NumpyZerosStmt(AssignStmt):
             shape    = self.shape
 
             var = Symbol(var_name)
+#            var = IndexedBase(var_name)
 
             namespace[var_name] = var
             if datatype is None:
@@ -620,7 +633,7 @@ class NumpyZerosStmt(AssignStmt):
 
         var_name = self.lhs
         var = Symbol(var_name)
-        # var = IndexedBase(var_name)
+#        var = IndexedBase(var_name)
 
         stmt = NumpyZeros(var, shape)
 
