@@ -73,10 +73,38 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
-def gencode(ast, printer):
+def gencode(ast, printer, name=None):
+    def gencode_as_module(name, imports, preludes, body):
+        # TODO improve if a block is empty
+        code  = "module " + str(name)     + "\n"
+        code += imports                   + "\n"
+        code += "implicit none"           + "\n"
+        code += preludes                  + "\n"
+        code += "contains"                + "\n"
+        code += body                      + "\n"
+        code += "end module " + str(name) + "\n"
+
+        return code
+
+    def gencode_as_program(name, imports, preludes, body):
+        # TODO improve if a block is empty
+        if name is None:
+            name = "main"
+
+        code  = "program " + str(name)     + "\n"
+        code += imports                   + "\n"
+        code += "implicit none"           + "\n"
+        code += preludes                  + "\n"
+        code += body                      + "\n"
+#        code += "contains"                + "\n"
+        # TODO add funcdef
+        code += "end"                     + "\n"
+
+        return code
+
     imports  = ""
     preludes = ""
-    lines    = ""
+    body    = ""
     for stmt in ast.statements:
         if isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
@@ -85,31 +113,28 @@ def gencode(ast, printer):
             for dec in decs:
                 preludes += fcode(dec) + "\n"
         elif isinstance(stmt, NumpyZerosStmt):
-            lines += fcode(stmt.expr) + "\n"
+            body += fcode(stmt.expr) + "\n"
 
             for s in stmt.declarations:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, AssignStmt):
-            lines += fcode(stmt.expr) + "\n"
+            body += fcode(stmt.expr) + "\n"
 
             for s in stmt.declarations:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, ForStmt):
-            lines += fcode(stmt.expr) + "\n"
+            body += fcode(stmt.expr) + "\n"
 
             for s in stmt.declarations:
                 preludes += fcode(s) + "\n"
         elif isinstance(stmt, IfStmt):
-            lines += fcode(stmt.expr) + "\n"
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            lines += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"+ "\n"
         else:
             raise Exception('Statement not yet handled.')
 
-    code = imports + "\n"  \
-         + preludes + "\n" \
-         + lines
-
+    code = gencode_as_program(name, imports, preludes, body)
     return code
 # ...
 
