@@ -11,3 +11,5 @@ tests/*.pyccel
 tests/*.f90
 tests/examples/*.pyccel
 tests/examples/*.f90
+tests/examples/openmp/*.pyccel
+tests/examples/openmp/*.f90

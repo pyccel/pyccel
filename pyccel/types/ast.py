@@ -799,6 +799,9 @@ class AnnotatedComment(Basic):
     accel : str
        accelerator id. One among {'omp', 'acc'}
 
+    do : bool
+        True if an do section. [Default= False]
+
     end : bool
         True if an end section. [Default= False]
 
@@ -818,29 +821,33 @@ class AnnotatedComment(Basic):
     # TODO variables must be symbols
 
     # since some arguments may be None, we need to define their default values
-    def __new__(cls, accel, end, parallel, section, visibility, variables):
-        return Basic.__new__(cls, accel, end, parallel, section, visibility, variables)
+    def __new__(cls, accel, do, end, parallel, section, visibility, variables):
+        return Basic.__new__(cls, accel, do, end, parallel, section, visibility, variables)
 
     @property
     def accel(self):
         return self._args[0]
 
     @property
-    def end(self):
+    def do(self):
         return self._args[1]
 
     @property
-    def parallel(self):
+    def end(self):
         return self._args[2]
 
     @property
-    def section(self):
+    def parallel(self):
         return self._args[3]
 
     @property
-    def visibility(self):
+    def section(self):
         return self._args[4]
 
     @property
-    def variables(self):
+    def visibility(self):
         return self._args[5]
+
+    @property
+    def variables(self):
+        return self._args[6]

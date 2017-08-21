@@ -89,6 +89,7 @@ CommentStmt:
 
 AnnotatedStmt:
   '#@' accel=Accelerator 
+  (do='do')? 
   (end='end')? 
   (parallel='parallel')? 
   (section='for')? 

@@ -6,6 +6,8 @@
 # Usage :   python pyccel_cmd.py --language="fortran" --compiler="gfortran" --filename=examples/ex1.py
 # Usage :   python pyccel_cmd.py --language="fortran" --compiler="gfortran" --filename=examples/ex1.py --execute
 
+# using openmp:
+#    export OMP_NUM_THREADS=2
 
 """
 .. todo:

@@ -944,6 +944,7 @@ class AnnotatedStmt(BasicStmt):
         """
         """
         self.accel      = kwargs.pop('accel')
+        self.do         = kwargs.pop('do', None)
         self.end        = kwargs.pop('end', None)
         self.parallel   = kwargs.pop('parallel', None)
         self.section    = kwargs.pop('section',  None)
@@ -957,6 +958,7 @@ class AnnotatedStmt(BasicStmt):
         self.update()
 
         return AnnotatedComment(accel=self.accel, \
+                                do=self.do, \
                                 end=self.end, \
                                 parallel=self.parallel, \
                                 section=self.section, \
