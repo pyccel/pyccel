@@ -20,4 +20,3 @@ c. Extends the concepts presented in **sympy** allowing for automatic code gener
 BUGS
 ****
 
-- non-annotated comments work only if there is no white space between *#*  and the following character
