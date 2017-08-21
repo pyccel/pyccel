@@ -757,7 +757,7 @@ class NumpyZerosStmt(AssignStmt):
         try:
             self.datatype = self.parameters['dtype']
         except:
-            self.datatype = 'int'
+            self.datatype = 'float'
 
         try:
             self.shape = self.parameters['shape']

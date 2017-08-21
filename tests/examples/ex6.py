@@ -6,7 +6,10 @@
 a = zeros(shape=64, dtype=float)
 b = zeros(shape=8, dtype=int)
 
-a[1] = 1
+a[1] = 1.0
+a[2] = 1.0
+a[3] = 1.0
+
 c = a[1]
 
 d = c + 5.3 * a[1+1] + 4.0 - a[3]

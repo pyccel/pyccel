@@ -261,6 +261,8 @@ parser.add_argument('--openmp', action='store_true', \
                     help='uses openmp')
 parser.add_argument('--execute', action='store_true', \
                     help='executes the binary file')
+parser.add_argument('--show', action='store_true', \
+                    help='prints the generated file.')
 # ...
 
 # ...
@@ -304,7 +306,7 @@ code = gencode(ast, fcode, \
                name=name, \
                accelerator=accelerator)
 
-if not execute:
+if args.show:
     print "---------------------------"
     print code
     print "---------------------------"
