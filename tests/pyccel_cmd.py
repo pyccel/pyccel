@@ -144,7 +144,6 @@ def gencode(ast, printer, name=None, debug=True):
         else:
             if debug:
                 print "> uncovered statement of type : ", type(stmt)
-                stmt.expr
             else:
                 raise Exception('Statement not yet handled.')
 

@@ -11,7 +11,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (PassStmt | FlowStmt | DelStmt | ImportStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
+  (HiddenStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
 ;
 
 CompoundStmt:
@@ -75,6 +75,20 @@ YieldStmt:
 
 DelStmt:
   'del' variables*=ID[',']
+;
+
+HiddenStmt:
+  (AnnotatedStmt | CommentStmt)
+//  (CommentStmt | AnnotatedStmt)
+;
+
+CommentStmt:
+//  '#' text=/[^x].*$/  
+  '#' text=/.*$/  
+;
+
+AnnotatedStmt:
+  '#@' accel=STRING
 ;
 
 
@@ -320,9 +334,9 @@ MulOrDiv:
   '*' | '/' 
 ;
 
-Comment:
-  /#.*$/
-;
+//Comment:
+//  /#.*$/
+//;
 
 INDENT:
   'indent'

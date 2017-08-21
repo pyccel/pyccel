@@ -28,6 +28,7 @@ __all__ = ["Pyccel", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
            "ImportFromStmt", \
+           "CommentStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -872,3 +873,19 @@ class PythonPrintStmt(BasicStmt):
         args        = self.args
         expressions = [arg.expr for arg in args]
         return Print(expressions)
+
+class CommentStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.text = kwargs.pop('text')
+
+        super(CommentStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return ""
+
+#        return Print(expressions)

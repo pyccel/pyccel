@@ -15,6 +15,7 @@ from pyccel.syntax import (Pyccel, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
                            IfStmt, ForStmt, FunctionDefStmt, \
                            ImportFromStmt, \
+                           CommentStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -165,6 +166,7 @@ class PyccelParser(Parser):
                    RaiseStmt, YieldStmt, ReturnStmt, \
                    IfStmt, ForStmt, FunctionDefStmt, \
                    ImportFromStmt, \
+                   CommentStmt, \
                    # python standard library statements
                    PythonPrintStmt, \
                    # numpy statments
