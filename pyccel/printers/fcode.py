@@ -110,6 +110,15 @@ class FCodePrinter(CodePrinter):
 #        shape_code = str(expr.shape)
         return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
 
+    def _print_NumpyLinspace(self, expr):
+        lhs_code   = self._print(expr.lhs)
+        start_code = self._print(expr.start)
+        end_code   = self._print(expr.end)
+        size_code  = self._print(expr.size)
+
+        return self._get_statement("%s = linspace(%s, %s, %s)" % \
+                                   (lhs_code, start_code, end_code, size_code))
+
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
         intent_lookup = {InArgument: 'in',

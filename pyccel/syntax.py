@@ -11,7 +11,7 @@ from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
 from pyccel.types.ast import Print
-from pyccel.types.ast import NumpyZeros
+from pyccel.types.ast import NumpyZeros, NumpyLinspace
 
 DEBUG = False
 #DEBUG = True
@@ -783,7 +783,6 @@ class NumpyZerosStmt(AssignStmt):
 
         var_name = self.lhs
         var = Symbol(var_name)
-#        var = IndexedBase(var_name)
 
         stmt = NumpyZeros(var, shape)
 
@@ -799,6 +798,9 @@ class NumpyZerosLikeStmt(AssignStmt):
 
         super(AssignStmt, self).__init__(**kwargs)
 
+    def update(self):
+        pass
+
     @property
     def expr(self):
         self.update()
@@ -813,6 +815,9 @@ class NumpyOnesStmt(AssignStmt):
         self.shape = kwargs.pop('shape')
 
         super(AssignStmt, self).__init__(**kwargs)
+
+    def update(self):
+        pass
 
     @property
     def expr(self):
@@ -831,10 +836,48 @@ class NumpyLinspaceStmt(AssignStmt):
 
         super(AssignStmt, self).__init__(**kwargs)
 
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+            s    = self.start
+            e    = self.end
+            size = self.size
+
+            ls = [s, e, size]
+            for name in ls:
+                if isinstance(name, (int, float)):
+                    pass
+                elif not(name in namespace):
+                    raise Exception('Unknown variable "{}" at position {}'
+                                    .format(name, self._tx_position))
+
+            var = Symbol(var_name)
+
+            namespace[var_name] = var
+
+            # TODO improve
+            datatype = 'float'
+
+            dec = Variable(datatype, var, rank=1)
+            self.declarations.append(Declare(datatype, dec))
+
     @property
     def expr(self):
         self.update()
-        return ""
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        start = self.start
+        end   = self.end
+        size  = self.size
+
+        stmt = NumpyLinspace(var, start, end, size)
+
+        return stmt
 
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""

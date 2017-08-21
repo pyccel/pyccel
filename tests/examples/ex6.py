@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from numpy import zeros
+from numpy import linspace
 
 a = zeros(shape=64, dtype=float)
 b = zeros(shape=8, dtype=int)
@@ -13,3 +14,5 @@ e = a # not working. e must be declared as an array
 
 x = zeros(shape=(2,8), dtype=float)
 y = x[0,2]
+
+z = linspace(0,4,1)

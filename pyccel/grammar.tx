@@ -169,16 +169,16 @@ NumpyStmt:
   (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt)
 ;
 
-NumpyZerosStmt: 
-  lhs=ID '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
-;
-
 ParameterValue:
   (value=IdentifierOrNumber | value=ArgList)
 ;
 
 ParameterSingle: 
   label=ParameterTest '=' value=ParameterValue
+;
+
+NumpyZerosStmt: 
+  lhs=ID '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
 NumpyZerosLikeStmt: 

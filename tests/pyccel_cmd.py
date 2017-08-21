@@ -2,7 +2,9 @@
 
 # if compile is not specified, pyccel will only convert the file to the target language.
 # For more info:  python pyccel_cmd.py --help
-# Usage :   python pyccel_cmd.py --filename=examples/ex1.py --language="fortran" --compiler="gfortran"
+# Usage :   python pyccel_cmd.py --language="fortran" --filename=examples/ex1.py
+# Usage :   python pyccel_cmd.py --language="fortran" --compiler="gfortran" --filename=examples/ex1.py
+# Usage :   python pyccel_cmd.py --language="fortran" --compiler="gfortran" --filename=examples/ex1.py --execute
 
 
 """
@@ -121,6 +123,11 @@ def gencode(ast, printer, name=None, debug=True):
             for dec in decs:
                 preludes += fcode(dec) + "\n"
         elif isinstance(stmt, NumpyZerosStmt):
+            body += fcode(stmt.expr) + "\n"
+
+            for s in stmt.declarations:
+                preludes += fcode(s) + "\n"
+        elif isinstance(stmt, NumpyLinspaceStmt):
             body += fcode(stmt.expr) + "\n"
 
             for s in stmt.declarations:
