@@ -135,6 +135,7 @@ def gencode(ast, printer, name=None):
             raise Exception('Statement not yet handled.')
 
     code = gencode_as_program(name, imports, preludes, body)
+#    code = gencode_as_module(name, imports, preludes, body)
     return code
 # ...
 
@@ -152,7 +153,10 @@ filename_tmp = make_tmp_file(filename)
 preprocess(filename, filename_tmp)
 
 ast = pyccel.parse_from_file(filename_tmp)
-code = gencode(ast, fcode)
+
+name = None
+name = "main"
+code = gencode(ast, fcode, name=name)
 
 f90_file = filename.split(".py")[0] + ".f90"
 f = open(f90_file, "w")
