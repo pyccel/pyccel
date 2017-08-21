@@ -140,6 +140,35 @@ def gencode(ast, printer, name=None):
 # ...
 
 # ...
+def write_to_file(code, filename, language="fortran"):
+    if not(language == "fortran"):
+        raise ValueError("Only fortran is available")
+
+    f90_file = filename.split(".py")[0] + ".f90"
+    f = open(f90_file, "w")
+    for line in code:
+        f.write(line)
+    f.close()
+
+    return f90_file
+# ...
+
+# ...
+def compile_file(filename, compiler="gfortran", language="fortran"):
+    if not(compiler == "gfortran"):
+        raise ValueError("Only gfortran is available")
+
+    if language == "fortran":
+        ext = "f90"
+    else:
+        raise ValueError("Only fortran is available")
+
+    binary = filename.split('.' + ext)[0]
+    cmd = compiler + " -O2 " + filename + " -o" + binary
+    os.system(cmd)
+# ...
+
+# ...
 try:
     filename = sys.argv[1]
 except:
@@ -158,13 +187,10 @@ name = None
 name = "main"
 code = gencode(ast, fcode, name=name)
 
-f90_file = filename.split(".py")[0] + ".f90"
-f = open(f90_file, "w")
-for line in code:
-    f.write(line)
-f.close()
+print code
 # ...
 
 # ...
-print code
+filename_out = write_to_file(code, filename, language="fortran")
+compile_file(filename_out, compiler="gfortran", language="fortran")
 # ...
