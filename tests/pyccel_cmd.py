@@ -1,5 +1,10 @@
 # coding: utf-8
 
+# if compile is not specified, pyccel will only convert the file to the target language.
+# For more info:  python pyccel_cmd.py --help
+# Usage :   python pyccel_cmd.py --filename=examples/ex1.py --language="fortran" --compiler="gfortran"
+
+
 """
 .. todo:
     - no need to declare a variable, if it is defined by assignment. ex: 'x=1'
@@ -8,8 +13,9 @@
 
 import sys
 import os
-from pyccel.printers import fcode
+import argparse
 
+from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser, get_by_name
 from pyccel.syntax import ( \
                            # statements
@@ -168,11 +174,42 @@ def compile_file(filename, compiler="gfortran", language="fortran"):
     os.system(cmd)
 # ...
 
+## ...
+#try:
+#    filename = sys.argv[1]
+#except:
+#    raise Exception('Expecting a filename')
+## ...
+
 # ...
-try:
-    filename = sys.argv[1]
-except:
-    raise Exception('Expecting a filename')
+parser = argparse.ArgumentParser(description='Pyccel command line.')
+
+#parser.add_argument('--filename', help='config filename. default: config.ini')
+parser.add_argument('--filename', type=str, \
+                    help='python file to convert')
+parser.add_argument('--language', type=str, \
+                    help='Target language')
+parser.add_argument('--compiler', type=str, \
+                    help='Used compiler')
+# ...
+
+# ...
+args = parser.parse_args()
+
+if args.filename:
+    filename = args.filename
+else:
+    raise ValueError("a python filename must be provided.")
+
+if args.language:
+    language = args.language
+else:
+    raise ValueError("a target language must be provided.")
+
+if args.compiler:
+    compiler = args.compiler
+else:
+    compiler = None
 # ...
 
 # ... creates an instance of Pyccel parser
@@ -192,5 +229,7 @@ print code
 
 # ...
 filename_out = write_to_file(code, filename, language="fortran")
-compile_file(filename_out, compiler="gfortran", language="fortran")
+
+if compiler:
+    compile_file(filename_out, compiler="gfortran", language="fortran")
 # ...
