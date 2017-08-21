@@ -798,7 +798,7 @@ class NumpyZerosStmt(AssignStmt):
                 datatype = 'int'
             # TODO check if var is a return value
 
-            dec = Variable(datatype, var, rank=rank)
+            dec = Variable(datatype, var, rank=rank, allocatable=True)
             self.declarations.append(Declare(datatype, dec))
 
     @property

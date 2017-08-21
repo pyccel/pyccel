@@ -137,10 +137,11 @@ class FCodePrinter(CodePrinter):
         return '(/ {0} /)'.format(fs)
 
     def _print_NumpyZeros(self, expr):
+        # TODO improve
         lhs_code   = self._print(expr.lhs)
         shape_code = self._print(expr.shape)
-#        shape_code = str(expr.shape)
-        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
+#        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
+        return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
 
     def _print_NumpyLinspace(self, expr):
         lhs_code   = self._print(expr.lhs)
@@ -159,26 +160,37 @@ class FCodePrinter(CodePrinter):
                          Variable: None}
         # Group the variables by intent
         f = lambda x: intent_lookup[type(x)]
-        arg_types = [type(v) for v in expr.variables]
-        var_list = groupby(sorted(expr.variables, key=f), f)
-        arg_ranks = [v.rank for v in expr.variables]
+
+        arg_types        = [type(v) for v in expr.variables]
+        var_list         = groupby(sorted(expr.variables, key=f), f)
+        arg_ranks        = [v.rank for v in expr.variables]
+        arg_allocatables = [v.allocatable for v in expr.variables]
+
         decs = []
         for intent, g in var_list:
             vstr = ', '.join(self._print(i.name) for i in g)
-            # TODO ARA add rank
-            rank = arg_ranks[0]
-#            rankstr = ':'
-            rankstr = ', '.join(':' for f in range(0, rank))
-            if intent:
-                if rank == 0:
-                    decs.append('{0}, intent({1}) :: {2}'.format(dtype, intent, vstr))
-                else:
-                    decs.append('{0}, intent({1}) :: {2}({3})'.format(dtype, intent, vstr, rankstr))
+
+            # TODO ARA improve
+            rank        = arg_ranks[0]
+            allocatable = arg_allocatables[0]
+
+            if rank == 0:
+                rankstr =  ''
             else:
-                if rank == 0:
-                    decs.append('{0} :: {2}'.format(dtype, intent, vstr))
-                else:
-                    decs.append('{0} :: {2}({3})'.format(dtype, intent, vstr, rankstr))
+                rankstr = ', '.join(':' for f in range(0, rank))
+                rankstr = '(' + rankstr + ')'
+
+            if allocatable:
+                allocatablestr = ', allocatable'
+            else:
+                allocatablestr = ''
+
+            if intent:
+                decs.append('{0}, intent({1}) {2} :: {3} {4}'.
+                            format(dtype, intent, allocatablestr, vstr, rankstr))
+            else:
+                decs.append('{0}{1} :: {2} {3}'.
+                            format(dtype, allocatablestr, vstr, rankstr))
 
         return '\n'.join(decs)
 
@@ -386,7 +398,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        print (">>>>>>>>>>>> PAR ICI :" + str(inds))
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):

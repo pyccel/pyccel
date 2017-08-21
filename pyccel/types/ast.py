@@ -402,10 +402,12 @@ class Variable(Basic):
         The sympy object the variable represents.
     rank : int
         used for arrays. [Default value: 0]
+    allocatable: False
+        used for arrays, if we need to allocate memory [Default value: False]
 
     """
 
-    def __new__(cls, dtype, name, rank=0):
+    def __new__(cls, dtype, name, rank=0, allocatable=False):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
@@ -416,7 +418,7 @@ class Variable(Basic):
             raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
-        return Basic.__new__(cls, dtype, name, rank)
+        return Basic.__new__(cls, dtype, name, rank, allocatable)
 
     @property
     def dtype(self):
@@ -429,6 +431,10 @@ class Variable(Basic):
     @property
     def rank(self):
         return self._args[2]
+
+    @property
+    def allocatable(self):
+        return self._args[3]
 
 
 class Argument(Variable):
