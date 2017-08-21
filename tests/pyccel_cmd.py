@@ -180,6 +180,15 @@ def compile_file(filename, compiler="gfortran", language="fortran"):
     binary = filename.split('.' + ext)[0]
     cmd = compiler + " -O2 " + filename + " -o" + binary
     os.system(cmd)
+
+    return binary
+# ...
+
+# ...
+def execute_file(binary):
+
+    cmd = binary
+    os.system(cmd)
 # ...
 
 ## ...
@@ -199,6 +208,8 @@ parser.add_argument('--language', type=str, \
                     help='Target language')
 parser.add_argument('--compiler', type=str, \
                     help='Used compiler')
+parser.add_argument('--execute', action='store_true', \
+                    help='executes the binary file')
 # ...
 
 # ...
@@ -218,6 +229,8 @@ if args.compiler:
     compiler = args.compiler
 else:
     compiler = None
+
+execute = args.execute
 # ...
 
 # ... creates an instance of Pyccel parser
@@ -232,12 +245,18 @@ name = None
 name = "main"
 code = gencode(ast, fcode, name=name)
 
-print code
+if not execute:
+    print "---------------------------"
+    print code
+    print "---------------------------"
 # ...
 
 # ...
 filename_out = write_to_file(code, filename, language="fortran")
 
 if compiler:
-    compile_file(filename_out, compiler="gfortran", language="fortran")
+    binary = compile_file(filename_out, compiler="gfortran", language="fortran")
+
+if compiler and execute:
+    execute_file(binary)
 # ...
