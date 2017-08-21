@@ -41,6 +41,7 @@ AST Type Tree
      |--->Declare
      |--->Return
      |--->Print
+     |--->Comment
 """
 
 from __future__ import print_function, division
@@ -773,3 +774,19 @@ class Print(Basic):
     def expr(self):
         return self._args[0]
 
+class Comment(Basic):
+    """Represents a Comment in the code.
+
+    Parameters
+    ----------
+    expr : sympy expr
+        The expression to return.
+
+    """
+
+    def __new__(cls, text):
+        return Basic.__new__(cls, text)
+
+    @property
+    def text(self):
+        return self._args[0]

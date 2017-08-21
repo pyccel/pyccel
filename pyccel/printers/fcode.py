@@ -100,6 +100,10 @@ class FCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr.expr)
         return 'print *, {0} '.format(fs)
 
+    def _print_Comment(self, expr):
+        txt = self._print(expr.text)
+        return '! {0} '.format(txt)
+
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)

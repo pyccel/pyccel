@@ -11,6 +11,7 @@ from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
 from pyccel.types.ast import Print
+from pyccel.types.ast import Comment
 from pyccel.types.ast import NumpyZeros, NumpyLinspace
 
 DEBUG = False
@@ -929,6 +930,4 @@ class CommentStmt(BasicStmt):
     @property
     def expr(self):
         self.update()
-        return ""
-
-#        return Print(expressions)
+        return Comment(self.text)

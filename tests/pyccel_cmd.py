@@ -27,6 +27,7 @@ from pyccel.syntax import ( \
                            AssignStmt, \
                            IfStmt, ForStmt, FunctionDefStmt, \
                            ImportFromStmt, \
+                           CommentStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -116,7 +117,9 @@ def gencode(ast, printer, name=None, debug=True):
     preludes = ""
     body    = ""
     for stmt in ast.statements:
-        if isinstance(stmt, ImportFromStmt):
+        if isinstance(stmt, CommentStmt):
+            body += fcode(stmt.expr) + "\n"+ "\n"
+        elif isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, DeclarationStmt):
             decs = stmt.expr
