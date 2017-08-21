@@ -53,7 +53,7 @@ from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.sets.fancysets import Range
-from sympy.tensor import Idx, Indexed
+from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
@@ -851,3 +851,47 @@ class AnnotatedComment(Basic):
     @property
     def variables(self):
         return self._args[6]
+
+
+class IndexedVariable(IndexedBase):
+    """Represents a Comment in the code.
+
+    Parameters
+    ----------
+    text : str
+       the comment line
+
+    """
+
+    def __new__(cls, label, shape=None, **kw_args):
+        return IndexedBase.__new__(cls, label, shape=None, **kw_args)
+
+class Slice(Basic):
+    """Represents a slice in the code.
+
+    Parameters
+    ----------
+    start : Symbol or int
+        starting index
+
+    end : Symbol or int
+        ending index
+
+    """
+    # TODO add step
+
+    def __new__(cls, start, end):
+        return Basic.__new__(cls, start, end)
+
+    @property
+    def start(self):
+        return self._args[0]
+
+    @property
+    def end(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} : {1}'.format(sstr(self.start), sstr(self.end))
+

@@ -284,14 +284,19 @@ FactorBinary:
   name=BinaryOp LPAREN op=Factor COMMA op=Factor RPAREN
 ;
 
-// TODO see antlr
 Trailer: 
-//  '[' args+=IdentifierOrNumber[','] ']'
+  (args=TrailerArgList)?
+  | (subs=TrailerSubscriptList)?
+;
+
+TrailerArgList: 
   '[' args+=Expression[','] ']'
 ;
 
-// there is a problem with this rule, only on my laptop
-// it seems it can't parse a word like phi, and only returns "p"
+TrailerSubscriptList: 
+  '[' args+=Expression[':'] ']'
+;
+
 Operand: 
   (op=NUMBER) | (op=ID) | (op=BOOLEAN) //| (LPAREN op=Expression RPAREN)
 ;

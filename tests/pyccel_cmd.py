@@ -38,6 +38,15 @@ from pyccel.syntax import ( \
                            )
 
 # ...
+def clean(filename):
+    name = filename.split('.py')[0]
+    for ext in ["f90", "pyccel"]:
+        f_name = name + "." + ext
+        cmd = "rm " + f_name
+        os.system(cmd)
+# ...
+
+# ...
 def make_tmp_file(filename):
     name = filename.split('.py')[0]
     return name + ".pyccel"
@@ -281,6 +290,8 @@ if args.openmp:
 
 # ... creates an instance of Pyccel parser
 pyccel = PyccelParser()
+
+clean(filename)
 
 filename_tmp = make_tmp_file(filename)
 preprocess(filename, filename_tmp)

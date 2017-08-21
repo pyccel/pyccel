@@ -386,10 +386,14 @@ class FCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
+        print (">>>>>>>>>>>> PAR ICI :" + str(inds))
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _print_Slice(self, expr):
+        return "%s:%s" % (self._print(expr.start), self._print(expr.end))
 
     def _pad_leading_columns(self, lines):
         result = []

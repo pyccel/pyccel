@@ -13,6 +13,8 @@ from pyccel.types.ast import Import
 from pyccel.types.ast import Print
 from pyccel.types.ast import Comment
 from pyccel.types.ast import AnnotatedComment
+from pyccel.types.ast import IndexedVariable
+from pyccel.types.ast import Slice
 from pyccel.types.ast import NumpyZeros, NumpyLinspace
 
 DEBUG = False
@@ -91,8 +93,8 @@ class BasicStmt(object):
 
     # TODO move somewhere else
     def do_trailer(self, trailer):
-        args = []
-        for a in trailer.args:
+        # ...
+        def do_arg(a):
             if isinstance(a, str):
                 arg = Symbol(a, integer=True)
             elif isinstance(a, Expression):
@@ -110,20 +112,42 @@ class BasicStmt(object):
                     var = Variable('int', arg)
                     self.declarations.append(Declare('int', var))
                     self.statements.append(Assign(arg, rhs))
-
-#                if not(isinstance(arg, Symbol)):
-#                    print "-----"
-#                    print type(arg), arg
-#                    arg = Integer(arg)
-#            elif isinstance(a, Basic):
-#                arg = a
             else:
                 arg = Integer(a)
+            return arg
+        # ...
 
-            # TODO treat n correctly
-            n = Symbol('n', integer=True)
-            i = Idx(arg, n)
-            args.append(i)
+        # there are two kind of trailers
+        # 1. a symbol, an expression
+        # 2. slices
+        is_subscript = False
+        if trailer.args:
+            inputs = trailer.args
+        elif trailer.subs:
+            inputs = trailer.subs
+            is_subscript = True
+        else:
+            raise Exception('Wrong inputs for the trailer at position {}'
+                            .format(var, self._tx_position))
+
+        # only slices of the form a:b are possible
+        # this assumes that inputs.args is of length 2
+        if is_subscript:
+            assert(len(inputs.args) == 2)
+
+            start = do_arg(inputs.args[0])
+            end   = do_arg(inputs.args[1])
+
+            args = Slice(start, end)
+        else:
+            args = []
+            for a in inputs.args:
+                arg = do_arg(a)
+
+                # TODO treat n correctly
+                n = Symbol('n', integer=True)
+                i = Idx(arg, n)
+                args.append(i)
         return args
 
 class DeclarationStmt(BasicStmt):
@@ -275,7 +299,7 @@ class AssignStmt(BasicStmt):
             l = sympify(self.lhs)
         else:
             args = self.do_trailer(self.trailer)
-            l = IndexedBase(str(self.lhs))[args]
+            l = IndexedVariable(str(self.lhs))[args]
 
         l = Assign(l, rhs)
 
@@ -387,7 +411,7 @@ class FactorSigned(ExpressionElement, BasicStmt):
             return -expr if self.sign == '-' else expr
         else:
             args = self.do_trailer(self.trailer)
-            expr = IndexedBase(str(expr))[args]
+            expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
 
 
@@ -409,7 +433,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
             return expr
         else:
             args = self.do_trailer(self.trailer)
-            expr = IndexedBase(str(expr))[args]
+            expr = IndexedVariable(str(expr))[args]
             return expr
 
 
