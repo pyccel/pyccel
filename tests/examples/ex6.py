@@ -17,8 +17,11 @@ print(d)
 
 #e = a # not working. e must be declared as an array
 
-#x = zeros(shape=(2,8), dtype=float)
-#y = x[0,2]
+x = zeros(shape=(2,8), dtype=float)
+x[1,1] = 1
+print(x)
+
+y = x[0,2]
 
 #z = linspace(0,4,1)
 #t = z[1:3]

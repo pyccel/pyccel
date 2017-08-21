@@ -6,6 +6,7 @@ import string
 from itertools import groupby
 
 from sympy.core import S, Add, N
+from sympy.core import Tuple
 from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
@@ -139,9 +140,14 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyZeros(self, expr):
         # TODO improve
         lhs_code   = self._print(expr.lhs)
-        shape_code = self._print(expr.shape)
+        # this is to not use Tuple
+        if isinstance(expr.shape, Tuple):
+            shape_code = ', '.join(self._print(i) for i in expr.shape)
+        else:
+            shape_code = self._print(expr.shape)
 #        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
         return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
+
 
     def _print_NumpyLinspace(self, expr):
         lhs_code   = self._print(expr.lhs)
