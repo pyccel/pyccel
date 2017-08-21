@@ -84,11 +84,20 @@ HiddenStmt:
 
 CommentStmt:
 //  '#' text=/[^x].*$/  
-  '#' text=/.*$/  
+  '#' text=/.*$/
 ;
 
 AnnotatedStmt:
-  '#@' accel=STRING
+  '#@' accel=Accelerator 
+  (end='end')? 
+  (parallel='parallel')? 
+  (section='for')? 
+  (visibility='private'|'shared')? 
+  (LPAREN variables+=ID[','] RPAREN)?
+;
+
+Accelerator:
+  ('omp' | 'acc')
 ;
 
 

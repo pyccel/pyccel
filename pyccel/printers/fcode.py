@@ -104,6 +104,30 @@ class FCodePrinter(CodePrinter):
         txt = self._print(expr.text)
         return '! {0} '.format(txt)
 
+    def _print_AnnotatedComment(self, expr):
+        accel      = self._print(expr.accel)
+        end        = self._print(expr.end)
+        parallel   = self._print(expr.parallel)
+        section    = self._print(expr.section)
+        visibility = self._print(expr.visibility)
+        variables  = ', '.join(self._print(f) for f in expr.variables)
+        if len(variables) > 0:
+            variables  = '(' + variables + ')'
+
+        if not end:
+            end = ''
+
+        if not parallel:
+            parallel = ''
+
+        if not section:
+            section = ''
+
+        if not visibility:
+            visibility = ''
+
+        return '!${0} {1} {2} {3} {4} {5}'.format(accel, end, parallel, section, visibility, variables)
+
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)

@@ -12,6 +12,7 @@ from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
 from pyccel.types.ast import Print
 from pyccel.types.ast import Comment
+from pyccel.types.ast import AnnotatedComment
 from pyccel.types.ast import NumpyZeros, NumpyLinspace
 
 DEBUG = False
@@ -29,7 +30,7 @@ __all__ = ["Pyccel", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
            "ImportFromStmt", \
-           "CommentStmt", \
+           "CommentStmt", "AnnotatedStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -925,9 +926,39 @@ class CommentStmt(BasicStmt):
         """
         self.text = kwargs.pop('text')
 
+        # TODO improve
+        #      to remove:  # coding: utf-8
+        if ("coding:" in self.text) or ("utf-8" in self.text):
+            self.text = ""
+
         super(CommentStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
         self.update()
         return Comment(self.text)
+
+class AnnotatedStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.accel      = kwargs.pop('accel')
+        self.end        = kwargs.pop('end', None)
+        self.parallel   = kwargs.pop('parallel', None)
+        self.section    = kwargs.pop('section',  None)
+        self.visibility = kwargs.pop('visibility', None)
+        self.variables  = kwargs.pop('variables',  None)
+
+        super(AnnotatedStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+
+        return AnnotatedComment(accel=self.accel, \
+                                end=self.end, \
+                                parallel=self.parallel, \
+                                section=self.section, \
+                                visibility=self.visibility, \
+                                variables=self.variables)

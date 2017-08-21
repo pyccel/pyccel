@@ -779,8 +779,8 @@ class Comment(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
-        The expression to return.
+    text : str
+       the comment line
 
     """
 
@@ -790,3 +790,57 @@ class Comment(Basic):
     @property
     def text(self):
         return self._args[0]
+
+class AnnotatedComment(Basic):
+    """Represents a Annotated Comment in the code.
+
+    Parameters
+    ----------
+    accel : str
+       accelerator id. One among {'omp', 'acc'}
+
+    end : bool
+        True if an end section. [Default= False]
+
+    parallel : bool
+        True if a parallel section. [Default= False]
+
+    section : str
+        section to parallelize. One among {'for'}. [Default= '']
+
+    visibility : str
+        selected visibility. One among {'shared', 'private'}. [Default= 'shared']
+
+    variables: list
+        list of variables names. (and not Symbols!)
+
+    """
+    # TODO variables must be symbols
+
+    # since some arguments may be None, we need to define their default values
+    def __new__(cls, accel, end, parallel, section, visibility, variables):
+        return Basic.__new__(cls, accel, end, parallel, section, visibility, variables)
+
+    @property
+    def accel(self):
+        return self._args[0]
+
+    @property
+    def end(self):
+        return self._args[1]
+
+    @property
+    def parallel(self):
+        return self._args[2]
+
+    @property
+    def section(self):
+        return self._args[3]
+
+    @property
+    def visibility(self):
+        return self._args[4]
+
+    @property
+    def variables(self):
+        return self._args[5]

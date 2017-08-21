@@ -27,7 +27,7 @@ from pyccel.syntax import ( \
                            AssignStmt, \
                            IfStmt, ForStmt, FunctionDefStmt, \
                            ImportFromStmt, \
-                           CommentStmt, \
+                           CommentStmt, AnnotatedStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -84,7 +84,7 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
-def gencode(ast, printer, name=None, debug=True):
+def gencode(ast, printer, name=None, debug=True, accelerator=None):
     def gencode_as_module(name, imports, preludes, body):
         # TODO improve if a block is empty
         code  = "module " + str(name)     + "\n"
@@ -115,9 +115,21 @@ def gencode(ast, printer, name=None, debug=True):
 
     imports  = ""
     preludes = ""
-    body    = ""
+    body     = ""
+
+    # ... TODO improve. mv somewhere else
+    if not (accelerator is None):
+        if accelerator == "openmp":
+            imports += "use omp_lib "
+        else:
+            raise ValueError("Only openmp is available")
+    # ...
+
+    # ...
     for stmt in ast.statements:
         if isinstance(stmt, CommentStmt):
+            body += fcode(stmt.expr) + "\n"+ "\n"
+        elif isinstance(stmt, AnnotatedStmt):
             body += fcode(stmt.expr) + "\n"+ "\n"
         elif isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
@@ -156,6 +168,7 @@ def gencode(ast, printer, name=None, debug=True):
                 print "> uncovered statement of type : ", type(stmt)
             else:
                 raise Exception('Statement not yet handled.')
+    # ...
 
     code = gencode_as_program(name, imports, preludes, body)
 #    code = gencode_as_module(name, imports, preludes, body)
@@ -177,8 +190,20 @@ def write_to_file(code, filename, language="fortran"):
 # ...
 
 # ...
-def compile_file(filename, compiler="gfortran", language="fortran"):
-    if not(compiler == "gfortran"):
+def compile_file(filename, \
+                 compiler="gfortran", language="fortran", \
+                 accelerator=None, \
+                 verbose=False):
+    """
+    """
+    flags = " -O2 "
+    if compiler == "gfortran":
+        if not (accelerator is None):
+            if accelerator == "openmp":
+                flags += " -fopenmp "
+            else:
+                raise ValueError("Only openmp is available")
+    else:
         raise ValueError("Only gfortran is available")
 
     if language == "fortran":
@@ -187,7 +212,11 @@ def compile_file(filename, compiler="gfortran", language="fortran"):
         raise ValueError("Only fortran is available")
 
     binary = filename.split('.' + ext)[0]
-    cmd = compiler + " -O2 " + filename + " -o" + binary
+    cmd = compiler + flags + filename + " -o" + binary
+
+    if verbose:
+        print cmd
+
     os.system(cmd)
 
     return binary
@@ -217,6 +246,8 @@ parser.add_argument('--language', type=str, \
                     help='Target language')
 parser.add_argument('--compiler', type=str, \
                     help='Used compiler')
+parser.add_argument('--openmp', action='store_true', \
+                    help='uses openmp')
 parser.add_argument('--execute', action='store_true', \
                     help='executes the binary file')
 # ...
@@ -240,6 +271,10 @@ else:
     compiler = None
 
 execute = args.execute
+
+accelerator = None
+if args.openmp:
+    accelerator = "openmp"
 # ...
 
 # ... creates an instance of Pyccel parser
@@ -252,7 +287,9 @@ ast = pyccel.parse_from_file(filename_tmp)
 
 name = None
 name = "main"
-code = gencode(ast, fcode, name=name)
+code = gencode(ast, fcode, \
+               name=name, \
+               accelerator=accelerator)
 
 if not execute:
     print "---------------------------"
@@ -264,7 +301,10 @@ if not execute:
 filename_out = write_to_file(code, filename, language="fortran")
 
 if compiler:
-    binary = compile_file(filename_out, compiler="gfortran", language="fortran")
+    binary = compile_file(filename_out, \
+                          compiler="gfortran", language="fortran", \
+                          accelerator=accelerator, \
+                          verbose=False)
 
 if compiler and execute:
     execute_file(binary)
