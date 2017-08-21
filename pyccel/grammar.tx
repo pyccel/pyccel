@@ -11,7 +11,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (PassStmt | FlowStmt | DelStmt | ImportStmt | DeclarationStmt | ExprStmt )
+  (PassStmt | FlowStmt | DelStmt | ImportStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
 ;
 
 CompoundStmt:
@@ -139,8 +139,16 @@ ArgList:
   LPAREN args+=IdentifierOrNumber[','] RPAREN
 ;
 
+PythonStdLibStmt:
+  (PythonPrintStmt)
+;
+
 ExprStmt: 
   (NumpyStmt | AssignStmt)
+;
+
+PythonPrintStmt: 
+  name='print' LPAREN args+=Expression[','] RPAREN 
 ;
 
 NumpyStmt: 

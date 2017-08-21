@@ -25,6 +25,8 @@ from pyccel.syntax import ( \
                            AssignStmt, \
                            IfStmt, ForStmt, FunctionDefStmt, \
                            ImportFromStmt, \
+                           # python standard library statements
+                           PythonPrintStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt \
@@ -79,7 +81,7 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
-def gencode(ast, printer, name=None):
+def gencode(ast, printer, name=None, debug=True):
     def gencode_as_module(name, imports, preludes, body):
         # TODO improve if a block is empty
         code  = "module " + str(name)     + "\n"
@@ -137,8 +139,14 @@ def gencode(ast, printer, name=None):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
             body += fcode(stmt.expr) + "\n"+ "\n"
+        elif isinstance(stmt, PythonPrintStmt):
+            body += fcode(stmt.expr) + "\n"+ "\n"
         else:
-            raise Exception('Statement not yet handled.')
+            if debug:
+                print "> uncovered statement of type : ", type(stmt)
+                stmt.expr
+            else:
+                raise Exception('Statement not yet handled.')
 
     code = gencode_as_program(name, imports, preludes, body)
 #    code = gencode_as_module(name, imports, preludes, body)

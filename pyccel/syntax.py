@@ -10,6 +10,7 @@ from pyccel.types.ast import For, Assign, Declare, Variable
 from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
+from pyccel.types.ast import Print
 from pyccel.types.ast import NumpyZeros
 
 DEBUG = False
@@ -27,6 +28,8 @@ __all__ = ["Pyccel", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
            "ImportFromStmt", \
+           # python standard library statements
+           "PythonPrintStmt", \
            # numpy statments
            "NumpyZerosStmt", "NumpyZerosLikeStmt", \
            "NumpyOnesStmt", "NumpyLinspaceStmt", \
@@ -850,3 +853,22 @@ class ImportFromStmt(BasicStmt):
         fil = self.dotted_name.names[0]
         funcs = self.import_as_names.names
         return Import(fil, funcs)
+
+class PythonPrintStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        self.args = kwargs.pop('args')
+
+        super(PythonPrintStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+
+        func_name   = self.name
+        args        = self.args
+        expressions = [arg.expr for arg in args]
+        return Print(expressions)

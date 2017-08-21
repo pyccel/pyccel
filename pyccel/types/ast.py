@@ -40,6 +40,7 @@ AST Type Tree
      |--->Import
      |--->Declare
      |--->Return
+     |--->Print
 """
 
 from __future__ import print_function, division
@@ -699,7 +700,22 @@ class NumpyZeros(Basic):
     def shape(self):
         return self._args[1]
 
-#    @property
-#    def expr(self):
-#        return self.rhs
+class Print(Basic):
+    """Represents a print function in the code.
+
+    Parameters
+    ----------
+    expr : sympy expr
+        The expression to return.
+
+    """
+
+    def __new__(cls, expr):
+        if not isinstance(expr, list):
+            expr = _sympify(expr)
+        return Basic.__new__(cls, expr)
+
+    @property
+    def expr(self):
+        return self._args[0]
 

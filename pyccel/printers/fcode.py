@@ -96,6 +96,10 @@ class FCodePrinter(CodePrinter):
             funcs = ', '.join(self._print(f) for f in expr.funcs)
             return 'use {0}, only: {1}'.format(fil, funcs)
 
+    def _print_Print(self, expr):
+        fs = ', '.join(self._print(f) for f in expr.expr)
+        return 'print *, {0} '.format(fs)
+
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)
