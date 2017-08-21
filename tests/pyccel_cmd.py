@@ -42,7 +42,7 @@ def clean(filename):
     name = filename.split('.py')[0]
     for ext in ["f90", "pyccel"]:
         f_name = name + "." + ext
-        cmd = "rm " + f_name
+        cmd = "rm -f " + f_name
         os.system(cmd)
 # ...
 
@@ -95,7 +95,7 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
-def gencode(ast, printer, name=None, debug=True, accelerator=None):
+def gencode(ast, printer, name=None, debug=False, accelerator=None):
     def gencode_as_module(name, imports, preludes, body):
         # TODO improve if a block is empty
         code  = "module " + str(name)     + "\n"
@@ -204,11 +204,15 @@ def write_to_file(code, filename, language="fortran"):
 def compile_file(filename, \
                  compiler="gfortran", language="fortran", \
                  accelerator=None, \
+                 debug=False, \
                  verbose=False):
     """
     """
     flags = " -O2 "
     if compiler == "gfortran":
+        if debug:
+            flags += " -fbounds-check "
+
         if not (accelerator is None):
             if accelerator == "openmp":
                 flags += " -fopenmp "
@@ -263,6 +267,8 @@ parser.add_argument('--execute', action='store_true', \
                     help='executes the binary file')
 parser.add_argument('--show', action='store_true', \
                     help='prints the generated file.')
+parser.add_argument('--debug', action='store_true', \
+                    help='compiles the code in a debug mode.')
 # ...
 
 # ...
@@ -288,6 +294,9 @@ execute = args.execute
 accelerator = None
 if args.openmp:
     accelerator = "openmp"
+
+debug = args.debug
+show  = args.show
 # ...
 
 # ... creates an instance of Pyccel parser
@@ -306,7 +315,7 @@ code = gencode(ast, fcode, \
                name=name, \
                accelerator=accelerator)
 
-if args.show:
+if show:
     print "---------------------------"
     print code
     print "---------------------------"
@@ -319,6 +328,7 @@ if compiler:
     binary = compile_file(filename_out, \
                           compiler="gfortran", language="fortran", \
                           accelerator=accelerator, \
+                          debug=debug, \
                           verbose=False)
 
 if compiler and execute:

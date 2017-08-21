@@ -16,3 +16,8 @@ a. Implement a new *Python* parser (we do not need to cover all *Python* grammar
 b. Enrich *Python* with new statments to provide multi-threading (although some of them already exist) at the target level
 
 c. Extends the concepts presented in **sympy** allowing for automatic code generation.  
+
+BUGS
+****
+
+- non-annotated comments work only if there is no white space between *#*  and the following character

@@ -19,9 +19,9 @@ print(d)
 
 x = zeros(shape=(2,8), dtype=float)
 x[1,1] = 1
-print(x)
 
 y = x[0,2]
+print(y)
 
 #z = linspace(0,4,1)
 #t = z[1:3]

@@ -5,6 +5,7 @@ from sympy import true, false
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.core.power import Pow
 
 from pyccel.types.ast import For, Assign, Declare, Variable
 from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
@@ -453,14 +454,8 @@ class FactorBinary(ExpressionElement):
         expr_l = self.op[0].expr
         expr_r = self.op[1].expr
 
-        if self.name == "dot":
-            return dot(expr_l, expr_r)
-        elif self.name == "inner":
-            return inner(expr_l, expr_r)
-        elif self.name == "outer":
-            return outer(expr_l, expr_r)
-        elif self.name == "cross":
-            return cross(expr_l, expr_r)
+        if self.name == "pow":
+            return Pow(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))

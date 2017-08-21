@@ -310,7 +310,7 @@ UnaryOp:
 ;
 
 BinaryOp:
-   ('sum')
+   ('pow')
 ;
 
 EQ:
