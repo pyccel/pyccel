@@ -45,14 +45,56 @@ __all__ = ["Pyccel", \
 
 
 # Global variable namespace
-namespace = {}
-stack     = {}
-settings  = {}
+namespace    = {}
+stack        = {}
+settings     = {}
+variables    = {}
+declarations = {}
 
 operators = {}
 
 namespace["True"]  = true
 namespace["False"] = false
+
+def insert_variable(var_name, var=None, datatype=None, rank=0):
+    if type(var_name) in [int, float]:
+        return
+
+    if datatype is None:
+#        datatype = 'int'
+        datatype = 'float'
+
+    is_integer = (datatype == 'int')
+
+    # we first create a sympy symbol
+    s = Symbol(var_name, integer=is_integer)
+
+    # we create a variable (for annotation)
+    if var is None:
+        var = Variable(datatype, s, rank=rank)
+
+    # we create a declaration for code generation
+    dec = Declare(datatype, var)
+
+    if var_name in namespace:
+        var_old = variables[var_name]
+        if not (var == var_old):
+            if DEBUG:
+                print ">>> wrong declaration : ", var_name
+                print "    type will be changed."
+
+            namespace.pop(var_name)
+            variables.pop(var_name)
+            declarations.pop(var_name)
+
+            namespace[var_name]    = s
+            variables[var_name]    = var
+            declarations[var_name] = dec
+    else:
+        namespace[var_name]    = s
+        variables[var_name]    = var
+        declarations[var_name] = dec
+
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -86,6 +128,7 @@ class Number(object):
 
 class BasicStmt(object):
     def __init__(self, **kwargs):
+        # TODO declarations and statements must be a dictionary
         self.declarations = []
         self.statements   = []
 
@@ -282,12 +325,10 @@ class AssignStmt(BasicStmt):
             if DEBUG:
                 print("> Found new variable " + var_name)
 
-            var = Symbol(var_name)
-            namespace[var_name] = var
             # TODO check if var is a return value
             rank = 0
-            dec = Variable(datatype, var, rank=rank)
-            self.declarations.append(Declare(datatype, dec))
+            insert_variable(var_name, datatype=datatype, rank=rank)
+            self.declarations.append(declarations[var_name])
 
     @property
     def expr(self):
@@ -321,14 +362,36 @@ class ForStmt(BasicStmt):
         # TODO add step
         self.step     = 1
 
-        namespace[self.iterable] = Symbol(self.iterable, integer=True)
-
         super(ForStmt, self).__init__(**kwargs)
 
     def update(self):
-        i   = Symbol(self.iterable, integer=True)
-        dec = Variable('int', i)
-        self.declarations.append(Declare('int', dec))
+        # check that start and end were declared, if they are symbols
+
+        insert_variable(self.start,    datatype='int')
+        insert_variable(self.end,      datatype='int')
+        insert_variable(self.iterable, datatype='int')
+
+        self.declarations.append(declarations[self.iterable])
+#        self.declarations.append(declarations[self.end])
+
+#        if not ri:
+#            self.declarations.append(declarations[self.iterable])
+#
+#        if re:
+#            dec_new = declarations[self.end]
+#            names = [str(v.name) for v in dec_new.variables]
+#            if self.end in names:
+#                i = 0
+#                for dec in self.declarations:
+#                    name = str(dec.variables[0].name)
+#                    if name == self.end:
+#                        break
+#                    i +=1
+#                    print name, self.end, i
+#                if i < len(self.declarations) :
+#                    self.declarations[i] = declarations[self.end]
+#        else:
+#            self.declarations.append(declarations[self.end])
 
         body = []
         for stmt in self.body:
