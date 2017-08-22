@@ -20,7 +20,9 @@ c. Extends the concepts presented in **sympy** allowing for automatic code gener
 Important remarks
 *****************
 
-1. *Python* is cool because there are many useful libraries (*numpy*, *scipy* etc). This is in fact a problem if one tries to convert a *Python* to a *Fortran* code for example. For instance, a function like **zeros** does not have an equivalent in *Fortran*. One can think of it like
+1. Because of the nature of *Python*, we will have to take some conventions. We refer to the corresponding section for more details.
+
+2. *Python* is cool because there are many useful libraries (*numpy*, *scipy* etc). This is in fact a problem if one tries to convert a *Python* code to a *Fortran* one for example. For instance, a function like **zeros** does not have an equivalent in *Fortran*. One can think of it like
 
   .. code-block:: fortran
 
@@ -43,13 +45,6 @@ Important remarks
 
     from numpy import zeros, ones
 
-
-
-BUGS
-****
-
-TODO
-****
 
 Numpy functions
 ^^^^^^^^^^^^^^^
@@ -86,7 +81,7 @@ The generated code should look like
   ! generated fortran code
   real, allocatable :: a(:)
   ...
-  a = (/ 1.0, 0.25, 0.7, 0.9 /)
+  a = linspace(0.0, 1.0, 100)
 
 * **zeroslike**
 
@@ -116,7 +111,7 @@ The generated code should look like
 .. code-block:: fortran
 
   ! generated fortran code
-  real :: a(:)
+  real, allocatable :: a(:)
   ...
   a = ones(64) 
 
@@ -141,16 +136,16 @@ The generated code should look like
 .. code-block:: python
 
   # input python code
-  a = array([1.0, 0.25, 0.7, 0.9], dtype=float)
+  x = meshgrid(u,v)
 
 The generated code should look like
 
 .. code-block:: fortran
 
   ! generated fortran code
-  real :: a(4)
+  real, allocatable :: x(:,:)
   ...
-  a = (/ 1.0, 0.25, 0.7, 0.9 /)
+  x = meshgrid(u,v)
 
 * **array**
 
@@ -175,3 +170,13 @@ Python standard library
 * **range**
 
 * **len**
+
+Conventions and Rules
+*********************
+
+BUGS
+****
+
+TODO
+****
+
