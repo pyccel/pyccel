@@ -56,7 +56,7 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
-def insert_variable(var_name, var=None, datatype=None, rank=0):
+def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False):
     if type(var_name) in [int, float]:
         return
 
@@ -71,7 +71,7 @@ def insert_variable(var_name, var=None, datatype=None, rank=0):
 
     # we create a variable (for annotation)
     if var is None:
-        var = Variable(datatype, s, rank=rank)
+        var = Variable(datatype, s, rank=rank, allocatable=allocatable)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
@@ -103,14 +103,8 @@ class Pyccel(object):
         Constructor for Pyccel.
 
         """
-        try:
-            self.declarations = kwargs.pop('declarations')
-        except:
-            self.declarations = []
-        try:
-            self.statements = kwargs.pop('statements')
-        except:
-            self.statements = []
+        self.declarations = kwargs.pop('declarations', [])
+        self.statements   = kwargs.pop('statements',   [])
 
 class Number(object):
     """Class representing a number."""
@@ -129,8 +123,12 @@ class Number(object):
 class BasicStmt(object):
     def __init__(self, **kwargs):
         # TODO declarations and statements must be a dictionary
-        self.declarations = []
         self.statements   = []
+        self.local_vars   = []
+
+    @property
+    def declarations(self):
+        return [declarations[v] for v in self.local_vars]
 
     def update(self):
         pass
@@ -149,13 +147,14 @@ class BasicStmt(object):
                     else:
                         arg = Symbol(arg.name, integer=True)
                 except:
-                    rhs = a.expr
-                    # TODO ARA
-                    name = 'result_%d' % abs(hash(rhs))
-                    arg = Symbol(name, integer=True)
-                    var = Variable('int', arg)
-                    self.declarations.append(Declare('int', var))
-                    self.statements.append(Assign(arg, rhs))
+                    raise Exception('not available yet')
+#                    rhs = a.expr
+#                    # TODO ARA
+#                    name = 'result_%d' % abs(hash(rhs))
+#                    arg = Symbol(name, integer=True)
+#                    var = Variable('int', arg)
+#                    self.declarations.append(Declare('int', var))
+#                    self.statements.append(Assign(arg, rhs))
             else:
                 arg = Integer(a)
             return arg
@@ -328,7 +327,7 @@ class AssignStmt(BasicStmt):
             # TODO check if var is a return value
             rank = 0
             insert_variable(var_name, datatype=datatype, rank=rank)
-            self.declarations.append(declarations[var_name])
+            self.local_vars.append(var_name)
 
     @property
     def expr(self):
@@ -371,8 +370,8 @@ class ForStmt(BasicStmt):
         insert_variable(self.end,      datatype='int')
         insert_variable(self.iterable, datatype='int')
 
-        self.declarations.append(declarations[self.iterable])
-#        self.declarations.append(declarations[self.end])
+        self.local_vars.append(self.iterable)
+        # TODO insert end and start if they are symbols
 
 #        if not ri:
 #            self.declarations.append(declarations[self.iterable])
@@ -402,7 +401,8 @@ class ForStmt(BasicStmt):
 
         for stmt in body:
             e = stmt.expr
-            self.declarations += stmt.declarations
+            # TODO to improve
+            self.local_vars += stmt.local_vars
 
     @property
     def expr(self):
@@ -847,17 +847,16 @@ class NumpyZerosStmt(AssignStmt):
                 raise Exception('Wrong instance for shape.')
             self.shape = shape
 
-            var = Symbol(var_name)
-
-            namespace[var_name] = var
             if datatype is None:
                 if DEBUG:
                     print("> No Datatype is specified, int will be used.")
                 datatype = 'int'
             # TODO check if var is a return value
-
-            dec = Variable(datatype, var, rank=rank, allocatable=True)
-            self.declarations.append(Declare(datatype, dec))
+            insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True)
+            self.local_vars.append(var_name)
 
     @property
     def expr(self):
