@@ -3,6 +3,7 @@
 #from numpy import zeros
 #from numpy import linspace
 
+
 a = zeros(shape=64, dtype=float)
 b = zeros(shape=8, dtype=int)
 
@@ -24,4 +25,4 @@ y = x[0,2]
 print(y)
 
 #z = linspace(0,4,1)
-#t = z[1:3]
+#t = x[1:3]

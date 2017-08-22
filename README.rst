@@ -34,3 +34,27 @@ The following **numpy** functions are recognized as *elements* of **Pyccel**:
 
   a = zeros(shape=64, dtype=float)
 
+* **linspace**
+
+* **zeroslike**
+
+* **ones**
+
+* **random**
+
+* **meshgrid**
+
+* **array**
+
+.. code-block:: python
+
+  a = array([1.0, 0.25, 0.7, 0.9])
+
+will generate a *Tuple* in the **AST**
+
+Python standard library
+^^^^^^^^^^^^^^^^^^^^^^^
+
+* **range**
+
+* **len**
