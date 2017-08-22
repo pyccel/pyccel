@@ -20,3 +20,17 @@ c. Extends the concepts presented in **sympy** allowing for automatic code gener
 BUGS
 ****
 
+TODO
+****
+
+Numpy functions
+^^^^^^^^^^^^^^^
+
+The following **numpy** functions are recognized as *elements* of **Pyccel**:
+
+* **zeros**. THe following statements should be valid
+
+.. code-block:: python
+
+  a = zeros(shape=64, dtype=float)
+
