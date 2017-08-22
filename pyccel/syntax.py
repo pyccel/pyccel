@@ -79,8 +79,7 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
     if var_name in namespace:
         var_old = variables[var_name]
         if not (var == var_old):
-            if True:
-            #if DEBUG:
+            if DEBUG:
                 print ">>> wrong declaration : ", var_name
                 print "    type will be changed."
 

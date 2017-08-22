@@ -199,27 +199,6 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         preludes += fcode(dec) + "\n"
     # ...
 
-
-#    # ...
-#    for stmt in ast.statements:
-#        if isinstance(stmt, DeclarationStmt):
-#            decs = stmt.expr
-#            for dec in decs:
-#                preludes += fcode(dec) + "\n"
-#        elif isinstance(stmt, NumpyZerosStmt):
-#            for s in stmt.declarations:
-#                preludes += fcode(s) + "\n"
-#        elif isinstance(stmt, NumpyLinspaceStmt):
-#            for s in stmt.declarations:
-#                preludes += fcode(s) + "\n"
-#        elif isinstance(stmt, AssignStmt):
-#            for s in stmt.declarations:
-#                preludes += fcode(s) + "\n"
-#        elif isinstance(stmt, ForStmt):
-#            for s in stmt.declarations:
-#                preludes += fcode(s) + "\n"
-#    # ...
-
     code = gencode_as_program(name, imports, preludes, body)
 #    code = gencode_as_module(name, imports, preludes, body)
     return code
