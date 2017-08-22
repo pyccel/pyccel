@@ -79,7 +79,8 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
     if var_name in namespace:
         var_old = variables[var_name]
         if not (var == var_old):
-            if DEBUG:
+            if True:
+            #if DEBUG:
                 print ">>> wrong declaration : ", var_name
                 print "    type will be changed."
 
@@ -103,8 +104,11 @@ class Pyccel(object):
         Constructor for Pyccel.
 
         """
-        self.declarations = kwargs.pop('declarations', [])
         self.statements   = kwargs.pop('statements',   [])
+
+    @property
+    def declarations(self):
+        return declarations
 
 class Number(object):
     """Class representing a number."""
@@ -371,7 +375,11 @@ class ForStmt(BasicStmt):
         insert_variable(self.iterable, datatype='int')
 
         self.local_vars.append(self.iterable)
-        # TODO insert end and start if they are symbols
+
+        if not(type(self.start) in [int, float]):
+            self.local_vars.appstart(self.start)
+        if not(type(self.end) in [int, float]):
+            self.local_vars.append(self.end)
 
 #        if not ri:
 #            self.declarations.append(declarations[self.iterable])

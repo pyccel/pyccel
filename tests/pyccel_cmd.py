@@ -95,7 +95,8 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
-def gencode(ast, printer, name=None, debug=False, accelerator=None):
+def gencode(filename, printer, name=None, debug=False, accelerator=None):
+    # ...
     def gencode_as_module(name, imports, preludes, body):
         # TODO improve if a block is empty
         code  = "module " + str(name)     + "\n"
@@ -107,7 +108,9 @@ def gencode(ast, printer, name=None, debug=False, accelerator=None):
         code += "end module " + str(name) + "\n"
 
         return code
+    # ...
 
+    # ...
     def gencode_as_program(name, imports, preludes, body):
         # TODO improve if a block is empty
         if name is None:
@@ -123,10 +126,18 @@ def gencode(ast, printer, name=None, debug=False, accelerator=None):
         code += "end"                     + "\n"
 
         return code
+    # ...
 
+    # ...
+    pyccel = PyccelParser()
+    ast = pyccel.parse_from_file(filename)
+    # ...
+
+    # ...
     imports  = ""
     preludes = ""
     body     = ""
+    # ...
 
     # ... TODO improve. mv somewhere else
     if not (accelerator is None):
@@ -146,28 +157,14 @@ def gencode(ast, printer, name=None, debug=False, accelerator=None):
             imports += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, DeclarationStmt):
             decs = stmt.expr
-            for dec in decs:
-                preludes += fcode(dec) + "\n"
         elif isinstance(stmt, NumpyZerosStmt):
             body += fcode(stmt.expr) + "\n"
-
-            for s in stmt.declarations:
-                preludes += fcode(s) + "\n"
         elif isinstance(stmt, NumpyLinspaceStmt):
             body += fcode(stmt.expr) + "\n"
-
-            for s in stmt.declarations:
-                preludes += fcode(s) + "\n"
         elif isinstance(stmt, AssignStmt):
             body += fcode(stmt.expr) + "\n"
-
-            for s in stmt.declarations:
-                preludes += fcode(s) + "\n"
         elif isinstance(stmt, ForStmt):
             body += fcode(stmt.expr) + "\n"
-
-            for s in stmt.declarations:
-                preludes += fcode(s) + "\n"
         elif isinstance(stmt, IfStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
@@ -180,6 +177,48 @@ def gencode(ast, printer, name=None, debug=False, accelerator=None):
             else:
                 raise Exception('Statement not yet handled.')
     # ...
+
+    # ...
+    declarations = []
+    for stmt in ast.statements:
+        if isinstance(stmt, DeclarationStmt):
+            decs = stmt.expr
+            declarations += decs
+        elif isinstance(stmt, NumpyZerosStmt):
+            declarations += stmt.declarations
+        elif isinstance(stmt, NumpyLinspaceStmt):
+            declarations += stmt.declarations
+        elif isinstance(stmt, AssignStmt):
+            declarations += stmt.declarations
+        elif isinstance(stmt, ForStmt):
+            declarations += stmt.declarations
+    # ...
+
+    # ...
+    for key, dec in ast.declarations.items():
+        preludes += fcode(dec) + "\n"
+    # ...
+
+
+#    # ...
+#    for stmt in ast.statements:
+#        if isinstance(stmt, DeclarationStmt):
+#            decs = stmt.expr
+#            for dec in decs:
+#                preludes += fcode(dec) + "\n"
+#        elif isinstance(stmt, NumpyZerosStmt):
+#            for s in stmt.declarations:
+#                preludes += fcode(s) + "\n"
+#        elif isinstance(stmt, NumpyLinspaceStmt):
+#            for s in stmt.declarations:
+#                preludes += fcode(s) + "\n"
+#        elif isinstance(stmt, AssignStmt):
+#            for s in stmt.declarations:
+#                preludes += fcode(s) + "\n"
+#        elif isinstance(stmt, ForStmt):
+#            for s in stmt.declarations:
+#                preludes += fcode(s) + "\n"
+#    # ...
 
     code = gencode_as_program(name, imports, preludes, body)
 #    code = gencode_as_module(name, imports, preludes, body)
@@ -300,18 +339,14 @@ show  = args.show
 # ...
 
 # ... creates an instance of Pyccel parser
-pyccel = PyccelParser()
-
 clean(filename)
 
 filename_tmp = make_tmp_file(filename)
 preprocess(filename, filename_tmp)
 
-ast = pyccel.parse_from_file(filename_tmp)
-
 name = None
 name = "main"
-code = gencode(ast, fcode, \
+code = gencode(filename_tmp, fcode, \
                name=name, \
                accelerator=accelerator)
 
