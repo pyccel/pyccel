@@ -128,10 +128,15 @@ class BasicStmt(object):
     def __init__(self, **kwargs):
         # TODO declarations and statements must be a dictionary
         self.statements   = []
+        self.stmt_vars    = []
         self.local_vars   = []
 
     @property
     def declarations(self):
+        return [declarations[v] for v in self.stmt_vars + self.local_vars]
+
+    @property
+    def local_declarations(self):
         return [declarations[v] for v in self.local_vars]
 
     def update(self):
@@ -331,7 +336,7 @@ class AssignStmt(BasicStmt):
             # TODO check if var is a return value
             rank = 0
             insert_variable(var_name, datatype=datatype, rank=rank)
-            self.local_vars.append(var_name)
+            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
@@ -376,8 +381,9 @@ class ForStmt(BasicStmt):
 
         self.local_vars.append(self.iterable)
 
+        # TODO to keep or remove?
         if not(type(self.start) in [int, float]):
-            self.local_vars.appstart(self.start)
+            self.local_vars.append(self.start)
         if not(type(self.end) in [int, float]):
             self.local_vars.append(self.end)
 
@@ -411,6 +417,7 @@ class ForStmt(BasicStmt):
             e = stmt.expr
             # TODO to improve
             self.local_vars += stmt.local_vars
+            self.stmt_vars  += stmt.stmt_vars
 
     @property
     def expr(self):
@@ -864,7 +871,7 @@ class NumpyZerosStmt(AssignStmt):
                             datatype=datatype, \
                             rank=rank, \
                             allocatable=True)
-            self.local_vars.append(var_name)
+            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
