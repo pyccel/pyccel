@@ -50,6 +50,15 @@ The following **numpy** functions are recognized as *elements* of **Pyccel**:
 
   a = array([1.0, 0.25, 0.7, 0.9])
 
+The generated code should look like
+
+.. code-block:: fortran
+
+  real :: a(4)
+  ...
+  a = (/ 1.0, 0.25, 0.7, 0.9 /)
+
+
 will generate a *Tuple* in the **AST**
 
 Python standard library
