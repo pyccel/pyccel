@@ -35,13 +35,13 @@ Important remarks
 
   .. code-block:: python
 
-  from pyccel.numpy import zeros, ones
+    from pyccel.numpy import zeros, ones
 
   rather than
 
   .. code-block:: python
 
-  from numpy import zeros, ones
+    from numpy import zeros, ones
 
 
 
