@@ -304,7 +304,7 @@ TrailerSubscriptList:
 ;
 
 Operand: 
-  (op=NUMBER) | (op=ID (LPAREN RPAREN)?) | (op=BOOLEAN) //| (LPAREN op=Expression RPAREN)
+  (op=NUMBER) | (op=ID) (LPAREN RPAREN)?     | (op=BOOLEAN) //| (LPAREN op=Expression RPAREN)
 ;
 
 BOOLEAN:
