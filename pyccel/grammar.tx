@@ -202,7 +202,7 @@ NumpyZerosLikeStmt:
 ;
 
 NumpyOnesStmt: 
-  lhs=ID '=' ONES LPAREN shape=INT RPAREN 
+  lhs=ID '=' ONES LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
 NumpyLinspaceStmt: 

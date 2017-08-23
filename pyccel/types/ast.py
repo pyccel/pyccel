@@ -658,7 +658,7 @@ class Return(Basic):
     def expr(self):
         return self._args[0]
 
-
+     
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
@@ -709,6 +709,57 @@ class NumpyZeros(Basic):
     def shape(self):
         return self._args[1]
 
+class NumpyOnes(Basic):
+    """Represents variable assignment using numpy.zeros for code generation.
+
+    Parameters
+    ----------
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    shape : int or list of integers
+
+    Examples
+    --------
+
+    >>> from sympy import symbols, MatrixSymbol, Matrix
+    >>> from sympy.printing.codeprinter import Assign
+    >>> x, y, z = symbols('x, y, z')
+    >>> Assign(x, y)
+    x := y
+
+    """
+
+    # TODO improve in the spirit of assign
+    def __new__(cls, lhs, shape):
+        lhs   = _sympify(lhs)
+        if isinstance(shape, list):
+            shape = Tuple(*(_sympify(i) for i in shape))
+        else:
+            shape = shape
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        
+        return Basic.__new__(cls, lhs, shape)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := 0'.format(sstr(self.lhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def shape(self):
+        return self._args[1]
+    
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
 
@@ -762,6 +813,8 @@ class NumpyLinspace(Basic):
     @property
     def size(self):
         return self._args[3]
+
+
 
 class Print(Basic):
     """Represents a print function in the code.

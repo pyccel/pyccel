@@ -1,5 +1,4 @@
 # coding: utf-8
-
 from sympy import Symbol, sympify, Piecewise, Integer, Float, Add, Mul
 from sympy import true, false
 from sympy.tensor import Idx, Indexed, IndexedBase
@@ -16,7 +15,7 @@ from pyccel.types.ast import Comment
 from pyccel.types.ast import AnnotatedComment
 from pyccel.types.ast import IndexedVariable
 from pyccel.types.ast import Slice
-from pyccel.types.ast import NumpyZeros, NumpyLinspace
+from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes
 
 DEBUG = False
 #DEBUG = True
@@ -45,14 +44,56 @@ __all__ = ["Pyccel", \
 
 
 # Global variable namespace
-namespace = {}
-stack     = {}
-settings  = {}
+namespace    = {}
+stack        = {}
+settings     = {}
+variables    = {}
+declarations = {}
 
 operators = {}
 
 namespace["True"]  = true
 namespace["False"] = false
+
+def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False):
+    if type(var_name) in [int, float]:
+        return
+
+    if datatype is None:
+#        datatype = 'int'
+        datatype = 'float'
+
+    is_integer = (datatype == 'int')
+
+    # we first create a sympy symbol
+    s = Symbol(var_name, integer=is_integer)
+
+    # we create a variable (for annotation)
+    if var is None:
+        var = Variable(datatype, s, rank=rank, allocatable=allocatable)
+
+    # we create a declaration for code generation
+    dec = Declare(datatype, var)
+
+    if var_name in namespace:
+        var_old = variables[var_name]
+        if not (var == var_old):
+            if DEBUG:
+                print ">>> wrong declaration : ", var_name
+                print "    type will be changed."
+
+            namespace.pop(var_name)
+            variables.pop(var_name)
+            declarations.pop(var_name)
+
+            namespace[var_name]    = s
+            variables[var_name]    = var
+            declarations[var_name] = dec
+    else:
+        namespace[var_name]    = s
+        variables[var_name]    = var
+        declarations[var_name] = dec
+
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -61,14 +102,11 @@ class Pyccel(object):
         Constructor for Pyccel.
 
         """
-        try:
-            self.declarations = kwargs.pop('declarations')
-        except:
-            self.declarations = []
-        try:
-            self.statements = kwargs.pop('statements')
-        except:
-            self.statements = []
+        self.statements   = kwargs.pop('statements',   [])
+
+    @property
+    def declarations(self):
+        return declarations
 
 class Number(object):
     """Class representing a number."""
@@ -86,8 +124,18 @@ class Number(object):
 
 class BasicStmt(object):
     def __init__(self, **kwargs):
-        self.declarations = []
+        # TODO declarations and statements must be a dictionary
         self.statements   = []
+        self.stmt_vars    = []
+        self.local_vars   = []
+
+    @property
+    def declarations(self):
+        return [declarations[v] for v in self.stmt_vars + self.local_vars]
+
+    @property
+    def local_declarations(self):
+        return [declarations[v] for v in self.local_vars]
 
     def update(self):
         pass
@@ -106,13 +154,14 @@ class BasicStmt(object):
                     else:
                         arg = Symbol(arg.name, integer=True)
                 except:
-                    rhs = a.expr
-                    # TODO ARA
-                    name = 'result_%d' % abs(hash(rhs))
-                    arg = Symbol(name, integer=True)
-                    var = Variable('int', arg)
-                    self.declarations.append(Declare('int', var))
-                    self.statements.append(Assign(arg, rhs))
+                    raise Exception('not available yet')
+#                    rhs = a.expr
+#                    # TODO ARA
+#                    name = 'result_%d' % abs(hash(rhs))
+#                    arg = Symbol(name, integer=True)
+#                    var = Variable('int', arg)
+#                    self.declarations.append(Declare('int', var))
+#                    self.statements.append(Assign(arg, rhs))
             else:
                 arg = Integer(a)
             return arg
@@ -283,12 +332,10 @@ class AssignStmt(BasicStmt):
             if DEBUG:
                 print("> Found new variable " + var_name)
 
-            var = Symbol(var_name)
-            namespace[var_name] = var
             # TODO check if var is a return value
             rank = 0
-            dec = Variable(datatype, var, rank=rank)
-            self.declarations.append(Declare(datatype, dec))
+            insert_variable(var_name, datatype=datatype, rank=rank)
+            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
@@ -322,14 +369,41 @@ class ForStmt(BasicStmt):
         # TODO add step
         self.step     = 1
 
-        namespace[self.iterable] = Symbol(self.iterable, integer=True)
-
         super(ForStmt, self).__init__(**kwargs)
 
     def update(self):
-        i   = Symbol(self.iterable, integer=True)
-        dec = Variable('int', i)
-        self.declarations.append(Declare('int', dec))
+        # check that start and end were declared, if they are symbols
+
+        insert_variable(self.start,    datatype='int')
+        insert_variable(self.end,      datatype='int')
+        insert_variable(self.iterable, datatype='int')
+
+        self.local_vars.append(self.iterable)
+
+        # TODO to keep or remove?
+        if not(type(self.start) in [int, float]):
+            self.local_vars.append(self.start)
+        if not(type(self.end) in [int, float]):
+            self.local_vars.append(self.end)
+
+#        if not ri:
+#            self.declarations.append(declarations[self.iterable])
+#
+#        if re:
+#            dec_new = declarations[self.end]
+#            names = [str(v.name) for v in dec_new.variables]
+#            if self.end in names:
+#                i = 0
+#                for dec in self.declarations:
+#                    name = str(dec.variables[0].name)
+#                    if name == self.end:
+#                        break
+#                    i +=1
+#                    print name, self.end, i
+#                if i < len(self.declarations) :
+#                    self.declarations[i] = declarations[self.end]
+#        else:
+#            self.declarations.append(declarations[self.end])
 
         body = []
         for stmt in self.body:
@@ -340,7 +414,9 @@ class ForStmt(BasicStmt):
 
         for stmt in body:
             e = stmt.expr
-            self.declarations += stmt.declarations
+            # TODO to improve
+            self.local_vars += stmt.local_vars
+            self.stmt_vars  += stmt.stmt_vars
 
     @property
     def expr(self):
@@ -785,17 +861,16 @@ class NumpyZerosStmt(AssignStmt):
                 raise Exception('Wrong instance for shape.')
             self.shape = shape
 
-            var = Symbol(var_name)
-
-            namespace[var_name] = var
             if datatype is None:
                 if DEBUG:
                     print("> No Datatype is specified, int will be used.")
                 datatype = 'int'
             # TODO check if var is a return value
-
-            dec = Variable(datatype, var, rank=rank, allocatable=True)
-            self.declarations.append(Declare(datatype, dec))
+            insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True)
+            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
@@ -829,22 +904,85 @@ class NumpyZerosLikeStmt(AssignStmt):
         return ""
 
 class NumpyOnesStmt(AssignStmt):
-    """Class representing a ."""
+     
     def __init__(self, **kwargs):
         """
         """
-        self.lhs = kwargs.pop('lhs')
-        self.shape = kwargs.pop('shape')
+        self.lhs        = kwargs.pop('lhs')
+        self.parameters = kwargs.pop('parameters')
+
+        labels = [str(p.label) for p in self.parameters]
+#        values = [p.value.value for p in self.parameters]
+        values = []
+        for p in self.parameters:
+            try:
+                v = p.value.value.args
+            except:
+                v = p.value.value
+            values.append(v)
+        d = {}
+        for (label, value) in zip(labels, values):
+            d[label] = value
+        self.parameters = d
+
+        try:
+            self.datatype = self.parameters['dtype']
+        except:
+            self.datatype = 'float'
+
+        try:
+            self.shape = self.parameters['shape']
+        except:
+            raise Exception('Expecting shape at position {}'
+                            .format(self._tx_position))
 
         super(AssignStmt, self).__init__(**kwargs)
 
     def update(self):
-        pass
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+            datatype = self.datatype
+
+            rank = 0
+            if isinstance(self.shape, int):
+                shape = self.shape
+                rank = 1
+            elif isinstance(self.shape, float):
+                shape = int(self.shape)
+                rank = 1
+            elif isinstance(self.shape, list):
+                shape = [int(s) for s in self.shape]
+                rank = len(shape)
+            else:
+                raise Exception('Wrong instance for shape.')
+            self.shape = shape
+
+            if datatype is None:
+                if DEBUG:
+                    print("> No Datatype is specified, int will be used.")
+                datatype = 'int'
+            # TODO check if var is a return value
+            insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True)
+            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
         self.update()
-        return ""
+
+        shape = self.shape
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        stmt = NumpyOnes(var, shape)
+
+        return stmt
 
 class NumpyLinspaceStmt(AssignStmt):
     """Class representing a ."""
