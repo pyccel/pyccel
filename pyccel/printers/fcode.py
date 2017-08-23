@@ -100,7 +100,16 @@ class FCodePrinter(CodePrinter):
             return 'use {0}, only: {1}'.format(fil, funcs)
 
     def _print_Print(self, expr):
-        fs = ', '.join(self._print(f) for f in expr.expr)
+        Str=[]
+        for f in expr.expr:
+             if isinstance(f,str):
+                 Str.append(repr(f))
+             else:
+                Str.append(self._print(f))
+        
+                     
+        fs = ', '.join(Str)
+
         return 'print *, {0} '.format(fs)
 
     def _print_Comment(self, expr):

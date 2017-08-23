@@ -254,6 +254,7 @@ class AssignStmt(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
+        
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
         self.trailer = kwargs.pop('trailer', None)
