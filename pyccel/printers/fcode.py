@@ -1,3 +1,5 @@
+# coding: utf-8
+
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 

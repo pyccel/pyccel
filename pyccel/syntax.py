@@ -935,7 +935,13 @@ class PythonPrintStmt(BasicStmt):
 
         func_name   = self.name
         args        = self.args
-        expressions = [arg.expr for arg in args]
+        expressions=[]
+        
+        for arg in args:
+            if not isinstance(arg,str):
+               expressions.append(arg.expr) 
+            else:
+                expressions.append(arg)
         return Print(expressions)
 
 class CommentStmt(BasicStmt):

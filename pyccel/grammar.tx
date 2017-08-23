@@ -172,7 +172,10 @@ ExprStmt:
 ;
 
 PythonPrintStmt: 
-  name='print' LPAREN args+=Expression[','] RPAREN 
+  name='print' LPAREN   (args+=PrintStmt[',']) RPAREN 
+;
+PrintStmt:
+  (STRING|Expression)
 ;
 
 NumpyStmt: 

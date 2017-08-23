@@ -1,3 +1,5 @@
+# coding: utf-8
+
 """
 Types used to represent a full function/module as an Abstract Syntax Tree.
 
