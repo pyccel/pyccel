@@ -56,7 +56,8 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
-def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False):
+def insert_variable(var_name, var=None, datatype=None, rank=0, \
+                    allocatable=False, is_argument=False):
     if type(var_name) in [int, float]:
         return
 
@@ -71,7 +72,10 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
 
     # we create a variable (for annotation)
     if var is None:
-        var = Variable(datatype, s, rank=rank, allocatable=allocatable)
+        if not is_argument:
+            var = Variable(datatype, s, rank=rank, allocatable=allocatable)
+        else:
+            var = InArgument(datatype, s)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
@@ -107,7 +111,11 @@ class Pyccel(object):
 
     @property
     def declarations(self):
-        return declarations
+        d = {}
+        for key,dec in declarations.items():
+            if not(isinstance(dec, Argument)):
+                d[key] = dec
+        return d
 
 class Number(object):
     """Class representing a number."""
@@ -760,47 +768,48 @@ class FunctionDefStmt(BasicStmt):
                 if DEBUG:
                     print("> Found new argument" + arg_name)
 
-                arg = Symbol(arg_name)
-                namespace[arg_name] = arg
-                datatype = 'int'
-                # TODO define datatype
+                # TODO define datatype, rank
                 # TODO check if arg is a return value
-                dec = InArgument(datatype, arg)
-                self.declarations.append(Declare(datatype, dec))
+                rank = 0
+                datatype = 'float'
+                insert_variable(arg_name, datatype=datatype, rank=rank,
+                                is_argument=True)
+
 
     @property
     def expr(self):
+        # TODO must copy code from codegen/routine
+        self.update()
+
         name = str(self.name)
 
         # TODO datatype
         datatype = 'int'
 
-        args = [InArgument(datatype, v) for v in self.args]
+        args    = [variables[arg_name] for arg_name in self.args]
+        prelude = [declarations[arg_name] for arg_name in self.args]
 
         body = []
         for stmt in self.body:
-            print type(stmt)
             if isinstance(stmt, list):
-                body += stmt
+                body += [e.expr for e in stmt]
             elif not(isinstance(stmt, ReturnStmt)):
-                body.append(stmt)
-
-        self.update()
-
-        body = [stmt.expr for stmt in body]
+                body.append(stmt.expr)
 
         results = []
-        prelude = self.declarations
-        for stmt in self.body:
-            if not(isinstance(stmt, ReturnStmt)):
-                prelude += stmt.declarations
-            else:
-                results += stmt.expr
-        body = prelude + body
+#        prelude = self.declarations
+#        for stmt in self.body:
+#            if not(isinstance(stmt, ReturnStmt)):
+#                prelude += stmt.declarations
+#            else:
+#                results += stmt.expr
 
         for arg_name in self.args:
-            if (arg_name in namespace):
-                namespace.pop(arg_name)
+            declarations.pop(arg_name)
+            variables.pop(arg_name)
+
+
+        body = prelude + body
 
         return FunctionDef(name, args, body, results)
 

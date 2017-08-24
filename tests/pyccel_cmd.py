@@ -150,9 +150,9 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     # ...
     for stmt in ast.statements:
         if isinstance(stmt, CommentStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, AnnotatedStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, DeclarationStmt):
@@ -168,30 +168,14 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         elif isinstance(stmt, IfStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, PythonPrintStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         else:
             if debug:
                 print "> uncovered statement of type : ", type(stmt)
             else:
                 raise Exception('Statement not yet handled.')
-    # ...
-
-    # ...
-    declarations = []
-    for stmt in ast.statements:
-        if isinstance(stmt, DeclarationStmt):
-            decs = stmt.expr
-            declarations += decs
-        elif isinstance(stmt, NumpyZerosStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, NumpyLinspaceStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, AssignStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, ForStmt):
-            declarations += stmt.declarations
     # ...
 
     # ...
