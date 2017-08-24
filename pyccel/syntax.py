@@ -796,7 +796,6 @@ class FunctionDefStmt(BasicStmt):
             elif not(isinstance(stmt, ReturnStmt)):
                 body.append(stmt.expr)
 
-        results = []
 #        prelude = self.declarations
 #        for stmt in self.body:
 #            if not(isinstance(stmt, ReturnStmt)):
@@ -808,10 +807,21 @@ class FunctionDefStmt(BasicStmt):
             declarations.pop(arg_name)
             variables.pop(arg_name)
 
+        for stmt in self.body:
+            print stmt
+            if isinstance(stmt, AssignStmt):
+                var_name = stmt.lhs
+                var = variables.pop(var_name, None)
+                dec = declarations.pop(var_name, None)
+                prelude.append(dec)
 
         body = prelude + body
 
-        return FunctionDef(name, args, body, results)
+        results = []
+        local_vars  = []
+        global_vars = []
+
+        return FunctionDef(name, args, results, body, local_vars, global_vars)
 
 class NumpyZerosStmt(AssignStmt):
     """Class representing a ."""
