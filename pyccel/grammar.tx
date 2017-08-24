@@ -182,7 +182,7 @@ PrintStmt:
 ;
 
 NumpyStmt: 
-  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt)
+  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt|NumpyArrayStmt)
 ;
 
 ParameterValue:
@@ -202,15 +202,23 @@ NumpyZerosLikeStmt:
 ;
 
 NumpyOnesStmt: 
-  lhs=ID '=' ONES LPAREN parameters+=ParameterSingle[','] RPAREN 
+  lhs=ID '=' ONES    LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
 NumpyLinspaceStmt: 
   lhs=ID '=' LINSPACE LPAREN 
                              start=IdentifierOrNumber COMMA
                              end=IdentifierOrNumber COMMA
-                             size=INT
+                             size=IdentifierOrNumber
                        RPAREN 
+;
+
+
+NumpyArrayStmt:
+   lhs=ID '=' ARRAY LPAREN '[' rhs+=NUMBEROrSTRING[','] ']' ',' 'dtype' '=' dtype=DataType RPAREN
+;
+NUMBEROrSTRING:
+  (NUMBER|STRING)
 ;
 
 AssignStmt: 
@@ -385,4 +393,7 @@ LINSPACE:
 
 AWAIT:
   'await'
+;
+ARRAY:
+  'array'
 ;

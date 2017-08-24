@@ -180,7 +180,12 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement("%s = linspace(%s, %s, %s)" % \
                                    (lhs_code, start_code, end_code, size_code))
-
+    def _print_NumpyArray(self,expr):
+        lhs_code   = self._print(expr.lhs)
+        lhs_size   =self._print(len(expr.rhs))
+        
+        return self._get_statement("allocate(%s(%s)) ; %s =( /"%(lhs_code,lhs_size,lhs_code)+','.join(str(i) for i in expr.rhs)+"/ )")
+        
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
         intent_lookup = {InArgument: 'in',

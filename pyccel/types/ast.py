@@ -409,7 +409,7 @@ class Variable(Basic):
 
     """
 
-    def __new__(cls, dtype, name, rank=0, allocatable=False):
+    def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
@@ -420,7 +420,13 @@ class Variable(Basic):
             raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
-        return Basic.__new__(cls, dtype, name, rank, allocatable)
+        if not shape==None:
+            if not (isinstance(shape,tuple) and all(isinstance(n, int) for n in shape)):     
+                raise TypeError("shape must be an instance of int or tuple of int")
+            
+                
+                
+        return Basic.__new__(cls, dtype, name, rank, allocatable,shape)
 
     @property
     def dtype(self):
@@ -734,13 +740,10 @@ class NumpyOnes(Basic):
     """
 
     # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape):
+    def __new__(cls, lhs,shape):
         lhs   = _sympify(lhs)
-        if isinstance(shape, list):
-            shape = Tuple(*(_sympify(i) for i in shape))
-        else:
-            shape = shape
-
+        shape   =_sympify(shape)
+        
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
@@ -759,7 +762,34 @@ class NumpyOnes(Basic):
     @property
     def shape(self):
         return self._args[1]
-    
+class NumpyArray(Basic):
+      
+    def __new__(cls, lhs,rhs):
+        lhs   = _sympify(lhs)
+        
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        if not isinstance(rhs,list):
+            raise TypeError("cannot assign rhs of type %s." % type(rhs))
+        
+        return Basic.__new__(cls, lhs, rhs)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := 0'.format(sstr(self.lhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+      
+         
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
 

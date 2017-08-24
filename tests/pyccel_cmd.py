@@ -34,7 +34,8 @@ from pyccel.syntax import ( \
                            PythonPrintStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
-                           NumpyOnesStmt, NumpyLinspaceStmt \
+                           NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt \
+                           
                            )
 
 # ...
@@ -163,6 +164,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, NumpyLinspaceStmt):
             body += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, NumpyArrayStmt):
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, AssignStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ForStmt):
@@ -177,6 +180,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             if debug:
                 print "> uncovered statement of type : ", type(stmt)
             else:
+                
                 raise Exception('Statement not yet handled.')
     # ...
 
@@ -187,6 +191,11 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             decs = stmt.expr
             declarations += decs
         elif isinstance(stmt, NumpyZerosStmt):
+            declarations += stmt.declarations
+        elif isinstance(stmt, NumpyOnesStmt):
+            declarations += stmt.declarations
+        elif isinstance(stmt, NumpyArrayStmt):
+            print(stmt.declarations)
             declarations += stmt.declarations
         elif isinstance(stmt, NumpyLinspaceStmt):
             declarations += stmt.declarations

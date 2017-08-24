@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 
-from pyccel.types.ast import For, Assign, Declare, Variable
+from pyccel.types.ast import For, Assign, Declare, Variable, datatype
 from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
@@ -15,7 +15,7 @@ from pyccel.types.ast import Comment
 from pyccel.types.ast import AnnotatedComment
 from pyccel.types.ast import IndexedVariable
 from pyccel.types.ast import Slice
-from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes
+from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
 
 DEBUG = False
 #DEBUG = True
@@ -93,7 +93,6 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
         namespace[var_name]    = s
         variables[var_name]    = var
         declarations[var_name] = dec
-
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -207,6 +206,7 @@ class DeclarationStmt(BasicStmt):
         """
         self.variables_name = kwargs.pop('variables')
         self.datatype = kwargs.pop('datatype')
+        
 
         self.variables = []
         # TODO create the appropriate type, not only Number
@@ -273,7 +273,6 @@ class PassStmt(BasicStmt):
         self.update()
 
         return self.label
-
 
 class IfStmt(BasicStmt):
     """Class representing a ."""
@@ -354,7 +353,6 @@ class AssignStmt(BasicStmt):
 
         self.update()
         return l
-
 
 class ForStmt(BasicStmt):
     """Class representing a ."""
@@ -471,7 +469,6 @@ class ExpressionElement(object):
 
         super(ExpressionElement, self).__init__()
 
-
 class FactorSigned(ExpressionElement, BasicStmt):
     """Class representing a signed factor."""
     def __init__(self, **kwargs):
@@ -491,7 +488,6 @@ class FactorSigned(ExpressionElement, BasicStmt):
             args = self.do_trailer(self.trailer)
             expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
-
 
 class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
@@ -513,7 +509,6 @@ class FactorUnary(ExpressionElement, BasicStmt):
             args = self.do_trailer(self.trailer)
             expr = IndexedVariable(str(expr))[args]
             return expr
-
 
 class FactorBinary(ExpressionElement):
     def __init__(self, **kwargs):
@@ -537,7 +532,6 @@ class FactorBinary(ExpressionElement):
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
 
-
 class Term(ExpressionElement):
     @property
     def expr(self):
@@ -551,7 +545,6 @@ class Term(ExpressionElement):
                 ret /= operand.expr
         return ret
 
-
 class Expression(ExpressionElement):
     @property
     def expr(self):
@@ -564,7 +557,6 @@ class Expression(ExpressionElement):
             else:
                 ret -= operand.expr
         return ret
-
 
 class Operand(ExpressionElement):
     @property
@@ -611,7 +603,6 @@ class Operand(ExpressionElement):
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
-
 
 class Test(ExpressionElement):
     @property
@@ -675,7 +666,6 @@ class Comparison(ExpressionElement):
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))
         return ret
-
 
 class FlowStmt(BasicStmt):
     """
@@ -838,6 +828,7 @@ class NumpyZerosStmt(AssignStmt):
                             .format(self._tx_position))
 
         super(AssignStmt, self).__init__(**kwargs)
+        self.update()
 
     def update(self):
         var_name = self.lhs
@@ -894,9 +885,16 @@ class NumpyZerosLikeStmt(AssignStmt):
         self.rhs = kwargs.pop('rhs')
 
         super(AssignStmt, self).__init__(**kwargs)
+        print(variables)
+        raise SystemExit()
 
     def update(self):
-        pass
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+        
+
 
     @property
     def expr(self):
@@ -1039,6 +1037,49 @@ class NumpyLinspaceStmt(AssignStmt):
 
         return stmt
 
+class NumpyArrayStmt(AssignStmt):
+    def __init__(self, **kwargs):
+        
+        
+        self.lhs= kwargs.pop('lhs')
+        self.rhs= kwargs.pop('rhs')
+        self.dtype=kwargs.pop('dtype')
+        super(AssignStmt, self).__init__(**kwargs)
+    
+    @property   
+    def expr(self):
+        self.update()
+        var_name = self.lhs
+        
+        var = Symbol(var_name)
+        mylist=self.rhs
+        if self.dtype=='int':
+            mylist=map(int, mylist)
+        elif self.dtype=='float':
+            mylist=map(float, mylist)
+        
+         
+        return NumpyArray(var,mylist)
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+        rank=1
+        #TODO improve later so that the rank would be bigger
+        
+        datatype=str(self.dtype)
+        if self.dtype is None:
+            datatype='float'
+            #TODO improve later
+        var=Symbol(var_name)
+        insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True)
+        self.stmt_vars.append(var_name)
+    
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
