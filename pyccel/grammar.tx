@@ -15,7 +15,7 @@ SmallStmt:
 ;
 
 CompoundStmt:
-  (IfStmt | ForStmt | DecoratedStmt)
+  (IfStmt | ForStmt | DecoratedStmt|WhileStmt)
 ;
 
 SuiteStmt: 
@@ -221,6 +221,7 @@ NUMBEROrSTRING:
   (NUMBER|STRING)
 ;
 
+
 AssignStmt: 
   lhs=ID (trailer=Trailer)? '=' rhs=Expression 
 ;
@@ -233,6 +234,15 @@ ForStmt:
   (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
   DEDENT
 ;
+WhileStmt:
+  'while' test=OrTest ':'
+  INDENT
+  (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
+  DEDENT
+;
+
+
+
 
 IfStmt: 
   'if' test=Test ':'

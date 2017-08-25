@@ -256,6 +256,37 @@ class AugAssign(Basic):
     def rhs(self):
         return self._args[2]
 
+class While(Basic):
+    """Represents a 'for-loop' in the code.
+
+    Expressions are of the form:
+        "for target in iter:
+            body..."
+
+    Parameters
+    ----------
+    target : symbol
+    iter : iterable
+    body : sympy expr
+    """
+
+    def __new__(cls, test, body):
+        test = _sympify(test)
+        
+        if not iterable(body):
+            raise TypeError("body must be an iterable")
+        body = Tuple(*(_sympify(i) for i in body))
+        return Basic.__new__(cls, test, body)
+
+    @property
+    def test(self):
+        return self._args[0]
+
+    
+    @property
+    def body(self):
+        return self._args[1]
+
 
 class For(Basic):
     """Represents a 'for-loop' in the code.
@@ -305,6 +336,7 @@ class For(Basic):
 # The following are defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
+
 
 class DataType(with_metaclass(Singleton, Basic)):
     """Base class representing native datatypes"""

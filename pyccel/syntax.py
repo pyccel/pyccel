@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 
-from pyccel.types.ast import For, Assign, Declare, Variable, datatype
+from pyccel.types.ast import For, Assign, Declare, Variable, datatype,While
 from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
@@ -93,6 +93,7 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
         namespace[var_name]    = s
         variables[var_name]    = var
         declarations[var_name] = dec
+
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -274,6 +275,7 @@ class PassStmt(BasicStmt):
 
         return self.label
 
+
 class IfStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -353,6 +355,7 @@ class AssignStmt(BasicStmt):
 
         self.update()
         return l
+
 
 class ForStmt(BasicStmt):
     """Class representing a ."""
@@ -456,6 +459,44 @@ class ForStmt(BasicStmt):
         body = [stmt.expr for stmt in body]
         return For(i, (b,e,s), body)
 
+class WhileStmt(BasicStmt):
+    
+    def __init__(self, **kwargs):
+        """
+        """
+        
+        self.test     = kwargs.pop('test')
+        self.body     = kwargs.pop('body')
+        
+
+        super(WhileStmt, self).__init__(**kwargs)
+    def update(self): 
+        
+        body = []
+        for stmt in self.body:
+            if isinstance(stmt, list):
+                body += stmt
+            else:
+                body.append(stmt)
+        for stmt in body:
+            e = stmt.expr
+            # TODO to improve
+            self.local_vars += stmt.local_vars
+            self.stmt_vars  += stmt.stmt_vars
+    @property
+    def expr(self):
+        test = self.test.expr
+        body = []
+        for stmt in self.body:
+            if isinstance(stmt, list):
+                body += stmt
+            else:
+                body.append(stmt)
+        ls = [l.expr for l in self.body]
+        
+        self.update()
+        return While(test,ls)
+    
 class ExpressionElement(object):
     """Class representing an element of an expression."""
     def __init__(self, **kwargs):
@@ -468,6 +509,7 @@ class ExpressionElement(object):
         self.op = kwargs['op']
 
         super(ExpressionElement, self).__init__()
+
 
 class FactorSigned(ExpressionElement, BasicStmt):
     """Class representing a signed factor."""
@@ -489,6 +531,7 @@ class FactorSigned(ExpressionElement, BasicStmt):
             expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
 
+
 class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
@@ -509,6 +552,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
             args = self.do_trailer(self.trailer)
             expr = IndexedVariable(str(expr))[args]
             return expr
+
 
 class FactorBinary(ExpressionElement):
     def __init__(self, **kwargs):
@@ -532,6 +576,7 @@ class FactorBinary(ExpressionElement):
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
 
+
 class Term(ExpressionElement):
     @property
     def expr(self):
@@ -545,6 +590,7 @@ class Term(ExpressionElement):
                 ret /= operand.expr
         return ret
 
+
 class Expression(ExpressionElement):
     @property
     def expr(self):
@@ -557,6 +603,7 @@ class Expression(ExpressionElement):
             else:
                 ret -= operand.expr
         return ret
+
 
 class Operand(ExpressionElement):
     @property
@@ -603,6 +650,7 @@ class Operand(ExpressionElement):
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
+
 
 class Test(ExpressionElement):
     @property
@@ -666,6 +714,7 @@ class Comparison(ExpressionElement):
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))
         return ret
+
 
 class FlowStmt(BasicStmt):
     """
@@ -828,7 +877,6 @@ class NumpyZerosStmt(AssignStmt):
                             .format(self._tx_position))
 
         super(AssignStmt, self).__init__(**kwargs)
-        self.update()
 
     def update(self):
         var_name = self.lhs
@@ -885,7 +933,7 @@ class NumpyZerosLikeStmt(AssignStmt):
         self.rhs = kwargs.pop('rhs')
 
         super(AssignStmt, self).__init__(**kwargs)
-        print(variables)
+        print(var)
         raise SystemExit()
 
     def update(self):
@@ -1079,6 +1127,11 @@ class NumpyArrayStmt(AssignStmt):
                             rank=rank, \
                             allocatable=True)
         self.stmt_vars.append(var_name)
+
+            
+        
+        
+        
     
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""

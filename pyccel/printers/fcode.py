@@ -294,7 +294,11 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
-
+    def _print_While(self,expr):
+        body = '\n'.join(self._print(i) for i in expr.body)
+        return ('do while ({test}) \n'
+                '{body}\n'
+                'end do').format(test=expr.test,body=body)
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
