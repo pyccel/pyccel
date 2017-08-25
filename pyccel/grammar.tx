@@ -41,7 +41,7 @@ DecoratedStmt:
 FunctionDefStmt: 
   'def' name=ID LPAREN args*=ID[','] RPAREN ':'
   INDENT
-  body+=Statement[';']
+  (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
   DEDENT
 ;
 

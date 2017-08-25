@@ -8,7 +8,7 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 
 from pyccel.types.ast import For, Assign, Declare, Variable
-from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
+from pyccel.types.ast import Argument, InArgument, InOutArgument, OutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
 from pyccel.types.ast import Print
@@ -724,12 +724,17 @@ class ReturnStmt(FlowStmt):
     def expr(self):
         """
         """
-        datatype = 'int'
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
-        for var in self.variables:
-            decs.append(Result(datatype, var))
+        for var_name in self.variables:
+            if var_name in variables:
+                datatype = variables[var_name].datatype
+            else:
+                datatype = 'float'
+
+            var = Result(datatype, var_name)
+            decs.append(var)
 
         self.update()
 
@@ -759,6 +764,7 @@ class FunctionDefStmt(BasicStmt):
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
+        print len(self.body)
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
@@ -783,12 +789,10 @@ class FunctionDefStmt(BasicStmt):
 
         name = str(self.name)
 
-        # TODO datatype
-        datatype = 'int'
-
         args    = [variables[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
 
+        results = []
         body = []
         for stmt in self.body:
             if isinstance(stmt, list):
@@ -796,28 +800,21 @@ class FunctionDefStmt(BasicStmt):
             elif not(isinstance(stmt, ReturnStmt)):
                 body.append(stmt.expr)
 
-#        prelude = self.declarations
-#        for stmt in self.body:
-#            if not(isinstance(stmt, ReturnStmt)):
-#                prelude += stmt.declarations
-#            else:
-#                results += stmt.expr
-
         for arg_name in self.args:
             declarations.pop(arg_name)
             variables.pop(arg_name)
 
         for stmt in self.body:
-            print stmt
             if isinstance(stmt, AssignStmt):
                 var_name = stmt.lhs
                 var = variables.pop(var_name, None)
                 dec = declarations.pop(var_name, None)
                 prelude.append(dec)
+            elif isinstance(stmt, ReturnStmt):
+                results += stmt.expr
 
         body = prelude + body
 
-        results = []
         local_vars  = []
         global_vars = []
 
