@@ -6,8 +6,8 @@ from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 
-from pyccel.types.ast import For, Assign, Declare, Variable, datatype,While
-from pyccel.types.ast import Argument, InArgument, InOutArgument, Result
+from pyccel.types.ast import For, Assign, Declare, Variable, datatype, While
+from pyccel.types.ast import Argument, InArgument, InOutArgument, OutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
 from pyccel.types.ast import Print
@@ -55,7 +55,7 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
-def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False,shape=None):
+def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False, shape=None, is_argument=False):
     if type(var_name) in [int, float]:
         return
 
@@ -70,7 +70,11 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
 
     # we create a variable (for annotation)
     if var is None:
-        var = Variable(datatype, s, rank=rank, allocatable=allocatable,shape=shape)
+        var = Variable(datatype, s, rank=rank, allocatable=allocatable, shape=shape)
+        if not is_argument:
+            var = Variable(datatype, s, rank=rank, allocatable=allocatable)
+        else:
+            var = InArgument(datatype, s)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
@@ -106,7 +110,11 @@ class Pyccel(object):
 
     @property
     def declarations(self):
-        return declarations
+        d = {}
+        for key,dec in declarations.items():
+            if not(isinstance(dec, Argument)):
+                d[key] = dec
+        return d
 
 class Number(object):
     """Class representing a number."""
@@ -207,7 +215,7 @@ class DeclarationStmt(BasicStmt):
         """
         self.variables_name = kwargs.pop('variables')
         self.datatype = kwargs.pop('datatype')
-        
+
 
         self.variables = []
         # TODO create the appropriate type, not only Number
@@ -304,7 +312,7 @@ class AssignStmt(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        
+
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
         self.trailer = kwargs.pop('trailer', None)
@@ -460,18 +468,18 @@ class ForStmt(BasicStmt):
         return For(i, (b,e,s), body)
 
 class WhileStmt(BasicStmt):
-    
+
     def __init__(self, **kwargs):
         """
         """
-        
+
         self.test     = kwargs.pop('test')
         self.body     = kwargs.pop('body')
-        
+
 
         super(WhileStmt, self).__init__(**kwargs)
-    def update(self): 
-        
+    def update(self):
+
         body = []
         for stmt in self.body:
             if isinstance(stmt, list):
@@ -493,10 +501,10 @@ class WhileStmt(BasicStmt):
             else:
                 body.append(stmt)
         ls = [l.expr for l in self.body]
-        
+
         self.update()
         return While(test,ls)
-    
+
 class ExpressionElement(object):
     """Class representing an element of an expression."""
     def __init__(self, **kwargs):
@@ -755,12 +763,17 @@ class ReturnStmt(FlowStmt):
     def expr(self):
         """
         """
-        datatype = 'int'
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
-        for var in self.variables:
-            decs.append(Result(datatype, var))
+        for var_name in self.variables:
+            if var_name in variables:
+                datatype = variables[var_name].datatype
+            else:
+                datatype = 'float'
+
+            var = Result(datatype, var_name)
+            decs.append(var)
 
         self.update()
 
@@ -790,6 +803,7 @@ class FunctionDefStmt(BasicStmt):
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
+        print len(self.body)
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
@@ -799,49 +813,51 @@ class FunctionDefStmt(BasicStmt):
                 if DEBUG:
                     print("> Found new argument" + arg_name)
 
-                arg = Symbol(arg_name)
-                namespace[arg_name] = arg
-                datatype = 'int'
-                # TODO define datatype
+                # TODO define datatype, rank
                 # TODO check if arg is a return value
-                dec = InArgument(datatype, arg)
-                self.declarations.append(Declare(datatype, dec))
+                rank = 0
+                datatype = 'float'
+                insert_variable(arg_name, datatype=datatype, rank=rank,
+                                is_argument=True)
+
 
     @property
     def expr(self):
-        name = str(self.name)
-
-        # TODO datatype
-        datatype = 'int'
-
-        args = [InArgument(datatype, v) for v in self.args]
-
-        body = []
-        for stmt in self.body:
-            print type(stmt)
-            if isinstance(stmt, list):
-                body += stmt
-            elif not(isinstance(stmt, ReturnStmt)):
-                body.append(stmt)
-
+        # TODO must copy code from codegen/routine
         self.update()
 
-        body = [stmt.expr for stmt in body]
+        name = str(self.name)
+
+        args    = [variables[arg_name] for arg_name in self.args]
+        prelude = [declarations[arg_name] for arg_name in self.args]
 
         results = []
-        prelude = self.declarations
+        body = []
         for stmt in self.body:
-            if not(isinstance(stmt, ReturnStmt)):
-                prelude += stmt.declarations
-            else:
-                results += stmt.expr
-        body = prelude + body
+            if isinstance(stmt, list):
+                body += [e.expr for e in stmt]
+            elif not(isinstance(stmt, ReturnStmt)):
+                body.append(stmt.expr)
 
         for arg_name in self.args:
-            if (arg_name in namespace):
-                namespace.pop(arg_name)
+            declarations.pop(arg_name)
+            variables.pop(arg_name)
 
-        return FunctionDef(name, args, body, results)
+        for stmt in self.body:
+            if isinstance(stmt, AssignStmt):
+                var_name = stmt.lhs
+                var = variables.pop(var_name, None)
+                dec = declarations.pop(var_name, None)
+                prelude.append(dec)
+            elif isinstance(stmt, ReturnStmt):
+                results += stmt.expr
+
+        body = prelude + body
+
+        local_vars  = []
+        global_vars = []
+
+        return FunctionDef(name, args, results, body, local_vars, global_vars)
 
 class NumpyZerosStmt(AssignStmt):
     """Class representing a ."""
@@ -933,7 +949,7 @@ class NumpyZerosLikeStmt(AssignStmt):
         self.rhs = kwargs.pop('rhs')
 
         super(AssignStmt, self).__init__(**kwargs)
-        
+
 
     def update(self):
         var_name = self.lhs
@@ -941,16 +957,16 @@ class NumpyZerosLikeStmt(AssignStmt):
             if DEBUG:
                 print("> Found new variable " + var_name)
         v=variables[self.rhs]
-        
-        
+
+
         insert_variable(var_name, \
                             datatype=v.dtype, \
                             rank=v.rank, \
                             allocatable=v.allocatable,shape=v.shape)
         self.stmt_vars.append(var_name)
-        
-        
-        
+
+
+
 
 
     @property
@@ -958,9 +974,9 @@ class NumpyZerosLikeStmt(AssignStmt):
         self.update()
         v=variables[self.rhs]
         shape = v.shape
-        
-        
-        
+
+
+
         if shape==None:
             shape=1
 
@@ -968,11 +984,11 @@ class NumpyZerosLikeStmt(AssignStmt):
         var = Symbol(var_name)
 
         stmt = NumpyZeros(var, shape)
-        
+
         return stmt
 
 class NumpyOnesStmt(AssignStmt):
-     
+
     def __init__(self, **kwargs):
         """
         """
@@ -1109,26 +1125,26 @@ class NumpyLinspaceStmt(AssignStmt):
 
 class NumpyArrayStmt(AssignStmt):
     def __init__(self, **kwargs):
-        
-        
+
+
         self.lhs= kwargs.pop('lhs')
         self.rhs= kwargs.pop('rhs')
         self.dtype=kwargs.pop('dtype')
         super(AssignStmt, self).__init__(**kwargs)
-    
-    @property   
+
+    @property
     def expr(self):
         self.update()
         var_name = self.lhs
-        
+
         var = Symbol(var_name)
         mylist=self.rhs
         if self.dtype=='int':
             mylist=map(int, mylist)
         elif self.dtype=='float':
             mylist=map(float, mylist)
-        
-         
+
+
         return NumpyArray(var,mylist)
     def update(self):
         var_name = self.lhs
@@ -1138,7 +1154,7 @@ class NumpyArrayStmt(AssignStmt):
 
         rank=1
         #TODO improve later so that the rank would be bigger
-        
+
         datatype=str(self.dtype)
         if self.dtype is None:
             datatype='float'
@@ -1150,11 +1166,11 @@ class NumpyArrayStmt(AssignStmt):
                             allocatable=True)
         self.stmt_vars.append(var_name)
 
-            
-        
-        
-        
-    
+
+
+
+
+
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -1191,10 +1207,10 @@ class PythonPrintStmt(BasicStmt):
         func_name   = self.name
         args        = self.args
         expressions=[]
-        
+
         for arg in args:
             if not isinstance(arg,str):
-               expressions.append(arg.expr) 
+               expressions.append(arg.expr)
             else:
                 expressions.append(arg)
         return Print(expressions)

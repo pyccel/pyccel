@@ -35,7 +35,7 @@ from pyccel.syntax import ( \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt \
-                           
+
                            )
 
 # ...
@@ -98,32 +98,35 @@ def preprocess(filename, filename_out):
 # ...
 def gencode(filename, printer, name=None, debug=False, accelerator=None):
     # ...
-    def gencode_as_module(name, imports, preludes, body):
-        # TODO improve if a block is empty
+    def gencode_as_module(name, imports, preludes, routines):
         code  = "module " + str(name)     + "\n"
         code += imports                   + "\n"
         code += "implicit none"           + "\n"
         code += preludes                  + "\n"
-        code += "contains"                + "\n"
-        code += body                      + "\n"
+
+        if len(routines) > 0:
+            code += "contains"            + "\n"
+            code += routines              + "\n"
         code += "end module " + str(name) + "\n"
 
         return code
     # ...
 
     # ...
-    def gencode_as_program(name, imports, preludes, body):
-        # TODO improve if a block is empty
+    def gencode_as_program(name, imports, preludes, body, routines):
         if name is None:
             name = "main"
 
-        code  = "program " + str(name)     + "\n"
+        code  = "program " + str(name)    + "\n"
         code += imports                   + "\n"
         code += "implicit none"           + "\n"
         code += preludes                  + "\n"
-        code += body                      + "\n"
-#        code += "contains"                + "\n"
-        # TODO add funcdef
+
+        if len(body) > 0:
+            code += body                  + "\n"
+        if len(routines) > 0:
+            code += "contains"            + "\n"
+            code += routines              + "\n"
         code += "end"                     + "\n"
 
         return code
@@ -138,6 +141,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     imports  = ""
     preludes = ""
     body     = ""
+    routines = ""
     # ...
 
     # ... TODO improve. mv somewhere else
@@ -151,9 +155,9 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     # ...
     for stmt in ast.statements:
         if isinstance(stmt, CommentStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, AnnotatedStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, DeclarationStmt):
@@ -177,41 +181,15 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         elif isinstance(stmt, IfStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            routines += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, PythonPrintStmt):
-            body += fcode(stmt.expr) + "\n"+ "\n"
+            body += fcode(stmt.expr) + "\n"
         else:
             if debug:
                 print "> uncovered statement of type : ", type(stmt)
             else:
-                
-                raise Exception('Statement not yet handled.')
-    # ...
 
-    # ...
-    declarations = []
-    for stmt in ast.statements:
-        if isinstance(stmt, DeclarationStmt):
-            decs = stmt.expr
-            declarations += decs
-        elif isinstance(stmt, NumpyZerosStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, NumpyZerosLikeStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, NumpyOnesStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, NumpyArrayStmt):
-            print(stmt.declarations)
-            declarations += stmt.declarations
-        elif isinstance(stmt, NumpyLinspaceStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, AssignStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt, ForStmt):
-            declarations += stmt.declarations
-        elif isinstance(stmt,WhileStmt):
-            declarations += stmt.declarations
-            
+                raise Exception('Statement not yet handled.')
     # ...
 
     # ...
@@ -219,8 +197,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         preludes += fcode(dec) + "\n"
     # ...
 
-    code = gencode_as_program(name, imports, preludes, body)
-#    code = gencode_as_module(name, imports, preludes, body)
+    code = gencode_as_program(name, imports, preludes, body, routines)
+#    code = gencode_as_module(name, imports, preludes, routines)
     return code
 # ...
 

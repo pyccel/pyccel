@@ -15,7 +15,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, Result, InArgument,
-        OutArgument, InOutArgument, Variable)
+        OutArgument, InOutArgument, Variable, Declare)
 from pyccel.printers.codeprinter import CodePrinter
 
 __all__ = ["FCodePrinter", "fcode"]
@@ -243,22 +243,55 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
+        out_args = []
+        decs = []
+        body = expr.body
+        func_end  = ''
         if len(expr.results) == 1:
             ret_type = self._print(expr.results[0].dtype)
             sig = '{0} function {1}'.format(ret_type, name)
             func_type = 'function'
+
+            result = expr.results[0]
+            func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
-            raise ValueError("Fortran doesn't support multiple return values.")
+            for result in expr.results:
+                arg = OutArgument(result.dtype, result.name)
+                out_args.append(arg)
+
+                dec = Declare(result.dtype, arg)
+                decs.append(dec)
+            sig = 'subroutine ' + name
+            func_type = 'subroutine'
+
+            names = [str(res.name) for res in expr.results]
+            body = []
+            for stmt in expr.body:
+                if isinstance(stmt, Declare):
+                    # TODO improve
+                    name = str(stmt.variables[0].name)
+                    if not(name in names):
+                        body.append(stmt)
+                else:
+                    body.append(stmt)
         else:
             sig = 'subroutine ' + name
             func_type = 'subroutine'
-        arg_code = ', '.join(self._print(i) for i in expr.arguments)
-        body = '\n'.join(self._print(i) for i in expr.body)
-        return ('{0}({1})\n'
+        out_code  = ', '.join(self._print(i) for i in out_args)
+
+        arg_code  = ', '.join(self._print(i) for i in expr.arguments)
+        if len(out_code) > 0:
+            arg_code  = ', '.join(i for i in [arg_code, out_code])
+        body_code = '\n'.join(self._print(i) for i in body)
+        prelude   = '\n'.join(self._print(i) for i in decs)
+
+        body_code = prelude + '\n' + body_code
+
+        return ('{0}({1}) {2}\n'
                 'implicit none\n'
                 'integer, parameter:: dp=kind(0.d0)\n'
-                '{2}\n'
-                'end {3}').format(sig, arg_code, body, func_type)
+                '{3}\n'
+                'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
     def _print_InArgument(self, expr):
         return self._print(expr.name)
@@ -270,11 +303,6 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_Return(self, expr):
-        # TODO: It may be easier to add an optional lhs (may be better name)
-        # attr to Return, to allow Fortran to use this instead of needing
-        # to convert all returns to Assign(func, expr).
-        if expr.expr:
-            raise ValueError("Fortran return doesn't accept expressions")
         return 'return'
 
     def _print_AugAssign(self, expr):

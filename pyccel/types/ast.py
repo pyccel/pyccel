@@ -560,27 +560,31 @@ class FunctionDef(Basic):
     ----------
     name : str
         The name of the function.
-    args : iterable
+    arguments : iterable
         The arguments to the function, of type `Argument`.
-    body : iterable
-        The body of the function.
     results : iterable
         The direct outputs of the function, of type `Result`.
+    body : iterable
+        The body of the function.
+    local_vars : list of Symbols
+        These are used internally by the routine.
+    global_vars : list of Symbols
+        Variables which will not be passed into the function.
 
     """
 
-    def __new__(cls, name, args, body, results):
+    def __new__(cls, name, arguments, results, body, local_vars, global_vars):
         # name
         if isinstance(name, str):
             name = Symbol(name)
         elif not isinstance(name, Symbol):
             raise TypeError("Function name must be Symbol or string")
-        # args
-        if not iterable(args):
-            raise TypeError("args must be an iterable")
-        if not all(isinstance(a, Argument) for a in args):
-            raise TypeError("All args must be of type Argument")
-        args = Tuple(*args)
+        # arguments
+        if not iterable(arguments):
+            raise TypeError("arguments must be an iterable")
+        if not all(isinstance(a, Argument) for a in arguments):
+            raise TypeError("All arguments must be of type Argument")
+        arguments = Tuple(*arguments)
         # body
         if not iterable(body):
             raise TypeError("body must be an iterable")
@@ -591,7 +595,63 @@ class FunctionDef(Basic):
         if not all(isinstance(i, Result) for i in results):
             raise TypeError("All results must be of type Result")
         results = Tuple(*results)
-        return Basic.__new__(cls, name, args, body, results)
+
+        # ...
+        # extract all input symbols and all symbols appearing in an expression
+        input_symbols = set([])
+        symbols = set([])
+#        print("<>>>>> arguments : ", str(arguments))
+        for arg in arguments:
+            if isinstance(arg, OutArgument):
+                symbols.update(arg.expr.free_symbols)
+            elif isinstance(arg, InArgument):
+                input_symbols.add(arg.name)
+            elif isinstance(arg, InOutArgument):
+                input_symbols.add(arg.name)
+                symbols.update(arg.expr.free_symbols)
+            else:
+                raise ValueError("Unknown Routine argument: %s" % arg)
+
+        for r in results:
+            if not isinstance(r, Result):
+                raise ValueError("Unknown Routine result: %s" % r)
+
+            try:
+                symbols.update(r.expr.free_symbols)
+            except:
+                pass
+
+            try:
+                symbols.update(r.expr)
+            except:
+                pass
+
+#        for stmt in statements:
+#            if not isinstance(stmt, (Assign, Equality, For)):
+#                raise ValueError("Unknown Routine statement: %s" % stmt)
+
+        symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
+
+        # Check that all symbols in the expressions are covered by
+        # InputArguments/InOutArguments---subset because user could
+        # specify additional (unused) InputArguments or local_vars.
+        notcovered = symbols.difference(
+            input_symbols.union(local_vars).union(global_vars))
+
+#        print (">>>>>>>>>>>>>>>>>>>> input_symbols :", str(input_symbols))
+#        print (">>>>>>>>>>>>>>>>>>>> symbols       :", str(symbols))
+#        print (">>>>>>>>>>>>>>>>>>>> not covered   :", str(notcovered))
+
+#        if notcovered != set([]):
+#            raise ValueError("Symbols needed for output are not in input or local " +
+#                             ", ".join([str(x) for x in notcovered]))
+        # ...
+
+
+        return Basic.__new__(cls, name, \
+                             arguments, results, \
+                             body, \
+                             local_vars, global_vars)
 
     @property
     def name(self):
@@ -602,12 +662,20 @@ class FunctionDef(Basic):
         return self._args[1]
 
     @property
-    def body(self):
+    def results(self):
         return self._args[2]
 
     @property
-    def results(self):
+    def body(self):
         return self._args[3]
+
+    @property
+    def local_vars(self):
+        return self._args[4]
+
+    @property
+    def global_vars(self):
+        return self._args[5]
 
 
 class Import(Basic):
