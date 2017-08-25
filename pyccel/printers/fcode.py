@@ -106,8 +106,8 @@ class FCodePrinter(CodePrinter):
                  Str.append(repr(f))
              else:
                 Str.append(self._print(f))
-        
-                     
+
+
         fs = ', '.join(Str)
 
         return 'print *, {0} '.format(fs)
@@ -183,9 +183,9 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self,expr):
         lhs_code   = self._print(expr.lhs)
         lhs_size   =self._print(len(expr.rhs))
-        
+
         return self._get_statement("allocate(%s(%s)) ; %s =( /"%(lhs_code,lhs_size,lhs_code)+','.join(str(i) for i in expr.rhs)+"/ )")
-        
+
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
         intent_lookup = {InArgument: 'in',
@@ -254,6 +254,16 @@ class FCodePrinter(CodePrinter):
 
             result = expr.results[0]
             func_end  = ' result({0})'.format(result.name)
+
+            body = []
+            for stmt in expr.body:
+                if isinstance(stmt, Declare):
+                    # TODO improve
+                    name = str(stmt.variables[0].name)
+                    if not(str(name) == str(result.name)):
+                        body.append(stmt)
+                else:
+                    body.append(stmt)
         elif len(expr.results) > 1:
             for result in expr.results:
                 arg = OutArgument(result.dtype, result.name)
