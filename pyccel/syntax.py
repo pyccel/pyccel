@@ -26,7 +26,7 @@ __all__ = ["Pyccel", \
            # statements
            "AssignStmt", "DeclarationStmt", \
            # compound stmts
-           "ForStmt", "IfStmt", \
+           "ForStmt", "IfStmt", "SuiteStmt", \
            # Flow statements
            "FlowStmt", "BreakStmt", "ContinueStmt", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
@@ -58,6 +58,9 @@ namespace["False"] = false
 def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False, shape=None, is_argument=False):
     if type(var_name) in [int, float]:
         return
+
+    if DEBUG:
+        print ">>> trying to insert : ", var_name
 
     if datatype is None:
 #        datatype = 'int'
@@ -395,38 +398,6 @@ class ForStmt(BasicStmt):
         if not(type(self.end) in [int, float]):
             self.local_vars.append(self.end)
 
-#        if not ri:
-#            self.declarations.append(declarations[self.iterable])
-#
-#        if re:
-#            dec_new = declarations[self.end]
-#            names = [str(v.name) for v in dec_new.variables]
-#            if self.end in names:
-#                i = 0
-#                for dec in self.declarations:
-#                    name = str(dec.variables[0].name)
-#                    if name == self.end:
-#                        break
-#                    i +=1
-#                    print name, self.end, i
-#                if i < len(self.declarations) :
-#                    self.declarations[i] = declarations[self.end]
-#        else:
-#            self.declarations.append(declarations[self.end])
-
-        body = []
-        for stmt in self.body:
-            if isinstance(stmt, list):
-                body += stmt
-            else:
-                body.append(stmt)
-
-        for stmt in body:
-            e = stmt.expr
-            # TODO to improve
-            self.local_vars += stmt.local_vars
-            self.stmt_vars  += stmt.stmt_vars
-
     @property
     def expr(self):
         i = Symbol(self.iterable, integer=True)
@@ -455,16 +426,13 @@ class ForStmt(BasicStmt):
             except:
                 s = int(self.step)
 
-        body = []
-        for stmt in self.body:
-            if isinstance(stmt, list):
-                body += stmt
-            else:
-                body.append(stmt)
-
         self.update()
 
-        body = [stmt.expr for stmt in body]
+        body = self.body.expr
+
+        self.local_vars += self.body.local_vars
+        self.stmt_vars  += self.body.stmt_vars
+
         return For(i, (b,e,s), body)
 
 class WhileStmt(BasicStmt):
@@ -656,8 +624,7 @@ class Operand(ExpressionElement):
             else:
                 return namespace[op]
         else:
-            raise Exception('Unknown variable "{}" at position {}'
-                            .format(op, self._tx_position))
+            raise Exception('Undefined variable "{}"'.format(op))
 
 
 class Test(ExpressionElement):
@@ -803,7 +770,6 @@ class FunctionDefStmt(BasicStmt):
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
-        print len(self.body)
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
@@ -1260,3 +1226,23 @@ class AnnotatedStmt(BasicStmt):
                                 section=self.section, \
                                 visibility=self.visibility, \
                                 variables=self.variables)
+
+
+class SuiteStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.stmts = kwargs.pop('stmts')
+
+        super(SuiteStmt, self).__init__(**kwargs)
+
+    def update(self):
+        for stmt in self.stmts:
+            self.local_vars += stmt.local_vars
+            self.stmt_vars  += stmt.stmt_vars
+
+    @property
+    def expr(self):
+        self.update()
+        return [stmt.expr for stmt in  self.stmts]
