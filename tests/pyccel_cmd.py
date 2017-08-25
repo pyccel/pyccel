@@ -97,32 +97,35 @@ def preprocess(filename, filename_out):
 # ...
 def gencode(filename, printer, name=None, debug=False, accelerator=None):
     # ...
-    def gencode_as_module(name, imports, preludes, body):
-        # TODO improve if a block is empty
+    def gencode_as_module(name, imports, preludes, routines):
         code  = "module " + str(name)     + "\n"
         code += imports                   + "\n"
         code += "implicit none"           + "\n"
         code += preludes                  + "\n"
-        code += "contains"                + "\n"
-        code += body                      + "\n"
+
+        if len(routines) > 0:
+            code += "contains"            + "\n"
+            code += routines              + "\n"
         code += "end module " + str(name) + "\n"
 
         return code
     # ...
 
     # ...
-    def gencode_as_program(name, imports, preludes, body):
-        # TODO improve if a block is empty
+    def gencode_as_program(name, imports, preludes, body, routines):
         if name is None:
             name = "main"
 
-        code  = "program " + str(name)     + "\n"
+        code  = "program " + str(name)    + "\n"
         code += imports                   + "\n"
         code += "implicit none"           + "\n"
         code += preludes                  + "\n"
-        code += body                      + "\n"
-#        code += "contains"                + "\n"
-        # TODO add funcdef
+
+        if len(body) > 0:
+            code += body                  + "\n"
+        if len(routines) > 0:
+            code += "contains"            + "\n"
+            code += routines              + "\n"
         code += "end"                     + "\n"
 
         return code
@@ -137,6 +140,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     imports  = ""
     preludes = ""
     body     = ""
+    routines = ""
     # ...
 
     # ... TODO improve. mv somewhere else
@@ -168,7 +172,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         elif isinstance(stmt, IfStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            body += fcode(stmt.expr) + "\n"
+            routines += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, PythonPrintStmt):
             body += fcode(stmt.expr) + "\n"
         else:
@@ -183,8 +187,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         preludes += fcode(dec) + "\n"
     # ...
 
-    code = gencode_as_program(name, imports, preludes, body)
-#    code = gencode_as_module(name, imports, preludes, body)
+    code = gencode_as_program(name, imports, preludes, body, routines)
+#    code = gencode_as_module(name, imports, preludes, routines)
     return code
 # ...
 
