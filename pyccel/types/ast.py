@@ -453,7 +453,7 @@ class Variable(Basic):
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
         if not shape==None:
-            if not (isinstance(shape,tuple) and all(isinstance(n, int) for n in shape)):     
+            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):     
                 raise TypeError("shape must be an instance of int or tuple of int")
             
                 
@@ -475,6 +475,9 @@ class Variable(Basic):
     @property
     def allocatable(self):
         return self._args[3]
+    @property
+    def shape(self):
+        return self._args[4]
 
 
 class Argument(Variable):

@@ -160,6 +160,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             decs = stmt.expr
         elif isinstance(stmt, NumpyZerosStmt):
             body += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, NumpyZerosLikeStmt):
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, NumpyOnesStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, NumpyLinspaceStmt):
@@ -193,6 +195,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             decs = stmt.expr
             declarations += decs
         elif isinstance(stmt, NumpyZerosStmt):
+            declarations += stmt.declarations
+        elif isinstance(stmt, NumpyZerosLikeStmt):
             declarations += stmt.declarations
         elif isinstance(stmt, NumpyOnesStmt):
             declarations += stmt.declarations

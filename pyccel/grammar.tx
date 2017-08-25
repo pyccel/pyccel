@@ -198,7 +198,7 @@ NumpyZerosStmt:
 ;
 
 NumpyZerosLikeStmt: 
-  lhs=ID '=' ZEROSLIKE LPAREN rhs=ID RPAREN 
+  lhs=ID '=' ZEROSLIKE LPAREN rhs=ID RPAREN
 ;
 
 NumpyOnesStmt: 
@@ -240,8 +240,6 @@ WhileStmt:
   (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
   DEDENT
 ;
-
-
 
 
 IfStmt: 

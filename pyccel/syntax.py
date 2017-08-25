@@ -55,7 +55,7 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
-def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False):
+def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False,shape=None):
     if type(var_name) in [int, float]:
         return
 
@@ -70,7 +70,7 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
 
     # we create a variable (for annotation)
     if var is None:
-        var = Variable(datatype, s, rank=rank, allocatable=allocatable)
+        var = Variable(datatype, s, rank=rank, allocatable=allocatable,shape=shape)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
@@ -908,7 +908,7 @@ class NumpyZerosStmt(AssignStmt):
             insert_variable(var_name, \
                             datatype=datatype, \
                             rank=rank, \
-                            allocatable=True)
+                            allocatable=True,shape = self.shape)
             self.stmt_vars.append(var_name)
 
     @property
@@ -933,21 +933,43 @@ class NumpyZerosLikeStmt(AssignStmt):
         self.rhs = kwargs.pop('rhs')
 
         super(AssignStmt, self).__init__(**kwargs)
-        print(var)
-        raise SystemExit()
+        
 
     def update(self):
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
                 print("> Found new variable " + var_name)
+        v=variables[self.rhs]
+        
+        
+        insert_variable(var_name, \
+                            datatype=v.dtype, \
+                            rank=v.rank, \
+                            allocatable=v.allocatable,shape=v.shape)
+        self.stmt_vars.append(var_name)
+        
+        
         
 
 
     @property
     def expr(self):
         self.update()
-        return ""
+        v=variables[self.rhs]
+        shape = v.shape
+        
+        
+        
+        if shape==None:
+            shape=1
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        stmt = NumpyZeros(var, shape)
+        
+        return stmt
 
 class NumpyOnesStmt(AssignStmt):
      
