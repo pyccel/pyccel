@@ -1422,7 +1422,6 @@ class TrailerSubscriptList(BasicTrailer):
 
     @property
     def expr(self):
-        raise()
         self.update()
         args = []
         for a in self.args:
