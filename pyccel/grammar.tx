@@ -335,7 +335,7 @@ UnaryOp:
 ;
 
 BinaryOp:
-   ('pow')
+   ('pow' | 'rational')
 ;
 
 EQ:

@@ -18,6 +18,7 @@ from pyccel.types.ast import IndexedVariable
 from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
 from pyccel.types.ast import MultiAssign
+from pyccel.types.ast import Rational
 from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
 
 DEBUG = False
@@ -635,6 +636,8 @@ class FactorBinary(ExpressionElement):
 
         if self.name == "pow":
             return Pow(expr_l, expr_r)
+        elif self.name == "rational":
+            return Rational(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))

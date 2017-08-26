@@ -1118,8 +1118,6 @@ class MultiAssign(Basic):
         ending index
 
     """
-    # TODO add step
-
     def __new__(cls, lhs, rhs, trailer):
         return Basic.__new__(cls, lhs, rhs, trailer)
 
@@ -1134,3 +1132,27 @@ class MultiAssign(Basic):
     @property
     def trailer(self):
         return self._args[2]
+
+class Rational(Basic):
+    """Represents a Rational numbers statement in the code.
+    This is different from sympy.Rational, as it allows for symbolic numbers.
+
+    Parameters
+    ----------
+    numerator : Symbol or int
+        numerator of the Rational number
+
+    denominator : Symbol or int
+        denominator of the Rational number
+
+    """
+    def __new__(cls, numerator, denominator):
+        return Basic.__new__(cls, numerator, denominator)
+
+    @property
+    def numerator(self):
+        return self._args[0]
+
+    @property
+    def denominator(self):
+        return self._args[1]
