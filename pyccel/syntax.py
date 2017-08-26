@@ -993,7 +993,9 @@ class NumpyZerosStmt(AssignStmt):
                 shape = [int(s) for s in self.shape]
                 rank = len(shape)
             else:
-                shape = self.shape
+                shape = str(self.shape)
+                print "shape = ", shape
+                print namespace
                 if shape in namespace:
                     shape = namespace[shape]
                     # TODO compute rank
