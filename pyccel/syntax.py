@@ -326,7 +326,8 @@ class AssignStmt(BasicStmt):
         super(AssignStmt, self).__init__(**kwargs)
 
     def update(self):
-        datatype = 'float'
+        # TODO default type?
+        datatype = 'int'
         if isinstance(self.rhs, Expression):
             expr = self.rhs.expr
             symbols = set([])
@@ -957,7 +958,13 @@ class NumpyZerosStmt(AssignStmt):
                 shape = [int(s) for s in self.shape]
                 rank = len(shape)
             else:
-                raise Exception('Wrong instance for shape.')
+                shape = self.shape
+                if shape in namespace:
+                    shape = namespace[shape]
+                    # TODO compute rank
+                    rank = 1
+                else:
+                    raise Exception('Wrong instance for shape.')
             self.shape = shape
 
             if datatype is None:

@@ -455,9 +455,9 @@ class Variable(Basic):
             raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
-        if not shape==None:
-            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
-                raise TypeError("shape must be an instance of int or tuple of int")
+#        if not shape==None:
+#            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
+#                raise TypeError("shape must be an instance of int or tuple of int")
 
         return Basic.__new__(cls, dtype, name, rank, allocatable,shape)
 
@@ -779,6 +779,8 @@ class NumpyZeros(Basic):
         lhs   = _sympify(lhs)
         if isinstance(shape, list):
             shape = Tuple(*(_sympify(i) for i in shape))
+        elif isinstance(shape, Basic):
+            shape = str(shape)
         else:
             shape = shape
 
