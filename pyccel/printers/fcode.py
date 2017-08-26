@@ -14,7 +14,7 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
-from pyccel.types.ast import (Assign, Result, InArgument,
+from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
         OutArgument, InOutArgument, Variable, Declare)
 from pyccel.printers.codeprinter import CodePrinter
 
@@ -323,6 +323,17 @@ class FCodePrinter(CodePrinter):
 
     def _print_AugAssign(self, expr):
         raise NotImplementedError("Fortran doesn't support AugAssign")
+
+    def _print_MultiAssign(self, expr):
+        # TODO improve, case where no input args, etc ...
+        if isinstance(expr.rhs, str):
+            args    = ', '.join(self._print(i) for i in expr.trailer)
+            outputs = ', '.join(self._print(i) for i in expr.lhs)
+
+            return 'call {0} ({1}, {2})'.format(expr.rhs, args, outputs)
+        else:
+            raise TypeError("Expecting a string for the rhs.")
+
 
     def _print_For(self, expr):
         target = self._print(expr.target)

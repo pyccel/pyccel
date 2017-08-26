@@ -26,7 +26,7 @@ from pyccel.syntax import ( \
                            DeclarationStmt, \
                            DelStmt, \
                            PassStmt, \
-                           AssignStmt, \
+                           AssignStmt, MultiAssignStmt, \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
                            ImportFromStmt, \
                            CommentStmt, AnnotatedStmt, \
@@ -173,6 +173,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         elif isinstance(stmt, NumpyArrayStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, AssignStmt):
+            body += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, MultiAssignStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ForStmt):
             body += fcode(stmt.expr) + "\n"

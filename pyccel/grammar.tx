@@ -172,7 +172,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | AssignStmt)
+  (NumpyStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -225,6 +225,10 @@ NUMBEROrSTRING:
 
 AssignStmt: 
   lhs=ID (trailer=Trailer)? '=' rhs=Expression 
+;
+
+MultiAssignStmt: 
+  lhs+=ID[','] '=' name=ID (trailer=Trailer)?
 ;
 
 ForStmt: 

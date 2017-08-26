@@ -17,6 +17,7 @@ from pyccel.types.ast import AnnotatedComment
 from pyccel.types.ast import IndexedVariable
 from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
+from pyccel.types.ast import MultiAssign
 from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
 
 DEBUG = False
@@ -26,7 +27,7 @@ __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
            # statements
-           "AssignStmt", "DeclarationStmt", \
+           "AssignStmt", "MultiAssignStmt", "DeclarationStmt", \
            # compound stmts
            "ForStmt", "IfStmt", "SuiteStmt", \
            # Flow statements
@@ -366,6 +367,53 @@ class AssignStmt(BasicStmt):
         self.update()
         return l
 
+class MultiAssignStmt(BasicStmt):
+    """Class representing multiple assignments. In fortran, this correspondans
+    to the call of a subroutine"""
+    def __init__(self, **kwargs):
+        """
+        """
+
+        self.lhs     = kwargs.pop('lhs')
+        self.name    = kwargs.pop('name')
+        self.trailer = kwargs.pop('trailer', None)
+
+        super(MultiAssignStmt, self).__init__(**kwargs)
+
+    def update(self):
+        datatype = 'float'
+        name = str(self.name)
+        if name in namespace:
+            F = namespace[name]
+            if isinstance(F, FunctionDefStmt):
+                print (">>>> found function : ", name)
+                print (">>>>  of  type : ", type(F))
+
+        for var_name in self.lhs:
+            print ">>> current var : ",var_name
+            print namespace
+            if not(var_name in namespace):
+#                if DEBUG:
+                if True:
+                    print("> Found new variable " + var_name)
+
+                # TODO get info from FunctionDefStmt
+                rank = 0
+                insert_variable(var_name, datatype=datatype, rank=rank)
+                self.stmt_vars.append(var_name)
+
+    @property
+    def expr(self):
+        self.update()
+        lhs = self.lhs
+        rhs = self.name
+        if not(self.trailer is None):
+            args = self.trailer.expr
+        else:
+            raise Exception('Expecting a trailer')
+
+        return MultiAssign(lhs, rhs, args)
+
 
 class ForStmt(BasicStmt):
     """Class representing a ."""
@@ -604,11 +652,9 @@ class Operand(ExpressionElement):
                 print ">>> found local variables: " + op
             return Symbol(op)
         elif op in namespace:
-            print (">>>> found var : ", op)
             if isinstance(namespace[op], Number):
                 return namespace[op].expr
             if isinstance(namespace[op], FunctionDefStmt):
-                print (">>>>  of  type : ", type(namespace[op]))
                 return Function(op) #(Symbol(args[0]), Symbol(args[1]))
             else:
                 return namespace[op]

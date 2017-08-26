@@ -12,6 +12,7 @@ AST Type Tree
 
 *Basic*
      |--->Assign
+     |--->MultiAssign
      |--->AugAssign
      |--->NativeOp
      |           |--------------|
@@ -1117,3 +1118,32 @@ class Piecewise(Basic):
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
+
+class MultiAssign(Basic):
+    """Represents a multiple assignment statement in the code.
+
+    Parameters
+    ----------
+    start : Symbol or int
+        starting index
+
+    end : Symbol or int
+        ending index
+
+    """
+    # TODO add step
+
+    def __new__(cls, lhs, rhs, trailer):
+        return Basic.__new__(cls, lhs, rhs, trailer)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    @property
+    def trailer(self):
+        return self._args[2]
