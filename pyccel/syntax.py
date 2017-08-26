@@ -1235,12 +1235,24 @@ class SuiteStmt(BasicStmt):
         self.update()
         return [stmt.expr for stmt in  self.stmts]
 
-class Trailer(BasicStmt):
+class BasicTrailer(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.args = kwargs.pop('args', None)
+
+        super(BasicTrailer, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        pass
+
+class Trailer(BasicTrailer):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
         self.subs = kwargs.pop('subs', None)
 
         super(Trailer, self).__init__(**kwargs)
@@ -1250,13 +1262,11 @@ class Trailer(BasicStmt):
         self.update()
         return [arg.expr for arg in  self.args]
 
-class TrailerArgList(BasicStmt):
+class TrailerArgList(BasicTrailer):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
-        self.args = kwargs.pop('args')
-
         super(TrailerArgList, self).__init__(**kwargs)
 
     @property
@@ -1264,13 +1274,11 @@ class TrailerArgList(BasicStmt):
         self.update()
         return [arg.expr for arg in  self.args]
 
-class TrailerSubscriptList(BasicStmt):
+class TrailerSubscriptList(BasicTrailer):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
-        self.args = kwargs.pop('args')
-
         super(TrailerSubscriptList, self).__init__(**kwargs)
 
     @property
