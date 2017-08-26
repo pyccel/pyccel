@@ -1,22 +1,17 @@
 # coding: utf-8
 
-def g(u,v):
-    m = u - v;
-    w =  2.0 * m;
-    r =  2.0 * w;
-    return r, m
+def f(u,v):
+    t = u - v;
+    return t
+
+def g(x,v):
+    m = x - v;
+    t =  2.0 * m;
+    z =  2.0 * t;
+    return t, z
 
 x = 1.0
 y = 2.0
 
-z, t = g(x,y)
-
-
-#def g(u,v):
-#    t = u - v;
-#    return t
-#
-#x = 1.0
-#y = 2.0
-#
-#z = 2 * g(x,y) + 1.0
+w    = 2 * f(x,y) + 1.0
+z, t = g(x,w)

@@ -383,18 +383,16 @@ class MultiAssignStmt(BasicStmt):
     def update(self):
         datatype = 'float'
         name = str(self.name)
-        if name in namespace:
+        if not(name in namespace):
+            raise Exception('Undefined function/subroutine {}'.format(name))
+        else:
             F = namespace[name]
-            if isinstance(F, FunctionDefStmt):
-                print (">>>> found function : ", name)
-                print (">>>>  of  type : ", type(F))
+            if not(isinstance(F, FunctionDefStmt)):
+                raise Exception('Expecting a {0} for {1}'.format(type(F), name))
 
         for var_name in self.lhs:
-            print ">>> current var : ",var_name
-            print namespace
             if not(var_name in namespace):
-#                if DEBUG:
-                if True:
+                if DEBUG:
                     print("> Found new variable " + var_name)
 
                 # TODO get info from FunctionDefStmt
@@ -760,7 +758,6 @@ class ReturnStmt(FlowStmt):
         """
         """
         self.variables = kwargs.pop('variables')
-        print "ReturnStmt : ", self.variables
 
         super(ReturnStmt, self).__init__(**kwargs)
 
@@ -846,18 +843,25 @@ class FunctionDefStmt(BasicStmt):
             elif not(isinstance(stmt, ReturnStmt)):
                 body.append(stmt.expr)
 
+        # ... cleaning the namespace
         for arg_name in self.args:
             declarations.pop(arg_name)
             variables.pop(arg_name)
+            namespace.pop(arg_name)
 
         for stmt in self.body:
             if isinstance(stmt, AssignStmt):
                 var_name = stmt.lhs
                 var = variables.pop(var_name, None)
                 dec = declarations.pop(var_name, None)
+
                 prelude.append(dec)
             elif isinstance(stmt, ReturnStmt):
                 results += stmt.expr
+                for var_name in stmt.variables:
+                    namespace.pop(var_name)
+
+        # ...
 
         body = prelude + body
 
@@ -1323,13 +1327,11 @@ class TrailerArgList(BasicTrailer):
     def __init__(self, **kwargs):
         """
         """
-        print ">>>>>>>>>>> par ici"
         super(TrailerArgList, self).__init__(**kwargs)
 
     @property
     def expr(self):
         self.update()
-        print ">>>>>>>>>>> par la"
         return [arg.expr for arg in  self.args]
 
 class TrailerSubscriptList(BasicTrailer):
