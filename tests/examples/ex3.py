@@ -28,3 +28,15 @@ if x <= 1:
 else:
     x = 2 * x
 
+
+x = 0
+if x == 1:
+    x = x + 1
+else:
+    y = 2 * x
+
+x = 0
+if x <> 1:
+    x = x + 1
+else:
+    y = 2 * x

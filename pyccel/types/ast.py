@@ -50,6 +50,8 @@ from __future__ import print_function, division
 
 
 from sympy.core import Symbol, Tuple
+from sympy.core.relational import Equality, Relational
+from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
@@ -272,7 +274,7 @@ class While(Basic):
 
     def __new__(cls, test, body):
         test = _sympify(test)
-        
+
         if not iterable(body):
             raise TypeError("body must be an iterable")
         body = Tuple(*(_sympify(i) for i in body))
@@ -282,7 +284,7 @@ class While(Basic):
     def test(self):
         return self._args[0]
 
-    
+
     @property
     def body(self):
         return self._args[1]
@@ -453,11 +455,11 @@ class Variable(Basic):
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
         if not shape==None:
-            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):     
+            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
                 raise TypeError("shape must be an instance of int or tuple of int")
-            
-                
-                
+
+
+
         return Basic.__new__(cls, dtype, name, rank, allocatable,shape)
 
     @property
@@ -767,7 +769,7 @@ class Return(Basic):
     def expr(self):
         return self._args[0]
 
-     
+
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
@@ -846,12 +848,12 @@ class NumpyOnes(Basic):
     def __new__(cls, lhs,shape):
         lhs   = _sympify(lhs)
         shape   =_sympify(shape)
-        
+
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        
+
         return Basic.__new__(cls, lhs, shape)
 
     def _sympystr(self, printer):
@@ -866,10 +868,10 @@ class NumpyOnes(Basic):
     def shape(self):
         return self._args[1]
 class NumpyArray(Basic):
-      
+
     def __new__(cls, lhs,rhs):
         lhs   = _sympify(lhs)
-        
+
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
@@ -877,7 +879,7 @@ class NumpyArray(Basic):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
         if not isinstance(rhs,list):
             raise TypeError("cannot assign rhs of type %s." % type(rhs))
-        
+
         return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
@@ -891,8 +893,8 @@ class NumpyArray(Basic):
     @property
     def rhs(self):
         return self._args[1]
-      
-         
+
+
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
 
@@ -1089,3 +1091,29 @@ class Slice(Basic):
         sstr = printer.doprint
         return '{0} : {1}'.format(sstr(self.start), sstr(self.end))
 
+class Piecewise(Basic):
+    """Represents a if statement in the code.
+
+    Parameters
+    ----------
+    args :
+        every argument is a tuple and
+        is defined as (cond, expr) where expr is a valid ast element
+        and cond is a boolean test.
+
+    """
+    # TODO add step
+
+    def __new__(cls, *args):
+
+        # (Try to) sympify args first
+        newargs = []
+        for ce in args:
+            cond = ce[0]
+            if not isinstance(cond, (bool, Relational, Boolean)):
+                raise TypeError(
+                    "Cond %s is of type %s, but must be a Relational,"
+                    " Boolean, or a built-in bool." % (cond, type(cond)))
+            newargs.append(ce)
+
+        return Basic.__new__(cls, *newargs)

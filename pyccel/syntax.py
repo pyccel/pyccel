@@ -1,5 +1,5 @@
 # coding: utf-8
-from sympy import Symbol, sympify, Piecewise, Integer, Float, Add, Mul
+from sympy import Symbol, sympify, Integer, Float, Add, Mul
 from sympy import true, false
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
@@ -15,6 +15,7 @@ from pyccel.types.ast import Comment
 from pyccel.types.ast import AnnotatedComment
 from pyccel.types.ast import IndexedVariable
 from pyccel.types.ast import Slice
+from pyccel.types.ast import Piecewise
 from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
 
 DEBUG = False
@@ -312,7 +313,7 @@ class IfStmt(BasicStmt):
         self.stmt_vars  += self.body_true.stmt_vars
         self.stmt_vars  += self.body_false.stmt_vars
 
-        return Piecewise((body_true, test), (body_false, True))
+        return Piecewise((test, body_true), (True, body_false))
 
 class AssignStmt(BasicStmt):
     """Class representing a ."""
@@ -625,6 +626,7 @@ class Test(ExpressionElement):
         ret = self.op.expr
         return ret
 
+# TODO improve using sympy And, Or, Not, ...
 class OrTest(ExpressionElement):
     @property
     def expr(self):
@@ -635,6 +637,7 @@ class OrTest(ExpressionElement):
             ret = (ret or operand.expr)
         return ret
 
+# TODO improve using sympy And, Or, Not, ...
 class AndTest(ExpressionElement):
     @property
     def expr(self):
@@ -645,6 +648,7 @@ class AndTest(ExpressionElement):
             ret = (ret and operand.expr)
         return ret
 
+# TODO improve using sympy And, Or, Not, ...
 class NotTest(ExpressionElement):
     @property
     def expr(self):

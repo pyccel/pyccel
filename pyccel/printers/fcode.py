@@ -241,6 +241,12 @@ class FCodePrinter(CodePrinter):
         # TODO: Create master header to be included, include dp definition
         return 'real(dp)'
 
+    def _print_Equality(self, expr):
+        return '{0} == {1} '.format(expr.lhs, expr.rhs)
+
+    def _print_Unequality(self, expr):
+        return '{0} /= {1} '.format(expr.lhs, expr.rhs)
+
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
         out_args = []
@@ -332,50 +338,29 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(target=target, start=start, stop=stop,
                         step=step, body=body)
+
     def _print_While(self,expr):
         body = '\n'.join(self._print(i) for i in expr.body)
         return ('do while ({test}) \n'
                 '{body}\n'
                 'end do').format(test=expr.test,body=body)
+
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond != True:
-            # We need the last conditional to be a True, otherwise the resulting
-            # function may not return a result.
-            raise ValueError("All Piecewise expressions must contain an "
-                             "(expr, True) statement to be used as a default "
-                             "condition. Without one, the generated "
-                             "expression may not evaluate to anything under "
-                             "some condition.")
         lines = []
-        if expr.has(Assign):
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) then" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
-                    lines.append("else")
-                else:
-                    lines.append("else if (%s) then" % self._print(c))
-                if isinstance(e, list):
-                    for ee in e:
-                        lines.append(self._print(ee))
-                else:
-                    lines.append(self._print(e))
-            lines.append("end if")
-            return "\n".join(lines)
-        else:
-            # The piecewise was used in an expression, need to do inline
-            # operators. This has the downside that inline operators will
-            # not work for statements that span multiple lines (Matrix or
-            # Indexed expressions).
-            pattern = "merge({T}, {F}, {COND})"
-            code = self._print(expr.args[-1].expr)
-            terms = list(expr.args[:-1])
-            while terms:
-                e, c = terms.pop()
-                expr = self._print(e)
-                cond = self._print(c)
-                code = pattern.format(T=expr, F=code, COND=cond)
-            return code
+        for i, (c, e) in enumerate(expr.args):
+            if i == 0:
+                lines.append("if (%s) then" % self._print(c))
+            elif i == len(expr.args) - 1 and c == True:
+                lines.append("else")
+            else:
+                lines.append("else if (%s) then" % self._print(c))
+            if isinstance(e, list):
+                for ee in e:
+                    lines.append(self._print(ee))
+            else:
+                lines.append(self._print(e))
+        lines.append("end if")
+        return "\n".join(lines)
 
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
