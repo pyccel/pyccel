@@ -22,7 +22,9 @@ from pyccel.syntax import (Pyccel, \
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, \
                            # test bool
-                           Test, OrTest, AndTest, NotTest, Comparison \
+                           Test, OrTest, AndTest, NotTest, Comparison, \
+                           # Trailers
+                           Trailer, TrailerArgList, TrailerSubscriptList \
                            )
 
 from textx.metamodel import metamodel_from_str
@@ -173,7 +175,9 @@ class PyccelParser(Parser):
                    NumpyZerosStmt, NumpyZerosLikeStmt, \
                    NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, \
                    # test bool
-                   Test, OrTest, AndTest, NotTest, Comparison \
+                   Test, OrTest, AndTest, NotTest, Comparison, \
+                   # Trailers
+                   Trailer, TrailerArgList, TrailerSubscriptList \
                    ]
 
         try:

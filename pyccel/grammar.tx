@@ -305,15 +305,15 @@ Trailer:
 ;
 
 TrailerArgList: 
-  '[' args+=Expression[','] ']'
+  '(' args+=Expression[','] ')'
 ;
 
 TrailerSubscriptList: 
-  '[' args+=Expression[':'] ']'
+  '[' args+=Expression[','] ']'
 ;
 
 Operand: 
-  (op=NUMBER) | (op=ID) (LPAREN RPAREN)?     | (op=BOOLEAN) //| (LPAREN op=Expression RPAREN)
+  (op=NUMBER) | (op=ID) | (op=BOOLEAN)
 ;
 
 BOOLEAN:

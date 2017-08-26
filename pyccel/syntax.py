@@ -40,7 +40,9 @@ __all__ = ["Pyccel", \
            "NumpyZerosStmt", "NumpyZerosLikeStmt", \
            "NumpyOnesStmt", "NumpyLinspaceStmt", \
            # Test
-           "Test", "OrTest", "AndTest", "NotTest", "Comparison"
+           "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
+           # Trailers
+           "Trailer", "TrailerArgList", "TrailerSubscriptList"
            ]
 
 
@@ -179,38 +181,30 @@ class BasicStmt(object):
             return arg
         # ...
 
-        # there are two kind of trailers
-        # 1. a symbol, an expression
-        # 2. slices
-        is_subscript = False
-        if trailer.args:
-            inputs = trailer.args
-        elif trailer.subs:
+#        # only slices of the form a:b are possible
+#        # this assumes that inputs.args is of length 2
+#        if is_slice:
+#            assert(len(inputs.args) == 2)
+#
+#            start = do_arg(inputs.args[0])
+#            end   = do_arg(inputs.args[1])
+#
+#            args = Slice(start, end)
+
+        if isinstance(trailer, Trailer):
             inputs = trailer.subs
-            is_subscript = True
+            if inputs:
+                args = []
+                for a in inputs.args:
+                    arg = do_arg(a)
+
+                    # TODO treat n correctly
+                    n = Symbol('n', integer=True)
+                    i = Idx(arg, n)
+                    args.append(i)
+                return args
         else:
-            raise Exception('Wrong inputs for the trailer at position {}'
-                            .format(var, self._tx_position))
-
-        # only slices of the form a:b are possible
-        # this assumes that inputs.args is of length 2
-        if is_subscript:
-            assert(len(inputs.args) == 2)
-
-            start = do_arg(inputs.args[0])
-            end   = do_arg(inputs.args[1])
-
-            args = Slice(start, end)
-        else:
-            args = []
-            for a in inputs.args:
-                arg = do_arg(a)
-
-                # TODO treat n correctly
-                n = Symbol('n', integer=True)
-                i = Idx(arg, n)
-                args.append(i)
-        return args
+            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
 
 class DeclarationStmt(BasicStmt):
     """Class representing a ."""
@@ -1240,3 +1234,46 @@ class SuiteStmt(BasicStmt):
     def expr(self):
         self.update()
         return [stmt.expr for stmt in  self.stmts]
+
+class Trailer(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args', None)
+        self.subs = kwargs.pop('subs', None)
+
+        super(Trailer, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return [arg.expr for arg in  self.args]
+
+class TrailerArgList(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(TrailerArgList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return [arg.expr for arg in  self.args]
+
+class TrailerSubscriptList(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(TrailerSubscriptList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return [arg.expr for arg in  self.args]
