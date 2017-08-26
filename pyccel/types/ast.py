@@ -591,7 +591,7 @@ class FunctionDef(Basic):
         # body
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        body = Tuple(*(_sympify(i) for i in body))
+#        body = Tuple(*(i for i in body))
         # results
         if not iterable(results):
             raise TypeError("results must be an iterable")

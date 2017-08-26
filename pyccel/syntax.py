@@ -770,7 +770,11 @@ class ReturnStmt(FlowStmt):
         # TODO check that var is in namespace
         for var_name in self.variables:
             if var_name in variables:
-                datatype = variables[var_name].datatype
+                var = variables[var_name]
+                if isinstance(var, Variable):
+                    datatype = var.dtype
+                else:
+                    datatype = var.datatype
             else:
                 datatype = 'float'
 
@@ -823,11 +827,12 @@ class FunctionDefStmt(BasicStmt):
                 datatype = 'float'
                 insert_variable(arg_name, datatype=datatype, rank=rank,
                                 is_argument=True)
+            else:
+                print("+++ found already declared argument : ", arg_name)
 
 
     @property
     def expr(self):
-        # TODO must copy code from codegen/routine
         self.update()
 
         name = str(self.name)
@@ -836,12 +841,13 @@ class FunctionDefStmt(BasicStmt):
         prelude = [declarations[arg_name] for arg_name in self.args]
 
         results = []
-        body = []
-        for stmt in self.body:
-            if isinstance(stmt, list):
-                body += [e.expr for e in stmt]
-            elif not(isinstance(stmt, ReturnStmt)):
-                body.append(stmt.expr)
+        body = self.body.expr
+
+#        for stmt in self.body:
+#            if isinstance(stmt, list):
+#                body += [e.expr for e in stmt]
+#            elif not(isinstance(stmt, ReturnStmt)):
+#                body.append(stmt.expr)
 
         # ... cleaning the namespace
         for arg_name in self.args:
@@ -849,7 +855,7 @@ class FunctionDefStmt(BasicStmt):
             variables.pop(arg_name)
             namespace.pop(arg_name)
 
-        for stmt in self.body:
+        for stmt in self.body.stmts:
             if isinstance(stmt, AssignStmt):
                 var_name = stmt.lhs
                 var = variables.pop(var_name, None)
@@ -1284,8 +1290,9 @@ class SuiteStmt(BasicStmt):
 
     def update(self):
         for stmt in self.stmts:
-            self.local_vars += stmt.local_vars
-            self.stmt_vars  += stmt.stmt_vars
+            if not(isinstance(stmt, ReturnStmt)):
+                self.local_vars += stmt.local_vars
+                self.stmt_vars  += stmt.stmt_vars
 
     @property
     def expr(self):

@@ -268,7 +268,7 @@ class FCodePrinter(CodePrinter):
                     name = str(stmt.variables[0].name)
                     if not(str(name) == str(result.name)):
                         body.append(stmt)
-                else:
+                elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
         elif len(expr.results) > 1:
             for result in expr.results:
@@ -288,7 +288,7 @@ class FCodePrinter(CodePrinter):
                     name = str(stmt.variables[0].name)
                     if not(name in names):
                         body.append(stmt)
-                else:
+                elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
         else:
             sig = 'subroutine ' + name
@@ -298,6 +298,7 @@ class FCodePrinter(CodePrinter):
         arg_code  = ', '.join(self._print(i) for i in expr.arguments)
         if len(out_code) > 0:
             arg_code  = ', '.join(i for i in [arg_code, out_code])
+
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
 

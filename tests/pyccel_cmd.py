@@ -54,6 +54,13 @@ def make_tmp_file(filename):
 # ...
 
 # ...
+def separator(n=40):
+    txt = "."*n
+    comment = '!'
+    return '{0} {1}\n'.format(comment, txt)
+# ...
+
+# ...
 def preprocess(filename, filename_out):
     f = open(filename)
     lines = f.readlines()
@@ -183,7 +190,9 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         elif isinstance(stmt, IfStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            routines += fcode(stmt.expr) + "\n"
+            sep = separator()
+            routines += sep + fcode(stmt.expr) + "\n" \
+                      + sep + '\n'
         elif isinstance(stmt, PythonPrintStmt):
             body += fcode(stmt.expr) + "\n"
         else:
