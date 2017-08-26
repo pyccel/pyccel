@@ -66,6 +66,9 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
 
     if DEBUG:
         print ">>> trying to insert : ", var_name
+        txt = '    datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
+                .format(datatype, rank, allocatable, shape, is_argument)
+        print txt
 
     if datatype is None:
 #        datatype = 'int'
@@ -758,6 +761,7 @@ class ReturnStmt(FlowStmt):
         """
         """
         self.variables = kwargs.pop('variables')
+        self.results   = None
 
         super(ReturnStmt, self).__init__(**kwargs)
 
@@ -765,6 +769,8 @@ class ReturnStmt(FlowStmt):
     def expr(self):
         """
         """
+        self.update()
+
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
@@ -772,17 +778,21 @@ class ReturnStmt(FlowStmt):
             if var_name in variables:
                 var = variables[var_name]
                 if isinstance(var, Variable):
-                    datatype = var.dtype
+                    res = Result(var.dtype, var_name, \
+                           rank=var.rank, \
+                           allocatable=var.allocatable, \
+                           shape=var.shape)
                 else:
                     datatype = var.datatype
+                    res = Result(datatype, var_name)
             else:
                 datatype = 'float'
+                res = Result(datatype, var_name)
+                raise()
 
-            var = Result(datatype, var_name)
-            decs.append(var)
+            decs.append(res)
 
-        self.update()
-
+        self.results = decs
         return decs
 
 class RaiseStmt(FlowStmt):
@@ -863,7 +873,7 @@ class FunctionDefStmt(BasicStmt):
 
                 prelude.append(dec)
             elif isinstance(stmt, ReturnStmt):
-                results += stmt.expr
+                results += stmt.results
                 for var_name in stmt.variables:
                     namespace.pop(var_name)
 
@@ -1297,7 +1307,8 @@ class SuiteStmt(BasicStmt):
     @property
     def expr(self):
         self.update()
-        return [stmt.expr for stmt in  self.stmts]
+        ls = [stmt.expr for stmt in  self.stmts]
+        return ls
 
 class BasicTrailer(BasicStmt):
     """Class representing a ."""

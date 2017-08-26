@@ -254,12 +254,25 @@ class FCodePrinter(CodePrinter):
         body = expr.body
         func_end  = ''
         if len(expr.results) == 1:
-            ret_type = self._print(expr.results[0].dtype)
-            sig = '{0} function {1}'.format(ret_type, name)
+            result = expr.results[0]
+
+            ret_type = self._print(result.dtype)
             func_type = 'function'
 
-            result = expr.results[0]
-            func_end  = ' result({0})'.format(result.name)
+            if result.allocatable:
+                sig = 'function {0}'.format(name)
+                additional = ' '.format(result.name)
+                for n in [result.name, name]:
+                    var = Variable(result.dtype, n, \
+                                 rank=result.rank, \
+                                 allocatable=result.allocatable, \
+                                 shape=result.shape)
+
+                    dec = Declare(result.dtype, var)
+                    decs.append(dec)
+            else:
+                sig = '{0} function {1}'.format(ret_type, name)
+                func_end  = ' result({0})'.format(result.name)
 
             body = []
             for stmt in expr.body:

@@ -268,6 +268,8 @@ def compile_file(filename, \
 def execute_file(binary):
 
     cmd = binary
+    if not ('/' in binary):
+        cmd = "./" + binary
     os.system(cmd)
 # ...
 

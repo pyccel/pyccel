@@ -459,8 +459,6 @@ class Variable(Basic):
             if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
                 raise TypeError("shape must be an instance of int or tuple of int")
 
-
-
         return Basic.__new__(cls, dtype, name, rank, allocatable,shape)
 
     @property
@@ -489,27 +487,8 @@ class Argument(Variable):
 
 
 class Result(Variable):
-    """Represents a result directly returned from a routine.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol or MatrixSymbol, optional
-        The sympy object the variable represents.
-
-    """
-
-    def __new__(cls, dtype, name=None):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError("datatype must be an instance of DataType.")
-        if not name:
-            name = Symbol('')
-        return Variable.__new__(cls, dtype, name)
-
+    """Represents a result directly returned from a routine."""
+    pass
 
 class InArgument(Argument):
     """Argument provided as input only.
