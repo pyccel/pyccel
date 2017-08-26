@@ -239,8 +239,11 @@ class FCodePrinter(CodePrinter):
         return 'real'
 
     def _print_NativeDouble(self, expr):
-        # TODO: Create master header to be included, include dp definition
-        return 'real(dp)'
+        return 'real(kind=8)'
+
+    def _print_NativeComplex(self, expr):
+        # TODO add precision
+        return 'complex(kind=8)'
 
     def _print_Equality(self, expr):
         return '{0} == {1} '.format(expr.lhs, expr.rhs)

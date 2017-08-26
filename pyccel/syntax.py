@@ -35,6 +35,7 @@ __all__ = ["Pyccel", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
            "ImportFromStmt", \
+           "ConstructorStmt", \
            "CommentStmt", "AnnotatedStmt", \
            # python standard library statements
            "PythonPrintStmt", \
@@ -210,6 +211,27 @@ class BasicStmt(object):
 #        else:
 #            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
 
+class ConstructorStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs         = kwargs.pop('lhs')
+        self.constructor = kwargs.pop('constructor')
+
+        super(ConstructorStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        """
+        var_name = str(self.lhs)
+        # TODO improve
+        datatype = str(self.constructor)
+        rank = 0
+        insert_variable(var_name, datatype=datatype, rank=rank)
+        return None
+
 class DeclarationStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -327,7 +349,8 @@ class AssignStmt(BasicStmt):
 
     def update(self):
         # TODO default type?
-        datatype = 'int'
+        datatype = 'float'
+#        datatype = 'int'
         if isinstance(self.rhs, Expression):
             expr = self.rhs.expr
             symbols = set([])

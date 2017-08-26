@@ -365,6 +365,10 @@ class NativeDouble(DataType):
     _name = 'Double'
     pass
 
+class NativeComplex(DataType):
+    _name = 'Complex'
+    pass
+
 
 class NativeVoid(DataType):
     _name = 'Void'
@@ -375,6 +379,7 @@ Bool = NativeBool()
 Int = NativeInteger()
 Float = NativeFloat()
 Double = NativeDouble()
+Complex = NativeComplex()
 Void = NativeVoid()
 
 
@@ -382,6 +387,7 @@ dtype_registry = {'bool': Bool,
                   'int': Int,
                   'float': Float,
                   'double': Double,
+                  'complex': Complex,
                   'void': Void}
 
 

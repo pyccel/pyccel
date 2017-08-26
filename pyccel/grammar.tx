@@ -11,7 +11,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (HiddenStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
+  (HiddenStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | ConstructorStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
 ;
 
 CompoundStmt:
@@ -146,7 +146,7 @@ DeclarationStmt:
 ;
 
 DataType:
-  ('double' | 'float' | 'int')
+  ('double' | 'float' | 'int' | 'complex')
 ;
 
 ParameterTest:
@@ -155,6 +155,14 @@ ParameterTest:
 
 Variable:
   ID
+;
+
+ConstructorStmt:
+  lhs=ID '=' constructor=Constructor LPAREN RPAREN 
+;
+
+Constructor:
+  DataType 
 ;
 
 IdentifierOrNumber:

@@ -7,7 +7,7 @@ from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
                            FactorSigned, FactorUnary, FactorBinary, \
                            # statements
-                           DeclarationStmt, \
+                           DeclarationStmt, ConstructorStmt, \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, MultiAssignStmt, \
@@ -160,7 +160,7 @@ class PyccelParser(Parser):
                    Expression, Term, Operand, \
                    FactorSigned, FactorUnary, FactorBinary, \
                    # statements
-                   DeclarationStmt, \
+                   DeclarationStmt, ConstructorStmt, \
                    AssignStmt, MultiAssignStmt, \
                    DelStmt, \
                    PassStmt, \

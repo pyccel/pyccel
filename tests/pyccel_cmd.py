@@ -24,6 +24,7 @@ from pyccel.parser  import PyccelParser, get_by_name
 from pyccel.syntax import ( \
                            # statements
                            DeclarationStmt, \
+                           ConstructorStmt, \
                            DelStmt, \
                            PassStmt, \
                            AssignStmt, MultiAssignStmt, \
@@ -195,6 +196,9 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
                       + sep + '\n'
         elif isinstance(stmt, PythonPrintStmt):
             body += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, ConstructorStmt):
+            # this statement does not generate any code
+            stmt.expr
         else:
             if debug:
                 print "> uncovered statement of type : ", type(stmt)
