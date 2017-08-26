@@ -15,3 +15,6 @@ y = 2.0
 
 w    = 2 * f(x,y) + 1.0
 z, t = g(x,w)
+
+print(z)
+print(t)
