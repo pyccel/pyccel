@@ -104,6 +104,30 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
         variables[var_name]    = var
         declarations[var_name] = dec
 
+# ...
+def do_arg(a):
+    if isinstance(a, str):
+        arg = Symbol(a, integer=True)
+    elif isinstance(a, Expression):
+        arg = a.expr
+        try:
+            if not(isinstance(arg, Symbol)):
+                arg = Integer(arg)
+            else:
+                arg = Symbol(arg.name, integer=True)
+        except:
+            raise Exception('not available yet')
+            rhs = a.expr
+            # TODO ARA
+            name = 'result_%d' % abs(hash(rhs))
+            arg = Symbol(name, integer=True)
+            var = Variable('int', arg)
+            self.declarations.append(Declare('int', var))
+            self.statements.append(Assign(arg, rhs))
+    else:
+        arg = Integer(a)
+    return arg
+# ...
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -154,57 +178,32 @@ class BasicStmt(object):
     def update(self):
         pass
 
-    # TODO move somewhere else
-    def do_trailer(self, trailer):
-        # ...
-        def do_arg(a):
-            if isinstance(a, str):
-                arg = Symbol(a, integer=True)
-            elif isinstance(a, Expression):
-                arg = a.expr
-                try:
-                    if not(isinstance(arg, Symbol)):
-                        arg = Integer(arg)
-                    else:
-                        arg = Symbol(arg.name, integer=True)
-                except:
-                    raise Exception('not available yet')
-#                    rhs = a.expr
-#                    # TODO ARA
-#                    name = 'result_%d' % abs(hash(rhs))
-#                    arg = Symbol(name, integer=True)
-#                    var = Variable('int', arg)
-#                    self.declarations.append(Declare('int', var))
-#                    self.statements.append(Assign(arg, rhs))
-            else:
-                arg = Integer(a)
-            return arg
-        # ...
-
-#        # only slices of the form a:b are possible
-#        # this assumes that inputs.args is of length 2
-#        if is_slice:
-#            assert(len(inputs.args) == 2)
+#    # TODO move somewhere else
+#    def do_trailer(self, trailer):
+##        # only slices of the form a:b are possible
+##        # this assumes that inputs.args is of length 2
+##        if is_slice:
+##            assert(len(inputs.args) == 2)
+##
+##            start = do_arg(inputs.args[0])
+##            end   = do_arg(inputs.args[1])
+##
+##            args = Slice(start, end)
 #
-#            start = do_arg(inputs.args[0])
-#            end   = do_arg(inputs.args[1])
+#        if isinstance(trailer, Trailer):
+#            inputs = trailer.subs
+#            if inputs:
+#                args = []
+#                for a in inputs.args:
+#                    arg = do_arg(a)
 #
-#            args = Slice(start, end)
-
-        if isinstance(trailer, Trailer):
-            inputs = trailer.subs
-            if inputs:
-                args = []
-                for a in inputs.args:
-                    arg = do_arg(a)
-
-                    # TODO treat n correctly
-                    n = Symbol('n', integer=True)
-                    i = Idx(arg, n)
-                    args.append(i)
-                return args
-        else:
-            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
+#                    # TODO treat n correctly
+#                    n = Symbol('n', integer=True)
+#                    i = Idx(arg, n)
+#                    args.append(i)
+#                return args
+#        else:
+#            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
 
 class DeclarationStmt(BasicStmt):
     """Class representing a ."""
@@ -358,7 +357,7 @@ class AssignStmt(BasicStmt):
         if self.trailer is None:
             l = sympify(self.lhs)
         else:
-            args = self.do_trailer(self.trailer)
+            args = self.trailer.expr
             l = IndexedVariable(str(self.lhs))[args]
 
         l = Assign(l, rhs)
@@ -488,7 +487,7 @@ class FactorSigned(ExpressionElement, BasicStmt):
         if self.trailer is None:
             return -expr if self.sign == '-' else expr
         else:
-            args = self.do_trailer(self.trailer)
+            args = self.trailer.expr
             expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
 
@@ -510,7 +509,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
         if self.trailer is None:
             return expr
         else:
-            args = self.do_trailer(self.trailer)
+            args = self.trailer.expr
             expr = IndexedVariable(str(expr))[args]
             return expr
 
@@ -1260,7 +1259,8 @@ class Trailer(BasicTrailer):
     @property
     def expr(self):
         self.update()
-        return [arg.expr for arg in  self.args]
+        if self.subs:
+            return self.subs.expr
 
 class TrailerArgList(BasicTrailer):
     """Class representing a ."""
@@ -1284,4 +1284,12 @@ class TrailerSubscriptList(BasicTrailer):
     @property
     def expr(self):
         self.update()
-        return [arg.expr for arg in  self.args]
+        args = []
+        for a in self.args:
+            arg = do_arg(a)
+
+            # TODO treat n correctly
+            n = Symbol('n', integer=True)
+            i = Idx(arg, n)
+            args.append(i)
+        return args
