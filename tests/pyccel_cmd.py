@@ -212,9 +212,24 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         preludes += fcode(dec) + "\n"
     # ...
 
-    code = gencode_as_program(name, imports, preludes, body, routines)
-#    code = gencode_as_module(name, imports, preludes, routines)
-    return code
+    # ...
+    is_module = True
+    for stmt in ast.statements:
+        if not(isinstance(stmt, (CommentStmt, ConstructorStmt, FunctionDefStmt))):
+            is_module = False
+            break
+    # ...
+
+    # ...
+    if is_module:
+        name = filename.split(".pyccel")[0]
+        name = name.split('/')[-1]
+#        print " name ", name
+        code = gencode_as_module(name, imports, preludes, routines)
+    else:
+        code = gencode_as_program(name, imports, preludes, body, routines)
+    # ...
+    return code, is_module
 # ...
 
 # ...
@@ -236,7 +251,8 @@ def compile_file(filename, \
                  compiler="gfortran", language="fortran", \
                  accelerator=None, \
                  debug=False, \
-                 verbose=False):
+                 verbose=False, \
+                 is_module=False):
     """
     """
     flags = " -O2 "
@@ -257,8 +273,13 @@ def compile_file(filename, \
     else:
         raise ValueError("Only fortran is available")
 
-    binary = filename.split('.' + ext)[0]
-    cmd = compiler + flags + filename + " -o" + binary
+    binary = ""
+    if not is_module:
+        binary = filename.split('.' + ext)[0]
+        binary = " -o" + binary
+    else:
+        flags += ' -c '
+    cmd = compiler + flags + filename + " " + binary
 
     if verbose:
         print cmd
@@ -340,9 +361,12 @@ preprocess(filename, filename_tmp)
 
 name = None
 name = "main"
-code = gencode(filename_tmp, fcode, \
-               name=name, \
-               accelerator=accelerator)
+code, is_module = gencode(filename_tmp, fcode, \
+                          name=name, \
+                          accelerator=accelerator)
+
+if is_module:
+    execute = False
 
 if show:
     print "---------------------------"
@@ -358,7 +382,8 @@ if compiler:
                           compiler="gfortran", language="fortran", \
                           accelerator=accelerator, \
                           debug=debug, \
-                          verbose=False)
+                          verbose=False, \
+                          is_module=is_module)
 
 if compiler and execute:
     execute_file(binary)
