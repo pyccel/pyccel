@@ -104,7 +104,7 @@ class CodePrinter(StrPrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         else:
-            return self._print_not_supported(expr)
+            return str(expr)
 
     def _print_NumberSymbol(self, expr):
         return str(expr)

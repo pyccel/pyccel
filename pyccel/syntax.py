@@ -355,7 +355,18 @@ class AssignStmt(BasicStmt):
     @property
     def expr(self):
         if isinstance(self.rhs, Expression):
-            rhs = sympify(self.rhs.expr)
+            rhs = self.rhs.expr
+            if isinstance(rhs, Function):
+                name = str(type(rhs).__name__)
+                F = namespace[name]
+                f_expr = F.expr
+                results = f_expr.results
+                result = results[0]
+                insert_variable(self.lhs, \
+                                datatype=result.dtype, \
+                                allocatable=result.allocatable, \
+                                shape=result.shape, \
+                                rank=result.rank)
         else:
             rhs = sympify(self.rhs)
 
@@ -538,7 +549,10 @@ class FactorSigned(ExpressionElement, BasicStmt):
             return -expr if self.sign == '-' else expr
         else:
             args = self.trailer.expr
-            expr = IndexedVariable(str(expr))[args]
+            if self.trailer.args:
+                expr = Function(str(expr))(*args)
+            elif self.trailer.subs:
+                expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
 
 
@@ -560,7 +574,10 @@ class FactorUnary(ExpressionElement, BasicStmt):
             return expr
         else:
             args = self.trailer.expr
-            expr = IndexedVariable(str(expr))[args]
+            if self.trailer.args:
+                expr = Function(str(expr))(*args)
+            elif self.trailer.subs:
+                expr = IndexedVariable(str(expr))[args]
             return expr
 
 
