@@ -300,15 +300,19 @@ class IfStmt(BasicStmt):
 
     @property
     def expr(self):
-        test = self.test.expr
-        ls = [l.expr for l in self.body_true]
-        rs = [l.expr for l in self.body_false]
-
-        e = Piecewise((ls, test), (rs, True))
 
         self.update()
 
-        return e
+        test       = self.test.expr
+        body_true  = self.body_true .expr
+        body_false = self.body_false.expr
+
+        self.local_vars += self.body_true.local_vars
+        self.local_vars += self.body_false.local_vars
+        self.stmt_vars  += self.body_true.stmt_vars
+        self.stmt_vars  += self.body_false.stmt_vars
+
+        return Piecewise((body_true, test), (body_false, True))
 
 class AssignStmt(BasicStmt):
     """Class representing a ."""
@@ -444,34 +448,20 @@ class WhileStmt(BasicStmt):
         self.test     = kwargs.pop('test')
         self.body     = kwargs.pop('body')
 
-
         super(WhileStmt, self).__init__(**kwargs)
-    def update(self):
 
-        body = []
-        for stmt in self.body:
-            if isinstance(stmt, list):
-                body += stmt
-            else:
-                body.append(stmt)
-        for stmt in body:
-            e = stmt.expr
-            # TODO to improve
-            self.local_vars += stmt.local_vars
-            self.stmt_vars  += stmt.stmt_vars
     @property
     def expr(self):
         test = self.test.expr
-        body = []
-        for stmt in self.body:
-            if isinstance(stmt, list):
-                body += stmt
-            else:
-                body.append(stmt)
-        ls = [l.expr for l in self.body]
 
         self.update()
-        return While(test,ls)
+
+        body = self.body.expr
+
+        self.local_vars += self.body.local_vars
+        self.stmt_vars  += self.body.stmt_vars
+
+        return While(test, body)
 
 class ExpressionElement(object):
     """Class representing an element of an expression."""

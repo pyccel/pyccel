@@ -235,22 +235,16 @@ ForStmt:
 ;
 WhileStmt:
   'while' test=OrTest ':'
-  INDENT
-  (body+=SmallStmt[';'])? (body+=CompoundStmt)? 
-  DEDENT
+  body=SuiteStmt
 ;
 
 
 IfStmt: 
   'if' test=Test ':'
-  INDENT
-  (body_true+=SmallStmt[';'])? (body_true+=CompoundStmt)? 
-  DEDENT
+  body_true=SuiteStmt
 //  ('elif' test=Test ':' SuiteStmt)* 
   ('else' ':'
-  INDENT
-  (body_false+=SmallStmt[';'])? (body_false+=CompoundStmt)? 
-  DEDENT)? 
+  body_false=SuiteStmt)? 
 ;
 
 Test: 
