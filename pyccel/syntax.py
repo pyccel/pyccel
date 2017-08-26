@@ -5,6 +5,7 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
+from sympy.core.function import Function
 
 from pyccel.types.ast import For, Assign, Declare, Variable, datatype, While
 from pyccel.types.ast import Argument, InArgument, InOutArgument, OutArgument, Result
@@ -603,8 +604,12 @@ class Operand(ExpressionElement):
                 print ">>> found local variables: " + op
             return Symbol(op)
         elif op in namespace:
+            print (">>>> found var : ", op)
             if isinstance(namespace[op], Number):
                 return namespace[op].expr
+            if isinstance(namespace[op], FunctionDefStmt):
+                print (">>>>  of  type : ", type(namespace[op]))
+                return Function(op) #(Symbol(args[0]), Symbol(args[1]))
             else:
                 return namespace[op]
         else:
@@ -757,6 +762,9 @@ class FunctionDefStmt(BasicStmt):
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
+
+        # TODO improve
+        namespace[str(self.name)] = self
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
@@ -1259,19 +1267,23 @@ class Trailer(BasicTrailer):
     @property
     def expr(self):
         self.update()
+        if self.args:
+            return self.args.expr
         if self.subs:
             return self.subs.expr
 
 class TrailerArgList(BasicTrailer):
-    """Class representing a ."""
+    """Class representing arguments of a function call."""
     def __init__(self, **kwargs):
         """
         """
+        print ">>>>>>>>>>> par ici"
         super(TrailerArgList, self).__init__(**kwargs)
 
     @property
     def expr(self):
         self.update()
+        print ">>>>>>>>>>> par la"
         return [arg.expr for arg in  self.args]
 
 class TrailerSubscriptList(BasicTrailer):
@@ -1283,6 +1295,7 @@ class TrailerSubscriptList(BasicTrailer):
 
     @property
     def expr(self):
+        raise()
         self.update()
         args = []
         for a in self.args:
