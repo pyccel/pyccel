@@ -7,6 +7,7 @@ from __future__ import print_function, division
 import string
 from itertools import groupby
 
+from sympy.core import Symbol
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
@@ -256,12 +257,20 @@ class FCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             result = expr.results[0]
 
+            body = []
+            for stmt in expr.body:
+                if isinstance(stmt, Declare):
+                    # TODO improve
+                    if not(str(stmt.variables[0].name) == str(result.name)):
+                        decs.append(stmt)
+                elif not isinstance(stmt, list): # for list of Results
+                    body.append(stmt)
+
             ret_type = self._print(result.dtype)
             func_type = 'function'
 
             if result.allocatable:
                 sig = 'function {0}'.format(name)
-                additional = ' '.format(result.name)
                 for n in [result.name, name]:
                     var = Variable(result.dtype, n, \
                                  rank=result.rank, \
@@ -270,19 +279,10 @@ class FCodePrinter(CodePrinter):
 
                     dec = Declare(result.dtype, var)
                     decs.append(dec)
+                body.append(Assign(Symbol(name), result.name))
             else:
                 sig = '{0} function {1}'.format(ret_type, name)
                 func_end  = ' result({0})'.format(result.name)
-
-            body = []
-            for stmt in expr.body:
-                if isinstance(stmt, Declare):
-                    # TODO improve
-                    name = str(stmt.variables[0].name)
-                    if not(str(name) == str(result.name)):
-                        body.append(stmt)
-                elif not isinstance(stmt, list): # for list of Results
-                    body.append(stmt)
         elif len(expr.results) > 1:
             for result in expr.results:
                 arg = OutArgument(result.dtype, result.name)
@@ -298,9 +298,9 @@ class FCodePrinter(CodePrinter):
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
                     # TODO improve
-                    name = str(stmt.variables[0].name)
-                    if not(name in names):
-                        body.append(stmt)
+                    nm = str(stmt.variables[0].name)
+                    if not(nm in names):
+                        decs.append(stmt)
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
         else:
@@ -315,12 +315,12 @@ class FCodePrinter(CodePrinter):
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
 
-        body_code = prelude + '\n' + body_code
+        body_code = prelude + '\n\n' + body_code
 
         return ('{0}({1}) {2}\n'
                 'implicit none\n'
                 'integer, parameter:: dp=kind(0.d0)\n'
-                '{3}\n'
+                '{3}\n\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
     def _print_InArgument(self, expr):
