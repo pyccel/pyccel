@@ -322,7 +322,7 @@ class FCodePrinter(CodePrinter):
 
         return ('{0}({1}) {2}\n'
                 'implicit none\n'
-                'integer, parameter:: dp=kind(0.d0)\n'
+#                'integer, parameter:: dp=kind(0.d0)\n'
                 '{3}\n\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 

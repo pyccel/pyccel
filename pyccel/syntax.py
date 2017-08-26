@@ -61,7 +61,12 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
-def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False, shape=None, is_argument=False):
+def insert_variable(var_name, \
+                    datatype=None, \
+                    rank=None, \
+                    allocatable=None, \
+                    shape=None, \
+                    is_argument=False):
     if type(var_name) in [int, float]:
         return
 
@@ -71,9 +76,25 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
                 .format(datatype, rank, allocatable, shape, is_argument)
         print txt
 
-    if datatype is None:
-#        datatype = 'int'
-        datatype = 'float'
+    if var_name in namespace:
+        var = variables[var_name]
+        if datatype is None:
+            datatype = var.dtype
+        if rank is None:
+            rank = var.rank
+        if allocatable is None:
+            allocatable = var.allocatable
+        if shape is None:
+            shape = var.shape
+        if isinstance(var, InArgument):
+            is_argument = True
+    else:
+        if datatype is None:
+            datatype = 'float'
+        if rank is None:
+            rank = 0
+        if allocatable is None:
+            allocatable = False
 
     is_integer = (datatype == 'int')
 
@@ -81,34 +102,25 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
     s = Symbol(var_name, integer=is_integer)
 
     # we create a variable (for annotation)
-    if var is None:
-        var = Variable(datatype, s, rank=rank, allocatable=allocatable, shape=shape)
-        if not is_argument:
-            var = Variable(datatype, s, rank=rank, allocatable=allocatable)
-        else:
-            var = InArgument(datatype, s)
+    if not is_argument:
+        var = Variable(datatype, s, \
+                       rank=rank, \
+                       allocatable=allocatable, \
+                       shape=shape)
+    else:
+        var = InArgument(datatype, s)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
 
     if var_name in namespace:
-        var_old = variables[var_name]
-        if not (var == var_old):
-            if DEBUG:
-                print ">>> wrong declaration : ", var_name
-                print "    type will be changed."
+        namespace.pop(var_name)
+        variables.pop(var_name)
+        declarations.pop(var_name)
 
-            namespace.pop(var_name)
-            variables.pop(var_name)
-            declarations.pop(var_name)
-
-            namespace[var_name]    = s
-            variables[var_name]    = var
-            declarations[var_name] = dec
-    else:
-        namespace[var_name]    = s
-        variables[var_name]    = var
-        declarations[var_name] = dec
+    namespace[var_name]    = s
+    variables[var_name]    = var
+    declarations[var_name] = dec
 
 # ...
 def do_arg(a):
@@ -230,7 +242,7 @@ class ConstructorStmt(BasicStmt):
         datatype = str(self.constructor)
         rank = 0
         insert_variable(var_name, datatype=datatype, rank=rank)
-        return None
+        return Comment("")
 
 class DeclarationStmt(BasicStmt):
     """Class representing a ."""
@@ -885,6 +897,7 @@ class FunctionDefStmt(BasicStmt):
     @property
     def expr(self):
         self.update()
+        body = self.body.expr
 
         name = str(self.name)
 
@@ -892,7 +905,6 @@ class FunctionDefStmt(BasicStmt):
         prelude = [declarations[arg_name] for arg_name in self.args]
 
         results = []
-        body = self.body.expr
 
 #        for stmt in self.body:
 #            if isinstance(stmt, list):
