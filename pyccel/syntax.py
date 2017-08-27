@@ -56,6 +56,90 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
+
+
+
+def Check_type(var_name,expr):
+    datatype='int'
+    rank=0
+    allocatable=False
+    shape=[]
+    s=[]
+    def pre(expr):
+        
+        if(type(expr)==Indexed):
+            s.append((expr.args[0],expr.args[1]))
+            return
+        elif len(expr.args)==0:
+            s.append(expr)
+        for arg in expr.args:
+            pre(arg)
+    
+    pre(expr.expr)
+    
+    if isinstance(expr,Expression) :
+        for i in s:
+            if isinstance(i,tuple):
+                if isinstance(i[0],IndexedBase):
+                     if variables[str(i[0])].dtype=='float':
+                         datatype='float'
+                     if  variables[str(i[0])].allocatable:
+                         allocatable=True
+
+                     if not variables[str(i[0])].shape==None:
+                            temp1=variables[str(i[0])].shape
+                            if(isinstance(temp1,tuple)):
+                                rank=len(temp1)
+                                if all(i[k].start>=0 and i[k].end<=temp1[k-1] for k in range(1,rank+1)):
+                                   shape.append(tuple([i[k].end-i[k].start for k in range(1,rank+1)]))
+                                else:
+                                    raise TypeError('dimension mismatch')
+                            elif isinstance(temp1,int):
+                                if i[1].start>=0 and i[1].end<=temp1:
+                                    shape.append(i[1].end-i[1].start)
+                                else:
+                                    raise TypeError('dimension mismatch')
+                            else:
+                                raise TypeError('shape must be an int or a tuple of int')
+                     else:
+                         raise TypeError('dimension mismatch')           
+                                
+            else:
+                 if isinstance(i,Symbol):
+                     if variables[str(i)].dtype=='float':
+                         datatype='float'
+                     if  variables[str(i)].allocatable:
+                         allocatable=True
+                     if not variables[str(i)].shape==None:
+                         shape.append(variables[str(i)].shape)
+                    
+                 elif i.is_real and not i.is_integer:
+                    datatype='float'
+    name=sympify(var_name)
+    if len(shape)>0:
+        if all(x==shape[0] for x in shape):
+            shape=shape[0]
+            
+            
+            if isinstance(shape,tuple):
+                shape=tuple(map(int,shape))
+                rank=len(shape)
+            elif shape.is_integer:
+                rank=1
+                shape=int(shape)
+                
+        else:
+            raise TypeError('shape are not equal')
+             
+    else:
+        shape=None
+    var=Variable(dtype=datatype,name=name , rank=rank, allocatable=allocatable,shape=shape)
+    return var
+        
+                
+                
+         
+
 def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False, shape=None, is_argument=False):
     if type(var_name) in [int, float]:
         return
@@ -74,11 +158,13 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
 
     # we create a variable (for annotation)
     if var is None:
-        var = Variable(datatype, s, rank=rank, allocatable=allocatable, shape=shape)
+        var = Variable(datatype, s, rank=rank, allocatable=allocatable)
         if not is_argument:
-            var = Variable(datatype, s, rank=rank, allocatable=allocatable)
+            var = Variable(datatype, s, rank=rank, allocatable=allocatable,shape=shape)
         else:
             var = InArgument(datatype, s)
+    else:
+        datatype=var.dtype
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
@@ -324,13 +410,16 @@ class AssignStmt(BasicStmt):
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
         self.trailer = kwargs.pop('trailer', None)
+        
 
         super(AssignStmt, self).__init__(**kwargs)
 
     def update(self):
+        
+    
         datatype = 'float'
         if isinstance(self.rhs, Expression):
-            expr = self.rhs.expr
+            expr = self.rhs
             symbols = set([])
             if isinstance(expr, Basic):
                 symbols = expr.free_symbols
@@ -351,7 +440,8 @@ class AssignStmt(BasicStmt):
 
             # TODO check if var is a return value
             rank = 0
-            insert_variable(var_name, datatype=datatype, rank=rank)
+            var=Check_type(self.lhs,self.rhs)
+            insert_variable(var_name, var=var)
             self.stmt_vars.append(var_name)
 
     @property
@@ -1012,7 +1102,7 @@ class NumpyOnesStmt(AssignStmt):
             insert_variable(var_name, \
                             datatype=datatype, \
                             rank=rank, \
-                            allocatable=True)
+                            allocatable=True,shape=self.shape)
             self.stmt_vars.append(var_name)
 
     @property
@@ -1090,6 +1180,7 @@ class NumpyArrayStmt(AssignStmt):
         self.lhs= kwargs.pop('lhs')
         self.rhs= kwargs.pop('rhs')
         self.dtype=kwargs.pop('dtype')
+        self.shape=len(self.rhs)
         super(AssignStmt, self).__init__(**kwargs)
 
     @property
@@ -1123,7 +1214,7 @@ class NumpyArrayStmt(AssignStmt):
         insert_variable(var_name, \
                             datatype=datatype, \
                             rank=rank, \
-                            allocatable=True)
+                            allocatable=True,shape=self.shape)
         self.stmt_vars.append(var_name)
 
 

@@ -441,7 +441,7 @@ class Variable(Basic):
     allocatable: False
         used for arrays, if we need to allocate memory [Default value: False]
 
-    """
+F    """
 
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
