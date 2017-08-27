@@ -11,6 +11,7 @@ import os
 import argparse
 
 from pyccel.codegen import PyccelCodegen, FCodegen
+from pyccel.codegen import Compiler
 
 # ...
 def clean(filename):
@@ -25,13 +26,6 @@ def clean(filename):
 def make_tmp_file(filename):
     name = filename.split('.py')[0]
     return name + ".pyccel"
-# ...
-
-# ...
-def separator(n=40):
-    txt = "."*n
-    comment = '!'
-    return '{0} {1}\n'.format(comment, txt)
 # ...
 
 # ...
@@ -77,67 +71,6 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
-def write_to_file(code, filename, language="fortran"):
-    if not(language == "fortran"):
-        raise ValueError("Only fortran is available")
-
-    f90_file = filename.split(".py")[0] + ".f90"
-    f = open(f90_file, "w")
-    for line in code:
-        f.write(line)
-    f.close()
-
-    return f90_file
-# ...
-
-# ...
-def compile_file(filename, \
-                 compiler="gfortran", language="fortran", \
-                 accelerator=None, \
-                 debug=False, \
-                 verbose=False, \
-                 is_module=False, \
-                 modules=[]):
-    """
-    """
-    flags = " -O2 "
-    if compiler == "gfortran":
-        if debug:
-            flags += " -fbounds-check "
-
-        if not (accelerator is None):
-            if accelerator == "openmp":
-                flags += " -fopenmp "
-            else:
-                raise ValueError("Only openmp is available")
-    else:
-        raise ValueError("Only gfortran is available")
-
-    if language == "fortran":
-        ext = "f90"
-    else:
-        raise ValueError("Only fortran is available")
-
-#    print "modules : ", modules
-
-    binary = ""
-    if not is_module:
-        binary = filename.split('.' + ext)[0]
-        o_code = " -o "
-    else:
-        flags += ' -c '
-        o_code = ' '
-    cmd = compiler + flags + filename + o_code + binary
-
-    if verbose:
-        print cmd
-
-    os.system(cmd)
-
-    return binary
-# ...
-
-# ...
 def execute_file(binary):
 
     cmd = binary
@@ -145,13 +78,6 @@ def execute_file(binary):
         cmd = "./" + binary
     os.system(cmd)
 # ...
-
-## ...
-#try:
-#    filename = sys.argv[1]
-#except:
-#    raise Exception('Expecting a filename')
-## ...
 
 # ...
 parser = argparse.ArgumentParser(description='Pyccel command line.')
@@ -211,8 +137,9 @@ name = None
 name = "main"
 
 codegen = FCodegen(filename=filename_tmp, name=name)
-code    = codegen.doprint(language="f95")
+codegen.doprint(language="fortran")
 
+code      = codegen.code
 is_module = codegen.is_module
 modules   = codegen.modules
 
@@ -226,17 +153,11 @@ if show:
 # ...
 
 # ...
-filename_out = write_to_file(code, filename, language="fortran")
-
 if compiler:
-    binary = compile_file(filename_out, \
-                          compiler="gfortran", language="fortran", \
-                          accelerator=accelerator, \
-                          debug=debug, \
-                          verbose=False, \
-                          is_module=is_module, \
-                          modules=modules)
+    compiler = Compiler(codegen, compiler="gfortran", debug=False)
+    compiler.compile(verbose=False)
+    binary   = compiler.binary
 
-if compiler and execute:
-    execute_file(binary)
+    if execute:
+        execute_file(binary)
 # ...
