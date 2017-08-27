@@ -821,33 +821,17 @@ class NumpyZeros(Basic):
         return self._args[1]
 
 class NumpyOnes(Basic):
-    """Represents variable assignment using numpy.zeros for code generation.
-
-    Parameters
-    ----------
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    shape : int or list of integers
-
-    Examples
-    --------
-
-    >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
-    >>> x, y, z = symbols('x, y, z')
-    >>> Assign(x, y)
-    x := y
+    """
 
     """
 
     # TODO improve in the spirit of assign
     def __new__(cls, lhs,shape):
         lhs   = _sympify(lhs)
-        shape   =_sympify(shape)
+        if isinstance(shape, list):
+            shape = Tuple(*(_sympify(i) for i in shape))
+        else:
+            shape = shape
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
