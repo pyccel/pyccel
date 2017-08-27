@@ -68,9 +68,14 @@ show    = args.show
 name = None
 name = "main"
 
-codegen_m = FCodegen(filename="core.py", name="core", is_module=True)
-codegen_m.doprint(language="fortran")
-print ">>> Codegen : core done."
+from pyccel.patterns.utilities import find_imports
+
+imports = find_imports(filename=filename)
+ms = []
+for module, names in imports.items():
+    codegen_m = FCodegen(filename=module+".py", name="core", is_module=True)
+    codegen_m.doprint(language="fortran")
+    ms.append(codegen_m)
 
 codegen = FCodegen(filename=filename, name=name)
 codegen.doprint(language="fortran")
@@ -81,8 +86,9 @@ modules   = codegen.modules
 
 # ...
 if compiler:
-    compiler_m = Compiler(codegen_m, compiler="gfortran", debug=debug)
-    compiler_m.compile(verbose=verbose)
+    for codegen_m in ms:
+        compiler_m = Compiler(codegen_m, compiler="gfortran", debug=debug)
+        compiler_m.compile(verbose=verbose)
 
     compiler = Compiler(codegen, compiler="gfortran", debug=debug)
     compiler.compile(verbose=verbose)
