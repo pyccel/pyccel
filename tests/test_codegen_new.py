@@ -12,6 +12,7 @@ import argparse
 
 from pyccel.codegen import PyccelCodegen, FCodegen
 from pyccel.codegen import Compiler, execute_file
+from pyccel.codegen import build_file
 
 # ...
 parser = argparse.ArgumentParser(description='Pyccel command line.')
@@ -31,6 +32,8 @@ parser.add_argument('--show', action='store_true', \
                     help='prints the generated file.')
 parser.add_argument('--debug', action='store_true', \
                     help='compiles the code in a debug mode.')
+parser.add_argument('--verbose', action='store_true', \
+                    help='enables verbose mode.')
 # ...
 
 # ...
@@ -57,36 +60,14 @@ accelerator = None
 if args.openmp:
     accelerator = "openmp"
 
-debug = args.debug
-show  = args.show
-# ...
-
-# ... creates an instance of Pyccel parser
-name = None
-name = "main"
-
-codegen = FCodegen(filename=filename, name=name)
-codegen.doprint(language="fortran")
-
-code      = codegen.code
-is_module = codegen.is_module
-modules   = codegen.modules
-
-if is_module:
-    execute = False
-
-if show:
-    print "---------------------------"
-    print code
-    print "---------------------------"
+debug   = args.debug
+verbose = args.verbose
+show    = args.show
 # ...
 
 # ...
-if compiler:
-    compiler = Compiler(codegen, compiler="gfortran", debug=False)
-    compiler.compile(verbose=False)
-    binary   = compiler.binary
-
-    if execute:
-        execute_file(binary)
+build_file(filename, language, compiler, \
+        execute=execute, accelerator=accelerator, \
+        debug=debug, verbose=verbose, show=show, \
+        name="main")
 # ...

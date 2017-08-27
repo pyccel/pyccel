@@ -15,6 +15,12 @@ def Linspace(n):
         x[i] = rational(i, k)
     return x
 
+def g(x,v):
+    m = x - v
+    t =  2.0 * m
+    z =  2.0 * t
+    return t, z
+
 #m = int()
 #m = 5
 #y = linspace(m)

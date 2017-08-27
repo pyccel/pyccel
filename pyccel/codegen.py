@@ -412,13 +412,14 @@ class Compiler(object):
     """Code compiler for the Pyccel Grammar"""
     def __init__(self, codegen, compiler, \
                  flags=None, accelerator=None, \
-                 binary=None, debug=False):
+                 binary=None, debug=False, inline=False):
         """
         """
         self._codegen     = codegen
         self._compiler    = compiler
         self._binary      = binary
         self._debug       = debug
+        self._inline      = inline
         self._accelerator = accelerator
 
         if flags:
@@ -452,6 +453,11 @@ class Compiler(object):
         return self._debug
 
     @property
+    def inline(self):
+        """Returns True if in inline mode"""
+        return self._inline
+
+    @property
     def accelerator(self):
         """Returns the used accelerator"""
         return self._accelerator
@@ -459,6 +465,7 @@ class Compiler(object):
     def construct_flags(self):
         compiler    = self.compiler
         debug       = self.debug
+        inline      = self.inline
         accelerator = self.accelerator
 
         flags = " -O2 "
@@ -479,6 +486,7 @@ class Compiler(object):
     def compile(self, verbose=False):
         compiler  = self.compiler
         flags     = self.flags
+        inline    = self.inline
         filename  = self.codegen.filename_out
         is_module = self.codegen.is_module
         modules   = self.codegen.modules
@@ -490,15 +498,23 @@ class Compiler(object):
         else:
             binary = self.binary
 
-        if not is_module:
-            o_code = " -o "
+        o_code = ''
+        if not inline:
+            if not is_module:
+                o_code = "-o"
+            else:
+                flags += ' -c '
         else:
-            flags += ' -c '
-            o_code = ' '
+            o_code = '-m'
+            flags  = '--quiet -c'
+            binary = 'external'
+            # TODO improve
+            compiler = 'f2py'
 
         m_code = ' '.join('{}.o '.format(m) for m in modules)
 
-        cmd = compiler + flags + m_code + filename + o_code + binary
+        cmd = '{0} {1} {2} {3} {4} {5}'.format( \
+            compiler, flags, m_code, filename, o_code, binary)
 
         if verbose:
             print cmd
@@ -512,7 +528,7 @@ class Compiler(object):
 def build_file(filename, language, compiler, \
                execute=False, accelerator = None, \
                debug=False, verbose=False, show=False, \
-               name="main"):
+               inline=False, name="main"):
     """User friendly interface for code generation."""
     # ...
     from pyccel.patterns.utilities import find_imports
@@ -537,11 +553,13 @@ def build_file(filename, language, compiler, \
             compiler_m = Compiler(codegen_m, compiler="gfortran", debug=debug)
             compiler_m.compile(verbose=verbose)
 
-        compiler = Compiler(codegen, compiler="gfortran", debug=debug)
-        compiler.compile(verbose=verbose)
-        binary   = compiler.binary
+        c = Compiler(codegen, \
+                     compiler=compiler, \
+                     inline=inline, \
+                     debug=debug)
+        c.compile(verbose=verbose)
 
         if execute:
-            execute_file(binary)
+            execute_file(c.binary)
     # ...
 # ...
