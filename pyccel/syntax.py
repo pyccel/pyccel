@@ -57,8 +57,6 @@ namespace["True"]  = true
 namespace["False"] = false
 
 
-
-
 def Check_type(var_name,expr):
     datatype='int'
     rank=0
@@ -137,10 +135,6 @@ def Check_type(var_name,expr):
     var=Variable(dtype=datatype,name=name , rank=rank, allocatable=allocatable,shape=shape)
     return var
         
-                
-                
-         
-
 def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False, shape=None, is_argument=False):
     if type(var_name) in [int, float]:
         return
@@ -188,7 +182,6 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
         namespace[var_name]    = s
         variables[var_name]    = var
         declarations[var_name] = dec
-
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -374,7 +367,6 @@ class PassStmt(BasicStmt):
 
         return self.label
 
-
 class IfStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -462,7 +454,6 @@ class AssignStmt(BasicStmt):
 
         self.update()
         return l
-
 
 class ForStmt(BasicStmt):
     """Class representing a ."""
@@ -568,7 +559,6 @@ class ExpressionElement(object):
 
         super(ExpressionElement, self).__init__()
 
-
 class FactorSigned(ExpressionElement, BasicStmt):
     """Class representing a signed factor."""
     def __init__(self, **kwargs):
@@ -588,7 +578,6 @@ class FactorSigned(ExpressionElement, BasicStmt):
             args = self.do_trailer(self.trailer)
             expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
-
 
 class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
@@ -610,7 +599,6 @@ class FactorUnary(ExpressionElement, BasicStmt):
             args = self.do_trailer(self.trailer)
             expr = IndexedVariable(str(expr))[args]
             return expr
-
 
 class FactorBinary(ExpressionElement):
     def __init__(self, **kwargs):
@@ -634,7 +622,6 @@ class FactorBinary(ExpressionElement):
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
 
-
 class Term(ExpressionElement):
     @property
     def expr(self):
@@ -648,7 +635,6 @@ class Term(ExpressionElement):
                 ret /= operand.expr
         return ret
 
-
 class Expression(ExpressionElement):
     @property
     def expr(self):
@@ -661,7 +647,6 @@ class Expression(ExpressionElement):
             else:
                 ret -= operand.expr
         return ret
-
 
 class Operand(ExpressionElement):
     @property
@@ -707,7 +692,6 @@ class Operand(ExpressionElement):
                 return namespace[op]
         else:
             raise Exception('Undefined variable "{}"'.format(op))
-
 
 class Test(ExpressionElement):
     @property
@@ -774,7 +758,6 @@ class Comparison(ExpressionElement):
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))
         return ret
-
 
 class FlowStmt(BasicStmt):
     """
@@ -1218,11 +1201,6 @@ class NumpyArrayStmt(AssignStmt):
                             allocatable=True,shape=self.shape)
         self.stmt_vars.append(var_name)
 
-
-
-
-
-
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -1312,7 +1290,6 @@ class AnnotatedStmt(BasicStmt):
                                 section=self.section, \
                                 visibility=self.visibility, \
                                 variables=self.variables)
-
 
 class SuiteStmt(BasicStmt):
     """Class representing a ."""
