@@ -22,6 +22,72 @@ from pyccel.syntax import ( \
 
 __all__ = ["PyccelCodegen"]
 
+# ...
+def clean(filename):
+    name = filename.split('.py')[0]
+    for ext in ["f90", "pyccel"]:
+        f_name = name + "." + ext
+        cmd = "rm -f " + f_name
+        os.system(cmd)
+# ...
+
+# ...
+def make_tmp_file(filename):
+    name = filename.split('.py')[0]
+    return name + ".pyccel"
+# ...
+
+# ...
+def preprocess(filename, filename_out):
+    f = open(filename)
+    lines = f.readlines()
+    f.close()
+
+    # to be sure that we dedent at the end
+    lines += "\n"
+
+    lines_new = ""
+
+    def delta(line):
+        l = line.lstrip(' ')
+        n = len(line) - len(l)
+        return n
+
+    tab   = 4
+    depth = 0
+    for i,line in enumerate(lines):
+        n = delta(line)
+
+        if n == depth * tab + tab:
+            depth += 1
+            lines_new += "indent" + "\n"
+            lines_new += line
+        else:
+
+            d = n // tab
+            if (d > 0) or (n==0):
+                old = delta(lines[i-1])
+                m = (old - n) // tab
+                depth -= m
+                for j in range(0, m):
+                    lines_new += "dedent" + "\n"
+
+            lines_new += line
+    f = open(filename_out, "w")
+    for line in lines_new:
+        f.write(line)
+    f.close()
+# ...
+
+# ...
+def execute_file(binary):
+
+    cmd = binary
+    if not ('/' in binary):
+        cmd = "./" + binary
+    os.system(cmd)
+# ...
+
 class Codegen(object):
     """Abstract class for code generation."""
     def __init__(self, \
@@ -38,6 +104,14 @@ class Codegen(object):
         body: list
             list of statements.
         """
+        # ... TODO improve once TextX will handle indentation
+        clean(filename)
+
+        filename_tmp = make_tmp_file(filename)
+        preprocess(filename, filename_tmp)
+        filename = filename_tmp
+        # ...
+
         if name is None:
             name = "main"
         if body is None:
