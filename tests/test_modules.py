@@ -12,6 +12,7 @@ import argparse
 
 from pyccel.codegen import PyccelCodegen, FCodegen
 from pyccel.codegen import Compiler, execute_file
+from pyccel.codegen import build_file
 
 # ...
 parser = argparse.ArgumentParser(description='Pyccel command line.')
@@ -64,36 +65,9 @@ verbose = args.verbose
 show    = args.show
 # ...
 
-# ... creates an instance of Pyccel parser
-name = None
-name = "main"
-
-from pyccel.patterns.utilities import find_imports
-
-imports = find_imports(filename=filename)
-ms = []
-for module, names in imports.items():
-    codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
-    codegen_m.doprint(language="fortran")
-    ms.append(codegen_m)
-
-codegen = FCodegen(filename=filename, name=name)
-codegen.doprint(language="fortran")
-print ">>> Codegen :", name, " done."
-
-modules   = codegen.modules
 # ...
-
-# ...
-if compiler:
-    for codegen_m in ms:
-        compiler_m = Compiler(codegen_m, compiler="gfortran", debug=debug)
-        compiler_m.compile(verbose=verbose)
-
-    compiler = Compiler(codegen, compiler="gfortran", debug=debug)
-    compiler.compile(verbose=verbose)
-    binary   = compiler.binary
-
-    if execute:
-        execute_file(binary)
+build_file(filename, language, compiler, \
+        execute=execute, accelerator=accelerator, \
+        debug=debug, verbose=verbose, show=show, \
+        name="main")
 # ...
