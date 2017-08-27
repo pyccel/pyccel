@@ -80,12 +80,14 @@ def Check_type(var_name,expr):
     if isinstance(expr,Expression) :
         for i in s:
             if isinstance(i,tuple):
-                if isinstance(i[0],IndexedBase):
+                
+                if isinstance(i[0],IndexedBase)and isinstance(i[1],Slice):
                      if variables[str(i[0])].dtype=='float':
                          datatype='float'
                      if  variables[str(i[0])].allocatable:
                          allocatable=True
-
+                         
+                         
                      if not variables[str(i[0])].shape==None:
                             temp1=variables[str(i[0])].shape
                             if(isinstance(temp1,tuple)):
