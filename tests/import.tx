@@ -3,7 +3,11 @@ ImportModel:
 ;
 
 ImportStmt: 
-  ImportNameStmt | ImportFromStmt 
+  ImportNameStmt | ImportFromStmt | NotaStmt 
+;
+
+NotaStmt:
+  /.*$/
 ;
 
 ImportNameStmt: 
@@ -35,3 +39,6 @@ DottedName:
   names+=ID['.'] 
 ;
 
+Comment:
+    /#.*$/
+;
