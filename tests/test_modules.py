@@ -73,7 +73,7 @@ from pyccel.patterns.utilities import find_imports
 imports = find_imports(filename=filename)
 ms = []
 for module, names in imports.items():
-    codegen_m = FCodegen(filename=module+".py", name="core", is_module=True)
+    codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
     codegen_m.doprint(language="fortran")
     ms.append(codegen_m)
 
