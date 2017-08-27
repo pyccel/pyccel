@@ -150,6 +150,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     preludes = ""
     body     = ""
     routines = ""
+    modules  = []
     # ...
 
     # ... TODO improve. mv somewhere else
@@ -168,6 +169,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
+            modules += stmt.dotted_name.names
         elif isinstance(stmt, DeclarationStmt):
             decs = stmt.expr
         elif isinstance(stmt, NumpyZerosStmt):
@@ -229,7 +231,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     else:
         code = gencode_as_program(name, imports, preludes, body, routines)
     # ...
-    return code, is_module
+    return code, is_module, modules
 # ...
 
 # ...
@@ -252,7 +254,8 @@ def compile_file(filename, \
                  accelerator=None, \
                  debug=False, \
                  verbose=False, \
-                 is_module=False):
+                 is_module=False, \
+                 modules=[]):
     """
     """
     flags = " -O2 "
@@ -273,13 +276,16 @@ def compile_file(filename, \
     else:
         raise ValueError("Only fortran is available")
 
+#    print "modules : ", modules
+
     binary = ""
     if not is_module:
         binary = filename.split('.' + ext)[0]
-        binary = " -o" + binary
+        o_code = " -o "
     else:
         flags += ' -c '
-    cmd = compiler + flags + filename + " " + binary
+        o_code = ' '
+    cmd = compiler + flags + filename + o_code + binary
 
     if verbose:
         print cmd
@@ -361,9 +367,9 @@ preprocess(filename, filename_tmp)
 
 name = None
 name = "main"
-code, is_module = gencode(filename_tmp, fcode, \
-                          name=name, \
-                          accelerator=accelerator)
+code, is_module, modules = gencode(filename_tmp, fcode, \
+                                   name=name, \
+                                   accelerator=accelerator)
 
 if is_module:
     execute = False
@@ -383,7 +389,8 @@ if compiler:
                           accelerator=accelerator, \
                           debug=debug, \
                           verbose=False, \
-                          is_module=is_module)
+                          is_module=is_module, \
+                          modules=modules)
 
 if compiler and execute:
     execute_file(binary)
