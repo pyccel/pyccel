@@ -1,0 +1,37 @@
+ImportModel:
+  statements*=ImportStmt
+;
+
+ImportStmt: 
+  ImportNameStmt | ImportFromStmt 
+;
+
+ImportNameStmt: 
+  'import' DottedAsNames
+;
+
+// note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+ImportFromStmt: ('from' (('.' | '...')* dotted_name=DottedName | ('.' | '...')+)
+              'import' ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames));
+
+ImportAsName: 
+  ID ('as' ID)?
+;
+
+DottedAsName: 
+  DottedName ('as' ID)?
+;
+
+ImportAsNames: 
+//  ImportAsName (',' ImportAsName)* (',')?
+  names+=ImportAsName[','] 
+;
+
+DottedAsNames: 
+  DottedAsName (',' DottedAsName)*
+;
+
+DottedName: 
+  names+=ID['.'] 
+;
+
