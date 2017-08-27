@@ -157,6 +157,19 @@ class Pyccel(object):
         """
         self.statements   = kwargs.pop('statements',   [])
 
+        # ... reset global variables
+        namespace    = {}
+        stack        = {}
+        settings     = {}
+        variables    = {}
+        declarations = {}
+
+        operators = {}
+
+        namespace["True"]  = true
+        namespace["False"] = false
+        # ...
+
     @property
     def declarations(self):
         d = {}

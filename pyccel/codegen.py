@@ -284,11 +284,14 @@ class Codegen(object):
         # ...
 
         # ...
-        is_module = True
-        for stmt in ast.statements:
-            if not(isinstance(stmt, (CommentStmt, ConstructorStmt, FunctionDefStmt))):
-                is_module = False
-                break
+        if not self.is_module:
+            is_module = True
+            for stmt in ast.statements:
+                if not(isinstance(stmt, (CommentStmt, ConstructorStmt, FunctionDefStmt))):
+                    is_module = False
+                    break
+        else:
+            is_module = True
         # ...
 
         # ...
@@ -478,6 +481,7 @@ class Compiler(object):
         flags     = self.flags
         filename  = self.codegen.filename_out
         is_module = self.codegen.is_module
+        modules   = self.codegen.modules
 
         binary = ""
         if self.binary is None:
@@ -491,7 +495,10 @@ class Compiler(object):
         else:
             flags += ' -c '
             o_code = ' '
-        cmd = compiler + flags + filename + o_code + binary
+
+        m_code = ' '.join('{}.o '.format(m) for m in modules)
+
+        cmd = compiler + flags + m_code + filename + o_code + binary
 
         if verbose:
             print cmd
