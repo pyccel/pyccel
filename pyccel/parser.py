@@ -7,10 +7,10 @@ from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
                            FactorSigned, FactorUnary, FactorBinary, \
                            # statements
-                           DeclarationStmt, \
+                           DeclarationStmt, ConstructorStmt, \
                            DelStmt, \
                            PassStmt, \
-                           AssignStmt, \
+                           AssignStmt, MultiAssignStmt, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
                            IfStmt, ForStmt, FunctionDefStmt,WhileStmt,\
@@ -22,7 +22,9 @@ from pyccel.syntax import (Pyccel, \
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, \
                            # test bool
-                           Test, OrTest, AndTest, NotTest, Comparison \
+                           Test, OrTest, AndTest, NotTest, Comparison, \
+                           # Trailers
+                           Trailer, TrailerArgList, TrailerSubscriptList \
                            )
 
 from textx.metamodel import metamodel_from_str
@@ -158,8 +160,8 @@ class PyccelParser(Parser):
                    Expression, Term, Operand, \
                    FactorSigned, FactorUnary, FactorBinary, \
                    # statements
-                   DeclarationStmt, \
-                   AssignStmt, \
+                   DeclarationStmt, ConstructorStmt, \
+                   AssignStmt, MultiAssignStmt, \
                    DelStmt, \
                    PassStmt, \
                    FlowStmt, BreakStmt, ContinueStmt, \
@@ -173,7 +175,9 @@ class PyccelParser(Parser):
                    NumpyZerosStmt, NumpyZerosLikeStmt, \
                    NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, \
                    # test bool
-                   Test, OrTest, AndTest, NotTest, Comparison \
+                   Test, OrTest, AndTest, NotTest, Comparison, \
+                   # Trailers
+                   Trailer, TrailerArgList, TrailerSubscriptList \
                    ]
 
         try:

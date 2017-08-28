@@ -7,6 +7,7 @@ from __future__ import print_function, division
 import string
 from itertools import groupby
 
+from sympy.core import Symbol
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
@@ -14,7 +15,7 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
-from pyccel.types.ast import (Assign, Result, InArgument,
+from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
         OutArgument, InOutArgument, Variable, Declare)
 from pyccel.printers.codeprinter import CodePrinter
 
@@ -238,8 +239,11 @@ class FCodePrinter(CodePrinter):
         return 'real'
 
     def _print_NativeDouble(self, expr):
-        # TODO: Create master header to be included, include dp definition
-        return 'real(dp)'
+        return 'real(kind=8)'
+
+    def _print_NativeComplex(self, expr):
+        # TODO add precision
+        return 'complex(kind=8)'
 
     def _print_Equality(self, expr):
         return '{0} == {1} '.format(expr.lhs, expr.rhs)
@@ -254,22 +258,34 @@ class FCodePrinter(CodePrinter):
         body = expr.body
         func_end  = ''
         if len(expr.results) == 1:
-            ret_type = self._print(expr.results[0].dtype)
-            sig = '{0} function {1}'.format(ret_type, name)
-            func_type = 'function'
-
             result = expr.results[0]
-            func_end  = ' result({0})'.format(result.name)
 
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
                     # TODO improve
-                    name = str(stmt.variables[0].name)
-                    if not(str(name) == str(result.name)):
-                        body.append(stmt)
-                else:
+                    if not(str(stmt.variables[0].name) == str(result.name)):
+                        decs.append(stmt)
+                elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
+
+            ret_type = self._print(result.dtype)
+            func_type = 'function'
+
+            if result.allocatable:
+                sig = 'function {0}'.format(name)
+                for n in [result.name, name]:
+                    var = Variable(result.dtype, n, \
+                                 rank=result.rank, \
+                                 allocatable=result.allocatable, \
+                                 shape=result.shape)
+
+                    dec = Declare(result.dtype, var)
+                    decs.append(dec)
+                body.append(Assign(Symbol(name), result.name))
+            else:
+                sig = '{0} function {1}'.format(ret_type, name)
+                func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
             for result in expr.results:
                 arg = OutArgument(result.dtype, result.name)
@@ -285,10 +301,10 @@ class FCodePrinter(CodePrinter):
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
                     # TODO improve
-                    name = str(stmt.variables[0].name)
-                    if not(name in names):
-                        body.append(stmt)
-                else:
+                    nm = str(stmt.variables[0].name)
+                    if not(nm in names):
+                        decs.append(stmt)
+                elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
         else:
             sig = 'subroutine ' + name
@@ -298,15 +314,16 @@ class FCodePrinter(CodePrinter):
         arg_code  = ', '.join(self._print(i) for i in expr.arguments)
         if len(out_code) > 0:
             arg_code  = ', '.join(i for i in [arg_code, out_code])
+
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
 
-        body_code = prelude + '\n' + body_code
+        body_code = prelude + '\n\n' + body_code
 
         return ('{0}({1}) {2}\n'
                 'implicit none\n'
-                'integer, parameter:: dp=kind(0.d0)\n'
-                '{3}\n'
+#                'integer, parameter:: dp=kind(0.d0)\n'
+                '{3}\n\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
     def _print_InArgument(self, expr):
@@ -323,6 +340,17 @@ class FCodePrinter(CodePrinter):
 
     def _print_AugAssign(self, expr):
         raise NotImplementedError("Fortran doesn't support AugAssign")
+
+    def _print_MultiAssign(self, expr):
+        # TODO improve, case where no input args, etc ...
+        if isinstance(expr.rhs, str):
+            args    = ', '.join(self._print(i) for i in expr.trailer)
+            outputs = ', '.join(self._print(i) for i in expr.lhs)
+
+            return 'call {0} ({1}, {2})'.format(expr.rhs, args, outputs)
+        else:
+            raise TypeError("Expecting a string for the rhs.")
+
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -447,8 +475,17 @@ class FCodePrinter(CodePrinter):
             return CodePrinter._print_Pow(self, expr)
 
     def _print_Rational(self, expr):
-        p, q = int(expr.p), int(expr.q)
-        return "%d.0d0/%d.0d0" % (p, q)
+        p = expr.numerator
+        q = expr.denominator
+        if type(p) == int:
+            txt_p = "%d.0d0" % (p)
+        else:
+            txt_p = '{} * 1.0d0'.format(str(p))
+        if type(q) == int:
+            txt_q = "%d.0d0" % (q)
+        else:
+            txt_q = '{} * 1.0d0'.format(str(q))
+        return '{0}/{1}'.format(txt_p, txt_q)
 
     def _print_Float(self, expr):
         printed = CodePrinter._print_Float(self, expr)

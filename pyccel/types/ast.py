@@ -12,6 +12,7 @@ AST Type Tree
 
 *Basic*
      |--->Assign
+     |--->MultiAssign
      |--->AugAssign
      |--->NativeOp
      |           |--------------|
@@ -364,6 +365,10 @@ class NativeDouble(DataType):
     _name = 'Double'
     pass
 
+class NativeComplex(DataType):
+    _name = 'Complex'
+    pass
+
 
 class NativeVoid(DataType):
     _name = 'Void'
@@ -374,6 +379,7 @@ Bool = NativeBool()
 Int = NativeInteger()
 Float = NativeFloat()
 Double = NativeDouble()
+Complex = NativeComplex()
 Void = NativeVoid()
 
 
@@ -381,6 +387,7 @@ dtype_registry = {'bool': Bool,
                   'int': Int,
                   'float': Float,
                   'double': Double,
+                  'complex': Complex,
                   'void': Void}
 
 
@@ -454,11 +461,9 @@ F    """
             raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
-        if not shape==None:
-            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
-                raise TypeError("shape must be an instance of int or tuple of int")
-
-
+#        if not shape==None:
+#            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
+#                raise TypeError("shape must be an instance of int or tuple of int")
 
         return Basic.__new__(cls, dtype, name, rank, allocatable,shape)
 
@@ -488,27 +493,8 @@ class Argument(Variable):
 
 
 class Result(Variable):
-    """Represents a result directly returned from a routine.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol or MatrixSymbol, optional
-        The sympy object the variable represents.
-
-    """
-
-    def __new__(cls, dtype, name=None):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError("datatype must be an instance of DataType.")
-        if not name:
-            name = Symbol('')
-        return Variable.__new__(cls, dtype, name)
-
+    """Represents a result directly returned from a routine."""
+    pass
 
 class InArgument(Argument):
     """Argument provided as input only.
@@ -590,7 +576,7 @@ class FunctionDef(Basic):
         # body
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        body = Tuple(*(_sympify(i) for i in body))
+#        body = Tuple(*(i for i in body))
         # results
         if not iterable(results):
             raise TypeError("results must be an iterable")
@@ -799,6 +785,8 @@ class NumpyZeros(Basic):
         lhs   = _sympify(lhs)
         if isinstance(shape, list):
             shape = Tuple(*(_sympify(i) for i in shape))
+        elif isinstance(shape, Basic):
+            shape = str(shape)
         else:
             shape = shape
 
@@ -1101,3 +1089,54 @@ class Piecewise(Basic):
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
+
+class MultiAssign(Basic):
+    """Represents a multiple assignment statement in the code.
+
+    Parameters
+    ----------
+    start : Symbol or int
+        starting index
+
+    end : Symbol or int
+        ending index
+
+    """
+    def __new__(cls, lhs, rhs, trailer):
+        return Basic.__new__(cls, lhs, rhs, trailer)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    @property
+    def trailer(self):
+        return self._args[2]
+
+class Rational(Basic):
+    """Represents a Rational numbers statement in the code.
+    This is different from sympy.Rational, as it allows for symbolic numbers.
+
+    Parameters
+    ----------
+    numerator : Symbol or int
+        numerator of the Rational number
+
+    denominator : Symbol or int
+        denominator of the Rational number
+
+    """
+    def __new__(cls, numerator, denominator):
+        return Basic.__new__(cls, numerator, denominator)
+
+    @property
+    def numerator(self):
+        return self._args[0]
+
+    @property
+    def denominator(self):
+        return self._args[1]

@@ -11,6 +11,7 @@ from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
 from pyccel.types.ast import Assign
+from pyccel.types.ast import FunctionDef
 
 __all__ = ["CodePrinter"]
 
@@ -80,7 +81,11 @@ class CodePrinter(StrPrinter):
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
+#        print(">>>>>>>>> type : ", type(expr.rhs), str(expr.rhs))
+        if isinstance(expr.rhs, FunctionDef):
+            rhs_code = self._print(expr.rhs.name)
+        else:
+            rhs_code = self._print(expr.rhs)
         return self._get_statement("%s = %s" % (lhs_code, rhs_code))
 
     def _print_Function(self, expr):
@@ -99,7 +104,7 @@ class CodePrinter(StrPrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         else:
-            return self._print_not_supported(expr)
+            return str(expr)
 
     def _print_NumberSymbol(self, expr):
         return str(expr)

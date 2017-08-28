@@ -5,6 +5,7 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
+from sympy.core.function import Function
 
 from pyccel.types.ast import For, Assign, Declare, Variable, datatype, While
 from pyccel.types.ast import Argument, InArgument, InOutArgument, OutArgument, Result
@@ -16,6 +17,8 @@ from pyccel.types.ast import AnnotatedComment
 from pyccel.types.ast import IndexedVariable
 from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
+from pyccel.types.ast import MultiAssign
+from pyccel.types.ast import Rational
 from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
 
 DEBUG = False
@@ -25,7 +28,7 @@ __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
            # statements
-           "AssignStmt", "DeclarationStmt", \
+           "AssignStmt", "MultiAssignStmt", "DeclarationStmt", \
            # compound stmts
            "ForStmt", "IfStmt", "SuiteStmt", \
            # Flow statements
@@ -33,6 +36,7 @@ __all__ = ["Pyccel", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
            "ImportFromStmt", \
+           "ConstructorStmt", \
            "CommentStmt", "AnnotatedStmt", \
            # python standard library statements
            "PythonPrintStmt", \
@@ -40,7 +44,9 @@ __all__ = ["Pyccel", \
            "NumpyZerosStmt", "NumpyZerosLikeStmt", \
            "NumpyOnesStmt", "NumpyLinspaceStmt", \
            # Test
-           "Test", "OrTest", "AndTest", "NotTest", "Comparison"
+           "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
+           # Trailers
+           "Trailer", "TrailerArgList", "TrailerSubscriptList"
            ]
 
 
@@ -56,7 +62,6 @@ operators = {}
 namespace["True"]  = true
 namespace["False"] = false
 
-
 def Check_type(var_name,expr):
     datatype='int'
     rank=0
@@ -64,7 +69,7 @@ def Check_type(var_name,expr):
     shape=[]
     s=[]
     def pre(expr):
-        
+
         if(type(expr)==Indexed):
             s.append((expr.args[0],expr.args[1]))
             return
@@ -72,9 +77,9 @@ def Check_type(var_name,expr):
             s.append(expr)
         for arg in expr.args:
             pre(arg)
-    
+
     pre(expr.expr)
-    
+
     if isinstance(expr,Expression):
         for i in s:
             if isinstance(i,tuple):
@@ -83,8 +88,8 @@ def Check_type(var_name,expr):
                          datatype='float'
                      if  variables[str(i[0])].allocatable:
                          allocatable=True
-                         
-                         
+
+
                      if not variables[str(i[0])].shape==None:
                             temp1=variables[str(i[0])].shape
                             if(isinstance(temp1,tuple)):
@@ -101,8 +106,8 @@ def Check_type(var_name,expr):
                             else:
                                 raise TypeError('shape must be an int or a tuple of int')
                      else:
-                         raise TypeError('dimension mismatch')           
-                                
+                         raise TypeError('dimension mismatch')
+
                 elif isinstance(i,Symbol):
                     if variables[str(i)].dtype=='float':
                         datatype='float'
@@ -118,33 +123,57 @@ def Check_type(var_name,expr):
     if len(shape)>0:
         if all(x==shape[0] for x in shape):
             shape=shape[0]
-            
-            
+
+
             if isinstance(shape,tuple):
                 shape=tuple(map(int,shape))
                 rank=len(shape)
             elif shape.is_integer:
                 rank=1
                 shape=int(shape)
-                
+
         else:
             raise TypeError('shape are not equal')
-             
+
     else:
         shape=None
     var=Variable(dtype=datatype,name=name , rank=rank, allocatable=allocatable,shape=shape)
     return var
-        
-def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False, shape=None, is_argument=False):
+
+def insert_variable(var_name, \
+                    datatype=None, \
+                    rank=None, \
+                    allocatable=None, \
+                    shape=None, \
+                    is_argument=False):
     if type(var_name) in [int, float]:
         return
 
     if DEBUG:
         print ">>> trying to insert : ", var_name
+        txt = '    datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
+                .format(datatype, rank, allocatable, shape, is_argument)
+        print txt
 
-    if datatype is None:
-#        datatype = 'int'
-        datatype = 'float'
+    if var_name in namespace:
+        var = variables[var_name]
+        if datatype is None:
+            datatype = var.dtype
+        if rank is None:
+            rank = var.rank
+        if allocatable is None:
+            allocatable = var.allocatable
+        if shape is None:
+            shape = var.shape
+        if isinstance(var, InArgument):
+            is_argument = True
+    else:
+        if datatype is None:
+            datatype = 'float'
+        if rank is None:
+            rank = 0
+        if allocatable is None:
+            allocatable = False
 
     is_integer = (datatype == 'int')
 
@@ -152,36 +181,57 @@ def insert_variable(var_name, var=None, datatype=None, rank=0, allocatable=False
     s = Symbol(var_name, integer=is_integer)
 
     # we create a variable (for annotation)
-    if var is None:
-        var = Variable(datatype, s, rank=rank, allocatable=allocatable)
-        if not is_argument:
-            var = Variable(datatype, s, rank=rank, allocatable=allocatable,shape=shape)
-        else:
-            var = InArgument(datatype, s)
+    if not is_argument:
+        var = Variable(datatype, s, \
+                       rank=rank, \
+                       allocatable=allocatable, \
+                       shape=shape)
     else:
-        datatype=var.dtype
+        var = InArgument(datatype, s, \
+                         rank=rank, \
+                         allocatable=allocatable, \
+                         shape=shape)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
 
     if var_name in namespace:
-        var_old = variables[var_name]
-        if not (var == var_old):
-            if DEBUG:
-                print ">>> wrong declaration : ", var_name
-                print "    type will be changed."
+        namespace.pop(var_name)
+        variables.pop(var_name)
+        declarations.pop(var_name)
 
-            namespace.pop(var_name)
-            variables.pop(var_name)
-            declarations.pop(var_name)
+    namespace[var_name]    = s
+    variables[var_name]    = var
+    declarations[var_name] = dec
 
-            namespace[var_name]    = s
-            variables[var_name]    = var
-            declarations[var_name] = dec
+# ...
+def do_arg(a):
+    if isinstance(a, str):
+        arg = Symbol(a, integer=True)
+    elif isinstance(a, Expression):
+        arg = a.expr
+        try:
+            if not(isinstance(arg, Symbol)):
+                arg = Integer(arg)
+            else:
+                arg = Symbol(arg.name, integer=True)
+        except:
+            raise Exception('not available yet')
+            rhs = a.expr
+            # TODO ARA
+            name = 'result_%d' % abs(hash(rhs))
+            arg = Symbol(name, integer=True)
+            var = Variable('int', arg)
+            self.declarations.append(Declare('int', var))
+            self.statements.append(Assign(arg, rhs))
     else:
         namespace[var_name]    = s
         variables[var_name]    = var
         declarations[var_name] = dec
+
+        arg = Integer(a)
+    return arg
+# ...
 
 class Pyccel(object):
     """Class for Pyccel syntax."""
@@ -191,6 +241,19 @@ class Pyccel(object):
 
         """
         self.statements   = kwargs.pop('statements',   [])
+
+        # ... reset global variables
+        namespace    = {}
+        stack        = {}
+        settings     = {}
+        variables    = {}
+        declarations = {}
+
+        operators = {}
+
+        namespace["True"]  = true
+        namespace["False"] = false
+        # ...
 
     @property
     def declarations(self):
@@ -232,65 +295,57 @@ class BasicStmt(object):
     def update(self):
         pass
 
-    # TODO move somewhere else
-    def do_trailer(self, trailer):
-        # ...
-        def do_arg(a):
-            if isinstance(a, str):
-                arg = Symbol(a, integer=True)
-            elif isinstance(a, Expression):
-                arg = a.expr
-                try:
-                    if not(isinstance(arg, Symbol)):
-                        arg = Integer(arg)
-                    else:
-                        arg = Symbol(arg.name, integer=True)
-                except:
-                    raise Exception('not available yet')
-#                    rhs = a.expr
-#                    # TODO ARA
-#                    name = 'result_%d' % abs(hash(rhs))
-#                    arg = Symbol(name, integer=True)
-#                    var = Variable('int', arg)
-#                    self.declarations.append(Declare('int', var))
-#                    self.statements.append(Assign(arg, rhs))
-            else:
-                arg = Integer(a)
-            return arg
-        # ...
+#    # TODO move somewhere else
+#    def do_trailer(self, trailer):
+##        # only slices of the form a:b are possible
+##        # this assumes that inputs.args is of length 2
+##        if is_slice:
+##            assert(len(inputs.args) == 2)
+##
+##            start = do_arg(inputs.args[0])
+##            end   = do_arg(inputs.args[1])
+##
+##            args = Slice(start, end)
+#
+#        if isinstance(trailer, Trailer):
+#            inputs = trailer.subs
+#            if inputs:
+#                args = []
+#                for a in inputs.args:
+#                    arg = do_arg(a)
+#
+#                    # TODO treat n correctly
+#                    n = Symbol('n', integer=True)
+#                    i = Idx(arg, n)
+#                    args.append(i)
+#                return args
+#        else:
+#            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
 
-        # there are two kind of trailers
-        # 1. a symbol, an expression
-        # 2. slices
-        is_subscript = False
-        if trailer.args:
-            inputs = trailer.args
-        elif trailer.subs:
-            inputs = trailer.subs
-            is_subscript = True
-        else:
-            raise Exception('Wrong inputs for the trailer at position {}'
-                            .format(var, self._tx_position))
+class ConstructorStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs         = kwargs.pop('lhs')
+        self.constructor = kwargs.pop('constructor')
 
-        # only slices of the form a:b are possible
-        # this assumes that inputs.args is of length 2
-        if is_subscript:
-            assert(len(inputs.args) == 2)
+        super(ConstructorStmt, self).__init__(**kwargs)
 
-            start = do_arg(inputs.args[0])
-            end   = do_arg(inputs.args[1])
-
-            args = Slice(start, end)
-        else:
-            args = []
-            for a in inputs.args:
-                arg = do_arg(a)
-
-                # TODO treat n correctly
-                n = Symbol('n', integer=True)
-                i = Idx(arg, n)
-                args.append(i)
-        return args
+    @property
+    def expr(self):
+        """
+        """
+        var_name = str(self.lhs)
+        # TODO improve
+        datatype = str(self.constructor)
+        rank = 0
+        # TODO improce with dtype from grammar
+        if datatype == "array":
+            rank = 1
+            datatype = 'float'
+        insert_variable(var_name, datatype=datatype, rank=rank)
+        return Comment("")
 
 class DeclarationStmt(BasicStmt):
     """Class representing a ."""
@@ -403,14 +458,14 @@ class AssignStmt(BasicStmt):
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
         self.trailer = kwargs.pop('trailer', None)
-        
+
 
         super(AssignStmt, self).__init__(**kwargs)
 
     def update(self):
-        
-    
+        # TODO default type?
         datatype = 'float'
+#        datatype = 'int'
         if isinstance(self.rhs, Expression):
             expr = self.rhs
             symbols = set([])
@@ -440,20 +495,77 @@ class AssignStmt(BasicStmt):
     @property
     def expr(self):
         if isinstance(self.rhs, Expression):
-            rhs = sympify(self.rhs.expr)
+            rhs = self.rhs.expr
+            if isinstance(rhs, Function):
+                name = str(type(rhs).__name__)
+                F = namespace[name]
+                f_expr = F.expr
+                results = f_expr.results
+                result = results[0]
+                insert_variable(self.lhs, \
+                                datatype=result.dtype, \
+                                allocatable=result.allocatable, \
+                                shape=result.shape, \
+                                rank=result.rank)
         else:
             rhs = sympify(self.rhs)
 
         if self.trailer is None:
             l = sympify(self.lhs)
         else:
-            args = self.do_trailer(self.trailer)
+            args = self.trailer.expr
             l = IndexedVariable(str(self.lhs))[args]
 
         l = Assign(l, rhs)
 
         self.update()
         return l
+
+class MultiAssignStmt(BasicStmt):
+    """Class representing multiple assignments. In fortran, this correspondans
+    to the call of a subroutine"""
+    def __init__(self, **kwargs):
+        """
+        """
+
+        self.lhs     = kwargs.pop('lhs')
+        self.name    = kwargs.pop('name')
+        self.trailer = kwargs.pop('trailer', None)
+
+        super(MultiAssignStmt, self).__init__(**kwargs)
+
+    def update(self):
+        datatype = 'float'
+        name = str(self.name)
+        if not(name in namespace):
+            raise Exception('Undefined function/subroutine {}'.format(name))
+        else:
+            F = namespace[name]
+            if not(isinstance(F, FunctionDefStmt)):
+                raise Exception('Expecting a {0} for {1}'.format(type(F), name))
+
+        for var_name in self.lhs:
+            if not(var_name in namespace):
+                if DEBUG:
+                    print("> Found new variable " + var_name)
+
+                # TODO get info from FunctionDefStmt
+                rank = 0
+                insert_variable(var_name, datatype=datatype, rank=rank)
+                self.stmt_vars.append(var_name)
+
+    @property
+    def expr(self):
+        self.update()
+        lhs = self.lhs
+        rhs = self.name
+        if not(self.trailer is None):
+            args = self.trailer.expr
+        else:
+            raise Exception('Expecting a trailer')
+
+        return MultiAssign(lhs, rhs, args)
+
 
 class ForStmt(BasicStmt):
     """Class representing a ."""
@@ -575,8 +687,11 @@ class FactorSigned(ExpressionElement, BasicStmt):
         if self.trailer is None:
             return -expr if self.sign == '-' else expr
         else:
-            args = self.do_trailer(self.trailer)
-            expr = IndexedVariable(str(expr))[args]
+            args = self.trailer.expr
+            if self.trailer.args:
+                expr = Function(str(expr))(*args)
+            elif self.trailer.subs:
+                expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
 
 class FactorUnary(ExpressionElement, BasicStmt):
@@ -596,8 +711,11 @@ class FactorUnary(ExpressionElement, BasicStmt):
         if self.trailer is None:
             return expr
         else:
-            args = self.do_trailer(self.trailer)
-            expr = IndexedVariable(str(expr))[args]
+            args = self.trailer.expr
+            if self.trailer.args:
+                expr = Function(str(expr))(*args)
+            elif self.trailer.subs:
+                expr = IndexedVariable(str(expr))[args]
             return expr
 
 class FactorBinary(ExpressionElement):
@@ -618,6 +736,8 @@ class FactorBinary(ExpressionElement):
 
         if self.name == "pow":
             return Pow(expr_l, expr_r)
+        elif self.name == "rational":
+            return Rational(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
@@ -688,6 +808,8 @@ class Operand(ExpressionElement):
         elif op in namespace:
             if isinstance(namespace[op], Number):
                 return namespace[op].expr
+            if isinstance(namespace[op], FunctionDefStmt):
+                return Function(op) #(Symbol(args[0]), Symbol(args[1]))
             else:
                 return namespace[op]
         else:
@@ -790,7 +912,7 @@ class ReturnStmt(FlowStmt):
         """
         """
         self.variables = kwargs.pop('variables')
-        print "ReturnStmt : ", self.variables
+        self.results   = None
 
         super(ReturnStmt, self).__init__(**kwargs)
 
@@ -798,20 +920,30 @@ class ReturnStmt(FlowStmt):
     def expr(self):
         """
         """
+        self.update()
+
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
         for var_name in self.variables:
             if var_name in variables:
-                datatype = variables[var_name].datatype
+                var = variables[var_name]
+                if isinstance(var, Variable):
+                    res = Result(var.dtype, var_name, \
+                           rank=var.rank, \
+                           allocatable=var.allocatable, \
+                           shape=var.shape)
+                else:
+                    datatype = var.datatype
+                    res = Result(datatype, var_name)
             else:
                 datatype = 'float'
+                res = Result(datatype, var_name)
+                raise()
 
-            var = Result(datatype, var_name)
-            decs.append(var)
+            decs.append(res)
 
-        self.update()
-
+        self.results = decs
         return decs
 
 class RaiseStmt(FlowStmt):
@@ -839,6 +971,9 @@ class FunctionDefStmt(BasicStmt):
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
 
+        # TODO improve
+        namespace[str(self.name)] = self
+
         super(FunctionDefStmt, self).__init__(**kwargs)
 
     def update(self):
@@ -853,12 +988,14 @@ class FunctionDefStmt(BasicStmt):
                 datatype = 'float'
                 insert_variable(arg_name, datatype=datatype, rank=rank,
                                 is_argument=True)
+            else:
+                print("+++ found already declared argument : ", arg_name)
 
 
     @property
     def expr(self):
-        # TODO must copy code from codegen/routine
         self.update()
+        body = self.body.expr
 
         name = str(self.name)
 
@@ -866,25 +1003,32 @@ class FunctionDefStmt(BasicStmt):
         prelude = [declarations[arg_name] for arg_name in self.args]
 
         results = []
-        body = []
-        for stmt in self.body:
-            if isinstance(stmt, list):
-                body += [e.expr for e in stmt]
-            elif not(isinstance(stmt, ReturnStmt)):
-                body.append(stmt.expr)
 
+#        for stmt in self.body:
+#            if isinstance(stmt, list):
+#                body += [e.expr for e in stmt]
+#            elif not(isinstance(stmt, ReturnStmt)):
+#                body.append(stmt.expr)
+
+        # ... cleaning the namespace
         for arg_name in self.args:
             declarations.pop(arg_name)
             variables.pop(arg_name)
+            namespace.pop(arg_name)
 
-        for stmt in self.body:
+        for stmt in self.body.stmts:
             if isinstance(stmt, AssignStmt):
                 var_name = stmt.lhs
                 var = variables.pop(var_name, None)
                 dec = declarations.pop(var_name, None)
+
                 prelude.append(dec)
             elif isinstance(stmt, ReturnStmt):
-                results += stmt.expr
+                results += stmt.results
+                for var_name in stmt.variables:
+                    namespace.pop(var_name)
+
+        # ...
 
         body = prelude + body
 
@@ -947,7 +1091,13 @@ class NumpyZerosStmt(AssignStmt):
                 shape = [int(s) for s in self.shape]
                 rank = len(shape)
             else:
-                raise Exception('Wrong instance for shape.')
+                shape = str(self.shape)
+                if shape in namespace:
+                    shape = namespace[shape]
+                    # TODO compute rank
+                    rank = 1
+                else:
+                    raise Exception('Wrong instance for shape.')
             self.shape = shape
 
             if datatype is None:
@@ -1302,10 +1452,74 @@ class SuiteStmt(BasicStmt):
 
     def update(self):
         for stmt in self.stmts:
-            self.local_vars += stmt.local_vars
-            self.stmt_vars  += stmt.stmt_vars
+            if not(isinstance(stmt, ReturnStmt)):
+                self.local_vars += stmt.local_vars
+                self.stmt_vars  += stmt.stmt_vars
 
     @property
     def expr(self):
         self.update()
-        return [stmt.expr for stmt in  self.stmts]
+        ls = [stmt.expr for stmt in  self.stmts]
+        return ls
+
+class BasicTrailer(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args', None)
+
+        super(BasicTrailer, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        pass
+
+class Trailer(BasicTrailer):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.subs = kwargs.pop('subs', None)
+
+        super(Trailer, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        if self.args:
+            return self.args.expr
+        if self.subs:
+            return self.subs.expr
+
+class TrailerArgList(BasicTrailer):
+    """Class representing arguments of a function call."""
+    def __init__(self, **kwargs):
+        """
+        """
+        super(TrailerArgList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        return [arg.expr for arg in  self.args]
+
+class TrailerSubscriptList(BasicTrailer):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        super(TrailerSubscriptList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        self.update()
+        args = []
+        for a in self.args:
+            arg = do_arg(a)
+
+            # TODO treat n correctly
+            n = Symbol('n', integer=True)
+            i = Idx(arg, n)
+            args.append(i)
+        return args

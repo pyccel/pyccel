@@ -24,9 +24,10 @@ from pyccel.parser  import PyccelParser, get_by_name
 from pyccel.syntax import ( \
                            # statements
                            DeclarationStmt, \
+                           ConstructorStmt, \
                            DelStmt, \
                            PassStmt, \
-                           AssignStmt, \
+                           AssignStmt, MultiAssignStmt, \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
                            ImportFromStmt, \
                            CommentStmt, AnnotatedStmt, \
@@ -51,6 +52,13 @@ def clean(filename):
 def make_tmp_file(filename):
     name = filename.split('.py')[0]
     return name + ".pyccel"
+# ...
+
+# ...
+def separator(n=40):
+    txt = "."*n
+    comment = '!'
+    return '{0} {1}\n'.format(comment, txt)
 # ...
 
 # ...
@@ -142,6 +150,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
     preludes = ""
     body     = ""
     routines = ""
+    modules  = []
     # ...
 
     # ... TODO improve. mv somewhere else
@@ -160,6 +169,7 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ImportFromStmt):
             imports += fcode(stmt.expr) + "\n"
+            modules += stmt.dotted_name.names
         elif isinstance(stmt, DeclarationStmt):
             decs = stmt.expr
         elif isinstance(stmt, NumpyZerosStmt):
@@ -174,6 +184,8 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, AssignStmt):
             body += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, MultiAssignStmt):
+            body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, ForStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt,WhileStmt):
@@ -181,9 +193,14 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         elif isinstance(stmt, IfStmt):
             body += fcode(stmt.expr) + "\n"
         elif isinstance(stmt, FunctionDefStmt):
-            routines += fcode(stmt.expr) + "\n"
+            sep = separator()
+            routines += sep + fcode(stmt.expr) + "\n" \
+                      + sep + '\n'
         elif isinstance(stmt, PythonPrintStmt):
             body += fcode(stmt.expr) + "\n"
+        elif isinstance(stmt, ConstructorStmt):
+            # this statement does not generate any code
+            stmt.expr
         else:
             if debug:
                 print "> uncovered statement of type : ", type(stmt)
@@ -197,9 +214,24 @@ def gencode(filename, printer, name=None, debug=False, accelerator=None):
         preludes += fcode(dec) + "\n"
     # ...
 
-    code = gencode_as_program(name, imports, preludes, body, routines)
-#    code = gencode_as_module(name, imports, preludes, routines)
-    return code
+    # ...
+    is_module = True
+    for stmt in ast.statements:
+        if not(isinstance(stmt, (CommentStmt, ConstructorStmt, FunctionDefStmt))):
+            is_module = False
+            break
+    # ...
+
+    # ...
+    if is_module:
+        name = filename.split(".pyccel")[0]
+        name = name.split('/')[-1]
+#        print " name ", name
+        code = gencode_as_module(name, imports, preludes, routines)
+    else:
+        code = gencode_as_program(name, imports, preludes, body, routines)
+    # ...
+    return code, is_module, modules
 # ...
 
 # ...
@@ -221,7 +253,9 @@ def compile_file(filename, \
                  compiler="gfortran", language="fortran", \
                  accelerator=None, \
                  debug=False, \
-                 verbose=False):
+                 verbose=False, \
+                 is_module=False, \
+                 modules=[]):
     """
     """
     flags = " -O2 "
@@ -242,8 +276,16 @@ def compile_file(filename, \
     else:
         raise ValueError("Only fortran is available")
 
-    binary = filename.split('.' + ext)[0]
-    cmd = compiler + flags + filename + " -o" + binary
+#    print "modules : ", modules
+
+    binary = ""
+    if not is_module:
+        binary = filename.split('.' + ext)[0]
+        o_code = " -o "
+    else:
+        flags += ' -c '
+        o_code = ' '
+    cmd = compiler + flags + filename + o_code + binary
 
     if verbose:
         print cmd
@@ -257,6 +299,8 @@ def compile_file(filename, \
 def execute_file(binary):
 
     cmd = binary
+    if not ('/' in binary):
+        cmd = "./" + binary
     os.system(cmd)
 # ...
 
@@ -323,9 +367,12 @@ preprocess(filename, filename_tmp)
 
 name = None
 name = "main"
-code = gencode(filename_tmp, fcode, \
-               name=name, \
-               accelerator=accelerator)
+code, is_module, modules = gencode(filename_tmp, fcode, \
+                                   name=name, \
+                                   accelerator=accelerator)
+
+if is_module:
+    execute = False
 
 if show:
     print "---------------------------"
@@ -341,7 +388,9 @@ if compiler:
                           compiler="gfortran", language="fortran", \
                           accelerator=accelerator, \
                           debug=debug, \
-                          verbose=False)
+                          verbose=False, \
+                          is_module=is_module, \
+                          modules=modules)
 
 if compiler and execute:
     execute_file(binary)
