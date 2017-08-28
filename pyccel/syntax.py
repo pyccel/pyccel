@@ -141,6 +141,7 @@ def Check_type(var_name,expr):
     return var
 
 def insert_variable(var_name, \
+                    var=None, \
                     datatype=None, \
                     rank=None, \
                     allocatable=None, \
