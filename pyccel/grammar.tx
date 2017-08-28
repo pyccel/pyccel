@@ -146,7 +146,7 @@ DeclarationStmt:
 ;
 
 DataType:
-  ('double' | 'float' | 'int' | 'complex')
+  ('double' | 'float' | 'int' | 'complex' | 'array')
 ;
 
 ParameterTest:

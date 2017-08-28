@@ -1,5 +1,6 @@
 # coding: utf-8
 
+
 def Ones(n):
     n = int()
     x = zeros(shape=n, dtype=float)
@@ -15,15 +16,11 @@ def Linspace(n):
         x[i] = rational(i, k)
     return x
 
-def g(x,v):
-    m = x - v
-    t =  2.0 * m
-    z =  2.0 * t
-    return t, z
-
-#m = int()
-#m = 5
-#y = linspace(m)
-#print(y)
-
-
+def dot(a,b,shape):
+    x = float()
+    a = array()
+    b = array()
+    x = 0
+    for i in range(0,shape):
+        x = x + a[i] * b[i]
+    return x

@@ -109,7 +109,10 @@ def insert_variable(var_name, \
                        allocatable=allocatable, \
                        shape=shape)
     else:
-        var = InArgument(datatype, s)
+        var = InArgument(datatype, s, \
+                         rank=rank, \
+                         allocatable=allocatable, \
+                         shape=shape)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
@@ -255,6 +258,10 @@ class ConstructorStmt(BasicStmt):
         # TODO improve
         datatype = str(self.constructor)
         rank = 0
+        # TODO improce with dtype from grammar
+        if datatype == "array":
+            rank = 1
+            datatype = 'float'
         insert_variable(var_name, datatype=datatype, rank=rank)
         return Comment("")
 
