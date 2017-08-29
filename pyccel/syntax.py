@@ -117,7 +117,7 @@ def Check_type(var_name,expr):
                         shape.append(variables[str(i)].shape)
                 elif isinstance(i[0],IndexedBase)and i[1].is_integer:
                     datatype=variables[str(i[0])].dtype
-                elif i.is_real and not i.is_integer:
+            elif i.is_real and not i.is_integer:
                     datatype='float'
     name=sympify(var_name)
     if len(shape)>0:
