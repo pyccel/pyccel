@@ -189,7 +189,7 @@ PrintStmt:
 ;
 
 NumpyStmt: 
-  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt|NumpyArrayStmt)
+  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt|NumpyArrayStmt|LenStmt)
 ;
 
 ParameterValue:
@@ -228,6 +228,13 @@ NUMBEROrSTRING:
   (NUMBER|STRING)
 ;
 
+LenStmt:
+  lhs=ID '=' LEN LPAREN rhs=ArrayOrID RPAREN
+;
+
+ArrayOrID:
+ ('[' NUMBEROrSTRING (',' NUMBEROrSTRING)* ']')|(ID)
+;
 
 AssignStmt: 
   lhs=ID (trailer=Trailer)? '=' rhs=Expression 
@@ -407,4 +414,7 @@ AWAIT:
 ;
 ARRAY:
   'array'
+;
+LEN:
+  'len'
 ;

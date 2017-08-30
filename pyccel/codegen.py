@@ -16,7 +16,7 @@ from pyccel.syntax import ( \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
-                           NumpyZerosStmt, NumpyZerosLikeStmt, \
+                           NumpyZerosStmt, NumpyZerosLikeStmt,LenStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt \
                            )
 
@@ -241,6 +241,8 @@ class Codegen(object):
                 modules += stmt.dotted_name.names
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
+            elif isinstance(stmt,LenStmt):
+                body += printer(stmt.expr)+ "\n"
             elif isinstance(stmt, NumpyZerosStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, NumpyZerosLikeStmt):
@@ -271,7 +273,7 @@ class Codegen(object):
                 # this statement does not generate any code
                 stmt.expr
             else:
-                if debug:
+                if True:
                     print "> uncovered statement of type : ", type(stmt)
                 else:
 

@@ -13,3 +13,17 @@ tests/examples/*.pyccel
 tests/examples/*.f90
 tests/examples/openmp/*.pyccel
 tests/examples/openmp/*.f90
+.project
+.pydevproject
+.settings/
+tests/examples/ex1
+tests/examples/ex10
+tests/examples/ex12
+tests/examples/ex12.py
+tests/examples/ex2
+tests/examples/ex3
+tests/examples/ex4
+tests/examples/ex5
+tests/examples/ex6
+tests/examples/ex8
+tests/examples/ex9

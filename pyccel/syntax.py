@@ -20,7 +20,7 @@ from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
 from pyccel.types.ast import MultiAssign
 from pyccel.types.ast import Rational
-from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
+from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray,LEN
 
 DEBUG = False
 #DEBUG = True
@@ -500,6 +500,7 @@ class AssignStmt(BasicStmt):
                             allocatable=d_var['allocatable'],
                             shape=d_var['shape'])
             self.stmt_vars.append(var_name)
+            
 
     @property
     def expr(self):
@@ -678,6 +679,7 @@ class ExpressionElement(object):
 
         # We have 'op' attribute in all grammar rules
         self.op = kwargs['op']
+        
 
         super(ExpressionElement, self).__init__()
 
@@ -694,6 +696,7 @@ class FactorSigned(ExpressionElement, BasicStmt):
         if DEBUG:
             print "> FactorSigned "
         expr = self.op.expr
+        
     
         
         if self.trailer is None:
@@ -1053,6 +1056,45 @@ class FunctionDefStmt(BasicStmt):
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
 
+
+class LenStmt(AssignStmt):
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs = kwargs.pop('lhs')
+        self.rhs = str(kwargs.pop('rhs'))
+        import ast
+        try:
+            rhs=ast.literal_eval(self.rhs)
+            
+        except:
+            rhs=Symbol(self.rhs)
+        
+        super(AssignStmt, self).__init__(**kwargs)
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            insert_variable(var_name, \
+                            datatype='int', \
+                            rank=0)
+            self.stmt_vars.append(var_name)
+     
+    @property
+    def expr(self):
+        self.update()
+        lhs=Symbol(self.lhs)
+        import ast
+        try:
+            rhs=ast.literal_eval(self.rhs)
+            
+        except:
+            rhs=self.rhs
+        
+    
+        return LEN(lhs,rhs)
+            
+        
+
 class NumpyZerosStmt(AssignStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -1367,6 +1409,9 @@ class NumpyArrayStmt(AssignStmt):
                             allocatable=True,shape=self.shape)
         self.stmt_vars.append(var_name)
 
+
+
+      
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
