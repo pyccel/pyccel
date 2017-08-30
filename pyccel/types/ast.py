@@ -260,7 +260,7 @@ class AugAssign(Basic):
         return self._args[2]
 
 class While(Basic):
-    
+
 
     def __new__(cls, test, body):
         test = _sympify(test)
@@ -359,7 +359,7 @@ class NativeComplex(DataType):
     pass
 
 
-    
+
 class NativeVoid(DataType):
     _name = 'Void'
     pass
@@ -433,10 +433,10 @@ class NotequalStmt(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
-        
-        
-        
-       
+
+
+
+
 class Variable(Basic):
     """Represents a typed variable.
 
@@ -764,10 +764,10 @@ class LEN(Basic):
      def __new__(cls, lhs, rhs):
          lhs=_sympify(lhs)
          if not isinstance(rhs,list):
-             
+
              rhs=Symbol(rhs)
          return Basic.__new__(cls, lhs, rhs)
-    
+
      @property
      def lhs(self):
         return self._args[0]
@@ -775,7 +775,7 @@ class LEN(Basic):
      @property
      def rhs(self):
         return self._args[1]
-             
+
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
@@ -1069,6 +1069,7 @@ class Slice(Basic):
     # TODO add step
 
     def __new__(cls, start, end):
+        print('> create slice {0} : {1}'.format(start, end))
         return Basic.__new__(cls, start, end)
 
     @property
@@ -1081,7 +1082,15 @@ class Slice(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return '{0} : {1}'.format(sstr(self.start), sstr(self.end))
+        if self.start is None:
+            start = ''
+        else:
+            start = sstr(self.start)
+        if self.end is None:
+            end = ''
+        else:
+            end = sstr(self.end)
+        return '{0} : {1}'.format(start, end)
 
 class Piecewise(Basic):
     """Represents a if statement in the code.

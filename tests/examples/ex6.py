@@ -45,6 +45,6 @@ m = 3
 x = zeros(shape=(n,m), dtype=float)
 y = zeros(shape=(n),   dtype=float)
 
-y = x[0:2,0]
+y = x[:2,0]
 print(x)
 

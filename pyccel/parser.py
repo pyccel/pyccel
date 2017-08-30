@@ -24,7 +24,8 @@ from pyccel.syntax import (Pyccel, \
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
-                           Trailer, TrailerArgList, TrailerSubscriptList \
+                           Trailer, TrailerArgList, TrailerSubscriptList, \
+                           TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                            )
 
 from textx.metamodel import metamodel_from_str
@@ -177,7 +178,8 @@ class PyccelParser(Parser):
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers
-                   Trailer, TrailerArgList, TrailerSubscriptList \
+                   Trailer, TrailerArgList, TrailerSubscriptList, \
+                   TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                    ]
 
         try:

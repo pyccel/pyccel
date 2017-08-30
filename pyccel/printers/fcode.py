@@ -193,7 +193,7 @@ class FCodePrinter(CodePrinter):
             return self._get_statement('%s =size((/%s/),1)'%(expr.lhs,st))
         else:
             return self._get_statement('%s =size(%s,1)'%(expr.lhs,expr.rhs))
-            
+
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
         intent_lookup = {InArgument: 'in',
@@ -235,9 +235,9 @@ class FCodePrinter(CodePrinter):
                             format(dtype, allocatablestr, vstr, rankstr))
 
         return '\n'.join(decs)
-    
-   
-        
+
+
+
 
     def _print_NativeBool(self, expr):
         return 'logical'
@@ -505,6 +505,9 @@ class FCodePrinter(CodePrinter):
         return "%sd0" % printed
 
     def _print_Indexed(self, expr):
+        print("PAR ICI")
+        for i in expr.indices:
+            print("i = ", i, " of type ", type(i))
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 

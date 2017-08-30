@@ -326,7 +326,23 @@ TrailerArgList:
 ;
 
 TrailerSubscriptList: 
-  '[' args+=Expression[','] ']'
+  '[' args+=TrailerSubscript[','] ']'
+;
+
+TrailerSubscript: 
+  (Expression | TrailerSlice | TrailerSliceLeft | TrailerSliceRight)
+;
+
+TrailerSliceLeft:
+  (start=Expression ':')
+;
+
+TrailerSliceRight:
+  (':' end=Expression)
+;
+
+TrailerSlice:
+  (start=Expression ':' end=Expression)
 ;
 
 Operand: 

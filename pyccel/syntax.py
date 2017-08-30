@@ -47,7 +47,8 @@ __all__ = ["Pyccel", \
            # Test
            "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
            # Trailers
-           "Trailer", "TrailerArgList", "TrailerSubscriptList"
+           "Trailer", "TrailerArgList", "TrailerSubscriptList", \
+           "TrailerSlice", "TrailerSliceRight", "TrailerSliceLeft"
            ]
 
 
@@ -154,8 +155,8 @@ def insert_variable(var_name, \
     if type(var_name) in [int, float]:
         return
 
-#    if DEBUG:
-    if True:
+    if DEBUG:
+#    if True:
         print ">>> trying to insert : ", var_name
         txt = '    datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
                 .format(datatype, rank, allocatable, shape, is_argument)
@@ -213,8 +214,13 @@ def insert_variable(var_name, \
 
 # ...
 def do_arg(a):
+    # TODO remove
+    arg = 0
+
     if isinstance(a, str):
         arg = Symbol(a, integer=True)
+    elif isinstance(a, (Integer, Float)):
+        arg = a
     elif isinstance(a, Expression):
         arg = a.expr
         try:
@@ -232,11 +238,8 @@ def do_arg(a):
             self.declarations.append(Declare('int', var))
             self.statements.append(Assign(arg, rhs))
     else:
-        namespace[var_name]    = s
-        variables[var_name]    = var
-        declarations[var_name] = dec
+        print a
 
-        arg = Integer(a)
     return arg
 # ...
 
@@ -1586,16 +1589,75 @@ class TrailerSubscriptList(BasicTrailer):
         """
         """
         super(TrailerSubscriptList, self).__init__(**kwargs)
+#        print(">> args : ", self.args)
 
     @property
     def expr(self):
         self.update()
         args = []
         for a in self.args:
-            arg = do_arg(a)
+            print type(a)
+            if isinstance(a, Expression):
+                arg = do_arg(a)
+            elif isinstance(a, TrailerSliceRight):
+                e = a.expr
+                arg = do_arg(e)
+            elif isinstance(a, TrailerSliceLeft):
+                e = a.expr
+                arg = do_arg(e)
+            else:
+                print("stop here")
+                import sys; sys.exit(0)
 
             # TODO treat n correctly
             n = Symbol('n', integer=True)
             i = Idx(arg, n)
             args.append(i)
         return args
+
+class BasicSlice(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.start = kwargs.pop('start', None)
+        self.end   = kwargs.pop('end',   None)
+
+        super(BasicSlice, self).__init__(**kwargs)
+
+    def extract_arg(self, name):
+        if name is None:
+            return None
+
+        name = name.expr
+        var = None
+        if isinstance(name, (Integer, Float)):
+            var = Integer(name)
+        else:
+            if name in namespace:
+                var = namespace[name]
+            else:
+                print("stop here 2")
+                print type(name), name
+                import sys; sys.exit(0)
+
+        return var
+
+    @property
+    def expr(self):
+        start = self.extract_arg(self.start)
+        end   = self.extract_arg(self.end)
+
+        return Slice(start, end)
+
+class TrailerSlice(BasicSlice):
+    """Class representing a ."""
+    pass
+
+class TrailerSliceRight(BasicSlice):
+    """Class representing a ."""
+    pass
+
+class TrailerSliceLeft(BasicSlice):
+    """Class representing a ."""
+    pass
