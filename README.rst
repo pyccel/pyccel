@@ -165,6 +165,20 @@ Now, let us take a look at the *Fortran* file
 
   end
 
+
+TODO
+****
+
+- improve precision
+
+- add *math* functions
+
+- arrays with *parametric* shapes
+
+- pointers
+
+- symbolic expressions (find a way to use directly functions that are defined in *sympy*)
+
 BUGS
 ****
 
@@ -182,16 +196,3 @@ BUGS
     n = int()
     n = 5.0d0
 
-
-TODO
-****
-
-- improve precision
-
-- add *math* functions
-
-- arrays with *parametric* shapes
-
-- pointers
-
-- symbolic expressions (find a way to use directly functions that are defined in *sympy*)
