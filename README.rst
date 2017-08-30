@@ -168,6 +168,21 @@ Now, let us take a look at the *Fortran* file
 BUGS
 ****
 
+- The following code
+
+  .. code-block:: python
+
+    n = int()
+    n = 5
+
+  gives
+
+  .. code-block:: fortran
+
+    n = int()
+    n = 5.0d0
+
+
 TODO
 ****
 
