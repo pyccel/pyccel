@@ -24,7 +24,14 @@ run::
 
   python setup.py install --prefix=MY_INSTALL_PATH
 
-for tests run::
+this will install a *python* library **pyccel** and a *binary* called **pyccel**.
+
+If **prefix** is not given, you will need to be in *sudo* mode. Otherwise, you will need to update your *.bashrc* or *.bash_profile* file with::
+
+  export PYTHONPATH=MY_INSTALL_PATH/lib/python2.7/site-packages/:$PYTHONPATH
+  export PATH=MY_INSTALL_PATH/bin:$PATH
+
+for tests, run::
 
   cd tests
   python run_tests.py
@@ -49,9 +56,9 @@ Let us consider the following *Python* file (*helloworld.py*)
 
 Now, run the command::
 
-  python pyccel_cmd.py --language="fortran" --compiler="gfortran" --filename=helloworld.py --execute
+  pyccel --language="fortran" --compiler="gfortran" --filename=helloworld.py
 
-The generated code is
+The generated *Fortran* code is
 
 .. code-block:: fortran
 

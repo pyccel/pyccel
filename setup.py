@@ -23,21 +23,22 @@ setup_args = dict(
     license              = LICENSE,
     keywords             = KEYWORDS,
     url                  = URL,
-#    download_url     = URL+'/tarball/master',
 )
 
 # ...
-packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
+packages         = ["pyccel", "pyccel.commands"]
+
+# TODO bug: install textx binary when textx is added to install_requires
+#install_requires = ['numpy', 'sympy', 'textx']
+install_requires = ['numpy', 'sympy']
 # ...
 
 def setup_package():
-    if 'setuptools' in sys.modules:
-        setup_args['install_requires'] = ['numpy', 'sympy']
-
-    setup(  packages = packages \
-          , include_package_data = True \
-          , **setup_args)
-
+    setup(packages=packages, \
+          include_package_data=True, \
+          install_requires=install_requires, \
+          entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel']}, \
+          **setup_args)
 
 if __name__ == "__main__":
     setup_package()
