@@ -10,7 +10,10 @@ Welcome to Pyccel's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   abstract
    pyccel
+   specs
+   stdlib
 
 
 

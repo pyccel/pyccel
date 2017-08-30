@@ -1,6 +1,5 @@
-Pyccel
-======
-
+Library
+=======
 
 Documentation
 *************
