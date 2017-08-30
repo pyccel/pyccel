@@ -171,3 +171,12 @@ BUGS
 TODO
 ****
 
+- improve precision
+
+- add *math* functions
+
+- arrays with *parametric* shapes
+
+- pointers
+
+- symbolic expressions (find a way to use directly functions that are defined in *sympy*)
