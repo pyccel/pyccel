@@ -29,6 +29,11 @@ for tests run::
   cd tests
   python run_tests.py
 
+Documentation
+*************
+
+Can be found `here <http://ratnani.org/documentations/pyccel/>`_
+
 BUGS
 ****
 
