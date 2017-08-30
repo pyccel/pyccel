@@ -34,6 +34,45 @@ Documentation
 
 Can be found `here <http://ratnani.org/documentations/pyccel/>`_
 
+Examples
+********
+
+Hello World
+^^^^^^^^^^^
+
+Let us consider the following *Python* file (*helloworld.py*)
+
+.. code-block:: python
+
+  def helloworld():
+      print("> Hello World!!")
+
+Now, run the command::
+
+  python pyccel_cmd.py --language="fortran" --compiler="gfortran" --filename=helloworld.py --execute
+
+The generated code is
+
+.. code-block:: fortran
+
+  module pyccel_m_helloworld
+
+  implicit none
+
+  contains
+  ! ........................................
+  subroutine helloworld()
+  implicit none
+
+  print \*, '> Hello World!!'
+
+  end subroutine
+  ! ........................................
+
+
+  end module pyccel_m_helloworld
+
+
 BUGS
 ****
 
