@@ -169,11 +169,11 @@ Now, let us take a look at the *Fortran* file
 TODO
 ****
 
-- improve precision
-
 - add *math* functions
 
-- arrays with *parametric* shapes
+- slices
+
+- improve precision
 
 - pointers
 
@@ -186,6 +186,8 @@ TODO
 - BLAS
 
 - LAPACK
+
+- must rename *Piecewise* into *If* if we want to use it from sympy
 
 - symbolic expressions (find a way to use directly functions that are defined in *sympy*)
 

@@ -23,16 +23,28 @@
 #
 #y = x[0,2]
 #print(y)
+#
+#n = int()
+#n = 2
+#m = int()
+#m = 3
+#x = zeros(shape=(n,m,2), dtype=float)
+#
+#for i in range(0, n):
+#    for j in range(0, m):
+#        x[i,j,0] = i-j
+#        x[i,j,1] = i+j
+#
+#print(x)
+
 
 n = int()
 n = 2
 m = int()
 m = 3
-x = zeros(shape=(n,m,2), dtype=float)
+x = zeros(shape=(n,m), dtype=float)
+y = zeros(shape=(n),   dtype=float)
 
-for i in range(0, n):
-    for j in range(0, m):
-        x[i,j,0] = i-j
-        x[i,j,1] = i+j
-
+y = x[0:2,0]
 print(x)
+
