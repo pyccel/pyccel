@@ -28,10 +28,11 @@ n = int()
 n = 2
 m = int()
 m = 3
-x = zeros(shape=(n,m), dtype=float)
+x = zeros(shape=(n,m,2), dtype=float)
 
 for i in range(0, n):
     for j in range(0, m):
-        x[i,j] = i-j
+        x[i,j,0] = i-j
+        x[i,j,1] = i+j
 
 print(x)
