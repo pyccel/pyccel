@@ -29,4 +29,9 @@ n = 2
 m = int()
 m = 3
 x = zeros(shape=(n,m), dtype=float)
+
+for i in range(0, n):
+    for j in range(0, m):
+        x[i,j] = i-j
+
 print(x)

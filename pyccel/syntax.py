@@ -70,20 +70,20 @@ def Check_type(var_name,expr):
     shape=[]
     s=[]
     def pre(expr):
-        
+
 
         if(type(expr)==Indexed):
             s.append((expr.args[0],expr.args[1]))
             return
-        
-        
+
+
         elif len(expr.args)==0:
             s.append(expr)
         for arg in expr.args:
             pre(arg)
 
     pre(expr.expr)
-    
+
 
     if isinstance(expr,Expression):
         for i in s:
@@ -141,7 +141,7 @@ def Check_type(var_name,expr):
 
     else:
         shape=None
-              
+
     return {'datatype':datatype,'name':name , 'rank':rank, 'allocatable':allocatable,'shape':shape}
 
 def insert_variable(var_name, \
@@ -154,11 +154,13 @@ def insert_variable(var_name, \
     if type(var_name) in [int, float]:
         return
 
-    if DEBUG:
+#    if DEBUG:
+    if True:
         print ">>> trying to insert : ", var_name
         txt = '    datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
                 .format(datatype, rank, allocatable, shape, is_argument)
         print txt
+        print namespace
 
     if var_name in namespace:
         var = variables[var_name]
@@ -435,7 +437,7 @@ class IfStmt(BasicStmt):
         self.body_true  = kwargs.pop('body_true')
         self.body_false = kwargs.pop('body_false')
         self.test       = kwargs.pop('test')
-        
+
 
         super(IfStmt, self).__init__(**kwargs)
 
@@ -500,13 +502,13 @@ class AssignStmt(BasicStmt):
                             allocatable=d_var['allocatable'],
                             shape=d_var['shape'])
             self.stmt_vars.append(var_name)
-            
+
 
     @property
     def expr(self):
         if isinstance(self.rhs, Expression):
             rhs = self.rhs.expr
-            
+
             if isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
                 F = namespace[name]
@@ -679,7 +681,7 @@ class ExpressionElement(object):
 
         # We have 'op' attribute in all grammar rules
         self.op = kwargs['op']
-        
+
 
         super(ExpressionElement, self).__init__()
 
@@ -696,9 +698,9 @@ class FactorSigned(ExpressionElement, BasicStmt):
         if DEBUG:
             print "> FactorSigned "
         expr = self.op.expr
-        
-    
-        
+
+
+
         if self.trailer is None:
             return -expr if self.sign == '-' else expr
         else:
@@ -775,17 +777,17 @@ class Expression(ExpressionElement):
     def expr(self):
         if DEBUG:
             print "> Expression "
-        
+
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
-            
+
             if operation == '+':
                 ret += operand.expr
             else:
                 ret -= operand.expr
-        
+
         return ret
-        
+
 
 class Operand(ExpressionElement):
     @property
@@ -883,7 +885,7 @@ class Comparison(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
 #            print "Comparison : ", ret, operation, operand.expr
-            if operation == "==":       
+            if operation == "==":
                 ret = EqualityStmt(ret, operand.expr)
             elif operation == ">":
                 ret = Gt(ret, operand.expr)
@@ -1066,10 +1068,10 @@ class LenStmt(AssignStmt):
         import ast
         try:
             rhs=ast.literal_eval(self.rhs)
-            
+
         except:
             rhs=Symbol(self.rhs)
-        
+
         super(AssignStmt, self).__init__(**kwargs)
     def update(self):
         var_name = self.lhs
@@ -1078,7 +1080,7 @@ class LenStmt(AssignStmt):
                             datatype='int', \
                             rank=0)
             self.stmt_vars.append(var_name)
-     
+
     @property
     def expr(self):
         self.update()
@@ -1086,14 +1088,14 @@ class LenStmt(AssignStmt):
         import ast
         try:
             rhs=ast.literal_eval(self.rhs)
-            
+
         except:
             rhs=self.rhs
-        
-    
+
+
         return LEN(lhs,rhs)
-            
-        
+
+
 
 class NumpyZerosStmt(AssignStmt):
     """Class representing a ."""
@@ -1146,7 +1148,20 @@ class NumpyZerosStmt(AssignStmt):
                 shape = int(self.shape)
                 rank = 1
             elif isinstance(self.shape, list):
-                shape = [int(s) for s in self.shape]
+                shape = []
+                for s in self.shape:
+                    if isinstance(s, (int, float)):
+                        shape.append(int(s))
+                    elif isinstance(s, str):
+                        if not(s in namespace):
+                            raise Exception('Could not find shape variable.')
+
+#                        if not(variables[s].dtype == 'int'):
+#                            raise Exception('Shape must be an integer.')
+
+                        shape.append(namespace[s])
+                    else:
+                        raise TypeError('Expecting a int, float or string')
                 rank = len(shape)
             else:
                 shape = str(self.shape)
@@ -1411,7 +1426,7 @@ class NumpyArrayStmt(AssignStmt):
 
 
 
-      
+
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
