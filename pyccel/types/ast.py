@@ -436,8 +436,7 @@ class NotequalStmt(Relational):
         
         
         
-    
-    
+       
 class Variable(Basic):
     """Represents a typed variable.
 
@@ -761,6 +760,22 @@ class Return(Basic):
         return self._args[0]
 
 
+class LEN(Basic):
+     def __new__(cls, lhs, rhs):
+         lhs=_sympify(lhs)
+         if not isinstance(rhs,list):
+             
+             rhs=Symbol(rhs)
+         return Basic.__new__(cls, lhs, rhs)
+    
+     @property
+     def lhs(self):
+        return self._args[0]
+
+     @property
+     def rhs(self):
+        return self._args[1]
+             
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 

@@ -16,7 +16,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
-        OutArgument, InOutArgument, Variable, Declare)
+        OutArgument, InOutArgument, Variable, Declare,LEN)
 from pyccel.printers.codeprinter import CodePrinter
 
 __all__ = ["FCodePrinter", "fcode"]
@@ -187,6 +187,13 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement("allocate(%s(%s)) ; %s =( /"%(lhs_code,lhs_size,lhs_code)+','.join(str(i) for i in expr.rhs)+"/ )")
 
+    def _print_LEN(self,expr):
+        if isinstance(expr.rhs,list):
+            st=','.join([str(i) for i in expr.rhs])
+            return self._get_statement('%s =size((/%s/),1)'%(expr.lhs,st))
+        else:
+            return self._get_statement('%s =size(%s,1)'%(expr.lhs,expr.rhs))
+            
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
         intent_lookup = {InArgument: 'in',
@@ -228,6 +235,9 @@ class FCodePrinter(CodePrinter):
                             format(dtype, allocatablestr, vstr, rankstr))
 
         return '\n'.join(decs)
+    
+   
+        
 
     def _print_NativeBool(self, expr):
         return 'logical'
