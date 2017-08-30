@@ -79,6 +79,91 @@ The generated *Fortran* code is
 
   end module pyccel_m_helloworld
 
+Functions and Subroutines
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's take a look at the file *tests/examples/ex5.py*, listed below
+
+.. code-block:: python
+
+  def f(u,v):
+      t = u - v
+      return t
+
+  def g(x,v):
+      m = x - v
+      t =  2.0 * m
+      z =  2.0 * t
+      return t, z
+
+  x = 1.0
+  y = 2.0
+
+  w    = 2 * f(x,y) + 1.0
+  z, t = g(x,w)
+
+  print(z)
+  print(t)
+
+Now, run the command::
+
+  pyccel --language="fortran" --compiler="gfortran" --filename=tests/examples/ex5.py --execute
+
+This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
+
+   4.00000000    
+   8.00000000 
+
+Now, let us take a look at the *Fortran* file
+
+.. code-block:: fortran
+
+  program main
+
+  implicit none
+  real :: y
+  real :: x
+  real :: z
+  real :: t
+  real :: w
+
+  !  
+  x = 1.0d0
+  y = 2.0d0
+  w = 2.0d0*f(x, y) + 1.0d0
+  call g (x, w, z, t)
+  print * , z
+  print * , t
+
+  contains
+  ! ........................................
+  real function f(u, v)  result(t)
+  implicit none
+  real, intent(in)  :: u
+  real, intent(in)  :: v
+
+  t = u - v
+
+  end function
+  ! ........................................
+
+  ! ........................................
+  subroutine g(x, v, t, z)
+  implicit none
+  real, intent(out)  :: t
+  real, intent(out)  :: z
+  real, intent(in)  :: x
+  real, intent(in)  :: v
+  real :: m
+
+  m = -v + x
+  t = 2.0d0*m
+  z = 2.0d0*t
+
+  end subroutine
+  ! ........................................
+
+  end
 
 BUGS
 ****
