@@ -177,6 +177,16 @@ TODO
 
 - pointers
 
+- structures and classes
+
+- procedure interfaces
+
+- user *Fortran/c* functions provided as inputs
+
+- BLAS
+
+- LAPACK
+
 - symbolic expressions (find a way to use directly functions that are defined in *sympy*)
 
 BUGS
