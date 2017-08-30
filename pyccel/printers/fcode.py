@@ -111,7 +111,7 @@ class FCodePrinter(CodePrinter):
 
         fs = ', '.join(Str)
 
-        return 'print *, {0} '.format(fs)
+        return 'print * , {0} '.format(fs)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
