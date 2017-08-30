@@ -245,10 +245,10 @@ class FCodePrinter(CodePrinter):
         # TODO add precision
         return 'complex(kind=8)'
 
-    def _print_Equality(self, expr):
+    def _print_EqualityStmt(self, expr):
         return '{0} == {1} '.format(expr.lhs, expr.rhs)
 
-    def _print_Unequality(self, expr):
+    def _print_NotequalStmt(self, expr):
         return '{0} /= {1} '.format(expr.lhs, expr.rhs)
 
     def _print_FunctionDef(self, expr):

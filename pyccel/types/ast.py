@@ -260,18 +260,7 @@ class AugAssign(Basic):
         return self._args[2]
 
 class While(Basic):
-    """Represents a 'for-loop' in the code.
-
-    Expressions are of the form:
-        "for target in iter:
-            body..."
-
-    Parameters
-    ----------
-    target : symbol
-    iter : iterable
-    body : sympy expr
-    """
+    
 
     def __new__(cls, test, body):
         test = _sympify(test)
@@ -370,6 +359,7 @@ class NativeComplex(DataType):
     pass
 
 
+    
 class NativeVoid(DataType):
     _name = 'Void'
     pass
@@ -432,7 +422,22 @@ def datatype(arg):
         else:
             return infer_dtype(arg)
 
+class EqualityStmt(Relational):
+    def __new__(cls,lhs,rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        return Relational.__new__(cls,lhs,rhs)
 
+class NotequalStmt(Relational):
+    def __new__(cls,lhs,rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        return Relational.__new__(cls,lhs,rhs)
+        
+        
+        
+    
+    
 class Variable(Basic):
     """Represents a typed variable.
 

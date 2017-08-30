@@ -7,7 +7,8 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
 
-from pyccel.types.ast import For, Assign, Declare, Variable, datatype, While
+from pyccel.types.ast import For, Assign, Declare, Variable, datatype, While,\
+    NativeFloat,EqualityStmt,NotequalStmt
 from pyccel.types.ast import Argument, InArgument, InOutArgument, OutArgument, Result
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import Import
@@ -69,16 +70,20 @@ def Check_type(var_name,expr):
     shape=[]
     s=[]
     def pre(expr):
+        
 
         if(type(expr)==Indexed):
             s.append((expr.args[0],expr.args[1]))
             return
+        
+        
         elif len(expr.args)==0:
             s.append(expr)
         for arg in expr.args:
             pre(arg)
 
     pre(expr.expr)
+    
 
     if isinstance(expr,Expression):
         for i in s:
@@ -107,17 +112,16 @@ def Check_type(var_name,expr):
                                 raise TypeError('shape must be an int or a tuple of int')
                      else:
                          raise TypeError('dimension mismatch')
-
-                elif isinstance(i,Symbol):
-                    if variables[str(i)].dtype=='float':
-                        datatype='float'
-                    if  variables[str(i)].allocatable:
-                        allocatable=True
-                    if not variables[str(i)].shape==None:
-                        shape.append(variables[str(i)].shape)
                 elif isinstance(i[0],IndexedBase)and i[1].is_integer:
                     datatype=variables[str(i[0])].dtype
-                elif i.is_real and not i.is_integer:
+            elif isinstance(i,Symbol):
+                if isinstance(variables[str(i)].dtype,NativeFloat):
+                    datatype='float'
+                if  variables[str(i)].allocatable:
+                    allocatable=True
+                if not variables[str(i)].shape==None:
+                    shape.append(variables[str(i)].shape)
+            elif i.is_real and not i.is_integer:
                     datatype='float'
     name=sympify(var_name)
     if len(shape)>0:
@@ -137,8 +141,8 @@ def Check_type(var_name,expr):
 
     else:
         shape=None
-    var=Variable(dtype=datatype,name=name , rank=rank, allocatable=allocatable,shape=shape)
-    return var
+              
+    return {'datatype':datatype,'name':name , 'rank':rank, 'allocatable':allocatable,'shape':shape}
 
 def insert_variable(var_name, \
                     var=None, \
@@ -431,6 +435,7 @@ class IfStmt(BasicStmt):
         self.body_true  = kwargs.pop('body_true')
         self.body_false = kwargs.pop('body_false')
         self.test       = kwargs.pop('test')
+        
 
         super(IfStmt, self).__init__(**kwargs)
 
@@ -438,17 +443,17 @@ class IfStmt(BasicStmt):
     def expr(self):
 
         self.update()
-
         test       = self.test.expr
         body_true  = self.body_true .expr
-        body_false = self.body_false.expr
-
         self.local_vars += self.body_true.local_vars
-        self.local_vars += self.body_false.local_vars
         self.stmt_vars  += self.body_true.stmt_vars
-        self.stmt_vars  += self.body_false.stmt_vars
-
-        return Piecewise((test, body_true), (True, body_false))
+        if not self.body_false==None:
+            self.local_vars += self.body_false.local_vars
+            body_false = self.body_false.expr
+            self.stmt_vars  += self.body_false.stmt_vars
+            return Piecewise((test, body_true), (True, body_false))
+        else:
+            return Piecewise((test, body_true))
 
 class AssignStmt(BasicStmt):
     """Class representing a ."""
@@ -489,14 +494,18 @@ class AssignStmt(BasicStmt):
 
             # TODO check if var is a return value
             rank = 0
-            var=Check_type(self.lhs,self.rhs)
-            insert_variable(var_name, var=var)
+            d_var=Check_type(self.lhs,self.rhs)
+            insert_variable(var_name,rank=d_var['rank'],
+                            datatype=d_var['datatype'],
+                            allocatable=d_var['allocatable'],
+                            shape=d_var['shape'])
             self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
         if isinstance(self.rhs, Expression):
             rhs = self.rhs.expr
+            
             if isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
                 F = namespace[name]
@@ -685,6 +694,8 @@ class FactorSigned(ExpressionElement, BasicStmt):
         if DEBUG:
             print "> FactorSigned "
         expr = self.op.expr
+    
+        
         if self.trailer is None:
             return -expr if self.sign == '-' else expr
         else:
@@ -761,13 +772,17 @@ class Expression(ExpressionElement):
     def expr(self):
         if DEBUG:
             print "> Expression "
+        
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
+            
             if operation == '+':
                 ret += operand.expr
             else:
                 ret -= operand.expr
+        
         return ret
+        
 
 class Operand(ExpressionElement):
     @property
@@ -779,7 +794,7 @@ class Operand(ExpressionElement):
 #        op = self.op[0]
         op = self.op
         if type(op) == float:
-            if (op).is_integer():
+            if sympify(op).is_integer:
 #                print "> found int ",Integer(op)
                 return Integer(op)
             else:
@@ -865,8 +880,8 @@ class Comparison(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
 #            print "Comparison : ", ret, operation, operand.expr
-            if operation == "==":
-                ret = Eq(ret, operand.expr)
+            if operation == "==":       
+                ret = EqualityStmt(ret, operand.expr)
             elif operation == ">":
                 ret = Gt(ret, operand.expr)
             elif operation == ">=":
@@ -876,7 +891,7 @@ class Comparison(ExpressionElement):
             elif operation == "<=":
                 ret = Le(ret, operand.expr)
             elif operation == "<>":
-                ret = Ne(ret, operand.expr)
+                ret = NotequalStmt(ret, operand.expr)
             else:
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))

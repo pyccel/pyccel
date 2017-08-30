@@ -316,6 +316,7 @@ class Codegen(object):
 
         self._code         = code
         self._filename_out = write_to_file(code, filename, language)
+        
 
         return code
 
@@ -402,8 +403,9 @@ def write_to_file(code, filename, language):
     f90_file = filename.split(".py")[0] + "." + ext
     f = open(f90_file, "w")
     for line in code:
-        f.write(line)
+        f.write(line)   
     f.close()
+    
 
     return f90_file
 # ...
@@ -539,12 +541,18 @@ def build_file(filename, language, compiler, \
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
         codegen_m.doprint(language="fortran")
         ms.append(codegen_m)
-
+        
+            
     codegen = FCodegen(filename=filename, name=name)
-    codegen.doprint(language="fortran")
-    print ">>> Codegen :", name, " done."
+    s=codegen.doprint(language="fortran")
+    if show:
+        print('========Fortran_Code========')
+        print(s)
+        print('============================')
+        print ">>> Codegen :", name, " done."
 
     modules   = codegen.modules
+    
     # ...
 
     # ...
@@ -575,7 +583,7 @@ def load_module(filename, language="fortran", compiler="gfortran"):
     # ...
     build_file(filename=filename, language=language, compiler=compiler, \
                execute=False, accelerator=None, \
-               debug=False, verbose=True, show=False, inline=True, name=name)
+               debug=False, verbose=True, show=True, inline=True, name=name)
     # ...
 
     # ...
