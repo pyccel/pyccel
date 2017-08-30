@@ -45,7 +45,7 @@ Let us consider the following *Python* file (*helloworld.py*)
 .. code-block:: python
 
   def helloworld():
-      print("> Hello World!!")
+      print("* Hello World!!")
 
 Now, run the command::
 
@@ -64,7 +64,7 @@ The generated code is
   subroutine helloworld()
   implicit none
 
-  print \*, '> Hello World!!'
+  print *, '* Hello World!!'
 
   end subroutine
   ! ........................................
