@@ -189,7 +189,7 @@ PrintStmt:
 ;
 
 NumpyStmt: 
-  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt|NumpyArrayStmt|LenStmt)
+  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt|NumpyArrayStmt)
 ;
 
 ParameterValue:
@@ -228,9 +228,6 @@ NUMBEROrSTRING:
   (NUMBER|STRING)
 ;
 
-LenStmt:
-  lhs=ID '=' LEN LPAREN rhs=ArrayOrID RPAREN
-;
 
 ArrayOrID:
  ('[' NUMBEROrSTRING (',' NUMBEROrSTRING)* ']')|(ID)
@@ -338,11 +335,11 @@ BOOLEAN:
 ;
 
 UnaryOp:
-   ('transpose')
+   ('transpose'|'len')
 ;
 
 BinaryOp:
-   ('pow' | 'rational')
+   ('pow' | 'rational'|'dot')
 ;
 
 EQ:
@@ -414,7 +411,4 @@ AWAIT:
 ;
 ARRAY:
   'array'
-;
-LEN:
-  'len'
 ;

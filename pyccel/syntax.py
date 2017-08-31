@@ -20,7 +20,7 @@ from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
 from pyccel.types.ast import MultiAssign
 from pyccel.types.ast import Rational
-from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray,LEN
+from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray,LEN,Dot
 
 DEBUG = False
 #DEBUG = True
@@ -129,7 +129,7 @@ def Check_type(var_name,expr):
             shape=shape[0]
 
 
-            if isinstance(shape,tuple):
+            if isinstance(shape,(tuple,list)):
                 shape=tuple(map(int,shape))
                 rank=len(shape)
             elif shape.is_integer:
@@ -713,6 +713,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
+        
         self.name = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
 
@@ -722,7 +723,16 @@ class FactorUnary(ExpressionElement, BasicStmt):
     def expr(self):
         if DEBUG:
             print "> FactorUnary "
+        
         expr = self.op.expr
+        if self.name=='len':
+            import ast
+            try:
+                rhs=ast.literal_eval(expr)
+            except:
+                rhs=expr
+            return LEN(rhs)
+            
         if self.trailer is None:
             return expr
         else:
@@ -753,6 +763,8 @@ class FactorBinary(ExpressionElement):
             return Pow(expr_l, expr_r)
         elif self.name == "rational":
             return Rational(expr_l, expr_r)
+        elif self.name == "dot":
+            return Dot(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
@@ -1056,43 +1068,6 @@ class FunctionDefStmt(BasicStmt):
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
 
-
-class LenStmt(AssignStmt):
-    def __init__(self, **kwargs):
-        """
-        """
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = str(kwargs.pop('rhs'))
-        import ast
-        try:
-            rhs=ast.literal_eval(self.rhs)
-            
-        except:
-            rhs=Symbol(self.rhs)
-        
-        super(AssignStmt, self).__init__(**kwargs)
-    def update(self):
-        var_name = self.lhs
-        if not(var_name in namespace):
-            insert_variable(var_name, \
-                            datatype='int', \
-                            rank=0)
-            self.stmt_vars.append(var_name)
-     
-    @property
-    def expr(self):
-        self.update()
-        lhs=Symbol(self.lhs)
-        import ast
-        try:
-            rhs=ast.literal_eval(self.rhs)
-            
-        except:
-            rhs=self.rhs
-        
-    
-        return LEN(lhs,rhs)
-            
         
 
 class NumpyZerosStmt(AssignStmt):
@@ -1408,8 +1383,6 @@ class NumpyArrayStmt(AssignStmt):
                             rank=rank, \
                             allocatable=True,shape=self.shape)
         self.stmt_vars.append(var_name)
-
-
 
       
 class ImportFromStmt(BasicStmt):

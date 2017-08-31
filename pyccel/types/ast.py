@@ -761,20 +761,21 @@ class Return(Basic):
 
 
 class LEN(Basic):
-     def __new__(cls, lhs, rhs):
-         lhs=_sympify(lhs)
-         if not isinstance(rhs,list):
-             
-             rhs=Symbol(rhs)
-         return Basic.__new__(cls, lhs, rhs)
-    
-     @property
-     def lhs(self):
-        return self._args[0]
-
+     def __new__(cls, rhs):
+         return Basic.__new__(cls, rhs)
      @property
      def rhs(self):
-        return self._args[1]
+        return self._args[0]
+class Dot(Basic):
+     def __new__(cls, expr_l, expr_r):
+         return Basic.__new__(cls, expr_l, expr_r)
+     @property
+     def expr_l(self):
+         return self.args[0]
+     @property
+     def expr_r(self):
+         return self.args[1]
+    
              
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
