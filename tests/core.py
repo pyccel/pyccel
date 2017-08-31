@@ -1,17 +1,23 @@
 # coding: utf-8
 
-
-def Ones(n):
+def matrix_product(a,b,n,m,p):
+    a = array_2()
+    b = array_2()
     n = int()
-    x = zeros(shape=n, dtype=float)
+    m = int()
+    p = int()
+    k = int()
+    c = zeros(shape=(n,p), dtype=float)
     for i in range(0, n):
-        x[i] = 1
-    return x
+        for j in range(0, p):
+            for k in range(0, p):
+                c[i,j] = c[i,j] + a[i,k]*b[k,j]
+    return c
 
 def Linspace(n):
     n = int()
     x = zeros(shape=n, dtype=float)
-    k = n-1
+    l = n-1
     for i in range(0, n):
-        x[i] = rational(i, k)
+        x[i] = rational(i, l)
     return x
