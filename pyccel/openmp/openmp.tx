@@ -3,12 +3,22 @@ OpenMPModel:
 ;
 
 OpenmpStmt: 
-  '#@' 'omp' stmt=ParallelStmt 
+  '#@' 'omp' stmt=OpenmpConstruct
+;
+
+OpenmpConstruct:
+  ParallelStmt 
+  | 
+  LoopStmt
 ;
 
 // TODO: add if parallel
 ParallelStmt:
   'parallel' clauses*=ParallelClause[',']
+;
+
+LoopStmt:
+  'do' clauses*=LoopClause[',']
 ;
 
 ParallelClause:
@@ -27,6 +37,25 @@ ParallelClause:
   ReductionClause
   |
   ParallelProcBindClause
+;
+
+// TODO: LinearListClause
+LoopClause:
+  PrivateListClause
+  |
+  FirstPrivateListClause
+  |
+  LastPrivateListClause
+//  |
+//  LinearListClause
+  |
+  ReductionClause
+  |
+  ScheduleClause
+  |
+  CollapseClause
+  |
+  OrderedClause
 ;
 
 ParallelNumThreadClause:
@@ -53,12 +82,32 @@ FirstPrivateListClause:
  clause='firstprivate' '(' args+=ID[','] ')'
 ;
 
+LastPrivateListClause:
+ clause='lastprivate' '(' args+=ID[','] ')'
+;
+
 CopyinListClause:
  clause='copyin' '(' args+=ID[','] ')'
 ;
 
 ReductionClause:
- clause='reduction' '('op=ReductionOperator args+=ID[','] ')'
+ clause='reduction' '('op=ReductionOperator ':' args+=ID[','] ')'
+;
+
+CollapseClause:
+  clause='collapse' '(' n=INT ')'
+;
+
+OrderedClause:
+  clause='ordered' ('(' n=INT ')')?
+;
+
+ScheduleClause:
+  clause='schedule' '(' kind=Schedule (chunk_size=INT)? ')'
+;
+
+Schedule:
+  ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' )
 ;
 
 ProcBind:
