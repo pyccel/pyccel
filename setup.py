@@ -3,9 +3,10 @@
 
 import sys
 from setuptools import setup, find_packages
+import pyccel
 
 NAME    = 'pyccel'
-VERSION = '0.1'
+VERSION = pyccel.__version__
 AUTHOR  = 'Ahmed Ratnani'
 EMAIL   = 'ahmed.ratnani@ipp.mpg.de'
 URL     = 'https://github.com/ratnania/pyccel'
@@ -26,7 +27,8 @@ setup_args = dict(
 )
 
 # ...
-packages         = ["pyccel", "pyccel.commands"]
+packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
+# ...
 
 # TODO bug: install textx binary when textx is added to install_requires
 #install_requires = ['numpy', 'sympy', 'textx']

@@ -7,21 +7,16 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
 
-from pyccel.types.ast import For, Assign, Declare, Variable, datatype, While,\
-    NativeFloat,EqualityStmt,NotequalStmt
-from pyccel.types.ast import Argument, InArgument, InOutArgument, OutArgument, Result
-from pyccel.types.ast import FunctionDef
-from pyccel.types.ast import Import
-from pyccel.types.ast import Print
-from pyccel.types.ast import Comment
-from pyccel.types.ast import AnnotatedComment
-from pyccel.types.ast import IndexedVariable
-from pyccel.types.ast import Slice
-from pyccel.types.ast import Piecewise
-from pyccel.types.ast import MultiAssign
-from pyccel.types.ast import Rational
-from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
-from pyccel.types.ast import LEN,Dot,Min,Max
+from pyccel.types.ast import (For, Assign, Declare, Variable, \
+                              datatype, While, NativeFloat, \
+                              EqualityStmt, NotequalStmt, \
+                              Argument, InArgument, InOutArgument, \
+                              MultiAssign, OutArgument, Result, \
+                              FunctionDef, Import, Print, \
+                              Comment, AnnotatedComment, \
+                              IndexedVariable, Slice, Piecewise, \
+                              Rational, NumpyZeros, NumpyLinspace, \
+                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max)
 
 DEBUG = False
 #DEBUG = True
@@ -714,7 +709,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
-        
+
         self.name = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
 
@@ -724,7 +719,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
     def expr(self):
         if DEBUG:
             print "> FactorUnary "
-        
+
         expr = self.op.expr
         if self.name=='len':
             import ast
@@ -735,10 +730,10 @@ class FactorUnary(ExpressionElement, BasicStmt):
             return LEN(rhs)
         elif self.name=='min':
             return Min(expr)
-            
+
         elif self.name=='max':
             Max(expr)
-            
+
         if self.trailer is None:
             return expr
         else:

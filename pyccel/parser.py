@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import os
-from sympy import Symbol, sympify
 
 from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \

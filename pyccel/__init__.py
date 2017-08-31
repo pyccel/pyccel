@@ -1,9 +1,9 @@
 # -*- coding: UTF-8 -*-
-__version__ = "0.1.beta"
+__version__ = "0.1"
 
-from .parser            import *
-from .syntax            import *
-from .printers          import *
-from .types             import *
-from .utilities.codegen import *
-
+from .types    import *
+from .printers import *
+from .patterns import *
+from .syntax   import *
+from .parser   import *
+from .codegen  import *
