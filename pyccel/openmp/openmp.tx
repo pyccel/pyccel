@@ -16,7 +16,15 @@ ParallelClause:
   |
   ParallelDefaultClause
   |
-  ParallelListClause
+  PrivateListClause
+  |
+  SharedListClause
+  |
+  FirstPrivateListClause
+  |
+  CopyinListClause
+  |
+  ReductionClause
   |
   ParallelProcBindClause
 ;
@@ -29,20 +37,36 @@ ParallelDefaultClause:
  clause='default' '(' status=Status ')'
 ;
 
-ParallelListClause:
- clause=ParallelArg '(' args+=ID[','] ')'
-;
-
 ParallelProcBindClause:
  clause='proc_bind' '(' status=ProcBind ')'
+;
+
+PrivateListClause:
+ clause='private' '(' args+=ID[','] ')'
+;
+
+SharedListClause:
+ clause='shared' '(' args+=ID[','] ')'
+;
+
+FirstPrivateListClause:
+ clause='firstprivate' '(' args+=ID[','] ')'
+;
+
+CopyinListClause:
+ clause='copyin' '(' args+=ID[','] ')'
+;
+
+ReductionClause:
+ clause='reduction' '('op=ReductionOperator args+=ID[','] ')'
 ;
 
 ProcBind:
   ('master' | 'close' | 'spread')
 ;
 
-ParallelArg:
-  ('private' | 'firstprivate' | 'shared' | 'copyin' | 'reduction')
+ReductionOperator:
+  ('+' | '-' | '*' | '/')
 ;
 
 Status:
