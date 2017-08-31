@@ -766,6 +766,19 @@ class LEN(Basic):
      @property
      def rhs(self):
         return self._args[0]
+class Min(Basic):
+     def __new__(cls, rhs):
+         return Basic.__new__(cls, rhs)
+     @property
+     def rhs(self):
+        return self._args[0]
+class Max(Basic):
+     def __new__(cls, rhs):
+         return Basic.__new__(cls, rhs)
+     @property
+     def rhs(self):
+        return self._args[0]
+
 class Dot(Basic):
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)

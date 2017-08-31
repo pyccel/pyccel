@@ -20,7 +20,8 @@ from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
 from pyccel.types.ast import MultiAssign
 from pyccel.types.ast import Rational
-from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray,LEN,Dot
+from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
+from pyccel.types.ast import LEN,Dot,Min,Max
 
 DEBUG = False
 #DEBUG = True
@@ -732,6 +733,11 @@ class FactorUnary(ExpressionElement, BasicStmt):
             except:
                 rhs=expr
             return LEN(rhs)
+        elif self.name=='min':
+            return Min(expr)
+            
+        elif self.name=='max':
+            Max(expr)
             
         if self.trailer is None:
             return expr

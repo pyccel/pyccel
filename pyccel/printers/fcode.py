@@ -16,7 +16,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
-        OutArgument, InOutArgument, Variable, Declare,LEN,Dot)
+        OutArgument, InOutArgument, Variable, Declare,LEN,Dot,Min,Max)
 from pyccel.printers.codeprinter import CodePrinter
 
 __all__ = ["FCodePrinter", "fcode"]
@@ -193,6 +193,19 @@ class FCodePrinter(CodePrinter):
             return self._get_statement('size((/%s/),1)'%(st))
         else:
             return self._get_statement('size(%s,1)'%(expr.rhs))
+    def _print_Min(self,expr):
+        if isinstance(expr.rhs,list):
+            st=','.join([str(i) for i in expr.rhs])
+            return self._get_statement('min((/%s/))'%(st))
+        else:
+            return self._get_statement('min(%s)'%(expr.rhs))
+    def _print_Max(self,expr):
+        if isinstance(expr.rhs,list):
+            st=','.join([str(i) for i in expr.rhs])
+            return self._get_statement('max((/%s/))'%(st))
+        else:
+            return self._get_statement('max(%s)'%(expr.rhs))
+    
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(expr.expr_l,expr.expr_r))
         

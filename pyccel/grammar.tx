@@ -335,7 +335,7 @@ BOOLEAN:
 ;
 
 UnaryOp:
-   ('transpose'|'len')
+   ('transpose'|'len'|'min'|'max')
 ;
 
 BinaryOp:
