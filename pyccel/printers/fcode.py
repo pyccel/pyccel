@@ -184,8 +184,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self,expr):
         lhs_code   = self._print(expr.lhs)
         lhs_size   =self._print(len(expr.rhs))
-
-        return self._get_statement("allocate(%s(%s)) ; %s =( /"%(lhs_code,lhs_size,lhs_code)+','.join(str(i) for i in expr.rhs)+"/ )")
+        st = ','.join(str(i) for i in expr.rhs)
+        return self._get_statement("allocate(%s(%s)) ; %s =(/"%(lhs_code,lhs_size,lhs_code)+st+"/)")
 
     def _print_LEN(self,expr):
         if isinstance(expr.rhs,list):
