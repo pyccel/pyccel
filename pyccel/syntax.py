@@ -214,9 +214,6 @@ def insert_variable(var_name, \
 
 # ...
 def do_arg(a):
-    # TODO remove
-    arg = 0
-
     if isinstance(a, str):
         arg = Symbol(a, integer=True)
     elif isinstance(a, (Integer, Float)):
@@ -230,15 +227,15 @@ def do_arg(a):
                 arg = Symbol(arg.name, integer=True)
         except:
             raise Exception('not available yet')
-            rhs = a.expr
-            # TODO ARA
-            name = 'result_%d' % abs(hash(rhs))
-            arg = Symbol(name, integer=True)
-            var = Variable('int', arg)
-            self.declarations.append(Declare('int', var))
-            self.statements.append(Assign(arg, rhs))
+#            rhs = a.expr
+#            # TODO ARA
+#            name = 'result_%d' % abs(hash(rhs))
+#            arg = Symbol(name, integer=True)
+#            var = Variable('int', arg)
+#            self.declarations.append(Declare('int', var))
+#            self.statements.append(Assign(arg, rhs))
     else:
-        print a
+        raise Exception('Wrong instance in do_arg')
 
     return arg
 # ...
@@ -1596,23 +1593,18 @@ class TrailerSubscriptList(BasicTrailer):
         self.update()
         args = []
         for a in self.args:
-            print type(a)
             if isinstance(a, Expression):
                 arg = do_arg(a)
-            elif isinstance(a, TrailerSliceRight):
-                e = a.expr
-                arg = do_arg(e)
-            elif isinstance(a, TrailerSliceLeft):
-                e = a.expr
-                arg = do_arg(e)
-            else:
-                print("stop here")
-                import sys; sys.exit(0)
 
-            # TODO treat n correctly
-            n = Symbol('n', integer=True)
-            i = Idx(arg, n)
-            args.append(i)
+                # TODO treat n correctly
+                n = Symbol('n', integer=True)
+                i = Idx(arg, n)
+                args.append(i)
+            elif isinstance(a, BasicSlice):
+                arg = a.expr
+                args.append(arg)
+            else:
+                raise Exception('Wrong instance')
         return args
 
 class BasicSlice(BasicStmt):

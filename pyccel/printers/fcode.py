@@ -504,10 +504,7 @@ class FCodePrinter(CodePrinter):
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
-    def _print_Indexed(self, expr):
-        print("PAR ICI")
-        for i in expr.indices:
-            print("i = ", i, " of type ", type(i))
+    def _print_IndexedElement(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
@@ -515,7 +512,16 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.label)
 
     def _print_Slice(self, expr):
-        return "%s:%s" % (self._print(expr.start), self._print(expr.end))
+        if expr.start is None:
+            start = ''
+        else:
+            start = self._print(expr.start)
+        if expr.end is None:
+            end = ''
+        else:
+            end = expr.end - 1
+            end = self._print(end)
+        return '{0} : {1}'.format(start, end)
 
     def _pad_leading_columns(self, lines):
         result = []

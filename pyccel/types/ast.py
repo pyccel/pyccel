@@ -57,6 +57,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
 from sympy.core.compatibility import with_metaclass
+from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
@@ -1054,6 +1055,32 @@ class IndexedVariable(IndexedBase):
     def __new__(cls, label, shape=None, **kw_args):
         return IndexedBase.__new__(cls, label, shape=None, **kw_args)
 
+    def __getitem__(self, indices, **kw_args):
+        if is_sequence(indices):
+            # Special case needed because M[*my_tuple] is a syntax error.
+            if self.shape and len(self.shape) != len(indices):
+                raise IndexException("Rank mismatch.")
+#            print ("indices : ", indices)
+            return IndexedElement(self, *indices, **kw_args)
+        else:
+            if self.shape and len(self.shape) != 1:
+                raise IndexException("Rank mismatch.")
+            return IndexedElement(self, indices, **kw_args)
+
+class IndexedElement(Indexed):
+    """Represents a Comment in the code.
+
+    Parameters
+    ----------
+    text : str
+       the comment line
+
+    """
+
+    def __new__(cls, base, *args, **kw_args):
+#        print("args : ", args)
+        return Indexed.__new__(cls, base, *args, **kw_args)
+
 class Slice(Basic):
     """Represents a slice in the code.
 
@@ -1069,7 +1096,7 @@ class Slice(Basic):
     # TODO add step
 
     def __new__(cls, start, end):
-        print('> create slice {0} : {1}'.format(start, end))
+#        print('> create slice {0} : {1}'.format(start, end))
         return Basic.__new__(cls, start, end)
 
     @property
