@@ -254,9 +254,7 @@ Now, let us take a look at the *Fortran* file
 TODO
 ****
 
-- add *math* functions
-
-- slices
+- add *math* functions: sign, ceil, log, exp, cos, sin, sqrt, abs, pi (must be added as a declaration)
 
 - improve precision
 
