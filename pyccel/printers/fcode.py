@@ -183,9 +183,17 @@ class FCodePrinter(CodePrinter):
                                    (lhs_code, start_code, end_code, size_code))
     def _print_NumpyArray(self,expr):
         lhs_code   = self._print(expr.lhs)
-        lhs_size   =self._print(len(expr.rhs)-1)
-        st = ','.join(str(i) for i in expr.rhs)
-        return self._get_statement("allocate(%s(0:%s)) ; %s(0:%s) =(/"%(lhs_code,lhs_size,lhs_code,lhs_size)+st+"/)")
+        
+        if len(expr.shape)>1:
+            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
+            st= ','.join(','.join(str(i) for i in array) for array in expr.rhs)
+        else:
+            shape_code = '0:' + self._print(expr.shape[0]) + '-1'
+            st=','.join(str(i) for i in expr.rhs)
+        shape=','.join(str(i) for i in expr.shape)
+        
+        return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
+                                   "=reshape((/"+st+"/),(/%s/))"%(str(shape)))
     def _print_LEN(self,expr):
         if isinstance(expr.rhs,list):
             st=','.join([str(i) for i in expr.rhs])

@@ -719,18 +719,22 @@ class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
-
+        
         self.name = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
+        
 
         super(FactorUnary, self).__init__(**kwargs)
+        
+
 
     @property
     def expr(self):
+        
         if DEBUG:
             print "> FactorUnary "
-
         expr = self.op.expr
+        
         if self.name=='len':
             import ast
             try:
@@ -854,6 +858,8 @@ class Operand(ExpressionElement):
                 return Function(op) #(Symbol(args[0]), Symbol(args[1]))
             else:
                 return namespace[op]
+        elif(type(op)==unicode):
+            return op
         else:
             raise Exception('Undefined variable "{}"'.format(op))
 
@@ -1367,35 +1373,45 @@ class NumpyLinspaceStmt(AssignStmt):
 class NumpyArrayStmt(AssignStmt):
     def __init__(self, **kwargs):
 
-
+        
         self.lhs= kwargs.pop('lhs')
         self.rhs= kwargs.pop('rhs')
+        import ast
+        self.rhs=ast.literal_eval(self.rhs)
         self.dtype=kwargs.pop('dtype')
-        self.shape=len(self.rhs)
+        
+        import numpy as n
+        self.shape=n.shape(self.rhs)
         super(AssignStmt, self).__init__(**kwargs)
+        
+
 
     @property
     def expr(self):
         self.update()
-        var_name = self.lhs
-
-        var = Symbol(var_name)
+        var=sympify(self.lhs)
         mylist=self.rhs
-        if self.dtype=='int':
-            mylist=map(int, mylist)
-        elif self.dtype=='float':
-            mylist=map(float, mylist)
+        
+        if isinstance(mylist[0],list):
+            if self.dtype=='int':
+                mylist=[map(int, i) for i in mylist]
+            elif self.dtype=='float':
+                mylist=[map(float, i) for i in mylist]
+        else:
+            if self.dtype=='int':
+                mylist=map(int,mylist)
+            elif self.dtype=='float':
+                mylist=map(float,mylist)
 
 
-        return NumpyArray(var,mylist)
+        return NumpyArray(var,mylist,self.shape)
     def update(self):
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
                 print("> Found new variable " + var_name)
 
-        rank=1
-        #TODO improve later so that the rank would be bigger
+        rank=len(self.shape)
 
         datatype=str(self.dtype)
         if self.dtype is None:

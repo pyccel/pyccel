@@ -1,6 +1,8 @@
 a=array([1,2,3,5,8,5],dtype=int)
 b=array([5,8,6,9,8,2],dtype=int)
+d=array([[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2]],dtype=int)
 print('a = ',a)
 print('b = ',b)
 print('dot(a,b) = ',dot(a,b))
 print('len(a) = ',len(a))
+print('len([1,2,3])= ',len([1,2,3]))

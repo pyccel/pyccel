@@ -222,10 +222,13 @@ NumpyLinspaceStmt:
 
 
 NumpyArrayStmt:
-   lhs=ID '=' ARRAY LPAREN '[' rhs+=NUMBEROrSTRING[','] ']' ',' 'dtype' '=' dtype=DataType RPAREN
+   lhs=ID '=' 'array' LPAREN rhs=ArrayOrMatrix ',' 'dtype' '=' dtype=DataType RPAREN
 ;
 NUMBEROrSTRING:
   (NUMBER|STRING)
+;
+ArrayOrMatrix:
+(Array|Matrix)
 ;
 
 
@@ -342,8 +345,15 @@ TrailerSlice:
   (start=Expression ':' end=Expression)
 ;
 
+Array:
+'[' NUMBER (',' NUMBER)* ']'
+;
+Matrix:
+'[' Array (',' Array)* ']'
+;
+
 Operand: 
-  (op=NUMBER) | (op=ID) | (op=BOOLEAN)
+  (op=NUMBER) | (op=ID) | (op=BOOLEAN)|(op=Array)
 ;
 
 BOOLEAN:
@@ -351,7 +361,7 @@ BOOLEAN:
 ;
 
 UnaryOp:
-   ('transpose'|'len'|'min'|'max')
+   ('transpose'|'len'|'min'|'max'|'log'|'exp'|'cos'|'sin'|'sqrt'|'abs'|'pi')
 ;
 
 BinaryOp:
@@ -424,7 +434,4 @@ LINSPACE:
 
 AWAIT:
   'await'
-;
-ARRAY:
-  'array'
 ;
