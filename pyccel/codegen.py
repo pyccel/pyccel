@@ -316,7 +316,7 @@ class Codegen(object):
 
         self._code         = code
         self._filename_out = write_to_file(code, filename, language)
-        
+
 
         return code
 
@@ -403,9 +403,9 @@ def write_to_file(code, filename, language):
     f90_file = filename.split(".py")[0] + "." + ext
     f = open(f90_file, "w")
     for line in code:
-        f.write(line)   
+        f.write(line)
     f.close()
-    
+
 
     return f90_file
 # ...
@@ -528,7 +528,7 @@ class Compiler(object):
 
 # ...
 def build_file(filename, language, compiler, \
-               execute=False, accelerator = None, \
+               execute=False, accelerator=None, \
                debug=False, verbose=False, show=False, \
                inline=False, name="main"):
     """User friendly interface for code generation."""
@@ -541,8 +541,8 @@ def build_file(filename, language, compiler, \
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
         codegen_m.doprint(language="fortran")
         ms.append(codegen_m)
-        
-            
+
+
     codegen = FCodegen(filename=filename, name=name)
     s=codegen.doprint(language="fortran")
     if show:
@@ -552,18 +552,22 @@ def build_file(filename, language, compiler, \
         print ">>> Codegen :", name, " done."
 
     modules   = codegen.modules
-    
+
     # ...
 
     # ...
     if compiler:
         for codegen_m in ms:
-            compiler_m = Compiler(codegen_m, compiler="gfortran", debug=debug)
+            compiler_m = Compiler(codegen_m, \
+                                  compiler="gfortran", \
+                                  accelerator=accelerator, \
+                                  debug=debug)
             compiler_m.compile(verbose=verbose)
 
         c = Compiler(codegen, \
                      compiler=compiler, \
                      inline=inline, \
+                     accelerator=accelerator, \
                      debug=debug)
         c.compile(verbose=verbose)
 
