@@ -165,6 +165,93 @@ Now, let us take a look at the *Fortran* file
 
   end
 
+Matrix-Matrix product
+^^^^^^^^^^^^^^^^^^^^^
+
+Let's take a look at the file *tests/matrix_product.py*, listed below
+
+.. code-block:: python
+
+  n = int()
+  m = int()
+  p = int()
+  n = 2
+  m = 4
+  p = 2
+
+  a = zeros(shape=(n,m), dtype=float)
+  b = zeros(shape=(m,p), dtype=float)
+  c = zeros(shape=(n,p), dtype=float)
+
+  for i in range(0, n):
+      for j in range(0, m):
+          a[i,j] = i-j
+
+  for i in range(0, m):
+      for j in range(0, p):
+          b[i,j] = i+j
+
+  for i in range(0, n):
+      for j in range(0, p):
+          for k in range(0, p):
+              c[i,j] = c[i,j] + a[i,k]*b[k,j]
+
+  print(c)
+
+Now, run the command::
+
+  pyccel --language="fortran" --compiler="gfortran" --filename=tests/matrix_product.py --execute
+
+This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
+
+  -1.00000000       0.00000000      -2.00000000       1.00000000
+
+Now, let us take a look at the *Fortran* file
+
+.. code-block:: fortran
+
+  program main
+
+  implicit none
+  real, allocatable :: a (:, :)
+  real, allocatable :: c (:, :)
+  real, allocatable :: b (:, :)
+  integer :: i
+  integer :: k
+  integer :: j
+  integer :: m
+  integer :: n
+  integer :: p
+
+  !  
+  ! from numpy import zeros 
+  ! from numpy import linspace 
+  n = 2.0d0
+  m = 4.0d0
+  p = 2.0d0
+  allocate(a(0:n-1, 0:m-1)) ; a = 0
+  allocate(b(0:m-1, 0:p-1)) ; b = 0
+  allocate(c(0:n-1, 0:p-1)) ; c = 0
+  do i = 0, n - 1, 1
+      do j = 0, m - 1, 1
+          a(i, j) = i - j
+      end do
+  end do
+  do i = 0, m - 1, 1
+      do j = 0, p - 1, 1
+          b(i, j) = i + j
+      end do
+  end do
+  do i = 0, n - 1, 1
+      do j = 0, p - 1, 1
+          do k = 0, p - 1, 1
+              c(i, j) = a(i, k)*b(k, j) + c(i, j)
+          end do
+      end do
+  end do
+  print * , c
+
+  end
 
 TODO
 ****
