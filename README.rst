@@ -224,8 +224,6 @@ Now, let us take a look at the *Fortran* file
   integer :: p
 
   !  
-  ! from numpy import zeros 
-  ! from numpy import linspace 
   n = 2.0d0
   m = 4.0d0
   p = 2.0d0
