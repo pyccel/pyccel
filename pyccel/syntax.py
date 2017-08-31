@@ -20,7 +20,8 @@ from pyccel.types.ast import Slice
 from pyccel.types.ast import Piecewise
 from pyccel.types.ast import MultiAssign
 from pyccel.types.ast import Rational
-from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray,LEN
+from pyccel.types.ast import NumpyZeros, NumpyLinspace,NumpyOnes,NumpyArray
+from pyccel.types.ast import LEN,Dot,Min,Max
 
 DEBUG = False
 #DEBUG = True
@@ -130,7 +131,7 @@ def Check_type(var_name,expr):
             shape=shape[0]
 
 
-            if isinstance(shape,tuple):
+            if isinstance(shape,(tuple,list)):
                 shape=tuple(map(int,shape))
                 rank=len(shape)
             elif shape.is_integer:
@@ -156,12 +157,10 @@ def insert_variable(var_name, \
         return
 
     if DEBUG:
-#    if True:
         print ">>> trying to insert : ", var_name
         txt = '    datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
                 .format(datatype, rank, allocatable, shape, is_argument)
         print txt
-        print namespace
 
     if var_name in namespace:
         var = variables[var_name]
@@ -715,6 +714,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
+        
         self.name = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
 
@@ -724,7 +724,21 @@ class FactorUnary(ExpressionElement, BasicStmt):
     def expr(self):
         if DEBUG:
             print "> FactorUnary "
+        
         expr = self.op.expr
+        if self.name=='len':
+            import ast
+            try:
+                rhs=ast.literal_eval(expr)
+            except:
+                rhs=expr
+            return LEN(rhs)
+        elif self.name=='min':
+            return Min(expr)
+            
+        elif self.name=='max':
+            Max(expr)
+            
         if self.trailer is None:
             return expr
         else:
@@ -755,6 +769,8 @@ class FactorBinary(ExpressionElement):
             return Pow(expr_l, expr_r)
         elif self.name == "rational":
             return Rational(expr_l, expr_r)
+        elif self.name == "dot":
+            return Dot(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
@@ -1057,43 +1073,6 @@ class FunctionDefStmt(BasicStmt):
         global_vars = []
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
-
-
-class LenStmt(AssignStmt):
-    def __init__(self, **kwargs):
-        """
-        """
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = str(kwargs.pop('rhs'))
-        import ast
-        try:
-            rhs=ast.literal_eval(self.rhs)
-
-        except:
-            rhs=Symbol(self.rhs)
-
-        super(AssignStmt, self).__init__(**kwargs)
-    def update(self):
-        var_name = self.lhs
-        if not(var_name in namespace):
-            insert_variable(var_name, \
-                            datatype='int', \
-                            rank=0)
-            self.stmt_vars.append(var_name)
-
-    @property
-    def expr(self):
-        self.update()
-        lhs=Symbol(self.lhs)
-        import ast
-        try:
-            rhs=ast.literal_eval(self.rhs)
-
-        except:
-            rhs=self.rhs
-
-
-        return LEN(lhs,rhs)
 
 
 
@@ -1425,8 +1404,6 @@ class NumpyArrayStmt(AssignStmt):
         self.stmt_vars.append(var_name)
 
 
-
-
 class ImportFromStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -1586,7 +1563,6 @@ class TrailerSubscriptList(BasicTrailer):
         """
         """
         super(TrailerSubscriptList, self).__init__(**kwargs)
-#        print(">> args : ", self.args)
 
     @property
     def expr(self):

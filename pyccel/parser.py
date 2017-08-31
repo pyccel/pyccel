@@ -20,7 +20,7 @@ from pyccel.syntax import (Pyccel, \
                            PythonPrintStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
-                           NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, LenStmt,\
+                           NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt,\
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
@@ -174,7 +174,7 @@ class PyccelParser(Parser):
                    PythonPrintStmt, \
                    # numpy statments
                    NumpyZerosStmt, NumpyZerosLikeStmt, \
-                   NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt,LenStmt, \
+                   NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers
