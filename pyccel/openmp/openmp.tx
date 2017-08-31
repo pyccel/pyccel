@@ -1,4 +1,4 @@
-OpenMPModel:
+Openmp:
   statements*=OpenmpStmt
 ;
 
@@ -14,11 +14,11 @@ OpenmpConstruct:
 
 // TODO: add if parallel
 ParallelStmt:
-  'parallel' clauses*=ParallelClause[',']
+  'parallel' clauses+=ParallelClause[',']
 ;
 
 LoopStmt:
-  'do' clauses*=LoopClause[',']
+  'do' clauses+=LoopClause[',']
 ;
 
 ParallelClause:
@@ -26,28 +26,28 @@ ParallelClause:
   |
   ParallelDefaultClause
   |
-  PrivateListClause
+  PrivateClause
   |
-  SharedListClause
+  SharedClause
   |
-  FirstPrivateListClause
+  FirstPrivateClause
   |
-  CopyinListClause
+  CopyinClause
   |
   ReductionClause
   |
   ParallelProcBindClause
 ;
 
-// TODO: LinearListClause
+// TODO: LinearClause
 LoopClause:
-  PrivateListClause
+  PrivateClause
   |
-  FirstPrivateListClause
+  FirstPrivateClause
   |
-  LastPrivateListClause
+  LastPrivateClause
 //  |
-//  LinearListClause
+//  LinearClause
   |
   ReductionClause
   |
@@ -59,51 +59,51 @@ LoopClause:
 ;
 
 ParallelNumThreadClause:
- clause='num_threads' '(' thread=ThreadIndex ')'
+ 'num_threads' '(' thread=ThreadIndex ')'
 ;
 
 ParallelDefaultClause:
- clause='default' '(' status=Status ')'
+ 'default' '(' status=Status ')'
 ;
 
 ParallelProcBindClause:
- clause='proc_bind' '(' status=ProcBind ')'
+ 'proc_bind' '(' status=ProcBind ')'
 ;
 
-PrivateListClause:
- clause='private' '(' args+=ID[','] ')'
+PrivateClause:
+ 'private' '(' args+=ID[','] ')'
 ;
 
-SharedListClause:
- clause='shared' '(' args+=ID[','] ')'
+SharedClause:
+ 'shared' '(' args+=ID[','] ')'
 ;
 
-FirstPrivateListClause:
- clause='firstprivate' '(' args+=ID[','] ')'
+FirstPrivateClause:
+ 'firstprivate' '(' args+=ID[','] ')'
 ;
 
-LastPrivateListClause:
- clause='lastprivate' '(' args+=ID[','] ')'
+LastPrivateClause:
+ 'lastprivate' '(' args+=ID[','] ')'
 ;
 
-CopyinListClause:
- clause='copyin' '(' args+=ID[','] ')'
+CopyinClause:
+ 'copyin' '(' args+=ID[','] ')'
 ;
 
 ReductionClause:
- clause='reduction' '('op=ReductionOperator ':' args+=ID[','] ')'
+ 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')'
 ;
 
 CollapseClause:
-  clause='collapse' '(' n=INT ')'
+  'collapse' '(' n=INT ')'
 ;
 
 OrderedClause:
-  clause='ordered' ('(' n=INT ')')?
+  'ordered' ('(' n=INT ')')?
 ;
 
 ScheduleClause:
-  clause='schedule' '(' kind=Schedule (chunk_size=INT)? ')'
+  'schedule' '(' kind=Schedule (chunk_size=INT)? ')'
 ;
 
 Schedule:
