@@ -14,6 +14,7 @@ Welcome to Pyccel's documentation!
    pyccel
    specs
    stdlib
+   openmp
 
 
 

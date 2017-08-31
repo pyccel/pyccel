@@ -789,7 +789,7 @@ class Dot(Basic):
      @property
      def expr_r(self):
          return self.args[1]
-    
+
 
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
@@ -1014,6 +1014,9 @@ class AnnotatedComment(Basic):
     section : str
         section to parallelize. One among {'for'}. [Default= '']
 
+    schedule : str
+        True if a schedule section. [Default= False]
+
     visibility : str
         selected visibility. One among {'shared', 'private'}. [Default= 'shared']
 
@@ -1024,8 +1027,8 @@ class AnnotatedComment(Basic):
     # TODO variables must be symbols
 
     # since some arguments may be None, we need to define their default values
-    def __new__(cls, accel, do, end, parallel, section, visibility, variables):
-        return Basic.__new__(cls, accel, do, end, parallel, section, visibility, variables)
+    def __new__(cls, accel, do, end, parallel, section, schedule, visibility, variables):
+        return Basic.__new__(cls, accel, do, end, parallel, section, schedule, visibility, variables)
 
     @property
     def accel(self):
@@ -1048,12 +1051,16 @@ class AnnotatedComment(Basic):
         return self._args[4]
 
     @property
-    def visibility(self):
+    def schedule(self):
         return self._args[5]
 
     @property
-    def variables(self):
+    def visibility(self):
         return self._args[6]
+
+    @property
+    def variables(self):
+        return self._args[7]
 
 
 class IndexedVariable(IndexedBase):

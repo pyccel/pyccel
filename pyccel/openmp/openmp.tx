@@ -1,0 +1,58 @@
+OpenMPModel:
+  statements*=OpenmpStmt
+;
+
+OpenmpStmt: 
+  '#@' 'omp' stmt=ParallelStmt 
+;
+
+// TODO: add if parallel
+ParallelStmt:
+  'parallel' clauses*=ParallelClause[',']
+;
+
+ParallelClause:
+  ParallelNumThreadClause
+  |
+  ParallelDefaultClause
+  |
+  ParallelListClause
+  |
+  ParallelProcBindClause
+;
+
+ParallelNumThreadClause:
+ clause='num_threads' '(' thread=ThreadIndex ')'
+;
+
+ParallelDefaultClause:
+ clause='default' '(' status=Status ')'
+;
+
+ParallelListClause:
+ clause=ParallelArg '(' args+=ID[','] ')'
+;
+
+ParallelProcBindClause:
+ clause='proc_bind' '(' status=ProcBind ')'
+;
+
+ProcBind:
+  ('master' | 'close' | 'spread')
+;
+
+ParallelArg:
+  ('private' | 'firstprivate' | 'shared' | 'copyin' | 'reduction')
+;
+
+Status:
+  ('private' | 'firstprivate' | 'shared' | 'none')
+;
+
+ThreadIndex:
+  (ID | INT)
+;
+
+NotaStmt:
+  /.*$/
+;

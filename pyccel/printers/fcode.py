@@ -123,6 +123,7 @@ class FCodePrinter(CodePrinter):
         end        = self._print(expr.end)
         parallel   = self._print(expr.parallel)
         section    = self._print(expr.section)
+        schedule   = self._print(expr.schedule)
         visibility = self._print(expr.visibility)
         variables  = ', '.join(self._print(f) for f in expr.variables)
         if len(variables) > 0:
@@ -140,10 +141,15 @@ class FCodePrinter(CodePrinter):
         if not section:
             section = ''
 
+        if not schedule:
+            schedule = ''
+
         if not visibility:
             visibility = ''
 
-        return '!${0} {1} {2} {3} {4} {5} {6}'.format(accel, do, end, parallel, section, visibility, variables)
+        return '!${0} {1} {2} {3} {4} {5} {6} {7}'.format(accel, do, end,
+                                                          parallel, section,
+                                                          schedule, visibility, variables)
 
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -205,10 +211,10 @@ class FCodePrinter(CodePrinter):
             return self._get_statement('max((/%s/))'%(st))
         else:
             return self._get_statement('max(%s)'%(expr.rhs))
-    
+
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(expr.expr_l,expr.expr_r))
-        
+
 
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)

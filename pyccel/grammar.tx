@@ -96,6 +96,7 @@ AnnotatedStmt:
   (parallel='parallel')? 
   (section='for')? 
   (visibility='private'|'shared')? 
+  (schedule='schedule')? 
   (LPAREN variables+=ID[','] RPAREN)?
 ;
 

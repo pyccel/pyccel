@@ -1482,6 +1482,7 @@ class AnnotatedStmt(BasicStmt):
         self.end        = kwargs.pop('end', None)
         self.parallel   = kwargs.pop('parallel', None)
         self.section    = kwargs.pop('section',  None)
+        self.schedule   = kwargs.pop('schedule',  None)
         self.visibility = kwargs.pop('visibility', None)
         self.variables  = kwargs.pop('variables',  None)
 
@@ -1496,6 +1497,7 @@ class AnnotatedStmt(BasicStmt):
                                 end=self.end, \
                                 parallel=self.parallel, \
                                 section=self.section, \
+                                schedule=self.schedule, \
                                 visibility=self.visibility, \
                                 variables=self.variables)
 
