@@ -16,7 +16,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, Piecewise, \
                               Rational, NumpyZeros, NumpyLinspace, \
-                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max)
+                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
+    IndexedElement)
 
 DEBUG = False
 #DEBUG = True
@@ -68,8 +69,8 @@ def Check_type(var_name,expr):
     s=[]
     def pre(expr):
 
-
-        if(type(expr)==Indexed):
+       
+        if(type(expr)==Indexed) or type(expr)==IndexedElement:
             s.append((expr.args[0],expr.args[1]))
             return
 
@@ -78,9 +79,9 @@ def Check_type(var_name,expr):
             s.append(expr)
         for arg in expr.args:
             pre(arg)
-
+    
     pre(expr.expr)
-
+  
 
     if isinstance(expr,Expression):
         for i in s:

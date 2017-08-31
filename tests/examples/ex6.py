@@ -11,16 +11,16 @@ a[1] = 1.0
 a[2] = 1.0
 a[3] = 1.0
 
-#c = a[1]
+c = a[1]
 
-#d = c + 5.3 * a[1+1] + 4.0 - a[3]
-#print(d)
-#
-#e = zeros(shape=(2,8), dtype=float)
-#e[1,1] = 1
-#
-#f = e[0,2]
-#print(f)
+d = c + 5.3 * a[1+1] + 4.0 - a[3]
+print(d)
+
+e = zeros(shape=(2,8), dtype=float)
+e[1,1] = 1
+
+f = e[0,2]
+print(f)
 
 n = int()
 n = 2
