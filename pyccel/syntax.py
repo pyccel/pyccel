@@ -6,6 +6,8 @@ from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
+from sympy import Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
+              sec, tan, cot, asin, acsc, acos, asec, atan, acot, atan2,factorial
 
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
@@ -734,6 +736,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
         if DEBUG:
             print "> FactorUnary "
         expr = self.op.expr
+        rhs=expr
         
         if self.name=='len':
             import ast
@@ -742,11 +745,47 @@ class FactorUnary(ExpressionElement, BasicStmt):
             except:
                 rhs=expr
             return LEN(rhs)
-        elif self.name=='min':
-            return Min(expr)
-
-        elif self.name=='max':
-            Max(expr)
+        elif self.name=='abs':
+            return Abs(rhs)
+        elif self.name=='cos':
+            return cos(rhs)
+        elif self.name=='sin':
+            return sin(rhs)
+        elif self.name=='sqrt':
+            return sqrt(rhs)
+        elif self.name=='exp':
+            return exp(rhs)
+        elif self.name=='log':
+            return log(rhs)
+        elif self.name=='sign':
+            return sign(rhs)
+        elif self.name=='csc':
+            return csc(rhs)
+        elif self.name=='sec':
+            return sec(rhs)
+        elif self.name=='tan':
+            return tan(rhs)
+        elif self.name=='cot':
+            return cot(rhs)
+        elif self.name=='asin':
+            return asin(rhs)
+        elif self.name=='acsc':
+            return acsc(rhs)
+        elif self.name=='acos': 
+            return acos(rhs)
+        elif self.name=='asec':
+            return asec(rhs)
+        elif self.name=='atan':
+            return atan(rhs)
+        elif self.name=='acot':
+            return acot(rhs)
+        elif self.name=='atan2':
+            return atan2(rhs)
+        elif self.name=='factorial':
+            return factorial(rhs)
+        else:
+            raise Exeption('function note supported')
+        
 
         if self.trailer is None:
             return expr
@@ -780,6 +819,10 @@ class FactorBinary(ExpressionElement):
             return Rational(expr_l, expr_r)
         elif self.name == "dot":
             return Dot(expr_l, expr_r)
+        elif self.name == "max":
+            return Max(expr_l, expr_r)
+        elif self.name == "min":
+            return Min(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))

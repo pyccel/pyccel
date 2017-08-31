@@ -361,11 +361,12 @@ BOOLEAN:
 ;
 
 UnaryOp:
-   ('transpose'|'len'|'min'|'max'|'log'|'exp'|'cos'|'sin'|'sqrt'|'abs'|'pi')
+   ('transpose'|'len'|'log'|'exp'|'cos'|'sin'|'sqrt'|'abs'|'pi'|'sign'|'csc'|'sec'|'tan'|'cot'|
+   'asin'|'acsc'|'acos'|'asec'|'atan'|'acot'|'atan2'|'factorial')
 ;
 
 BinaryOp:
-   ('pow' | 'rational'|'dot')
+   ('pow' | 'rational'|'dot'|'min'|'max')
 ;
 
 EQ:

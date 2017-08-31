@@ -201,17 +201,34 @@ class FCodePrinter(CodePrinter):
         else:
             return self._get_statement('size(%s,1)'%(expr.rhs))
     def _print_Min(self,expr):
-        if isinstance(expr.rhs,list):
-            st=','.join([str(i) for i in expr.rhs])
-            return self._get_statement('min((/%s/))'%(st))
+        if isinstance(expr.expr_l,list):
+            st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'
+    
         else:
-            return self._get_statement('min(%s)'%(expr.rhs))
+            st_l=expr.expr_l
+        
+        if isinstance(expr.expr_r,list):
+            st_r='(/'+','.join([str(i) for i in expr.expr_r])+'/)'
+    
+        else:
+            st_r=expr.expr_r
+        return self._get_statement('min(%s,%s)'%(st_l,st_r))
+        
+        
     def _print_Max(self,expr):
-        if isinstance(expr.rhs,list):
-            st=','.join([str(i) for i in expr.rhs])
-            return self._get_statement('max((/%s/))'%(st))
+        if isinstance(expr.expr_l,list):
+            st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'
+    
         else:
-            return self._get_statement('max(%s)'%(expr.rhs))
+            st_l=expr.expr_l
+        
+        if isinstance(expr.expr_r,list):
+            st_r='(/'+','.join([str(i) for i in expr.expr_r])+'/)'
+    
+        else:
+            st_r=expr.expr_r
+        return self._get_statement('max(%s,%s)'%(st_l,st_r))
+    
     
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(expr.expr_l,expr.expr_r))
