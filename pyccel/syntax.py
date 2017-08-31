@@ -69,7 +69,7 @@ def Check_type(var_name,expr):
     s=[]
     def pre(expr):
 
-       
+
         if(type(expr)==Indexed) or type(expr)==IndexedElement:
             s.append((expr.args[0],expr.args[1]))
             return
@@ -79,7 +79,7 @@ def Check_type(var_name,expr):
             s.append(expr)
         for arg in expr.args:
             pre(arg)
-    
+
     pre(expr.expr)
 
     if isinstance(expr,Expression):
@@ -112,7 +112,7 @@ def Check_type(var_name,expr):
                 elif isinstance(i[0],IndexedBase)and i[1].is_integer:
                     datatype=variables[str(i[0])].dtype
             elif isinstance(i,Symbol):
-                
+
                 if isinstance(variables[str(i)].dtype,NativeFloat):
                     datatype='float'
                 if  variables[str(i)].allocatable:
@@ -339,14 +339,22 @@ class ConstructorStmt(BasicStmt):
     def expr(self):
         """
         """
-        var_name = str(self.lhs)
+        var_name    = str(self.lhs)
+        constructor = str(self.constructor)
         # TODO improve
-        datatype = str(self.constructor)
-        rank = 0
-        # TODO improce with dtype from grammar
-        if datatype == "array":
-            rank = 1
-            datatype = 'float'
+        if constructor in ["array_1", "array_2", "array_3"]:
+            if constructor == "array_2":
+                rank = 2
+                datatype = 'float'
+            elif constructor == "array_3":
+                rank = 3
+                datatype = 'float'
+            else:
+                rank = 1
+                datatype = 'float'
+        else:
+            rank     = 0
+            datatype = constructor
         insert_variable(var_name, datatype=datatype, rank=rank)
         return Comment("")
 
