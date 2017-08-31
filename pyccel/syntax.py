@@ -82,7 +82,6 @@ def Check_type(var_name,expr):
 
     pre(expr.expr)
 
-
     if isinstance(expr,Expression):
         for i in s:
             if isinstance(i,tuple):
@@ -113,6 +112,7 @@ def Check_type(var_name,expr):
                 elif isinstance(i[0],IndexedBase)and i[1].is_integer:
                     datatype=variables[str(i[0])].dtype
             elif isinstance(i,Symbol):
+
                 if isinstance(variables[str(i)].dtype,NativeFloat):
                     datatype='float'
                 if  variables[str(i)].allocatable:
@@ -126,14 +126,15 @@ def Check_type(var_name,expr):
         if all(x==shape[0] for x in shape):
             shape=shape[0]
 
-
             if isinstance(shape,(tuple,list)):
                 shape=tuple(map(int,shape))
                 rank=len(shape)
-            elif shape.is_integer:
+            elif isinstance(shape,int):
                 rank=1
-                shape=int(shape)
-
+            elif isinstance(shape,Symbol):
+                if shape.is_integer:
+                    rank=1
+                    shape=int(shape)
         else:
             raise TypeError('shape are not equal')
 
