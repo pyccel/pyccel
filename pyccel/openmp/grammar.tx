@@ -10,15 +10,17 @@ OpenmpConstruct:
   ParallelStmt 
   | 
   LoopStmt
+  |
+  EndConstructClause
 ;
 
 // TODO: add if parallel
 ParallelStmt:
-  'parallel' clauses+=ParallelClause[',']
+  'parallel' clauses*=ParallelClause[',']
 ;
 
 LoopStmt:
-  'do' clauses+=LoopClause[',']
+  'do' clauses*=LoopClause[',']
 ;
 
 ParallelClause:
@@ -106,6 +108,10 @@ ScheduleClause:
   'schedule' '(' kind=Schedule (',' chunk_size=INT)? ')'
 ;
 
+EndConstructClause:
+  'end' construct=OpenmpConstructs
+;
+
 Schedule:
   ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' )
 ;
@@ -120,6 +126,10 @@ ReductionOperator:
 
 Status:
   ('private' | 'firstprivate' | 'shared' | 'none')
+;
+
+OpenmpConstructs:
+  ('parallel' | 'do')
 ;
 
 ThreadIndex:

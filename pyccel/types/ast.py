@@ -1002,66 +1002,19 @@ class AnnotatedComment(Basic):
     accel : str
        accelerator id. One among {'omp', 'acc'}
 
-    do : bool
-        True if an do section. [Default= False]
-
-    end : bool
-        True if an end section. [Default= False]
-
-    parallel : bool
-        True if a parallel section. [Default= False]
-
-    section : str
-        section to parallelize. One among {'for'}. [Default= '']
-
-    schedule : str
-        True if a schedule section. [Default= False]
-
-    visibility : str
-        selected visibility. One among {'shared', 'private'}. [Default= 'shared']
-
-    variables: list
-        list of variables names. (and not Symbols!)
-
+    txt: str
+        statement to print
     """
-    # TODO variables must be symbols
-
-    # since some arguments may be None, we need to define their default values
-    def __new__(cls, accel, do, end, parallel, section, schedule, visibility, variables):
-        return Basic.__new__(cls, accel, do, end, parallel, section, schedule, visibility, variables)
+    def __new__(cls, accel, txt):
+        return Basic.__new__(cls, accel, txt)
 
     @property
     def accel(self):
         return self._args[0]
 
     @property
-    def do(self):
+    def txt(self):
         return self._args[1]
-
-    @property
-    def end(self):
-        return self._args[2]
-
-    @property
-    def parallel(self):
-        return self._args[3]
-
-    @property
-    def section(self):
-        return self._args[4]
-
-    @property
-    def schedule(self):
-        return self._args[5]
-
-    @property
-    def visibility(self):
-        return self._args[6]
-
-    @property
-    def variables(self):
-        return self._args[7]
-
 
 class IndexedVariable(IndexedBase):
     """Represents a Comment in the code.

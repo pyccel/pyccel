@@ -27,7 +27,7 @@ from pyccel.syntax import (Pyccel, \
                            TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                            )
 
-from pyccel.openmp.syntax import (Openmp, OpenmpStmt, \
+from pyccel.openmp.syntax import (OpenmpStmt, \
                                   ParallelStmt, \
                                   LoopStmt, \
                                   ParallelNumThreadClause, \
@@ -41,7 +41,8 @@ from pyccel.openmp.syntax import (Openmp, OpenmpStmt, \
                                   ReductionClause, \
                                   CollapseClause, \
                                   ScheduleClause, \
-                                  OrderedClause \
+                                  OrderedClause, \
+                                  EndConstructClause
                                  )
 
 
@@ -178,7 +179,7 @@ class PyccelParser(Parser):
                    TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                    ]
 
-        classes += [Openmp, OpenmpStmt, \
+        classes += [OpenmpStmt, \
                     ParallelStmt, \
                     LoopStmt, \
                     ParallelNumThreadClause, \
@@ -192,7 +193,8 @@ class PyccelParser(Parser):
                     ReductionClause, \
                     CollapseClause, \
                     ScheduleClause, \
-                    OrderedClause \
+                    OrderedClause, \
+                    EndConstructClause
                    ]
 
         try:

@@ -20,6 +20,9 @@ from pyccel.syntax import ( \
                            NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt \
                            )
 
+from pyccel.openmp.syntax import OpenmpStmt
+
+
 __all__ = ["PyccelCodegen"]
 
 # ...
@@ -270,6 +273,8 @@ class Codegen(object):
             elif isinstance(stmt, ConstructorStmt):
                 # this statement does not generate any code
                 stmt.expr
+            elif isinstance(stmt, OpenmpStmt):
+                body += printer(stmt.expr) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)

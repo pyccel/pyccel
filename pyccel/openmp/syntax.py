@@ -8,36 +8,9 @@ from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.syntax import BasicStmt
+from pyccel.types.ast import AnnotatedComment
 
 DEBUG = False
-
-#############################################
-# TO BE MOVED TO AST
-#############################################
-from sympy.core.basic import Basic
-class AnnotatedComment(Basic):
-    """Represents a Annotated Comment in the code.
-
-    Parameters
-    ----------
-    accel : str
-       accelerator id. One among {'omp', 'acc'}
-
-    txt: str
-        statement to print
-    """
-    def __new__(cls, accel, txt):
-        return Basic.__new__(cls, accel, txt)
-
-    @property
-    def accel(self):
-        return self._args[0]
-
-    @property
-    def txt(self):
-        return self._args[1]
-
-#############################################
 
 class Openmp(object):
     """Class for Openmp syntax."""
@@ -61,7 +34,16 @@ class OpenmpStmt(BasicStmt):
     def expr(self):
         if DEBUG:
             print("> OpenmpStmt: expr")
-        pass
+
+        stmt = self.stmt
+        if isinstance(stmt, EndConstructClause):
+            return stmt.expr
+        elif isinstance(stmt, ParallelStmt):
+            return stmt.expr
+        elif isinstance(stmt, LoopStmt):
+            return stmt.expr
+        else:
+            raise TypeError('Wrong stmt for OpenmpStmt')
 
 class ParallelStmt(BasicStmt):
     """Class representing a ."""
@@ -78,6 +60,7 @@ class ParallelStmt(BasicStmt):
             print("> ParallelStmt: expr")
 
         prelude = 'parallel'
+        txt = ''
         for clause in self.clauses:
             if isinstance(clause, ParallelNumThreadClause):
                 txt = clause.expr
@@ -116,6 +99,7 @@ class LoopStmt(BasicStmt):
             print("> LoopStmt: expr")
 
         prelude = 'do'
+        txt = ''
         for clause in self.clauses:
             if isinstance(clause, PrivateClause):
                 txt = clause.expr
@@ -135,6 +119,23 @@ class LoopStmt(BasicStmt):
                 raise TypeError('Wrong clause for LoopStmt')
 
         txt = '{0} {1}'.format(prelude, txt)
+        return AnnotatedComment('omp', txt)
+
+class EndConstructClause(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.construct = kwargs.pop('construct')
+
+        super(EndConstructClause, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> EndConstructClause: expr")
+
+        txt = 'end {}'.format(self.construct)
         return AnnotatedComment('omp', txt)
 
 class ParallelNumThreadClause(BasicStmt):
