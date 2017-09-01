@@ -9,6 +9,36 @@ from textx.export import metamodel_export, model_export
 
 from pyccel.syntax import BasicStmt
 
+DEBUG = False
+
+#############################################
+# TO BE MOVED TO AST
+#############################################
+from sympy.core.basic import Basic
+class AnnotatedComment(Basic):
+    """Represents a Annotated Comment in the code.
+
+    Parameters
+    ----------
+    accel : str
+       accelerator id. One among {'omp', 'acc'}
+
+    txt: str
+        statement to print
+    """
+    def __new__(cls, accel, txt):
+        return Basic.__new__(cls, accel, txt)
+
+    @property
+    def accel(self):
+        return self._args[0]
+
+    @property
+    def txt(self):
+        return self._args[1]
+
+#############################################
+
 class Openmp(object):
     """Class for Openmp syntax."""
     def __init__(self, **kwargs):
@@ -29,7 +59,8 @@ class OpenmpStmt(BasicStmt):
 
     @property
     def expr(self):
-        print("> OpenmpStmt: expr")
+        if DEBUG:
+            print("> OpenmpStmt: expr")
         pass
 
 class ParallelStmt(BasicStmt):
@@ -43,8 +74,32 @@ class ParallelStmt(BasicStmt):
 
     @property
     def expr(self):
-        print("> ParallelStmt: expr")
-        pass
+        if DEBUG:
+            print("> ParallelStmt: expr")
+
+        prelude = 'parallel'
+        for clause in self.clauses:
+            if isinstance(clause, ParallelNumThreadClause):
+                txt = clause.expr
+            elif isinstance(clause, ParallelDefaultClause):
+                txt = clause.expr
+            elif isinstance(clause, PrivateClause):
+                txt = clause.expr
+            elif isinstance(clause, SharedClause):
+                txt = clause.expr
+            elif isinstance(clause, FirstPrivateClause):
+                txt = clause.expr
+            elif isinstance(clause, CopyinClause):
+                txt = clause.expr
+            elif isinstance(clause, ReductionClause):
+                txt = clause.expr
+            elif isinstance(clause, ParallelProcBindClause):
+                txt = clause.expr
+            else:
+                raise TypeError('Wrong clause for ParallelStmt')
+
+        txt = '{0} {1}'.format(prelude, txt)
+        return AnnotatedComment('omp', txt)
 
 class LoopStmt(BasicStmt):
     """Class representing a ."""
@@ -57,8 +112,30 @@ class LoopStmt(BasicStmt):
 
     @property
     def expr(self):
-        print("> LoopStmt: expr")
-        pass
+        if DEBUG:
+            print("> LoopStmt: expr")
+
+        prelude = 'do'
+        for clause in self.clauses:
+            if isinstance(clause, PrivateClause):
+                txt = clause.expr
+            elif isinstance(clause, FirstPrivateClause):
+                txt = clause.expr
+            elif isinstance(clause, LastPrivateClause):
+                txt = clause.expr
+            elif isinstance(clause, ReductionClause):
+                txt = clause.expr
+            elif isinstance(clause, ScheduleClause):
+                txt = clause.expr
+            elif isinstance(clause, CollapseClause):
+                txt = clause.expr
+            elif isinstance(clause, OrderedClause):
+                txt = clause.expr
+            else:
+                raise TypeError('Wrong clause for LoopStmt')
+
+        txt = '{0} {1}'.format(prelude, txt)
+        return AnnotatedComment('omp', txt)
 
 class ParallelNumThreadClause(BasicStmt):
     """Class representing a ."""
@@ -71,8 +148,12 @@ class ParallelNumThreadClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> ParallelNumThreadClause: expr")
-        pass
+        # TODO check if variable exist in namespace
+        if DEBUG:
+            print("> ParallelNumThreadClause: expr")
+
+        thread = self.thread
+        return 'num_threads({})'.format(thread)
 
 class ParallelDefaultClause(BasicStmt):
     """Class representing a ."""
@@ -85,8 +166,10 @@ class ParallelDefaultClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> ParallelDefaultClause: expr")
-        pass
+        if DEBUG:
+            print("> ParallelDefaultClause: expr")
+
+        return 'default({})'.format(self.status)
 
 class ParallelProcBindClause(BasicStmt):
     """Class representing a ."""
@@ -99,8 +182,10 @@ class ParallelProcBindClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> ParallelProcBindClause: expr")
-        pass
+        if DEBUG:
+            print("> ParallelProcBindClause: expr")
+
+        return 'proc_bind({})'.format(self.status)
 
 class PrivateClause(BasicStmt):
     """Class representing a ."""
@@ -113,8 +198,12 @@ class PrivateClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> PrivateClause: expr")
-        pass
+        if DEBUG:
+            print("> PrivateClause: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'private({})'.format(args)
 
 class SharedClause(BasicStmt):
     """Class representing a ."""
@@ -127,8 +216,12 @@ class SharedClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> SharedClause: expr")
-        pass
+        if DEBUG:
+            print("> SharedClause: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'shared({})'.format(args)
 
 class FirstPrivateClause(BasicStmt):
     """Class representing a ."""
@@ -141,8 +234,12 @@ class FirstPrivateClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> FirstPrivateClause: expr")
-        pass
+        if DEBUG:
+            print("> FirstPrivateClause: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'firstprivate({})'.format(args)
 
 class LastPrivateClause(BasicStmt):
     """Class representing a ."""
@@ -155,8 +252,12 @@ class LastPrivateClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> LastPrivateClause: expr")
-        pass
+        if DEBUG:
+            print("> LastPrivateClause: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'lastprivate({})'.format(args)
 
 class CopyinClause(BasicStmt):
     """Class representing a ."""
@@ -169,8 +270,12 @@ class CopyinClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> CopyinClause: expr")
-        pass
+        if DEBUG:
+            print("> CopyinClause: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'copyin({})'.format(args)
 
 class ReductionClause(BasicStmt):
     """Class representing a ."""
@@ -184,8 +289,13 @@ class ReductionClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> ReductionClause: expr")
-        pass
+        if DEBUG:
+            print("> ReductionClause: expr")
+
+        # TODO check if variable exist in namespace
+        op   = self.op
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'copyin({0}: {1})'.format(op, args)
 
 class CollapseClause(BasicStmt):
     """Class representing a ."""
@@ -198,8 +308,10 @@ class CollapseClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> CollapseClause: expr")
-        pass
+        if DEBUG:
+            print("> CollapseClause: expr")
+
+        return 'collapse({})'.format(self.n)
 
 class OrderedClause(BasicStmt):
     """Class representing a ."""
@@ -212,8 +324,14 @@ class OrderedClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> OrderedClause: expr")
-        pass
+        if DEBUG:
+            print("> OrderedClause: expr")
+
+        if self.n:
+            return 'collapse({})'.format(self.n)
+        else:
+            return 'collapse()'
+
 
 class ScheduleClause(BasicStmt):
     """Class representing a ."""
@@ -227,11 +345,13 @@ class ScheduleClause(BasicStmt):
 
     @property
     def expr(self):
-        print("> ScheduleClause: expr")
-        pass
+        if DEBUG:
+            print("> ScheduleClause: expr")
 
-
-
+        if self.chunk_size:
+            return 'schedule({0}, {1})'.format(self.kind, self.chunk_size)
+        else:
+            return 'schedule({0})'.format(self.kind)
 
 
 
@@ -265,7 +385,8 @@ def parse(filename, debug=False):
     d = {}
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
-            print stmt.stmt
+            stmt.stmt.expr
+
 #            module = str(stmt.dotted_name.names[0])
 #            names  = [str(n) for n in stmt.import_as_names.names]
 #            d[module] = names

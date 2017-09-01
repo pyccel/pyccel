@@ -103,7 +103,7 @@ OrderedClause:
 ;
 
 ScheduleClause:
-  'schedule' '(' kind=Schedule (chunk_size=INT)? ')'
+  'schedule' '(' kind=Schedule (',' chunk_size=INT)? ')'
 ;
 
 Schedule:
