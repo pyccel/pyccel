@@ -18,13 +18,6 @@ c = zeros(shape=(n,p), dtype=float)
 x = 0
 y = 0
 
-#@ omp parallel private(t_id)
-nb_taches = thread_number()
-t_id = thread_id()
-print("> thread  id     = ", t_id)
-#@ omp end parallel
-print("> threads number = ", nb_taches)
-
 #@ omp parallel
 #@ omp do schedule(runtime)
 for i in range(0, n):

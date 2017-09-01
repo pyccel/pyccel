@@ -1,10 +1,9 @@
 # coding: utf-8
 
-x = 0
-
-#@ omp parallel private (x, y)
-for i in range(0,10):
-    x = x + 1
-    y = 2*x
-    print(y)
+#@ omp parallel private(t_id)
+nb_taches = thread_number()
+t_id = thread_id()
+print("> thread  id     = ", t_id)
 #@ omp end parallel
+
+print("> threads number = ", nb_taches)
