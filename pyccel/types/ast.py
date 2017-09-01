@@ -768,17 +768,23 @@ class LEN(Basic):
      def rhs(self):
         return self._args[0]
 class Min(Basic):
-     def __new__(cls, rhs):
-         return Basic.__new__(cls, rhs)
+     def __new__(cls, expr_l, expr_r):
+         return Basic.__new__(cls, expr_l, expr_r)
      @property
-     def rhs(self):
-        return self._args[0]
+     def expr_l(self):
+         return self.args[0]
+     @property
+     def expr_r(self):
+         return self.args[1]
 class Max(Basic):
-     def __new__(cls, rhs):
-         return Basic.__new__(cls, rhs)
+     def __new__(cls, expr_l, expr_r):
+         return Basic.__new__(cls, expr_l, expr_r)
      @property
-     def rhs(self):
-        return self._args[0]
+     def expr_l(self):
+         return self.args[0]
+     @property
+     def expr_r(self):
+         return self.args[1]
 
 class Dot(Basic):
      def __new__(cls, expr_l, expr_r):
@@ -876,7 +882,7 @@ class NumpyOnes(Basic):
         return self._args[1]
 class NumpyArray(Basic):
 
-    def __new__(cls, lhs,rhs):
+    def __new__(cls, lhs,rhs,shape):
         lhs   = _sympify(lhs)
 
 
@@ -886,8 +892,11 @@ class NumpyArray(Basic):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
         if not isinstance(rhs,list):
             raise TypeError("cannot assign rhs of type %s." % type(rhs))
+        if not isinstance(shape,tuple):
+            raise TypeError("shape must be of type tuple")
+        
 
-        return Basic.__new__(cls, lhs, rhs)
+        return Basic.__new__(cls, lhs, rhs,shape)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -900,6 +909,9 @@ class NumpyArray(Basic):
     @property
     def rhs(self):
         return self._args[1]
+    @property
+    def shape(self):
+        return self._args[2]
 
 
 class NumpyLinspace(Basic):

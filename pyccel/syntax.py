@@ -6,6 +6,8 @@ from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
+from sympy import Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
+              sec, tan, cot, asin, acsc, acos, asec, atan, acot, atan2,factorial
 
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
@@ -719,18 +721,23 @@ class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
-
+        
         self.name = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
+        
 
         super(FactorUnary, self).__init__(**kwargs)
+        
+
 
     @property
     def expr(self):
+        
         if DEBUG:
             print "> FactorUnary "
-
         expr = self.op.expr
+        rhs=expr
+        
         if self.name=='len':
             import ast
             try:
@@ -738,11 +745,47 @@ class FactorUnary(ExpressionElement, BasicStmt):
             except:
                 rhs=expr
             return LEN(rhs)
-        elif self.name=='min':
-            return Min(expr)
-
-        elif self.name=='max':
-            Max(expr)
+        elif self.name=='abs':
+            return Abs(rhs)
+        elif self.name=='cos':
+            return cos(rhs)
+        elif self.name=='sin':
+            return sin(rhs)
+        elif self.name=='sqrt':
+            return sqrt(rhs)
+        elif self.name=='exp':
+            return exp(rhs)
+        elif self.name=='log':
+            return log(rhs)
+        elif self.name=='sign':
+            return sign(rhs)
+        elif self.name=='csc':
+            return csc(rhs)
+        elif self.name=='sec':
+            return sec(rhs)
+        elif self.name=='tan':
+            return tan(rhs)
+        elif self.name=='cot':
+            return cot(rhs)
+        elif self.name=='asin':
+            return asin(rhs)
+        elif self.name=='acsc':
+            return acsc(rhs)
+        elif self.name=='acos': 
+            return acos(rhs)
+        elif self.name=='asec':
+            return asec(rhs)
+        elif self.name=='atan':
+            return atan(rhs)
+        elif self.name=='acot':
+            return acot(rhs)
+        elif self.name=='atan2':
+            return atan2(rhs)
+        elif self.name=='factorial':
+            return factorial(rhs)
+        else:
+            raise Exeption('function note supported')
+        
 
         if self.trailer is None:
             return expr
@@ -776,6 +819,10 @@ class FactorBinary(ExpressionElement):
             return Rational(expr_l, expr_r)
         elif self.name == "dot":
             return Dot(expr_l, expr_r)
+        elif self.name == "max":
+            return Max(expr_l, expr_r)
+        elif self.name == "min":
+            return Min(expr_l, expr_r)
         else:
             raise Exception('Unknown variable "{}" at position {}'
                             .format(op, self._tx_position))
@@ -854,6 +901,8 @@ class Operand(ExpressionElement):
                 return Function(op) #(Symbol(args[0]), Symbol(args[1]))
             else:
                 return namespace[op]
+        elif(type(op)==unicode):
+            return op
         else:
             raise Exception('Undefined variable "{}"'.format(op))
 
@@ -1367,35 +1416,45 @@ class NumpyLinspaceStmt(AssignStmt):
 class NumpyArrayStmt(AssignStmt):
     def __init__(self, **kwargs):
 
-
+        
         self.lhs= kwargs.pop('lhs')
         self.rhs= kwargs.pop('rhs')
+        import ast
+        self.rhs=ast.literal_eval(self.rhs)
         self.dtype=kwargs.pop('dtype')
-        self.shape=len(self.rhs)
+        
+        import numpy as n
+        self.shape=n.shape(self.rhs)
         super(AssignStmt, self).__init__(**kwargs)
+        
+
 
     @property
     def expr(self):
         self.update()
-        var_name = self.lhs
-
-        var = Symbol(var_name)
+        var=sympify(self.lhs)
         mylist=self.rhs
-        if self.dtype=='int':
-            mylist=map(int, mylist)
-        elif self.dtype=='float':
-            mylist=map(float, mylist)
+        
+        if isinstance(mylist[0],list):
+            if self.dtype=='int':
+                mylist=[map(int, i) for i in mylist]
+            elif self.dtype=='float':
+                mylist=[map(float, i) for i in mylist]
+        else:
+            if self.dtype=='int':
+                mylist=map(int,mylist)
+            elif self.dtype=='float':
+                mylist=map(float,mylist)
 
 
-        return NumpyArray(var,mylist)
+        return NumpyArray(var,mylist,self.shape)
     def update(self):
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
                 print("> Found new variable " + var_name)
 
-        rank=1
-        #TODO improve later so that the rank would be bigger
+        rank=len(self.shape)
 
         datatype=str(self.dtype)
         if self.dtype is None:
