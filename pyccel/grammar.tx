@@ -1,4 +1,4 @@
-import openmp.openmp
+import openmp.grammar
 
 Pyccel:
   (statements*=Statement)

@@ -27,7 +27,7 @@ from pyccel.syntax import (Pyccel, \
                            TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                            )
 
-from pyccel.openmp.openmp import (Openmp, OpenmpStmt, \
+from pyccel.openmp.syntax import (Openmp, OpenmpStmt, \
                                   ParallelStmt, \
                                   LoopStmt, \
                                   ParallelNumThreadClause, \
