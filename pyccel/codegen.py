@@ -13,6 +13,8 @@ from pyccel.syntax import ( \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
                            ImportFromStmt, \
                            CommentStmt, \
+                           # Multi-threading
+                           ThreadStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -194,7 +196,7 @@ class Codegen(object):
         """Generate code as a module. Every extension must implement this method."""
         pass
 
-    def as_module(self):
+    def as_program(self):
         """Generate code as a program. Every extension must implement this method."""
         pass
 
@@ -274,6 +276,8 @@ class Codegen(object):
                 # this statement does not generate any code
                 stmt.expr
             elif isinstance(stmt, OpenmpStmt):
+                body += printer(stmt.expr) + "\n"
+            elif isinstance(stmt, ThreadStmt):
                 body += printer(stmt.expr) + "\n"
             else:
                 if True:
@@ -544,12 +548,12 @@ def build_file(filename, language, compiler, \
     ms = []
     for module, names in imports.items():
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
-        codegen_m.doprint(language="fortran")
+        codegen_m.doprint(language=language, accelerator=accelerator)
         ms.append(codegen_m)
 
 
     codegen = FCodegen(filename=filename, name=name)
-    s=codegen.doprint(language="fortran")
+    s=codegen.doprint(language=language, accelerator=accelerator)
     if show:
         print('========Fortran_Code========')
         print(s)
@@ -564,7 +568,7 @@ def build_file(filename, language, compiler, \
     if compiler:
         for codegen_m in ms:
             compiler_m = Compiler(codegen_m, \
-                                  compiler="gfortran", \
+                                  compiler=compiler, \
                                   accelerator=accelerator, \
                                   debug=debug)
             compiler_m.compile(verbose=verbose)

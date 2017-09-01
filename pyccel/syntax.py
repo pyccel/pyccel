@@ -16,6 +16,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               MultiAssign, OutArgument, Result, \
                               FunctionDef, Import, Print, \
                               Comment, AnnotatedComment, \
+                              ThreadID, ThreadsNumber, \
                               IndexedVariable, Slice, Piecewise, \
                               Rational, NumpyZeros, NumpyLinspace, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
@@ -38,6 +39,8 @@ __all__ = ["Pyccel", \
            "ImportFromStmt", \
            "ConstructorStmt", \
            "CommentStmt", \
+           # Multi-threading
+           "ThreadStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -721,23 +724,23 @@ class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
     def __init__(self, **kwargs):
         # name of the unary operator
-        
+
         self.name = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
-        
+
 
         super(FactorUnary, self).__init__(**kwargs)
-        
+
 
 
     @property
     def expr(self):
-        
+
         if DEBUG:
             print "> FactorUnary "
         expr = self.op.expr
         rhs=expr
-        
+
         if self.name=='len':
             import ast
             try:
@@ -771,7 +774,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
             return asin(rhs)
         elif self.name=='acsc':
             return acsc(rhs)
-        elif self.name=='acos': 
+        elif self.name=='acos':
             return acos(rhs)
         elif self.name=='asec':
             return asec(rhs)
@@ -785,7 +788,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
             return factorial(rhs)
         else:
             raise Exeption('function note supported')
-        
+
 
         if self.trailer is None:
             return expr
@@ -1416,17 +1419,17 @@ class NumpyLinspaceStmt(AssignStmt):
 class NumpyArrayStmt(AssignStmt):
     def __init__(self, **kwargs):
 
-        
+
         self.lhs= kwargs.pop('lhs')
         self.rhs= kwargs.pop('rhs')
         import ast
         self.rhs=ast.literal_eval(self.rhs)
         self.dtype=kwargs.pop('dtype')
-        
+
         import numpy as n
         self.shape=n.shape(self.rhs)
         super(AssignStmt, self).__init__(**kwargs)
-        
+
 
 
     @property
@@ -1434,7 +1437,7 @@ class NumpyArrayStmt(AssignStmt):
         self.update()
         var=sympify(self.lhs)
         mylist=self.rhs
-        
+
         if isinstance(mylist[0],list):
             if self.dtype=='int':
                 mylist=[map(int, i) for i in mylist]
@@ -1666,3 +1669,36 @@ class TrailerSliceRight(BasicSlice):
 class TrailerSliceLeft(BasicSlice):
     """Class representing a ."""
     pass
+
+class ThreadStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs  = kwargs.pop('lhs')
+        self.func = kwargs.pop('func')
+
+        super(ThreadStmt, self).__init__(**kwargs)
+
+    def update(self):
+        var_name = str(self.lhs)
+        if not(var_name in namespace):
+            insert_variable(var_name, datatype='int', rank=0)
+            self.stmt_vars.append(var_name)
+        else:
+            raise Exception('Already declared variable for thread_id.')
+
+    @property
+    def expr(self):
+        self.update()
+
+        var_name = str(self.lhs)
+        var = Symbol(var_name)
+
+        func = str(self.func)
+        if func == 'thread_id':
+            return ThreadID(var)
+        elif func == 'thread_number':
+            return ThreadsNumber(var)
+        else:
+            raise Exception('Wrong value for func.')

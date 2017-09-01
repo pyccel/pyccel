@@ -7,9 +7,9 @@
 n = int()
 m = int()
 p = int()
-n = 2000
-m = 4000
-p = 2000
+n = 200
+m = 400
+p = 200
 
 a = zeros(shape=(n,m), dtype=float)
 b = zeros(shape=(m,p), dtype=float)
@@ -18,12 +18,20 @@ c = zeros(shape=(n,p), dtype=float)
 x = 0
 y = 0
 
+#@ omp parallel private(t_id)
+nb_taches = thread_number()
+t_id = thread_id()
+print("> thread  id     = ", t_id)
+#@ omp end parallel
+print("> threads number = ", nb_taches)
+
 #@ omp parallel
 #@ omp do schedule(runtime)
 for i in range(0, n):
     for j in range(0, m):
         a[i,j] = i-j
 #@ omp end do nowait
+
 
 #@ omp do schedule(runtime)
 for i in range(0, m):

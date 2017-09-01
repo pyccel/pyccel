@@ -169,7 +169,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | AssignStmt | MultiAssignStmt)
+  (NumpyStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -189,6 +189,14 @@ ParameterValue:
 
 ParameterSingle: 
   label=ParameterTest '=' value=ParameterValue
+;
+
+ThreadStmt: 
+  lhs=ID '=' func=ThreadFunction LPAREN RPAREN 
+;
+
+ThreadFunction:
+  ('thread_id' | 'thread_number')
 ;
 
 NumpyZerosStmt: 

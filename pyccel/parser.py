@@ -15,6 +15,8 @@ from pyccel.syntax import (Pyccel, \
                            IfStmt, ForStmt, FunctionDefStmt,WhileStmt,\
                            ImportFromStmt, \
                            CommentStmt, SuiteStmt, \
+                           # Multi-threading
+                           ThreadStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -167,6 +169,8 @@ class PyccelParser(Parser):
                    IfStmt, ForStmt, FunctionDefStmt,WhileStmt, \
                    ImportFromStmt, \
                    CommentStmt, SuiteStmt, \
+                   # Multi-threading
+                   ThreadStmt, \
                    # python standard library statements
                    PythonPrintStmt, \
                    # numpy statments

@@ -122,6 +122,19 @@ class FCodePrinter(CodePrinter):
         txt   = str(expr.txt)
         return '!${0} {1}'.format(accel, txt)
 
+    def _print_ThreadID(self, expr):
+        lhs_code = self._print(expr.lhs)
+        func = 'omp_get_thread_num'
+        code = "{0} = {1}()".format(lhs_code, func)
+        return self._get_statement(code)
+
+    def _print_ThreadsNumber(self, expr):
+        lhs_code = self._print(expr.lhs)
+        func = 'omp_get_num_threads'
+        code = "{0} = {1}()".format(lhs_code, func)
+        return self._get_statement(code)
+
+
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)
