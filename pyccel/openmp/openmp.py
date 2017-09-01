@@ -385,7 +385,8 @@ def parse(filename, debug=False):
     d = {}
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
-            stmt.stmt.expr
+            e = stmt.stmt.expr
+            print(e)
 
 #            module = str(stmt.dotted_name.names[0])
 #            names  = [str(n) for n in stmt.import_as_names.names]
