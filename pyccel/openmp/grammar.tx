@@ -109,7 +109,7 @@ ScheduleClause:
 ;
 
 EndConstructClause:
-  'end' construct=OpenmpConstructs
+  'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?
 ;
 
 Schedule:

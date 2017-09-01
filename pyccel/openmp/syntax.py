@@ -127,6 +127,8 @@ class EndConstructClause(BasicStmt):
         """
         """
         self.construct = kwargs.pop('construct')
+        self.simd      = kwargs.pop('simd', '')
+        self.nowait    = kwargs.pop('nowait', '')
 
         super(EndConstructClause, self).__init__(**kwargs)
 
@@ -135,7 +137,7 @@ class EndConstructClause(BasicStmt):
         if DEBUG:
             print("> EndConstructClause: expr")
 
-        txt = 'end {}'.format(self.construct)
+        txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
         return AnnotatedComment('omp', txt)
 
 class ParallelNumThreadClause(BasicStmt):
