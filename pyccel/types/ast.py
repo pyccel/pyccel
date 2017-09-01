@@ -894,7 +894,7 @@ class NumpyArray(Basic):
             raise TypeError("cannot assign rhs of type %s." % type(rhs))
         if not isinstance(shape,tuple):
             raise TypeError("shape must be of type tuple")
-        
+
 
         return Basic.__new__(cls, lhs, rhs,shape)
 
@@ -1181,3 +1181,42 @@ class Rational(Basic):
     @property
     def denominator(self):
         return self._args[1]
+
+class Thread(Basic):
+    """Represents a thread function for code generation.
+
+    Parameters
+    ----------
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    Examples
+    --------
+
+    """
+
+    def __new__(cls, lhs):
+        lhs   = _sympify(lhs)
+
+        # Tuple of things that can be on the lhs of an assignment
+        if not isinstance(lhs, Symbol):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        return Basic.__new__(cls, lhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+
+class ThreadID(Thread):
+    """Represents a get thread id for code generation.
+    """
+    pass
+
+class ThreadsNumber(Thread):
+    """Represents a get threads number for code generation.
+    """
+    pass
