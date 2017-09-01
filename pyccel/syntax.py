@@ -35,7 +35,7 @@ __all__ = ["Pyccel", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
            "ImportFromStmt", \
            "ConstructorStmt", \
-           "CommentStmt", "AnnotatedStmt", \
+           "CommentStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -1471,35 +1471,6 @@ class CommentStmt(BasicStmt):
     def expr(self):
         self.update()
         return Comment(self.text)
-
-class AnnotatedStmt(BasicStmt):
-    """Class representing a ."""
-    def __init__(self, **kwargs):
-        """
-        """
-        self.accel      = kwargs.pop('accel')
-        self.do         = kwargs.pop('do', None)
-        self.end        = kwargs.pop('end', None)
-        self.parallel   = kwargs.pop('parallel', None)
-        self.section    = kwargs.pop('section',  None)
-        self.schedule   = kwargs.pop('schedule',  None)
-        self.visibility = kwargs.pop('visibility', None)
-        self.variables  = kwargs.pop('variables',  None)
-
-        super(AnnotatedStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        self.update()
-
-        return AnnotatedComment(accel=self.accel, \
-                                do=self.do, \
-                                end=self.end, \
-                                parallel=self.parallel, \
-                                section=self.section, \
-                                schedule=self.schedule, \
-                                visibility=self.visibility, \
-                                variables=self.variables)
 
 class SuiteStmt(BasicStmt):
     """Class representing a ."""

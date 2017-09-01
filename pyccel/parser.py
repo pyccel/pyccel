@@ -14,7 +14,7 @@ from pyccel.syntax import (Pyccel, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
                            IfStmt, ForStmt, FunctionDefStmt,WhileStmt,\
                            ImportFromStmt, \
-                           CommentStmt, AnnotatedStmt, SuiteStmt, \
+                           CommentStmt, SuiteStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -27,7 +27,25 @@ from pyccel.syntax import (Pyccel, \
                            TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                            )
 
-from textx.metamodel import metamodel_from_str
+from pyccel.openmp.openmp import (Openmp, OpenmpStmt, \
+                                  ParallelStmt, \
+                                  LoopStmt, \
+                                  ParallelNumThreadClause, \
+                                  ParallelDefaultClause, \
+                                  ParallelProcBindClause, \
+                                  PrivateClause, \
+                                  SharedClause, \
+                                  FirstPrivateClause, \
+                                  LastPrivateClause, \
+                                  CopyinClause, \
+                                  ReductionClause, \
+                                  CollapseClause, \
+                                  ScheduleClause, \
+                                  OrderedClause \
+                                 )
+
+
+from textx.metamodel import metamodel_from_file
 
 __all__ = ["PyccelParser", "ast_to_dict", "get_by_name"]
 
@@ -75,12 +93,8 @@ class Parser(object):
 
     >>> parser.parse_from_file("tests/inputs/1d/poisson.vl")
     """
-    def __init__(self, grammar=None, filename=None, \
-                 classes=None):
+    def __init__(self, filename, classes=None, debug=False):
         """Parser constructor.
-
-        grammar : str
-            abstract grammar describing the DSL.
 
         filename: str
             name of the file containing the abstract grammar.
@@ -88,30 +102,13 @@ class Parser(object):
         classes : list
             a list of Python classes to be used to describe the grammar. Take a
             look at TextX documentation for more details.
+
+        debug: bool
+            True if in debug mode.
         """
 
-        _grammar = grammar
-
         # ... read the grammar from a file
-        if not (filename is None):
-            dir_path = os.path.dirname(os.path.realpath(__file__))
-            filename = os.path.join(dir_path, filename)
-
-            f = open(filename)
-            _grammar = f.read()
-            _grammar.replace("\n", "")
-            f.close()
-        # ...
-
-        # ...
-        self.grammar = _grammar
-        # ...
-
-        # ...
-        if classes is None:
-            self.model = metamodel_from_str(_grammar)
-        else:
-            self.model = metamodel_from_str(_grammar, classes=classes)
+        self.model = metamodel_from_file(filename, debug=debug, classes=classes)
         # ...
 
     def parse(self, instructions):
@@ -168,7 +165,7 @@ class PyccelParser(Parser):
                    RaiseStmt, YieldStmt, ReturnStmt, \
                    IfStmt, ForStmt, FunctionDefStmt,WhileStmt, \
                    ImportFromStmt, \
-                   CommentStmt, AnnotatedStmt, SuiteStmt, \
+                   CommentStmt, SuiteStmt, \
                    # python standard library statements
                    PythonPrintStmt, \
                    # numpy statments
@@ -181,13 +178,30 @@ class PyccelParser(Parser):
                    TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                    ]
 
+        classes += [Openmp, OpenmpStmt, \
+                    ParallelStmt, \
+                    LoopStmt, \
+                    ParallelNumThreadClause, \
+                    ParallelDefaultClause, \
+                    ParallelProcBindClause, \
+                    PrivateClause, \
+                    SharedClause, \
+                    FirstPrivateClause, \
+                    LastPrivateClause, \
+                    CopyinClause, \
+                    ReductionClause, \
+                    CollapseClause, \
+                    ScheduleClause, \
+                    OrderedClause \
+                   ]
+
         try:
             filename = kwargs["filename"]
         except:
-            filename = "grammar.tx"
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            filename = os.path.join(dir_path, "grammar.tx")
 
-        super(PyccelParser, self).__init__(filename = filename, \
-                                         classes=classes)
+        super(PyccelParser, self).__init__(filename, classes=classes)
 
     def parse_from_file(self, filename):
         """Parse a set of instructions with respect to the grammar and returns

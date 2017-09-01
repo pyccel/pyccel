@@ -12,7 +12,7 @@ from pyccel.syntax import ( \
                            AssignStmt, MultiAssignStmt, \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
                            ImportFromStmt, \
-                           CommentStmt, AnnotatedStmt, \
+                           CommentStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -234,8 +234,8 @@ class Codegen(object):
         for stmt in ast.statements:
             if isinstance(stmt, CommentStmt):
                 body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, AnnotatedStmt):
-                body += printer(stmt.expr) + "\n"
+#            elif isinstance(stmt, AnnotatedStmt):
+#                body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ImportFromStmt):
                 imports += printer(stmt.expr) + "\n"
                 modules += stmt.dotted_name.names
