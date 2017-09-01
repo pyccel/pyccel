@@ -19,8 +19,11 @@ The following sentinels are recognized in fixed form source files::
 
   !$omp | c$omp | *$omp
 
-*parallel* Construct
-^^^^^^^^^^^^^^^^^^^^
+Constructs
+^^^^^^^^^^
+
+parallel
+________
 
 The syntax of the parallel construct is as follows::
 
@@ -44,8 +47,8 @@ The **end parallel** directive denotes the end of the **parallel** construct.
 
 .. todo:: add restrictions (page 49)
 
-*Loop* Construct
-^^^^^^^^^^^^^^^^
+Loop
+____
 
 The syntax of the loop construct is as follows::
 
@@ -66,8 +69,8 @@ where *clause* is one of the following::
 
 If an **end do** directive is not specified, an **end do** directive is assumed at the end of the do-loops.
 
-*sections* Construct
-^^^^^^^^^^^^^^^^^^^^
+sections
+________
 
 The syntax of the sections construct is as follows::
 
@@ -86,8 +89,8 @@ where *clause* is one of the following::
   lastprivate(list)
   reduction(reduction-identifier : list)
 
-*single* Construct
-^^^^^^^^^^^^^^^^^^
+single
+______
 
 The syntax of the single construct is as follows::
 
@@ -105,8 +108,8 @@ and *end_clause* is one of the following::
   copyprivate(list)
   nowait
 
-*workshare* Construct
-^^^^^^^^^^^^^^^^^^^^^
+workshare
+_________
 
 The syntax of the workshare construct is as follows::
 
@@ -126,8 +129,8 @@ The enclosed structured block must consist of only the following::
   critical constructs
   parallel constructs
 
-*simd* Construct
-^^^^^^^^^^^^^^^^
+simd
+____
 
 The syntax of the simd construct is as follows::
 
@@ -148,8 +151,8 @@ where *clause* is one of the following::
 
 If an **end simd** directive is not specified, an **end simd** directive is assumed at the end of the *do-loops*.
 
-*declare simd* Construct
-^^^^^^^^^^^^^^^^^^^^^^^^
+declare simd
+____________
 
 The syntax of the declare simd construct is as follows::
 
@@ -164,8 +167,8 @@ where *clause* is one of the following::
   inbranch
   notinbranch
 
-*Loop simd* Construct
-^^^^^^^^^^^^^^^^^^^^^
+Loop simd
+_________
 
 The syntax of the Loop simd construct is as follows::
 
