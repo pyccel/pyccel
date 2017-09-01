@@ -13,7 +13,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (HiddenStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | ConstructorStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
+  (AnnotatedStmt | CommentStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | ConstructorStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
 ;
 
 CompoundStmt:
@@ -79,11 +79,6 @@ YieldStmt:
 
 DelStmt:
   'del' variables*=ID[',']
-;
-
-HiddenStmt:
-  (AnnotatedStmt | CommentStmt)
-//  (CommentStmt | AnnotatedStmt)
 ;
 
 CommentStmt:
