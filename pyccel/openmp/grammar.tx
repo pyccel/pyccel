@@ -47,15 +47,14 @@ ParallelClause:
   ParallelProcBindClause
 ;
 
-// TODO: LinearClause
 LoopClause:
   PrivateClause
   |
   FirstPrivateClause
   |
   LastPrivateClause
-//  |
-//  LinearClause
+  |
+  LinearClause
   |
   ReductionClause
   |
@@ -110,6 +109,11 @@ ReductionClause:
 
 CollapseClause:
   'collapse' '(' n=INT ')'
+;
+
+// TODO: improve using lists. see specs
+LinearClause:
+  'linear' '(' val=ID ':' step=INT ')'
 ;
 
 OrderedClause:

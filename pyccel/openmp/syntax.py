@@ -99,6 +99,7 @@ class LoopStmt(BasicStmt):
                          ReductionClause, \
                          ScheduleClause, \
                          CollapseClause, \
+                         LinearClause, \
                          OrderedClause)
 
         txt = 'do'
@@ -350,6 +351,23 @@ class OrderedClause(BasicStmt):
         else:
             return 'ordered'
 
+class LinearClause(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.val  = kwargs.pop('val')
+        self.step = kwargs.pop('step')
+
+        super(LinearClause, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> LinearClause: expr")
+
+        return 'linear({0} : {1})'.format(self.val, self.step)
+
 
 class ScheduleClause(BasicStmt):
     """Class representing a ."""
@@ -378,7 +396,7 @@ def parse(filename, debug=False):
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
-    grammar = join(this_folder, 'openmp.tx')
+    grammar = join(this_folder, 'grammar.tx')
     classes = [Openmp, OpenmpStmt, \
                ParallelStmt, \
                LoopStmt, \
@@ -393,6 +411,7 @@ def parse(filename, debug=False):
                CopyinClause, \
                ReductionClause, \
                CollapseClause, \
+               LinearClause, \
                ScheduleClause, \
                OrderedClause \
               ]
@@ -401,17 +420,10 @@ def parse(filename, debug=False):
     # Instantiate model
     model = meta.model_from_file(filename)
 
-    d = {}
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
             e = stmt.stmt.expr
             print(e)
-
-#            module = str(stmt.dotted_name.names[0])
-#            names  = [str(n) for n in stmt.import_as_names.names]
-#            d[module] = names
-
-    return d
 
 ####################################
 if __name__ == '__main__':
