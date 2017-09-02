@@ -90,11 +90,6 @@ AnnotatedStmt:
   OpenmpStmt
 ;
 
-Accelerator:
-  ('omp' | 'acc')
-;
-
-
 ImportStmt: 
   ImportNameStmt | ImportFromStmt 
 ;

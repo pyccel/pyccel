@@ -3,7 +3,7 @@ Openmp:
 ;
 
 OpenmpStmt: 
-  '#@' 'omp' stmt=OpenmpConstruct
+  '#$' 'omp' stmt=OpenmpConstruct
 ;
 
 OpenmpConstruct:

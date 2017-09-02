@@ -18,24 +18,24 @@ c = zeros(shape=(n,p), dtype=float)
 x = 0
 y = 0
 
-#@ omp parallel
-#@ omp do schedule(runtime)
+#$ omp parallel
+#$ omp do schedule(runtime)
 for i in range(0, n):
     for j in range(0, m):
         a[i,j] = i-j
-#@ omp end do nowait
+#$ omp end do nowait
 
 
-#@ omp do schedule(runtime)
+#$ omp do schedule(runtime)
 for i in range(0, m):
     for j in range(0, p):
         b[i,j] = i+j
-#@ omp end do nowait
+#$ omp end do nowait
 
-#@ omp do schedule(runtime)
+#$ omp do schedule(runtime)
 for i in range(0, n):
     for j in range(0, p):
         for k in range(0, p):
             c[i,j] = c[i,j] + a[i,k]*b[k,j]
-#@ omp end do
-#@ omp end parallel
+#$ omp end do
+#$ omp end parallel
