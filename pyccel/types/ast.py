@@ -769,7 +769,7 @@ class LEN(Basic):
      @property
      def str(self):
         return 'size('+str(self._args[0])+',1)'
-    
+
 class Min(Basic):
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)
@@ -813,7 +813,7 @@ class NumpyZeros(Basic):
 
     shape : int or list of integers
 
- 
+
 
     """
 
@@ -821,9 +821,13 @@ class NumpyZeros(Basic):
     def __new__(cls, lhs, shape):
         lhs   = _sympify(lhs)
         if isinstance(shape, list):
-            shape = Tuple(*(_sympify(i) for i in shape))
+            # this is a correction. otherwise it is not working on LRZ
+            if isinstance(shape[0], list):
+                shape = Tuple(*(_sympify(i) for i in shape[0]))
+            else:
+                shape = Tuple(*(_sympify(i) for i in shape))
         elif isinstance(shape, int):
-            shape = Tuple(_sympify(shape))   
+            shape = Tuple(_sympify(shape))
         elif isinstance(shape, Basic) and not isinstance(shape,LEN):
             shape = str(shape)
         elif isinstance(shape,LEN):

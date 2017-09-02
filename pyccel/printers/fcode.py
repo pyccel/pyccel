@@ -139,10 +139,13 @@ class FCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)
 
+    def _print_Variable(self, expr):
+        return '{}'.format(expr.name)
+
     def _print_NumpyZeros(self, expr):
         lhs_code   = self._print(expr.lhs)
         if isinstance(expr.shape, Tuple):
-#            shape_code = ', '.join(self._print(i) for i in expr.shape)
+            # this is a correction. problem on LRZ
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
         elif isinstance(expr.shape,str):
             shape_code = '0:' + self._print(expr.shape) + '-1'
@@ -150,6 +153,7 @@ class FCodePrinter(CodePrinter):
             raise TypeError('Unknown type of shape'+str(type(expr.shape)))
 #        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
         return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
+
     def _print_NumpyOnes(self, expr):
         lhs_code   = self._print(expr.lhs)
 

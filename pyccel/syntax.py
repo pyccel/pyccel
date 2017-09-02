@@ -1205,13 +1205,7 @@ class NumpyZerosStmt(AssignStmt):
         self.parameters = kwargs.pop('parameters')
 
         labels = [str(p.label) for p in self.parameters]
-        values = []
-        for p in self.parameters:
-            if isinstance(p.value.value, ArgList):
-                v = p.value.value.args
-            else:
-                v = p.value.value
-            values.append(v)
+        values = [p.value.value for p in self.parameters]
         d = {}
         for (label, value) in zip(labels, values):
             d[label] = value
@@ -1224,6 +1218,10 @@ class NumpyZerosStmt(AssignStmt):
 
         try:
             self.shape = self.parameters['shape']
+            print("old .shape : ", self.shape)
+            if isinstance(self.shape, ArgList):
+                self.shape = self.shape.args
+            print("self.shape : ", self.shape)
         except:
             raise Exception('Expecting shape at position {}'
                             .format(self._tx_position))
@@ -1244,6 +1242,7 @@ class NumpyZerosStmt(AssignStmt):
             datatype = self.datatype
 
             rank = 0
+            print("ici : ", type(self.shape), self.shape)
             if isinstance(self.shape, int):
                 shape = self.shape
                 rank = 1
@@ -1261,7 +1260,10 @@ class NumpyZerosStmt(AssignStmt):
                         shape.append(namespace[s])
                     elif isinstance(s,FactorUnary):
                         shape.append(s.expr)
+#                    elif isinstance(s,ArgList):
+#                        shape.append(s.expr)
                     else:
+                        print ("> given type: ", type(s))
                         raise TypeError('Expecting a int, float or string')
                 rank = len(shape)
             elif isinstance(self.shape,FactorUnary):
@@ -1280,6 +1282,8 @@ class NumpyZerosStmt(AssignStmt):
                 if DEBUG:
                     print("> No Datatype is specified, int will be used.")
                 datatype = 'int'
+            elif isinstance(datatype, list):
+                datatype = datatype[0] # otherwise, it's not working on LRZ
             # TODO check if var is a return value
             insert_variable(var_name, \
                             datatype=datatype, \

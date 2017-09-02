@@ -183,7 +183,7 @@ NumpyStmt:
 ;
 
 ParameterValue:
-  (value=FactorUnary|value=IdentifierOrNumber |value=ArgList)
+  (value=FactorUnary | value=IdentifierOrNumber |value=ArgList)
 ;
 
 ParameterSingle: 
