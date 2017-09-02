@@ -932,7 +932,6 @@ class Operand(ExpressionElement):
         elif type(op) == list:
             # op is a list
             for O in op:
-                print(">>> o : ", O, type(O))
                 if O in namespace:
                     if isinstance(namespace[O], Number):
                         return namespace[O].expr

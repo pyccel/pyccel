@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from numpy import zeros
+#from numpy import zeros
 
 n = int()
 m = int()
