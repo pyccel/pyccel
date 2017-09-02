@@ -28,8 +28,6 @@ for i in range(0,n):
 
 #$omp do schedule(static)
 for i in range(1,n1):
-    i1 = int()
-    i1 = i-1
-    y[i] = z[i1] + a[i]
+    y[i] = z[i-1] + a[i]
 #$omp end do nowait
 #$omp end parallel
