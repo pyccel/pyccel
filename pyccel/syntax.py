@@ -932,6 +932,7 @@ class Operand(ExpressionElement):
         elif type(op) == list:
             # op is a list
             for O in op:
+                print(">>> o : ", O, type(O))
                 if O in namespace:
                     if isinstance(namespace[O], Number):
                         return namespace[O].expr
@@ -941,6 +942,10 @@ class Operand(ExpressionElement):
                     if DEBUG:
                         print ">>> found local variables: " + O
                     return Symbol(O)
+                elif type(O) == int:
+                    return Integer(O)
+                elif type(O) == float:
+                    return Float(O)
                 else:
                     raise Exception('Unknown variable "{}" at position {}'
                                     .format(O, self._tx_position))
