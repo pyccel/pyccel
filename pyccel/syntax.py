@@ -599,18 +599,19 @@ class ForStmt(BasicStmt):
         self.start    = kwargs.pop('start')
         self.end      = kwargs.pop('end')
         self.body     = kwargs.pop('body')
-
-        # TODO add step
-        self.step     = 1
+        self.step     = kwargs.pop('step', None)
 
         super(ForStmt, self).__init__(**kwargs)
 
     def update(self):
         # check that start and end were declared, if they are symbols
+        insert_variable(self.iterable, datatype='int')
 
+        # TODO do we have to insert them? or just to check they exist?
         insert_variable(self.start,    datatype='int')
         insert_variable(self.end,      datatype='int')
-        insert_variable(self.iterable, datatype='int')
+        if not(self.step is None):
+            insert_variable(self.step, datatype='int')
 
         self.local_vars.append(self.iterable)
 
@@ -619,6 +620,9 @@ class ForStmt(BasicStmt):
             self.local_vars.append(self.start)
         if not(type(self.end) in [int, float]):
             self.local_vars.append(self.end)
+        if not(self.step is None):
+            if not(type(self.step) in [int, float]):
+                self.local_vars.appstep(self.step)
 
     @property
     def expr(self):
@@ -640,13 +644,16 @@ class ForStmt(BasicStmt):
             except:
                 e = int(self.end)
 
-        if self.step in namespace:
-            s = namespace[self.step]
+        if self.step is None:
+            s = 1
         else:
-            try:
-                s = Symbol(self.step, integer=True)
-            except:
-                s = int(self.step)
+            if self.step in namespace:
+                s = namespace[self.step]
+            else:
+                try:
+                    s = Symbol(self.step, integer=True)
+                except:
+                    s = int(self.step)
 
         self.update()
 

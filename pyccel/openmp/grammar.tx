@@ -10,17 +10,23 @@ OpenmpConstruct:
   ParallelStmt 
   | 
   LoopStmt
+  | 
+  SingleStmt
   |
   EndConstructClause
 ;
 
 // TODO: add if parallel
 ParallelStmt:
-  'parallel' clauses*=ParallelClause[',']
+  'parallel' clauses*=ParallelClause
 ;
 
 LoopStmt:
-  'do' clauses*=LoopClause[',']
+  'do' clauses*=LoopClause
+;
+
+SingleStmt:
+  'single' clauses*=SingleClause
 ;
 
 ParallelClause:
@@ -41,15 +47,14 @@ ParallelClause:
   ParallelProcBindClause
 ;
 
-// TODO: LinearClause
 LoopClause:
   PrivateClause
   |
   FirstPrivateClause
   |
   LastPrivateClause
-//  |
-//  LinearClause
+  |
+  LinearClause
   |
   ReductionClause
   |
@@ -58,6 +63,12 @@ LoopClause:
   CollapseClause
   |
   OrderedClause
+;
+
+SingleClause:
+  PrivateClause
+  |
+  FirstPrivateClause
 ;
 
 ParallelNumThreadClause:
@@ -100,6 +111,11 @@ CollapseClause:
   'collapse' '(' n=INT ')'
 ;
 
+// TODO: improve using lists. see specs
+LinearClause:
+  'linear' '(' val=ID ':' step=INT ')'
+;
+
 OrderedClause:
   'ordered' ('(' n=INT ')')?
 ;
@@ -129,7 +145,7 @@ Status:
 ;
 
 OpenmpConstructs:
-  ('parallel' | 'do')
+  ('single' | 'parallel' | 'do')
 ;
 
 ThreadIndex:

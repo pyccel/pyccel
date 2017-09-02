@@ -42,6 +42,8 @@ class OpenmpStmt(BasicStmt):
             return stmt.expr
         elif isinstance(stmt, LoopStmt):
             return stmt.expr
+        elif isinstance(stmt, SingleStmt):
+            return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
@@ -59,29 +61,22 @@ class ParallelStmt(BasicStmt):
         if DEBUG:
             print("> ParallelStmt: expr")
 
-        prelude = 'parallel'
-        txt = ''
+        valid_clauses = (ParallelNumThreadClause, \
+                         ParallelDefaultClause, \
+                         PrivateClause, \
+                         SharedClause, \
+                         FirstPrivateClause, \
+                         CopyinClause, \
+                         ReductionClause, \
+                         ParallelProcBindClause)
+
+        txt = 'parallel'
         for clause in self.clauses:
-            if isinstance(clause, ParallelNumThreadClause):
-                txt = clause.expr
-            elif isinstance(clause, ParallelDefaultClause):
-                txt = clause.expr
-            elif isinstance(clause, PrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, SharedClause):
-                txt = clause.expr
-            elif isinstance(clause, FirstPrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, CopyinClause):
-                txt = clause.expr
-            elif isinstance(clause, ReductionClause):
-                txt = clause.expr
-            elif isinstance(clause, ParallelProcBindClause):
-                txt = clause.expr
+            if isinstance(clause, valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for ParallelStmt')
 
-        txt = '{0} {1}'.format(prelude, txt)
         return AnnotatedComment('omp', txt)
 
 class LoopStmt(BasicStmt):
@@ -98,27 +93,49 @@ class LoopStmt(BasicStmt):
         if DEBUG:
             print("> LoopStmt: expr")
 
-        prelude = 'do'
-        txt = ''
-        for clause in self.clauses:
-            if isinstance(clause, PrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, FirstPrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, LastPrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, ReductionClause):
-                txt = clause.expr
-            elif isinstance(clause, ScheduleClause):
-                txt = clause.expr
-            elif isinstance(clause, CollapseClause):
-                txt = clause.expr
-            elif isinstance(clause, OrderedClause):
-                txt = clause.expr
-            else:
-                raise TypeError('Wrong clause for LoopStmt')
+        valid_clauses = (PrivateClause, \
+                         FirstPrivateClause, \
+                         LastPrivateClause, \
+                         ReductionClause, \
+                         ScheduleClause, \
+                         CollapseClause, \
+                         LinearClause, \
+                         OrderedClause)
 
-        txt = '{0} {1}'.format(prelude, txt)
+        txt = 'do'
+        for clause in self.clauses:
+            if isinstance(clause, valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for LoopStmt. Given : ', \
+                                type(clause))
+
+        return AnnotatedComment('omp', txt)
+
+class SingleStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.clauses = kwargs.pop('clauses')
+
+        super(SingleStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> SingleStmt: expr")
+
+        valid_clauses = (PrivateClause, \
+                         FirstPrivateClause)
+
+        txt = 'single'
+        for clause in self.clauses:
+            if isinstance(clause, valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for SingleStmt')
+
         return AnnotatedComment('omp', txt)
 
 class EndConstructClause(BasicStmt):
@@ -331,9 +348,26 @@ class OrderedClause(BasicStmt):
             print("> OrderedClause: expr")
 
         if self.n:
-            return 'collapse({})'.format(self.n)
+            return 'ordered({})'.format(self.n)
         else:
-            return 'collapse()'
+            return 'ordered'
+
+class LinearClause(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.val  = kwargs.pop('val')
+        self.step = kwargs.pop('step')
+
+        super(LinearClause, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> LinearClause: expr")
+
+        return 'linear({0}:{1})'.format(self.val, self.step)
 
 
 class ScheduleClause(BasicStmt):
@@ -363,10 +397,11 @@ def parse(filename, debug=False):
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
-    grammar = join(this_folder, 'openmp.tx')
+    grammar = join(this_folder, 'grammar.tx')
     classes = [Openmp, OpenmpStmt, \
                ParallelStmt, \
                LoopStmt, \
+               SingleStmt, \
                ParallelNumThreadClause, \
                ParallelDefaultClause, \
                ParallelProcBindClause, \
@@ -377,6 +412,7 @@ def parse(filename, debug=False):
                CopyinClause, \
                ReductionClause, \
                CollapseClause, \
+               LinearClause, \
                ScheduleClause, \
                OrderedClause \
               ]
@@ -385,17 +421,10 @@ def parse(filename, debug=False):
     # Instantiate model
     model = meta.model_from_file(filename)
 
-    d = {}
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
             e = stmt.stmt.expr
             print(e)
-
-#            module = str(stmt.dotted_name.names[0])
-#            names  = [str(n) for n in stmt.import_as_names.names]
-#            d[module] = names
-
-    return d
 
 ####################################
 if __name__ == '__main__':

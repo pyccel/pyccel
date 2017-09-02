@@ -25,10 +25,10 @@ for i in range(1, n):
     b[i] = a[i] / 2.0 + a[i1] / 2.0
 #$ omp end do nowait
 
-#    y[i] = sqrt(z[i])
 
 #$ omp do
 for i in range(1, m):
-    y[i] = z[i]
+    t = z[i]
+    y[i] = sqrt(t)
 #$ omp end do nowait
 #$ omp end parallel
