@@ -16,11 +16,11 @@ OpenmpConstruct:
 
 // TODO: add if parallel
 ParallelStmt:
-  'parallel' clauses*=ParallelClause[',']
+  'parallel' clauses*=ParallelClause
 ;
 
 LoopStmt:
-  'do' clauses*=LoopClause[',']
+  'do' clauses*=LoopClause
 ;
 
 ParallelClause:

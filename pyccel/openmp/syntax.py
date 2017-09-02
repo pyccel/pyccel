@@ -59,29 +59,22 @@ class ParallelStmt(BasicStmt):
         if DEBUG:
             print("> ParallelStmt: expr")
 
-        prelude = 'parallel'
-        txt = ''
+        valid_clauses = (ParallelNumThreadClause, \
+                         ParallelDefaultClause, \
+                         PrivateClause, \
+                         SharedClause, \
+                         FirstPrivateClause, \
+                         CopyinClause, \
+                         ReductionClause, \
+                         ParallelProcBindClause)
+
+        txt = 'parallel'
         for clause in self.clauses:
-            if isinstance(clause, ParallelNumThreadClause):
-                txt = clause.expr
-            elif isinstance(clause, ParallelDefaultClause):
-                txt = clause.expr
-            elif isinstance(clause, PrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, SharedClause):
-                txt = clause.expr
-            elif isinstance(clause, FirstPrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, CopyinClause):
-                txt = clause.expr
-            elif isinstance(clause, ReductionClause):
-                txt = clause.expr
-            elif isinstance(clause, ParallelProcBindClause):
-                txt = clause.expr
+            if isinstance(clause, valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for ParallelStmt')
 
-        txt = '{0} {1}'.format(prelude, txt)
         return AnnotatedComment('omp', txt)
 
 class LoopStmt(BasicStmt):
@@ -98,27 +91,21 @@ class LoopStmt(BasicStmt):
         if DEBUG:
             print("> LoopStmt: expr")
 
-        prelude = 'do'
-        txt = ''
+        valid_clauses = (PrivateClause, \
+                         FirstPrivateClause, \
+                         LastPrivateClause, \
+                         ReductionClause, \
+                         ScheduleClause, \
+                         CollapseClause, \
+                         OrderedClause)
+
+        txt = 'do'
         for clause in self.clauses:
-            if isinstance(clause, PrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, FirstPrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, LastPrivateClause):
-                txt = clause.expr
-            elif isinstance(clause, ReductionClause):
-                txt = clause.expr
-            elif isinstance(clause, ScheduleClause):
-                txt = clause.expr
-            elif isinstance(clause, CollapseClause):
-                txt = clause.expr
-            elif isinstance(clause, OrderedClause):
-                txt = clause.expr
+            if isinstance(clause, valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for LoopStmt')
 
-        txt = '{0} {1}'.format(prelude, txt)
         return AnnotatedComment('omp', txt)
 
 class EndConstructClause(BasicStmt):
