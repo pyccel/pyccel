@@ -65,7 +65,6 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
 
-
 class Assign(Basic):
     """Represents variable assignment for code generation.
 
@@ -767,6 +766,10 @@ class LEN(Basic):
      @property
      def rhs(self):
         return self._args[0]
+     @property
+     def str(self):
+        return 'size('+str(self._args[0])+',1)'
+    
 class Min(Basic):
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)
@@ -810,14 +813,7 @@ class NumpyZeros(Basic):
 
     shape : int or list of integers
 
-    Examples
-    --------
-
-    >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
-    >>> x, y, z = symbols('x, y, z')
-    >>> Assign(x, y)
-    x := y
+ 
 
     """
 
@@ -826,8 +822,12 @@ class NumpyZeros(Basic):
         lhs   = _sympify(lhs)
         if isinstance(shape, list):
             shape = Tuple(*(_sympify(i) for i in shape))
-        elif isinstance(shape, Basic):
+        elif isinstance(shape, int):
+            shape = Tuple(_sympify(shape))   
+        elif isinstance(shape, Basic) and not isinstance(shape,LEN):
             shape = str(shape)
+        elif isinstance(shape,LEN):
+            shape=shape.str
         else:
             shape = shape
 
@@ -1144,7 +1144,7 @@ class Slice(Basic):
             end = sstr(self.end)
         return '{0} : {1}'.format(start, end)
 
-class Piecewise(Basic):
+class If(Basic):
     """Represents a if statement in the code.
 
     Parameters

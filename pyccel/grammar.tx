@@ -170,8 +170,12 @@ IdentifierOrNumber:
 ;
 
 ArgList:
-  LPAREN args+=IdentifierOrNumber[','] RPAREN
+  LPAREN args+=Args[','] RPAREN
 ;
+Args:
+  (FactorUnary|IdentifierOrNumber)
+;
+
 
 PythonStdLibStmt:
   (PythonPrintStmt)
@@ -193,7 +197,7 @@ NumpyStmt:
 ;
 
 ParameterValue:
-  (value=IdentifierOrNumber | value=ArgList)
+  (value=FactorUnary|value=IdentifierOrNumber |value=ArgList)
 ;
 
 ParameterSingle: 

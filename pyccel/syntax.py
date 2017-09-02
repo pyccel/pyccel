@@ -1,6 +1,6 @@
 # coding: utf-8
 from sympy import Symbol, sympify, Integer, Float, Add, Mul
-from sympy import true, false
+from sympy import true, false,pi
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
@@ -16,7 +16,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               MultiAssign, OutArgument, Result, \
                               FunctionDef, Import, Print, \
                               Comment, AnnotatedComment, \
-                              IndexedVariable, Slice, Piecewise, \
+                              IndexedVariable, Slice, If, \
                               Rational, NumpyZeros, NumpyLinspace, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
     IndexedElement)
@@ -62,6 +62,7 @@ operators = {}
 
 namespace["True"]  = true
 namespace["False"] = false
+namespace["pi"]=pi
 
 def Check_type(var_name,expr):
     datatype='int'
@@ -459,9 +460,9 @@ class IfStmt(BasicStmt):
             self.local_vars += self.body_false.local_vars
             body_false = self.body_false.expr
             self.stmt_vars  += self.body_false.stmt_vars
-            return Piecewise((test, body_true), (True, body_false))
+            return If((test, body_true), (True, body_false))
         else:
-            return Piecewise((test, body_true))
+            return If((test, body_true))
 
 class AssignStmt(BasicStmt):
     """Class representing a ."""
@@ -1135,8 +1136,11 @@ class NumpyZerosStmt(AssignStmt):
     def __init__(self, **kwargs):
         """
         """
+        
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
+       # print(self.parameters[0].value,'####')
+        #raise SystemExit()
 
         labels = [str(p.label) for p in self.parameters]
 #        values = [p.value.value for p in self.parameters]
@@ -1193,9 +1197,15 @@ class NumpyZerosStmt(AssignStmt):
 #                            raise Exception('Shape must be an integer.')
 
                         shape.append(namespace[s])
+                    elif isinstance(s,FactorUnary):
+                        shape.append(s.expr)
+                        
+                        
                     else:
                         raise TypeError('Expecting a int, float or string')
                 rank = len(shape)
+            elif isinstance(self.shape,FactorUnary):
+                 shape=self.shape.expr
             else:
                 shape = str(self.shape)
                 if shape in namespace:

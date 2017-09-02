@@ -109,9 +109,9 @@ class FCodePrinter(CodePrinter):
                 Str.append(self._print(f))
 
 
-        fs = ', '.join(Str)
+        fs = ','.join(Str)
 
-        return 'print * , {0} '.format(fs)
+        return 'print * ,{0} '.format(fs)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -151,13 +151,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyZeros(self, expr):
         lhs_code   = self._print(expr.lhs)
-
         if isinstance(expr.shape, Tuple):
 #            shape_code = ', '.join(self._print(i) for i in expr.shape)
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        else:
+        elif isinstance(expr.shape,str):
             shape_code = '0:' + self._print(expr.shape) + '-1'
-
+        else:
+            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
 #        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
         return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
     def _print_NumpyOnes(self, expr):
@@ -423,7 +423,7 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 'end do').format(test=expr.test,body=body)
 
-    def _print_Piecewise(self, expr):
+    def _print_If(self, expr):
         lines = []
         for i, (c, e) in enumerate(expr.args):
             if i == 0:
