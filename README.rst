@@ -291,3 +291,4 @@ BUGS
     n = int()
     n = 5.0d0
 
+- **sqrt** function does work on an indexed variable. Must check the other math functions and function calls and more generally expressions.
