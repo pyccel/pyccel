@@ -1218,10 +1218,12 @@ class NumpyZerosStmt(AssignStmt):
 
         try:
             self.shape = self.parameters['shape']
-            print("old .shape : ", self.shape)
-            if isinstance(self.shape, ArgList):
-                self.shape = self.shape.args
-            print("self.shape : ", self.shape)
+            # on LRZ, self.shape can be a list of ArgList
+            # this is why we do the following check
+            # maybe a bug in textX
+            if isinstance(self.shape, list):
+                if isinstance(self.shape[0], ArgList):
+                    self.shape = self.shape[0].args
         except:
             raise Exception('Expecting shape at position {}'
                             .format(self._tx_position))
@@ -1242,7 +1244,6 @@ class NumpyZerosStmt(AssignStmt):
             datatype = self.datatype
 
             rank = 0
-            print("ici : ", type(self.shape), self.shape)
             if isinstance(self.shape, int):
                 shape = self.shape
                 rank = 1
