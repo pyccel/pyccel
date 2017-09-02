@@ -346,9 +346,9 @@ class OrderedClause(BasicStmt):
             print("> OrderedClause: expr")
 
         if self.n:
-            return 'collapse({})'.format(self.n)
+            return 'ordered({})'.format(self.n)
         else:
-            return 'collapse()'
+            return 'ordered'
 
 
 class ScheduleClause(BasicStmt):
