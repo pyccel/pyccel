@@ -307,6 +307,18 @@ This will parse the *Python* file, generate the corresponding *Fortran* file and
 
 .. note:: **Openmp** is activated using the flag **--openmp** in the command line.
 
+The following plot shows the scalability of the generated code on **LRZ**.
+
+.. figure:: doc/include/openmp/matrix_product_scalability.png 
+   :scale: 50% 
+
+   Weak scalability on LRZ
+
+.. figure:: doc/include/openmp/matrix_product_speedup.png 
+   :scale: 50% 
+
+   Speedup on LRZ
+
 
 TODO
 ****
