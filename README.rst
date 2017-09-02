@@ -310,12 +310,12 @@ This will parse the *Python* file, generate the corresponding *Fortran* file and
 The following plot shows the scalability of the generated code on **LRZ**.
 
 .. figure:: doc/include/openmp/matrix_product_scalability.png 
-   :scale: 50% 
+   :scale: 25% 
 
    Weak scalability on LRZ
 
 .. figure:: doc/include/openmp/matrix_product_speedup.png 
-   :scale: 50% 
+   :scale: 25% 
 
    Speedup on LRZ
 
