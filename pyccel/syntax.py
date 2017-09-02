@@ -25,6 +25,9 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
 DEBUG = False
 #DEBUG = True
 
+# TODO: 1. check that every stmt is well implementing
+#          the local_vars and stmt_vars properties.
+
 __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", "FactorUnary", "FactorBinary", \
