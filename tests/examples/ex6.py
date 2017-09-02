@@ -1,8 +1,6 @@
 # coding: utf-8
 
-#from numpy import zeros
-#from numpy import linspace
-
+from numpy import zeros
 
 a = zeros(shape=64, dtype=float)
 b = zeros(shape=8, dtype=int)

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-#from numpy import zeros
+from numpy import zeros
 
 a = zeros(shape=10, dtype=float)
 for i in range(0,10):
