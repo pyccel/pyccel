@@ -32,6 +32,7 @@ from pyccel.syntax import (Pyccel, \
 from pyccel.openmp.syntax import (OpenmpStmt, \
                                   ParallelStmt, \
                                   LoopStmt, \
+                                  SingleStmt, \
                                   ParallelNumThreadClause, \
                                   ParallelDefaultClause, \
                                   ParallelProcBindClause, \
@@ -186,6 +187,7 @@ class PyccelParser(Parser):
         classes += [OpenmpStmt, \
                     ParallelStmt, \
                     LoopStmt, \
+                    SingleStmt, \
                     ParallelNumThreadClause, \
                     ParallelDefaultClause, \
                     ParallelProcBindClause, \

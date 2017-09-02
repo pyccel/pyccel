@@ -10,6 +10,8 @@ OpenmpConstruct:
   ParallelStmt 
   | 
   LoopStmt
+  | 
+  SingleStmt
   |
   EndConstructClause
 ;
@@ -21,6 +23,10 @@ ParallelStmt:
 
 LoopStmt:
   'do' clauses*=LoopClause
+;
+
+SingleStmt:
+  'single' clauses*=SingleClause
 ;
 
 ParallelClause:
@@ -58,6 +64,12 @@ LoopClause:
   CollapseClause
   |
   OrderedClause
+;
+
+SingleClause:
+  PrivateClause
+  |
+  FirstPrivateClause
 ;
 
 ParallelNumThreadClause:
@@ -129,7 +141,7 @@ Status:
 ;
 
 OpenmpConstructs:
-  ('parallel' | 'do')
+  ('single' | 'parallel' | 'do')
 ;
 
 ThreadIndex:

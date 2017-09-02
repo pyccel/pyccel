@@ -42,6 +42,8 @@ class OpenmpStmt(BasicStmt):
             return stmt.expr
         elif isinstance(stmt, LoopStmt):
             return stmt.expr
+        elif isinstance(stmt, SingleStmt):
+            return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
@@ -105,6 +107,32 @@ class LoopStmt(BasicStmt):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for LoopStmt')
+
+        return AnnotatedComment('omp', txt)
+
+class SingleStmt(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.clauses = kwargs.pop('clauses')
+
+        super(SingleStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> SingleStmt: expr")
+
+        valid_clauses = (PrivateClause, \
+                         FirstPrivateClause)
+
+        txt = 'single'
+        for clause in self.clauses:
+            if isinstance(clause, valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for SingleStmt')
 
         return AnnotatedComment('omp', txt)
 
@@ -354,6 +382,7 @@ def parse(filename, debug=False):
     classes = [Openmp, OpenmpStmt, \
                ParallelStmt, \
                LoopStmt, \
+               SingleStmt, \
                ParallelNumThreadClause, \
                ParallelDefaultClause, \
                ParallelProcBindClause, \
