@@ -290,8 +290,6 @@ class BasicStmt(object):
     def __init__(self, **kwargs):
         # TODO declarations and statements must be a dictionary
         self.statements   = []
-        self.stmt_vars    = []
-        self.local_vars   = []
 
     @property
     def declarations(self):
@@ -300,6 +298,16 @@ class BasicStmt(object):
     @property
     def local_declarations(self):
         return [declarations[v] for v in self.local_vars]
+
+    @property
+    def local_vars(self):
+        """must be defined byt the statement."""
+        return []
+
+    @property
+    def stmt_vars(self):
+        """must be defined byt the statement."""
+        return []
 
     def update(self):
         pass
@@ -457,12 +465,8 @@ class IfStmt(BasicStmt):
         self.update()
         test       = self.test.expr
         body_true  = self.body_true .expr
-        self.local_vars += self.body_true.local_vars
-        self.stmt_vars  += self.body_true.stmt_vars
         if not self.body_false==None:
-            self.local_vars += self.body_false.local_vars
             body_false = self.body_false.expr
-            self.stmt_vars  += self.body_false.stmt_vars
             return If((test, body_true), (True, body_false))
         else:
             return If((test, body_true))
@@ -477,8 +481,12 @@ class AssignStmt(BasicStmt):
         self.rhs = kwargs.pop('rhs')
         self.trailer = kwargs.pop('trailer', None)
 
-
         super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
 
     def update(self):
         # TODO default type?
@@ -511,7 +519,6 @@ class AssignStmt(BasicStmt):
                             datatype=d_var['datatype'],
                             allocatable=d_var['allocatable'],
                             shape=d_var['shape'])
-            self.stmt_vars.append(var_name)
 
 
     @property
@@ -557,6 +564,11 @@ class MultiAssignStmt(BasicStmt):
 
         super(MultiAssignStmt, self).__init__(**kwargs)
 
+    @property
+    def stmt_vars(self):
+        """."""
+        return self.lhs
+
     def update(self):
         datatype = 'float'
         name = str(self.name)
@@ -575,7 +587,6 @@ class MultiAssignStmt(BasicStmt):
                 # TODO get info from FunctionDefStmt
                 rank = 0
                 insert_variable(var_name, datatype=datatype, rank=rank)
-                self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
@@ -603,6 +614,20 @@ class ForStmt(BasicStmt):
 
         super(ForStmt, self).__init__(**kwargs)
 
+    @property
+    def local_vars(self):
+        """."""
+        return [self.iterable]
+
+    @property
+    def stmt_vars(self):
+        """."""
+        ls = []
+        for stmt in self.body.stmts:
+            ls += stmt.local_vars
+            ls += stmt.stmt_vars
+        return ls
+
     def update(self):
         # check that start and end were declared, if they are symbols
         insert_variable(self.iterable, datatype='int')
@@ -612,17 +637,6 @@ class ForStmt(BasicStmt):
         insert_variable(self.end,      datatype='int')
         if not(self.step is None):
             insert_variable(self.step, datatype='int')
-
-        self.local_vars.append(self.iterable)
-
-        # TODO to keep or remove?
-        if not(type(self.start) in [int, float]):
-            self.local_vars.append(self.start)
-        if not(type(self.end) in [int, float]):
-            self.local_vars.append(self.end)
-        if not(self.step is None):
-            if not(type(self.step) in [int, float]):
-                self.local_vars.appstep(self.step)
 
     @property
     def expr(self):
@@ -659,9 +673,6 @@ class ForStmt(BasicStmt):
 
         body = self.body.expr
 
-        self.local_vars += self.body.local_vars
-        self.stmt_vars  += self.body.stmt_vars
-
         return For(i, (b,e,s), body)
 
 class WhileStmt(BasicStmt):
@@ -682,9 +693,6 @@ class WhileStmt(BasicStmt):
         self.update()
 
         body = self.body.expr
-
-        self.local_vars += self.body.local_vars
-        self.stmt_vars  += self.body.stmt_vars
 
         return While(test, body)
 
@@ -1093,6 +1101,15 @@ class FunctionDefStmt(BasicStmt):
             else:
                 print("+++ found already declared argument : ", arg_name)
 
+    @property
+    def local_vars(self):
+        """."""
+        return self.body.local_vars
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return self.body.stmt_vars
 
     @property
     def expr(self):
@@ -1104,13 +1121,12 @@ class FunctionDefStmt(BasicStmt):
         args    = [variables[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
 
+        # ...
         results = []
-
-#        for stmt in self.body:
-#            if isinstance(stmt, list):
-#                body += [e.expr for e in stmt]
-#            elif not(isinstance(stmt, ReturnStmt)):
-#                body.append(stmt.expr)
+        for stmt in self.body.stmts:
+            if isinstance(stmt, ReturnStmt):
+                results += stmt.results
+        # ...
 
         # ... cleaning the namespace
         for arg_name in self.args:
@@ -1118,18 +1134,14 @@ class FunctionDefStmt(BasicStmt):
             variables.pop(arg_name)
             namespace.pop(arg_name)
 
-        for stmt in self.body.stmts:
-            if isinstance(stmt, AssignStmt):
-                var_name = stmt.lhs
-                var = variables.pop(var_name, None)
+        ls = self.local_vars + self.stmt_vars
+        for var_name in ls:
+            if var_name in namespace:
+                namespace.pop(var_name, None)
+                variables.pop(var_name, None)
                 dec = declarations.pop(var_name, None)
-
-                prelude.append(dec)
-            elif isinstance(stmt, ReturnStmt):
-                results += stmt.results
-                for var_name in stmt.variables:
-                    namespace.pop(var_name)
-
+                if dec:
+                    prelude.append(dec)
         # ...
 
         body = prelude + body
@@ -1146,7 +1158,7 @@ class NumpyZerosStmt(AssignStmt):
     def __init__(self, **kwargs):
         """
         """
-        
+
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
        # print(self.parameters[0].value,'####')
@@ -1179,6 +1191,11 @@ class NumpyZerosStmt(AssignStmt):
 
         super(AssignStmt, self).__init__(**kwargs)
 
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
     def update(self):
         var_name = self.lhs
         if not(var_name in namespace):
@@ -1209,8 +1226,8 @@ class NumpyZerosStmt(AssignStmt):
                         shape.append(namespace[s])
                     elif isinstance(s,FactorUnary):
                         shape.append(s.expr)
-                        
-                        
+
+
                     else:
                         raise TypeError('Expecting a int, float or string')
                 rank = len(shape)
@@ -1235,7 +1252,6 @@ class NumpyZerosStmt(AssignStmt):
                             datatype=datatype, \
                             rank=rank, \
                             allocatable=True,shape = self.shape)
-            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
@@ -1260,6 +1276,10 @@ class NumpyZerosLikeStmt(AssignStmt):
 
         super(AssignStmt, self).__init__(**kwargs)
 
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
 
     def update(self):
         var_name = self.lhs
@@ -1273,7 +1293,6 @@ class NumpyZerosLikeStmt(AssignStmt):
                             datatype=v.dtype, \
                             rank=v.rank, \
                             allocatable=v.allocatable,shape=v.shape)
-        self.stmt_vars.append(var_name)
 
 
 
@@ -1332,6 +1351,11 @@ class NumpyOnesStmt(AssignStmt):
 
         super(AssignStmt, self).__init__(**kwargs)
 
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
     def update(self):
         var_name = self.lhs
         if not(var_name in namespace):
@@ -1363,7 +1387,6 @@ class NumpyOnesStmt(AssignStmt):
                             datatype=datatype, \
                             rank=rank, \
                             allocatable=True,shape=self.shape)
-            self.stmt_vars.append(var_name)
 
     @property
     def expr(self):
@@ -1389,6 +1412,11 @@ class NumpyLinspaceStmt(AssignStmt):
         self.size  = kwargs.pop('size')
 
         super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
 
     def update(self):
         var_name = self.lhs
@@ -1448,6 +1476,11 @@ class NumpyArrayStmt(AssignStmt):
         super(AssignStmt, self).__init__(**kwargs)
 
 
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
 
     @property
     def expr(self):
@@ -1485,7 +1518,6 @@ class NumpyArrayStmt(AssignStmt):
                             datatype=datatype, \
                             rank=rank, \
                             allocatable=True,shape=self.shape)
-        self.stmt_vars.append(var_name)
 
 
 class ImportFromStmt(BasicStmt):
@@ -1560,11 +1592,26 @@ class SuiteStmt(BasicStmt):
 
         super(SuiteStmt, self).__init__(**kwargs)
 
-    def update(self):
+    @property
+    def local_vars(self):
+        """."""
+        ls = []
         for stmt in self.stmts:
-            if not(isinstance(stmt, ReturnStmt)):
-                self.local_vars += stmt.local_vars
-                self.stmt_vars  += stmt.stmt_vars
+            ls += stmt.local_vars
+        s = set(ls)
+        return list(s)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        ls = []
+        for stmt in self.stmts:
+            ls += stmt.stmt_vars
+        s = set(ls)
+        return list(s)
+
+    def update(self):
+        pass
 
     @property
     def expr(self):
@@ -1701,7 +1748,6 @@ class ThreadStmt(BasicStmt):
         var_name = str(self.lhs)
         if not(var_name in namespace):
             insert_variable(var_name, datatype='int', rank=0)
-            self.stmt_vars.append(var_name)
         else:
             raise Exception('Already declared variable for thread_id.')
 
