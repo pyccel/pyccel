@@ -1224,6 +1224,8 @@ class NumpyZerosStmt(AssignStmt):
             if isinstance(self.shape, list):
                 if isinstance(self.shape[0], ArgList):
                     self.shape = self.shape[0].args
+            elif isinstance(self.shape, ArgList):
+                self.shape = self.shape.args
         except:
             raise Exception('Expecting shape at position {}'
                             .format(self._tx_position))
@@ -1276,7 +1278,7 @@ class NumpyZerosStmt(AssignStmt):
                     # TODO compute rank
                     rank = 1
                 else:
-                    raise Exception('Wrong instance for shape.')
+                    raise Exception('Wrong instance for shape : '.format(type(self.shape)))
             self.shape = shape
 
             if datatype is None:
