@@ -12,13 +12,18 @@ from pyccel.syntax import ( \
                            AssignStmt, MultiAssignStmt, \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
                            ImportFromStmt, \
-                           CommentStmt, AnnotatedStmt, \
+                           CommentStmt, \
+                           # Multi-threading
+                           ThreadStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
                            NumpyZerosStmt, NumpyZerosLikeStmt, \
                            NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt \
                            )
+
+from pyccel.openmp.syntax import OpenmpStmt
+
 
 __all__ = ["PyccelCodegen"]
 
@@ -191,7 +196,7 @@ class Codegen(object):
         """Generate code as a module. Every extension must implement this method."""
         pass
 
-    def as_module(self):
+    def as_program(self):
         """Generate code as a program. Every extension must implement this method."""
         pass
 
@@ -234,8 +239,8 @@ class Codegen(object):
         for stmt in ast.statements:
             if isinstance(stmt, CommentStmt):
                 body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, AnnotatedStmt):
-                body += printer(stmt.expr) + "\n"
+#            elif isinstance(stmt, AnnotatedStmt):
+#                body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ImportFromStmt):
                 imports += printer(stmt.expr) + "\n"
                 modules += stmt.dotted_name.names
@@ -270,6 +275,10 @@ class Codegen(object):
             elif isinstance(stmt, ConstructorStmt):
                 # this statement does not generate any code
                 stmt.expr
+            elif isinstance(stmt, OpenmpStmt):
+                body += printer(stmt.expr) + "\n"
+            elif isinstance(stmt, ThreadStmt):
+                body += printer(stmt.expr) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)
@@ -316,7 +325,7 @@ class Codegen(object):
 
         self._code         = code
         self._filename_out = write_to_file(code, filename, language)
-        
+
 
         return code
 
@@ -403,9 +412,9 @@ def write_to_file(code, filename, language):
     f90_file = filename.split(".py")[0] + "." + ext
     f = open(f90_file, "w")
     for line in code:
-        f.write(line)   
+        f.write(line)
     f.close()
-    
+
 
     return f90_file
 # ...
@@ -528,7 +537,7 @@ class Compiler(object):
 
 # ...
 def build_file(filename, language, compiler, \
-               execute=False, accelerator = None, \
+               execute=False, accelerator=None, \
                debug=False, verbose=False, show=False, \
                inline=False, name="main"):
     """User friendly interface for code generation."""
@@ -539,12 +548,12 @@ def build_file(filename, language, compiler, \
     ms = []
     for module, names in imports.items():
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
-        codegen_m.doprint(language="fortran")
+        codegen_m.doprint(language=language, accelerator=accelerator)
         ms.append(codegen_m)
-        
-            
+
+
     codegen = FCodegen(filename=filename, name=name)
-    s=codegen.doprint(language="fortran")
+    s=codegen.doprint(language=language, accelerator=accelerator)
     if show:
         print('========Fortran_Code========')
         print(s)
@@ -552,18 +561,22 @@ def build_file(filename, language, compiler, \
         print ">>> Codegen :", name, " done."
 
     modules   = codegen.modules
-    
+
     # ...
 
     # ...
     if compiler:
         for codegen_m in ms:
-            compiler_m = Compiler(codegen_m, compiler="gfortran", debug=debug)
+            compiler_m = Compiler(codegen_m, \
+                                  compiler=compiler, \
+                                  accelerator=accelerator, \
+                                  debug=debug)
             compiler_m.compile(verbose=verbose)
 
         c = Compiler(codegen, \
                      compiler=compiler, \
                      inline=inline, \
+                     accelerator=accelerator, \
                      debug=debug)
         c.compile(verbose=verbose)
 

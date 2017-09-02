@@ -798,7 +798,7 @@ class Dot(Basic):
      @property
      def expr_r(self):
          return self.args[1]
-    
+
 
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
@@ -894,7 +894,7 @@ class NumpyArray(Basic):
             raise TypeError("cannot assign rhs of type %s." % type(rhs))
         if not isinstance(shape,tuple):
             raise TypeError("shape must be of type tuple")
-        
+
 
         return Basic.__new__(cls, lhs, rhs,shape)
 
@@ -1014,59 +1014,19 @@ class AnnotatedComment(Basic):
     accel : str
        accelerator id. One among {'omp', 'acc'}
 
-    do : bool
-        True if an do section. [Default= False]
-
-    end : bool
-        True if an end section. [Default= False]
-
-    parallel : bool
-        True if a parallel section. [Default= False]
-
-    section : str
-        section to parallelize. One among {'for'}. [Default= '']
-
-    visibility : str
-        selected visibility. One among {'shared', 'private'}. [Default= 'shared']
-
-    variables: list
-        list of variables names. (and not Symbols!)
-
+    txt: str
+        statement to print
     """
-    # TODO variables must be symbols
-
-    # since some arguments may be None, we need to define their default values
-    def __new__(cls, accel, do, end, parallel, section, visibility, variables):
-        return Basic.__new__(cls, accel, do, end, parallel, section, visibility, variables)
+    def __new__(cls, accel, txt):
+        return Basic.__new__(cls, accel, txt)
 
     @property
     def accel(self):
         return self._args[0]
 
     @property
-    def do(self):
+    def txt(self):
         return self._args[1]
-
-    @property
-    def end(self):
-        return self._args[2]
-
-    @property
-    def parallel(self):
-        return self._args[3]
-
-    @property
-    def section(self):
-        return self._args[4]
-
-    @property
-    def visibility(self):
-        return self._args[5]
-
-    @property
-    def variables(self):
-        return self._args[6]
-
 
 class IndexedVariable(IndexedBase):
     """Represents a Comment in the code.
@@ -1221,3 +1181,42 @@ class Rational(Basic):
     @property
     def denominator(self):
         return self._args[1]
+
+class Thread(Basic):
+    """Represents a thread function for code generation.
+
+    Parameters
+    ----------
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    Examples
+    --------
+
+    """
+
+    def __new__(cls, lhs):
+        lhs   = _sympify(lhs)
+
+        # Tuple of things that can be on the lhs of an assignment
+        if not isinstance(lhs, Symbol):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        return Basic.__new__(cls, lhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+
+class ThreadID(Thread):
+    """Represents a get thread id for code generation.
+    """
+    pass
+
+class ThreadsNumber(Thread):
+    """Represents a get threads number for code generation.
+    """
+    pass

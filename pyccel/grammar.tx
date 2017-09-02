@@ -1,3 +1,5 @@
+import openmp.grammar
+
 Pyccel:
   (statements*=Statement)
 ;
@@ -11,7 +13,7 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (HiddenStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | ConstructorStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
+  (AnnotatedStmt | CommentStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | ConstructorStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
 ;
 
 CompoundStmt:
@@ -79,30 +81,14 @@ DelStmt:
   'del' variables*=ID[',']
 ;
 
-HiddenStmt:
-  (AnnotatedStmt | CommentStmt)
-//  (CommentStmt | AnnotatedStmt)
-;
-
 CommentStmt:
 //  '#' text=/[^x].*$/  
   '#' text=/.*$/
 ;
 
 AnnotatedStmt:
-  '#@' accel=Accelerator 
-  (do='do')? 
-  (end='end')? 
-  (parallel='parallel')? 
-  (section='for')? 
-  (visibility='private'|'shared')? 
-  (LPAREN variables+=ID[','] RPAREN)?
+  OpenmpStmt
 ;
-
-Accelerator:
-  ('omp' | 'acc')
-;
-
 
 ImportStmt: 
   ImportNameStmt | ImportFromStmt 
@@ -182,7 +168,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | AssignStmt | MultiAssignStmt)
+  (NumpyStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -202,6 +188,14 @@ ParameterValue:
 
 ParameterSingle: 
   label=ParameterTest '=' value=ParameterValue
+;
+
+ThreadStmt: 
+  lhs=ID '=' func=ThreadFunction LPAREN RPAREN 
+;
+
+ThreadFunction:
+  ('thread_id' | 'thread_number')
 ;
 
 NumpyZerosStmt: 

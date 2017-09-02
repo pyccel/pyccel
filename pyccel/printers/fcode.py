@@ -118,32 +118,22 @@ class FCodePrinter(CodePrinter):
         return '! {0} '.format(txt)
 
     def _print_AnnotatedComment(self, expr):
-        accel      = self._print(expr.accel)
-        do         = self._print(expr.do)
-        end        = self._print(expr.end)
-        parallel   = self._print(expr.parallel)
-        section    = self._print(expr.section)
-        visibility = self._print(expr.visibility)
-        variables  = ', '.join(self._print(f) for f in expr.variables)
-        if len(variables) > 0:
-            variables  = '(' + variables + ')'
+        accel = self._print(expr.accel)
+        txt   = str(expr.txt)
+        return '!${0} {1}'.format(accel, txt)
 
-        if not do:
-            do = ''
+    def _print_ThreadID(self, expr):
+        lhs_code = self._print(expr.lhs)
+        func = 'omp_get_thread_num'
+        code = "{0} = {1}()".format(lhs_code, func)
+        return self._get_statement(code)
 
-        if not end:
-            end = ''
+    def _print_ThreadsNumber(self, expr):
+        lhs_code = self._print(expr.lhs)
+        func = 'omp_get_num_threads'
+        code = "{0} = {1}()".format(lhs_code, func)
+        return self._get_statement(code)
 
-        if not parallel:
-            parallel = ''
-
-        if not section:
-            section = ''
-
-        if not visibility:
-            visibility = ''
-
-        return '!${0} {1} {2} {3} {4} {5} {6}'.format(accel, do, end, parallel, section, visibility, variables)
 
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -183,7 +173,7 @@ class FCodePrinter(CodePrinter):
                                    (lhs_code, start_code, end_code, size_code))
     def _print_NumpyArray(self,expr):
         lhs_code   = self._print(expr.lhs)
-        
+
         if len(expr.shape)>1:
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
             st= ','.join(','.join(str(i) for i in array) for array in expr.rhs)
@@ -191,7 +181,7 @@ class FCodePrinter(CodePrinter):
             shape_code = '0:' + self._print(expr.shape[0]) + '-1'
             st=','.join(str(i) for i in expr.rhs)
         shape=','.join(str(i) for i in expr.shape)
-        
+
         return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
                                    "=reshape((/"+st+"/),(/%s/))"%(str(shape)))
     def _print_LEN(self,expr):
@@ -203,36 +193,36 @@ class FCodePrinter(CodePrinter):
     def _print_Min(self,expr):
         if isinstance(expr.expr_l,list):
             st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'
-    
+
         else:
             st_l=expr.expr_l
-        
+
         if isinstance(expr.expr_r,list):
             st_r='(/'+','.join([str(i) for i in expr.expr_r])+'/)'
-    
+
         else:
             st_r=expr.expr_r
         return self._get_statement('min(%s,%s)'%(st_l,st_r))
-        
-        
+
+
     def _print_Max(self,expr):
         if isinstance(expr.expr_l,list):
             st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'
-    
+
         else:
             st_l=expr.expr_l
-        
+
         if isinstance(expr.expr_r,list):
             st_r='(/'+','.join([str(i) for i in expr.expr_r])+'/)'
-    
+
         else:
             st_r=expr.expr_r
         return self._get_statement('max(%s,%s)'%(st_l,st_r))
-    
-    
+
+
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(expr.expr_l,expr.expr_r))
-        
+
 
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
