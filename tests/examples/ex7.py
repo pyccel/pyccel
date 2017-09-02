@@ -12,8 +12,7 @@ for i in range(0,9):
     a[i,i+1] = -1.0
 
 for i in range(0,9):
-    j = i+1
-    a[i,j] = -1.0
+    a[i,i+1] = -1.0
 
 n = 5
 for i in range(0, n):

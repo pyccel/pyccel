@@ -6,7 +6,7 @@ compiler = "--compiler=gfortran"
 execute  = ""
 show     = "--show"
 
-not_working = ["ex7.py","ex11.py"]
+not_working = ["ex11.py"]
 
 examples = []
 for i in range(1, 12 + 1):
