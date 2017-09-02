@@ -11,8 +11,6 @@ b = zeros(shape=n, dtype=float)
 #$ omp parallel
 #$ omp do
 for i in range(1, n):
-    i1 = i-1
-    i1 = int()
-    b[i] = a[i] / 2.0 + a[i1] / 2.0
+    b[i] = a[i] / 2.0 + a[i-1] / 2.0
 #$ omp end do
 #$ omp end parallel

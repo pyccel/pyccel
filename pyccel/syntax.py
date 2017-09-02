@@ -6,6 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
+from sympy import preorder_traversal
 from sympy import Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
               sec, tan, cot, asin, acsc, acos, asec, atan, acot, atan2,factorial
 
@@ -225,26 +226,40 @@ def do_arg(a):
         arg = a
     elif isinstance(a, Expression):
         arg = a.expr
-        try:
-            if not(isinstance(arg, Symbol)):
-                arg = Integer(arg)
-            else:
-                arg = Symbol(arg.name, integer=True)
-        except:
-            raise Exception('not available yet')
-#            rhs = a.expr
-#            # TODO ARA
-#            name = 'result_%d' % abs(hash(rhs))
-#            arg = Symbol(name, integer=True)
-#            var = Variable('int', arg)
-#            self.declarations.append(Declare('int', var))
-#            self.statements.append(Assign(arg, rhs))
+        if isinstance(arg, Symbol):
+            arg = Symbol(arg.name, integer=True)
+        else:
+            arg = convert_to_integer_expression(arg)
     else:
         raise Exception('Wrong instance in do_arg')
 
     return arg
 # ...
 
+# ...
+def is_integer_expression(expr):
+    """determines is an expression is an integer expression.
+    We check if there is an integer Symbol."""
+    for arg in preorder_traversal(expr):
+        if isinstance(arg, Symbol):
+            if arg.is_integer:
+                return True
+    return False
+# ...
+
+# ...
+def convert_to_integer_expression(expr):
+    numbers = []
+    for arg in preorder_traversal(expr):
+        if isinstance(arg, Float):
+            numbers.append(arg)
+    e = expr
+    for n in numbers:
+        e = e.subs(n, int(n))
+    return e
+# ...
+
+# ...
 class Pyccel(object):
     """Class for Pyccel syntax."""
     def __init__(self, **kwargs):
