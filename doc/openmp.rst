@@ -181,3 +181,124 @@ where *clause* can be any of the clauses accepted by the **simd** or **do** dire
 If an **end do simd** directive is not specified, an **end do simd** directive is assumed at the end of the do-loops.
 
 .. todo:: finish the specs and add more details.
+
+Data-Sharing Attribute Clauses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+default
+_______
+
+The syntax of the **default** clause is as follows::
+
+  default(private | firstprivate | shared | none)
+
+shared
+_______
+
+The syntax of the **shared** clause is as follows::
+
+  shared(list)
+
+private
+_______
+
+The syntax of the **private** clause is as follows::
+
+  private(list)
+
+firstprivate
+____________
+
+The syntax of the **firstprivate** clause is as follows::
+
+  firstprivate(list)
+
+lastprivate
+___________
+
+The syntax of the **lastprivate** clause is as follows::
+
+  lastprivate(list)
+
+reduction
+_________
+
+The syntax of the **reduction** clause is as follows::
+
+  reduction(reduction-identifier : list)
+
+linear
+______
+
+The syntax of the **linear** clause is as follows::
+
+  linear(linear-list[ : linear-step])
+
+where *linear-list* is one of the following::
+
+  list
+  modifier(list)
+
+where *modifier* is one of the following::
+
+  val
+
+Data Copying Clauses
+^^^^^^^^^^^^^^^^^^^^
+
+copyin
+______
+
+The syntax of the **copyin** clause is as follows::
+
+  copyin(list)
+
+copyprivate
+___________
+
+The syntax of the **copyprivate** clause is as follows::
+
+  copyprivate(list)
+
+Data-mapping Attribute Rules and Clauses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+map
+___
+
+The syntax of the *map* clause is as follows::
+
+  map([ [map-type-modifier[,]] map-type : ] list)
+
+where *map-type* is one of the following::
+
+  to
+  from
+  tofrom
+  alloc
+  release
+  delete
+
+and *map-type-modifier* is **always**.
+
+defaultmap
+__________
+
+The syntax of the *defaultmap* clause is as follows::
+
+  defaultmap(tofrom:scalar)
+
+declare reduction Directive
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The syntax of the *declare reduction* directive is as follows::
+
+  !$omp declare reduction(reduction-identifier : type-list : combiner)
+  [initializer-clause]
+
+where:
+
+1. *reduction-identifier* is either a base language identifier, or a user-defined operator, or one of the following operators: **+**, **-**, ***** , **.and.**, **.or.**, **.eqv.**, **.neqv.**, or one of the following intrinsic procedure names: **max**, **min**, **iand**, **ior**, **ieor**.
+2. *type-list* is a list of type specifiers
+3. *combiner* is either an assignment statement or a subroutine name followed by an argument list
+4. *initializer-clause* is **initializer** (*initializer-expr*), where *initializer-expr* is **omp_priv** = *expression* or *subroutine-name* (*argument-list*)
