@@ -26,7 +26,6 @@ for i in range(1, n):
 
 #$ omp do
 for i in range(1, m):
-    t = z[i]
-    y[i] = sqrt(t)
+    y[i] = sqrt(z[i])
 #$ omp end do nowait
 #$ omp end parallel

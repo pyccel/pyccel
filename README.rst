@@ -270,8 +270,6 @@ TODO
 
 - LAPACK
 
-- must rename *Piecewise* into *If* if we want to use it from sympy
-
 - symbolic expressions (find a way to use directly functions that are defined in *sympy*)
 
 BUGS
@@ -290,5 +288,3 @@ BUGS
 
     n = int()
     n = 5.0d0
-
-- **sqrt** function does work on an indexed variable. Must check the other math functions and function calls and more generally expressions.

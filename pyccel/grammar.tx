@@ -308,11 +308,11 @@ FactorSigned:
 ;
 
 FactorUnary:
-  name=UnaryOp LPAREN op=Operand (trailer=Trailer)? RPAREN
+  name=UnaryOp LPAREN op=Expression (trailer=Trailer)? RPAREN
 ;
 
 FactorBinary:
-  name=BinaryOp LPAREN op=Factor COMMA op=Factor RPAREN
+  name=BinaryOp LPAREN op=Expression COMMA op=Expression RPAREN
 ;
 
 Trailer: 
@@ -365,7 +365,7 @@ UnaryOp:
 ;
 
 BinaryOp:
-   ('pow' | 'rational'|'dot'|'min'|'max')
+   ('pow' | 'rational' | 'dot' | 'min' | 'max')
 ;
 
 EQ:
