@@ -251,6 +251,63 @@ Now, let us take a look at the *Fortran* file
 
   end
 
+Openmp examples
+^^^^^^^^^^^^^^^
+
+Matrix-Matrix product
+_____________________
+
+Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed below
+
+.. code-block:: python
+
+  from numpy import zeros
+
+  n = int()
+  m = int()
+  p = int()
+  n = 2000
+  m = 4000
+  p = 2000
+
+  a = zeros(shape=(n,m), dtype=float)
+  b = zeros(shape=(m,p), dtype=float)
+  c = zeros(shape=(n,p), dtype=float)
+
+  x = 0
+  y = 0
+
+  #$ omp parallel
+  #$ omp do schedule(runtime)
+  for i in range(0, n):
+      for j in range(0, m):
+          a[i,j] = i-j
+  #$ omp end do nowait
+
+
+  #$ omp do schedule(runtime)
+  for i in range(0, m):
+      for j in range(0, p):
+          b[i,j] = i+j
+  #$ omp end do nowait
+
+  #$ omp do schedule(runtime)
+  for i in range(0, n):
+      for j in range(0, p):
+          for k in range(0, p):
+              c[i,j] = c[i,j] + a[i,k]*b[k,j]
+  #$ omp end do
+  #$ omp end parallel
+
+Now, run the command::
+
+  pyccel --language="fortran" --compiler="gfortran" --openmp --filename=tests/examples/openmp/matrix_product.py
+
+This will parse the *Python* file, generate the corresponding *Fortran* file and compile it. 
+
+.. note:: **Openmp** is activated using the flag **--openmp** in the command line.
+
+
 TODO
 ****
 
