@@ -456,12 +456,23 @@ class IfStmt(BasicStmt):
         self.body_false = kwargs.pop('body_false')
         self.test       = kwargs.pop('test')
 
-
         super(IfStmt, self).__init__(**kwargs)
 
     @property
-    def expr(self):
+    def stmt_vars(self):
+        """."""
+        ls = []
+        for stmt in self.body_true.stmts:
+            ls += stmt.local_vars
+            ls += stmt.stmt_vars
+        if not self.body_false==None:
+            for stmt in self.body_false.stmts:
+                ls += stmt.local_vars
+                ls += stmt.stmt_vars
+        return ls
 
+    @property
+    def expr(self):
         self.update()
         test       = self.test.expr
         body_true  = self.body_true .expr
@@ -680,11 +691,19 @@ class WhileStmt(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-
         self.test     = kwargs.pop('test')
         self.body     = kwargs.pop('body')
 
         super(WhileStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        ls = []
+        for stmt in self.body.stmts:
+            ls += stmt.local_vars
+            ls += stmt.stmt_vars
+        return ls
 
     @property
     def expr(self):
