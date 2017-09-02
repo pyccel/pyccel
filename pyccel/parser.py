@@ -43,6 +43,7 @@ from pyccel.openmp.syntax import (OpenmpStmt, \
                                   CopyinClause, \
                                   ReductionClause, \
                                   CollapseClause, \
+                                  LinearClause, \
                                   ScheduleClause, \
                                   OrderedClause, \
                                   EndConstructClause
@@ -198,6 +199,7 @@ class PyccelParser(Parser):
                     CopyinClause, \
                     ReductionClause, \
                     CollapseClause, \
+                    LinearClause, \
                     ScheduleClause, \
                     OrderedClause, \
                     EndConstructClause

@@ -107,7 +107,8 @@ class LoopStmt(BasicStmt):
             if isinstance(clause, valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for LoopStmt')
+                raise TypeError('Wrong clause for LoopStmt. Given : ', \
+                                type(clause))
 
         return AnnotatedComment('omp', txt)
 
@@ -366,7 +367,7 @@ class LinearClause(BasicStmt):
         if DEBUG:
             print("> LinearClause: expr")
 
-        return 'linear({0} : {1})'.format(self.val, self.step)
+        return 'linear({0}:{1})'.format(self.val, self.step)
 
 
 class ScheduleClause(BasicStmt):
