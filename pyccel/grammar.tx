@@ -152,7 +152,7 @@ Constructor:
 ;
 
 IdentifierOrNumber:
-  (NUMBER | ID)
+  (IntOrFloat | ID)
 ;
 
 ArgList:
@@ -352,7 +352,10 @@ Matrix:
 ;
 
 Operand: 
-  (op=NUMBER) | (op=ID) | (op=BOOLEAN)|(op=Array)
+  (op=IntOrFloat) | (op=ID) | (op=BOOLEAN)|(op=Array)
+;
+IntOrFloat:
+/[.0-9]+/?
 ;
 
 BOOLEAN:

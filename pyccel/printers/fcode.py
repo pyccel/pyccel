@@ -141,15 +141,16 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyZeros(self, expr):
         lhs_code   = self._print(expr.lhs)
+
         if isinstance(expr.shape, Tuple):
 #            shape_code = ', '.join(self._print(i) for i in expr.shape)
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        elif isinstance(expr.shape,str):
-            shape_code = '0:' + self._print(expr.shape) + '-1'
         else:
-            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
+            shape_code = '0:' + self._print(expr.shape) + '-1'
+
 #        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
         return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
+
     def _print_NumpyOnes(self, expr):
         lhs_code   = self._print(expr.lhs)
 

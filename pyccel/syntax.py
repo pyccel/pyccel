@@ -640,6 +640,33 @@ class ForStmt(BasicStmt):
         self.end      = kwargs.pop('end')
         self.body     = kwargs.pop('body')
         self.step     = kwargs.pop('step', None)
+        self.start
+        
+        if type(self.start)==str:
+            try:
+                start_temp=int(self.start)
+            except:
+                try:
+                    start_temp=float(self.start)
+                except:
+                    pass
+            try:
+                self.start=start_temp
+            except:
+                pass
+
+        if type(self.end)==str:
+            try:
+                end_temp=int(self.end)
+            except:
+                try:
+                    end_temp=float(self.end)
+                except:
+                    pass
+            try:
+                self.end=end_temp
+            except:
+                pass
 
         super(ForStmt, self).__init__(**kwargs)
 
@@ -922,13 +949,25 @@ class Operand(ExpressionElement):
             print self.op
 #        op = self.op[0]
         op = self.op
+        if type(op)==str:
+            try:
+                op_temp=int(op)
+            except:
+                try:
+                    op_temp=float(op)
+                except:
+                    pass
+            try:
+                op=op_temp
+            except:
+                pass
+                
+                
+            
         if type(op) == float:
-            if sympify(op).is_integer:
-#                print "> found int ",Integer(op)
-                return Integer(op)
-            else:
-#                print "> found float ",Float(op)
-                return Float(op)
+            return Float(op)
+        elif type(op)==int:
+            return Integer(op)
         elif type(op) == list:
             # op is a list
             for O in op:
@@ -1209,6 +1248,230 @@ class NumpyZerosStmt(AssignStmt):
                 v = p.value.value.args
             except:
                 v = p.value.value
+            v_temp=''
+            if type(v)==str:
+                try:
+                    v_temp=int(v)
+                except:
+                    try:
+                        v_temp=float(v)
+                    except:
+                        pass
+            if not type(v_temp)==str:
+                v=v_temp
+                   
+                
+                        
+            elif type(v)==list and type(v[0])==str:
+                for i in range(0,len(v)):
+                    v_temp=''
+                    try:
+                        v_temp=int(v[i])
+                    except:
+                            try:
+                                v_temp=float(v[i])
+                            except:
+                                    pass
+                    if not type(v_temp)==str:
+                        v[i]=v_temp
+                    
+                    
+            
+                
+            values.append(v)
+        d = {}
+        for (label, value) in zip(labels, values):
+            d[label] = value
+        self.parameters = d
+
+        try:
+            self.datatype = self.parameters['dtype']
+        except:
+            self.datatype = 'float'
+
+        try:
+            self.shape = self.parameters['shape']
+        except:
+            raise Exception('Expecting shape at position {}'
+                            .format(self._tx_position))
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+            datatype = self.datatype
+
+            rank = 0
+            if isinstance(self.shape, int):
+                shape = self.shape
+                rank = 1
+            elif isinstance(self.shape, float):
+                shape = int(self.shape)
+                rank = 1
+            elif isinstance(self.shape, list):
+                shape = []
+                for s in self.shape:
+                    if isinstance(s, (int, float)):
+                        shape.append(int(s))
+                    elif isinstance(s, str):
+                        if not(s in namespace):
+                            raise Exception('Could not find shape variable.')
+
+#                        if not(variables[s].dtype == 'int'):
+#                            raise Exception('Shape must be an integer.')
+
+                        shape.append(namespace[s])
+                    elif isinstance(s,FactorUnary):
+                        shape.append(s.expr)
+
+
+                    else:
+                        raise TypeError('Expecting a int, float or string')
+                rank = len(shape)
+            elif isinstance(self.shape,FactorUnary):
+                 shape=self.shape.expr
+                 rank = 1
+            else:
+                shape = str(self.shape)
+                if shape in namespace:
+                    shape = namespace[shape]
+                    # TODO compute rank
+                    rank = 1
+                else:
+                    raise Exception('Wrong instance for shape.')
+            self.shape = shape
+
+            if datatype is None:
+                if DEBUG:
+                    print("> No Datatype is specified, int will be used.")
+                datatype = 'int'
+            # TODO check if var is a return value
+            insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True,shape = self.shape)
+
+    @property
+    def expr(self):
+        self.update()
+
+        shape = self.shape
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        stmt = NumpyZeros(var, shape)
+
+        return stmt
+
+class NumpyZerosLikeStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs = kwargs.pop('lhs')
+        self.rhs = kwargs.pop('rhs')
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+        v=variables[self.rhs]
+
+
+        insert_variable(var_name, \
+                            datatype=v.dtype, \
+                            rank=v.rank, \
+                            allocatable=v.allocatable,shape=v.shape)
+
+
+
+
+
+    @property
+    def expr(self):
+        self.update()
+        v=variables[self.rhs]
+        shape = v.shape
+
+
+
+        if shape==None:
+            shape=1
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        stmt = NumpyZeros(var, shape)
+
+        return stmt
+
+class NumpyOnesStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+
+        self.lhs        = kwargs.pop('lhs')
+        self.parameters = kwargs.pop('parameters')
+       # print(self.parameters[0].value,'####')
+        #raise SystemExit()
+
+        labels = [str(p.label) for p in self.parameters]
+#        values = [p.value.value for p in self.parameters]
+        values = []
+        for p in self.parameters:
+            try:
+                v = p.value.value.args
+            except:
+                v = p.value.value
+            v_temp=''
+            if type(v)==str:
+                try:
+                    v_temp=int(v)
+                except:
+                    try:
+                        v_temp=float(v)
+                    except:
+                        pass
+            if not type(v_temp)==str:
+                v=v_temp
+                   
+                
+                        
+            elif type(v)==list and type(v[0])==str:
+                for i in range(0,len(v)):
+                    v_temp=''
+                    try:
+                        v_temp=int(v[i])
+                    except:
+                            try:
+                                v_temp=float(v[i])
+                            except:
+                                    pass
+                    if not type(v_temp)==str:
+                        v[i]=v_temp
+                    
+                    
+            
+                
             values.append(v)
         d = {}
         for (label, value) in zip(labels, values):
@@ -1299,145 +1562,10 @@ class NumpyZerosStmt(AssignStmt):
         var_name = self.lhs
         var = Symbol(var_name)
 
-        stmt = NumpyZeros(var, shape)
-
-        return stmt
-
-class NumpyZerosLikeStmt(AssignStmt):
-    """Class representing a ."""
-    def __init__(self, **kwargs):
-        """
-        """
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = kwargs.pop('rhs')
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """."""
-        return [self.lhs]
-
-    def update(self):
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-        v=variables[self.rhs]
-
-
-        insert_variable(var_name, \
-                            datatype=v.dtype, \
-                            rank=v.rank, \
-                            allocatable=v.allocatable,shape=v.shape)
-
-
-
-
-
-    @property
-    def expr(self):
-        self.update()
-        v=variables[self.rhs]
-        shape = v.shape
-
-
-
-        if shape==None:
-            shape=1
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        stmt = NumpyZeros(var, shape)
-
-        return stmt
-
-class NumpyOnesStmt(AssignStmt):
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.parameters = kwargs.pop('parameters')
-
-        labels = [str(p.label) for p in self.parameters]
-#        values = [p.value.value for p in self.parameters]
-        values = []
-        for p in self.parameters:
-            try:
-                v = p.value.value.args
-            except:
-                v = p.value.value
-            values.append(v)
-        d = {}
-        for (label, value) in zip(labels, values):
-            d[label] = value
-        self.parameters = d
-
-        try:
-            self.datatype = self.parameters['dtype']
-        except:
-            self.datatype = 'float'
-
-        try:
-            self.shape = self.parameters['shape']
-        except:
-            raise Exception('Expecting shape at position {}'
-                            .format(self._tx_position))
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """."""
-        return [self.lhs]
-
-    def update(self):
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-
-            datatype = self.datatype
-
-            rank = 0
-            if isinstance(self.shape, int):
-                shape = self.shape
-                rank = 1
-            elif isinstance(self.shape, float):
-                shape = int(self.shape)
-                rank = 1
-            elif isinstance(self.shape, list):
-                shape = [int(s) for s in self.shape]
-                rank = len(shape)
-            else:
-                raise Exception('Wrong instance for shape.')
-            self.shape = shape
-
-            if datatype is None:
-                if DEBUG:
-                    print("> No Datatype is specified, int will be used.")
-                datatype = 'int'
-            # TODO check if var is a return value
-            insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape=self.shape)
-
-    @property
-    def expr(self):
-        self.update()
-
-        shape = self.shape
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
         stmt = NumpyOnes(var, shape)
 
         return stmt
-
+    
 class NumpyLinspaceStmt(AssignStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):

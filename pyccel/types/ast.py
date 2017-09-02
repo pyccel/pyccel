@@ -458,6 +458,7 @@ F    """
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
+            print(dtype,'dtype')
             raise TypeError("datatype must be an instance of DataType.")
         if isinstance(name, str):
             name = Symbol(name)
