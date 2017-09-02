@@ -25,6 +25,7 @@ from pyccel.syntax import (Pyccel, \
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
+                           ArgList, \
                            Trailer, TrailerArgList, TrailerSubscriptList, \
                            TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                            )
@@ -181,6 +182,7 @@ class PyccelParser(Parser):
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers
+                   ArgList, \
                    Trailer, TrailerArgList, TrailerSubscriptList, \
                    TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                    ]

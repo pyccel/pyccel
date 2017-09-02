@@ -53,6 +53,7 @@ __all__ = ["Pyccel", \
            # Test
            "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
            # Trailers
+           "ArgList", \
            "Trailer", "TrailerArgList", "TrailerSubscriptList", \
            "TrailerSlice", "TrailerSliceRight", "TrailerSliceLeft"
            ]
@@ -1202,16 +1203,13 @@ class NumpyZerosStmt(AssignStmt):
 
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
-       # print(self.parameters[0].value,'####')
-        #raise SystemExit()
 
         labels = [str(p.label) for p in self.parameters]
-#        values = [p.value.value for p in self.parameters]
         values = []
         for p in self.parameters:
-            try:
+            if isinstance(p.value.value, ArgList):
                 v = p.value.value.args
-            except:
+            else:
                 v = p.value.value
             values.append(v)
         d = {}
@@ -1260,15 +1258,9 @@ class NumpyZerosStmt(AssignStmt):
                     elif isinstance(s, str):
                         if not(s in namespace):
                             raise Exception('Could not find shape variable.')
-
-#                        if not(variables[s].dtype == 'int'):
-#                            raise Exception('Shape must be an integer.')
-
                         shape.append(namespace[s])
                     elif isinstance(s,FactorUnary):
                         shape.append(s.expr)
-
-
                     else:
                         raise TypeError('Expecting a int, float or string')
                 rank = len(shape)
@@ -1806,3 +1798,25 @@ class ThreadStmt(BasicStmt):
             return ThreadsNumber(var)
         else:
             raise Exception('Wrong value for func.')
+
+class ArgList(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args', None)
+
+        super(ArgList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        ls = []
+        for arg in self.args:
+            if isinstance(arg, FactorUnary):
+                ls.append(arg.expr)
+            else:
+                if arg in namespace:
+                    ls.append(variables[arg])
+                else:
+                    ls.append(arg)
+        return ls
