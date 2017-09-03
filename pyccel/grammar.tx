@@ -329,7 +329,7 @@ TrailerSubscriptList:
 ;
 
 TrailerSubscript: 
-  (Expression | TrailerSlice | TrailerSliceLeft | TrailerSliceRight)
+  (TrailerSlice | TrailerSliceLeft | TrailerSliceRight|Expression)
 ;
 
 TrailerSliceLeft:

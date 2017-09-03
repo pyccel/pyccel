@@ -79,9 +79,9 @@ def Check_type(var_name,expr):
     s=[]
     def pre(expr):
 
-
         if(type(expr)==Indexed) or type(expr)==IndexedElement:
-            s.append((expr.args[0],expr.args[1]))
+            element=list([expr.args[i] for i in range(0,len(expr.args))])
+            s.append(element)
             return
 
 
@@ -91,11 +91,26 @@ def Check_type(var_name,expr):
             pre(arg)
 
     pre(expr.expr)
-
     if isinstance(expr,Expression):
         for i in s:
-            if isinstance(i,tuple):
-                if isinstance(i[0],IndexedBase)and isinstance(i[1],Slice):
+            if isinstance(i,list):
+                import numpy as np
+                anySlice=[isinstance(i[j],Slice) for j in range(1,len(i))]
+                SliceIndex=np.where(anySlice)[0]
+                temp1=variables[str(i[0])].shape
+                for j in SliceIndex:
+                    slice_start=i[j+1].start
+                    slice_end=i[j+1].end
+                    if i[j+1].start==None:
+                        slice_start=0
+                    if i[j+1].end==None:
+                        if isinstance(temp1,(list,tuple)):
+                            slice_end=temp1[j]
+                        else:
+                            slice_end=temp1
+                    i[j+1]=Slice(slice_start,slice_end)     
+                
+                if isinstance(i[0],IndexedBase)and any(anySlice):
                      if variables[str(i[0])].dtype=='float':
                          datatype='float'
                      if  variables[str(i[0])].allocatable:
@@ -103,11 +118,11 @@ def Check_type(var_name,expr):
 
 
                      if not variables[str(i[0])].shape==None:
-                            temp1=variables[str(i[0])].shape
-                            if(isinstance(temp1,tuple)):
+                            
+                            if isinstance(temp1,(tuple,list)):
                                 rank=len(temp1)
-                                if all(i[k].start>=0 and i[k].end<=temp1[k-1] for k in range(1,rank+1)):
-                                   shape.append(tuple([i[k].end-i[k].start for k in range(1,rank+1)]))
+                                if all(i[k+1].start>=0 and i[k+1].end<=temp1[k] for k in SliceIndex):
+                                   shape.append(tuple([i[k+1].end-i[k+1].start for k in SliceIndex]))
                                 else:
                                     raise TypeError('dimension mismatch')
                             elif isinstance(temp1,int):
@@ -118,7 +133,7 @@ def Check_type(var_name,expr):
                             else:
                                 raise TypeError('shape must be an int or a tuple of int')
                      else:
-                         raise TypeError('dimension mismatch')
+                         raise TypeError('variable doesnt have a shape')
                 elif isinstance(i[0],IndexedBase)and i[1].is_integer:
                     datatype=variables[str(i[0])].dtype
             elif isinstance(i,Symbol):
@@ -135,13 +150,14 @@ def Check_type(var_name,expr):
     if len(shape)>0:
         if all(x==shape[0] for x in shape):
             shape=shape[0]
+            print(shape,type(shape))
 
             if isinstance(shape,(tuple,list)):
                 shape=tuple(map(int,shape))
                 rank=len(shape)
             elif isinstance(shape,int):
                 rank=1
-            elif isinstance(shape,Symbol):
+            elif isinstance(shape,Symbol) or isinstance(shape,Integer) :
                 if shape.is_integer:
                     rank=1
                     shape=int(shape)
@@ -208,6 +224,7 @@ def insert_variable(var_name, \
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
+    print(dec)
 
     if var_name in namespace:
         namespace.pop(var_name)
