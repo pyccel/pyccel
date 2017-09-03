@@ -20,6 +20,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
+                              Stencil, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
     IndexedElement)
 
@@ -45,6 +46,7 @@ __all__ = ["Pyccel", \
            "CommentStmt", \
            # Multi-threading
            "ThreadStmt", \
+           "StencilStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -53,6 +55,7 @@ __all__ = ["Pyccel", \
            # Test
            "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
            # Trailers
+           "ArgList", \
            "Trailer", "TrailerArgList", "TrailerSubscriptList", \
            "TrailerSlice", "TrailerSliceRight", "TrailerSliceLeft"
            ]
@@ -108,8 +111,8 @@ def Check_type(var_name,expr):
                             slice_end=temp1[j]
                         else:
                             slice_end=temp1
-                    i[j+1]=Slice(slice_start,slice_end)     
-                
+                    i[j+1]=Slice(slice_start,slice_end)
+
                 if isinstance(i[0],IndexedBase)and any(anySlice):
                      if variables[str(i[0])].dtype=='float':
                          datatype='float'
@@ -118,7 +121,7 @@ def Check_type(var_name,expr):
 
 
                      if not variables[str(i[0])].shape==None:
-                            
+
                             if isinstance(temp1,(tuple,list)):
                                 rank=len(temp1)
                                 if all(i[k+1].start>=0 and i[k+1].end<=temp1[k] for k in SliceIndex):
@@ -346,33 +349,6 @@ class BasicStmt(object):
 
     def update(self):
         pass
-
-#    # TODO move somewhere else
-#    def do_trailer(self, trailer):
-##        # only slices of the form a:b are possible
-##        # this assumes that inputs.args is of length 2
-##        if is_slice:
-##            assert(len(inputs.args) == 2)
-##
-##            start = do_arg(inputs.args[0])
-##            end   = do_arg(inputs.args[1])
-##
-##            args = Slice(start, end)
-#
-#        if isinstance(trailer, Trailer):
-#            inputs = trailer.subs
-#            if inputs:
-#                args = []
-#                for a in inputs.args:
-#                    arg = do_arg(a)
-#
-#                    # TODO treat n correctly
-#                    n = Symbol('n', integer=True)
-#                    i = Idx(arg, n)
-#                    args.append(i)
-#                return args
-#        else:
-#            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
 
 class ConstructorStmt(BasicStmt):
     """Class representing a ."""
@@ -658,7 +634,7 @@ class ForStmt(BasicStmt):
         self.body     = kwargs.pop('body')
         self.step     = kwargs.pop('step', None)
         self.start
-        
+
         if type(self.start)==str:
             try:
                 start_temp=int(self.start)
@@ -705,12 +681,6 @@ class ForStmt(BasicStmt):
         # check that start and end were declared, if they are symbols
         insert_variable(self.iterable, datatype='int')
 
-        # TODO do we have to insert them? or just to check they exist?
-        insert_variable(self.start,    datatype='int')
-        insert_variable(self.end,      datatype='int')
-        if not(self.step is None):
-            insert_variable(self.step, datatype='int')
-
     @property
     def expr(self):
         i = Symbol(self.iterable, integer=True)
@@ -718,18 +688,12 @@ class ForStmt(BasicStmt):
         if self.start in namespace:
             b = namespace[self.start]
         else:
-            try:
-                b = Symbol(self.start, integer=True)
-            except:
-                b = int(self.start)
+            b = do_arg(self.start)
 
         if self.end in namespace:
             e = namespace[self.end]
         else:
-            try:
-                e = Symbol(self.end, integer=True)
-            except:
-                e = int(self.end)
+            e = do_arg(self.end)
 
         if self.step is None:
             s = 1
@@ -737,10 +701,7 @@ class ForStmt(BasicStmt):
             if self.step in namespace:
                 s = namespace[self.step]
             else:
-                try:
-                    s = Symbol(self.step, integer=True)
-                except:
-                    s = int(self.step)
+                s = do_arg(self.step)
 
         self.update()
 
@@ -978,9 +939,9 @@ class Operand(ExpressionElement):
                 op=op_temp
             except:
                 pass
-                
-                
-            
+
+
+
         if type(op) == float:
             return Float(op)
         elif type(op)==int:
@@ -997,6 +958,10 @@ class Operand(ExpressionElement):
                     if DEBUG:
                         print ">>> found local variables: " + O
                     return Symbol(O)
+                elif type(O) == int:
+                    return Integer(O)
+                elif type(O) == float:
+                    return Float(O)
                 else:
                     raise Exception('Unknown variable "{}" at position {}'
                                     .format(O, self._tx_position))
@@ -1251,14 +1216,11 @@ class NumpyZerosStmt(AssignStmt):
     def __init__(self, **kwargs):
         """
         """
-
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
-       # print(self.parameters[0].value,'####')
-        #raise SystemExit()
 
         labels = [str(p.label) for p in self.parameters]
-#        values = [p.value.value for p in self.parameters]
+
         values = []
         for p in self.parameters:
             try:
@@ -1276,9 +1238,7 @@ class NumpyZerosStmt(AssignStmt):
                         pass
             if not type(v_temp)==str:
                 v=v_temp
-                   
-                
-                        
+
             elif type(v)==list and type(v[0])==str:
                 for i in range(0,len(v)):
                     v_temp=''
@@ -1291,11 +1251,12 @@ class NumpyZerosStmt(AssignStmt):
                                     pass
                     if not type(v_temp)==str:
                         v[i]=v_temp
-                    
-                    
-            
-                
+
             values.append(v)
+
+        # TODO to check, after merging
+#        values = [p.value.value for p in self.parameters]
+
         d = {}
         for (label, value) in zip(labels, values):
             d[label] = value
@@ -1308,6 +1269,14 @@ class NumpyZerosStmt(AssignStmt):
 
         try:
             self.shape = self.parameters['shape']
+            # on LRZ, self.shape can be a list of ArgList
+            # this is why we do the following check
+            # maybe a bug in textX
+            if isinstance(self.shape, list):
+                if isinstance(self.shape[0], ArgList):
+                    self.shape = self.shape[0].args
+            elif isinstance(self.shape, ArgList):
+                self.shape = self.shape.args
         except:
             raise Exception('Expecting shape at position {}'
                             .format(self._tx_position))
@@ -1342,16 +1311,13 @@ class NumpyZerosStmt(AssignStmt):
                     elif isinstance(s, str):
                         if not(s in namespace):
                             raise Exception('Could not find shape variable.')
-
-#                        if not(variables[s].dtype == 'int'):
-#                            raise Exception('Shape must be an integer.')
-
                         shape.append(namespace[s])
                     elif isinstance(s,FactorUnary):
                         shape.append(s.expr)
-
-
+#                    elif isinstance(s,ArgList):
+#                        shape.append(s.expr)
                     else:
+                        print ("> given type: ", type(s))
                         raise TypeError('Expecting a int, float or string')
                 rank = len(shape)
             elif isinstance(self.shape,FactorUnary):
@@ -1364,13 +1330,15 @@ class NumpyZerosStmt(AssignStmt):
                     # TODO compute rank
                     rank = 1
                 else:
-                    raise Exception('Wrong instance for shape.')
+                    raise Exception('Wrong instance for shape : '.format(type(self.shape)))
             self.shape = shape
 
             if datatype is None:
                 if DEBUG:
                     print("> No Datatype is specified, int will be used.")
                 datatype = 'int'
+            elif isinstance(datatype, list):
+                datatype = datatype[0] # otherwise, it's not working on LRZ
             # TODO check if var is a return value
             insert_variable(var_name, \
                             datatype=datatype, \
@@ -1470,9 +1438,9 @@ class NumpyOnesStmt(AssignStmt):
                         pass
             if not type(v_temp)==str:
                 v=v_temp
-                   
-                
-                        
+
+
+
             elif type(v)==list and type(v[0])==str:
                 for i in range(0,len(v)):
                     v_temp=''
@@ -1485,10 +1453,10 @@ class NumpyOnesStmt(AssignStmt):
                                     pass
                     if not type(v_temp)==str:
                         v[i]=v_temp
-                    
-                    
-            
-                
+
+
+
+
             values.append(v)
         d = {}
         for (label, value) in zip(labels, values):
@@ -1582,7 +1550,7 @@ class NumpyOnesStmt(AssignStmt):
         stmt = NumpyOnes(var, shape)
 
         return stmt
-    
+
 class NumpyLinspaceStmt(AssignStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -1883,17 +1851,18 @@ class BasicSlice(BasicStmt):
         if name is None:
             return None
 
-        name = name.expr
         var = None
         if isinstance(name, (Integer, Float)):
             var = Integer(name)
-        else:
+        elif isinstance(name, str):
             if name in namespace:
                 var = namespace[name]
             else:
-                print("stop here 2")
-                print type(name), name
-                import sys; sys.exit(0)
+                raise Exception("could not find {} in namespace ".format(name))
+        elif isinstance(name, Expression):
+            var = do_arg(name)
+        else:
+            raise Exception("Unexpected type {0} for {1}".format(type(name), name))
 
         return var
 
@@ -1947,3 +1916,157 @@ class ThreadStmt(BasicStmt):
             return ThreadsNumber(var)
         else:
             raise Exception('Wrong value for func.')
+
+class ArgList(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args', None)
+
+        super(ArgList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        ls = []
+        for arg in self.args:
+            if isinstance(arg, FactorUnary):
+                ls.append(arg.expr)
+            else:
+                if arg in namespace:
+                    ls.append(variables[arg])
+                else:
+                    ls.append(arg)
+        return ls
+
+class StencilStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs        = kwargs.pop('lhs')
+        self.parameters = kwargs.pop('parameters')
+
+        labels = [str(p.label) for p in self.parameters]
+        values = [p.value.value for p in self.parameters]
+        d = {}
+        for (label, value) in zip(labels, values):
+            d[label] = value
+        self.parameters = d
+
+        try:
+            self.datatype = self.parameters['dtype']
+        except:
+            self.datatype = 'float'
+
+        try:
+            self.shape = self.parameters['shape']
+            # on LRZ, self.shape can be a list of ArgList
+            # this is why we do the following check
+            # maybe a bug in textX
+            if isinstance(self.shape, list):
+                if isinstance(self.shape[0], ArgList):
+                    self.shape = self.shape[0].args
+            elif isinstance(self.shape, ArgList):
+                self.shape = self.shape.args
+        except:
+            raise Exception('Expecting shape at position {}'
+                            .format(self._tx_position))
+
+        try:
+            self.step = self.parameters['step']
+            # on LRZ, self.step can be a list of ArgList
+            # this is why we do the following check
+            # maybe a bug in textX
+            if isinstance(self.step, list):
+                if isinstance(self.step[0], ArgList):
+                    self.step = self.step[0].args
+            elif isinstance(self.step, ArgList):
+                self.step = self.step.args
+        except:
+            raise Exception('Expecting step at position {}'
+                            .format(self._tx_position))
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+            datatype = self.datatype
+
+            # ...
+            def format_entry(s_in):
+                rank = 0
+                if isinstance(s_in, int):
+                    s_out = s_in
+                    rank = 1
+                elif isinstance(s_in, float):
+                    s_out = int(s_in)
+                    rank = 1
+                elif isinstance(s_in, list):
+                    s_out = []
+                    for s in s_in:
+                        if isinstance(s, (int, float)):
+                            s_out.append(int(s))
+                        elif isinstance(s, str):
+                            if not(s in namespace):
+                                raise Exception('Could not find s_out variable.')
+                            s_out.append(namespace[s])
+                        elif isinstance(s,FactorUnary):
+                            s_out.append(s.expr)
+    #                    elif isinstance(s,ArgList):
+    #                        s_out.append(s.expr)
+                        else:
+                            print ("> given type: ", type(s))
+                            raise TypeError('Expecting a int, float or string')
+                    rank = len(s_out)
+                elif isinstance(s_in,FactorUnary):
+                     s_out=s_in.expr
+                else:
+                    s_out = str(s_in)
+                    if s_out in namespace:
+                        s_out = namespace[s_out]
+                        # TODO compute rank
+                        rank = 1
+                    else:
+                        raise Exception('Wrong instance for s_out : '.format(type(s_in)))
+                return s_out, rank
+            # ...
+
+            # ...
+            self.shape, r_1 = format_entry(self.shape)
+            self.step,  r_2 = format_entry(self.step)
+            rank = r_1 + r_2
+            # ...
+
+            if datatype is None:
+                if DEBUG:
+                    print("> No Datatype is specified, int will be used.")
+                datatype = 'int'
+            elif isinstance(datatype, list):
+                datatype = datatype[0] # otherwise, it's not working on LRZ
+            # TODO check if var is a return value
+            insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True,shape = self.shape)
+
+    @property
+    def expr(self):
+        self.update()
+
+        shape = self.shape
+        step  = self.step
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        return Stencil(var, shape, step)

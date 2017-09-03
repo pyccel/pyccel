@@ -136,7 +136,7 @@ DataType:
 ;
 
 ParameterTest:
-  ('shape' | 'dtype')
+  ID | STRING
 ;
 
 Variable:
@@ -168,7 +168,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
+  (NumpyStmt | StencilStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -183,7 +183,7 @@ NumpyStmt:
 ;
 
 ParameterValue:
-  (value=FactorUnary|value=IdentifierOrNumber |value=ArgList)
+  (value=FactorUnary | value=IdentifierOrNumber |value=ArgList)
 ;
 
 ParameterSingle: 
@@ -196,6 +196,10 @@ ThreadStmt:
 
 ThreadFunction:
   ('thread_id' | 'thread_number')
+;
+
+StencilStmt: 
+  lhs=ID '=' 'stencil' LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
 NumpyZerosStmt: 
@@ -244,9 +248,9 @@ MultiAssignStmt:
 
 ForStmt: 
   'for' iterable=ID 'in' 
-  'range' LPAREN start=IdentifierOrNumber COMMA 
-                 end=IdentifierOrNumber 
-                (COMMA step=IdentifierOrNumber)? RPAREN ':' 
+  'range' LPAREN start=Expression COMMA 
+                 end=Expression 
+                (COMMA step=Expression)? RPAREN ':' 
   body=SuiteStmt
 ;
 WhileStmt:
@@ -329,7 +333,7 @@ TrailerSubscriptList:
 ;
 
 TrailerSubscript: 
-  (TrailerSlice | TrailerSliceLeft | TrailerSliceRight|Expression)
+  (TrailerSlice | TrailerSliceLeft | TrailerSliceRight | Expression)
 ;
 
 TrailerSliceLeft:

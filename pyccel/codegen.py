@@ -15,6 +15,7 @@ from pyccel.syntax import ( \
                            CommentStmt, \
                            # Multi-threading
                            ThreadStmt, \
+                           StencilStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -200,7 +201,7 @@ class Codegen(object):
         """Generate code as a program. Every extension must implement this method."""
         pass
 
-    def doprint(self, language, accelerator=None):
+    def doprint(self, language, accelerator=None, ignored_modules=[]):
         """Generate code for a given language.
 
         language: str
@@ -242,8 +243,11 @@ class Codegen(object):
 #            elif isinstance(stmt, AnnotatedStmt):
 #                body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ImportFromStmt):
-                imports += printer(stmt.expr) + "\n"
-                modules += stmt.dotted_name.names
+                # TODO: this only works if names contains one entry
+                name = stmt.dotted_name.names[0]
+                if not(name in ignored_modules):
+                    imports += printer(stmt.expr) + "\n"
+                    modules += stmt.dotted_name.names
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
             elif isinstance(stmt, NumpyZerosStmt):
@@ -278,6 +282,8 @@ class Codegen(object):
             elif isinstance(stmt, OpenmpStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ThreadStmt):
+                body += printer(stmt.expr) + "\n"
+            elif isinstance(stmt, StencilStmt):
                 body += printer(stmt.expr) + "\n"
             else:
                 if True:
@@ -539,21 +545,28 @@ class Compiler(object):
 def build_file(filename, language, compiler, \
                execute=False, accelerator=None, \
                debug=False, verbose=False, show=False, \
-               inline=False, name="main"):
+               inline=False, name="main", \
+               ignored_modules=['numpy', 'scipy', 'sympy']):
     """User friendly interface for code generation."""
     # ...
     from pyccel.patterns.utilities import find_imports
 
-    imports = find_imports(filename=filename)
+    d = find_imports(filename=filename)
+    imports = {}
+    for key, value in d.items():
+        if not(key in ignored_modules):
+            imports[key] = value
     ms = []
     for module, names in imports.items():
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
-        codegen_m.doprint(language=language, accelerator=accelerator)
+        codegen_m.doprint(language=language, accelerator=accelerator, \
+                         ignored_modules=ignored_modules)
         ms.append(codegen_m)
 
 
     codegen = FCodegen(filename=filename, name=name)
-    s=codegen.doprint(language=language, accelerator=accelerator)
+    s=codegen.doprint(language=language, accelerator=accelerator, \
+                     ignored_modules=ignored_modules)
     if show:
         print('========Fortran_Code========')
         print(s)

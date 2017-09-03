@@ -17,6 +17,7 @@ from pyccel.syntax import (Pyccel, \
                            CommentStmt, SuiteStmt, \
                            # Multi-threading
                            ThreadStmt, \
+                           StencilStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -25,6 +26,7 @@ from pyccel.syntax import (Pyccel, \
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
+                           ArgList, \
                            Trailer, TrailerArgList, TrailerSubscriptList, \
                            TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                            )
@@ -173,6 +175,7 @@ class PyccelParser(Parser):
                    CommentStmt, SuiteStmt, \
                    # Multi-threading
                    ThreadStmt, \
+                   StencilStmt, \
                    # python standard library statements
                    PythonPrintStmt, \
                    # numpy statments
@@ -181,6 +184,7 @@ class PyccelParser(Parser):
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers
+                   ArgList, \
                    Trailer, TrailerArgList, TrailerSubscriptList, \
                    TrailerSlice, TrailerSliceRight, TrailerSliceLeft
                    ]

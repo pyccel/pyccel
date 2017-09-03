@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from numpy import zeros
 
 w_u = zeros(shape=4, dtype=float)
 w_v = zeros(shape=4, dtype=float)
