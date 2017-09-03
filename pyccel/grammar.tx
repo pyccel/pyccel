@@ -244,9 +244,9 @@ MultiAssignStmt:
 
 ForStmt: 
   'for' iterable=ID 'in' 
-  'range' LPAREN start=IdentifierOrNumber COMMA 
-                 end=IdentifierOrNumber 
-                (COMMA step=IdentifierOrNumber)? RPAREN ':' 
+  'range' LPAREN start=Expression COMMA 
+                 end=Expression 
+                (COMMA step=Expression)? RPAREN ':' 
   body=SuiteStmt
 ;
 WhileStmt:

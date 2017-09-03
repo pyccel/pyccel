@@ -662,12 +662,6 @@ class ForStmt(BasicStmt):
         # check that start and end were declared, if they are symbols
         insert_variable(self.iterable, datatype='int')
 
-        # TODO do we have to insert them? or just to check they exist?
-        insert_variable(self.start,    datatype='int')
-        insert_variable(self.end,      datatype='int')
-        if not(self.step is None):
-            insert_variable(self.step, datatype='int')
-
     @property
     def expr(self):
         i = Symbol(self.iterable, integer=True)
@@ -675,18 +669,12 @@ class ForStmt(BasicStmt):
         if self.start in namespace:
             b = namespace[self.start]
         else:
-            try:
-                b = Symbol(self.start, integer=True)
-            except:
-                b = int(self.start)
+            b = do_arg(self.start)
 
         if self.end in namespace:
             e = namespace[self.end]
         else:
-            try:
-                e = Symbol(self.end, integer=True)
-            except:
-                e = int(self.end)
+            e = do_arg(self.end)
 
         if self.step is None:
             s = 1
@@ -694,10 +682,7 @@ class ForStmt(BasicStmt):
             if self.step in namespace:
                 s = namespace[self.step]
             else:
-                try:
-                    s = Symbol(self.step, integer=True)
-                except:
-                    s = int(self.step)
+                s = do_arg(self.step)
 
         self.update()
 
@@ -1734,6 +1719,8 @@ class BasicSlice(BasicStmt):
         """
         self.start = kwargs.pop('start', None)
         self.end   = kwargs.pop('end',   None)
+        print("start : ", self.start)
+        print("end : ", self.end)
 
         super(BasicSlice, self).__init__(**kwargs)
 
@@ -1745,13 +1732,13 @@ class BasicSlice(BasicStmt):
         var = None
         if isinstance(name, (Integer, Float)):
             var = Integer(name)
+#        elif isinstance(name, Expression):
+#            var = do_arg(name)
         else:
             if name in namespace:
                 var = namespace[name]
             else:
-                print("stop here 2")
-                print type(name), name
-                import sys; sys.exit(0)
+                raise Exception("extract_arg failed.")
 
         return var
 

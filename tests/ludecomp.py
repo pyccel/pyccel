@@ -16,14 +16,13 @@ for i in range(0, n):
         b[i,j] = i-j
 print(a)
 
-n1 = n-1
-for k in range(0,n1):
-    k1 = k+1
-    for i in range(k1,n):
+#            a[i,k+1:n] = a[i,k+1:n] - lam*a[k,k+1:n]
+#            a[i,k] = lam
+
+for k in range(0,n-1):
+    for i in range(k+1,n):
         t = a[i,k]
         if t <> 0.0:
             ak = a[k,k]
             lam = t/ak
-            a[i,k1:n] = a[i,k1:n] - lam*a[k,k1:n]
-            a[i,k] = lam
 print(a)
