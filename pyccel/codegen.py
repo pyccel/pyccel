@@ -15,6 +15,7 @@ from pyccel.syntax import ( \
                            CommentStmt, \
                            # Multi-threading
                            ThreadStmt, \
+                           StencilStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -281,6 +282,8 @@ class Codegen(object):
             elif isinstance(stmt, OpenmpStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ThreadStmt):
+                body += printer(stmt.expr) + "\n"
+            elif isinstance(stmt, StencilStmt):
                 body += printer(stmt.expr) + "\n"
             else:
                 if True:
