@@ -331,33 +331,6 @@ class BasicStmt(object):
     def update(self):
         pass
 
-#    # TODO move somewhere else
-#    def do_trailer(self, trailer):
-##        # only slices of the form a:b are possible
-##        # this assumes that inputs.args is of length 2
-##        if is_slice:
-##            assert(len(inputs.args) == 2)
-##
-##            start = do_arg(inputs.args[0])
-##            end   = do_arg(inputs.args[1])
-##
-##            args = Slice(start, end)
-#
-#        if isinstance(trailer, Trailer):
-#            inputs = trailer.subs
-#            if inputs:
-#                args = []
-#                for a in inputs.args:
-#                    arg = do_arg(a)
-#
-#                    # TODO treat n correctly
-#                    n = Symbol('n', integer=True)
-#                    i = Idx(arg, n)
-#                    args.append(i)
-#                return args
-#        else:
-#            raise Exception('Wrong Trailer type. given {}'.format(type(trailer)))
-
 class ConstructorStmt(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -1719,8 +1692,6 @@ class BasicSlice(BasicStmt):
         """
         self.start = kwargs.pop('start', None)
         self.end   = kwargs.pop('end',   None)
-        print("start : ", self.start)
-        print("end : ", self.end)
 
         super(BasicSlice, self).__init__(**kwargs)
 
@@ -1728,17 +1699,18 @@ class BasicSlice(BasicStmt):
         if name is None:
             return None
 
-        name = name.expr
         var = None
         if isinstance(name, (Integer, Float)):
             var = Integer(name)
-#        elif isinstance(name, Expression):
-#            var = do_arg(name)
-        else:
+        elif isinstance(name, str):
             if name in namespace:
                 var = namespace[name]
             else:
-                raise Exception("extract_arg failed.")
+                raise Exception("could not find {} in namespace ".format(name))
+        elif isinstance(name, Expression):
+            var = do_arg(name)
+        else:
+            raise Exception("Unexpected type {0} for {1}".format(type(name), name))
 
         return var
 
