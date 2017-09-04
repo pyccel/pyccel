@@ -17,7 +17,6 @@ from pyccel.syntax import (Pyccel, \
                            CommentStmt, SuiteStmt, \
                            # Multi-threading
                            ThreadStmt, \
-                           StencilStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
@@ -175,7 +174,6 @@ class PyccelParser(Parser):
                    CommentStmt, SuiteStmt, \
                    # Multi-threading
                    ThreadStmt, \
-                   StencilStmt, \
                    # python standard library statements
                    PythonPrintStmt, \
                    # numpy statments

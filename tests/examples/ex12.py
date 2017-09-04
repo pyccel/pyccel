@@ -5,34 +5,25 @@ from numpy import dot
 
 a=array([1,2,3,5,8,5],dtype=int)
 b=array([5,8,6,9,8,2],dtype=int)
-k=zeros(shape=(1,len(a)),dtype=int)
-l=zeros(shape=len(a),dtype=int)
-f=ones(shape=(len(a),len(a)),dtype=int)
+k=zeros(shape=(len(a),len(a)),dtype=int)
 d=array([[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2],[5,8,6,9,8,2]],dtype=int)
-i=1
-j=1.0
-o=i
-p=j
-s=i+j
-t=i*j
-
-print('1=',1)
-print('1.0=',1.0)
 print('a = ',a)
 print('b = ',b)
 print('dot(a,b) = ',dot(a,b))
 print('len(a) = ',len(a))
 print('len([1,2,3])= ',len([1,2,3]))
 print(' k =',k)
-x=1.0
-print('factorial(x) = ',factorial(1))
+x=1
+t=int()
+t=10
+print('factorial(x) = ',factorial(t))
 print('sqrt(x) =',sqrt(x))
 print('abs(x) = ',abs(x))
 print('sin(x) = ',sin(x))
 print('cos(pi) = ',cos(pi))
 print('exp(x) = ',exp(x))
 print('log(x) = ',log(x))
-print('sign(x) = ',sign(5))
+print('sign(x) = ',sign(x))
 #print('csc(x) = ',csc(x))
 #print('sec(x) = ',sec(x))
 print('tan(x) = ',tan(x))

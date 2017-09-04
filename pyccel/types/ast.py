@@ -458,7 +458,6 @@ F    """
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
-            print(dtype,'dtype')
             raise TypeError("datatype must be an instance of DataType.")
         if isinstance(name, str):
             name = Symbol(name)
@@ -1225,64 +1224,3 @@ class ThreadsNumber(Thread):
     """Represents a get threads number for code generation.
     """
     pass
-
-class Stencil(Basic):
-    """Represents variable assignment using a stencil for code generation.
-
-    Parameters
-    ----------
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    shape : int or list of integers
-
-    step : int or list of integers
-    """
-
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape, step):
-        # ...
-        def format_entry(s_in):
-            if isinstance(s_in, list):
-                # this is a correction. otherwise it is not working on LRZ
-                if isinstance(s_in[0], list):
-                    s_out = Tuple(*(_sympify(i) for i in s_in[0]))
-                else:
-                    s_out = Tuple(*(_sympify(i) for i in s_in))
-            elif isinstance(s_in, int):
-                s_out = Tuple(_sympify(s_in))
-            elif isinstance(s_in, Basic) and not isinstance(s_in,LEN):
-                s_out = str(s_in)
-            elif isinstance(s_in,LEN):
-                s_our = s_in.str
-            else:
-                s_out = s_in
-            return s_out
-        # ...
-
-        # ...
-        lhs   = _sympify(lhs)
-        shape = format_entry(shape)
-        step  = format_entry(step)
-        # ...
-
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs, shape, step)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def shape(self):
-        return self._args[1]
-
-    @property
-    def step(self):
-        return self._args[2]

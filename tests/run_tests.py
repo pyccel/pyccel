@@ -9,7 +9,7 @@ show     = "--show"
 not_working = ["ex11.py"]
 
 examples = []
-for i in range(1, 13 + 1):
+for i in range(1, 12 + 1):
     example = "ex{0}.py".format(str(i))
     if not(example in not_working):
         examples.append(example)

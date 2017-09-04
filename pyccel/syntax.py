@@ -20,7 +20,6 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
-                              Stencil, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
     IndexedElement)
 
@@ -46,7 +45,6 @@ __all__ = ["Pyccel", \
            "CommentStmt", \
            # Multi-threading
            "ThreadStmt", \
-           "StencilStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -82,9 +80,9 @@ def Check_type(var_name,expr):
     s=[]
     def pre(expr):
 
+
         if(type(expr)==Indexed) or type(expr)==IndexedElement:
-            element=list([expr.args[i] for i in range(0,len(expr.args))])
-            s.append(element)
+            s.append((expr.args[0],expr.args[1]))
             return
 
 
@@ -94,26 +92,11 @@ def Check_type(var_name,expr):
             pre(arg)
 
     pre(expr.expr)
+
     if isinstance(expr,Expression):
         for i in s:
-            if isinstance(i,list):
-                import numpy as np
-                anySlice=[isinstance(i[j],Slice) for j in range(1,len(i))]
-                SliceIndex=np.where(anySlice)[0]
-                temp1=variables[str(i[0])].shape
-                for j in SliceIndex:
-                    slice_start=i[j+1].start
-                    slice_end=i[j+1].end
-                    if i[j+1].start==None:
-                        slice_start=0
-                    if i[j+1].end==None:
-                        if isinstance(temp1,(list,tuple)):
-                            slice_end=temp1[j]
-                        else:
-                            slice_end=temp1
-                    i[j+1]=Slice(slice_start,slice_end)
-
-                if isinstance(i[0],IndexedBase)and any(anySlice):
+            if isinstance(i,tuple):
+                if isinstance(i[0],IndexedBase)and isinstance(i[1],Slice):
                      if variables[str(i[0])].dtype=='float':
                          datatype='float'
                      if  variables[str(i[0])].allocatable:
@@ -121,11 +104,11 @@ def Check_type(var_name,expr):
 
 
                      if not variables[str(i[0])].shape==None:
-
-                            if isinstance(temp1,(tuple,list)):
+                            temp1=variables[str(i[0])].shape
+                            if(isinstance(temp1,tuple)):
                                 rank=len(temp1)
-                                if all(i[k+1].start>=0 and i[k+1].end<=temp1[k] for k in SliceIndex):
-                                   shape.append(tuple([i[k+1].end-i[k+1].start for k in SliceIndex]))
+                                if all(i[k].start>=0 and i[k].end<=temp1[k-1] for k in range(1,rank+1)):
+                                   shape.append(tuple([i[k].end-i[k].start for k in range(1,rank+1)]))
                                 else:
                                     raise TypeError('dimension mismatch')
                             elif isinstance(temp1,int):
@@ -136,7 +119,7 @@ def Check_type(var_name,expr):
                             else:
                                 raise TypeError('shape must be an int or a tuple of int')
                      else:
-                         raise TypeError('variable doesnt have a shape')
+                         raise TypeError('dimension mismatch')
                 elif isinstance(i[0],IndexedBase)and i[1].is_integer:
                     datatype=variables[str(i[0])].dtype
             elif isinstance(i,Symbol):
@@ -153,14 +136,13 @@ def Check_type(var_name,expr):
     if len(shape)>0:
         if all(x==shape[0] for x in shape):
             shape=shape[0]
-            print(shape,type(shape))
 
             if isinstance(shape,(tuple,list)):
                 shape=tuple(map(int,shape))
                 rank=len(shape)
             elif isinstance(shape,int):
                 rank=1
-            elif isinstance(shape,Symbol) or isinstance(shape,Integer) :
+            elif isinstance(shape,Symbol):
                 if shape.is_integer:
                     rank=1
                     shape=int(shape)
@@ -227,7 +209,6 @@ def insert_variable(var_name, \
 
     # we create a declaration for code generation
     dec = Declare(datatype, var)
-    print(dec)
 
     if var_name in namespace:
         namespace.pop(var_name)
@@ -633,33 +614,6 @@ class ForStmt(BasicStmt):
         self.end      = kwargs.pop('end')
         self.body     = kwargs.pop('body')
         self.step     = kwargs.pop('step', None)
-        self.start
-
-        if type(self.start)==str:
-            try:
-                start_temp=int(self.start)
-            except:
-                try:
-                    start_temp=float(self.start)
-                except:
-                    pass
-            try:
-                self.start=start_temp
-            except:
-                pass
-
-        if type(self.end)==str:
-            try:
-                end_temp=int(self.end)
-            except:
-                try:
-                    end_temp=float(self.end)
-                except:
-                    pass
-            try:
-                self.end=end_temp
-            except:
-                pass
 
         super(ForStmt, self).__init__(**kwargs)
 
@@ -927,25 +881,13 @@ class Operand(ExpressionElement):
             print self.op
 #        op = self.op[0]
         op = self.op
-        if type(op)==str:
-            try:
-                op_temp=int(op)
-            except:
-                try:
-                    op_temp=float(op)
-                except:
-                    pass
-            try:
-                op=op_temp
-            except:
-                pass
-
-
-
         if type(op) == float:
-            return Float(op)
-        elif type(op)==int:
-            return Integer(op)
+            if sympify(op).is_integer:
+#                print "> found int ",Integer(op)
+                return Integer(op)
+            else:
+#                print "> found float ",Float(op)
+                return Float(op)
         elif type(op) == list:
             # op is a list
             for O in op:
@@ -1216,47 +1158,12 @@ class NumpyZerosStmt(AssignStmt):
     def __init__(self, **kwargs):
         """
         """
+
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
 
         labels = [str(p.label) for p in self.parameters]
-
-        values = []
-        for p in self.parameters:
-            try:
-                v = p.value.value.args
-            except:
-                v = p.value.value
-            v_temp=''
-            if type(v)==str:
-                try:
-                    v_temp=int(v)
-                except:
-                    try:
-                        v_temp=float(v)
-                    except:
-                        pass
-            if not type(v_temp)==str:
-                v=v_temp
-
-            elif type(v)==list and type(v[0])==str:
-                for i in range(0,len(v)):
-                    v_temp=''
-                    try:
-                        v_temp=int(v[i])
-                    except:
-                            try:
-                                v_temp=float(v[i])
-                            except:
-                                    pass
-                    if not type(v_temp)==str:
-                        v[i]=v_temp
-
-            values.append(v)
-
-        # TODO to check, after merging
-#        values = [p.value.value for p in self.parameters]
-
+        values = [p.value.value for p in self.parameters]
         d = {}
         for (label, value) in zip(labels, values):
             d[label] = value
@@ -1322,7 +1229,6 @@ class NumpyZerosStmt(AssignStmt):
                 rank = len(shape)
             elif isinstance(self.shape,FactorUnary):
                  shape=self.shape.expr
-                 rank = 1
             else:
                 shape = str(self.shape)
                 if shape in namespace:
@@ -1409,15 +1315,12 @@ class NumpyZerosLikeStmt(AssignStmt):
         return stmt
 
 class NumpyOnesStmt(AssignStmt):
-    """Class representing a ."""
+
     def __init__(self, **kwargs):
         """
         """
-
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
-       # print(self.parameters[0].value,'####')
-        #raise SystemExit()
 
         labels = [str(p.label) for p in self.parameters]
 #        values = [p.value.value for p in self.parameters]
@@ -1427,36 +1330,6 @@ class NumpyOnesStmt(AssignStmt):
                 v = p.value.value.args
             except:
                 v = p.value.value
-            v_temp=''
-            if type(v)==str:
-                try:
-                    v_temp=int(v)
-                except:
-                    try:
-                        v_temp=float(v)
-                    except:
-                        pass
-            if not type(v_temp)==str:
-                v=v_temp
-
-
-
-            elif type(v)==list and type(v[0])==str:
-                for i in range(0,len(v)):
-                    v_temp=''
-                    try:
-                        v_temp=int(v[i])
-                    except:
-                            try:
-                                v_temp=float(v[i])
-                            except:
-                                    pass
-                    if not type(v_temp)==str:
-                        v[i]=v_temp
-
-
-
-
             values.append(v)
         d = {}
         for (label, value) in zip(labels, values):
@@ -1497,35 +1370,10 @@ class NumpyOnesStmt(AssignStmt):
                 shape = int(self.shape)
                 rank = 1
             elif isinstance(self.shape, list):
-                shape = []
-                for s in self.shape:
-                    if isinstance(s, (int, float)):
-                        shape.append(int(s))
-                    elif isinstance(s, str):
-                        if not(s in namespace):
-                            raise Exception('Could not find shape variable.')
-
-#                        if not(variables[s].dtype == 'int'):
-#                            raise Exception('Shape must be an integer.')
-
-                        shape.append(namespace[s])
-                    elif isinstance(s,FactorUnary):
-                        shape.append(s.expr)
-
-
-                    else:
-                        raise TypeError('Expecting a int, float or string')
+                shape = [int(s) for s in self.shape]
                 rank = len(shape)
-            elif isinstance(self.shape,FactorUnary):
-                 shape=self.shape.expr
             else:
-                shape = str(self.shape)
-                if shape in namespace:
-                    shape = namespace[shape]
-                    # TODO compute rank
-                    rank = 1
-                else:
-                    raise Exception('Wrong instance for shape.')
+                raise Exception('Wrong instance for shape.')
             self.shape = shape
 
             if datatype is None:
@@ -1536,7 +1384,7 @@ class NumpyOnesStmt(AssignStmt):
             insert_variable(var_name, \
                             datatype=datatype, \
                             rank=rank, \
-                            allocatable=True,shape = self.shape)
+                            allocatable=True,shape=self.shape)
 
     @property
     def expr(self):
@@ -1938,135 +1786,3 @@ class ArgList(BasicStmt):
                 else:
                     ls.append(arg)
         return ls
-
-class StencilStmt(AssignStmt):
-    """Class representing a ."""
-    def __init__(self, **kwargs):
-        """
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.parameters = kwargs.pop('parameters')
-
-        labels = [str(p.label) for p in self.parameters]
-        values = [p.value.value for p in self.parameters]
-        d = {}
-        for (label, value) in zip(labels, values):
-            d[label] = value
-        self.parameters = d
-
-        try:
-            self.datatype = self.parameters['dtype']
-        except:
-            self.datatype = 'float'
-
-        try:
-            self.shape = self.parameters['shape']
-            # on LRZ, self.shape can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.shape, list):
-                if isinstance(self.shape[0], ArgList):
-                    self.shape = self.shape[0].args
-            elif isinstance(self.shape, ArgList):
-                self.shape = self.shape.args
-        except:
-            raise Exception('Expecting shape at position {}'
-                            .format(self._tx_position))
-
-        try:
-            self.step = self.parameters['step']
-            # on LRZ, self.step can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.step, list):
-                if isinstance(self.step[0], ArgList):
-                    self.step = self.step[0].args
-            elif isinstance(self.step, ArgList):
-                self.step = self.step.args
-        except:
-            raise Exception('Expecting step at position {}'
-                            .format(self._tx_position))
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """."""
-        return [self.lhs]
-
-    def update(self):
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-
-            datatype = self.datatype
-
-            # ...
-            def format_entry(s_in):
-                rank = 0
-                if isinstance(s_in, int):
-                    s_out = s_in
-                    rank = 1
-                elif isinstance(s_in, float):
-                    s_out = int(s_in)
-                    rank = 1
-                elif isinstance(s_in, list):
-                    s_out = []
-                    for s in s_in:
-                        if isinstance(s, (int, float)):
-                            s_out.append(int(s))
-                        elif isinstance(s, str):
-                            if not(s in namespace):
-                                raise Exception('Could not find s_out variable.')
-                            s_out.append(namespace[s])
-                        elif isinstance(s,FactorUnary):
-                            s_out.append(s.expr)
-    #                    elif isinstance(s,ArgList):
-    #                        s_out.append(s.expr)
-                        else:
-                            print ("> given type: ", type(s))
-                            raise TypeError('Expecting a int, float or string')
-                    rank = len(s_out)
-                elif isinstance(s_in,FactorUnary):
-                     s_out=s_in.expr
-                else:
-                    s_out = str(s_in)
-                    if s_out in namespace:
-                        s_out = namespace[s_out]
-                        # TODO compute rank
-                        rank = 1
-                    else:
-                        raise Exception('Wrong instance for s_out : '.format(type(s_in)))
-                return s_out, rank
-            # ...
-
-            # ...
-            self.shape, r_1 = format_entry(self.shape)
-            self.step,  r_2 = format_entry(self.step)
-            rank = r_1 + r_2
-            # ...
-
-            if datatype is None:
-                if DEBUG:
-                    print("> No Datatype is specified, int will be used.")
-                datatype = 'int'
-            elif isinstance(datatype, list):
-                datatype = datatype[0] # otherwise, it's not working on LRZ
-            # TODO check if var is a return value
-            insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape = self.shape)
-
-    @property
-    def expr(self):
-        self.update()
-
-        shape = self.shape
-        step  = self.step
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        return Stencil(var, shape, step)

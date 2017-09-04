@@ -136,7 +136,7 @@ DataType:
 ;
 
 ParameterTest:
-  ID | STRING
+  ('shape' | 'dtype')
 ;
 
 Variable:
@@ -152,7 +152,7 @@ Constructor:
 ;
 
 IdentifierOrNumber:
-  (IntOrFloat | ID)
+  (NUMBER | ID)
 ;
 
 ArgList:
@@ -168,7 +168,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | StencilStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
+  (NumpyStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -196,10 +196,6 @@ ThreadStmt:
 
 ThreadFunction:
   ('thread_id' | 'thread_number')
-;
-
-StencilStmt: 
-  lhs=ID '=' 'stencil' LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
 NumpyZerosStmt: 
@@ -356,10 +352,7 @@ Matrix:
 ;
 
 Operand: 
-  (op=IntOrFloat) | (op=ID) | (op=BOOLEAN)|(op=Array)
-;
-IntOrFloat:
-/[.0-9]+/?
+  (op=NUMBER) | (op=ID) | (op=BOOLEAN)|(op=Array)
 ;
 
 BOOLEAN:
