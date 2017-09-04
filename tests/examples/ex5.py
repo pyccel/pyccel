@@ -10,6 +10,8 @@ def g(x,v):
     z =  2.0 * t
     return t, z
 
+i = 5
+
 x = 1.0
 y = 2.0
 

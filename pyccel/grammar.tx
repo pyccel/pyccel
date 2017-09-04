@@ -351,13 +351,19 @@ TrailerSlice:
 Array:
 '[' NUMBER (',' NUMBER)* ']'
 ;
+
 Matrix:
 '[' Array (',' Array)* ']'
 ;
 
 Operand: 
-  (op=NUMBER) | (op=ID) | (op=BOOLEAN)|(op=Array)
+  (op=Float) | (op=INT) | (op=ID) | (op=BOOLEAN) | (op=Array)
 ;
+
+Float:
+  /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/
+;
+
 
 BOOLEAN:
    ('True'|'False')

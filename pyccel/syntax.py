@@ -263,6 +263,17 @@ def convert_to_integer_expression(expr):
 # ...
 
 # ...
+def is_Float(s):
+    """returns True if the string s is a float number."""
+    try:
+        float(s)
+        return True
+#    except ValueError:
+    except:
+        return False
+# ...
+
+# ...
 class Pyccel(object):
     """Class for Pyccel syntax."""
     def __init__(self, **kwargs):
@@ -883,13 +894,11 @@ class Operand(ExpressionElement):
             print self.op
 #        op = self.op[0]
         op = self.op
-        if type(op) == float:
-            if sympify(op).is_integer:
-#                print "> found int ",Integer(op)
-                return Integer(op)
-            else:
-#                print "> found float ",Float(op)
-                return Float(op)
+        if type(op) == int:
+            return Integer(op)
+        elif is_Float(op):
+            # op is here a string that can be converted to a number
+            return Float(float(op))
         elif type(op) == list:
             # op is a list
             for O in op:
