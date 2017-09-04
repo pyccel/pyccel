@@ -20,6 +20,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
+                              Stencil, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
     IndexedElement)
 
@@ -45,6 +46,7 @@ __all__ = ["Pyccel", \
            "CommentStmt", \
            # Multi-threading
            "ThreadStmt", \
+           "StencilStmt", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
@@ -1786,3 +1788,135 @@ class ArgList(BasicStmt):
                 else:
                     ls.append(arg)
         return ls
+
+class StencilStmt(AssignStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs        = kwargs.pop('lhs')
+        self.parameters = kwargs.pop('parameters')
+
+        labels = [str(p.label) for p in self.parameters]
+        values = [p.value.value for p in self.parameters]
+        d = {}
+        for (label, value) in zip(labels, values):
+            d[label] = value
+        self.parameters = d
+
+        try:
+            self.datatype = self.parameters['dtype']
+        except:
+            self.datatype = 'float'
+
+        try:
+            self.shape = self.parameters['shape']
+            # on LRZ, self.shape can be a list of ArgList
+            # this is why we do the following check
+            # maybe a bug in textX
+            if isinstance(self.shape, list):
+                if isinstance(self.shape[0], ArgList):
+                    self.shape = self.shape[0].args
+            elif isinstance(self.shape, ArgList):
+                self.shape = self.shape.args
+        except:
+            raise Exception('Expecting shape at position {}'
+                            .format(self._tx_position))
+
+        try:
+            self.step = self.parameters['step']
+            # on LRZ, self.step can be a list of ArgList
+            # this is why we do the following check
+            # maybe a bug in textX
+            if isinstance(self.step, list):
+                if isinstance(self.step[0], ArgList):
+                    self.step = self.step[0].args
+            elif isinstance(self.step, ArgList):
+                self.step = self.step.args
+        except:
+            raise Exception('Expecting step at position {}'
+                            .format(self._tx_position))
+
+        super(AssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return [self.lhs]
+
+    def update(self):
+        var_name = self.lhs
+        if not(var_name in namespace):
+            if DEBUG:
+                print("> Found new variable " + var_name)
+
+            datatype = self.datatype
+
+            # ...
+            def format_entry(s_in):
+                rank = 0
+                if isinstance(s_in, int):
+                    s_out = s_in
+                    rank = 1
+                elif isinstance(s_in, float):
+                    s_out = int(s_in)
+                    rank = 1
+                elif isinstance(s_in, list):
+                    s_out = []
+                    for s in s_in:
+                        if isinstance(s, (int, float)):
+                            s_out.append(int(s))
+                        elif isinstance(s, str):
+                            if not(s in namespace):
+                                raise Exception('Could not find s_out variable.')
+                            s_out.append(namespace[s])
+                        elif isinstance(s,FactorUnary):
+                            s_out.append(s.expr)
+    #                    elif isinstance(s,ArgList):
+    #                        s_out.append(s.expr)
+                        else:
+                            print ("> given type: ", type(s))
+                            raise TypeError('Expecting a int, float or string')
+                    rank = len(s_out)
+                elif isinstance(s_in,FactorUnary):
+                     s_out=s_in.expr
+                else:
+                    s_out = str(s_in)
+                    if s_out in namespace:
+                        s_out = namespace[s_out]
+                        # TODO compute rank
+                        rank = 1
+                    else:
+                        raise Exception('Wrong instance for s_out : '.format(type(s_in)))
+                return s_out, rank
+            # ...
+
+            # ...
+            self.shape, r_1 = format_entry(self.shape)
+            self.step,  r_2 = format_entry(self.step)
+            rank = r_1 + r_2
+            # ...
+
+            if datatype is None:
+                if DEBUG:
+                    print("> No Datatype is specified, int will be used.")
+                datatype = 'int'
+            elif isinstance(datatype, list):
+                datatype = datatype[0] # otherwise, it's not working on LRZ
+            # TODO check if var is a return value
+            insert_variable(var_name, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=True,shape = self.shape)
+
+    @property
+    def expr(self):
+        self.update()
+
+        shape = self.shape
+        step  = self.step
+
+        var_name = self.lhs
+        var = Symbol(var_name)
+
+        return Stencil(var, shape, step)

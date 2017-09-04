@@ -2,9 +2,10 @@
 
 # This example is the python implementation of nowait.2.f from OpenMP 4.5 examples
 
-n = 100
 n = int()
+n = 100
 
+n1 = int()
 n1 = n+1
 
 a = zeros(shape=n, dtype=float)

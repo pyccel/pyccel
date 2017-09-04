@@ -142,8 +142,33 @@ class FCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return '{}'.format(expr.name)
 
+    def _print_Stencil(self, expr):
+        lhs_code = self._print(expr.lhs)
+
+        if isinstance(expr.shape, Tuple):
+            # this is a correction. problem on LRZ
+            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
+        elif isinstance(expr.shape,str):
+            shape_code = '0:' + self._print(expr.shape) + '-1'
+        else:
+            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
+
+        if isinstance(expr.step, Tuple):
+            # this is a correction. problem on LRZ
+            step_code = ', '.join('-' + self._print(i) + ':' + self._print(i) \
+                                  for i in expr.step)
+        elif isinstance(expr.step,str):
+            step_code = '-' + self._print(expr.step) + ':' + self._print(expr.step)
+        else:
+            raise TypeError('Unknown type of step'+str(type(expr.step)))
+
+        code ="allocate({0}({1}, {2})) ; {3} = 0".format(lhs_code, shape_code, \
+                                                         step_code, lhs_code)
+        return self._get_statement(code)
+
     def _print_NumpyZeros(self, expr):
         lhs_code   = self._print(expr.lhs)
+
         if isinstance(expr.shape, Tuple):
             # this is a correction. problem on LRZ
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
