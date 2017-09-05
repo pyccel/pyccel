@@ -13,6 +13,7 @@ from pyccel.syntax import ( \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
                            ImportFromStmt, \
                            CommentStmt, \
+                           EvalStmt, \
                            # Multi-threading
                            ThreadStmt, \
                            StencilStmt, \
@@ -285,6 +286,9 @@ class Codegen(object):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, StencilStmt):
                 body += printer(stmt.expr) + "\n"
+            elif isinstance(stmt, EvalStmt):
+                for s in stmt.expr:
+                    body += printer(s) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)

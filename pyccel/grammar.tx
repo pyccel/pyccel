@@ -168,7 +168,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | StencilStmt | ThreadStmt | AssignStmt | MultiAssignStmt)
+  (NumpyStmt | StencilStmt | ThreadStmt | EvalStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -244,6 +244,10 @@ AssignStmt:
 
 MultiAssignStmt: 
   lhs+=ID[','] '=' name=ID (trailer=Trailer)?
+;
+
+EvalStmt: 
+  lhs+=ID[','] '=' 'eval' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
 ;
 
 ForStmt: 
