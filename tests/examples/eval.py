@@ -16,3 +16,6 @@ print("linspace(0.0, 1.0, 5) = ", z)
 
 u,v = eval('ex5', 'g', (2,5))
 print("g(2, 3) = ", u, v)
+
+cs = eval('pyccel.calculus', 'compute_stencil_uniform', (1, 4, 0.0, 0.25))
+print("stencil(2, 4, 0., 0.25) = ", cs)

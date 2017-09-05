@@ -152,7 +152,7 @@ Constructor:
 ;
 
 IdentifierOrNumber:
-  (NUMBER | ID)
+  (Float | INT | ID)
 ;
 
 ArgList:

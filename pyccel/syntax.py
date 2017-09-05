@@ -1822,6 +1822,10 @@ class ArgList(BasicStmt):
         for arg in self.args:
             if isinstance(arg, (FactorUnary, ArgList)):
                 ls.append(arg.expr)
+            elif type(arg) == int:
+                ls.append(int(arg))
+            elif is_Float(arg):
+                ls.append(float(arg))
             else:
                 if arg in namespace:
                     ls.append(variables[arg])
