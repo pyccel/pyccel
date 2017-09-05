@@ -14,3 +14,5 @@ print("max((25,4)) = ", y)
 z = eval('numpy', 'linspace', (0.0,1.0,5))
 print("linspace(0.0, 1.0, 5) = ", z)
 
+u,v = eval('ex5', 'g', (2,5))
+print("g(2, 3) = ", u, v)

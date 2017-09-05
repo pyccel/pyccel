@@ -2007,6 +2007,9 @@ class EvalStmt(BasicStmt):
         args = self.args.expr
         rs   = function(*args)
 
+        if isinstance(rs, tuple):
+            rs = list(rs)
+
         if not isinstance(rs, list):
             rs = [rs]
 
@@ -2019,7 +2022,13 @@ class EvalStmt(BasicStmt):
                 rank        = 0
                 shape       = None
                 allocatable = False
-                datatype    = convert_numpy_type(r.dtype)
+                # check if numpy variable
+                if (type(r).__module__ == np.__name__):
+                    t = r.dtype
+                else:
+                    t = type(r)
+                datatype = convert_numpy_type(t)
+
             elif isinstance(r, ndarray):
                 shape       = r.shape
                 rank        = len(shape)
