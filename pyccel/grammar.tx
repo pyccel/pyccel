@@ -371,7 +371,7 @@ BOOLEAN:
 
 UnaryOp:
    ('transpose'|'len'|'log'|'exp'|'cos'|'sin'|'sqrt'|'abs'|'pi'|'sign'|'csc'|'sec'|'tan'|'cot'|
-   'asin'|'acsc'|'acos'|'asec'|'atan'|'acot'|'atan2'|'factorial')
+   'asin'|'acsc'|'acos'|'asec'|'atan'|'acot'|'atan2'|'factorial'|'ceil')
 ;
 
 BinaryOp:

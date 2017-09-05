@@ -670,6 +670,14 @@ class FunctionDef(Basic):
         return self._args[5]
 
 
+class ceil(Basic):
+    def __new__(cls,rhs):    
+        return Basic.__new__(cls,rhs)
+    @property
+    def rhs(self):
+        return self._args[0]
+        
+    
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 

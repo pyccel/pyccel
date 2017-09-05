@@ -251,6 +251,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(expr.expr_l,expr.expr_r))
+    def _print_ceil(self,expr):
+        return self._get_statement('ceil(%s)'%(expr.rhs))
 
 
     def _print_Declare(self, expr):

@@ -8,7 +8,10 @@ from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy import preorder_traversal
 from sympy import Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
-              sec, tan, cot, asin, acsc, acos, asec, atan, acot, atan2,factorial
+              sec, tan, cot, asin, acsc, acos, asec, atan,\
+               acot, atan2,factorial
+        
+
 
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
@@ -20,9 +23,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
-                              Stencil, \
-                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,
-    IndexedElement)
+                              Stencil,ceil, \
+                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
 
 DEBUG = False
 #DEBUG = True
@@ -821,6 +823,8 @@ class FactorUnary(ExpressionElement, BasicStmt):
             return atan2(rhs)
         elif self.name=='factorial':
             return factorial(rhs)
+        elif self.name=='ceil':
+            return ceil(rhs)
         else:
             raise Exeption('function note supported')
 
