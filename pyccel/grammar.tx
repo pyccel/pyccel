@@ -159,7 +159,7 @@ ArgList:
   LPAREN args+=Args[','] RPAREN
 ;
 Args:
-  (FactorUnary|IdentifierOrNumber)
+  (ArgList | FactorUnary | IdentifierOrNumber)
 ;
 
 

@@ -1,4 +1,6 @@
 # coding: utf-8
+import numpy as np
+
 from sympy import Symbol, sympify, Integer, Float, Add, Mul
 from sympy import true, false,pi
 from sympy.tensor import Idx, Indexed, IndexedBase
@@ -1968,9 +1970,7 @@ class EvalStmt(BasicStmt):
     @property
     def expr(self):
         # TODO must check compatibility
-        self.update()
-
-        args = self.args.expr
+#        self.update()
 
         module_name   = self.module
         function_name = self.function
@@ -1986,7 +1986,17 @@ class EvalStmt(BasicStmt):
         except:
             raise Exception('Could not import function {}.'.format(function_name))
 
-        rs = function(*args)
+        args = self.args.expr
+        rs = []
+        for a in args:
+            if isinstance(a, ArgList):
+                rs.append(a.expr)
+            else:
+                rs.append(a)
+
+        print "args : ", rs
+        rs = function(*rs)
+        print "rs   : ", rs
 
         if not isinstance(rs, list):
             rs = [rs]
@@ -1996,6 +2006,29 @@ class EvalStmt(BasicStmt):
 
         ls = []
         for (l,r) in zip(self.lhs, rs):
-            ls.append(Assign(sympify(l), r))
+            datatype = 'float'
+            rank = 0
+            shape = None
+            allocatable = False
+
+#            allocatable = True
+#            rank = 1
+
+            insert_variable(l, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=allocatable, \
+                            shape=shape)
+
+            var = namespace[l]
+            if isinstance(r, ArgList):
+                e = r.expr
+                # TODO improve
+                shape = np.asarray(e).shape
+                stmt = NumpyArray(var, e, shape)
+            else:
+                stmt = Assign(var, r)
+
+            ls.append(stmt)
 
         return ls
