@@ -11,6 +11,6 @@ print("sqrt(25) = ", x)
 y = eval('numpy', 'max', ((25,4)))
 print("max((25,4)) = ", y)
 
-#z = eval('numpy', 'linspace', (0.,1.,5))
-#print("linspace(0.,1.,5) = ", z)
+z = eval('numpy', 'linspace', (0.0,1.0,5))
+print("linspace(0.0, 1.0, 5) = ", z)
 
