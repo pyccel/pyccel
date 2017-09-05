@@ -106,8 +106,8 @@ class Assign(Basic):
         rhs = _sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        #if not isinstance(lhs, assignable):
+        #    raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
         # Indexed types implement shape, but don't define it until later. This
         # causes issues in assignment validation. For now, matrices are defined
         # as anything with a shape that is not an Indexed
