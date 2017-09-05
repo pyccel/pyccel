@@ -44,6 +44,7 @@ __all__ = ["Pyccel", \
            "ImportFromStmt", \
            "ConstructorStmt", \
            "CommentStmt", \
+           "EvalStmt", \
            # Multi-threading
            "ThreadStmt", \
            "StencilStmt", \
@@ -1939,3 +1940,62 @@ class StencilStmt(AssignStmt):
         var = Symbol(var_name)
 
         return Stencil(var, shape, step)
+
+class EvalStmt(BasicStmt):
+    """Class representing multiple assignments. In fortran, this correspondans
+    to the call of a subroutine"""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.lhs      = kwargs.pop('lhs')
+        self.module   = kwargs.pop('module')
+        self.function = kwargs.pop('function')
+        self.args     = kwargs.pop('args')
+
+
+        super(EvalStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """."""
+        return self.lhs
+
+    def update(self):
+        for var_name in self.lhs:
+            if not(var_name in namespace):
+                raise Exception('Undefined variable {}.'.format(var_name))
+
+    @property
+    def expr(self):
+        # TODO must check compatibility
+        self.update()
+
+        args = self.args.expr
+
+        module_name   = self.module
+        function_name = self.function
+
+        try:
+            import importlib
+            module   = importlib.import_module(module_name)
+        except:
+            raise Exception('Could not import module {}.'.format(module_name))
+
+        try:
+            function = getattr(module, "{}".format(function_name))
+        except:
+            raise Exception('Could not import function {}.'.format(function_name))
+
+        rs = function(*args)
+
+        if not isinstance(rs, list):
+            rs = [rs]
+
+        if not(len(rs) == len(self.lhs)):
+            raise Exception('Incompatible lhs with function output.')
+
+        ls = []
+        for (l,r) in zip(self.lhs, rs):
+            ls.append(Assign(sympify(l), r))
+
+        return ls
