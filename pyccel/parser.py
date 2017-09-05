@@ -15,6 +15,7 @@ from pyccel.syntax import (Pyccel, \
                            IfStmt, ForStmt, FunctionDefStmt,WhileStmt,\
                            ImportFromStmt, \
                            CommentStmt, SuiteStmt, \
+                           EvalStmt, \
                            # Multi-threading
                            ThreadStmt, \
                            StencilStmt, \
@@ -173,6 +174,7 @@ class PyccelParser(Parser):
                    IfStmt, ForStmt, FunctionDefStmt,WhileStmt, \
                    ImportFromStmt, \
                    CommentStmt, SuiteStmt, \
+                   EvalStmt, \
                    # Multi-threading
                    ThreadStmt, \
                    StencilStmt, \
