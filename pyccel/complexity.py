@@ -4,15 +4,24 @@ from sympy import sympify, Symbol, Integer, Float, Add, Mul
 from sympy import Piecewise, log
 from sympy.abc import x
 
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Derivative
 from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
+from sympy.utilities.iterables import iterable
+
+from pyccel.parser  import PyccelParser
+from pyccel.syntax import ( \
+                           # statements
+                           AssignStmt, MultiAssignStmt, \
+                           IfStmt, ForStmt,WhileStmt \
+                           )
 
 # ...
-def count_ops(expr):
+def count_ops(expr, visual=True):
     """
     Return a representation (integer or expression) of the operations in expr.
 
@@ -109,10 +118,10 @@ def count_ops(expr):
                 args.extend(a.args)
 
     elif type(expr) is dict:
-        ops = [count_ops(k, visual=True) +
-               count_ops(v, visual=True) for k, v in expr.items()]
+        ops = [count_ops(k, visual=visual) +
+               count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
-        ops = [count_ops(i, visual=True) for i in expr]
+        ops = [count_ops(i, visual=visual) for i in expr]
     elif isinstance(expr, BooleanFunction):
         ops = []
         for arg in expr.args:
@@ -150,16 +159,81 @@ def count_ops(expr):
     return ops
 # ...
 
+# ...
+class Complexity(object):
+    """Abstract class for complexity computation."""
+    def __init__(self, filename):
+        """Constructor for the Codegen class.
+
+        body: list
+            list of statements.
+        """
+        # ... TODO improve once TextX will handle indentation
+        from pyccel.codegen import clean, preprocess, make_tmp_file
+
+        clean(filename)
+
+        filename_tmp = make_tmp_file(filename)
+        preprocess(filename, filename_tmp)
+        filename = filename_tmp
+        # ...
+
+        self._filename = filename
+
+    @property
+    def filename(self):
+        """Returns the name of the file to convert."""
+        return self._filename
+
+    def cost(self):
+        """Computes the complexity of the given code."""
+        # ...
+        filename = self.filename
+        # ...
+
+        # ...
+        pyccel = PyccelParser()
+        ast    = pyccel.parse_from_file(filename)
+        # ...
+
+        # ...
+        cost = 0
+        for stmt in ast.statements:
+            if isinstance(stmt, AssignStmt):
+                cost += count_ops(stmt.expr.rhs)
+#            elif isinstance(stmt, MultiAssignStmt):
+#                pass
+            elif isinstance(stmt, ForStmt):
+                expr = stmt.expr
+                b = expr.iterable.args[0]
+                e = expr.iterable.args[1]
+                cost += count_ops(stmt.body.expr) * (e-b)
+            elif isinstance(stmt,WhileStmt):
+                pass
+            elif isinstance(stmt, IfStmt):
+                pass
+            else:
+                pass
+        # ...
+
+        return cost
+# ...
+
 ##############################################
 if __name__ == "__main__":
-    expr = sympify('(x+1)**2+x+1')
-    print expr
-    d = count_ops(expr)
-    print d
+#    expr = sympify('(x+1)**2+x+1')
+#    print expr
+#    d = count_ops(expr)
+#    print d
+#
+#    f = x**2
+#    g = log(x)
+#    expr = Piecewise( (0, x<-1), (f, x<=1), (g, True))
+#    d = count_ops(expr)
+#    print d
 
-    f = x**2
-    g = log(x)
-    expr = Piecewise( (0, x<-1), (f, x<=1), (g, True))
-    d = count_ops(expr)
-    print d
+    import sys
+    filename = sys.argv[1]
+    complexity = Complexity(filename)
+    print complexity.cost()
 
