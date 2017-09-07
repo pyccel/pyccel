@@ -3,6 +3,8 @@ import numpy as np
 from numpy import ndarray
 from numpy import asarray
 
+from ast import literal_eval
+
 from sympy import Symbol, sympify, Integer, Float, Add, Mul
 from sympy import true, false,pi
 from sympy.tensor import Idx, Indexed, IndexedBase
@@ -1295,34 +1297,39 @@ class Comparison(ExpressionElement):
         return ret
 
 class FlowStmt(BasicStmt):
-    """
-    """
+    """Base class representing a Flow statement in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a Flow statement
+
+        Parameters
+        ==========
+        label: str
+            name of the flow statement.
+            One among {'break', 'continue', 'return', 'raise', 'yield'}
         """
         self.label = kwargs.pop('label')
 
 class BreakStmt(FlowStmt):
-    """
-    """
-    def __init__(self, **kwargs):
-        """
-        """
-        super(BreakStmt, self).__init__(**kwargs)
+    """Base class representing a Break statement in the grammar."""
 
 class ContinueStmt(FlowStmt):
-    """
-    """
-    def __init__(self, **kwargs):
-        """
-        """
-        super(ContinueStmt, self).__init__(**kwargs)
+    """Base class representing a Continue statement in the grammar."""
 
 class ReturnStmt(FlowStmt):
-    """
-    """
+    """Base class representing a Return statement in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a return statement flow.
+
+        Parameters
+        ==========
+        variables: list
+            list of variables to return, as strings
+        results: list
+            list of variables to return, as pyccel.types.ast objects
         """
         self.variables = kwargs.pop('variables')
         self.results   = None
@@ -1332,6 +1339,7 @@ class ReturnStmt(FlowStmt):
     @property
     def expr(self):
         """
+        Process the return flow statement
         """
         self.update()
 
@@ -1360,25 +1368,26 @@ class ReturnStmt(FlowStmt):
         return decs
 
 class RaiseStmt(FlowStmt):
-    """
-    """
-    def __init__(self, **kwargs):
-        """
-        """
-        super(RaiseStmt, self).__init__(**kwargs)
+    """Base class representing a Raise statement in the grammar."""
 
 class YieldStmt(FlowStmt):
-    """
-    """
-    def __init__(self, **kwargs):
-        """
-        """
-        super(YieldStmt, self).__init__(**kwargs)
+    """Base class representing a Yield statement in the grammar."""
 
 class FunctionDefStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing the definition of a function in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for the definition of a function.
+
+        Parameters
+        ==========
+        name: str
+            name of the function
+        args: list
+            list of the function arguments
+        body: list
+            list of statements as given by the parser.
         """
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
@@ -1389,7 +1398,9 @@ class FunctionDefStmt(BasicStmt):
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
+    # TODO: closure?
     def update(self):
+        """Inserts arguments that are not in the namespace."""
         for arg_name in self.args:
             if not(arg_name in namespace):
                 if DEBUG:
@@ -1406,16 +1417,20 @@ class FunctionDefStmt(BasicStmt):
 
     @property
     def local_vars(self):
-        """."""
+        """returns the local variables of the body."""
         return self.body.local_vars
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables of the body."""
         return self.body.stmt_vars
 
     @property
     def expr(self):
+        """
+        Process the Function Definition by returning the appropriate object from
+        pyccel.types.ast
+        """
         self.update()
         body = self.body.expr
 
@@ -1454,14 +1469,20 @@ class FunctionDefStmt(BasicStmt):
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
 
-
-
 class NumpyZerosStmt(AssignStmt):
-    """Class representing a ."""
+    """Class representing a zeros function call."""
+
     def __init__(self, **kwargs):
         """
-        """
+        Constructor for a zeros function call.
 
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        parameters: list
+            list of parameters needed for the function call.
+        """
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
 
@@ -1495,10 +1516,11 @@ class NumpyZerosStmt(AssignStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables."""
         return [self.lhs]
 
     def update(self):
+        """updates the zeros function call."""
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
@@ -1556,6 +1578,10 @@ class NumpyZerosStmt(AssignStmt):
 
     @property
     def expr(self):
+        """
+        Process the zeros statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         shape = self.shape
@@ -1568,9 +1594,17 @@ class NumpyZerosStmt(AssignStmt):
         return stmt
 
 class NumpyZerosLikeStmt(AssignStmt):
-    """Class representing a ."""
+    """Class representing a zeroslike function call."""
     def __init__(self, **kwargs):
         """
+        Constructor for a zeros function call.
+
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        rhs: str
+            input variable name
         """
         self.lhs = kwargs.pop('lhs')
         self.rhs = kwargs.pop('rhs')
@@ -1579,33 +1613,31 @@ class NumpyZerosLikeStmt(AssignStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables."""
         return [self.lhs]
 
     def update(self):
+        """updates the zeroslike function call."""
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
                 print("> Found new variable " + var_name)
         v=variables[self.rhs]
 
-
         insert_variable(var_name, \
                             datatype=v.dtype, \
                             rank=v.rank, \
                             allocatable=v.allocatable,shape=v.shape)
 
-
-
-
-
     @property
     def expr(self):
+        """
+        Process the zeroslike statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
         v=variables[self.rhs]
         shape = v.shape
-
-
 
         if shape==None:
             shape=1
@@ -1617,10 +1649,20 @@ class NumpyZerosLikeStmt(AssignStmt):
 
         return stmt
 
+# TODO: shall we keep it?
 class NumpyOnesStmt(AssignStmt):
+    """Class representing a ones function call."""
 
     def __init__(self, **kwargs):
         """
+        Constructor for a ones function call.
+
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        parameters: list
+            list of parameters needed for the function call.
         """
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
@@ -1654,10 +1696,11 @@ class NumpyOnesStmt(AssignStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables."""
         return [self.lhs]
 
     def update(self):
+        """updates the ones function call."""
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
@@ -1691,6 +1734,10 @@ class NumpyOnesStmt(AssignStmt):
 
     @property
     def expr(self):
+        """
+        Process the ones statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         shape = self.shape
@@ -1703,9 +1750,23 @@ class NumpyOnesStmt(AssignStmt):
         return stmt
 
 class NumpyLinspaceStmt(AssignStmt):
-    """Class representing a ."""
+    """Class representing a linspace function call."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a linspace function call. This will create a uniform
+        grid between two points, given the number of intervals.
+
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        start: str, int, float
+            min value of the linspace
+        end: str
+            max value of the linspace
+        size: int
+            the total size of the constructed array is size+1.
         """
         self.lhs   = kwargs.pop('lhs')
         self.start = kwargs.pop('start')
@@ -1716,10 +1777,11 @@ class NumpyLinspaceStmt(AssignStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables."""
         return [self.lhs]
 
     def update(self):
+        """updates the linspace function call."""
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
@@ -1749,6 +1811,10 @@ class NumpyLinspaceStmt(AssignStmt):
 
     @property
     def expr(self):
+        """
+        Process the linspace statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         var_name = self.lhs
@@ -1763,28 +1829,41 @@ class NumpyLinspaceStmt(AssignStmt):
         return stmt
 
 class NumpyArrayStmt(AssignStmt):
+    """Class representing an array of atoms, with a static dimension."""
+
     def __init__(self, **kwargs):
+        """
+        Constructor for a zeros function call.
 
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        rhs: list
+            list of atoms
+        dtype: str
+            datatype of the array elements.
+        """
+        self.lhs   = kwargs.pop('lhs')
+        self.rhs   = kwargs.pop('rhs')
+        self.dtype = kwargs.pop('dtype')
 
-        self.lhs= kwargs.pop('lhs')
-        self.rhs= kwargs.pop('rhs')
-        import ast
-        self.rhs=ast.literal_eval(self.rhs)
-        self.dtype=kwargs.pop('dtype')
+        self.rhs   = literal_eval(self.rhs)
+        self.shape = np.shape(self.rhs)
 
-        import numpy as n
-        self.shape=n.shape(self.rhs)
         super(AssignStmt, self).__init__(**kwargs)
-
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables."""
         return [self.lhs]
-
 
     @property
     def expr(self):
+        """
+        Process the array statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
         var=sympify(self.lhs)
         mylist=self.rhs
@@ -1800,9 +1879,10 @@ class NumpyArrayStmt(AssignStmt):
             elif self.dtype=='float':
                 mylist=map(float,mylist)
 
-
         return NumpyArray(var,mylist,self.shape)
+
     def update(self):
+        """updates the array function call."""
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
@@ -1820,11 +1900,18 @@ class NumpyArrayStmt(AssignStmt):
                             rank=rank, \
                             allocatable=True,shape=self.shape)
 
-
 class ImportFromStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing an Import statement in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor for an Import statement.
+
+        Parameters
+        ==========
+        dotted_name: list
+            modules path
+        import_as_names: textX object
+            everything that can be imported
         """
         self.dotted_name     = kwargs.pop('dotted_name')
         self.import_as_names = kwargs.pop('import_as_names')
@@ -1833,6 +1920,10 @@ class ImportFromStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Import statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         # TODO how to handle dotted packages?
@@ -1841,9 +1932,18 @@ class ImportFromStmt(BasicStmt):
         return Import(fil, funcs)
 
 class PythonPrintStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a Print statement as described in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a Print statement.
+
+        Parameters
+        ==========
+        name: str
+            is equal to 'print'
+        args: list
+            list of atoms to print
         """
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
@@ -1852,6 +1952,10 @@ class PythonPrintStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Print statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         func_name   = self.name
@@ -1866,9 +1970,16 @@ class PythonPrintStmt(BasicStmt):
         return Print(expressions)
 
 class CommentStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a Comment in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a Comment.
+
+        Parameters
+        ==========
+        text: str
+            text that appears in the comment
         """
         self.text = kwargs.pop('text')
 
@@ -1881,13 +1992,23 @@ class CommentStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Comment statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
         return Comment(self.text)
 
 class SuiteStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a Suite statement in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor for a Suite statement.
+
+        Parameters
+        ==========
+        stmts: list
+            list of statements as given by the parser.
         """
         self.stmts = kwargs.pop('stmts')
 
@@ -1895,7 +2016,7 @@ class SuiteStmt(BasicStmt):
 
     @property
     def local_vars(self):
-        """."""
+        """returns local variables for every statement in stmts."""
         ls = []
         for stmt in self.stmts:
             ls += stmt.local_vars
@@ -1904,39 +2025,48 @@ class SuiteStmt(BasicStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns statement variables for every statement in stmts."""
         ls = []
         for stmt in self.stmts:
             ls += stmt.stmt_vars
         s = set(ls)
         return list(s)
 
-    def update(self):
-        pass
-
     @property
     def expr(self):
+        """
+        Process the Suite statement,
+        by returning a list of appropriate objects from pyccel.types.ast
+        """
         self.update()
         ls = [stmt.expr for stmt in  self.stmts]
         return ls
 
 class BasicTrailer(BasicStmt):
-    """Class representing a ."""
+    """Base class representing a Trailer in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor for a Base Trailer.
+
+        Parameters
+        ==========
+        args: list or ArgList
+            arguments of the trailer
         """
         self.args = kwargs.pop('args', None)
 
         super(BasicTrailer, self).__init__(**kwargs)
 
-    @property
-    def expr(self):
-        pass
-
 class Trailer(BasicTrailer):
-    """Class representing a ."""
+    """Class representing a Trailer in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor for a Trailer.
+
+        Parameters
+        ==========
+        subs: list or subscripts
+            subscripts of the trailer
         """
         self.subs = kwargs.pop('subs', None)
 
@@ -1944,6 +2074,10 @@ class Trailer(BasicTrailer):
 
     @property
     def expr(self):
+        """
+        Process a Trailer by returning the approriate objects from
+        pyccel.types.ast
+        """
         self.update()
         if self.args:
             return self.args.expr
@@ -1951,26 +2085,36 @@ class Trailer(BasicTrailer):
             return self.subs.expr
 
 class TrailerArgList(BasicTrailer):
-    """Class representing arguments of a function call."""
+    """Class representing a Trailer with list of arguments in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor of the Trailer ArgList
         """
         super(TrailerArgList, self).__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Process a Trailer by returning the approriate objects from
+        pyccel.types.ast
+        """
         self.update()
         return [arg.expr for arg in  self.args]
 
 class TrailerSubscriptList(BasicTrailer):
-    """Class representing a ."""
+    """Class representing a Trailer with list of subscripts in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor of the Trailer with subscripts
         """
         super(TrailerSubscriptList, self).__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Process a Trailer by returning the approriate objects from
+        pyccel.types.ast
+        """
         self.update()
         args = []
         for a in self.args:
@@ -1989,9 +2133,18 @@ class TrailerSubscriptList(BasicTrailer):
         return args
 
 class BasicSlice(BasicStmt):
-    """Class representing a ."""
+    """Base class representing a Slice in the grammar."""
     def __init__(self, **kwargs):
         """
+        Constructor for the base slice.
+        The general form of slices is 'a:b'
+
+        Parameters
+        ==========
+        start: str, int, Expression
+            Starting index of the slice.
+        end: str, int, Expression
+            Ending index of the slice.
         """
         self.start = kwargs.pop('start', None)
         self.end   = kwargs.pop('end',   None)
@@ -1999,6 +2152,14 @@ class BasicSlice(BasicStmt):
         super(BasicSlice, self).__init__(**kwargs)
 
     def extract_arg(self, name):
+        """
+        returns an argument as a variable, given its name
+
+        Parameters
+        ==========
+        name: str
+            variable name
+        """
         if name is None:
             return None
 
@@ -2019,27 +2180,49 @@ class BasicSlice(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Slice statement, by giving its appropriate object from
+        pyccel.types.ast
+        """
         start = self.extract_arg(self.start)
         end   = self.extract_arg(self.end)
 
         return Slice(start, end)
 
 class TrailerSlice(BasicSlice):
-    """Class representing a ."""
+    """
+    Class representing a Slice in the grammar.
+    A Slice is of the form 'a:b'
+    """
     pass
 
 class TrailerSliceRight(BasicSlice):
-    """Class representing a ."""
+    """
+    Class representing a right Slice in the grammar.
+    A right Slice is of the form 'a:'
+    """
     pass
 
 class TrailerSliceLeft(BasicSlice):
-    """Class representing a ."""
+    """
+    Class representing a left Slice in the grammar.
+    A left Slice is of the form ':b'
+    """
     pass
 
 class ThreadStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a Thread call function in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a Thread function call.
+
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        func: str
+            function to call
         """
         self.lhs  = kwargs.pop('lhs')
         self.func = kwargs.pop('func')
@@ -2047,6 +2230,9 @@ class ThreadStmt(BasicStmt):
         super(ThreadStmt, self).__init__(**kwargs)
 
     def update(self):
+        """
+        appends the variable to the namespace
+        """
         var_name = str(self.lhs)
         if not(var_name in namespace):
             insert_variable(var_name, datatype='int', rank=0)
@@ -2055,6 +2241,10 @@ class ThreadStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Thread function call,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         var_name = str(self.lhs)
@@ -2069,9 +2259,15 @@ class ThreadStmt(BasicStmt):
             raise Exception('Wrong value for func.')
 
 class ArgList(BasicStmt):
-    """Class representing a ."""
+    """Class representing a list of arguments."""
     def __init__(self, **kwargs):
         """
+        Constructor for ArgList statement.
+
+        Parameters
+        ==========
+        args: list
+            list of arguments
         """
         self.args = kwargs.pop('args', None)
 
@@ -2079,6 +2275,10 @@ class ArgList(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the ArgList statement,
+        by returning a list of appropriate objects from pyccel.types.ast
+        """
         ls = []
         for arg in self.args:
             if isinstance(arg, (FactorUnary, ArgList)):
@@ -2095,9 +2295,18 @@ class ArgList(BasicStmt):
         return ls
 
 class StencilStmt(AssignStmt):
-    """Class representing a ."""
+    """Class representing a Stencil statement in the grammar."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for a Stencil statement.
+
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        parameters: list
+            list of parameters needed for the Stencil object.
         """
         self.lhs        = kwargs.pop('lhs')
         self.parameters = kwargs.pop('parameters')
@@ -2146,10 +2355,13 @@ class StencilStmt(AssignStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns statement variables."""
         return [self.lhs]
 
     def update(self):
+        """
+        specific treatments before process
+        """
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
@@ -2216,6 +2428,10 @@ class StencilStmt(AssignStmt):
 
     @property
     def expr(self):
+        """
+        Process the Stencil statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
         self.update()
 
         shape = self.shape
@@ -2227,31 +2443,50 @@ class StencilStmt(AssignStmt):
         return Stencil(var, shape, step)
 
 class EvalStmt(BasicStmt):
-    """Class representing multiple assignments. In fortran, this correspondans
-    to the call of a subroutine"""
+    """
+    Class representing an Eval statement in the grammar
+    """
     def __init__(self, **kwargs):
         """
+        Constructor for a eval statement.
+
+        Parameters
+        ==========
+        lhs: str
+            variable name to create
+        module: str
+            module where the function lives
+        function: str
+            function to call from the module
+        args: list
+            list of arguments to feed the function call
         """
         self.lhs      = kwargs.pop('lhs')
         self.module   = kwargs.pop('module')
         self.function = kwargs.pop('function')
         self.args     = kwargs.pop('args')
 
-
         super(EvalStmt, self).__init__(**kwargs)
 
     @property
     def stmt_vars(self):
-        """."""
+        """returns the statement variables."""
         return self.lhs
 
     def update(self):
+        """
+        Pre-process. We check that the lhs is not in the namespace.
+        """
         for var_name in self.lhs:
             if not(var_name in namespace):
                 raise Exception('Undefined variable {}.'.format(var_name))
 
     @property
     def expr(self):
+        """
+        Process the Eval statement,
+        by returning a list of appropriate objects from pyccel.types.ast
+        """
         # TODO must check compatibility
 #        self.update()
 
