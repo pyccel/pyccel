@@ -11,11 +11,9 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy import preorder_traversal
-from sympy import Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
-              sec, tan, cot, asin, acsc, acos, asec, atan,\
-               acot, atan2,factorial
-        
-
+from sympy import (Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
+                   sec, tan, cot, asin, acsc, acos, asec, atan,\
+                   acot, atan2,factorial)
 
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
@@ -75,11 +73,9 @@ settings     = {}
 variables    = {}
 declarations = {}
 
-operators = {}
-
 namespace["True"]  = true
 namespace["False"] = false
-namespace["pi"]=pi
+namespace["pi"]    = pi
 
 def Check_type(var_name,expr):
     datatype='int'
@@ -174,12 +170,37 @@ def Check_type(var_name,expr):
     return {'datatype':datatype,'name':name , 'rank':rank, 'allocatable':allocatable,'shape':shape}
 
 def insert_variable(var_name, \
-                    var=None, \
                     datatype=None, \
                     rank=None, \
                     allocatable=None, \
                     shape=None, \
-                    is_argument=False):
+                    is_argument=False, \
+                    var=None):
+    """
+    Inserts a variable as a symbol into the namespace. Appends also its
+    declaration and the corresponding variable.
+
+    var_name: str
+        variable name
+
+    datatype: str
+        datatype variable attribut. One among {'int', 'float', 'complex'}
+
+    allocatable: bool
+        if True then the variable needs memory allocation.
+
+    rank: int
+        if rank > 0, then the variable is an array
+
+    shape: int or list of int
+        shape of the array.
+
+    is_argument: bool
+        if the variable is a function argument.
+
+    var: pyccel.types.ast.Variable
+        if attributs are not given, then var must be provided.
+    """
     if type(var_name) in [int, float]:
         return
 
@@ -239,6 +260,7 @@ def insert_variable(var_name, \
     declarations[var_name] = dec
 
 # ...
+# TODO: refactoring
 def do_arg(a):
     if isinstance(a, str):
         arg = Symbol(a, integer=True)
@@ -258,8 +280,13 @@ def do_arg(a):
 
 # ...
 def is_integer_expression(expr):
-    """determines is an expression is an integer expression.
-    We check if there is an integer Symbol."""
+    """
+    Determines if an expression is an integer expression.
+    We check if there is an integer Symbol.
+
+    expr: sympy.expression
+        a sympy expression
+    """
     for arg in preorder_traversal(expr):
         if isinstance(arg, Symbol):
             if arg.is_integer:
@@ -269,6 +296,13 @@ def is_integer_expression(expr):
 
 # ...
 def convert_to_integer_expression(expr):
+    """
+    converts an expression to an integer expression.
+    this function replaces the float numbers like 1.0 to 1
+
+    expr: sympy.expression
+        a sympy expression
+    """
     numbers = []
     for arg in preorder_traversal(expr):
         if isinstance(arg, Float):
@@ -281,19 +315,28 @@ def convert_to_integer_expression(expr):
 
 # ...
 def is_Float(s):
-    """returns True if the string s is a float number."""
+    """
+    returns True if the string s is a float number.
+
+    s: str, int, float
+        a string or a number
+    """
     try:
         float(s)
         return True
-#    except ValueError:
     except:
         return False
 # ...
 
 # ...
 def convert_numpy_type(dtype):
-    """convert a numpy type to standard python type that are understood by the
-    syntax."""
+    """
+    convert a numpy type to standard python type that are understood by the
+    syntax.
+
+    dtype: int, float, complex
+        a numpy datatype
+    """
     # TODO improve, numpy dtypes are int64, float64, ...
     if dtype == int:
         datatype = 'int'
@@ -309,12 +352,17 @@ def convert_numpy_type(dtype):
 # ...
 class Pyccel(object):
     """Class for Pyccel syntax."""
+
     def __init__(self, **kwargs):
         """
         Constructor for Pyccel.
 
+        Parameters
+        ==========
+        statements : list
+            list of parsed statements.
         """
-        self.statements   = kwargs.pop('statements',   [])
+        self.statements = kwargs.pop('statements', [])
 
         # ... reset global variables
         namespace    = {}
@@ -323,64 +371,88 @@ class Pyccel(object):
         variables    = {}
         declarations = {}
 
-        operators = {}
-
         namespace["True"]  = true
         namespace["False"] = false
         # ...
 
     @property
     def declarations(self):
+        """
+        Returns the list of all declarations using objects from pyccel.types.ast
+        """
         d = {}
         for key,dec in declarations.items():
             if not(isinstance(dec, Argument)):
                 d[key] = dec
         return d
 
-class Number(object):
-    """Class representing a number."""
-    def __init__(self, **kwargs):
-        """
-        """
-        self.name     = kwargs.pop('name')
-        self.datatype = kwargs.pop('datatype')
-
-        namespace[self.name] = self
-
-    @property
-    def expr(self):
-        return Symbol(self.name)
-
 class BasicStmt(object):
+    """
+    Base class for all objects in Pyccel.
+    """
+
     def __init__(self, **kwargs):
-        # TODO declarations and statements must be a dictionary
-        self.statements   = []
+        """
+        Constructor for the base class.
+
+        Conventions:
+
+        1) Every extension class must provide the properties stmt_vars and
+        local_vars
+        2) stmt_vars describes the list of all variables that are
+        created by the statement.
+        3) local_vars describes the list of all local variables to the
+        statement, like the index of a For statement.
+        4) Every extension must implement the update function. This function is
+        called to prepare for the applied property (for example the expr
+        property.)
+
+        Parameters
+        ==========
+        statements : list
+            list of statements from pyccel.types.ast
+        """
+        self.statements = []
 
     @property
     def declarations(self):
+        """
+        Returns all declarations related to the current statement by looking
+        into the global dictionary declarations. the filter is given by
+        stmt_vars and local_vars, which must be provided by every extension of
+        the base class.
+        """
         return [declarations[v] for v in self.stmt_vars + self.local_vars]
 
     @property
-    def local_declarations(self):
-        return [declarations[v] for v in self.local_vars]
-
-    @property
     def local_vars(self):
-        """must be defined byt the statement."""
+        """must be defined by the statement."""
         return []
 
     @property
     def stmt_vars(self):
-        """must be defined byt the statement."""
+        """must be defined by the statement."""
         return []
 
     def update(self):
         pass
 
 class ConstructorStmt(BasicStmt):
-    """Class representing a ."""
+    """
+    Class representing a Constructor statement.
+
+    Constructors are used to mimic static typing in Python.
+    """
     def __init__(self, **kwargs):
         """
+        Constructor for the Constructor statement class.
+
+        Parameters
+        ==========
+        lhs: str
+            variable to construct
+        constructor: str
+            a builtin constructor
         """
         self.lhs         = kwargs.pop('lhs')
         self.constructor = kwargs.pop('constructor')
@@ -390,6 +462,8 @@ class ConstructorStmt(BasicStmt):
     @property
     def expr(self):
         """
+        Process the Constructor statement by inserting the lhs variable in the
+        global dictionaries.
         """
         var_name    = str(self.lhs)
         constructor = str(self.constructor)
@@ -411,24 +485,31 @@ class ConstructorStmt(BasicStmt):
         return Comment("")
 
 class DeclarationStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a declaration statement."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for the declaration statement.
+
+        Parameters
+        ==========
+        variables_names: list of str
+            list of variable names.
+        datatype: str
+            datatype of the declared variables.
         """
         self.variables_name = kwargs.pop('variables')
         self.datatype = kwargs.pop('datatype')
 
-
-        self.variables = []
-        # TODO create the appropriate type, not only Number
-        for var in self.variables_name:
-            self.variables.append(Number(name=var, datatype=self.datatype))
+        raise Exception("Need to be updated! not used anymore.")
 
         super(DeclarationStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
         """
+        Process the declaration statement. This property will return a list of
+        declarations statements.
         """
         datatype = str(self.datatype)
         decs = []
@@ -441,10 +522,18 @@ class DeclarationStmt(BasicStmt):
 
         return decs
 
+# TODO: improve by creating the corresponding object in pyccel.types.ast
 class DelStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a delete statement."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for the Delete statement class.
+
+        Parameters
+        ==========
+        variables: list of str
+            variables to delete
         """
         self.variables = kwargs.pop('variables')
 
@@ -452,6 +541,9 @@ class DelStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Delete statement by returning a pyccel.types.ast object
+        """
         lines = []
         for var in self.variables:
             if var in namespace:
@@ -469,10 +561,18 @@ class DelStmt(BasicStmt):
 
         return lines
 
+# TODO: improve by creating the corresponding object in pyccel.types.ast
 class PassStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a Pass statement."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for the Pass statement class.
+
+        Parameters
+        ==========
+        label: str
+            label must be equal to 'pass'
         """
         self.label = kwargs.pop('label')
 
@@ -480,15 +580,29 @@ class PassStmt(BasicStmt):
 
     @property
     def expr(self):
-
+        """
+        Process the Delete statement by returning a pyccel.types.ast object
+        """
         self.update()
 
         return self.label
 
+# TODO: improve by allowing for the elif statements
 class IfStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing an If statement."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for the If statement class.
+
+        Parameters
+        ==========
+        body_true: list
+            statements tree as given by the textX, for the true block (if)
+        body_false: list
+            statements tree as given by the textX, for the false block (else)
+        test: Test
+            represents the condition for the If statement.
         """
         self.body_true  = kwargs.pop('body_true')
         self.body_false = kwargs.pop('body_false')
@@ -498,7 +612,7 @@ class IfStmt(BasicStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """Returns the statement variables."""
         ls = []
         for stmt in self.body_true.stmts:
             ls += stmt.local_vars
@@ -511,6 +625,9 @@ class IfStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the If statement by returning a pyccel.types.ast object
+        """
         self.update()
         test       = self.test.expr
         body_true  = self.body_true .expr
@@ -521,23 +638,36 @@ class IfStmt(BasicStmt):
             return If((test, body_true))
 
 class AssignStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing an assign statement."""
+
     def __init__(self, **kwargs):
         """
-        """
+        Constructor for the Assign statement.
 
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = kwargs.pop('rhs')
+        Parameters
+        ==========
+        lhs: str
+            variable to assign to
+        rhs: Expression
+            expression to assign to the lhs
+        trailer: Trailer
+            a trailer is used for a function call or Array indexing.
+        """
+        self.lhs     = kwargs.pop('lhs')
+        self.rhs     = kwargs.pop('rhs')
         self.trailer = kwargs.pop('trailer', None)
 
         super(AssignStmt, self).__init__(**kwargs)
 
     @property
     def stmt_vars(self):
-        """."""
+        """Statement variables."""
         return [self.lhs]
 
     def update(self):
+        """
+        Update before processing the Assign statement
+        """
         # TODO default type?
         datatype = 'float'
 #        datatype = 'int'
@@ -572,6 +702,9 @@ class AssignStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the Assign statement by returning a pyccel.types.ast object
+        """
         if isinstance(self.rhs, Expression):
             rhs = self.rhs.expr
 
@@ -601,12 +734,23 @@ class AssignStmt(BasicStmt):
         return l
 
 class MultiAssignStmt(BasicStmt):
-    """Class representing multiple assignments. In fortran, this correspondans
-    to the call of a subroutine"""
+    """
+    Class representing multiple assignments.
+    In fortran, this correspondans to the call of a subroutine.
+    """
     def __init__(self, **kwargs):
         """
-        """
+        Constructor for the multi Assign statement.
 
+        Parameters
+        ==========
+        lhs: list of str
+            variables to assign to
+        name: str
+            function/subroutine name
+        trailer: Trailer
+            a trailer is used for a function call or Array indexing.
+        """
         self.lhs     = kwargs.pop('lhs')
         self.name    = kwargs.pop('name')
         self.trailer = kwargs.pop('trailer', None)
@@ -615,10 +759,13 @@ class MultiAssignStmt(BasicStmt):
 
     @property
     def stmt_vars(self):
-        """."""
+        """Statement variables."""
         return self.lhs
 
     def update(self):
+        """
+        Update before processing the MultiAssign statement
+        """
         datatype = 'float'
         name = str(self.name)
         if not(name in namespace):
@@ -639,6 +786,9 @@ class MultiAssignStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the MultiAssign statement by returning a pyccel.types.ast object
+        """
         self.update()
         lhs = self.lhs
         rhs = self.name
@@ -649,28 +799,42 @@ class MultiAssignStmt(BasicStmt):
 
         return MultiAssign(lhs, rhs, args)
 
-
 class ForStmt(BasicStmt):
-    """Class representing a ."""
+    """Class representing a For statement."""
+
     def __init__(self, **kwargs):
         """
+        Constructor for the For statement.
+
+        Parameters
+        ==========
+        iterable: str
+            the iterable variable
+        start: str
+            start index
+        end: str
+            end index
+        step: str
+            step for the iterable. if not given, 1 will be used.
+        body: list
+            a list of statements for the body of the For statement.
         """
         self.iterable = kwargs.pop('iterable')
         self.start    = kwargs.pop('start')
         self.end      = kwargs.pop('end')
-        self.body     = kwargs.pop('body')
         self.step     = kwargs.pop('step', None)
+        self.body     = kwargs.pop('body')
 
         super(ForStmt, self).__init__(**kwargs)
 
     @property
     def local_vars(self):
-        """."""
+        """Local variables of the For statement."""
         return [self.iterable]
 
     @property
     def stmt_vars(self):
-        """."""
+        """Statement variables."""
         ls = []
         for stmt in self.body.stmts:
             ls += stmt.local_vars
@@ -678,11 +842,17 @@ class ForStmt(BasicStmt):
         return ls
 
     def update(self):
+        """
+        Update before processing the statement
+        """
         # check that start and end were declared, if they are symbols
         insert_variable(self.iterable, datatype='int')
 
     @property
     def expr(self):
+        """
+        Process the For statement by returning a pyccel.types.ast object
+        """
         i = Symbol(self.iterable, integer=True)
 
         if self.start in namespace:
@@ -710,18 +880,27 @@ class ForStmt(BasicStmt):
         return For(i, (b,e,s), body)
 
 class WhileStmt(BasicStmt):
+    """Class representing a While statement."""
 
     def __init__(self, **kwargs):
         """
+        Constructor for the While statement.
+
+        Parameters
+        ==========
+        test: Test
+            a test expression
+        body: list
+            a list of statements for the body of the While statement.
         """
-        self.test     = kwargs.pop('test')
-        self.body     = kwargs.pop('body')
+        self.test = kwargs.pop('test')
+        self.body = kwargs.pop('body')
 
         super(WhileStmt, self).__init__(**kwargs)
 
     @property
     def stmt_vars(self):
-        """."""
+        """Statement variables."""
         ls = []
         for stmt in self.body.stmts:
             ls += stmt.local_vars
@@ -730,6 +909,9 @@ class WhileStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the While statement by returning a pyccel.types.ast object
+        """
         test = self.test.expr
 
         self.update()
@@ -741,7 +923,16 @@ class WhileStmt(BasicStmt):
 class ExpressionElement(object):
     """Class representing an element of an expression."""
     def __init__(self, **kwargs):
+        """
+        Constructor for the ExpessionElement class.
 
+        Parameters
+        ==========
+        parent: Expression
+            parent Expression
+        op:
+            attribut in the Expression (see the grammar)
+        """
         # textX will pass in parent attribute used for parent-child
         # relationships. We can use it if we want to.
         self.parent = kwargs.get('parent', None)
@@ -749,12 +940,22 @@ class ExpressionElement(object):
         # We have 'op' attribute in all grammar rules
         self.op = kwargs['op']
 
-
         super(ExpressionElement, self).__init__()
 
 class FactorSigned(ExpressionElement, BasicStmt):
     """Class representing a signed factor."""
+
     def __init__(self, **kwargs):
+        """
+        Constructor for a signed factor.
+
+        Parameters
+        ==========
+        sign: str
+            one among {'+', '-'}
+        trailer: Trailer
+            a trailer is used for a function call or Array indexing.
+        """
         self.sign    = kwargs.pop('sign', '+')
         self.trailer = kwargs.pop('trailer', None)
 
@@ -762,11 +963,12 @@ class FactorSigned(ExpressionElement, BasicStmt):
 
     @property
     def expr(self):
+        """
+        Process the signed factor, by returning a sympy expression
+        """
         if DEBUG:
             print "> FactorSigned "
         expr = self.op.expr
-
-
 
         if self.trailer is None:
             return -expr if self.sign == '-' else expr
@@ -780,22 +982,31 @@ class FactorSigned(ExpressionElement, BasicStmt):
 
 class FactorUnary(ExpressionElement, BasicStmt):
     """Class representing a unary factor."""
+
     def __init__(self, **kwargs):
-        # name of the unary operator
+        """
+        Constructor for an unary factor.
 
-        self.name = kwargs['name']
+        Parameters
+        ==========
+        name: str
+            the unary operator
+        trailer: Trailer
+            a trailer is used for a function call or Array indexing.
+        """
+        self.name    = kwargs['name']
         self.trailer = kwargs.pop('trailer', None)
-
 
         super(FactorUnary, self).__init__(**kwargs)
 
-
-
     @property
     def expr(self):
-
+        """
+        Process the unary factor, by returning a sympy expression
+        """
         if DEBUG:
             print "> FactorUnary "
+
         expr = self.op.expr
         rhs=expr
 
@@ -849,7 +1060,6 @@ class FactorUnary(ExpressionElement, BasicStmt):
         else:
             raise Exeption('function note supported')
 
-
         if self.trailer is None:
             return expr
         else:
@@ -860,9 +1070,19 @@ class FactorUnary(ExpressionElement, BasicStmt):
                 expr = IndexedVariable(str(expr))[args]
             return expr
 
+# TODO: add trailer?
 class FactorBinary(ExpressionElement):
+    """Class representing a binary factor."""
+
     def __init__(self, **kwargs):
-        # name of the unary operator
+        """
+        Constructor for a binary factor.
+
+        Parameters
+        ==========
+        name: str
+            name of the applied binary operator
+        """
         self.name = kwargs['name']
 
         super(FactorBinary, self).__init__(**kwargs)
@@ -871,7 +1091,6 @@ class FactorBinary(ExpressionElement):
     def expr(self):
         if DEBUG:
             print "> FactorBinary "
-#        print self.op
 
         expr_l = self.op[0].expr
         expr_r = self.op[1].expr
@@ -891,10 +1110,16 @@ class FactorBinary(ExpressionElement):
                             .format(op, self._tx_position))
 
 class Term(ExpressionElement):
+    """Class representing a term in the grammar."""
+
     @property
     def expr(self):
+        """
+        Process the term, by returning a sympy expression
+        """
         if DEBUG:
             print "> Term "
+
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             if operation == '*':
@@ -904,8 +1129,13 @@ class Term(ExpressionElement):
         return ret
 
 class Expression(ExpressionElement):
+    """Class representing an expression in the grammar."""
+
     @property
     def expr(self):
+        """
+        Process the expression, by returning a sympy expression
+        """
         if DEBUG:
             print "> Expression "
 
@@ -919,15 +1149,19 @@ class Expression(ExpressionElement):
 
         return ret
 
-
 class Operand(ExpressionElement):
+    """Class representing an operand in the grammar."""
+
     @property
     def expr(self):
+        """
+        Process the operand, by returning a sympy atom
+        """
         if DEBUG:
             print "> Operand "
             print "> stack : ", stack
             print self.op
-#        op = self.op[0]
+
         op = self.op
         if type(op) == int:
             return Integer(op)
@@ -938,10 +1172,7 @@ class Operand(ExpressionElement):
             # op is a list
             for O in op:
                 if O in namespace:
-                    if isinstance(namespace[O], Number):
-                        return namespace[O].expr
-                    else:
-                        return namespace[O]
+                    return namespace[O]
                 elif O in stack:
                     if DEBUG:
                         print ">>> found local variables: " + O
@@ -960,8 +1191,6 @@ class Operand(ExpressionElement):
                 print ">>> found local variables: " + op
             return Symbol(op)
         elif op in namespace:
-            if isinstance(namespace[op], Number):
-                return namespace[op].expr
             if isinstance(namespace[op], FunctionDefStmt):
                 return Function(op) #(Symbol(args[0]), Symbol(args[1]))
             else:
@@ -972,8 +1201,13 @@ class Operand(ExpressionElement):
             raise Exception('Undefined variable "{}"'.format(op))
 
 class Test(ExpressionElement):
+    """Class representing a test expression as described in the grammmar."""
+
     @property
     def expr(self):
+        """
+        Process the test expression, by returning a sympy expression
+        """
         if DEBUG:
             print "> DEBUG "
         ret = self.op.expr
@@ -981,10 +1215,16 @@ class Test(ExpressionElement):
 
 # TODO improve using sympy And, Or, Not, ...
 class OrTest(ExpressionElement):
+    """Class representing an Or term expression as described in the grammmar."""
+
     @property
     def expr(self):
+        """
+        Process the Or term, by returning a sympy expression
+        """
         if DEBUG:
             print "> DEBUG "
+
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             ret = (ret or operand.expr)
@@ -992,10 +1232,16 @@ class OrTest(ExpressionElement):
 
 # TODO improve using sympy And, Or, Not, ...
 class AndTest(ExpressionElement):
+    """Class representing an And term expression as described in the grammmar."""
+
     @property
     def expr(self):
+        """
+        Process the And term, by returning a sympy expression
+        """
         if DEBUG:
             print "> DEBUG "
+
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             ret = (ret and operand.expr)
@@ -1003,23 +1249,34 @@ class AndTest(ExpressionElement):
 
 # TODO improve using sympy And, Or, Not, ...
 class NotTest(ExpressionElement):
+    """Class representing an Not term expression as described in the grammmar."""
+
     @property
     def expr(self):
+        """
+        Process the Not term, by returning a sympy expression
+        """
         if DEBUG:
             print "> DEBUG "
+
         ret = self.op.expr
         ret = (not ret)
         return ret
 
+# TODO ARA finish
 class Comparison(ExpressionElement):
-    # TODO ARA finish
+    """Class representing the comparison expression as described in the grammmar."""
+
     @property
     def expr(self):
+        """
+        Process the comparison, by returning a sympy expression
+        """
         if DEBUG:
             print "> Comparison "
+
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
-#            print "Comparison : ", ret, operation, operand.expr
             if operation == "==":
                 ret = EqualityStmt(ret, operand.expr)
             elif operation == ">":
