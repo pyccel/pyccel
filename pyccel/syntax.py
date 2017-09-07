@@ -1,4 +1,8 @@
 # coding: utf-8
+import numpy as np
+from numpy import ndarray
+from numpy import asarray
+
 from sympy import Symbol, sympify, Integer, Float, Add, Mul
 from sympy import true, false,pi
 from sympy.tensor import Idx, Indexed, IndexedBase
@@ -284,6 +288,22 @@ def is_Float(s):
 #    except ValueError:
     except:
         return False
+# ...
+
+# ...
+def convert_numpy_type(dtype):
+    """convert a numpy type to standard python type that are understood by the
+    syntax."""
+    # TODO improve, numpy dtypes are int64, float64, ...
+    if dtype == int:
+        datatype = 'int'
+    elif dtype == float:
+        datatype = 'float'
+    elif dtype == complex:
+        datatype = 'complex'
+    else:
+        raise TypeError('Expecting int, float or complex for numpy dtype.')
+    return datatype
 # ...
 
 # ...
@@ -1804,8 +1824,12 @@ class ArgList(BasicStmt):
     def expr(self):
         ls = []
         for arg in self.args:
-            if isinstance(arg, FactorUnary):
+            if isinstance(arg, (FactorUnary, ArgList)):
                 ls.append(arg.expr)
+            elif type(arg) == int:
+                ls.append(int(arg))
+            elif is_Float(arg):
+                ls.append(float(arg))
             else:
                 if arg in namespace:
                     ls.append(variables[arg])
@@ -1972,9 +1996,7 @@ class EvalStmt(BasicStmt):
     @property
     def expr(self):
         # TODO must check compatibility
-        self.update()
-
-        args = self.args.expr
+#        self.update()
 
         module_name   = self.module
         function_name = self.function
@@ -1990,7 +2012,11 @@ class EvalStmt(BasicStmt):
         except:
             raise Exception('Could not import function {}.'.format(function_name))
 
-        rs = function(*args)
+        args = self.args.expr
+        rs   = function(*args)
+
+        if isinstance(rs, tuple):
+            rs = list(rs)
 
         if not isinstance(rs, list):
             rs = [rs]
@@ -2000,6 +2026,42 @@ class EvalStmt(BasicStmt):
 
         ls = []
         for (l,r) in zip(self.lhs, rs):
-            ls.append(Assign(sympify(l), r))
+            if isinstance(r, (int, float, complex)):
+                rank        = 0
+                shape       = None
+                allocatable = False
+                # check if numpy variable
+                if (type(r).__module__ == np.__name__):
+                    t = r.dtype
+                else:
+                    t = type(r)
+                datatype = convert_numpy_type(t)
+
+            elif isinstance(r, ndarray):
+                shape       = r.shape
+                rank        = len(shape)
+                allocatable = True
+                datatype    = convert_numpy_type(r.dtype)
+            else:
+                raise TypeError('Expecting int, float, complex or numpy array.')
+
+            if l in namespace:
+                raise Exception('Variable {} already defined, '
+                                'cannot be used in eval statement.'.format(l))
+
+            insert_variable(l, \
+                            datatype=datatype, \
+                            rank=rank, \
+                            allocatable=allocatable, \
+                            shape=shape)
+
+            var = namespace[l]
+#            print type(r)
+            if isinstance(r, ndarray):
+                stmt = NumpyArray(var, r, shape)
+            else:
+                stmt = Assign(var, r)
+
+            ls.append(stmt)
 
         return ls

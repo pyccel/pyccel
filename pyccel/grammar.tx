@@ -152,14 +152,14 @@ Constructor:
 ;
 
 IdentifierOrNumber:
-  (NUMBER | ID)
+  (Float | INT | ID)
 ;
 
 ArgList:
   LPAREN args+=Args[','] RPAREN
 ;
 Args:
-  (FactorUnary|IdentifierOrNumber)
+  (ArgList | FactorUnary | IdentifierOrNumber)
 ;
 
 

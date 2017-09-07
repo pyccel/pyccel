@@ -49,6 +49,7 @@ AST Type Tree
 
 from __future__ import print_function, division
 
+from numpy import ndarray
 
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational
@@ -902,9 +903,9 @@ class NumpyArray(Basic):
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        if not isinstance(rhs,list):
+        if not isinstance(rhs, (list, ndarray)):
             raise TypeError("cannot assign rhs of type %s." % type(rhs))
-        if not isinstance(shape,tuple):
+        if not isinstance(shape, tuple):
             raise TypeError("shape must be of type tuple")
 
 
