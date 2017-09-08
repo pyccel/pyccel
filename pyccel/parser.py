@@ -55,7 +55,7 @@ from pyccel.openmp.syntax import (OpenmpStmt, \
 
 from textx.metamodel import metamodel_from_file
 
-__all__ = ["PyccelParser", "ast_to_dict", "get_by_name"]
+__all__ = ["Parser", "PyccelParser", "ast_to_dict", "get_by_name"]
 
 # ...
 def get_by_name(ast, name):

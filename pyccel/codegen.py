@@ -27,7 +27,9 @@ from pyccel.syntax import ( \
 from pyccel.openmp.syntax import OpenmpStmt
 
 
-__all__ = ["PyccelCodegen"]
+__all__ = ["Codegen", "FCodegen", "PyccelCodegen", \
+           "Compiler", \
+           "build_file", "load_module"]
 
 # ...
 def clean(filename):
