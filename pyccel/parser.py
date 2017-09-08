@@ -61,6 +61,11 @@ __all__ = ["PyccelParser", "ast_to_dict", "get_by_name"]
 def get_by_name(ast, name):
     """
     Returns an object from the AST by giving its name.
+
+    ast: textX
+        the ast as given by textX
+    name: str
+        identifier/statement name
     """
     # TODO declarations is empty for the moment
     for token in ast.declarations:
@@ -75,7 +80,10 @@ def get_by_name(ast, name):
 # ...
 def ast_to_dict(ast):
     """
-    Returns an object from the AST by giving its name.
+    converts the ast to a dictionary
+
+    ast: textX
+        the ast as given by textX
     """
     tokens = {}
     for token in ast.declarations:
@@ -86,7 +94,7 @@ def ast_to_dict(ast):
 class Parser(object):
     """ Class for a Parser using TextX.
 
-    A parser can be created from a grammar (str) or a filename. It is preferable
+    A parser can be created from a grammar a filename. It is preferable
     to specify the list classes to have more control over the abstract grammar;
     for example, to use a namespace, and to do some specific anotation.
 
@@ -95,11 +103,11 @@ class Parser(object):
     Once the parser is created, you can parse a given set of instructions by
     calling
 
-    >>> parser.parse(["Field(V) :: u"])
+    >>> parser.parse(["n = 10"])
 
     or by providing a file to parse
 
-    >>> parser.parse_from_file("tests/inputs/1d/poisson.vl")
+    >>> parser.parse_from_file("tests/examples/ex1.py")
     """
     def __init__(self, filename, classes=None, debug=False):
         """Parser constructor.
@@ -113,6 +121,11 @@ class Parser(object):
 
         debug: bool
             True if in debug mode.
+
+        Parameters
+        ==========
+        model: textX.model
+            the model as created by textX
         """
 
         # ... read the grammar from a file
@@ -151,10 +164,7 @@ class Parser(object):
 class PyccelParser(Parser):
     """A Class for Pyccel parser.
 
-    This is an extension of the Parser class. Additional treatment is done for
-    Linear and Bilinear Forms to define their dependencies: user_fields,
-    user_functions and user_constants.
-
+    This is an extension of the Parser class.
     """
     def __init__(self, **kwargs):
         """Pyccel parser constructor.
