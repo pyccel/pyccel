@@ -526,9 +526,6 @@ class LuaCodePrinter(CodePrinter):
 def lua_code(expr, assign_to=None, **settings):
     """Converts an expr to a string of Lua code
 
-    Parameters
-    ==========
-
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
@@ -565,7 +562,6 @@ def lua_code(expr, assign_to=None, **settings):
         be preceeded by local for their first assignment.
 
     Examples
-    ========
 
     >>> from sympy import lua_code, symbols, Rational, sin, ceiling, Abs, Function
     >>> x, tau = symbols("x, tau")

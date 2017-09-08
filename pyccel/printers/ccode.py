@@ -260,9 +260,6 @@ class CCodePrinter(CodePrinter):
 def ccode(expr, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
-    Parameters
-    ==========
-
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
@@ -284,7 +281,6 @@ def ccode(expr, assign_to=None, **settings):
         ``(*a)`` instead of ``a``.
 
     Examples
-    ========
 
     >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
     >>> x, tau = symbols("x, tau")

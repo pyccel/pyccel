@@ -37,8 +37,6 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
 class Assign(Basic):
     """Represents variable assignment for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -52,7 +50,6 @@ class Assign(Basic):
         the dimensions will not align.
 
     Examples
-    --------
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
     >>> from sympy.printing.codeprinter import Assign
@@ -155,19 +152,16 @@ def operator(op):
 
 
 class AugAssign(Basic):
-    """Represents augmented variable assignment for code generation.
+    """
+    Represents augmented variable assignment for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
-
     op : NativeOp
-        Operator (+, -, /, *, %).
-
+        Operator (+, -, /, \*, %).
     rhs : Expr
         Sympy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
@@ -175,14 +169,12 @@ class AugAssign(Basic):
         the dimensions will not align.
 
     Examples
-    --------
 
     >>> from sympy import symbols
     >>> from pyccel.types.ast import AugAssign
     >>> x, y = symbols('x, y')
     >>> AugAssign(x, AddOp, y)
     x += y
-
     """
 
     def __new__(cls, lhs, op, rhs):
@@ -235,8 +227,6 @@ class While(Basic):
         "while test:
             body..."
 
-    Parameters
-    ----------
     test : expression
         test condition given as a sympy expression
     body : sympy expr
@@ -266,8 +256,6 @@ class For(Basic):
         "for target in iter:
             body..."
 
-    Parameters
-    ----------
     target : symbol
         symbol representing the iterator
     iter : iterable
@@ -366,17 +354,14 @@ dtype_registry = {'bool': Bool,
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 
-    Parameters
-    ----------
     arg : str or sympy expression
         If a str ('bool', 'int', 'float', 'double', or 'void'), return the
         singleton for the corresponding dtype. If a sympy expression, return
         the datatype that best fits the expression. This is determined from the
         assumption system. For more control, use the `DataType` class directly.
 
-    Returns
-    -------
-    DataType
+    Returns:
+        DataType
 
     """
     def infer_dtype(arg):
@@ -421,8 +406,6 @@ class NotequalStmt(Relational):
 class Variable(Basic):
     """Represents a typed variable.
 
-    Parameters
-    ----------
     dtype : str, DataType
         The type of the variable. Can be either a DataType, or a str (bool,
         int, float, double).
@@ -494,8 +477,6 @@ class InOutArgument(Argument):
 class FunctionDef(Basic):
     """Represents a function definition.
 
-    Parameters
-    ----------
     name : str
         The name of the function.
     arguments : iterable
@@ -618,8 +599,6 @@ class ceil(Basic):
     """
     Represents ceil expression in the code.
 
-    Parameters
-    ----------
     rhs: symbol or number
         input for the ceil function
     """
@@ -633,8 +612,6 @@ class ceil(Basic):
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 
-    Parameters
-    ----------
     fil : str
         The filepath of the module (i.e. header in C).
     funcs
@@ -667,8 +644,6 @@ class Import(Basic):
 class Declare(Basic):
     """Represents a variable declaration in the code.
 
-    Parameters
-    ----------
     dtype : DataType
         The type for the declaration.
     variable(s)
@@ -704,8 +679,6 @@ class Declare(Basic):
 class Return(Basic):
     """Represents a function return in the code.
 
-    Parameters
-    ----------
     expr : sympy expr
         The expression to return.
 
@@ -724,8 +697,6 @@ class LEN(Basic):
     """
     Represents a 'len' expression in the code.
 
-    Parameters
-    ----------
     rhs: symbol or number
         input for the len function
     """
@@ -773,8 +744,6 @@ class Dot(Basic):
     """
     Represents a 'dot' expression in the code.
 
-    Parameters
-    ----------
     expr_l: variable
         first variable
     expr_r: variable
@@ -794,8 +763,6 @@ class Dot(Basic):
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -844,8 +811,6 @@ class NumpyOnes(Basic):
     """
     Represents variable assignment using numpy.ones for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -884,8 +849,6 @@ class NumpyOnes(Basic):
 class NumpyArray(Basic):
     """Represents variable assignment using numpy.array for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -935,8 +898,6 @@ class NumpyArray(Basic):
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -984,8 +945,6 @@ class NumpyLinspace(Basic):
 class Print(Basic):
     """Represents a print function in the code.
 
-    Parameters
-    ----------
     expr : sympy expr
         The expression to return.
     """
@@ -1002,8 +961,6 @@ class Print(Basic):
 class Comment(Basic):
     """Represents a Comment in the code.
 
-    Parameters
-    ----------
     text : str
        the comment line
     """
@@ -1018,8 +975,6 @@ class Comment(Basic):
 class AnnotatedComment(Basic):
     """Represents a Annotated Comment in the code.
 
-    Parameters
-    ----------
     accel : str
        accelerator id. One among {'omp', 'acc'}
 
@@ -1064,8 +1019,6 @@ class IndexedElement(Indexed):
 class Slice(Basic):
     """Represents a slice in the code.
 
-    Parameters
-    ----------
     start : Symbol or int
         starting index
 
@@ -1101,8 +1054,6 @@ class Slice(Basic):
 class If(Basic):
     """Represents a if statement in the code.
 
-    Parameters
-    ----------
     args :
         every argument is a tuple and
         is defined as (cond, expr) where expr is a valid ast element
@@ -1127,8 +1078,6 @@ class MultiAssign(Basic):
     """Represents a multiple assignment statement in the code.
     In Fortran, this will be interpreted as a subroutine call.
 
-    Parameters
-    ----------
     lhs : list Expr
         list of assignable objects
     rhs : Function
@@ -1153,8 +1102,6 @@ class Rational(Basic):
     """Represents a Rational numbers statement in the code.
     This is different from sympy.Rational, as it allows for symbolic numbers.
 
-    Parameters
-    ----------
     numerator : Symbol or int
         numerator of the Rational number
 
@@ -1176,8 +1123,6 @@ class Rational(Basic):
 class Thread(Basic):
     """Represents a thread function for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -1185,7 +1130,6 @@ class Thread(Basic):
         subclass these types are also supported.
 
     Examples
-    --------
 
     """
 
@@ -1215,8 +1159,6 @@ class ThreadsNumber(Thread):
 class Stencil(Basic):
     """Represents variable assignment using a stencil for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types

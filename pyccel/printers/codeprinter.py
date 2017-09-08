@@ -30,8 +30,6 @@ class CodePrinter(StrPrinter):
         """
         Print the expression as code.
 
-        Parameters
-        ----------
         expr : Expression
             The expression to be printed.
 

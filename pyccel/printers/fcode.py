@@ -705,9 +705,6 @@ class FCodePrinter(CodePrinter):
 def fcode(expr, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
-    Parameters
-    ==========
-
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
@@ -724,7 +721,6 @@ def fcode(expr, assign_to=None, **settings):
         for examples.
 
     Examples
-    ========
 
     >>> from sympy import fcode, symbols, Rational, sin, ceiling, floor
     >>> x, tau = symbols("x, tau")
