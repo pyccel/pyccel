@@ -4,9 +4,22 @@ from sympy.calculus import finite_diff_weights
 
 import numpy as np
 
+__all__ = ['compute_stencil_uniform']
+
 def compute_stencil_uniform(order, n, x_value, h_value, x0=0.):
     """
     computes a stencil of Order order
+
+    order: int
+        derivative order
+    n: int
+        number of points - 1
+    x_value: float
+        value of the grid point
+    h_value: float
+        mesh size
+    x0: float
+        real number around which we compute the Taylor expansion.
     """
     h,x = symbols('h x')
     if n % 2 == 0:

@@ -1,15 +1,22 @@
 # coding: utf-8
 
-"""
-"""
-
 from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.syntax import ImportFromStmt
 
+__all__ = ['find_imports']
+
 def find_imports(filename, debug=False):
+    """
+    Finds all import statements in the file.
+
+    filename: str
+        name of the file to parse
+    debug: bool
+        use debug mode if True
+    """
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
