@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from sympy import sympify, Symbol, Integer, Float, Add, Mul
+from sympy import sympify, simplify, Symbol, Integer, Float, Add, Mul
 from sympy import Piecewise, log
 from sympy.abc import x
 
@@ -20,6 +20,8 @@ from pyccel.syntax import ( \
                            IfStmt, ForStmt,WhileStmt \
                            )
 
+from pyccel.types.ast import (Assign, For)
+
 # ...
 def count_ops(expr, visual=True):
     """
@@ -36,7 +38,9 @@ def count_ops(expr, visual=True):
     from sympy.simplify.radsimp import fraction
     from sympy.logic.boolalg import BooleanFunction
 
-    expr = sympify(expr)
+    if not isinstance(expr, (Assign, For)):
+        expr = sympify(expr)
+
     if isinstance(expr, Expr):
 
         ops = []
@@ -128,6 +132,13 @@ def count_ops(expr, visual=True):
             ops.append(count_ops(arg, visual=True))
         o = Symbol(expr.func.__name__.upper())
         ops.append(o)
+    elif isinstance(expr, Assign):
+        ops = [count_ops(expr.rhs, visual=visual)]
+    elif isinstance(expr, For):
+        b = expr.iterable.args[0]
+        e = expr.iterable.args[1]
+        ops = [count_ops(i, visual=visual) for i in expr.body]
+        ops = [i * (e-b) for i in ops]
     elif not isinstance(expr, Basic):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):
@@ -154,7 +165,7 @@ def count_ops(expr, visual=True):
     if not ops:
         return S.Zero
 
-    ops = Add(*ops)
+    ops = simplify(Add(*ops))
 
     return ops
 # ...
@@ -199,21 +210,8 @@ class Complexity(object):
         # ...
         cost = 0
         for stmt in ast.statements:
-            if isinstance(stmt, AssignStmt):
-                cost += count_ops(stmt.expr.rhs)
-#            elif isinstance(stmt, MultiAssignStmt):
-#                pass
-            elif isinstance(stmt, ForStmt):
-                expr = stmt.expr
-                b = expr.iterable.args[0]
-                e = expr.iterable.args[1]
-                cost += count_ops(stmt.body.expr) * (e-b)
-            elif isinstance(stmt,WhileStmt):
-                pass
-            elif isinstance(stmt, IfStmt):
-                pass
-            else:
-                pass
+            if isinstance(stmt, (AssignStmt, ForStmt)):
+                cost += count_ops(stmt.expr)
         # ...
 
         return cost
