@@ -13,7 +13,6 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy.utilities.iterables import iterable
 
-from pyccel.parser  import PyccelParser
 from pyccel.syntax import ( \
                            # statements
                            AssignStmt, MultiAssignStmt, \
@@ -22,7 +21,9 @@ from pyccel.syntax import ( \
 
 from pyccel.types.ast import (Assign, For)
 
-__all__ = ["count_ops", "Complexity"]
+from pyccel.complexity.basic import Complexity
+
+__all__ = ["count_ops", "OpComplexity"]
 
 # ...
 def count_ops(expr, visual=True):
@@ -173,45 +174,14 @@ def count_ops(expr, visual=True):
 # ...
 
 # ...
-class Complexity(object):
-    """Abstract class for complexity computation."""
-    def __init__(self, filename):
-        """Constructor for the Complexity class.
-
-        filename: str
-            name of the file containing the abstract grammar.
-        """
-        # ... TODO improve once TextX will handle indentation
-        from pyccel.codegen import clean, preprocess, make_tmp_file
-
-        clean(filename)
-
-        filename_tmp = make_tmp_file(filename)
-        preprocess(filename, filename_tmp)
-        filename = filename_tmp
-        # ...
-
-        self._filename = filename
-
-    @property
-    def filename(self):
-        """Returns the name of the file to process."""
-        return self._filename
+class OpComplexity(Complexity):
+    """class for Operation complexity computation."""
 
     def cost(self):
         """Computes the complexity of the given code."""
         # ...
-        filename = self.filename
-        # ...
-
-        # ...
-        pyccel = PyccelParser()
-        ast    = pyccel.parse_from_file(filename)
-        # ...
-
-        # ...
         cost = 0
-        for stmt in ast.statements:
+        for stmt in self.ast.statements:
             if isinstance(stmt, (AssignStmt, ForStmt)):
                 cost += count_ops(stmt.expr)
         # ...
@@ -234,6 +204,6 @@ if __name__ == "__main__":
 
     import sys
     filename = sys.argv[1]
-    complexity = Complexity(filename)
+    complexity = OpComplexity(filename)
     print complexity.cost()
 
