@@ -432,8 +432,9 @@ class Variable(Basic):
         used for arrays. [Default value: 0]
     allocatable: False
         used for arrays, if we need to allocate memory [Default value: False]
-
-F    """
+    shape: int or list
+        shape of the array. [Default value: None]
+    """
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -474,55 +475,21 @@ class Argument(Variable):
     """An abstract Argument data structure."""
     pass
 
-
 class Result(Variable):
     """Represents a result directly returned from a routine."""
     pass
 
 class InArgument(Argument):
-    """Argument provided as input only.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol, MatrixSymbol
-        The sympy object the variable represents.
-
-    """
+    """Argument provided as input only."""
     pass
-
 
 class OutArgument(Argument):
-    """OutputArgument are always initialized in the routine.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol, MatrixSymbol
-        The sympy object the variable represents.
-
-    """
+    """OutputArgument are always initialized in the routine."""
     pass
-
 
 class InOutArgument(Argument):
-    """InOutArgument are never initialized in the routine.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol, MatrixSymbol
-        The sympy object the variable represents.
-
-    """
+    """InOutArgument are never initialized in the routine."""
     pass
-
 
 class FunctionDef(Basic):
     """Represents a function definition.
@@ -648,9 +615,17 @@ class FunctionDef(Basic):
         return self._args[5]
 
 class ceil(Basic):
-    """Represents ceil expression in the code."""
+    """
+    Represents ceil expression in the code.
+
+    Parameters
+    ----------
+    rhs: symbol or number
+        input for the ceil function
+    """
     def __new__(cls,rhs):
         return Basic.__new__(cls,rhs)
+
     @property
     def rhs(self):
         return self._args[0]
@@ -746,48 +721,75 @@ class Return(Basic):
 
 
 class LEN(Basic):
-    """Represents a 'len' expression in the code."""
-     def __new__(cls, rhs):
-         return Basic.__new__(cls, rhs)
-     @property
-     def rhs(self):
+    """
+    Represents a 'len' expression in the code.
+
+    Parameters
+    ----------
+    rhs: symbol or number
+        input for the len function
+    """
+    def __new__(cls, rhs):
+        return Basic.__new__(cls, rhs)
+
+    @property
+    def rhs(self):
         return self._args[0]
-     @property
-     def str(self):
+
+    # TODO do we keep it? improve it
+    @property
+    def str(self):
         return 'size('+str(self._args[0])+',1)'
 
+# TODO: improve by using args
 class Min(Basic):
     """Represents a 'min' expression in the code."""
-     def __new__(cls, expr_l, expr_r):
-         return Basic.__new__(cls, expr_l, expr_r)
-     @property
-     def expr_l(self):
-         return self.args[0]
-     @property
-     def expr_r(self):
-         return self.args[1]
+    def __new__(cls, expr_l, expr_r):
+        return Basic.__new__(cls, expr_l, expr_r)
 
+    @property
+    def expr_l(self):
+        return self.args[0]
+
+    @property
+    def expr_r(self):
+        return self.args[1]
+
+# TODO: improve by using args
 class Max(Basic):
     """Represents a 'max' expression in the code."""
-     def __new__(cls, expr_l, expr_r):
-         return Basic.__new__(cls, expr_l, expr_r)
-     @property
-     def expr_l(self):
-         return self.args[0]
-     @property
-     def expr_r(self):
-         return self.args[1]
+    def __new__(cls, expr_l, expr_r):
+        return Basic.__new__(cls, expr_l, expr_r)
+
+    @property
+    def expr_l(self):
+        return self.args[0]
+
+    @property
+    def expr_r(self):
+        return self.args[1]
 
 class Dot(Basic):
-    """Represents a 'dot' expression in the code."""
-     def __new__(cls, expr_l, expr_r):
-         return Basic.__new__(cls, expr_l, expr_r)
-     @property
-     def expr_l(self):
-         return self.args[0]
-     @property
-     def expr_r(self):
-         return self.args[1]
+    """
+    Represents a 'dot' expression in the code.
+
+    Parameters
+    ----------
+    expr_l: variable
+        first variable
+    expr_r: variable
+        second variable
+    """
+    def __new__(cls, expr_l, expr_r):
+        return Basic.__new__(cls, expr_l, expr_r)
+
+    @property
+    def expr_l(self):
+        return self.args[0]
+
+    @property
+    def expr_r(self):
+        return self.args[1]
 
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
@@ -890,6 +892,12 @@ class NumpyArray(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
+    rhs : Expr
+        Sympy object representing the rhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
     shape : int or list of integers
     """
     def __new__(cls, lhs,rhs,shape):
@@ -919,10 +927,10 @@ class NumpyArray(Basic):
     @property
     def rhs(self):
         return self._args[1]
+
     @property
     def shape(self):
         return self._args[2]
-
 
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
@@ -935,17 +943,12 @@ class NumpyLinspace(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    shape : int or list of integers
-
-    Examples
-    --------
-
-    >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
-    >>> x, y, z = symbols('x, y, z')
-    >>> Assign(x, y)
-    x := y
-
+    start: expression
+        minimum of the grid
+    end: expression
+        maximum of the grid
+    size: int, Expr
+        number of elements of the grid
     """
 
     # TODO improve in the spirit of assign
@@ -978,8 +981,6 @@ class NumpyLinspace(Basic):
     def size(self):
         return self._args[3]
 
-
-
 class Print(Basic):
     """Represents a print function in the code.
 
@@ -987,7 +988,6 @@ class Print(Basic):
     ----------
     expr : sympy expr
         The expression to return.
-
     """
 
     def __new__(cls, expr):
@@ -1006,7 +1006,6 @@ class Comment(Basic):
     ----------
     text : str
        the comment line
-
     """
 
     def __new__(cls, text):
@@ -1039,14 +1038,7 @@ class AnnotatedComment(Basic):
         return self._args[1]
 
 class IndexedVariable(IndexedBase):
-    """Represents a Comment in the code.
-
-    Parameters
-    ----------
-    text : str
-       the comment line
-
-    """
+    """Represents an indexed variable, like x in x[i], in the code."""
 
     def __new__(cls, label, shape=None, **kw_args):
         return IndexedBase.__new__(cls, label, shape=None, **kw_args)
@@ -1064,17 +1056,9 @@ class IndexedVariable(IndexedBase):
             return IndexedElement(self, indices, **kw_args)
 
 class IndexedElement(Indexed):
-    """Represents a Comment in the code.
-
-    Parameters
-    ----------
-    text : str
-       the comment line
-
-    """
+    """Represents an indexed element, like x[i] in x[i], in the code."""
 
     def __new__(cls, base, *args, **kw_args):
-#        print("args : ", args)
         return Indexed.__new__(cls, base, *args, **kw_args)
 
 class Slice(Basic):
@@ -1126,9 +1110,7 @@ class If(Basic):
 
     """
     # TODO add step
-
     def __new__(cls, *args):
-
         # (Try to) sympify args first
         newargs = []
         for ce in args:
@@ -1143,15 +1125,14 @@ class If(Basic):
 
 class MultiAssign(Basic):
     """Represents a multiple assignment statement in the code.
+    In Fortran, this will be interpreted as a subroutine call.
 
     Parameters
     ----------
-    start : Symbol or int
-        starting index
-
-    end : Symbol or int
-        ending index
-
+    lhs : list Expr
+        list of assignable objects
+    rhs : Function
+        function call expression
     """
     def __new__(cls, lhs, rhs, trailer):
         return Basic.__new__(cls, lhs, rhs, trailer)
