@@ -22,6 +22,8 @@ from pyccel.syntax import ( \
 
 from pyccel.types.ast import (Assign, For)
 
+__all__ = ["count_ops", "Complexity"]
+
 # ...
 def count_ops(expr, visual=True):
     """
@@ -174,10 +176,10 @@ def count_ops(expr, visual=True):
 class Complexity(object):
     """Abstract class for complexity computation."""
     def __init__(self, filename):
-        """Constructor for the Codegen class.
+        """Constructor for the Complexity class.
 
-        body: list
-            list of statements.
+        filename: str
+            name of the file containing the abstract grammar.
         """
         # ... TODO improve once TextX will handle indentation
         from pyccel.codegen import clean, preprocess, make_tmp_file
@@ -193,7 +195,7 @@ class Complexity(object):
 
     @property
     def filename(self):
-        """Returns the name of the file to convert."""
+        """Returns the name of the file to process."""
         return self._filename
 
     def cost(self):

@@ -1,52 +1,5 @@
 # coding: utf-8
 
-"""
-Types used to represent a full function/module as an Abstract Syntax Tree.
-
-Most types are small, and are merely used as tokens in the AST. A tree diagram
-has been included below to illustrate the relationships between the AST types.
-
-
-AST Type Tree
--------------
-
-*Basic*
-     |--->Assign
-     |--->MultiAssign
-     |--->AugAssign
-     |--->NativeOp
-     |           |--------------|
-     |                          |--->AddOp
-     |                          |--->SubOp
-     |                          |--->MulOp
-     |                          |--->DivOp
-     |                          |--->ModOp
-     |           *Singleton*----|
-     |                    |
-     |--->DataType        |
-     |           |--------|--->NativeBool
-     |                    |--->NativeInteger
-     |                    |--->NativeFloat
-     |                    |--->NativeDouble
-     |                    |--->NativeVoid
-     |
-     |--->For
-     |--->Variable
-     |           |--->Argument
-     |           |           |
-     |           |           |--->InArgument
-     |           |           |--->OutArgument
-     |           |           |--->InOutArgument
-     |           |--->Result
-     |
-     |--->FunctionDef
-     |--->Import
-     |--->Declare
-     |--->Return
-     |--->Print
-     |--->Comment
-"""
-
 from __future__ import print_function, division
 
 from numpy import ndarray
@@ -65,6 +18,21 @@ from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
+# TODO: rename ceil to Ceil
+# TODO: rename LEN to Len
+# TODO: clean Thread objects
+# TODO: update code examples
+__all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
+           "ModOp", "AugAssign", "While", "For", "DataType", "NativeBool", \
+           "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
+           "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
+           "Argument", "Result", "InArgument", "OutArgument", \
+           "InOutArgument", "FunctionDef", "ceil", "Import", "Declare", \
+           "Return", "LEN", "Min", "Max", "Dot", \
+           "NumpyZeros", "NumpyOnes", "NumpyArray", "NumpyLinspace", \
+           "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
+           "IndexedElement", "Slice", "If", "MultiAssign", "Rational", \
+           "Thread", "ThreadID", "ThreadsNumber", "Stencil"]
 
 class Assign(Basic):
     """Represents variable assignment for code generation.
@@ -261,8 +229,19 @@ class AugAssign(Basic):
         return self._args[2]
 
 class While(Basic):
+    """Represents a 'while' statement in the code.
 
+    Expressions are of the form:
+        "while test:
+            body..."
 
+    Parameters
+    ----------
+    test : expression
+        test condition given as a sympy expression
+    body : sympy expr
+        list of statements representing the body of the While statement.
+    """
     def __new__(cls, test, body):
         test = _sympify(test)
 
@@ -280,7 +259,6 @@ class While(Basic):
     def body(self):
         return self._args[1]
 
-
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -291,8 +269,11 @@ class For(Basic):
     Parameters
     ----------
     target : symbol
+        symbol representing the iterator
     iter : iterable
+        iterable object. for the moment only Range is used
     body : sympy expr
+        list of statements representing the body of the For statement.
     """
 
     def __new__(cls, target, iter, body):
@@ -424,19 +405,18 @@ def datatype(arg):
             return infer_dtype(arg)
 
 class EqualityStmt(Relational):
+    """Represents a relational equality expression in the code."""
     def __new__(cls,lhs,rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
 class NotequalStmt(Relational):
+    """Represents a relational not equality expression in the code."""
     def __new__(cls,lhs,rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
-
-
-
 
 class Variable(Basic):
     """Represents a typed variable.
@@ -454,7 +434,6 @@ class Variable(Basic):
         used for arrays, if we need to allocate memory [Default value: False]
 
 F    """
-
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -490,7 +469,6 @@ F    """
     @property
     def shape(self):
         return self._args[4]
-
 
 class Argument(Variable):
     """An abstract Argument data structure."""
@@ -563,7 +541,6 @@ class FunctionDef(Basic):
         These are used internally by the routine.
     global_vars : list of Symbols
         Variables which will not be passed into the function.
-
     """
 
     def __new__(cls, name, arguments, results, body, local_vars, global_vars):
@@ -670,15 +647,14 @@ class FunctionDef(Basic):
     def global_vars(self):
         return self._args[5]
 
-
 class ceil(Basic):
-    def __new__(cls,rhs):    
+    """Represents ceil expression in the code."""
+    def __new__(cls,rhs):
         return Basic.__new__(cls,rhs)
     @property
     def rhs(self):
         return self._args[0]
-        
-    
+
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 
@@ -770,6 +746,7 @@ class Return(Basic):
 
 
 class LEN(Basic):
+    """Represents a 'len' expression in the code."""
      def __new__(cls, rhs):
          return Basic.__new__(cls, rhs)
      @property
@@ -780,6 +757,7 @@ class LEN(Basic):
         return 'size('+str(self._args[0])+',1)'
 
 class Min(Basic):
+    """Represents a 'min' expression in the code."""
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)
      @property
@@ -788,7 +766,9 @@ class Min(Basic):
      @property
      def expr_r(self):
          return self.args[1]
+
 class Max(Basic):
+    """Represents a 'max' expression in the code."""
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)
      @property
@@ -799,6 +779,7 @@ class Max(Basic):
          return self.args[1]
 
 class Dot(Basic):
+    """Represents a 'dot' expression in the code."""
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)
      @property
@@ -807,7 +788,6 @@ class Dot(Basic):
      @property
      def expr_r(self):
          return self.args[1]
-
 
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
@@ -821,11 +801,7 @@ class NumpyZeros(Basic):
         subclass these types are also supported.
 
     shape : int or list of integers
-
-
-
     """
-
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, shape):
         lhs   = _sympify(lhs)
@@ -864,9 +840,18 @@ class NumpyZeros(Basic):
 
 class NumpyOnes(Basic):
     """
+    Represents variable assignment using numpy.ones for code generation.
 
+    Parameters
+    ----------
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    shape : int or list of integers
     """
-
     # TODO improve in the spirit of assign
     def __new__(cls, lhs,shape):
         lhs   = _sympify(lhs)
@@ -893,8 +878,20 @@ class NumpyOnes(Basic):
     @property
     def shape(self):
         return self._args[1]
-class NumpyArray(Basic):
 
+class NumpyArray(Basic):
+    """Represents variable assignment using numpy.array for code generation.
+
+    Parameters
+    ----------
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    shape : int or list of integers
+    """
     def __new__(cls, lhs,rhs,shape):
         lhs   = _sympify(lhs)
 
