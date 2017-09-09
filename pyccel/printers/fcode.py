@@ -408,6 +408,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         return 'return'
+    def _print_Break(self,expr):
+        return 'Exit'
 
     def _print_AugAssign(self, expr):
         raise NotImplementedError("Fortran doesn't support AugAssign")
@@ -442,7 +444,7 @@ class FCodePrinter(CodePrinter):
         body = '\n'.join(self._print(i) for i in expr.body)
         return ('do while ({test}) \n'
                 '{body}\n'
-                'end do').format(test=expr.test,body=body)
+                'end do').format(test=self._print(expr.test),body=body)
 
     def _print_If(self, expr):
         lines = []

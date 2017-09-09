@@ -767,6 +767,18 @@ class Return(Basic):
     @property
     def expr(self):
         return self._args[0]
+class Break(Basic):
+    """Represents a function return in the code.
+
+    Parameters
+    ----------
+    expr : sympy expr
+        The expression to return.
+
+    """
+
+    def __new__(cls):
+        return Basic.__new__(cls)
 
 
 class LEN(Basic):

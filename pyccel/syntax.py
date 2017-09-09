@@ -27,7 +27,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
-                              Stencil,ceil, \
+                              Stencil,ceil,Break, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
 
 DEBUG = False
@@ -155,7 +155,14 @@ def Check_type(var_name,expr):
             shape=shape[0]
 
             if isinstance(shape,(tuple,list)):
-                shape=tuple(map(int,shape))
+                s=[]
+                for i in shape:
+                    try:
+                        s.append(int(i))
+                    except:
+                        s.append(i)
+                        
+                shape=tuple(s)
                 rank=len(shape)
             elif isinstance(shape,int):
                 rank=1
@@ -1313,6 +1320,11 @@ class FlowStmt(BasicStmt):
 
 class BreakStmt(FlowStmt):
     """Base class representing a Break statement in the grammar."""
+    def __init__(self, **kwargs):
+        super(BreakStmt, self).__init__(**kwargs)
+    @property
+    def expr(self):
+        return Break()
 
 class ContinueStmt(FlowStmt):
     """Base class representing a Continue statement in the grammar."""
