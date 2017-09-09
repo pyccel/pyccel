@@ -1,13 +1,10 @@
 # coding: utf-8
 
-from sympy import sympify, simplify, Symbol, Integer, Float, Add, Mul
-from sympy import Piecewise, log
-from sympy.abc import x
+from sympy import sympify, simplify, Symbol, Add
 from sympy import preorder_traversal
-from sympy.core.expr import Expr, AtomicExpr
+from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.tensor.indexed import Idx
-from sympy import limit, oo
 
 from pyccel.parser  import PyccelParser
 from pyccel.syntax import ( \
@@ -37,11 +34,18 @@ __all__ = ["count_access", "MemComplexity"]
 # ...
 def count_access(expr, visual=True, local_vars=[]):
     """
-    """
-    from sympy import Integral, Symbol
-    from sympy.simplify.radsimp import fraction
-    from sympy.logic.boolalg import BooleanFunction
+    returns the number of access to memory in terms of WRITE and READ.
 
+    expr: sympy.Expr
+        any sympy expression or pyccel.types.ast object
+    visual: bool
+        If ``visual`` is ``True`` then the number of each type of operation is shown
+        with the core class types (or their virtual equivalent) multiplied by the
+        number of times they occur.
+    local_vars: list
+        list of variables that are supposed to be in the fast memory. We will
+        ignore their corresponding memory accesses.
+    """
     if not isinstance(expr, (Assign, For)):
         expr = sympify(expr)
 
@@ -98,6 +102,11 @@ def count_access(expr, visual=True, local_vars=[]):
 # ...
 def free_parameters(expr):
     """
+    Returns the free parameters of a given expression. In general, this
+    corresponds to length of a For loop.
+
+    expr: sympy.Expr
+        any sympy expression or pyccel.types.ast object
     """
     args = []
     if isinstance(expr, For):
@@ -116,25 +125,35 @@ def free_parameters(expr):
 # ...
 
 # ...
-from sympy import Poly, LM
+from sympy import Poly, LT
 def leading_term(expr, *args):
+    """
+    Returns the leading term in a sympy Polynomial.
 
+    expr: sympy.Expr
+        any sympy expression
+
+    args: list
+        list of input symbols for univariate/multivariate polynomials
+    """
     expr = sympify(str(expr))
     P = Poly(expr, *args)
-    d = P.as_dict()
-    degree = P.total_degree()
-    for key, value in d.items():
-        if sum(key) == degree:
-            return value * LM(P)
-    return 0
+    return LT(P)
 # ...
 
 # ...
 class MemComplexity(Complexity):
-    """Abstract class for complexity computation."""
+    """
+    Class for memory complexity computation.
+    This class implements a simple two level memory model
+    """
 
     @property
     def free_parameters(self):
+        """
+        Returns the free parameters. In general, this
+        corresponds to length of a For loop.
+        """
         # ...
         args = []
         for stmt in self.ast.statements:
@@ -145,7 +164,13 @@ class MemComplexity(Complexity):
         return args
 
     def cost(self, local_vars=[]):
-        """Computes the complexity of the given code."""
+        """
+        Computes the complexity of the given code.
+
+        local_vars: list
+            list of variables that are supposed to be in the fast memory. We will
+            ignore their corresponding memory accesses.
+        """
         # ...
         m = S.Zero
         f = S.Zero
@@ -172,6 +197,15 @@ class MemComplexity(Complexity):
         return d
 
     def intensity(self, d=None, args=None):
+        """
+        Returns the computational intensity for the two level memory model.
+
+        d: dict
+            dictionary containing the floating and memory costs. if not given,
+            we will compute them.
+        args: list
+            list of free parameters, i.e. degrees of freedom.
+        """
         # ...
         if d is None:
             d = self.cost(local_vars=['r', 'u', 'v'])
