@@ -92,23 +92,7 @@ def ast_to_dict(ast):
 # ...
 
 class Parser(object):
-    """ Class for a Parser using TextX.
-
-    A parser can be created from a grammar a filename. It is preferable
-    to specify the list classes to have more control over the abstract grammar;
-    for example, to use a namespace, and to do some specific anotation.
-
-    >>> parser = Parser(filename="gammar.tx")
-
-    Once the parser is created, you can parse a given set of instructions by
-    calling
-
-    >>> parser.parse(["n = 10"])
-
-    or by providing a file to parse
-
-    >>> parser.parse_from_file("tests/examples/ex1.py")
-    """
+    """ Class for a Parser using TextX."""
     def __init__(self, filename, classes=None, debug=False):
         """Parser constructor.
 
@@ -165,6 +149,45 @@ class PyccelParser(Parser):
     """A Class for Pyccel parser.
 
     This is an extension of the Parser class.
+
+    Example
+
+    >>> code = '''
+    ... n = 10
+    ... for i in range(0,n):
+    ...     for j in range(0,n):
+    ...         x = pow(i,2) + pow(i,3) + 3*i
+    ...         y = x / 3 + 2* x
+    ... '''
+
+    we first use the function *preprocess_as_str* to find indentation and add a
+    TAG (indent/dedent) whenever needed.
+
+    >>> from pyccel.codegen import preprocess_as_str
+    >>> from pyccel.parser import PyccelParser
+    >>> code = preprocess_as_str(code)
+    >>> print code
+    n = 10
+    for i in range(0,n):
+    indent
+        for j in range(0,n):
+    indent
+            x = pow(i,2) + pow(i,3) + 3*i
+            y = x / 3 + 2* x
+    dedent
+    dedent
+
+    >>> pyccel = PyccelParser()
+    >>> ast = pyccel.parse(code)
+
+    A typical loop on the AST is the following one, note that we expect two
+    statements: an assignement and a loop. The later has a body of statements,
+    that contains a loop statement, and so on...
+
+    >>> for stmt in ast.statements:
+    ...     print type(stmt)
+    <class 'pyccel.syntax.AssignStmt'>
+    <class 'pyccel.syntax.ForStmt'>
     """
     def __init__(self, **kwargs):
         """Pyccel parser constructor.

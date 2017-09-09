@@ -146,6 +146,66 @@ class MemComplexity(Complexity):
     """
     Class for memory complexity computation.
     This class implements a simple two level memory model
+
+    Example
+
+    >>> code = '''
+    ... n = 10
+    ... for i in range(0,n):
+    ...     for j in range(0,n):
+    ...         x = pow(i,2) + pow(i,3) + 3*i
+    ...         y = x / 3 + 2* x
+    ... '''
+
+    >>> from pyccel.complexity.memory import MemComplexity
+    >>> M = MemComplexity(code)
+    >>> d = M.cost()
+    >>> print "f = ", d['f']
+    f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)
+    >>> print "m = ", d['m']
+    m =  WRITE + 2*n**2*(READ + WRITE)
+    >>> q = M.intensity()
+    >>> print "+++ computational intensity ~", q
+    +++ computational intensity ~ (2*ADD + DIV + 2*MUL + 2*POW)/(2*READ + 2*WRITE)
+
+    Now let us consider a case where some variables are supposed to be in the
+    fast memory, (*r* in this test)
+
+    >>> code = '''
+    ... n = 10
+    ... x = zeros(shape=(n,n), dtype=float)
+    ... r = float()
+    ... r = 0
+    ... for i in range(0, n):
+    ...     r = x[n,i] + 1
+    ... '''
+
+    >>> M = MemComplexity(code)
+    >>> d = M.cost()
+    >>> print "f = ", d['f']
+    f =  ADD*n
+    >>> print "m = ", d['m']
+    m =  2*WRITE + n*(READ + WRITE)
+    >>> q = M.intensity()
+    >>> print "+++ computational intensity ~", q
+    +++ computational intensity ~ ADD/(READ + WRITE)
+
+    Notice, that this is not what we expect! the cost of writing into *r* is
+    'zero', and therefor, there should be no :math:`n*WRITE` in our memory cost.
+    In order to achieve this, you must tell pyccel that you have the variable
+    *r* is already in the fast memory. This can be done by adding the argument
+    *local_vars=['r']* when calling the cost method.
+
+    >>> d = M.cost(local_vars=['r'])
+    >>> print "f = ", d['f']
+    f =  ADD*n
+    >>> print "m = ", d['m']
+    m =  READ*n + WRITE
+    >>> q = M.intensity(local_vars=['r'])
+    >>> print "+++ computational intensity ~", q
+    +++ computational intensity ~ ADD/READ
+
+    and this is exactly what we were expecting.
     """
 
     @property
@@ -228,28 +288,6 @@ class MemComplexity(Complexity):
 
         return lt_f/lt_m
 # ...
-
-##############################################
-if __name__ == "__main__":
-    code = '''
-n = 10
-
-for i in range(0,n):
-    for j in range(0,n):
-        x = pow(i,2) + pow(i,3) + 3*i
-        y = x / 3 + 2* x
-    '''
-
-    M = MemComplexity(code)
-    d = M.cost(local_vars=['r', 'u', 'v'])
-
-    f = d['f']
-    m = d['m']
-    print "f = ", f
-    print "m = ", m
-
-    q = M.intensity()
-    print ">>> computational intensity ~", q
 
 #    # ... computational intensity
 #    q = f / m
