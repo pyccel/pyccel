@@ -24,12 +24,6 @@ Codegen
 .. automodule:: pyccel.codegen
    :members:
 
-Complexity
-^^^^^^^^^^
-
-.. automodule:: pyccel.complexity
-   :members:
-
 Abstract Syntax Tree (AST)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -77,3 +71,19 @@ OpenMP
 
 .. automodule:: pyccel.openmp.syntax
    :members:
+
+Complexity
+^^^^^^^^^^
+
+Arithmetic
+__________
+
+.. automodule:: pyccel.complexity.operation
+   :members:
+
+Memory
+______
+
+.. automodule:: pyccel.complexity.memory
+   :members:
+

@@ -9,7 +9,10 @@ from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
-from sympy.core.sympify import _sympify
+# TODO rename _sympify to sympify. Before we were using _sympify from sympy.core
+#      but then sympy will keep in memory all used variables. we don't need it,
+#      since the in syntax.py we always check the namespace for any new variable.
+from sympy import sympify as _sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range
