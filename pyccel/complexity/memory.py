@@ -65,16 +65,17 @@ def count_access(expr, visual=True, local_vars=[]):
         local_vars = set(local_vars)
         ignored = indices.union(local_vars)
         atoms = atoms - ignored
-        print type(expr), expr
-        print "indices : ", indices
-        print "atoms : ", atoms
-        print "ignored : ", ignored
+#        print type(expr), expr
+#        print "indices : ", indices
+#        print "atoms : ", atoms
+#        print "ignored : ", ignored
         ops = [READ]*len(atoms)
     elif isinstance(expr, Assign):
         if isinstance(expr.lhs, IndexedElement):
             name = str(expr.lhs.base)
         else:
             name = str(expr.lhs)
+#        print "type(expr.rhs) = ", type(expr.rhs)
         ops  = [count_access(expr.rhs, visual=visual, local_vars=local_vars)]
         if not Symbol(name) in local_vars:
             ops += [WRITE]
@@ -86,6 +87,7 @@ def count_access(expr, visual=True, local_vars=[]):
         if isinstance(e, Symbol):
             local_vars.append(e)
         ops = [count_access(i, visual=visual, local_vars=local_vars) for i in expr.body]
+#        print ">>> ops = ", ops
         ops = [i * (e-b) for i in ops]
     elif isinstance(expr, (NumpyZeros, NumpyOnes)):
         ops = []
@@ -103,15 +105,7 @@ def count_mem(expr, visual=True, local_vars=[]):
     """
     """
     f = count_ops(expr, visual=True)
-    if f == 0:
-        return 0
-
     m = count_access(expr, visual=True, local_vars=local_vars)
-    print "f: ", f
-    print "m: ", m
-
-    q = f/m
-    return q
 
 #    t_f = Symbol('t_f')
 #    t_m = Symbol('t_m')
@@ -125,13 +119,18 @@ class MemComplexity(Complexity):
     def cost(self, local_vars=[]):
         """Computes the complexity of the given code."""
         # ...
-        cost = 0
+        f = S.Zero
+        m = S.Zero
         for stmt in self.ast.statements:
             if isinstance(stmt, (AssignStmt, ForStmt)):
-                cost += count_mem(stmt.expr, local_vars=local_vars)
+                f += count_ops(stmt.expr, visual=True)
+                m += count_access(stmt.expr, visual=True, local_vars=local_vars)
         # ...
 
-        return cost
+        print "f: ", f
+        print "m: ", m
+
+        return f,m
 # ...
 
 ##############################################
@@ -150,4 +149,4 @@ if __name__ == "__main__":
     import sys
     filename = sys.argv[1]
     complexity = MemComplexity(filename)
-    print complexity.cost(local_vars=['r', 'u', 'v'])
+    complexity.cost(local_vars=['r', 'u', 'v'])
