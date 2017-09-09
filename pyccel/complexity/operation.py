@@ -19,7 +19,18 @@ from pyccel.syntax import ( \
                            IfStmt, ForStmt,WhileStmt \
                            )
 
-from pyccel.types.ast import (Assign, For)
+from pyccel.types.ast import (For, Assign, Declare, Variable, \
+                              datatype, While, NativeFloat, \
+                              EqualityStmt, NotequalStmt, \
+                              Argument, InArgument, InOutArgument, \
+                              MultiAssign, OutArgument, Result, \
+                              FunctionDef, Import, Print, \
+                              Comment, AnnotatedComment, \
+                              IndexedVariable, Slice, If, \
+                              ThreadID, ThreadsNumber, \
+                              Rational, NumpyZeros, NumpyLinspace, \
+                              Stencil,ceil, \
+                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
 
 from pyccel.complexity.basic import Complexity
 
@@ -121,7 +132,7 @@ def count_ops(expr, visual=True):
                     ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
-            if not a.is_Symbol:
+            if (not a.is_Symbol) and (not isinstance(a, IndexedElement)):
                 args.extend(a.args)
 
     elif type(expr) is dict:
@@ -142,6 +153,8 @@ def count_ops(expr, visual=True):
         e = expr.iterable.args[1]
         ops = [count_ops(i, visual=visual) for i in expr.body]
         ops = [i * (e-b) for i in ops]
+    elif isinstance(expr, (NumpyZeros, NumpyOnes)):
+        ops = []
     elif not isinstance(expr, Basic):
         ops = []
     else:  # it's Basic not isinstance(expr, Expr):

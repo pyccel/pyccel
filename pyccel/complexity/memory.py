@@ -3,6 +3,11 @@
 from sympy import sympify, simplify, Symbol, Integer, Float, Add, Mul
 from sympy import Piecewise, log
 from sympy.abc import x
+from sympy import preorder_traversal
+from sympy.core.expr import Expr, AtomicExpr
+from sympy.core.singleton import S
+from sympy.tensor.indexed import Idx
+from sympy import limit, oo
 
 from pyccel.parser  import PyccelParser
 from pyccel.syntax import ( \
@@ -11,30 +16,119 @@ from pyccel.syntax import ( \
                            IfStmt, ForStmt,WhileStmt \
                            )
 
-from pyccel.types.ast import (Assign, For)
+from pyccel.types.ast import (For, Assign, Declare, Variable, \
+                              datatype, While, NativeFloat, \
+                              EqualityStmt, NotequalStmt, \
+                              Argument, InArgument, InOutArgument, \
+                              MultiAssign, OutArgument, Result, \
+                              FunctionDef, Import, Print, \
+                              Comment, AnnotatedComment, \
+                              IndexedVariable, Slice, If, \
+                              ThreadID, ThreadsNumber, \
+                              Rational, NumpyZeros, NumpyLinspace, \
+                              Stencil,ceil, \
+                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
 
-from pyccel.complexity.basic import Complexity
+from pyccel.complexity.basic     import Complexity
+from pyccel.complexity.operation import count_ops
 
 __all__ = ["count_mem", "MemComplexity"]
 
 # ...
-def count_mem(expr, visual=True):
+def count_access(expr, visual=True, local_vars=[]):
     """
     """
-    return 0
+    from sympy import Integral, Symbol
+    from sympy.simplify.radsimp import fraction
+    from sympy.logic.boolalg import BooleanFunction
+
+    if not isinstance(expr, (Assign, For)):
+        expr = sympify(expr)
+
+    ops   = []
+    WRITE = Symbol('WRITE')
+    READ  = Symbol('READ')
+
+    local_vars = [str(a) for a in local_vars]
+
+    if isinstance(expr, Expr):
+        indices = []
+        for arg in preorder_traversal(expr):
+            if isinstance(arg, Idx):
+                indices.append(str(arg))
+
+        atoms = expr.atoms(Symbol)
+        atoms = [str(i) for i in atoms]
+
+        atoms      = set(atoms)
+        indices    = set(indices)
+        local_vars = set(local_vars)
+        ignored = indices.union(local_vars)
+        atoms = atoms - ignored
+        print type(expr), expr
+        print "indices : ", indices
+        print "atoms : ", atoms
+        print "ignored : ", ignored
+        ops = [READ]*len(atoms)
+    elif isinstance(expr, Assign):
+        if isinstance(expr.lhs, IndexedElement):
+            name = str(expr.lhs.base)
+        else:
+            name = str(expr.lhs)
+        ops  = [count_access(expr.rhs, visual=visual, local_vars=local_vars)]
+        if not Symbol(name) in local_vars:
+            ops += [WRITE]
+    elif isinstance(expr, For):
+        b = expr.iterable.args[0]
+        e = expr.iterable.args[1]
+        if isinstance(b, Symbol):
+            local_vars.append(b)
+        if isinstance(e, Symbol):
+            local_vars.append(e)
+        ops = [count_access(i, visual=visual, local_vars=local_vars) for i in expr.body]
+        ops = [i * (e-b) for i in ops]
+    elif isinstance(expr, (NumpyZeros, NumpyOnes)):
+        ops = []
+
+    if not ops:
+        return S.Zero
+
+    ops = simplify(Add(*ops))
+
+    return ops
+# ...
+
+# ...
+def count_mem(expr, visual=True, local_vars=[]):
+    """
+    """
+    f = count_ops(expr, visual=True)
+    if f == 0:
+        return 0
+
+    m = count_access(expr, visual=True, local_vars=local_vars)
+    print "f: ", f
+    print "m: ", m
+
+    q = f/m
+    return q
+
+#    t_f = Symbol('t_f')
+#    t_m = Symbol('t_m')
+#    return f * t_f + m * t_m
 # ...
 
 # ...
 class MemComplexity(Complexity):
     """Abstract class for complexity computation."""
 
-    def cost(self):
+    def cost(self, local_vars=[]):
         """Computes the complexity of the given code."""
         # ...
         cost = 0
         for stmt in self.ast.statements:
             if isinstance(stmt, (AssignStmt, ForStmt)):
-                cost += count_mem(stmt.expr)
+                cost += count_mem(stmt.expr, local_vars=local_vars)
         # ...
 
         return cost
@@ -56,5 +150,4 @@ if __name__ == "__main__":
     import sys
     filename = sys.argv[1]
     complexity = MemComplexity(filename)
-    print complexity.cost()
-
+    print complexity.cost(local_vars=['r', 'u', 'v'])
