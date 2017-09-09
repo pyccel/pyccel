@@ -32,7 +32,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
 from pyccel.complexity.basic     import Complexity
 from pyccel.complexity.operation import count_ops
 
-__all__ = ["count_mem", "MemComplexity"]
+__all__ = ["count_access", "MemComplexity"]
 
 # ...
 def count_access(expr, visual=True, local_vars=[]):
@@ -55,7 +55,8 @@ def count_access(expr, visual=True, local_vars=[]):
         indices = []
         for arg in preorder_traversal(expr):
             if isinstance(arg, Idx):
-                indices.append(str(arg))
+                for a in arg.free_symbols:
+                    indices.append(str(a))
 
         atoms = expr.atoms(Symbol)
         atoms = [str(i) for i in atoms]
@@ -65,19 +66,14 @@ def count_access(expr, visual=True, local_vars=[]):
         local_vars = set(local_vars)
         ignored = indices.union(local_vars)
         atoms = atoms - ignored
-#        print type(expr), expr
-#        print "indices : ", indices
-#        print "atoms : ", atoms
-#        print "ignored : ", ignored
         ops = [READ]*len(atoms)
     elif isinstance(expr, Assign):
         if isinstance(expr.lhs, IndexedElement):
             name = str(expr.lhs.base)
         else:
             name = str(expr.lhs)
-#        print "type(expr.rhs) = ", type(expr.rhs)
         ops  = [count_access(expr.rhs, visual=visual, local_vars=local_vars)]
-        if not Symbol(name) in local_vars:
+        if not name in local_vars:
             ops += [WRITE]
     elif isinstance(expr, For):
         b = expr.iterable.args[0]
@@ -87,7 +83,6 @@ def count_access(expr, visual=True, local_vars=[]):
         if isinstance(e, Symbol):
             local_vars.append(e)
         ops = [count_access(i, visual=visual, local_vars=local_vars) for i in expr.body]
-#        print ">>> ops = ", ops
         ops = [i * (e-b) for i in ops]
     elif isinstance(expr, (NumpyZeros, NumpyOnes)):
         ops = []
@@ -101,52 +96,50 @@ def count_access(expr, visual=True, local_vars=[]):
 # ...
 
 # ...
-def count_mem(expr, visual=True, local_vars=[]):
-    """
-    """
-    f = count_ops(expr, visual=True)
-    m = count_access(expr, visual=True, local_vars=local_vars)
-
-#    t_f = Symbol('t_f')
-#    t_m = Symbol('t_m')
-#    return f * t_f + m * t_m
-# ...
-
-# ...
 class MemComplexity(Complexity):
     """Abstract class for complexity computation."""
 
     def cost(self, local_vars=[]):
         """Computes the complexity of the given code."""
         # ...
-        f = S.Zero
         m = S.Zero
-        for stmt in self.ast.statements:
-            if isinstance(stmt, (AssignStmt, ForStmt)):
-                f += count_ops(stmt.expr, visual=True)
-                m += count_access(stmt.expr, visual=True, local_vars=local_vars)
+        f = S.Zero
         # ...
 
-        print "f: ", f
-        print "m: ", m
+        # ...
+        for stmt in self.ast.statements:
+            if isinstance(stmt, (AssignStmt, ForStmt)):
+                m += count_access(stmt.expr, visual=True, local_vars=local_vars)
+                f += count_ops(stmt.expr, visual=True)
+        # ...
 
-        return f,m
+        # ...
+        m = simplify(m)
+        f = simplify(f)
+        # ...
+
+        # ...
+        d = {}
+        d['m'] = m
+        d['f'] = f
+        # ...
+
+        return d
 # ...
 
 ##############################################
 if __name__ == "__main__":
-#    expr = sympify('(x+1)**2+x+1')
-#    print expr
-#    d = count_ops(expr)
-#    print d
-#
-#    f = x**2
-#    g = log(x)
-#    expr = Piecewise( (0, x<-1), (f, x<=1), (g, True))
-#    d = count_ops(expr)
-#    print d
-
     import sys
     filename = sys.argv[1]
-    complexity = MemComplexity(filename)
-    complexity.cost(local_vars=['r', 'u', 'v'])
+
+    M = MemComplexity(filename)
+    d = M.cost(local_vars=['r', 'u', 'v'])
+    f = d['f']
+    m = d['m']
+    print "f = ", f
+    print "m = ", m
+
+#    t_f = Symbol('t_f')
+#    t_m = Symbol('t_m')
+#    c = f * t_f + m * t_m
+

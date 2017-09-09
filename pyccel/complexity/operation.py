@@ -193,13 +193,17 @@ class OpComplexity(Complexity):
     def cost(self):
         """Computes the complexity of the given code."""
         # ...
-        cost = 0
+        f = S.Zero
         for stmt in self.ast.statements:
             if isinstance(stmt, (AssignStmt, ForStmt)):
-                cost += count_ops(stmt.expr)
+                f += count_ops(stmt.expr, visual=True)
         # ...
 
-        return cost
+        # ...
+        f = simplify(f)
+        # ...
+
+        return f
 # ...
 
 ##############################################
@@ -219,4 +223,3 @@ if __name__ == "__main__":
     filename = sys.argv[1]
     complexity = OpComplexity(filename)
     print complexity.cost()
-
