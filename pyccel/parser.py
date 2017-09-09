@@ -221,21 +221,7 @@ class PyccelParser(Parser):
                     EndConstructClause
                    ]
 
-        try:
-            filename = kwargs["filename"]
-        except:
-            dir_path = os.path.dirname(os.path.realpath(__file__))
-            filename = os.path.join(dir_path, "grammar.tx")
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        filename = os.path.join(dir_path, "grammar.tx")
 
         super(PyccelParser, self).__init__(filename, classes=classes)
-
-    def parse_from_file(self, filename):
-        """Parse a set of instructions with respect to the grammar and returns
-        the AST.
-
-        filename: str
-            a file containing the instructions to parse.
-        """
-        ast = super(PyccelParser, self).parse_from_file(filename)
-
-        return ast

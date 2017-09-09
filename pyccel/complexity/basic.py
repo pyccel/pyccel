@@ -1,41 +1,49 @@
 # coding: utf-8
 
 from pyccel.parser  import PyccelParser
+import os
 
 __all__ = ["Complexity"]
 
 # ...
 class Complexity(object):
     """Abstract class for complexity computation."""
-    def __init__(self, filename):
+    def __init__(self, filename_or_text):
         """Constructor for the Complexity class.
 
-        filename: str
-            name of the file containing the abstract grammar.
+        filename_or_text: str
+            name of the file containing the abstract grammar or input code to
+            parse as a string.
         """
         # ... TODO improve once TextX will handle indentation
-        from pyccel.codegen import clean, preprocess, make_tmp_file
-
-        clean(filename)
-
-        filename_tmp = make_tmp_file(filename)
-        preprocess(filename, filename_tmp)
-        filename = filename_tmp
-        # ...
+        from pyccel.codegen import clean, preprocess, preprocess_as_str, make_tmp_file
 
         # ...
-        self._filename = filename
-        # ...
+        if os.path.isfile(filename_or_text):
+            # ...
+            filename = filename_or_text
 
-        # ...
-        pyccel    = PyccelParser()
-        self._ast = pyccel.parse_from_file(filename)
-        # ...
+            clean(filename)
 
-    @property
-    def filename(self):
-        """Returns the name of the file to process."""
-        return self._filename
+            filename_tmp = make_tmp_file(filename)
+            preprocess(filename, filename_tmp)
+            filename = filename_tmp
+            # ...
+
+            # ...
+            pyccel    = PyccelParser()
+            self._ast = pyccel.parse_from_file(filename)
+            # ...
+        else:
+            # ...
+            code = preprocess_as_str(filename_or_text)
+            # ...
+
+            # ...
+            pyccel    = PyccelParser()
+            self._ast = pyccel.parse(code)
+            # ...
+        # ...
 
     @property
     def ast(self):

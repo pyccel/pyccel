@@ -208,18 +208,14 @@ class OpComplexity(Complexity):
 
 ##############################################
 if __name__ == "__main__":
-#    expr = sympify('(x+1)**2+x+1')
-#    print expr
-#    d = count_ops(expr)
-#    print d
-#
-#    f = x**2
-#    g = log(x)
-#    expr = Piecewise( (0, x<-1), (f, x<=1), (g, True))
-#    d = count_ops(expr)
-#    print d
+    code = '''
+n = 10
 
-    import sys
-    filename = sys.argv[1]
-    complexity = OpComplexity(filename)
+for i in range(0,n):
+    for j in range(0,n):
+        x = pow(i,2) + pow(i,3) + 3*i
+        y = x / 3 + 2* x
+    '''
+
+    complexity = OpComplexity(code)
     print complexity.cost()

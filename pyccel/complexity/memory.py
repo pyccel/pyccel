@@ -231,10 +231,16 @@ class MemComplexity(Complexity):
 
 ##############################################
 if __name__ == "__main__":
-    import sys
-    filename = sys.argv[1]
+    code = '''
+n = 10
 
-    M = MemComplexity(filename)
+for i in range(0,n):
+    for j in range(0,n):
+        x = pow(i,2) + pow(i,3) + 3*i
+        y = x / 3 + 2* x
+    '''
+
+    M = MemComplexity(code)
     d = M.cost(local_vars=['r', 'u', 'v'])
 
     f = d['f']

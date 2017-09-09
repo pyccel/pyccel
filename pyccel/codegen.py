@@ -60,21 +60,20 @@ def make_tmp_file(filename):
 # ...
 
 # ...
-def preprocess(filename, filename_out):
+def preprocess_as_str(lines):
     """
     The input python file will be decorated with
     indent/dedent so that textX can find the blocks easily.
     This function will write the output code in filename_out.
 
-    filename: str
-        name of the file to parse.
-
-    filename_out: str
-        name of the temporary file that will be parsed by textX.
+    lines: str or list
+        python code as a string
     """
-    f = open(filename)
-    lines = f.readlines()
-    f.close()
+    if type(lines) == str:
+        ls = lines.split("\n")
+        lines = []
+        for l in ls:
+            lines.append(l + "\n")
 
     # to be sure that we dedent at the end
     lines += "\n"
@@ -106,6 +105,28 @@ def preprocess(filename, filename_out):
                     lines_new += "dedent" + "\n"
 
             lines_new += line
+    return lines_new
+# ...
+
+# ...
+def preprocess(filename, filename_out):
+    """
+    The input python file will be decorated with
+    indent/dedent so that textX can find the blocks easily.
+    This function will write the output code in filename_out.
+
+    filename: str
+        name of the file to parse.
+
+    filename_out: str
+        name of the temporary file that will be parsed by textX.
+    """
+    f = open(filename)
+    lines = f.readlines()
+    f.close()
+
+    lines_new = preprocess_as_str(lines)
+
     f = open(filename_out, "w")
     for line in lines_new:
         f.write(line)
