@@ -96,8 +96,53 @@ def count_access(expr, visual=True, local_vars=[]):
 # ...
 
 # ...
+def free_parameters(expr):
+    """
+    """
+    args = []
+    if isinstance(expr, For):
+        b = expr.iterable.args[0]
+        e = expr.iterable.args[1]
+        if isinstance(b, Symbol):
+            args.append(str(b))
+        if isinstance(e, Symbol):
+            args.append(str(e))
+        for i in expr.body:
+            args += free_parameters(i)
+        args = set(args)
+        args = list(args)
+
+    return args
+# ...
+
+# ...
+from sympy import Poly, LM
+def leading_term(expr, *args):
+
+    expr = sympify(str(expr))
+    P = Poly(expr, *args)
+    d = P.as_dict()
+    degree = P.total_degree()
+    for key, value in d.items():
+        if sum(key) == degree:
+            return value * LM(P)
+    return 0
+# ...
+
+# ...
 class MemComplexity(Complexity):
     """Abstract class for complexity computation."""
+
+    @property
+    def free_parameters(self):
+        # ...
+        args = []
+        for stmt in self.ast.statements:
+            if isinstance(stmt, ForStmt):
+                args += free_parameters(stmt.expr)
+        # ...
+        args = [Symbol(i) for i in args]
+        return args
 
     def cost(self, local_vars=[]):
         """Computes the complexity of the given code."""
@@ -125,6 +170,26 @@ class MemComplexity(Complexity):
         # ...
 
         return d
+
+    def intensity(self, d=None, args=None):
+        # ...
+        if d is None:
+            d = self.cost(local_vars=['r', 'u', 'v'])
+        # ...
+
+        # ...
+        if args is None:
+            args = self.free_parameters
+        # ...
+
+        # ...
+        f = d['f']
+        m = d['m']
+        lt_f = leading_term(f, *args)
+        lt_m = leading_term(m, *args)
+        # ...
+
+        return lt_f/lt_m
 # ...
 
 ##############################################
@@ -134,45 +199,20 @@ if __name__ == "__main__":
 
     M = MemComplexity(filename)
     d = M.cost(local_vars=['r', 'u', 'v'])
+
     f = d['f']
     m = d['m']
     print "f = ", f
     print "m = ", m
 
-    # ... computational intensity
-    q = f / m
-    q = simplify(q)
-#    print "q = ", q
-    # ...
+    q = M.intensity()
+    print ">>> computational intensity ~", q
 
-    # ... TODO get these symbols from loops
-    b = Symbol('b')
-    p = Symbol('p')
-    # ...
-
-    # ...
-    from sympy import Poly, LM
-    def leading_term(expr, *args):
-
-        expr = sympify(str(expr))
-        P = Poly(expr, *args)
-        d = P.as_dict()
-        degree = P.total_degree()
-        for key, value in d.items():
-            if sum(key) == degree:
-                return value * LM(P)
-        return 0
-    # ...
-
-    # ...
-    lt_f = leading_term(f, b, p)
-    lt_m = leading_term(m, b, p)
-    # ...
-
-    e = lt_f/lt_m
-    print ">>> computational intensity ~", e
-
+#    # ... computational intensity
+#    q = f / m
+#    q = simplify(q)
 #    t_f = Symbol('t_f')
 #    t_m = Symbol('t_m')
 #    c = f * t_f + m * t_m
+#    # ...
 
