@@ -139,6 +139,39 @@ if __name__ == "__main__":
     print "f = ", f
     print "m = ", m
 
+    # ... computational intensity
+    q = f / m
+    q = simplify(q)
+#    print "q = ", q
+    # ...
+
+    # ... TODO get these symbols from loops
+    b = Symbol('b')
+    p = Symbol('p')
+    # ...
+
+    # ...
+    from sympy import Poly, LM
+    def leading_term(expr, *args):
+
+        expr = sympify(str(expr))
+        P = Poly(expr, *args)
+        d = P.as_dict()
+        degree = P.total_degree()
+        for key, value in d.items():
+            if sum(key) == degree:
+                return value * LM(P)
+        return 0
+    # ...
+
+    # ...
+    lt_f = leading_term(f, b, p)
+    lt_m = leading_term(m, b, p)
+    # ...
+
+    e = lt_f/lt_m
+    print ">>> computational intensity ~", e
+
 #    t_f = Symbol('t_f')
 #    t_m = Symbol('t_m')
 #    c = f * t_f + m * t_m
