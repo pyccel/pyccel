@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
 
 from .basic      import *
-from .operation  import *
+from .arithmetic import *
 from .memory     import *

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from pyccel.complexity.operation import OpComplexity
+from pyccel.complexity.arithmetic import OpComplexity
 from os.path import join, dirname
 
 def test_1():
