@@ -26,8 +26,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Stencil,ceil, \
                               NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
 
-from pyccel.complexity.basic     import Complexity
-from pyccel.complexity.operation import count_ops
+from pyccel.complexity.basic      import Complexity
+from pyccel.complexity.arithmetic import count_ops
 
 __all__ = ["count_access", "MemComplexity"]
 
@@ -196,7 +196,7 @@ class MemComplexity(Complexity):
 
         return d
 
-    def intensity(self, d=None, args=None):
+    def intensity(self, d=None, args=None, local_vars=[]):
         """
         Returns the computational intensity for the two level memory model.
 
@@ -205,10 +205,13 @@ class MemComplexity(Complexity):
             we will compute them.
         args: list
             list of free parameters, i.e. degrees of freedom.
+        local_vars: list
+            list of variables that are supposed to be in the fast memory. We will
+            ignore their corresponding memory accesses.
         """
         # ...
         if d is None:
-            d = self.cost(local_vars=['r', 'u', 'v'])
+            d = self.cost(local_vars=local_vars)
         # ...
 
         # ...
