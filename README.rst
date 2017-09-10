@@ -359,11 +359,13 @@ The generated *Fortran* code is
 The following plot shows the scalability of the generated code on **LRZ** using :math:`(n,m,p) = (5000,7000,5000)`.
 
 .. figure:: doc/include/openmp/matrix_product_scalability.png 
+   :align: center
    :scale: 25% 
 
    Weak scalability on LRZ. CPU time is given in seconds.
 
 .. figure:: doc/include/openmp/matrix_product_speedup.png 
+   :align: center
    :scale: 25% 
 
    Speedup on LRZ
