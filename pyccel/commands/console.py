@@ -1,4 +1,6 @@
+# coding: utf-8
 #!/usr/bin/env python
+
 import sys
 import os
 import argparse
@@ -40,6 +42,11 @@ def pyccel():
                         help='compiles the code in a debug mode.')
     parser.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
+    parser.add_argument('--analysis', action='store_true', \
+                        help='enables code analysis mode.')
+    parser.add_argument('--local_vars', type=str, \
+                        help='local variables on fast memory.')
+    # TODO: remove local_vars later, by using Annotated Comments
     # ...
 
     # ...
@@ -54,7 +61,8 @@ def pyccel():
     if args.language:
         language = args.language
     else:
-        raise ValueError("a target language must be provided.")
+        if not args.analysis:
+            raise ValueError("a target language must be provided.")
 
     if args.compiler:
         compiler = args.compiler
@@ -67,14 +75,24 @@ def pyccel():
     if args.openmp:
         accelerator = "openmp"
 
-    debug   = args.debug
-    verbose = args.verbose
-    show    = args.show
+    debug      = args.debug
+    verbose    = args.verbose
+    show       = args.show
+    analysis   = args.analysis
     # ...
 
     # ...
-    build_file(filename, language, compiler, \
-            execute=execute, accelerator=accelerator, \
-            debug=debug, verbose=verbose, show=show, \
-            name="main")
+    if not analysis:
+        build_file(filename, language, compiler, \
+                execute=execute, accelerator=accelerator, \
+                debug=debug, verbose=verbose, show=show, \
+                name="main")
+    else:
+        from pyccel.complexity.memory import MemComplexity
+
+        local_vars = []
+        if args.local_vars:
+            local_vars = args.local_vars.split(',')
+        complexity = MemComplexity(filename)
+        complexity.intensity(verbose=True, local_vars=local_vars)
     # ...

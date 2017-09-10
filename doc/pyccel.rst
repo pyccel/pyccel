@@ -183,8 +183,8 @@ Parser
 .. automodule:: pyccel.parser
    :members:
 
-Syntax
-^^^^^^
+Syntax (IR)
+^^^^^^^^^^^
 
 .. inheritance-diagram:: pyccel.syntax
 

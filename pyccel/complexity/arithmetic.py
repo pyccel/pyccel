@@ -190,8 +190,13 @@ def count_ops(expr, visual=True):
 class OpComplexity(Complexity):
     """class for Operation complexity computation."""
 
-    def cost(self):
-        """Computes the complexity of the given code."""
+    def cost(self, verbose=False):
+        """
+        Computes the complexity of the given code.
+
+        verbose: bool
+            talk more
+        """
         # ...
         f = S.Zero
         for stmt in self.ast.statements:
@@ -201,6 +206,11 @@ class OpComplexity(Complexity):
 
         # ...
         f = simplify(f)
+        # ...
+
+        # ...
+        if verbose:
+            print (" arithmetic cost         ~ " + str(f))
         # ...
 
         return f

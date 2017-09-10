@@ -256,7 +256,7 @@ class MemComplexity(Complexity):
 
         return d
 
-    def intensity(self, d=None, args=None, local_vars=[]):
+    def intensity(self, d=None, args=None, local_vars=[], verbose=False):
         """
         Returns the computational intensity for the two level memory model.
 
@@ -268,6 +268,8 @@ class MemComplexity(Complexity):
         local_vars: list
             list of variables that are supposed to be in the fast memory. We will
             ignore their corresponding memory accesses.
+        verbose: bool
+            talk more
         """
         # ...
         if d is None:
@@ -282,11 +284,23 @@ class MemComplexity(Complexity):
         # ...
         f = d['f']
         m = d['m']
-        lt_f = leading_term(f, *args)
-        lt_m = leading_term(m, *args)
         # ...
 
-        return lt_f/lt_m
+        # ...
+        lt_f = leading_term(f, *args)
+        lt_m = leading_term(m, *args)
+
+        q = lt_f/lt_m
+        # ...
+
+        # ...
+        if verbose:
+            print (" arithmetic cost         ~ " + str(f))
+            print (" memory cost             ~ " + str(m))
+            print (" computational intensity ~ " + str(q))
+        # ...
+
+        return q
 # ...
 
 #    # ... computational intensity
