@@ -101,6 +101,10 @@ html_theme = 'alabaster'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# specify the side bar
+#html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html'], }
+html_sidebars = { '**': ['localtoc.html', 'relations.html', 'searchbox.html'], }
+
 
 # -- Options for Tikz -----------------------------------------------------
 tikz_proc_suite     = 'GhostScript'
