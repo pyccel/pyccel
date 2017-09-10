@@ -698,6 +698,41 @@ def build_file(filename, language, compiler, \
     ignored_modules: list
         list of modules to ignore (like 'numpy', 'sympy').
         These modules do not have a correspondence in Fortran.
+
+    Example
+
+    >>> from pyccel.codegen import build_file
+    >>> code = '''
+    ... n = int()
+    ... n = 10
+    ...
+    ... x = int()
+    ... x = 0
+    ... for i in range(0,n):
+    ...     for j in range(0,n):
+    ...         x = x + i*j
+    ... '''
+    >>> filename = "test.py"
+    >>> f = open(filename, "w")
+    >>> f.write(code)
+    >>> f.close()
+    >>> build_file(filename, "fortran", "gfortran", show=True, name="main")
+    ========Fortran_Code========
+    program main
+    implicit none
+    integer :: i
+    integer :: x
+    integer :: j
+    integer :: n
+    n = 10
+    x = 0
+    do i = 0, n - 1, 1
+        do j = 0, n - 1, 1
+            x = i*j + x
+        end do
+    end do
+    end
+    ============================
     """
     # ...
     from pyccel.patterns.utilities import find_imports
@@ -762,6 +797,27 @@ def load_module(filename, language="fortran", compiler="gfortran"):
         low-level target language used in the conversion
     compiled: str
         used compiler for the target language.
+
+    Example
+
+    >>> from pyccel.codegen import load_module
+    >>> code = '''
+    ... def f(n):
+    ...     n = int()
+    ...     x = int()
+    ...     x = 0
+    ...     for i in range(0,n):
+    ...         for j in range(0,n):
+    ...             x = x + i*j
+    ...     print("x = ", x)
+    ... '''
+    >>> filename = "test.py"
+    >>> f = open(filename, "w")
+    >>> f.write(code)
+    >>> f.close()
+    >>> module = load_module(filename="test.py")
+    >>> module.f(5)
+    x =          100
     """
     # ...
     name = filename.split(".")[0]

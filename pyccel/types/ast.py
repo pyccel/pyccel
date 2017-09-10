@@ -25,6 +25,7 @@ from sympy.utilities.iterables import iterable
 # TODO: rename LEN to Len
 # TODO: clean Thread objects
 # TODO: update code examples
+# TODO: add _sympystr whenever it's possible
 __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "ModOp", "AugAssign", "While", "For", "DataType", "NativeBool", \
            "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
@@ -55,7 +56,7 @@ class Assign(Basic):
     Examples
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
+    >>> from pyccel.types.ast import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
     x := y
@@ -171,13 +172,6 @@ class AugAssign(Basic):
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.types.ast import AugAssign
-    >>> x, y = symbols('x, y')
-    >>> AugAssign(x, AddOp, y)
-    x += y
     """
 
     def __new__(cls, lhs, op, rhs):
@@ -234,6 +228,14 @@ class While(Basic):
         test condition given as a sympy expression
     body : sympy expr
         list of statements representing the body of the While statement.
+
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.types.ast import Assign, While
+    >>> n = Symbol('n')
+    >>> While((n>1), [Assign(n,n-1)])
+    While(n > 1, (n := n - 1,))
     """
     def __new__(cls, test, body):
         test = _sympify(test)
@@ -265,6 +267,15 @@ class For(Basic):
         iterable object. for the moment only Range is used
     body : sympy expr
         list of statements representing the body of the For statement.
+
+    Examples
+
+    >>> from sympy import symbols, MatrixSymbol
+    >>> from pyccel.types.ast import Assign, For
+    >>> i,b,e,s,x = symbols('i,b,e,s,x')
+    >>> A = MatrixSymbol('A', 1, 3)
+    >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
+    For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
     """
 
     def __new__(cls, target, iter, body):
@@ -420,6 +431,16 @@ class Variable(Basic):
         used for arrays, if we need to allocate memory [Default value: False]
     shape: int or list
         shape of the array. [Default value: None]
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Variable
+    >>> x, n = symbols('x, n')
+    >>> Variable('int', 'n')
+    Variable(NativeInteger(), n, 0, False, None)
+    >>> Variable('float', x, rank=2, shape=(n,2), allocatable=True)
+    Variable(NativeFloat(), x, 2, True, (n, 2)
     """
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
@@ -492,6 +513,17 @@ class FunctionDef(Basic):
         These are used internally by the routine.
     global_vars : list of Symbols
         Variables which will not be passed into the function.
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Assign, InArgument, Result, FunctionDef
+    >>> n,x,y = symbols('n,x,y')
+    >>> args        = [InArgument('float', x), InArgument('int', n)]
+    >>> results     = [Result('float', y)]
+    >>> body        = [Assign(y,x+n)]
+    >>> local_vars  = []
+    >>> global_vars = []
+    >>> FunctionDef('f', args, results, body, local_vars, global_vars)
+    FunctionDef(f, (InArgument(NativeFloat(), x, 0, False, None), InArgument(NativeInteger(), n, 0, False, None)), (Result(NativeFloat(), y, 0, False, None),), [y := n + x], [], [])
     """
 
     def __new__(cls, name, arguments, results, body, local_vars, global_vars):
@@ -598,6 +630,7 @@ class FunctionDef(Basic):
     def global_vars(self):
         return self._args[5]
 
+# TODO: rename and add example
 class ceil(Basic):
     """
     Represents ceil expression in the code.
@@ -620,6 +653,11 @@ class Import(Basic):
     funcs
         The name of the function (or an iterable of names) to be imported.
 
+    Examples
+
+    >>> from pyccel.types.ast import Import
+    >>> Import('numpy', 'linspace')
+    Import(numpy, (linspace,))
     """
 
     def __new__(cls, fil, funcs=None):
@@ -642,7 +680,6 @@ class Import(Basic):
     def funcs(self):
         return self._args[1]
 
-
 # TODO: Should Declare have an optional init value for each var?
 class Declare(Basic):
     """Represents a variable declaration in the code.
@@ -653,6 +690,14 @@ class Declare(Basic):
         A single variable or an iterable of Variables. If iterable, all
         Variables must be of the same type.
 
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.types.ast import Declare, Variable
+    >>> n = Symbol('n')
+    >>> var = Variable('int', 'n')
+    >>> Declare('int', var)
+    Declare(NativeInteger(), (Variable(NativeInteger(), n, 0, False, None),))
     """
 
     def __new__(cls, dtype, variables):
@@ -678,7 +723,7 @@ class Declare(Basic):
     def variables(self):
         return self._args[1]
 
-
+# TODO: not used. do we keep it?
 class Return(Basic):
     """Represents a function return in the code.
 
@@ -695,7 +740,7 @@ class Return(Basic):
     def expr(self):
         return self._args[0]
 
-
+# TODO: rename and add example
 class LEN(Basic):
     """
     Represents a 'len' expression in the code.
@@ -716,6 +761,7 @@ class LEN(Basic):
         return 'size('+str(self._args[0])+',1)'
 
 # TODO: improve by using args
+# TODO: add example
 class Min(Basic):
     """Represents a 'min' expression in the code."""
     def __new__(cls, expr_l, expr_r):
@@ -730,6 +776,7 @@ class Min(Basic):
         return self.args[1]
 
 # TODO: improve by using args
+# TODO: add example
 class Max(Basic):
     """Represents a 'max' expression in the code."""
     def __new__(cls, expr_l, expr_r):
@@ -743,6 +790,7 @@ class Max(Basic):
     def expr_r(self):
         return self.args[1]
 
+# TODO: add example
 class Dot(Basic):
     """
     Represents a 'dot' expression in the code.
@@ -773,6 +821,14 @@ class NumpyZeros(Basic):
         subclass these types are also supported.
 
     shape : int or list of integers
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import NumpyZeros
+    >>> n,m,x = symbols('n,m,x')
+    >>> NumpyZeros(x, (n,m))
+    x := 0
     """
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, shape):
@@ -849,6 +905,7 @@ class NumpyOnes(Basic):
     def shape(self):
         return self._args[1]
 
+# TODO: add example
 class NumpyArray(Basic):
     """Represents variable assignment using numpy.array for code generation.
 
@@ -898,6 +955,7 @@ class NumpyArray(Basic):
     def shape(self):
         return self._args[2]
 
+# TODO: remove
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
 
@@ -950,6 +1008,14 @@ class Print(Basic):
 
     expr : sympy expr
         The expression to return.
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Print
+    >>> n,m = symbols('n,m')
+    >>> Print(('results', n,m))
+    Print((results, n, m))
     """
 
     def __new__(cls, expr):
@@ -966,6 +1032,12 @@ class Comment(Basic):
 
     text : str
        the comment line
+
+    Examples
+
+    >>> from pyccel.types.ast import Comment
+    >>> Comment('this is a comment')
+    Comment(this is a comment)
     """
 
     def __new__(cls, text):
@@ -983,6 +1055,12 @@ class AnnotatedComment(Basic):
 
     txt: str
         statement to print
+
+    Examples
+
+    >>> from pyccel.types.ast import AnnotatedComment
+    >>> AnnotatedComment('omp', 'parallel')
+    AnnotatedComment(omp, parallel)
     """
     def __new__(cls, accel, txt):
         return Basic.__new__(cls, accel, txt)
@@ -996,7 +1074,42 @@ class AnnotatedComment(Basic):
         return self._args[1]
 
 class IndexedVariable(IndexedBase):
-    """Represents an indexed variable, like x in x[i], in the code."""
+    """
+    Represents an indexed variable, like x in x[i], in the code.
+
+    Examples
+
+    >>> from sympy import symbols, Idx
+    >>> from pyccel.types.ast import IndexedVariable
+    >>> A = IndexedVariable('A'); A
+    A
+    >>> type(A)
+    <class 'pyccel.types.ast.IndexedVariable'>
+
+    When an IndexedVariable object receives indices, it returns an array with named
+    axes, represented by an IndexedElement object:
+
+    >>> i, j = symbols('i j', integer=True)
+    >>> A[i, j, 2]
+    A[i, j, 2]
+    >>> type(A[i, j, 2])
+    <class 'pyccel.types.ast.IndexedElement'>
+
+    The IndexedVariable constructor takes an optional shape argument.  If given,
+    it overrides any shape information in the indices. (But not the index
+    ranges!)
+
+    >>> m, n, o, p = symbols('m n o p', integer=True)
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> A[i, j].shape
+    (m, n)
+    >>> B = IndexedVariable('B', shape=(o, p))
+    >>> B[i, j].shape
+    (m, n)
+
+    **todo:** fix bug. the last result must be : (o,p)
+    """
 
     def __new__(cls, label, shape=None, **kw_args):
         return IndexedBase.__new__(cls, label, shape=None, **kw_args)
@@ -1014,11 +1127,30 @@ class IndexedVariable(IndexedBase):
             return IndexedElement(self, indices, **kw_args)
 
 class IndexedElement(Indexed):
-    """Represents an indexed element, like x[i] in x[i], in the code."""
+    """
+    Represents a mathematical object with indices.
 
+    Examples
+
+    >>> from sympy import symbols, Idx
+    >>> from pyccel.types.ast import IndexedVariable
+    >>> i, j = symbols('i j', cls=Idx)
+    >>> IndexedElement('A', i, j)
+    A[i, j]
+
+    It is recommended that ``IndexedElement`` objects be created via ``IndexedVariable``:
+
+    >>> from pyccel.types.ast import IndexedElement
+    >>> A = IndexedVariable('A')
+    >>> IndexedElement('A', i, j) == A[i, j]
+    False
+
+    **todo:** fix bug. the last result must be : True
+    """
     def __new__(cls, base, *args, **kw_args):
         return Indexed.__new__(cls, base, *args, **kw_args)
 
+# TODO check that args are integers
 class Slice(Basic):
     """Represents a slice in the code.
 
@@ -1028,6 +1160,17 @@ class Slice(Basic):
     end : Symbol or int
         ending index
 
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Slice
+    >>> m, n = symbols('m, n', integer=True)
+    >>> Slice(m,n)
+    m : n
+    >>> Slice(None,n)
+     : n
+    >>> Slice(m,None)
+    m :
     """
     # TODO add step
 
@@ -1062,6 +1205,13 @@ class If(Basic):
         is defined as (cond, expr) where expr is a valid ast element
         and cond is a boolean test.
 
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.types.ast import Assign, If
+    >>> n = Symbol('n')
+    >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
+    If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
     """
     # TODO add step
     def __new__(cls, *args):
@@ -1085,6 +1235,15 @@ class MultiAssign(Basic):
         list of assignable objects
     rhs : Function
         function call expression
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import MultiAssign
+    >>> x, y, z, t = symbols('x, y, z, t')
+    >>> args = [x,y]
+    >>> MultiAssign((z,t), 'f', args)
+    z, t := f(x, y)
     """
     def __new__(cls, lhs, rhs, trailer):
         return Basic.__new__(cls, lhs, rhs, trailer)
@@ -1101,6 +1260,12 @@ class MultiAssign(Basic):
     def trailer(self):
         return self._args[2]
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args    = ', '.join(sstr(i) for i in self.trailer)
+        outputs = ', '.join(sstr(i) for i in self.lhs)
+        return '{2} := {0}({1})'.format(self.rhs, args, outputs)
+
 class Rational(Basic):
     """Represents a Rational numbers statement in the code.
     This is different from sympy.Rational, as it allows for symbolic numbers.
@@ -1111,6 +1276,13 @@ class Rational(Basic):
     denominator : Symbol or int
         denominator of the Rational number
 
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Rational
+    >>> x, y, z = symbols('x, y, z')
+    >>> a = x**2 + y*z
+    >>> b = 2
+    >>> Rational(a, b)
+    (x**2 + y*z) / (2)
     """
     def __new__(cls, numerator, denominator):
         return Basic.__new__(cls, numerator, denominator)
@@ -1123,6 +1295,11 @@ class Rational(Basic):
     def denominator(self):
         return self._args[1]
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '({0}) / ({1})'.format(sstr(self.numerator), sstr(self.denominator))
+
+# TODO: to rewrite
 class Thread(Basic):
     """Represents a thread function for code generation.
 
@@ -1148,17 +1325,19 @@ class Thread(Basic):
     def lhs(self):
         return self._args[0]
 
-
+# TODO: to rewrite
 class ThreadID(Thread):
     """Represents a get thread id for code generation.
     """
     pass
 
+# TODO: to rewrite
 class ThreadsNumber(Thread):
     """Represents a get threads number for code generation.
     """
     pass
 
+# TODO: remove LEN from here
 class Stencil(Basic):
     """Represents variable assignment using a stencil for code generation.
 
@@ -1171,6 +1350,17 @@ class Stencil(Basic):
     shape : int or list of integers
 
     step : int or list of integers
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Stencil
+    >>> x, y, z = symbols('x, y, z')
+    >>> m, n, p, q = symbols('m n p q', integer=True)
+    >>> Stencil(x, n, p)
+    Stencil(x, n, p)
+    >>> Stencil(y, (n,m), (p,q))
+    Stencil(y, (n, m), (p, q))
     """
 
     # TODO improve in the spirit of assign
