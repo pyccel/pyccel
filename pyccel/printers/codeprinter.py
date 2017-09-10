@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
@@ -12,6 +14,8 @@ from sympy.printing.precedence import precedence
 
 from pyccel.types.ast import Assign
 from pyccel.types.ast import FunctionDef
+
+# TODO: add examples
 
 __all__ = ["CodePrinter"]
 

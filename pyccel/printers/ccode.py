@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from __future__ import print_function, division
 
 from sympy.core import S
@@ -7,6 +9,8 @@ from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import Assign, datatype, Result
 from pyccel.printers.codeprinter import CodePrinter
+
+# TODO: add examples
 
 __all__ = ["CCodePrinter", "ccode"]
 
@@ -279,62 +283,6 @@ def ccode(expr, assign_to=None, **settings):
         expression. These would be values passed by address to the function.
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
-
-    Examples
-
-    >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
-    >>> x, tau = symbols("x, tau")
-    >>> ccode((2*tau)**Rational(7, 2))
-    '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
-    >>> ccode(sin(x), assign_to="s")
-    's = sin(x);'
-
-    Custom printing can be defined for certain types by passing a dictionary of
-    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
-    dictionary value can be a list of tuples i.e. [(argument_test,
-    cfunction_string)].
-
-    >>> custom_functions = {
-    ...   "ceiling": "CEIL",
-    ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
-    ...           (lambda x: x.is_integer, "ABS")]
-    ... }
-    >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
-    'fabs(x) + CEIL(x)'
-
-    ``Piecewise`` expressions are converted into conditionals. If an
-    ``assign_to`` variable is provided an if statement is created, otherwise
-    the ternary operator is used. Note that if the ``Piecewise`` lacks a
-    default term, represented by ``(expr, True)`` then an error will be thrown.
-    This is to prevent generating an expression that may not evaluate to
-    anything.
-
-    >>> from sympy import Piecewise
-    >>> expr = Piecewise((x + 1, x > 0), (x, True))
-    >>> print(ccode(expr, tau))
-    if (x > 0) {
-    tau = x + 1;
-    }
-    else {
-    tau = x;
-    }
-
-    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
-    must be provided to ``assign_to``. Note that any expression that can be
-    generated normally can also exist inside a Matrix:
-
-    >>> from sympy import Matrix, MatrixSymbol
-    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
-    >>> A = MatrixSymbol('A', 3, 1)
-    >>> print(ccode(mat, A))
-    A[0] = pow(x, 2);
-    if (x > 0) {
-       A[1] = x + 1;
-    }
-    else {
-       A[1] = x;
-    }
-    A[2] = sin(x);
     """
 
     return CCodePrinter(settings).doprint(expr, assign_to)
