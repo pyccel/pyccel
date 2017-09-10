@@ -44,3 +44,25 @@ Important remarks
   .. code-block:: python
 
     from numpy import zeros, ones
+
+
+.. tikz:: Overview of the Assembler object. In dashed the procedure pointers that act on the outputs. 
+
+    \node[draw=black, rectangle, fill=red!40] (py)  
+    at (0,0)  {Python};
+    \node at (1,0) [color=gray,above=3mm,right=0mm] {Parser};
+
+    \draw[black, thick, fill=blue!10] (3,0) circle [radius=0.5cm];
+    \node at (3,0) [color=black] {\textsc{IR}};
+
+    \draw[black, thick, fill=blue!30] (6,0) circle [radius=0.7cm];
+    \node at (6,0) [color=black] {\textsc{AST}};
+    \node at (6.7,0) [color=gray,above=3mm,right=0mm] {Codegen};
+
+    \node[draw=black, rectangle, fill=green!20] (f90)  
+    at (9.5,0)  {Fortran};
+
+    \draw[->,very thick] (py) --(2.5,0) ;
+    \draw[->,very thick] (3.5,0)--(5.3,0) ;
+    \draw[->,very thick] (6.7,0)--(f90) ;
+
