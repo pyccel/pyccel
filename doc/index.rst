@@ -13,10 +13,10 @@ Welcome to Pyccel's documentation!
    :caption: Contents:
 
    pyccel
-   specs
-   stdlib
-   python
    openmp
+   openacc
+   mpi
+   tbp
 
 Indices and tables
 ==================

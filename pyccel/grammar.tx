@@ -373,6 +373,7 @@ BOOLEAN:
    ('True'|'False')
 ;
 
+// TODO: remove pi from here
 UnaryOp:
    ('transpose'|'len'|'log'|'exp'|'cos'|'sin'|'sqrt'|'abs'|'pi'|'sign'|'csc'|'sec'|'tan'|'cot'|
    'asin'|'acsc'|'acos'|'asec'|'atan'|'acot'|'atan2'|'factorial'|'ceil')

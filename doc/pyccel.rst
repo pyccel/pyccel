@@ -13,7 +13,7 @@ Typical processing using **Pyccel** can be splitted into 3 main stages:
 
     \node[draw=black, rectangle, fill=red!40] (py)  
     at (0,0)  {Python};
-    \node at (1,0) [color=gray,above=3mm,right=0mm] {Parser};
+    \node at (0.9,0) [color=gray,above=3mm,right=0mm] {Parser};
 
     \draw[black, thick, fill=blue!10] (3,0) circle [radius=0.5cm];
     \node at (3,0) [color=black] {\textsc{IR}};
@@ -30,6 +30,148 @@ Typical processing using **Pyccel** can be splitted into 3 main stages:
     \draw[->,very thick] (py) --(2.5,0) ;
     \draw[->,very thick] (3.5,0)--(5.3,0) ;
     \draw[->,very thick] (6.7,0)--(f90) ;
+
+Specifications
+**************
+
+We follow `Python 3.6.2`_ specifications.
+
+.. _Python 3.6.2: https://docs.python.org/3/reference/grammar.html
+
+**Pyccel** grammar was derived from `ANTLR`_
+
+.. _ANTLR: https://github.com/antlr/grammars-v4/blob/master/python3/Python3.g4
+
+Types
+^^^^^
+
+Dynamic *vs* Static typing
+__________________________
+
+Since our aim is to generate code in a low-level language, which is in most cases of static typed, we will have to *enforce* the given *Python* variables to mimic, in some sens, static types. This can be done by including the concept of *constructors* that can be implemented easily in order to still run your code inside *Python* .
+
+Let's explain this more precisely; we consider the following code
+
+.. code-block:: python
+
+  n = 5
+  x = 2.0 * n
+
+In this example, **n** will be interprated as an **integer** while **x** will be a **float** number, so everything is fine.
+
+The problem arises when using a function, like in the following example
+
+.. code-block:: python
+
+  def f(n):
+    x = 2.0 * n
+    return x
+
+  n = 5
+  x = f(n)
+
+Now the question is what would be the signature of **f** if there was no call to it in the previous script?
+
+To overcome this ambiguity, we rewrite our function as
+
+.. code-block:: python
+
+  def f(n):
+    n = int()
+    x = 2.0 * n
+    return x
+
+Such an implementation still makes sens inside *Python*.
+
+Built-in Types
+______________
+
+The following are the built-in types in **Pyccel**::
+
+  int, float, double, complex, array, matrix, stencil
+
+.. todo:: boolean expressions not tested yet
+
+Built-in Functions
+^^^^^^^^^^^^^^^^^^
+
+Mathematical functions
+______________________
+
+Functions of one argument are ::
+
+   'transpose'
+   'len'
+   'log'
+   'exp'
+   'cos'
+   'sin'
+   'sqrt'
+   'abs'
+   'sign'
+   'csc'
+   'sec'
+   'tan'
+   'cot'
+   'asin'
+   'acsc'
+   'acos'
+   'asec'
+   'atan'
+   'acot'
+   'atan2'
+   'factorial'
+   'ceil'
+
+Functions of two arguments are ::
+
+   'pow'
+   'rational'
+   'dot'
+   'min'
+   'max'
+
+Built-in Constants
+^^^^^^^^^^^^^^^^^^
+
+Mathematical constants
+______________________
+
+The following constants are available::
+
+   'pi'
+
+Data Types
+^^^^^^^^^^
+
+.. todo:: strctures and classe are not yet available
+
+File and Directory Access
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. todo:: file and directory access is not yet available 
+
+Importing modules
+^^^^^^^^^^^^^^^^^
+
+Importing modules is not allowed. However, you can import objects that are defined inside a given module. 
+
+Iterators
+^^^^^^^^^
+
+.. todo:: iterators are not yet available 
+
+Parallel computing
+^^^^^^^^^^^^^^^^^^
+
+OpenMP
+______
+
+OpenACC
+_______
+
+MPI
+___
 
 
 Documentation
