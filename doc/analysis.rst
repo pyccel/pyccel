@@ -82,6 +82,12 @@ As we can see, the computational intensity is now a linear function of the block
 
 .. todo:: remove local_vars from **pyccel** command line and use Annotated Comments instead.
 
+.. todo:: for the moment, we only cover the **for** statement. Further work must be done for **if** and **while** statements.
+
+.. todo:: add probability law for the **if** statement.
+
+.. todo:: how to handle the **while** statement?
+
 Arithmetic
 ^^^^^^^^^^
 
