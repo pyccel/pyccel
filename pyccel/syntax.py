@@ -13,7 +13,7 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy import preorder_traversal
-from sympy import (Abs,sqrt,sin,cos,exp,log,sign,csc, cos, \
+from sympy import (Abs,sqrt,sin,cos,exp,log,csc, cos, \
                    sec, tan, cot, asin, acsc, acos, asec, atan,\
                    acot, atan2,factorial)
 
@@ -28,7 +28,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
                               Stencil,ceil,Break, \
-                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
+                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,SIGN,IndexedElement,\
+                              GOrEq,LOrEq,Lthan,Gter)
 
 DEBUG = False
 #DEBUG = True
@@ -1039,7 +1040,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
         elif self.name=='log':
             return log(rhs)
         elif self.name=='sign':
-            return sign(rhs)
+            return SIGN(rhs)
         elif self.name=='csc':
             return csc(rhs)
         elif self.name=='sec':
@@ -1289,13 +1290,13 @@ class Comparison(ExpressionElement):
             if operation == "==":
                 ret = EqualityStmt(ret, operand.expr)
             elif operation == ">":
-                ret = Gt(ret, operand.expr)
+                ret = Gter(ret, operand.expr)
             elif operation == ">=":
-                ret = Ge(ret, operand.expr)
+                ret = GOrEq(ret, operand.expr)
             elif operation == "<":
-                ret = Lt(ret, operand.expr)
+                ret = Lthan(ret, operand.expr)
             elif operation == "<=":
-                ret = Le(ret, operand.expr)
+                ret = LOrEq(ret, operand.expr)
             elif operation == "<>":
                 ret = NotequalStmt(ret, operand.expr)
             else:

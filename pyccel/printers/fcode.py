@@ -16,7 +16,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
-        OutArgument, InOutArgument, Variable, Declare,LEN,Dot,Min,Max)
+        OutArgument, InOutArgument, Variable, Declare,LEN,Dot,Min,Max,SIGN)
 from pyccel.printers.codeprinter import CodePrinter
 
 __all__ = ["FCodePrinter", "fcode"]
@@ -250,9 +250,12 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Dot(self,expr):
-        return self._get_statement('dot_product(%s,%s)'%(expr.expr_l,expr.expr_r))
+        return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l),self._print(expr.expr_r)))
     def _print_ceil(self,expr):
-        return self._get_statement('ceil(%s)'%(expr.rhs))
+        return self._get_statement('ceil(%s)'%(self._print(expr.rhs)))
+    def _print_SIGN(self,expr):
+        return self._get_statement('SIGN(1.,%s)'%(self._print(expr.rhs)))
+
 
 
     def _print_Declare(self, expr):
@@ -317,10 +320,18 @@ class FCodePrinter(CodePrinter):
         return 'complex(kind=8)'
 
     def _print_EqualityStmt(self, expr):
-        return '{0} == {1} '.format(expr.lhs, expr.rhs)
+        return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_NotequalStmt(self, expr):
-        return '{0} /= {1} '.format(expr.lhs, expr.rhs)
+        return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+    def _print_LOrEq(self, expr):
+        return '{0} <= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+    def _print_Lthan(self, expr):
+        return '{0} < {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+    def _print_GOrEq(self, expr):
+        return '{0} >= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+    def _print_Gter(self, expr):
+        return '{0} > {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_FunctionDef(self, expr):
         name = str(expr.name)

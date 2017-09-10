@@ -434,7 +434,28 @@ class NotequalStmt(Relational):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
+class GOrEq(Relational):
+    def __new__(cls,lhs,rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        return Relational.__new__(cls,lhs,rhs)
+class LOrEq(Relational):
+    def __new__(cls,lhs,rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        return Relational.__new__(cls,lhs,rhs)
 
+class Lthan(Relational):
+    def __new__(cls,lhs,rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        return Relational.__new__(cls,lhs,rhs)
+
+class Gter(Relational):
+    def __new__(cls,lhs,rhs):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        return Relational.__new__(cls,lhs,rhs)
 
 
 
@@ -800,6 +821,7 @@ class Min(Basic):
      @property
      def expr_r(self):
          return self.args[1]
+     
 class Max(Basic):
      def __new__(cls, expr_l, expr_r):
          return Basic.__new__(cls, expr_l, expr_r)
@@ -819,8 +841,12 @@ class Dot(Basic):
      @property
      def expr_r(self):
          return self.args[1]
-
-
+class SIGN(Basic):
+    def __new__(cls,expr):
+        return Basic.__new__(cls, expr)
+    @property
+    def rhs(self):
+        return self.args[0]
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
