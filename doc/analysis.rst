@@ -91,5 +91,19 @@ As we can see, the computational intensity is now a linear function of the block
 Arithmetic
 ^^^^^^^^^^
 
+.. TODO:: add Fusion Mul-Add (FMA) instruction
+
+.. TODO:: add table of costs for all instructions
+
 Memory
 ^^^^^^
+
+We describe here our *Memory model*. It follows the work of J. Demmel and his collaborators on the matrix multiplication. More details can be found in `J. Demmel's talk`_
+
+.. _J. Demmel's talk: https://people.eecs.berkeley.edu/~demmel/cs267_Spr99/Lectures/Lect_02_1999b.pdf
+
+Here are our assumptions:
+
+1. Two levels of memory: *fast* and *slow*
+2. All data are initially in *slow* memory
+
