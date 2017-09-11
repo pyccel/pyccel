@@ -34,6 +34,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
+    'sphinx.ext.inheritance_diagram',
+    'sphinxcontrib.tikz',
     'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -98,6 +100,17 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# specify the side bar
+#html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html'], }
+html_sidebars = { '**': ['localtoc.html', 'relations.html', 'searchbox.html'], }
+
+
+# -- Options for Tikz -----------------------------------------------------
+tikz_proc_suite     = 'GhostScript'
+tikz_transparent    = True
+#tikz_latex_preamble = ‹string›
+#tikz_tikzlibraries  = 'positioning,shapes,shadows,arrows'
 
 
 # -- Options for HTMLHelp output ------------------------------------------

@@ -6,18 +6,18 @@
 Welcome to Pyccel's documentation!
 ==================================
 
+.. include:: abstract.rst
+
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
-   abstract
    pyccel
-   specs
-   stdlib
-   python
    openmp
-
-
+   openacc
+   mpi
+   tbp
+   analysis
 
 Indices and tables
 ==================

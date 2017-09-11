@@ -19,6 +19,8 @@ from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
         OutArgument, InOutArgument, Variable, Declare,LEN,Dot,Min,Max,SIGN)
 from pyccel.printers.codeprinter import CodePrinter
 
+# TODO: add examples
+
 __all__ = ["FCodePrinter", "fcode"]
 
 known_functions = {
@@ -718,9 +720,6 @@ class FCodePrinter(CodePrinter):
 def fcode(expr, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
-    Parameters
-    ==========
-
     expr : Expr
         A sympy expression to be converted.
     assign_to : optional
@@ -735,61 +734,6 @@ def fcode(expr, assign_to=None, **settings):
         their string representations. Alternatively, the dictionary value can
         be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
         for examples.
-
-    Examples
-    ========
-
-    >>> from sympy import fcode, symbols, Rational, sin, ceiling, floor
-    >>> x, tau = symbols("x, tau")
-    >>> fcode((2*tau)**Rational(7, 2))
-    '8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
-    >>> fcode(sin(x), assign_to="s")
-    's = sin(x)'
-
-    Custom printing can be defined for certain types by passing a dictionary of
-    "type" : "function" to the ``user_functions`` kwarg. Alternatively, the
-    dictionary value can be a list of tuples i.e. [(argument_test,
-    cfunction_string)].
-
-    >>> custom_functions = {
-    ...   "ceiling": "CEIL",
-    ...   "floor": [(lambda x: not x.is_integer, "FLOOR1"),
-    ...             (lambda x: x.is_integer, "FLOOR2")]
-    ... }
-    >>> fcode(floor(x) + ceiling(x), user_functions=custom_functions)
-    'CEIL(x) + FLOOR1(x)'
-
-    ``Piecewise`` expressions are converted into conditionals. If an
-    ``assign_to`` variable is provided an if statement is created, otherwise
-    the ternary operator is used. Note that if the ``Piecewise`` lacks a
-    default term, represented by ``(expr, True)`` then an error will be thrown.
-    This is to prevent generating an expression that may not evaluate to
-    anything.
-
-    >>> from sympy import Piecewise
-    >>> expr = Piecewise((x + 1, x > 0), (x, True))
-    >>> print(fcode(expr, tau))
-    if (x > 0) then
-        tau = x + 1
-    else
-        tau = x
-    end if
-
-    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
-    must be provided to ``assign_to``. Note that any expression that can be
-    generated normally can also exist inside a Matrix:
-
-    >>> from sympy import Matrix, MatrixSymbol
-    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
-    >>> A = MatrixSymbol('A', 3, 1)
-    >>> print(fcode(mat, A))
-    A(1, 1) = x**2
-        if (x > 0) then
-    A(2, 1) = x + 1
-        else
-    A(2, 1) = x
-        end if
-    A(3, 1) = sin(x)
     """
 
     return FCodePrinter(settings).doprint(expr, assign_to)

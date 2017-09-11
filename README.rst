@@ -33,8 +33,8 @@ If **prefix** is not given, you will need to be in *sudo* mode. Otherwise, you w
 
 for tests, run::
 
-  cd tests
-  python run_tests.py
+  python tests/run_tests.py
+  python tests/run_tests_openmp.py
 
 Documentation
 *************
@@ -130,10 +130,10 @@ Now, let us take a look at the *Fortran* file
   !  
   x = 1.0d0
   y = 2.0d0
-  w = 2.0d0*f(x, y) + 1.0d0
+  w = 2*f(x, y) + 1.0d0
   call g (x, w, z, t)
-  print * , z
-  print * , t
+  print * ,z
+  print * ,t
 
   contains
   ! ........................................
@@ -163,6 +163,7 @@ Now, let us take a look at the *Fortran* file
   end subroutine
   ! ........................................
 
+
   end
 
 Matrix-Matrix product
@@ -172,9 +173,6 @@ Let's take a look at the file *tests/matrix_product.py*, listed below
 
 .. code-block:: python
 
-  n = int()
-  m = int()
-  p = int()
   n = 2
   m = 4
   p = 2
@@ -224,9 +222,10 @@ Now, let us take a look at the *Fortran* file
   integer :: p
 
   !  
-  n = 2.0d0
-  m = 4.0d0
-  p = 2.0d0
+  ! from numpy import zeros 
+  n = 2
+  m = 4
+  p = 2
   allocate(a(0:n-1, 0:m-1)) ; a = 0
   allocate(b(0:m-1, 0:p-1)) ; b = 0
   allocate(c(0:n-1, 0:p-1)) ; c = 0
@@ -247,7 +246,7 @@ Now, let us take a look at the *Fortran* file
           end do
       end do
   end do
-  print * , c
+  print * ,c
 
   end
 
@@ -263,9 +262,6 @@ Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed 
 
   from numpy import zeros
 
-  n = int()
-  m = int()
-  p = int()
   n = 2000
   m = 4000
   p = 2000
@@ -307,25 +303,81 @@ This will parse the *Python* file, generate the corresponding *Fortran* file and
 
 .. note:: **Openmp** is activated using the flag **--openmp** in the command line.
 
-The following plot shows the scalability of the generated code on **LRZ**.
+The generated *Fortran* code is
+
+.. code-block:: fortran
+
+  program main
+  use omp_lib 
+  implicit none
+  real, allocatable :: a (:, :)
+  real, allocatable :: c (:, :)
+  real, allocatable :: b (:, :)
+  integer :: i
+  integer :: k
+  integer :: j
+  integer :: m
+  integer :: n
+  integer :: p
+
+  !  
+  ! from numpy import zeros 
+  n = 500
+  m = 700
+  p = 500
+  allocate(a(0:n-1, 0:m-1)) ; a = 0
+  allocate(b(0:m-1, 0:p-1)) ; b = 0
+  allocate(c(0:n-1, 0:p-1)) ; c = 0
+  !$omp parallel
+  !$omp do schedule(runtime)
+  do i = 0, n - 1, 1
+      do j = 0, m - 1, 1
+          a(i, j) = i - j
+      end do
+  end do
+  !$omp end do  nowait
+  !$omp do schedule(runtime)
+  do i = 0, m - 1, 1
+      do j = 0, p - 1, 1
+          b(i, j) = i + j
+      end do
+  end do
+  !$omp end do  nowait
+  !$omp do schedule(runtime)
+  do i = 0, n - 1, 1
+      do j = 0, p - 1, 1
+          do k = 0, p - 1, 1
+              c(i, j) = a(i, k)*b(k, j) + c(i, j)
+          end do
+      end do
+  end do
+  !$omp end do
+  !$omp end parallel
+
+  end
+
+The following plot shows the scalability of the generated code on **LRZ** using :math:`(n,m,p) = (5000,7000,5000)`.
 
 .. figure:: doc/include/openmp/matrix_product_scalability.png 
+   :align: center
    :scale: 25% 
 
-   Weak scalability on LRZ
+   Weak scalability on LRZ. CPU time is given in seconds.
 
 .. figure:: doc/include/openmp/matrix_product_speedup.png 
+   :align: center
    :scale: 25% 
 
    Speedup on LRZ
 
-
 TODO
 ****
 
-- add *math* functions: sign, ceil, log, exp, cos, sin, sqrt, abs, pi (must be added as a declaration)
-
 - improve precision
+
+- **elif** statements
+
+- **inout** arguments are not handled yet
 
 - pointers
 
@@ -340,20 +392,3 @@ TODO
 - LAPACK
 
 - symbolic expressions (find a way to use directly functions that are defined in *sympy*)
-
-BUGS
-****
-
-- The following code
-
-  .. code-block:: python
-
-    n = int()
-    n = 5
-
-  gives
-
-  .. code-block:: fortran
-
-    n = int()
-    n = 5.0d0

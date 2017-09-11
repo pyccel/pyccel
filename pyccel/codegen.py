@@ -27,10 +27,18 @@ from pyccel.syntax import ( \
 from pyccel.openmp.syntax import OpenmpStmt
 
 
-__all__ = ["PyccelCodegen"]
+__all__ = ["Codegen", "FCodegen", "PyccelCodegen", \
+           "Compiler", \
+           "build_file", "load_module"]
 
 # ...
 def clean(filename):
+    """
+    removes the generated files: .pyccel and .f90
+
+    filename: str
+        name of the file to parse.
+    """
     name = filename.split('.py')[0]
     for ext in ["f90", "pyccel"]:
         f_name = name + "." + ext
@@ -40,15 +48,32 @@ def clean(filename):
 
 # ...
 def make_tmp_file(filename):
+    """
+    returns a temporary file of extension .pyccel that will be decorated with
+    indent/dedent so that textX can find the blocks easily.
+
+    filename: str
+        name of the file to parse.
+    """
     name = filename.split('.py')[0]
     return name + ".pyccel"
 # ...
 
 # ...
-def preprocess(filename, filename_out):
-    f = open(filename)
-    lines = f.readlines()
-    f.close()
+def preprocess_as_str(lines):
+    """
+    The input python file will be decorated with
+    indent/dedent so that textX can find the blocks easily.
+    This function will write the output code in filename_out.
+
+    lines: str or list
+        python code as a string
+    """
+    if type(lines) == str:
+        ls = lines.split("\n")
+        lines = []
+        for l in ls:
+            lines.append(l + "\n")
 
     # to be sure that we dedent at the end
     lines += "\n"
@@ -80,6 +105,28 @@ def preprocess(filename, filename_out):
                     lines_new += "dedent" + "\n"
 
             lines_new += line
+    return lines_new
+# ...
+
+# ...
+def preprocess(filename, filename_out):
+    """
+    The input python file will be decorated with
+    indent/dedent so that textX can find the blocks easily.
+    This function will write the output code in filename_out.
+
+    filename: str
+        name of the file to parse.
+
+    filename_out: str
+        name of the temporary file that will be parsed by textX.
+    """
+    f = open(filename)
+    lines = f.readlines()
+    f.close()
+
+    lines_new = preprocess_as_str(lines)
+
     f = open(filename_out, "w")
     for line in lines_new:
         f.write(line)
@@ -87,8 +134,14 @@ def preprocess(filename, filename_out):
 # ...
 
 # ...
+# TODO improve, when using mpi
 def execute_file(binary):
+    """
+    Execute a binary file.
 
+    binary: str
+        the name of the binary file
+    """
     cmd = binary
     if not ('/' in binary):
         cmd = "./" + binary
@@ -108,8 +161,23 @@ class Codegen(object):
                  is_module=False):
         """Constructor for the Codegen class.
 
+        filename: str
+            name of the file to parse.
+        name: str
+            name of the generated module or program.
+            If not given, 'main' will be used
+        imports: list
+            list of imports statements as strings.
+        preludes: list
+            list of preludes statements.
         body: list
-            list of statements.
+            list of body statements.
+        routines: list
+            list of all routines (functions/subroutines) definitions.
+        modules: list
+            list of used modules.
+        is_module: bool
+            True if the input file will be treated as a module and not a program
         """
         # ... TODO improve once TextX will handle indentation
         clean(filename)
@@ -207,6 +275,12 @@ class Codegen(object):
 
         language: str
             target language. Possible values {"fortran"}
+        accelerator: str
+            name of the selected accelerator.
+            For the moment, only 'openmp' is available
+        ignored_modules: list
+            list of modules to ignore (like 'numpy', 'sympy').
+            These modules do not have a correspondence in Fortran.
         """
         # ...
         filename = self.filename
@@ -241,8 +315,6 @@ class Codegen(object):
         for stmt in ast.statements:
             if isinstance(stmt, CommentStmt):
                 body += printer(stmt.expr) + "\n"
-#            elif isinstance(stmt, AnnotatedStmt):
-#                body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ImportFromStmt):
                 # TODO: this only works if names contains one entry
                 name = stmt.dotted_name.names[0]
@@ -326,16 +398,15 @@ class Codegen(object):
 
         # ...
         if is_module:
-#            name = filename.split(".pyccel")[0]
-#            name = name.split('/')[-1]
             code = self.as_module()
         else:
             code = self.as_program()
         # ...
 
+        # ...
         self._code         = code
         self._filename_out = write_to_file(code, filename, language)
-
+        # ...
 
         return code
 
@@ -344,6 +415,7 @@ class FCodegen(Codegen):
     """Code generation for Fortran."""
     def __init__(self, *args, **kwargs):
         """
+        Constructor for code generation using Fortran.
         """
         super(FCodegen, self).__init__(*args, **kwargs)
 
@@ -391,30 +463,51 @@ class FCodegen(Codegen):
 
         return code
 
+# TODO improve later
 class PyccelCodegen(Codegen):
     """Code generation for the Pyccel Grammar"""
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        super(PyccelCodegen, self).__init__(*args, **kwargs)
+    pass
 
+# ...
 def get_extension(language):
+    """
+    returns the extension of a given language.
+
+    language: str
+        low-level target language used in the conversion
+    """
     if language == "fortran":
         return "f90"
     else:
         raise ValueError("Only fortran is available")
-
+# ...
 
 # ...
 def separator(n=40):
+    """
+    Creates a separator string.
+    This is used to improve the readability of the generated code.
+
+    n: int
+        length of the separator
+    """
     txt = "."*n
     comment = '!'
     return '{0} {1}\n'.format(comment, txt)
 # ...
 
-
 # ...
 def write_to_file(code, filename, language):
+    """
+    Writes a given code lines into a file, given a target language.
+
+    code: str
+        code lines to write in file.
+    filename: str
+        name of the file to write in.
+    language: str
+        low-level target language used in the conversion
+    """
     if not(language == "fortran"):
         raise ValueError("Only fortran is available")
 
@@ -430,11 +523,28 @@ def write_to_file(code, filename, language):
 # ...
 
 class Compiler(object):
-    """Code compiler for the Pyccel Grammar"""
+    """Base class for Code compiler for the Pyccel Grammar"""
     def __init__(self, codegen, compiler, \
                  flags=None, accelerator=None, \
                  binary=None, debug=False, inline=False):
         """
+        Constructor of the code compiler.
+
+        codegen: pyccel.codegen.Codegen
+            a generation code object.
+        compiler: str
+            used compiler for the target language.
+        flags: str
+            compiler flags
+        accelerator: str
+            name of the selected accelerator.
+            For the moment, only 'openmp' is available
+        binary: str
+            name of the binary file to generate.
+        debug: bool
+            add some useful prints that may help for debugging.
+        inline: bool
+            set to True, if the file is being load inside a python session.
         """
         self._codegen     = codegen
         self._compiler    = compiler
@@ -484,6 +594,9 @@ class Compiler(object):
         return self._accelerator
 
     def construct_flags(self):
+        """
+        Constructs compiling flags
+        """
         compiler    = self.compiler
         debug       = self.debug
         inline      = self.inline
@@ -505,6 +618,12 @@ class Compiler(object):
         return flags
 
     def compile(self, verbose=False):
+        """
+        Compiles the generated file.
+
+        verbose: bool
+            talk more
+        """
         compiler  = self.compiler
         flags     = self.flags
         inline    = self.inline
@@ -551,7 +670,70 @@ def build_file(filename, language, compiler, \
                debug=False, verbose=False, show=False, \
                inline=False, name="main", \
                ignored_modules=['numpy', 'scipy', 'sympy']):
-    """User friendly interface for code generation."""
+    """
+    User friendly interface for code generation.
+
+    filename: str
+        name of the file to load.
+    language: str
+        low-level target language used in the conversion
+    compiler: str
+        used compiler for the target language.
+    execute: bool
+        execute the generated code, after compiling if True.
+    accelerator: str
+        name of the selected accelerator.
+        For the moment, only 'openmp' is available
+    debug: bool
+        add some useful prints that may help for debugging.
+    verbose: bool
+        talk more
+    show: bool
+        prints the generated code if True
+    inline: bool
+        set to True, if the file is being load inside a python session.
+    name: str
+        name of the generated module or program.
+        If not given, 'main' will be used
+    ignored_modules: list
+        list of modules to ignore (like 'numpy', 'sympy').
+        These modules do not have a correspondence in Fortran.
+
+    Example
+
+    >>> from pyccel.codegen import build_file
+    >>> code = '''
+    ... n = int()
+    ... n = 10
+    ...
+    ... x = int()
+    ... x = 0
+    ... for i in range(0,n):
+    ...     for j in range(0,n):
+    ...         x = x + i*j
+    ... '''
+    >>> filename = "test.py"
+    >>> f = open(filename, "w")
+    >>> f.write(code)
+    >>> f.close()
+    >>> build_file(filename, "fortran", "gfortran", show=True, name="main")
+    ========Fortran_Code========
+    program main
+    implicit none
+    integer :: i
+    integer :: x
+    integer :: j
+    integer :: n
+    n = 10
+    x = 0
+    do i = 0, n - 1, 1
+        do j = 0, n - 1, 1
+            x = i*j + x
+        end do
+    end do
+    end
+    ============================
+    """
     # ...
     from pyccel.patterns.utilities import find_imports
 
@@ -605,6 +787,38 @@ def build_file(filename, language, compiler, \
 # ...
 # TODO improve args
 def load_module(filename, language="fortran", compiler="gfortran"):
+    """
+    Loads a given filename in a Python session.
+    The file will be parsed, compiled and wrapped into python, using f2py.
+
+    filename: str
+        name of the file to load.
+    language: str
+        low-level target language used in the conversion
+    compiled: str
+        used compiler for the target language.
+
+    Example
+
+    >>> from pyccel.codegen import load_module
+    >>> code = '''
+    ... def f(n):
+    ...     n = int()
+    ...     x = int()
+    ...     x = 0
+    ...     for i in range(0,n):
+    ...         for j in range(0,n):
+    ...             x = x + i*j
+    ...     print("x = ", x)
+    ... '''
+    >>> filename = "test.py"
+    >>> f = open(filename, "w")
+    >>> f.write(code)
+    >>> f.close()
+    >>> module = load_module(filename="test.py")
+    >>> module.f(5)
+    x =          100
+    """
     # ...
     name = filename.split(".")[0]
     name = 'pyccel_m_{0}'.format(name)

@@ -1,52 +1,5 @@
 # coding: utf-8
 
-"""
-Types used to represent a full function/module as an Abstract Syntax Tree.
-
-Most types are small, and are merely used as tokens in the AST. A tree diagram
-has been included below to illustrate the relationships between the AST types.
-
-
-AST Type Tree
--------------
-
-*Basic*
-     |--->Assign
-     |--->MultiAssign
-     |--->AugAssign
-     |--->NativeOp
-     |           |--------------|
-     |                          |--->AddOp
-     |                          |--->SubOp
-     |                          |--->MulOp
-     |                          |--->DivOp
-     |                          |--->ModOp
-     |           *Singleton*----|
-     |                    |
-     |--->DataType        |
-     |           |--------|--->NativeBool
-     |                    |--->NativeInteger
-     |                    |--->NativeFloat
-     |                    |--->NativeDouble
-     |                    |--->NativeVoid
-     |
-     |--->For
-     |--->Variable
-     |           |--->Argument
-     |           |           |
-     |           |           |--->InArgument
-     |           |           |--->OutArgument
-     |           |           |--->InOutArgument
-     |           |--->Result
-     |
-     |--->FunctionDef
-     |--->Import
-     |--->Declare
-     |--->Return
-     |--->Print
-     |--->Comment
-"""
-
 from __future__ import print_function, division
 
 from numpy import ndarray
@@ -56,7 +9,10 @@ from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
-from sympy.core.sympify import _sympify
+# TODO rename _sympify to sympify. Before we were using _sympify from sympy.core
+#      but then sympy will keep in memory all used variables. we don't need it,
+#      since the in syntax.py we always check the namespace for any new variable.
+from sympy import sympify as _sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range
@@ -65,12 +21,26 @@ from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
+# TODO: rename ceil to Ceil
+# TODO: rename LEN to Len
+# TODO: clean Thread objects
+# TODO: update code examples
+# TODO: add _sympystr whenever it's possible
+__all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
+           "ModOp", "AugAssign", "While", "For", "DataType", "NativeBool", \
+           "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
+           "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
+           "Argument", "Result", "InArgument", "OutArgument", \
+           "InOutArgument", "FunctionDef", "ceil", "Import", "Declare", \
+           "Return", "LEN", "Min", "Max", "Dot", \
+           "NumpyZeros", "NumpyOnes", "NumpyArray", "NumpyLinspace", \
+           "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
+           "IndexedElement", "Slice", "If", "MultiAssign", "Rational", \
+           "Thread", "ThreadID", "ThreadsNumber", "Stencil"]
 
 class Assign(Basic):
     """Represents variable assignment for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -84,10 +54,9 @@ class Assign(Basic):
         the dimensions will not align.
 
     Examples
-    --------
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
+    >>> from pyccel.types.ast import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
     x := y
@@ -187,33 +156,21 @@ def operator(op):
 
 
 class AugAssign(Basic):
-    """Represents augmented variable assignment for code generation.
+    """
+    Represents augmented variable assignment for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
-
     op : NativeOp
-        Operator (+, -, /, *, %).
-
+        Operator (+, -, /, \*, %).
     rhs : Expr
         Sympy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
-
-    Examples
-    --------
-
-    >>> from sympy import symbols
-    >>> from pyccel.types.ast import AugAssign
-    >>> x, y = symbols('x, y')
-    >>> AugAssign(x, AddOp, y)
-    x += y
 
     """
 
@@ -261,8 +218,25 @@ class AugAssign(Basic):
         return self._args[2]
 
 class While(Basic):
+    """Represents a 'while' statement in the code.
 
+    Expressions are of the form:
+        "while test:
+            body..."
 
+    test : expression
+        test condition given as a sympy expression
+    body : sympy expr
+        list of statements representing the body of the While statement.
+
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.types.ast import Assign, While
+    >>> n = Symbol('n')
+    >>> While((n>1), [Assign(n,n-1)])
+    While(n > 1, (n := n - 1,))
+    """
     def __new__(cls, test, body):
         test = _sympify(test)
 
@@ -280,7 +254,6 @@ class While(Basic):
     def body(self):
         return self._args[1]
 
-
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -288,11 +261,21 @@ class For(Basic):
         "for target in iter:
             body..."
 
-    Parameters
-    ----------
     target : symbol
+        symbol representing the iterator
     iter : iterable
+        iterable object. for the moment only Range is used
     body : sympy expr
+        list of statements representing the body of the For statement.
+
+    Examples
+
+    >>> from sympy import symbols, MatrixSymbol
+    >>> from pyccel.types.ast import Assign, For
+    >>> i,b,e,s,x = symbols('i,b,e,s,x')
+    >>> A = MatrixSymbol('A', 1, 3)
+    >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
+    For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
     """
 
     def __new__(cls, target, iter, body):
@@ -385,17 +368,14 @@ dtype_registry = {'bool': Bool,
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 
-    Parameters
-    ----------
     arg : str or sympy expression
         If a str ('bool', 'int', 'float', 'double', or 'void'), return the
         singleton for the corresponding dtype. If a sympy expression, return
         the datatype that best fits the expression. This is determined from the
         assumption system. For more control, use the `DataType` class directly.
 
-    Returns
-    -------
-    DataType
+    Returns:
+        DataType
 
     """
     def infer_dtype(arg):
@@ -424,21 +404,25 @@ def datatype(arg):
             return infer_dtype(arg)
 
 class EqualityStmt(Relational):
+    """Represents a relational equality expression in the code."""
     def __new__(cls,lhs,rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
 class NotequalStmt(Relational):
+    """Represents a relational not equality expression in the code."""
     def __new__(cls,lhs,rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
+
 class GOrEq(Relational):
     def __new__(cls,lhs,rhs):
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
+
 class LOrEq(Relational):
     def __new__(cls,lhs,rhs):
         lhs = _sympify(lhs)
@@ -457,13 +441,9 @@ class Gter(Relational):
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
-
-
 class Variable(Basic):
     """Represents a typed variable.
 
-    Parameters
-    ----------
     dtype : str, DataType
         The type of the variable. Can be either a DataType, or a str (bool,
         int, float, double).
@@ -473,9 +453,19 @@ class Variable(Basic):
         used for arrays. [Default value: 0]
     allocatable: False
         used for arrays, if we need to allocate memory [Default value: False]
+    shape: int or list
+        shape of the array. [Default value: None]
 
-F    """
+    Examples
 
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Variable
+    >>> x, n = symbols('x, n')
+    >>> Variable('int', 'n')
+    Variable(NativeInteger(), n, 0, False, None)
+    >>> Variable('float', x, rank=2, shape=(n,2), allocatable=True)
+    Variable(NativeFloat(), x, 2, True, (n, 2)
+    """
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -512,66 +502,29 @@ F    """
     def shape(self):
         return self._args[4]
 
-
 class Argument(Variable):
     """An abstract Argument data structure."""
     pass
-
 
 class Result(Variable):
     """Represents a result directly returned from a routine."""
     pass
 
 class InArgument(Argument):
-    """Argument provided as input only.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol, MatrixSymbol
-        The sympy object the variable represents.
-
-    """
+    """Argument provided as input only."""
     pass
-
 
 class OutArgument(Argument):
-    """OutputArgument are always initialized in the routine.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol, MatrixSymbol
-        The sympy object the variable represents.
-
-    """
+    """OutputArgument are always initialized in the routine."""
     pass
-
 
 class InOutArgument(Argument):
-    """InOutArgument are never initialized in the routine.
-
-    Parameters
-    ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
-    name : Symbol, MatrixSymbol
-        The sympy object the variable represents.
-
-    """
+    """InOutArgument are never initialized in the routine."""
     pass
-
 
 class FunctionDef(Basic):
     """Represents a function definition.
 
-    Parameters
-    ----------
     name : str
         The name of the function.
     arguments : iterable
@@ -585,6 +538,16 @@ class FunctionDef(Basic):
     global_vars : list of Symbols
         Variables which will not be passed into the function.
 
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Assign, InArgument, Result, FunctionDef
+    >>> n,x,y = symbols('n,x,y')
+    >>> args        = [InArgument('float', x), InArgument('int', n)]
+    >>> results     = [Result('float', y)]
+    >>> body        = [Assign(y,x+n)]
+    >>> local_vars  = []
+    >>> global_vars = []
+    >>> FunctionDef('f', args, results, body, local_vars, global_vars)
+    FunctionDef(f, (InArgument(NativeFloat(), x, 0, False, None), InArgument(NativeInteger(), n, 0, False, None)), (Result(NativeFloat(), y, 0, False, None),), [y := n + x], [], [])
     """
 
     def __new__(cls, name, arguments, results, body, local_vars, global_vars):
@@ -691,25 +654,34 @@ class FunctionDef(Basic):
     def global_vars(self):
         return self._args[5]
 
-
+# TODO: rename and add example
 class ceil(Basic):
-    def __new__(cls,rhs):    
+    """
+    Represents ceil expression in the code.
+
+    rhs: symbol or number
+        input for the ceil function
+    """
+    def __new__(cls,rhs):
         return Basic.__new__(cls,rhs)
+
     @property
     def rhs(self):
         return self._args[0]
-        
-    
+
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 
-    Parameters
-    ----------
     fil : str
         The filepath of the module (i.e. header in C).
     funcs
         The name of the function (or an iterable of names) to be imported.
 
+    Examples
+
+    >>> from pyccel.types.ast import Import
+    >>> Import('numpy', 'linspace')
+    Import(numpy, (linspace,))
     """
 
     def __new__(cls, fil, funcs=None):
@@ -732,19 +704,24 @@ class Import(Basic):
     def funcs(self):
         return self._args[1]
 
-
 # TODO: Should Declare have an optional init value for each var?
 class Declare(Basic):
     """Represents a variable declaration in the code.
 
-    Parameters
-    ----------
     dtype : DataType
         The type for the declaration.
     variable(s)
         A single variable or an iterable of Variables. If iterable, all
         Variables must be of the same type.
 
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.types.ast import Declare, Variable
+    >>> n = Symbol('n')
+    >>> var = Variable('int', 'n')
+    >>> Declare('int', var)
+    Declare(NativeInteger(), (Variable(NativeInteger(), n, 0, False, None),))
     """
 
     def __new__(cls, dtype, variables):
@@ -770,12 +747,10 @@ class Declare(Basic):
     def variables(self):
         return self._args[1]
 
-
+# TODO: not used. do we keep it?
 class Return(Basic):
     """Represents a function return in the code.
 
-    Parameters
-    ----------
     expr : sympy expr
         The expression to return.
 
@@ -801,57 +776,89 @@ class Break(Basic):
     def __new__(cls):
         return Basic.__new__(cls)
 
-
+# TODO: rename and add example
 class LEN(Basic):
-     def __new__(cls, rhs):
-         return Basic.__new__(cls, rhs)
-     @property
-     def rhs(self):
+    """
+    Represents a 'len' expression in the code.
+
+    rhs: symbol or number
+        input for the len function
+    """
+    def __new__(cls, rhs):
+        return Basic.__new__(cls, rhs)
+
+    @property
+    def rhs(self):
         return self._args[0]
-     @property
-     def str(self):
+
+    # TODO do we keep it? improve it
+    @property
+    def str(self):
         return 'size('+str(self._args[0])+',1)'
 
+# TODO: improve by using args
+# TODO: add example
 class Min(Basic):
-     def __new__(cls, expr_l, expr_r):
-         return Basic.__new__(cls, expr_l, expr_r)
-     @property
-     def expr_l(self):
-         return self.args[0]
-     @property
-     def expr_r(self):
-         return self.args[1]
-     
-class Max(Basic):
-     def __new__(cls, expr_l, expr_r):
-         return Basic.__new__(cls, expr_l, expr_r)
-     @property
-     def expr_l(self):
-         return self.args[0]
-     @property
-     def expr_r(self):
-         return self.args[1]
+    """Represents a 'min' expression in the code."""
+    def __new__(cls, expr_l, expr_r):
+        return Basic.__new__(cls, expr_l, expr_r)
 
+    @property
+    def expr_l(self):
+        return self.args[0]
+
+    @property
+    def expr_r(self):
+        return self.args[1]
+
+# TODO: improve by using args
+# TODO: add example
+class Max(Basic):
+    """Represents a 'max' expression in the code."""
+    def __new__(cls, expr_l, expr_r):
+        return Basic.__new__(cls, expr_l, expr_r)
+
+    @property
+    def expr_l(self):
+        return self.args[0]
+
+    @property
+    def expr_r(self):
+        return self.args[1]
+
+# TODO: add example
 class Dot(Basic):
-     def __new__(cls, expr_l, expr_r):
-         return Basic.__new__(cls, expr_l, expr_r)
-     @property
-     def expr_l(self):
-         return self.args[0]
-     @property
-     def expr_r(self):
-         return self.args[1]
+    """
+    Represents a 'dot' expression in the code.
+
+    expr_l: variable
+        first variable
+    expr_r: variable
+        second variable
+    """
+    def __new__(cls, expr_l, expr_r):
+        return Basic.__new__(cls, expr_l, expr_r)
+
+    @property
+    def expr_l(self):
+        return self.args[0]
+
+    @property
+    def expr_r(self):
+        return self.args[1]
+
 class SIGN(Basic):
+
     def __new__(cls,expr):
         return Basic.__new__(cls, expr)
+
     @property
     def rhs(self):
         return self.args[0]
+
 class NumpyZeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -860,10 +867,14 @@ class NumpyZeros(Basic):
 
     shape : int or list of integers
 
+    Examples
 
-
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import NumpyZeros
+    >>> n,m,x = symbols('n,m,x')
+    >>> NumpyZeros(x, (n,m))
+    x := 0
     """
-
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, shape):
         lhs   = _sympify(lhs)
@@ -902,9 +913,16 @@ class NumpyZeros(Basic):
 
 class NumpyOnes(Basic):
     """
+    Represents variable assignment using numpy.ones for code generation.
 
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    shape : int or list of integers
     """
-
     # TODO improve in the spirit of assign
     def __new__(cls, lhs,shape):
         lhs   = _sympify(lhs)
@@ -931,8 +949,25 @@ class NumpyOnes(Basic):
     @property
     def shape(self):
         return self._args[1]
-class NumpyArray(Basic):
 
+# TODO: add example
+class NumpyArray(Basic):
+    """Represents variable assignment using numpy.array for code generation.
+
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    rhs : Expr
+        Sympy object representing the rhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    shape : int or list of integers
+    """
     def __new__(cls, lhs,rhs,shape):
         lhs   = _sympify(lhs)
 
@@ -960,33 +995,27 @@ class NumpyArray(Basic):
     @property
     def rhs(self):
         return self._args[1]
+
     @property
     def shape(self):
         return self._args[2]
 
-
+# TODO: remove
 class NumpyLinspace(Basic):
     """Represents variable assignment using numpy.linspace for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    shape : int or list of integers
-
-    Examples
-    --------
-
-    >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from sympy.printing.codeprinter import Assign
-    >>> x, y, z = symbols('x, y, z')
-    >>> Assign(x, y)
-    x := y
-
+    start: expression
+        minimum of the grid
+    end: expression
+        maximum of the grid
+    size: int, Expr
+        number of elements of the grid
     """
 
     # TODO improve in the spirit of assign
@@ -1019,16 +1048,19 @@ class NumpyLinspace(Basic):
     def size(self):
         return self._args[3]
 
-
-
 class Print(Basic):
     """Represents a print function in the code.
 
-    Parameters
-    ----------
     expr : sympy expr
         The expression to return.
 
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Print
+    >>> n,m = symbols('n,m')
+    >>> Print(('results', n,m))
+    Print((results, n, m))
     """
 
     def __new__(cls, expr):
@@ -1043,11 +1075,14 @@ class Print(Basic):
 class Comment(Basic):
     """Represents a Comment in the code.
 
-    Parameters
-    ----------
     text : str
        the comment line
 
+    Examples
+
+    >>> from pyccel.types.ast import Comment
+    >>> Comment('this is a comment')
+    Comment(this is a comment)
     """
 
     def __new__(cls, text):
@@ -1060,13 +1095,17 @@ class Comment(Basic):
 class AnnotatedComment(Basic):
     """Represents a Annotated Comment in the code.
 
-    Parameters
-    ----------
     accel : str
        accelerator id. One among {'omp', 'acc'}
 
     txt: str
         statement to print
+
+    Examples
+
+    >>> from pyccel.types.ast import AnnotatedComment
+    >>> AnnotatedComment('omp', 'parallel')
+    AnnotatedComment(omp, parallel)
     """
     def __new__(cls, accel, txt):
         return Basic.__new__(cls, accel, txt)
@@ -1080,13 +1119,41 @@ class AnnotatedComment(Basic):
         return self._args[1]
 
 class IndexedVariable(IndexedBase):
-    """Represents a Comment in the code.
+    """
+    Represents an indexed variable, like x in x[i], in the code.
 
-    Parameters
-    ----------
-    text : str
-       the comment line
+    Examples
 
+    >>> from sympy import symbols, Idx
+    >>> from pyccel.types.ast import IndexedVariable
+    >>> A = IndexedVariable('A'); A
+    A
+    >>> type(A)
+    <class 'pyccel.types.ast.IndexedVariable'>
+
+    When an IndexedVariable object receives indices, it returns an array with named
+    axes, represented by an IndexedElement object:
+
+    >>> i, j = symbols('i j', integer=True)
+    >>> A[i, j, 2]
+    A[i, j, 2]
+    >>> type(A[i, j, 2])
+    <class 'pyccel.types.ast.IndexedElement'>
+
+    The IndexedVariable constructor takes an optional shape argument.  If given,
+    it overrides any shape information in the indices. (But not the index
+    ranges!)
+
+    >>> m, n, o, p = symbols('m n o p', integer=True)
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> A[i, j].shape
+    (m, n)
+    >>> B = IndexedVariable('B', shape=(o, p))
+    >>> B[i, j].shape
+    (m, n)
+
+    **todo:** fix bug. the last result must be : (o,p)
     """
 
     def __new__(cls, label, shape=None, **kw_args):
@@ -1105,30 +1172,50 @@ class IndexedVariable(IndexedBase):
             return IndexedElement(self, indices, **kw_args)
 
 class IndexedElement(Indexed):
-    """Represents a Comment in the code.
-
-    Parameters
-    ----------
-    text : str
-       the comment line
-
     """
+    Represents a mathematical object with indices.
 
+    Examples
+
+    >>> from sympy import symbols, Idx
+    >>> from pyccel.types.ast import IndexedVariable
+    >>> i, j = symbols('i j', cls=Idx)
+    >>> IndexedElement('A', i, j)
+    A[i, j]
+
+    It is recommended that ``IndexedElement`` objects be created via ``IndexedVariable``:
+
+    >>> from pyccel.types.ast import IndexedElement
+    >>> A = IndexedVariable('A')
+    >>> IndexedElement('A', i, j) == A[i, j]
+    False
+
+    **todo:** fix bug. the last result must be : True
+    """
     def __new__(cls, base, *args, **kw_args):
-#        print("args : ", args)
         return Indexed.__new__(cls, base, *args, **kw_args)
 
+# TODO check that args are integers
 class Slice(Basic):
     """Represents a slice in the code.
 
-    Parameters
-    ----------
     start : Symbol or int
         starting index
 
     end : Symbol or int
         ending index
 
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Slice
+    >>> m, n = symbols('m, n', integer=True)
+    >>> Slice(m,n)
+    m : n
+    >>> Slice(None,n)
+     : n
+    >>> Slice(m,None)
+    m :
     """
     # TODO add step
 
@@ -1158,18 +1245,21 @@ class Slice(Basic):
 class If(Basic):
     """Represents a if statement in the code.
 
-    Parameters
-    ----------
     args :
         every argument is a tuple and
         is defined as (cond, expr) where expr is a valid ast element
         and cond is a boolean test.
 
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.types.ast import Assign, If
+    >>> n = Symbol('n')
+    >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
+    If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
     """
     # TODO add step
-
     def __new__(cls, *args):
-
         # (Try to) sympify args first
         newargs = []
         for ce in args:
@@ -1184,15 +1274,21 @@ class If(Basic):
 
 class MultiAssign(Basic):
     """Represents a multiple assignment statement in the code.
+    In Fortran, this will be interpreted as a subroutine call.
 
-    Parameters
-    ----------
-    start : Symbol or int
-        starting index
+    lhs : list Expr
+        list of assignable objects
+    rhs : Function
+        function call expression
 
-    end : Symbol or int
-        ending index
+    Examples
 
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import MultiAssign
+    >>> x, y, z, t = symbols('x, y, z, t')
+    >>> args = [x,y]
+    >>> MultiAssign((z,t), 'f', args)
+    z, t := f(x, y)
     """
     def __new__(cls, lhs, rhs, trailer):
         return Basic.__new__(cls, lhs, rhs, trailer)
@@ -1209,18 +1305,29 @@ class MultiAssign(Basic):
     def trailer(self):
         return self._args[2]
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args    = ', '.join(sstr(i) for i in self.trailer)
+        outputs = ', '.join(sstr(i) for i in self.lhs)
+        return '{2} := {0}({1})'.format(self.rhs, args, outputs)
+
 class Rational(Basic):
     """Represents a Rational numbers statement in the code.
     This is different from sympy.Rational, as it allows for symbolic numbers.
 
-    Parameters
-    ----------
     numerator : Symbol or int
         numerator of the Rational number
 
     denominator : Symbol or int
         denominator of the Rational number
 
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Rational
+    >>> x, y, z = symbols('x, y, z')
+    >>> a = x**2 + y*z
+    >>> b = 2
+    >>> Rational(a, b)
+    (x**2 + y*z) / (2)
     """
     def __new__(cls, numerator, denominator):
         return Basic.__new__(cls, numerator, denominator)
@@ -1233,11 +1340,14 @@ class Rational(Basic):
     def denominator(self):
         return self._args[1]
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '({0}) / ({1})'.format(sstr(self.numerator), sstr(self.denominator))
+
+# TODO: to rewrite
 class Thread(Basic):
     """Represents a thread function for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -1245,7 +1355,6 @@ class Thread(Basic):
         subclass these types are also supported.
 
     Examples
-    --------
 
     """
 
@@ -1261,22 +1370,22 @@ class Thread(Basic):
     def lhs(self):
         return self._args[0]
 
-
+# TODO: to rewrite
 class ThreadID(Thread):
     """Represents a get thread id for code generation.
     """
     pass
 
+# TODO: to rewrite
 class ThreadsNumber(Thread):
     """Represents a get threads number for code generation.
     """
     pass
 
+# TODO: remove LEN from here
 class Stencil(Basic):
     """Represents variable assignment using a stencil for code generation.
 
-    Parameters
-    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -1286,6 +1395,17 @@ class Stencil(Basic):
     shape : int or list of integers
 
     step : int or list of integers
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Stencil
+    >>> x, y, z = symbols('x, y, z')
+    >>> m, n, p, q = symbols('m n p q', integer=True)
+    >>> Stencil(x, n, p)
+    Stencil(x, n, p)
+    >>> Stencil(y, (n,m), (p,q))
+    Stencil(y, (n, m), (p, q))
     """
 
     # TODO improve in the spirit of assign

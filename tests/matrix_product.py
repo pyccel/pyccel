@@ -2,9 +2,6 @@
 
 #from numpy import zeros
 
-n = int()
-m = int()
-p = int()
 n = 2
 m = 4
 p = 2

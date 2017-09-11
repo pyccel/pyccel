@@ -30,9 +30,13 @@ setup_args = dict(
 packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # ...
 
-# TODO bug: install textx binary when textx is added to install_requires
-#install_requires = ['numpy', 'sympy', 'textx']
+# ...
 install_requires = ['numpy', 'sympy']
+
+try:
+    import textx
+except:
+    install_requires += ['textx']
 # ...
 
 def setup_package():

@@ -383,6 +383,7 @@ class Pyccel(object):
 
         namespace["True"]  = true
         namespace["False"] = false
+        namespace["pi"]    = pi
         # ...
 
     @property
