@@ -377,6 +377,8 @@ TODO
 
 - **elif** statements
 
+- **inout** arguments are not handled yet
+
 - pointers
 
 - structures and classes
