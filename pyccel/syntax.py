@@ -1377,6 +1377,7 @@ class BreakStmt(FlowStmt):
 class ContinueStmt(FlowStmt):
     """Base class representing a Continue statement in the grammar."""
 
+# TODO improve
 class ReturnStmt(FlowStmt):
     """Base class representing a Return statement in the grammar."""
 
@@ -1402,24 +1403,25 @@ class ReturnStmt(FlowStmt):
         Process the return flow statement
         """
         self.update()
+#        print "namespace = ", namespace
+#        print "variables = ", variables
 
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
         for var_name in self.variables:
-            if var_name in variables:
+            if var_name in namespace:
                 var = variables[var_name]
                 if isinstance(var, Variable):
                     res = Result(var.dtype, var_name, \
-                           rank=var.rank, \
-                           allocatable=var.allocatable, \
-                           shape=var.shape)
+                                 rank=var.rank, \
+                                 allocatable=var.allocatable, \
+                                 shape=var.shape)
                 else:
+                    # TODO is it correct? raise?
                     datatype = var.datatype
                     res = Result(datatype, var_name)
             else:
-                datatype = 'float'
-                res = Result(datatype, var_name)
                 raise()
 
             decs.append(res)

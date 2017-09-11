@@ -372,7 +372,11 @@ class FCodePrinter(CodePrinter):
                 func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
             for result in expr.results:
-                arg = OutArgument(result.dtype, result.name)
+                arg = OutArgument(result.dtype, result.name, \
+                                  rank=result.rank, \
+                                  allocatable=result.allocatable, \
+                                  shape=result.shape)
+
                 out_args.append(arg)
 
                 dec = Declare(result.dtype, arg)
