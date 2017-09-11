@@ -257,18 +257,20 @@ ForStmt:
                 (COMMA step=Expression)? RPAREN ':' 
   body=SuiteStmt
 ;
+
 WhileStmt:
   'while' test=OrTest ':'
   body=SuiteStmt
 ;
 
-
 IfStmt: 
-  'if' test=Test ':'
-  body_true=SuiteStmt
-//  ('elif' test=Test ':' SuiteStmt)* 
-  ('else' ':'
-  body_false=SuiteStmt)? 
+  'if' test=Test ':' body_true=SuiteStmt
+  (body_elif*=ElifStmt)? 
+  ('else' ':' body_false=SuiteStmt)? 
+;
+
+ElifStmt:
+  ('elif' test=Test ':' body=SuiteStmt) 
 ;
 
 Test: 

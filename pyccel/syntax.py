@@ -162,7 +162,7 @@ def Check_type(var_name,expr):
                         s.append(int(i))
                     except:
                         s.append(i)
-                        
+
                 shape=tuple(s)
                 rank=len(shape)
             elif isinstance(shape,int):
@@ -598,6 +598,36 @@ class PassStmt(BasicStmt):
 
         return self.label
 
+#class ElifStmt(BasicStmt):
+#    """Class representing an Elif statement."""
+#
+#    def __init__(self, **kwargs):
+#        """
+#        Constructor for the Elif statement class.
+#        This class does not have the expr property,
+#        since it is used inside the IfStmt
+#
+#        Parameters
+#        ==========
+#        body: list
+#            statements tree as given by the textX, for the true block (if)
+#        test: Test
+#            represents the condition for the Elif statement.
+#        """
+#        self.body = kwargs.pop('body')
+#        self.test = kwargs.pop('test')
+#
+#        super(ElifStmt, self).__init__(**kwargs)
+#
+#    @property
+#    def stmt_vars(self):
+#        """Returns the statement variables."""
+#        ls = []
+#        for stmt in self.body.stmts:
+#            ls += stmt.local_vars
+#            ls += stmt.stmt_vars
+#        return ls
+
 # TODO: improve by allowing for the elif statements
 class IfStmt(BasicStmt):
     """Class representing an If statement."""
@@ -612,11 +642,14 @@ class IfStmt(BasicStmt):
             statements tree as given by the textX, for the true block (if)
         body_false: list
             statements tree as given by the textX, for the false block (else)
+        body_elif: list
+            statements tree as given by the textX, for the elif blocks
         test: Test
             represents the condition for the If statement.
         """
         self.body_true  = kwargs.pop('body_true')
-        self.body_false = kwargs.pop('body_false')
+        self.body_false = kwargs.pop('body_false', None)
+        self.body_elif  = kwargs.pop('body_elif',  None)
         self.test       = kwargs.pop('test')
 
         super(IfStmt, self).__init__(**kwargs)
@@ -632,6 +665,11 @@ class IfStmt(BasicStmt):
             for stmt in self.body_false.stmts:
                 ls += stmt.local_vars
                 ls += stmt.stmt_vars
+        if not self.body_elif==None:
+            for elif_block in self.body_elif:
+                for stmt in elif_block.body.stmts:
+                    ls += stmt.local_vars
+                    ls += stmt.stmt_vars
         return ls
 
     @property
@@ -640,13 +678,17 @@ class IfStmt(BasicStmt):
         Process the If statement by returning a pyccel.types.ast object
         """
         self.update()
-        test       = self.test.expr
-        body_true  = self.body_true .expr
+
+        args = [(self.test.expr, self.body_true.expr)]
+
+        if not self.body_elif==None:
+            for elif_block in self.body_elif:
+                args.append((elif_block.test.expr, elif_block.body.expr))
+
         if not self.body_false==None:
-            body_false = self.body_false.expr
-            return If((test, body_true), (True, body_false))
-        else:
-            return If((test, body_true))
+            args.append((True, self.body_false.expr))
+
+        return If(*args)
 
 class AssignStmt(BasicStmt):
     """Class representing an assign statement."""
@@ -1291,13 +1333,17 @@ class Comparison(ExpressionElement):
             if operation == "==":
                 ret = EqualityStmt(ret, operand.expr)
             elif operation == ">":
-                ret = Gter(ret, operand.expr)
+#                ret = Gter(ret, operand.expr)
+                ret = Gt(ret, operand.expr)
             elif operation == ">=":
-                ret = GOrEq(ret, operand.expr)
+#                ret = GOrEq(ret, operand.expr)
+                ret = Ge(ret, operand.expr)
             elif operation == "<":
-                ret = Lthan(ret, operand.expr)
+#                ret = Lthan(ret, operand.expr)
+                ret = Lt(ret, operand.expr)
             elif operation == "<=":
-                ret = LOrEq(ret, operand.expr)
+#                ret = LOrEq(ret, operand.expr)
+                ret = Le(ret, operand.expr)
             elif operation == "<>":
                 ret = NotequalStmt(ret, operand.expr)
             else:
