@@ -168,7 +168,7 @@ PythonStdLibStmt:
 ;
 
 ExprStmt: 
-  (NumpyStmt | StencilStmt | ThreadStmt | EvalStmt | AssignStmt | MultiAssignStmt)
+  (StencilStmt | ThreadStmt | EvalStmt | AssignStmt | MultiAssignStmt)
 ;
 
 PythonPrintStmt: 
@@ -176,10 +176,6 @@ PythonPrintStmt:
 ;
 PrintStmt:
   (STRING|Expression)
-;
-
-NumpyStmt: 
-  (NumpyZerosStmt | NumpyZerosLikeStmt | NumpyOnesStmt | NumpyLinspaceStmt|NumpyArrayStmt)
 ;
 
 ParameterValue:

@@ -80,6 +80,15 @@ namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
 
+builtin_funcs = ['zeros']
+builtin_types = ['int', 'float', 'complex']
+
+class BuiltInFunction(object):
+    def __init__(self, name, *args, **kwargs):
+        self.name = name
+        self.args = args
+        self.kwargs = kwargs
+
 def Check_type(var_name,expr):
     datatype='int'
     rank=0
@@ -763,15 +772,52 @@ class AssignStmt(BasicStmt):
 
             if isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
-                F = namespace[name]
-                f_expr = F.expr
-                results = f_expr.results
-                result = results[0]
-                insert_variable(self.lhs, \
-                                datatype=result.dtype, \
-                                allocatable=result.allocatable, \
-                                shape=result.shape, \
-                                rank=result.rank)
+                if name in builtin_funcs:
+                    args = rhs.args
+                    if name == "zeros":
+                        lhs = Symbol(self.lhs)
+                        # default type
+                        dtype = 'float'
+                        allocatable = True
+                        shape = []
+
+                        for i in args:
+                            # TODO add double type
+                            if isinstance(i, Symbol):
+                                if str(i) in builtin_types:
+                                    dtype = str(i)
+                                else:
+                                    # TODO further check
+                                    shape.append(i)
+                            else:
+                                # TODO further check
+                                shape.append(i)
+                        rank = len(shape)
+                        if len(shape) == 1:
+                            shape = shape[0]
+
+                        insert_variable(self.lhs, \
+                                        datatype=dtype, \
+                                        allocatable=allocatable, \
+                                        shape=shape, \
+                                        rank=rank)
+
+                        return NumpyZeros(lhs, shape)
+                    else:
+                        raise ValueError("Excpecting a builtin function.")
+                else:
+                    name = str(type(rhs).__name__)
+                    F = namespace[name]
+                    f_expr = F.expr
+                    results = f_expr.results
+                    result = results[0]
+                    insert_variable(self.lhs, \
+                                    datatype=result.dtype, \
+                                    allocatable=result.allocatable, \
+                                    shape=result.shape, \
+                                    rank=result.rank)
+            elif isinstance(rhs, BuiltInFunction):
+                name = str(type(rhs).__name__)
         else:
             rhs = sympify(self.rhs)
 
@@ -1245,9 +1291,13 @@ class Operand(ExpressionElement):
             return Symbol(op)
         elif op in namespace:
             if isinstance(namespace[op], FunctionDefStmt):
-                return Function(op) #(Symbol(args[0]), Symbol(args[1]))
+                return Function(op)
             else:
                 return namespace[op]
+        elif op in builtin_funcs:
+            return Function(op)
+        elif op in builtin_types:
+            return op
         elif(type(op)==unicode):
             return op
         else:
