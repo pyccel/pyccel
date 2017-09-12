@@ -215,12 +215,13 @@ class FCodePrinter(CodePrinter):
             reshape = False
         shape=','.join(str(i) for i in expr.shape)
 
+        code  = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+        code += '\n'
         if reshape:
-            return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
-                                       "=reshape((/"+st+"/),(/%s/))"%(str(shape)))
+            code += '{0} = reshape((/{1}/),(/{2}/))'.format(lhs_code, st, str(shape))
         else:
-            return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
-                                       "=(/"+st+"/)")
+            code += '{0} = (/{1}/)'.format(lhs_code, st)
+        return code
 
     def _print_LEN(self,expr):
         if isinstance(expr.rhs,list):
