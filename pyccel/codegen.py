@@ -21,7 +21,6 @@ from pyccel.syntax import ( \
                            PythonPrintStmt, \
                            # numpy statments
                            NumpyZerosLikeStmt, \
-                           NumpyArrayStmt \
                            )
 
 from pyccel.openmp.syntax import OpenmpStmt
@@ -324,8 +323,6 @@ class Codegen(object):
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
             elif isinstance(stmt, NumpyZerosLikeStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, NumpyArrayStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, AssignStmt):
                 body += printer(stmt.expr) + "\n"

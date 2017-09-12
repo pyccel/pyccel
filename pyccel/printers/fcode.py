@@ -37,7 +37,7 @@ known_functions = {
     "log": "log",
     "exp": "exp",
     "erf": "erf",
-    "Abs": "Abs",
+    "Abs": "abs",
     "sign": "sign",
     "conjugate": "conjg"
 }
@@ -262,7 +262,7 @@ class FCodePrinter(CodePrinter):
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l),self._print(expr.expr_r)))
     def _print_ceil(self,expr):
-        return self._get_statement('ceil(%s)'%(self._print(expr.rhs)))
+        return self._get_statement('ceiling(%s)'%(self._print(expr.rhs)))
     def _print_SIGN(self,expr):
         return self._get_statement('SIGN(1.,%s)'%(self._print(expr.rhs)))
 

@@ -23,7 +23,6 @@ from pyccel.syntax import (Pyccel, \
                            PythonPrintStmt, \
                            # numpy statments
                            NumpyZerosLikeStmt, \
-                           NumpyArrayStmt,\
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
@@ -215,7 +214,6 @@ class PyccelParser(Parser):
                    PythonPrintStmt, \
                    # numpy statments
                    NumpyZerosLikeStmt, \
-                   NumpyArrayStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers

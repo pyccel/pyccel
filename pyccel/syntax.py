@@ -59,8 +59,6 @@ __all__ = ["Pyccel", \
            "StencilStmt", \
            # python standard library statements
            "PythonPrintStmt", \
-           # numpy statments
-           "NumpyZerosLikeStmt", \
            # Test
            "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
            # Trailers
@@ -81,8 +79,24 @@ namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
 
-builtin_funcs = ['zeros', 'ones', 'array']
-builtin_types = ['int', 'float', 'double', 'complex']
+# ... builtin types
+builtin_types  = ['int', 'float', 'double', 'complex']
+# ...
+
+# ... builtin functions
+builtin_funcs_math_un = ['abs', 'sqrt', 'exp', 'log', \
+                         'cos', 'sin', 'tan', 'cot', \
+                         'asin', 'acsc', 'acos', \
+                         'asec', 'atan', 'acot', \
+                         'atan2','csc', 'sec', 'ceil' \
+                        ]
+builtin_funcs_math_bin = ['dot']
+builtin_funcs_math = builtin_funcs_math_un + \
+                     builtin_funcs_math_bin
+
+builtin_funcs  = ['zeros', 'ones', 'array']
+builtin_funcs += builtin_funcs_math
+# ...
 
 # TODO add kwargs
 def builtin_function(name, args, lhs=None):
@@ -148,25 +162,49 @@ def builtin_function(name, args, lhs=None):
         return d_var, arr
     # ...
 
-    # ... TODO: improve
-    if not lhs:
-        raise ValueError("Expecting a lhs.")
     # ...
-
     if name == "zeros":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
         d_var = get_arguments()
         insert_variable(lhs, **d_var)
         return NumpyZeros(lhs, d_var['shape'])
     elif name == "ones":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
         d_var = get_arguments()
         insert_variable(lhs, **d_var)
         return NumpyOnes(lhs, d_var['shape'])
     elif name == "array":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
         d_var, arr = get_arguments_array()
         insert_variable(lhs, **d_var)
         return NumpyArray(lhs, arr, d_var['shape'])
+    elif name == "dot":
+        if lhs is None:
+            return Dot(*args)
+        else:
+            d_var = {}
+            # TODO get dtype from args
+            d_var['datatype'] = 'float'
+            insert_variable(lhs, **d_var)
+            expr = Dot(*args)
+            return Assign(Symbol(lhs), expr)
+    elif name in builtin_funcs_math_un:
+        func = eval(name)
+        if lhs is None:
+            return func(*args)
+        else:
+            d_var = {}
+            # TODO get dtype from args
+            d_var['datatype'] = 'float'
+            insert_variable(lhs, **d_var)
+            expr = func(*args)
+            return Assign(Symbol(lhs), expr)
     else:
-        raise ValueError("Excpecting a builtin function.")
+        raise ValueError("Expecting a builtin function.")
+    # ...
 
 def Check_type(var_name,expr):
     datatype='int'
@@ -829,7 +867,8 @@ class AssignStmt(BasicStmt):
 
         var_name = self.lhs
         if not(var_name in namespace):
-            if DEBUG:
+#            if DEBUG:
+            if True:
                 print("> Found new variable " + var_name)
 
             # TODO check if var is a return value
@@ -1128,7 +1167,11 @@ class FactorSigned(ExpressionElement, BasicStmt):
                     else:
                         ls.append(i)
                 args = ls
-                expr = Function(str(expr))(*args)
+                name = str(expr)
+                if name in builtin_funcs_math:
+                    expr = builtin_function(name, args)
+                else:
+                    expr = Function(str(expr))(*args)
             elif self.trailer.subs:
                 expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
@@ -1170,46 +1213,10 @@ class FactorUnary(ExpressionElement, BasicStmt):
             except:
                 rhs=expr
             return LEN(rhs)
-        elif self.name=='abs':
-            return Abs(rhs)
-        elif self.name=='cos':
-            return cos(rhs)
-        elif self.name=='sin':
-            return sin(rhs)
-        elif self.name=='sqrt':
-            return sqrt(rhs)
-        elif self.name=='exp':
-            return exp(rhs)
-        elif self.name=='log':
-            return log(rhs)
         elif self.name=='sign':
             return SIGN(rhs)
-        elif self.name=='csc':
-            return csc(rhs)
-        elif self.name=='sec':
-            return sec(rhs)
-        elif self.name=='tan':
-            return tan(rhs)
-        elif self.name=='cot':
-            return cot(rhs)
-        elif self.name=='asin':
-            return asin(rhs)
-        elif self.name=='acsc':
-            return acsc(rhs)
-        elif self.name=='acos':
-            return acos(rhs)
-        elif self.name=='asec':
-            return asec(rhs)
-        elif self.name=='atan':
-            return atan(rhs)
-        elif self.name=='acot':
-            return acot(rhs)
-        elif self.name=='atan2':
-            return atan2(rhs)
         elif self.name=='factorial':
             return factorial(rhs)
-        elif self.name=='ceil':
-            return ceil(rhs)
         else:
             raise Exeption('function note supported')
 
@@ -1252,8 +1259,6 @@ class FactorBinary(ExpressionElement):
             return Pow(expr_l, expr_r)
         elif self.name == "rational":
             return Rational(expr_l, expr_r)
-        elif self.name == "dot":
-            return Dot(expr_l, expr_r)
         elif self.name == "max":
             return Max(expr_l, expr_r)
         elif self.name == "min":
@@ -1690,79 +1695,6 @@ class NumpyZerosLikeStmt(AssignStmt):
         stmt = NumpyZeros(var, shape)
 
         return stmt
-
-
-class NumpyArrayStmt(AssignStmt):
-    """Class representing an array of atoms, with a static dimension."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a zeros function call.
-
-        Parameters
-        ==========
-        lhs: str
-            variable name to create
-        rhs: list
-            list of atoms
-        dtype: str
-            datatype of the array elements.
-        """
-        self.lhs   = kwargs.pop('lhs')
-        self.rhs   = kwargs.pop('rhs')
-        self.dtype = kwargs.pop('dtype')
-
-        self.rhs   = literal_eval(self.rhs)
-        self.shape = np.shape(self.rhs)
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns the statement variables."""
-        return [self.lhs]
-
-    @property
-    def expr(self):
-        """
-        Process the array statement,
-        by returning the appropriate object from pyccel.types.ast
-        """
-        self.update()
-        var=sympify(self.lhs)
-        mylist=self.rhs
-
-        if isinstance(mylist[0],list):
-            if self.dtype=='int':
-                mylist=[map(int, i) for i in mylist]
-            elif self.dtype=='float':
-                mylist=[map(float, i) for i in mylist]
-        else:
-            if self.dtype=='int':
-                mylist=map(int,mylist)
-            elif self.dtype=='float':
-                mylist=map(float,mylist)
-
-        return NumpyArray(var,mylist,self.shape)
-
-    def update(self):
-        """updates the array function call."""
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-
-        rank=len(self.shape)
-
-        datatype=str(self.dtype)
-        if self.dtype is None:
-            datatype='float'
-            #TODO improve later
-        var=Symbol(var_name)
-        insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape=self.shape)
 
 class ImportFromStmt(BasicStmt):
     """Class representing an Import statement in the grammar."""
