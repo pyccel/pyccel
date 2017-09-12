@@ -85,11 +85,47 @@ namespace["pi"]    = pi
 builtin_funcs = ['zeros']
 builtin_types = ['int', 'float', 'double', 'complex']
 
-class BuiltInFunction(object):
-    def __init__(self, name, *args, **kwargs):
-        self.name = name
-        self.args = args
-        self.kwargs = kwargs
+# TODO add kwargs
+def builtin_function(name, args, lhs=None):
+    """
+    User friendly interface for builtin function calls.
+
+    name: str
+        name of the function
+    args: list
+        list of arguments
+    lhs: str
+        name of the variable to assign to
+    """
+    if name == "zeros":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+
+        # default type
+        dtype = 'float'
+        allocatable = True
+        shape = []
+        for i in args:
+            if isinstance(i, DataType):
+                dtype = i
+            elif isinstance(i, Tuple):
+                shape = [j for j in i]
+            else:
+                # TODO further check
+                shape.append(i)
+        rank = len(shape)
+        if len(shape) == 1:
+            shape = shape[0]
+
+        insert_variable(lhs, \
+                        datatype=dtype, \
+                        allocatable=allocatable, \
+                        shape=shape, \
+                        rank=rank)
+
+        return NumpyZeros(lhs, shape)
+    else:
+        raise ValueError("Excpecting a builtin function.")
 
 def Check_type(var_name,expr):
     datatype='int'
@@ -776,34 +812,7 @@ class AssignStmt(BasicStmt):
                 name = str(type(rhs).__name__)
                 if name in builtin_funcs:
                     args = rhs.args
-                    if name == "zeros":
-                        lhs = Symbol(self.lhs)
-                        # default type
-                        dtype = 'float'
-                        allocatable = True
-                        shape = []
-
-                        for i in args:
-                            if isinstance(i, DataType):
-                                dtype = i
-                            elif isinstance(i, Tuple):
-                                shape = [j for j in i]
-                            else:
-                                # TODO further check
-                                shape.append(i)
-                        rank = len(shape)
-                        if len(shape) == 1:
-                            shape = shape[0]
-
-                        insert_variable(self.lhs, \
-                                        datatype=dtype, \
-                                        allocatable=allocatable, \
-                                        shape=shape, \
-                                        rank=rank)
-
-                        return NumpyZeros(lhs, shape)
-                    else:
-                        raise ValueError("Excpecting a builtin function.")
+                    return builtin_function(name, args, lhs=self.lhs)
                 else:
                     name = str(type(rhs).__name__)
                     F = namespace[name]
