@@ -82,7 +82,7 @@ namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
 
-builtin_funcs = ['zeros']
+builtin_funcs = ['zeros', 'ones']
 builtin_types = ['int', 'float', 'double', 'complex']
 
 # TODO add kwargs
@@ -97,11 +97,9 @@ def builtin_function(name, args, lhs=None):
     lhs: str
         name of the variable to assign to
     """
-    if name == "zeros":
-        if not lhs:
-            raise ValueError("Expecting a lhs.")
-
-        # default type
+    # ...
+    def get_arguments():
+        # TODO appropriate default type
         dtype = 'float'
         allocatable = True
         shape = []
@@ -117,13 +115,30 @@ def builtin_function(name, args, lhs=None):
         if len(shape) == 1:
             shape = shape[0]
 
-        insert_variable(lhs, \
-                        datatype=dtype, \
-                        allocatable=allocatable, \
-                        shape=shape, \
-                        rank=rank)
+        d_var = {}
+        d_var['datatype'] = dtype
+        d_var['allocatable'] = allocatable
+        d_var['shape'] = shape
+        d_var['rank'] = rank
 
-        return NumpyZeros(lhs, shape)
+        return d_var
+    # ...
+
+    # ... TODO: improve
+    if not lhs:
+        raise ValueError("Expecting a lhs.")
+    # ...
+
+    # ...
+    d_var = get_arguments()
+    # ...
+
+    if name == "zeros":
+        insert_variable(lhs, **d_var)
+        return NumpyZeros(lhs, d_var['shape'])
+    elif name == "ones":
+        insert_variable(lhs, **d_var)
+        return NumpyOnes(lhs, d_var['shape'])
     else:
         raise ValueError("Excpecting a builtin function.")
 
