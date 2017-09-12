@@ -17,6 +17,7 @@ from sympy import (Abs,sqrt,sin,cos,exp,log,csc, cos, \
                    sec, tan, cot, asin, acsc, acos, asec, atan,\
                    acot, atan2,factorial)
 
+from pyccel.types.ast import DataType
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -81,7 +82,7 @@ namespace["False"] = false
 namespace["pi"]    = pi
 
 builtin_funcs = ['zeros']
-builtin_types = ['int', 'float', 'complex']
+builtin_types = ['int', 'float', 'double', 'complex']
 
 class BuiltInFunction(object):
     def __init__(self, name, *args, **kwargs):
@@ -782,13 +783,8 @@ class AssignStmt(BasicStmt):
                         shape = []
 
                         for i in args:
-                            # TODO add double type
-                            if isinstance(i, Symbol):
-                                if str(i) in builtin_types:
-                                    dtype = str(i)
-                                else:
-                                    # TODO further check
-                                    shape.append(i)
+                            if isinstance(i, DataType):
+                                dtype = i
                             else:
                                 # TODO further check
                                 shape.append(i)
@@ -1297,7 +1293,7 @@ class Operand(ExpressionElement):
         elif op in builtin_funcs:
             return Function(op)
         elif op in builtin_types:
-            return op
+            return datatype(op)
         elif(type(op)==unicode):
             return op
         else:

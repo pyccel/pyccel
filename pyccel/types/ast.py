@@ -364,7 +364,7 @@ dtype_registry = {'bool': Bool,
                   'complex': Complex,
                   'void': Void}
 
-
+# TODO check the use of floats
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 
