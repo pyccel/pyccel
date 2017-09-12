@@ -208,13 +208,20 @@ class FCodePrinter(CodePrinter):
         if len(expr.shape)>1:
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
             st= ','.join(','.join(str(i) for i in array) for array in expr.rhs)
+            reshape = True
         else:
             shape_code = '0:' + self._print(expr.shape[0]) + '-1'
             st=','.join(str(i) for i in expr.rhs)
+            reshape = False
         shape=','.join(str(i) for i in expr.shape)
 
-        return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
-                                   "=reshape((/"+st+"/),(/%s/))"%(str(shape)))
+        if reshape:
+            return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
+                                       "=reshape((/"+st+"/),(/%s/))"%(str(shape)))
+        else:
+            return self._get_statement("allocate(%s(%s)) ; %s"%(lhs_code,shape_code,lhs_code)+\
+                                       "=(/"+st+"/)")
+
     def _print_LEN(self,expr):
         if isinstance(expr.rhs,list):
             st=','.join([str(i) for i in expr.rhs])

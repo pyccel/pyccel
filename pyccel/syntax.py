@@ -60,8 +60,7 @@ __all__ = ["Pyccel", \
            # python standard library statements
            "PythonPrintStmt", \
            # numpy statments
-           "NumpyZerosStmt", "NumpyZerosLikeStmt", \
-           "NumpyOnesStmt", "NumpyLinspaceStmt", \
+           "NumpyZerosLikeStmt", \
            # Test
            "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
            # Trailers
@@ -82,7 +81,7 @@ namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
 
-builtin_funcs = ['zeros', 'ones']
+builtin_funcs = ['zeros', 'ones', 'array']
 builtin_types = ['int', 'float', 'double', 'complex']
 
 # TODO add kwargs
@@ -112,7 +111,7 @@ def builtin_function(name, args, lhs=None):
                 # TODO further check
                 shape.append(i)
         rank = len(shape)
-        if len(shape) == 1:
+        if rank == 1:
             shape = shape[0]
 
         d_var = {}
@@ -124,21 +123,48 @@ def builtin_function(name, args, lhs=None):
         return d_var
     # ...
 
+    # ...
+    def get_arguments_array():
+        # TODO appropriate default type
+        dtype = 'float'
+        allocatable = True
+        for i in args:
+            if isinstance(i, DataType):
+                dtype = i
+            elif isinstance(i, Tuple):
+                arr = [j for j in i]
+            else:
+                raise TypeError("Expecting a Tuple or DataType.")
+        arr = asarray(arr)
+        shape = arr.shape
+        rank = len(shape)
+
+        d_var = {}
+        d_var['datatype'] = dtype
+        d_var['allocatable'] = allocatable
+        d_var['shape'] = shape
+        d_var['rank'] = rank
+
+        return d_var, arr
+    # ...
+
     # ... TODO: improve
     if not lhs:
         raise ValueError("Expecting a lhs.")
     # ...
 
-    # ...
-    d_var = get_arguments()
-    # ...
-
     if name == "zeros":
+        d_var = get_arguments()
         insert_variable(lhs, **d_var)
         return NumpyZeros(lhs, d_var['shape'])
     elif name == "ones":
+        d_var = get_arguments()
         insert_variable(lhs, **d_var)
         return NumpyOnes(lhs, d_var['shape'])
+    elif name == "array":
+        d_var, arr = get_arguments_array()
+        insert_variable(lhs, **d_var)
+        return NumpyArray(lhs, arr, d_var['shape'])
     else:
         raise ValueError("Excpecting a builtin function.")
 
@@ -839,8 +865,6 @@ class AssignStmt(BasicStmt):
                                     allocatable=result.allocatable, \
                                     shape=result.shape, \
                                     rank=result.rank)
-            elif isinstance(rhs, BuiltInFunction):
-                name = str(type(rhs).__name__)
         else:
             rhs = sympify(self.rhs)
 
@@ -1611,130 +1635,6 @@ class FunctionDefStmt(BasicStmt):
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
 
-class NumpyZerosStmt(AssignStmt):
-    """Class representing a zeros function call."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a zeros function call.
-
-        Parameters
-        ==========
-        lhs: str
-            variable name to create
-        parameters: list
-            list of parameters needed for the function call.
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.parameters = kwargs.pop('parameters')
-
-        labels = [str(p.label) for p in self.parameters]
-        values = [p.value.value for p in self.parameters]
-        d = {}
-        for (label, value) in zip(labels, values):
-            d[label] = value
-        self.parameters = d
-
-        try:
-            self.datatype = self.parameters['dtype']
-        except:
-            self.datatype = 'float'
-
-        try:
-            self.shape = self.parameters['shape']
-            # on LRZ, self.shape can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.shape, list):
-                if isinstance(self.shape[0], ArgList):
-                    self.shape = self.shape[0].args
-            elif isinstance(self.shape, ArgList):
-                self.shape = self.shape.args
-        except:
-            raise Exception('Expecting shape at position {}'
-                            .format(self._tx_position))
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns the statement variables."""
-        return [self.lhs]
-
-    def update(self):
-        """updates the zeros function call."""
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-
-            datatype = self.datatype
-
-            rank = 0
-            if isinstance(self.shape, int):
-                shape = self.shape
-                rank = 1
-            elif isinstance(self.shape, float):
-                shape = int(self.shape)
-                rank = 1
-            elif isinstance(self.shape, list):
-                shape = []
-                for s in self.shape:
-                    if isinstance(s, (int, float)):
-                        shape.append(int(s))
-                    elif isinstance(s, str):
-                        if not(s in namespace):
-                            raise Exception('Could not find shape variable.')
-                        shape.append(namespace[s])
-                    elif isinstance(s,FactorUnary):
-                        shape.append(s.expr)
-#                    elif isinstance(s,ArgList):
-#                        shape.append(s.expr)
-                    else:
-                        print ("> given type: ", type(s))
-                        raise TypeError('Expecting a int, float or string')
-                rank = len(shape)
-            elif isinstance(self.shape,FactorUnary):
-                 shape=self.shape.expr
-            else:
-                shape = str(self.shape)
-                if shape in namespace:
-                    shape = namespace[shape]
-                    # TODO compute rank
-                    rank = 1
-                else:
-                    raise Exception('Wrong instance for shape : '.format(type(self.shape)))
-            self.shape = shape
-
-            if datatype is None:
-                if DEBUG:
-                    print("> No Datatype is specified, int will be used.")
-                datatype = 'int'
-            elif isinstance(datatype, list):
-                datatype = datatype[0] # otherwise, it's not working on LRZ
-            # TODO check if var is a return value
-            insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape = self.shape)
-
-    @property
-    def expr(self):
-        """
-        Process the zeros statement,
-        by returning the appropriate object from pyccel.types.ast
-        """
-        self.update()
-
-        shape = self.shape
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        stmt = NumpyZeros(var, shape)
-
-        return stmt
-
 class NumpyZerosLikeStmt(AssignStmt):
     """Class representing a zeroslike function call."""
     def __init__(self, **kwargs):
@@ -1791,184 +1691,6 @@ class NumpyZerosLikeStmt(AssignStmt):
 
         return stmt
 
-# TODO: shall we keep it?
-class NumpyOnesStmt(AssignStmt):
-    """Class representing a ones function call."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a ones function call.
-
-        Parameters
-        ==========
-        lhs: str
-            variable name to create
-        parameters: list
-            list of parameters needed for the function call.
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.parameters = kwargs.pop('parameters')
-
-        labels = [str(p.label) for p in self.parameters]
-#        values = [p.value.value for p in self.parameters]
-        values = []
-        for p in self.parameters:
-            try:
-                v = p.value.value.args
-            except:
-                v = p.value.value
-            values.append(v)
-        d = {}
-        for (label, value) in zip(labels, values):
-            d[label] = value
-        self.parameters = d
-
-        try:
-            self.datatype = self.parameters['dtype']
-        except:
-            self.datatype = 'float'
-
-        try:
-            self.shape = self.parameters['shape']
-        except:
-            raise Exception('Expecting shape at position {}'
-                            .format(self._tx_position))
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns the statement variables."""
-        return [self.lhs]
-
-    def update(self):
-        """updates the ones function call."""
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-
-            datatype = self.datatype
-
-            rank = 0
-            if isinstance(self.shape, int):
-                shape = self.shape
-                rank = 1
-            elif isinstance(self.shape, float):
-                shape = int(self.shape)
-                rank = 1
-            elif isinstance(self.shape, list):
-                shape = [int(s) for s in self.shape]
-                rank = len(shape)
-            else:
-                raise Exception('Wrong instance for shape.')
-            self.shape = shape
-
-            if datatype is None:
-                if DEBUG:
-                    print("> No Datatype is specified, int will be used.")
-                datatype = 'int'
-            # TODO check if var is a return value
-            insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape=self.shape)
-
-    @property
-    def expr(self):
-        """
-        Process the ones statement,
-        by returning the appropriate object from pyccel.types.ast
-        """
-        self.update()
-
-        shape = self.shape
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        stmt = NumpyOnes(var, shape)
-
-        return stmt
-
-class NumpyLinspaceStmt(AssignStmt):
-    """Class representing a linspace function call."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a linspace function call. This will create a uniform
-        grid between two points, given the number of intervals.
-
-        Parameters
-        ==========
-        lhs: str
-            variable name to create
-        start: str, int, float
-            min value of the linspace
-        end: str
-            max value of the linspace
-        size: int
-            the total size of the constructed array is size+1.
-        """
-        self.lhs   = kwargs.pop('lhs')
-        self.start = kwargs.pop('start')
-        self.end   = kwargs.pop('end')
-        self.size  = kwargs.pop('size')
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns the statement variables."""
-        return [self.lhs]
-
-    def update(self):
-        """updates the linspace function call."""
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-
-            s    = self.start
-            e    = self.end
-            size = self.size
-
-            ls = [s, e, size]
-            for name in ls:
-                if isinstance(name, (int, float)):
-                    pass
-                elif not(name in namespace):
-                    raise Exception('Unknown variable "{}" at position {}'
-                                    .format(name, self._tx_position))
-
-            var = Symbol(var_name)
-
-            namespace[var_name] = var
-
-            # TODO improve
-            datatype = 'float'
-
-            dec = Variable(datatype, var, rank=1)
-            self.declarations.append(Declare(datatype, dec))
-
-    @property
-    def expr(self):
-        """
-        Process the linspace statement,
-        by returning the appropriate object from pyccel.types.ast
-        """
-        self.update()
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        start = self.start
-        end   = self.end
-        size  = self.size
-
-        stmt = NumpyLinspace(var, start, end, size)
-
-        return stmt
 
 class NumpyArrayStmt(AssignStmt):
     """Class representing an array of atoms, with a static dimension."""

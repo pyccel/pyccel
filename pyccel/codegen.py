@@ -20,8 +20,8 @@ from pyccel.syntax import ( \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
-                           NumpyZerosStmt, NumpyZerosLikeStmt, \
-                           NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt \
+                           NumpyZerosLikeStmt, \
+                           NumpyArrayStmt \
                            )
 
 from pyccel.openmp.syntax import OpenmpStmt
@@ -323,13 +323,7 @@ class Codegen(object):
                     modules += stmt.dotted_name.names
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
-            elif isinstance(stmt, NumpyZerosStmt):
-                body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, NumpyZerosLikeStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, NumpyOnesStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, NumpyLinspaceStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, NumpyArrayStmt):
                 body += printer(stmt.expr) + "\n"

@@ -12,3 +12,6 @@ b1 = ones(64, double)
 b2 = ones(3,2)
 b3 = ones(5, int)
 b4 = ones((2,3), double)
+
+c1 = array((1,2,3,5,8,5),int)
+

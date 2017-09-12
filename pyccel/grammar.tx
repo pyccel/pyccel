@@ -198,26 +198,9 @@ StencilStmt:
   lhs=ID '=' 'stencil' LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
-NumpyZerosStmt: 
-  lhs=ID '=' ZEROS LPAREN parameters+=ParameterSingle[','] RPAREN 
-;
-
 NumpyZerosLikeStmt: 
   lhs=ID '=' ZEROSLIKE LPAREN rhs=ID RPAREN
 ;
-
-NumpyOnesStmt: 
-  lhs=ID '=' ONES    LPAREN parameters+=ParameterSingle[','] RPAREN 
-;
-
-NumpyLinspaceStmt: 
-  lhs=ID '=' LINSPACE LPAREN 
-                             start=IdentifierOrNumber COMMA
-                             end=IdentifierOrNumber COMMA
-                             size=IdentifierOrNumber
-                       RPAREN 
-;
-
 
 NumpyArrayStmt:
    lhs=ID '=' 'array' LPAREN rhs=ArrayOrMatrix ',' 'dtype' '=' dtype=DataType RPAREN

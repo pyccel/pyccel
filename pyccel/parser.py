@@ -22,8 +22,8 @@ from pyccel.syntax import (Pyccel, \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
-                           NumpyZerosStmt, NumpyZerosLikeStmt, \
-                           NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt,\
+                           NumpyZerosLikeStmt, \
+                           NumpyArrayStmt,\
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
@@ -214,8 +214,8 @@ class PyccelParser(Parser):
                    # python standard library statements
                    PythonPrintStmt, \
                    # numpy statments
-                   NumpyZerosStmt, NumpyZerosLikeStmt, \
-                   NumpyOnesStmt, NumpyLinspaceStmt,NumpyArrayStmt, \
+                   NumpyZerosLikeStmt, \
+                   NumpyArrayStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers
