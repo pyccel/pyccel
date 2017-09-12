@@ -5,8 +5,8 @@
 n = 100
 n = int()
 
-a = zeros(shape=n, dtype=float)
-b = zeros(shape=n, dtype=float)
+a = zeros(n, double)
+b = zeros(n, double)
 
 #$ omp parallel
 #$ omp do

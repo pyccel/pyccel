@@ -7,10 +7,10 @@ m = 100
 n = int()
 m = int()
 
-a = zeros(shape=n, dtype=float)
-b = zeros(shape=n, dtype=float)
-y = zeros(shape=m, dtype=float)
-z = zeros(shape=m, dtype=float)
+a = zeros(n, double)
+b = zeros(n, double)
+y = zeros(m, double)
+z = zeros(m, double)
 
 #$ omp parallel
 #$ omp do schedule(runtime)

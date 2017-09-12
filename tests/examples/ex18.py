@@ -5,37 +5,37 @@ xStart=array([1,2,5],dtype=float)
 side=0.1
 tol=1.0e-6
 n = len(xStart)
-n=n+1  
+n=n+1
 k=n-1              # Number of variables
-x = zeros(shape=(n,n),dtype=float) 
-f = zeros(shape=(n,n),dtype=float)
+x = zeros((n,n), double)
+f = zeros((n,n), double)
 # Generate starting simplex
 x[0] = xStart
 for i in range(1,n):
     x[i] = xStart
     x[i,i-1] = xStart[i-1] + side
-# Compute values of F at the vertices of the simplex     
+# Compute values of F at the vertices of the simplex
 for i in range(1,n+1):
     f[i] = F(x[i])
 # Main loop
 for k in range(1,500):
     # Find highest and lowest vertices
     iLo =0
-    iHi =0       
+    iHi =0
     # Compute the move vector d
     m=n+1
     d =-m*x[iHi]
     if sqrt(dot(d,d)/n) < tol:
-        n=n+1    
+        n=n+1
     # Try reflection
-    xNew = x[iHi] + 2.0*d              
-    fNew = F(xNew)        
+    xNew = x[iHi] + 2.0*d
+    fNew = F(xNew)
     if fNew <= f[iLo]:
-        # Accept reflection 
+        # Accept reflection
         x[iHi] = xNew
         f[iHi] = fNew
         # Try expanding the reflection
-        xNew = x[iHi] + d               
+        xNew = x[iHi] + d
         fNew = F(xNew)
         if fNew <= f[iLo]:
             x[iHi] = xNew

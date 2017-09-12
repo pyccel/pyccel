@@ -2,11 +2,11 @@
 
 from numpy import zeros
 
-w_u = zeros(shape=4, dtype=float)
-w_v = zeros(shape=4, dtype=float)
+w_u = zeros(4, double)
+w_v = zeros(4, double)
 
-b_0 = zeros(shape=(4,4), dtype=float)
-b_s = zeros(shape=(4,4), dtype=float)
+b_0 = zeros((4,4), double)
+b_s = zeros((4,4), double)
 
 for i_u in range(0,4):
     for i_v in range(0,4):

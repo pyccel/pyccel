@@ -3,9 +3,9 @@
 n = int()
 n = 2
 
-x = zeros(shape=(n,n), dtype=float)
-y = zeros(shape=(n,n), dtype=float)
-z = zeros(shape=(n,n), dtype=float)
+x = zeros((n,n), double)
+y = zeros((n,n), double)
+z = zeros((n,n), double)
 
 for i in range(0, n):
     for j in range(0, n):

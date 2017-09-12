@@ -3,8 +3,8 @@
 def legendre(p):
     p = int()
     k = p + 1
-    x = zeros(shape=k, dtype=float)
-    w = zeros(shape=k, dtype=float)
+    x = zeros(k, double)
+    w = zeros(k, double)
     if p == 1:
         x[0] = -0.577350269189625765
         x[1] =  0.577350269189625765

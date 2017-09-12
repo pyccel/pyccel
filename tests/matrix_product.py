@@ -1,14 +1,14 @@
 # coding: utf-8
 
-#from numpy import zeros
+from numpy import zeros
 
 n = 2
 m = 4
 p = 2
 
-a = zeros(shape=(n,m), dtype=float)
-b = zeros(shape=(m,p), dtype=float)
-c = zeros(shape=(n,p), dtype=float)
+a = zeros((n,m), double)
+b = zeros((m,p), double)
+c = zeros((n,p), double)
 
 for i in range(0, n):
     for j in range(0, m):

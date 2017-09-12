@@ -6,9 +6,9 @@ n = 500
 m = 700
 p = 500
 
-a = zeros(shape=(n,m), dtype=float)
-b = zeros(shape=(m,p), dtype=float)
-c = zeros(shape=(n,p), dtype=float)
+a = zeros((n,m), double)
+b = zeros((m,p), double)
+c = zeros((n,p), double)
 
 #$ omp parallel
 #$ omp do schedule(runtime)

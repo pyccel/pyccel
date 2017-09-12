@@ -7,13 +7,13 @@ n = 10
 b = 2
 p = n / b
 
-x = zeros(shape=(n,n), dtype=float)
-y = zeros(shape=(n,n), dtype=float)
-z = zeros(shape=(n,n), dtype=float)
+x = zeros((n,n), double)
+y = zeros((n,n), double)
+z = zeros((n,n), double)
 
-r = zeros(shape=(b,b), dtype=float)
-u = zeros(shape=(b,b), dtype=float)
-v = zeros(shape=(b,b), dtype=float)
+r = zeros((b,b), double)
+u = zeros((b,b), double)
+v = zeros((b,b), double)
 
 for i in range(0, p):
     for j in range(0, p):

@@ -9,8 +9,8 @@ from numpy import zeros
 from numpy import dot
 
 n = 10
-a = zeros(shape=(10,10), dtype=float)
-b = zeros(shape=(10,10), dtype=float)
+a = zeros((10,10), double)
+b = zeros((10,10), double)
 
 #def gaussElimin(a,b):
 #n = len(b)

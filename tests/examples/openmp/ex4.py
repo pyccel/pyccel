@@ -8,11 +8,11 @@ n = 100
 n1 = int()
 n1 = n+1
 
-a = zeros(shape=n, dtype=float)
-b = zeros(shape=n, dtype=float)
-c = zeros(shape=n, dtype=float)
-y = zeros(shape=n1, dtype=float)
-z = zeros(shape=n, dtype=float)
+a = zeros(n, double)
+b = zeros(n, double)
+c = zeros(n, double)
+y = zeros(n1, double)
+z = zeros(n, double)
 
 #$omp parallel
 #$omp do schedule(static)

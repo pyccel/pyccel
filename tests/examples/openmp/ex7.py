@@ -10,8 +10,8 @@ n = int()
 n2 = n / 2
 n2 = int()
 
-a = zeros(shape=n,  dtype=float)
-b = zeros(shape=n2, dtype=float)
+a = zeros(n,  double)
+b = zeros(n2, double)
 
 for i in range(0, n):
     a[i] = i+1

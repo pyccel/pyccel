@@ -15,7 +15,7 @@ def F(x,y):
 def run_kut4(x,y,h):
     x=float()
     y=float()
-    h=float()  
+    h=float()
     K0 = h*F(x,y)
     K1 = h*F(x + h/2.0, y + K0/2.0)
     K2 = h*F(x + h/2.0, y + K1/2.0)
@@ -29,11 +29,11 @@ def integrate(x,y,xStop,h):
     h=float()
     n=100
     i=0
-    X = zeros(shape=n,dtype=float)
-    Y = zeros(shape=n,dtype=float)
+    X = zeros(n,double)
+    Y = zeros(n,double)
     X[0]=x
     Y[0]=y
-    
+
     while x < xStop and i<n:
         h = min(h,xStop - x)
         y = y + run_kut4(x,y,h)

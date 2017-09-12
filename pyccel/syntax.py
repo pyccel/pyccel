@@ -5,6 +5,7 @@ from numpy import asarray
 
 from ast import literal_eval
 
+from sympy.core.containers import Tuple
 from sympy import Symbol, sympify, Integer, Float, Add, Mul
 from sympy import true, false,pi
 from sympy.tensor import Idx, Indexed, IndexedBase
@@ -785,6 +786,8 @@ class AssignStmt(BasicStmt):
                         for i in args:
                             if isinstance(i, DataType):
                                 dtype = i
+                            elif isinstance(i, Tuple):
+                                shape = [j for j in i]
                             else:
                                 # TODO further check
                                 shape.append(i)
@@ -1070,6 +1073,13 @@ class FactorSigned(ExpressionElement, BasicStmt):
         else:
             args = self.trailer.expr
             if self.trailer.args:
+                ls = []
+                for i in args:
+                    if isinstance(i, (list, tuple)):
+                        ls.append(Tuple(*i))
+                    else:
+                        ls.append(i)
+                args = ls
                 expr = Function(str(expr))(*args)
             elif self.trailer.subs:
                 expr = IndexedVariable(str(expr))[args]

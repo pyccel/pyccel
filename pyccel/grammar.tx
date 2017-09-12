@@ -327,7 +327,11 @@ Trailer:
 ;
 
 TrailerArgList: 
-  '(' args+=Expression[','] ')'
+  '(' args+=TrailerArg[','] ')'
+;
+
+TrailerArg: 
+  (TrailerArgList | Expression)
 ;
 
 TrailerSubscriptList: 

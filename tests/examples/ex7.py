@@ -2,7 +2,7 @@
 
 from numpy import zeros
 
-a = zeros(shape=(10,10),dtype=float)
+a = zeros((10,10), double)
 
 for i in range(0,10):
     a[i,i] = 2.0
