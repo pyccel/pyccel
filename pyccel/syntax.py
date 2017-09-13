@@ -131,7 +131,6 @@ def get_attributs(expr):
         args = [expr]
         while args:
             a = args.pop()
-            print ">>>>> ", a, type(a)
 
             # XXX: This is a hack to support non-Basic args
             if isinstance(a, string_types):
@@ -179,7 +178,7 @@ def get_attributs(expr):
             if (not a.is_Symbol) and (not isinstance(a, IndexedElement)):
                 args.extend(a.args)
             if isinstance(a, IndexedVariable):
-                print ">>>>> is_IndexedVariable : ", a
+#                print ">>>>> is_IndexedVariable : ", a
                 name = str(a)
                 if name in namespace:
                     var = variables[name]
@@ -189,7 +188,7 @@ def get_attributs(expr):
                     d_var['shape']       = var.shape
                     d_var['rank']        = var.rank
             if isinstance(a, IndexedElement):
-                print ">>>>> is_IndexedElement : ", a
+#                print ">>>>> is_IndexedElement : ", a
                 name = str(a.base)
                 if name in namespace:
                     var = variables[name]
@@ -199,7 +198,7 @@ def get_attributs(expr):
                     d_var['shape']       = d_var['shape']
                     d_var['rank']        = d_var['rank']
             if (a.is_Symbol) and (not isinstance(a, IndexedVariable)):
-                print ">>>>> is_Symbol : ", a
+#                print ">>>>> is_Symbol : ", a
                 name = str(a)
                 if name in namespace:
                     var = variables[name]
@@ -351,105 +350,6 @@ def builtin_function(name, args, lhs=None):
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
-
-def Check_type(var_name,expr):
-    datatype='int'
-    rank=0
-    allocatable=False
-    shape=[]
-    s=[]
-    def pre(expr):
-
-        if(type(expr)==Indexed) or type(expr)==IndexedElement:
-            element=list([expr.args[i] for i in range(0,len(expr.args))])
-            s.append(element)
-            return
-
-
-        elif len(expr.args)==0:
-            s.append(expr)
-        for arg in expr.args:
-            pre(arg)
-
-    pre(expr.expr)
-    if isinstance(expr,Expression):
-        for i in s:
-            if isinstance(i,list):
-                if isinstance(i[0],IndexedVariable)and isinstance(variables[str(i[0])].dtype,NativeFloat):
-                         datatype='float'
-                if  variables[str(i[0])].allocatable:
-                    allocatable=True
-                import numpy as np
-                anySlice=[isinstance(i[j],Slice) for j in range(1,len(i))]
-                SliceIndex=np.where(anySlice)[0]
-                temp1=variables[str(i[0])].shape
-                for j in SliceIndex:
-                    slice_start=i[j+1].start
-                    slice_end=i[j+1].end
-                    if i[j+1].start==None:
-                        slice_start=0
-                    if i[j+1].end==None:
-                        if isinstance(temp1,(list,tuple)):
-                            slice_end=temp1[j]
-                        else:
-                            slice_end=temp1
-                    i[j+1]=Slice(slice_start,slice_end)
-
-                    if not variables[str(i[0])].shape==None:
-
-                            if isinstance(temp1,(tuple,list)):
-                                rank=len(temp1)
-                                if all(i[k+1].start>=0 and i[k+1].end<=temp1[k] for k in SliceIndex):
-                                   shape.append(tuple([i[k+1].end-i[k+1].start for k in SliceIndex]))
-                                else:
-                                    raise TypeError('dimension mismatch')
-                            elif isinstance(temp1,int):
-                                if i[1].start>=0 and i[1].end<=temp1:
-                                    shape.append(i[1].end-i[1].start)
-                                else:
-                                    raise TypeError('dimension mismatch')
-                            else:
-                                raise TypeError('shape must be an int or a tuple of int')
-                    else:
-                         raise TypeError('variable doesnt have a shape')
-            elif isinstance(i,Symbol):
-
-                if isinstance(variables[str(i)].dtype,NativeFloat):
-                    datatype='float'
-                if  variables[str(i)].allocatable:
-                    allocatable=True
-                if not variables[str(i)].shape==None:
-                    shape.append(variables[str(i)].shape)
-            elif i.is_real and not i.is_integer:
-                    datatype='float'
-    name=sympify(var_name)
-    if len(shape)>0:
-        if all(x==shape[0] for x in shape):
-            shape=shape[0]
-
-            if isinstance(shape,(tuple,list)):
-                s=[]
-                for i in shape:
-                    try:
-                        s.append(int(i))
-                    except:
-                        s.append(i)
-
-                shape=tuple(s)
-                rank=len(shape)
-            elif isinstance(shape,int):
-                rank=1
-            elif isinstance(shape,Symbol) or isinstance(shape,Integer) :
-                if shape.is_integer:
-                    rank=1
-                    shape=int(shape)
-        else:
-            raise TypeError('shape are not equal')
-
-    else:
-        shape=None
-
-    return {'datatype':datatype,'name':name , 'rank':rank, 'allocatable':allocatable,'shape':shape}
 
 def insert_variable(var_name, \
                     datatype=None, \
@@ -1017,16 +917,12 @@ class AssignStmt(BasicStmt):
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
-#            if True:
                 print("> Found new variable " + var_name)
 
-            # TODO check if var is a return value
-            rank = 0
-#            d_var = Check_type(self.lhs,self.rhs)
             expr  = self.rhs.expr
             d_var = get_attributs(expr)
-            print ">>>>> name : ", var_name
-            print "           : ", d_var
+#            print ">>>>> name : ", var_name
+#            print "           : ", d_var
             insert_variable(var_name,rank=d_var['rank'],
                             datatype=d_var['datatype'],
                             allocatable=d_var['allocatable'],
@@ -1039,43 +935,41 @@ class AssignStmt(BasicStmt):
         Process the Assign statement by returning a pyccel.types.ast object
         """
         self.update()
-        if isinstance(self.rhs, Expression):
-            rhs = self.rhs.expr
 
-            if isinstance(rhs, Function):
-                name = str(type(rhs).__name__)
+        if not (self.lhs in namespace):
+            raise Exception("lhs must be declared in namespace.")
+
+        if not isinstance(self.rhs, Expression):
+            raise TypeError("Expecting an expression")
+
+        rhs = self.rhs.expr
+        if isinstance(rhs, Function):
+            name = str(type(rhs).__name__)
 #                print str(rhs), rhs, type(rhs)
 #                name = str(rhs)
-                # TODO this is not good for other language like c
-                if name.lower() in builtin_funcs:
-                    args = rhs.args
-                    return builtin_function(name.lower(), args, lhs=self.lhs)
-                else:
-                    name = str(type(rhs).__name__)
-                    F = namespace[name]
-                    f_expr = F.expr
-                    results = f_expr.results
-                    result = results[0]
-                    insert_variable(self.lhs, \
-                                    datatype=result.dtype, \
-                                    allocatable=result.allocatable, \
-                                    shape=result.shape, \
-                                    rank=result.rank)
-        else:
-            rhs = sympify(self.rhs)
+            # TODO this is not good for other language like c
+            if name.lower() in builtin_funcs:
+                args = rhs.args
+                return builtin_function(name.lower(), args, lhs=self.lhs)
+            else:
+                name = str(type(rhs).__name__)
+                F = namespace[name]
+                f_expr = F.expr
+                results = f_expr.results
+                result = results[0]
+                insert_variable(self.lhs, \
+                                datatype=result.dtype, \
+                                allocatable=result.allocatable, \
+                                shape=result.shape, \
+                                rank=result.rank)
 
         if self.trailer is None:
-            l = sympify(self.lhs)
+            l = namespace[self.lhs]
         else:
             args = self.trailer.expr
             l = IndexedVariable(str(self.lhs))[args]
 
-        name = self.lhs
-        if not (name in namespace):
-            raise Exception("lhs must be declared in namespace.")
-
-        l = namespace[name]
-        return Assign(l, rhs)
+        return Assign(l, rhs, strict=False)
 
 class MultiAssignStmt(BasicStmt):
     """

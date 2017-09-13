@@ -53,6 +53,10 @@ class Assign(Basic):
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
+    strict: bool
+        if True, we do some verifications. In general, this can be more
+        complicated and is treated in pyccel.syntax.
+
     Examples
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
@@ -71,26 +75,28 @@ class Assign(Basic):
 
     """
 
-    def __new__(cls, lhs, rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        #if not isinstance(lhs, assignable):
-        #    raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
+    def __new__(cls, lhs, rhs, strict=True):
+        if strict:
+            lhs = _sympify(lhs)
+            rhs = _sympify(rhs)
+            # Tuple of things that can be on the lhs of an assignment
+            assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
+            #if not isinstance(lhs, assignable):
+            #    raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+            # Indexed types implement shape, but don't define it until later. This
+            # causes issues in assignment validation. For now, matrices are defined
+            # as anything with a shape that is not an Indexed
+            lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
+            rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
+            # If lhs and rhs have same structure, then this assignment is ok
+            print ("+++++ ", type(lhs), type(rhs))
+            if lhs_is_mat:
+                if not rhs_is_mat:
+                    raise ValueError("Cannot assign a scalar to a matrix.")
+                elif lhs.shape != rhs.shape:
+                    raise ValueError("Dimensions of lhs and rhs don't align.")
+            elif rhs_is_mat and not lhs_is_mat:
+                raise ValueError("Cannot assign a matrix to a scalar.")
         return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
