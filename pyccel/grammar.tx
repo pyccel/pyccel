@@ -363,7 +363,7 @@ BOOLEAN:
 
 // TODO: remove pi from here
 UnaryOp:
-   ('transpose' | 'len' | 'sign' | 'factorial')
+   ('transpose' | 'sign' | 'factorial')
 ;
 
 BinaryOp:

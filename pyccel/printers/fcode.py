@@ -16,7 +16,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
-        OutArgument, InOutArgument, Variable, Declare,LEN,Dot,Min,Max,SIGN)
+        OutArgument, InOutArgument, Variable, Declare,Len,Dot,Min,Max,SIGN)
 from pyccel.printers.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -223,7 +223,7 @@ class FCodePrinter(CodePrinter):
             code += '{0} = (/{1}/)'.format(lhs_code, st)
         return code
 
-    def _print_LEN(self,expr):
+    def _print_Len(self,expr):
         if isinstance(expr.rhs,list):
             st=','.join([str(i) for i in expr.rhs])
             return self._get_statement('size((/%s/),1)'%(st))

@@ -30,7 +30,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
                               Stencil,ceil,Break, \
-                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,SIGN,IndexedElement,\
+                              NumpyOnes, NumpyArray, Len, Dot, Min, Max,SIGN,IndexedElement,\
                               GOrEq,LOrEq,Lthan,Gter)
 
 DEBUG = False
@@ -94,7 +94,8 @@ builtin_funcs_math_bin = ['dot']
 builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
-builtin_funcs  = ['zeros', 'ones', 'array']
+builtin_funcs  = ['zeros', 'ones', 'array', \
+                  'len', 'shape']
 builtin_funcs += builtin_funcs_math
 # ...
 
@@ -202,8 +203,22 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
+    elif name == 'len':
+        if not(len(args) == 1):
+            raise ValueError("len takes only one argument")
+
+        arg = args[0]
+        if lhs is None:
+            return Len(arg)
+        else:
+            d_var = {}
+            d_var['datatype'] = 'int'
+            insert_variable(lhs, **d_var)
+
+            expr = Len(arg)
+            return Assign(Symbol(lhs), expr)
     else:
-        raise ValueError("Expecting a builtin function.")
+        raise ValueError("Expecting a builtin function. given : ", name)
     # ...
 
 def Check_type(var_name,expr):
@@ -867,8 +882,8 @@ class AssignStmt(BasicStmt):
 
         var_name = self.lhs
         if not(var_name in namespace):
-#            if DEBUG:
-            if True:
+            if DEBUG:
+#            if True:
                 print("> Found new variable " + var_name)
 
             # TODO check if var is a return value
@@ -890,9 +905,12 @@ class AssignStmt(BasicStmt):
 
             if isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
-                if name in builtin_funcs:
+#                print str(rhs), rhs, type(rhs)
+#                name = str(rhs)
+                # TODO this is not good for other language like c
+                if name.lower() in builtin_funcs:
                     args = rhs.args
-                    return builtin_function(name, args, lhs=self.lhs)
+                    return builtin_function(name.lower(), args, lhs=self.lhs)
                 else:
                     name = str(type(rhs).__name__)
                     F = namespace[name]
@@ -1170,6 +1188,8 @@ class FactorSigned(ExpressionElement, BasicStmt):
                 name = str(expr)
                 if name in builtin_funcs_math:
                     expr = builtin_function(name, args)
+                elif name == 'len':
+                    expr = builtin_function(name, args)
                 else:
                     expr = Function(str(expr))(*args)
             elif self.trailer.subs:
@@ -1206,14 +1226,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
         expr = self.op.expr
         rhs=expr
 
-        if self.name=='len':
-            import ast
-            try:
-                rhs=ast.literal_eval(expr)
-            except:
-                rhs=expr
-            return LEN(rhs)
-        elif self.name=='sign':
+        if self.name=='sign':
             return SIGN(rhs)
         elif self.name=='factorial':
             return factorial(rhs)
@@ -1280,6 +1293,7 @@ class Term(ExpressionElement):
 
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
+            print "expr = ", operand.expr
             if operation == '*':
                 ret *= operand.expr
             else:

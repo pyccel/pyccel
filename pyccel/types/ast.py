@@ -9,6 +9,7 @@ from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
+from sympy.core.function import Function
 # TODO rename _sympify to sympify. Before we were using _sympify from sympy.core
 #      but then sympy will keep in memory all used variables. we don't need it,
 #      since the in syntax.py we always check the namespace for any new variable.
@@ -22,7 +23,6 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
 # TODO: rename ceil to Ceil
-# TODO: rename LEN to Len
 # TODO: clean Thread objects
 # TODO: update code examples
 # TODO: add _sympystr whenever it's possible
@@ -32,7 +32,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
            "Argument", "Result", "InArgument", "OutArgument", \
            "InOutArgument", "FunctionDef", "ceil", "Import", "Declare", \
-           "Return", "LEN", "Min", "Max", "Dot", \
+           "Return", "Len", "Min", "Max", "Dot", \
            "NumpyZeros", "NumpyOnes", "NumpyArray", "NumpyLinspace", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
            "IndexedElement", "Slice", "If", "MultiAssign", "Rational", \
@@ -776,14 +776,18 @@ class Break(Basic):
     def __new__(cls):
         return Basic.__new__(cls)
 
-# TODO: rename and add example
-class LEN(Basic):
+# TODO: improve with __new__ from Function and add example
+class Len(Function):
     """
     Represents a 'len' expression in the code.
 
     rhs: symbol or number
         input for the len function
     """
+    # TODO : remove later
+    def __str__(self):
+        return "len"
+
     def __new__(cls, rhs):
         return Basic.__new__(cls, rhs)
 
@@ -791,10 +795,10 @@ class LEN(Basic):
     def rhs(self):
         return self._args[0]
 
-    # TODO do we keep it? improve it
-    @property
-    def str(self):
-        return 'size('+str(self._args[0])+',1)'
+#    # TODO do we keep it? improve it
+#    @property
+#    def str(self):
+#        return 'size('+str(self._args[0])+',1)'
 
 # TODO: improve by using args
 # TODO: add example
@@ -886,9 +890,9 @@ class NumpyZeros(Basic):
                 shape = Tuple(*(_sympify(i) for i in shape))
         elif isinstance(shape, int):
             shape = Tuple(_sympify(shape))
-        elif isinstance(shape, Basic) and not isinstance(shape,LEN):
+        elif isinstance(shape, Basic) and not isinstance(shape,Len):
             shape = str(shape)
-        elif isinstance(shape,LEN):
+        elif isinstance(shape,Len):
             shape=shape.str
         else:
             shape = shape
@@ -1382,7 +1386,7 @@ class ThreadsNumber(Thread):
     """
     pass
 
-# TODO: remove LEN from here
+# TODO: remove Len from here
 class Stencil(Basic):
     """Represents variable assignment using a stencil for code generation.
 
@@ -1420,9 +1424,9 @@ class Stencil(Basic):
                     s_out = Tuple(*(_sympify(i) for i in s_in))
             elif isinstance(s_in, int):
                 s_out = Tuple(_sympify(s_in))
-            elif isinstance(s_in, Basic) and not isinstance(s_in,LEN):
+            elif isinstance(s_in, Basic) and not isinstance(s_in,Len):
                 s_out = str(s_in)
-            elif isinstance(s_in,LEN):
+            elif isinstance(s_in,Len):
                 s_our = s_in.str
             else:
                 s_out = s_in

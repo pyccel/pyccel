@@ -55,5 +55,8 @@ e14 = 3.0 + 2.0 * atan(e)
 #e16 = 3.0 + 2.0 * sec (e)
 e17 = 3.0 + 2.0 * ceil(e) # problem with check_compatibility with ints
 
+n1 = len(c1)
+#n2 = 3 + 2 * len(c1)  # problem with check_compatibility
+
 #z1 = dot(c1, c1)
 #z2 = 3.0 + 2.0 * dot(c1, c1)

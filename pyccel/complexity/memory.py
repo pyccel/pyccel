@@ -24,7 +24,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
                               Stencil,ceil, \
-                              NumpyOnes, NumpyArray, LEN, Dot, Min, Max,IndexedElement)
+                              NumpyOnes, NumpyArray, Len, Dot, Min, Max,IndexedElement)
 
 from pyccel.complexity.basic      import Complexity
 from pyccel.complexity.arithmetic import count_ops
