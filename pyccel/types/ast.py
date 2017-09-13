@@ -89,7 +89,6 @@ class Assign(Basic):
             lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
             rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
             # If lhs and rhs have same structure, then this assignment is ok
-            print ("+++++ ", type(lhs), type(rhs))
             if lhs_is_mat:
                 if not rhs_is_mat:
                     raise ValueError("Cannot assign a scalar to a matrix.")
@@ -856,8 +855,8 @@ class Max(Basic):
     def expr_r(self):
         return self.args[1]
 
-# TODO: add example
-class Dot(Basic):
+# TODO: improve with __new__ from Function and add example
+class Dot(Function):
     """
     Represents a 'dot' expression in the code.
 

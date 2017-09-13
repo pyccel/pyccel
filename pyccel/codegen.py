@@ -312,6 +312,7 @@ class Codegen(object):
 
         # ...
         for stmt in ast.statements:
+#            print ("=====================================")
             if isinstance(stmt, CommentStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ImportFromStmt):

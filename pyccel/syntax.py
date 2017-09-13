@@ -117,6 +117,21 @@ builtin_funcs  = ['zeros', 'ones', 'array', \
 builtin_funcs += builtin_funcs_math
 # ...
 
+def dtype_from_args(args, strict=True):
+    # ...
+    def _get_dtype(a):
+        name = str(a)
+        if not(name in namespace):
+            raise Exception("Undefined variable {0}".format(name))
+        return variables[name].dtype
+    # ...
+
+    dtypes = list(set([_get_dtype(a) for a in args]))
+    if strict:
+        assert(len(dtypes) == 1)
+    return dtypes[0]
+
+
 def get_attributs(expr):
     """
     finds attributs of the expression
@@ -131,6 +146,7 @@ def get_attributs(expr):
         args = [expr]
         while args:
             a = args.pop()
+#            print ">>>> ", a, type(a)
 
             # XXX: This is a hack to support non-Basic args
             if isinstance(a, string_types):
@@ -175,8 +191,17 @@ def get_attributs(expr):
                     isinstance(a, Integral)):
 
                 o = Symbol(a.func.__name__.upper())
-            if (not a.is_Symbol) and (not isinstance(a, IndexedElement)):
+            if     (not a.is_Symbol) \
+               and (not isinstance(a, (IndexedElement, Function))):
                 args.extend(a.args)
+            if isinstance(a, Dot):
+                d_var['datatype']    = dtype_from_args(a.args)
+                d_var['allocatable'] = False
+                d_var['shape']       = None
+                d_var['rank']        = 0
+            if isinstance(a, Function):
+#                print ">>>>> is_Function : ", a
+                continue
             if isinstance(a, IndexedVariable):
 #                print ">>>>> is_IndexedVariable : ", a
                 name = str(a)
@@ -197,7 +222,8 @@ def get_attributs(expr):
                     d_var['allocatable'] = var.allocatable
                     d_var['shape']       = d_var['shape']
                     d_var['rank']        = d_var['rank']
-            if (a.is_Symbol) and (not isinstance(a, IndexedVariable)):
+            if (a.is_Symbol) \
+               and (not isinstance(a, (IndexedVariable, Function))):
 #                print ">>>>> is_Symbol : ", a
                 name = str(a)
                 if name in namespace:
@@ -299,8 +325,7 @@ def builtin_function(name, args, lhs=None):
             return Dot(*args)
         else:
             d_var = {}
-            # TODO get dtype from args
-            d_var['datatype'] = 'float'
+            d_var['datatype'] = dtype_from_args(args)
             insert_variable(lhs, **d_var)
             expr = Dot(*args)
             return Assign(Symbol(lhs), expr)
@@ -952,6 +977,7 @@ class AssignStmt(BasicStmt):
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=self.lhs)
             else:
+                # TODO do we keep it?
                 name = str(type(rhs).__name__)
                 F = namespace[name]
                 f_expr = F.expr
