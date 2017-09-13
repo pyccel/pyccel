@@ -91,7 +91,7 @@ builtin_funcs_math_un = ['abs', 'sqrt', 'exp', 'log', \
                          'asec', 'atan', 'acot', \
                          'atan2','csc', 'sec', 'ceil' \
                         ]
-builtin_funcs_math_bin = ['dot']
+builtin_funcs_math_bin = ['dot', 'pow']
 builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
@@ -203,6 +203,19 @@ def builtin_function(name, args, lhs=None):
             d_var['datatype'] = 'float'
             insert_variable(lhs, **d_var)
             expr = func(*args)
+            return Assign(Symbol(lhs), expr)
+    elif name == 'pow' :
+        if not(len(args) == 2):
+            raise ValueError("pow takes exactly two arguments")
+
+        if lhs is None:
+            return Pow(*args)
+        else:
+            d_var = {}
+            # TODO get dtype from args
+            d_var['datatype'] = 'float'
+            insert_variable(lhs, **d_var)
+            expr = Pow(*args)
             return Assign(Symbol(lhs), expr)
     elif name == 'len':
         if not(len(args) == 1):

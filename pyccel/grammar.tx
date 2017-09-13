@@ -367,7 +367,7 @@ UnaryOp:
 ;
 
 BinaryOp:
-   ('pow' | 'rational' | 'min' | 'max')
+   ('rational' | 'min' | 'max')
 ;
 
 

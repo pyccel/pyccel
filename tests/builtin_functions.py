@@ -35,6 +35,7 @@ d14 = atan(2.0)
 #d15 = csc (2.0)
 #d16 = sec (2.0)
 d17 = ceil (2.2)
+d18 = pow  (2,3)
 
 e   = 1.0
 e0  = 3.0 + 2.0 * abs(e)
@@ -55,6 +56,7 @@ e14 = 3.0 + 2.0 * atan(e)
 #e15 = 3.0 + 2.0 * csc (e)
 #e16 = 3.0 + 2.0 * sec (e)
 e17 = 3.0 + 2.0 * ceil(e) # problem with check_compatibility with ints
+e18 = 3.0 + 2.0 * pow(e, 3)
 
 n1 = len(c1)
 #n2 = 3 + 2 * len(c1)  # problem with check_compatibility
