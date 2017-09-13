@@ -16,7 +16,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
-        OutArgument, InOutArgument, Variable, Declare,Len,Dot,Min,Max,SIGN)
+        OutArgument, InOutArgument, Variable, Declare,Len,Dot,Min,Max,Sign)
 from pyccel.printers.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -270,12 +270,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l),self._print(expr.expr_r)))
+
     def _print_ceil(self,expr):
         return self._get_statement('ceiling(%s)'%(self._print(expr.rhs)))
-    def _print_SIGN(self,expr):
-        return self._get_statement('SIGN(1.,%s)'%(self._print(expr.rhs)))
 
-
+    def _print_Sign(self,expr):
+        # TODO use the appropriate precision from rhs
+        return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
 
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)

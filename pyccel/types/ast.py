@@ -871,7 +871,7 @@ class Dot(Basic):
     def expr_r(self):
         return self.args[1]
 
-class SIGN(Basic):
+class Sign(Basic):
 
     def __new__(cls,expr):
         return Basic.__new__(cls, expr)

@@ -31,11 +31,13 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               NumpyZeros, NumpyLinspace, \
                               Stencil,ceil,Break, \
                               NumpyOnes, NumpyArray, Shape, Len, \
-                              Dot, Min, Max,SIGN,IndexedElement,\
+                              Dot, Min, Max,Sign,IndexedElement,\
                               GOrEq,LOrEq,Lthan,Gter)
 
 DEBUG = False
 #DEBUG = True
+
+sign = Sign
 
 # TODO: 1. check that every stmt is well implementing
 #          the local_vars and stmt_vars properties.
@@ -89,7 +91,8 @@ builtin_funcs_math_un = ['abs', 'sqrt', 'exp', 'log', \
                          'cos', 'sin', 'tan', 'cot', \
                          'asin', 'acsc', 'acos', \
                          'asec', 'atan', 'acot', \
-                         'atan2','csc', 'sec', 'ceil' \
+                         'atan2','csc', 'sec', 'ceil', \
+                         'sign' \
                         ]
 builtin_funcs_math_bin = ['dot', 'pow']
 builtin_funcs_math = builtin_funcs_math_un + \
@@ -1248,9 +1251,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
         expr = self.op.expr
         rhs=expr
 
-        if self.name=='sign':
-            return SIGN(rhs)
-        elif self.name=='factorial':
+        if self.name=='factorial':
             return factorial(rhs)
         else:
             raise Exeption('function note supported')

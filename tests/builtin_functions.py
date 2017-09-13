@@ -36,7 +36,9 @@ d14 = atan(2.0)
 #d16 = sec (2.0)
 d17 = ceil (2.2)
 d18 = pow  (2,3)
+d19 = sign (-2.0)
 
+e   = double()
 e   = 1.0
 e0  = 3.0 + 2.0 * abs(e)
 e1  = 3.0 + 2.0 * sqrt(e)
@@ -57,6 +59,7 @@ e14 = 3.0 + 2.0 * atan(e)
 #e16 = 3.0 + 2.0 * sec (e)
 e17 = 3.0 + 2.0 * ceil(e) # problem with check_compatibility with ints
 e18 = 3.0 + 2.0 * pow(e, 3)
+e19 = 3.0 + 2.0 * sign(e)
 
 n1 = len(c1)
 #n2 = 3 + 2 * len(c1)  # problem with check_compatibility
