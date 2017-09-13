@@ -159,7 +159,7 @@ ArgList:
   LPAREN args+=Args[','] RPAREN
 ;
 Args:
-  (ArgList | FactorUnary | IdentifierOrNumber)
+  (ArgList | IdentifierOrNumber)
 ;
 
 
@@ -179,7 +179,7 @@ PrintStmt:
 ;
 
 ParameterValue:
-  (value=FactorUnary | value=IdentifierOrNumber |value=ArgList)
+  (value=IdentifierOrNumber |value=ArgList)
 ;
 
 ParameterSingle: 
@@ -288,20 +288,12 @@ Term:
 ;
 
 Factor: 
-  FactorBinary | FactorUnary | FactorSigned
+  FactorSigned
 ;
 
 // TODO trailer must be a list 
 FactorSigned: 
   (sign=PlusOrMinus)?  op=Operand (trailer=Trailer)?
-;
-
-FactorUnary:
-  name=UnaryOp LPAREN op=Expression (trailer=Trailer)? RPAREN
-;
-
-FactorBinary:
-  name=BinaryOp LPAREN op=Expression COMMA op=Expression RPAREN
 ;
 
 Trailer: 
@@ -361,14 +353,14 @@ BOOLEAN:
    ('True'|'False')
 ;
 
-// TODO: remove pi from here
-UnaryOp:
-   ('transpose')
-;
-
-BinaryOp:
-   ('min' | 'max')
-;
+//// TODO: remove pi from here
+//UnaryOp:
+//   ('transpose')
+//;
+//
+//BinaryOp:
+//   ('min' | 'max')
+//;
 
 
 COMMA:

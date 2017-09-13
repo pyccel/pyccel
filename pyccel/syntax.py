@@ -58,7 +58,7 @@ sign = Sign
 
 __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
-           "FactorSigned", "FactorUnary", "FactorBinary", \
+           "FactorSigned", \
            # statements
            "AssignStmt", "MultiAssignStmt", "DeclarationStmt", \
            # compound stmts
@@ -136,13 +136,13 @@ def get_attributs(expr):
     """
     finds attributs of the expression
     """
-    if isinstance(expr, Expr):
-        d_var = {}
-        d_var['datatype']    = None
-        d_var['allocatable'] = None
-        d_var['shape']       = None
-        d_var['rank']        = None
+    d_var = {}
+    d_var['datatype']    = None
+    d_var['allocatable'] = None
+    d_var['shape']       = None
+    d_var['rank']        = None
 
+    if isinstance(expr, Expr):
         args = [expr]
         while args:
             a = args.pop()
@@ -195,33 +195,16 @@ def get_attributs(expr):
                and (not isinstance(a, (IndexedElement, Function))):
                 args.extend(a.args)
             if isinstance(a, Dot):
-                d_var['datatype']    = dtype_from_args(a.args)
-                d_var['allocatable'] = False
-                d_var['shape']       = None
-                d_var['rank']        = 0
+                d_var = get_attributs(a)
+            if isinstance(a, ceil):
+                d_var = get_attributs(a)
             if isinstance(a, Function):
 #                print ">>>>> is_Function : ", a
                 continue
             if isinstance(a, IndexedVariable):
-#                print ">>>>> is_IndexedVariable : ", a
-                name = str(a)
-                if name in namespace:
-                    var = variables[name]
-
-                    d_var['datatype']    = var.dtype
-                    d_var['allocatable'] = var.allocatable
-                    d_var['shape']       = var.shape
-                    d_var['rank']        = var.rank
+                d_var = get_attributs(a)
             if isinstance(a, IndexedElement):
-#                print ">>>>> is_IndexedElement : ", a
-                name = str(a.base)
-                if name in namespace:
-                    var = variables[name]
-
-                    d_var['datatype']    = var.dtype
-                    d_var['allocatable'] = var.allocatable
-                    d_var['shape']       = d_var['shape']
-                    d_var['rank']        = d_var['rank']
+                d_var = get_attributs(a)
             if (a.is_Symbol) \
                and (not isinstance(a, (IndexedVariable, Function))):
 #                print ">>>>> is_Symbol : ", a
@@ -233,6 +216,33 @@ def get_attributs(expr):
                     d_var['allocatable'] = False
                     d_var['shape']       = d_var['shape']
                     d_var['rank']        = d_var['rank']
+
+    elif isinstance(expr, ceil):
+        d_var['datatype']    = 'int'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+    elif isinstance(expr, Dot):
+        d_var['datatype']    = dtype_from_args(expr.args)
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+    elif isinstance(expr, IndexedVariable):
+        name = str(expr)
+        if name in namespace:
+            var = variables[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
+    elif isinstance(expr, IndexedElement):
+        name = str(expr.base)
+        if name in namespace:
+            var = variables[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = d_var['shape']
+            d_var['rank']        = d_var['rank']
 
     return d_var
 
@@ -340,7 +350,10 @@ def builtin_function(name, args, lhs=None):
         else:
             d_var = {}
             # TODO get dtype from args
-            d_var['datatype'] = 'float'
+            if name in ['ceil']:
+                d_var['datatype'] = 'int'
+            else:
+                d_var['datatype'] = 'float'
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
@@ -917,35 +930,19 @@ class AssignStmt(BasicStmt):
         """Statement variables."""
         return [self.lhs]
 
-    def update(self):
+    @property
+    def expr(self):
         """
-        Update before processing the Assign statement
+        Process the Assign statement by returning a pyccel.types.ast object
         """
-        # TODO default type?
-        datatype = 'float'
-#        datatype = 'int'
-        if isinstance(self.rhs, Expression):
-            expr = self.rhs
-            symbols = set([])
-            if isinstance(expr, Basic):
-                symbols = expr.free_symbols
-
-            for s in symbols:
-                if s.name in namespace:
-                    if s.is_integer:
-                        datatype = 'int'
-                        break
-                    elif s.is_Boolean:
-                        datatype = 'bool'
-                        break
+        if not isinstance(self.rhs, Expression):
+            raise TypeError("Expecting an expression")
 
         var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
+        rhs      = self.rhs.expr
 
-            expr  = self.rhs.expr
-            d_var = get_attributs(expr)
+        if not(var_name in namespace):
+            d_var = get_attributs(rhs)
 #            print ">>>>> name : ", var_name
 #            print "           : ", d_var
             insert_variable(var_name,rank=d_var['rank'],
@@ -953,21 +950,6 @@ class AssignStmt(BasicStmt):
                             allocatable=d_var['allocatable'],
                             shape=d_var['shape'])
 
-
-    @property
-    def expr(self):
-        """
-        Process the Assign statement by returning a pyccel.types.ast object
-        """
-        self.update()
-
-        if not (self.lhs in namespace):
-            raise Exception("lhs must be declared in namespace.")
-
-        if not isinstance(self.rhs, Expression):
-            raise TypeError("Expecting an expression")
-
-        rhs = self.rhs.expr
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
 #                print str(rhs), rhs, type(rhs)
@@ -1258,83 +1240,6 @@ class FactorSigned(ExpressionElement, BasicStmt):
             elif self.trailer.subs:
                 expr = IndexedVariable(str(expr))[args]
             return -expr if self.sign == '-' else expr
-
-class FactorUnary(ExpressionElement, BasicStmt):
-    """Class representing a unary factor."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for an unary factor.
-
-        Parameters
-        ==========
-        name: str
-            the unary operator
-        trailer: Trailer
-            a trailer is used for a function call or Array indexing.
-        """
-        self.name    = kwargs['name']
-        self.trailer = kwargs.pop('trailer', None)
-
-        super(FactorUnary, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the unary factor, by returning a sympy expression
-        """
-        if DEBUG:
-            print "> FactorUnary "
-
-        expr = self.op.expr
-        rhs=expr
-
-        raise Exeption('function note supported')
-
-        if self.trailer is None:
-            return expr
-        else:
-            args = self.trailer.expr
-            if self.trailer.args:
-                expr = Function(str(expr))(*args)
-            elif self.trailer.subs:
-                expr = IndexedVariable(str(expr))[args]
-            return expr
-
-# TODO: add trailer?
-class FactorBinary(ExpressionElement):
-    """Class representing a binary factor."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a binary factor.
-
-        Parameters
-        ==========
-        name: str
-            name of the applied binary operator
-        """
-        self.name = kwargs['name']
-
-        super(FactorBinary, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print "> FactorBinary "
-
-        expr_l = self.op[0].expr
-        expr_r = self.op[1].expr
-
-        if self.name == "pow":
-            return Pow(expr_l, expr_r)
-        elif self.name == "max":
-            return Max(expr_l, expr_r)
-        elif self.name == "min":
-            return Min(expr_l, expr_r)
-        else:
-            raise Exception('Unknown variable "{}" at position {}'
-                            .format(op, self._tx_position))
 
 class Term(ExpressionElement):
     """Class representing a term in the grammar."""
@@ -2149,7 +2054,7 @@ class ArgList(BasicStmt):
         """
         ls = []
         for arg in self.args:
-            if isinstance(arg, (FactorUnary, ArgList)):
+            if isinstance(arg, ArgList):
                 ls.append(arg.expr)
             elif type(arg) == int:
                 ls.append(int(arg))
@@ -2255,16 +2160,12 @@ class StencilStmt(AssignStmt):
                             if not(s in namespace):
                                 raise Exception('Could not find s_out variable.')
                             s_out.append(namespace[s])
-                        elif isinstance(s,FactorUnary):
-                            s_out.append(s.expr)
     #                    elif isinstance(s,ArgList):
     #                        s_out.append(s.expr)
                         else:
                             print ("> given type: ", type(s))
                             raise TypeError('Expecting a int, float or string')
                     rank = len(s_out)
-                elif isinstance(s_in,FactorUnary):
-                     s_out=s_in.expr
                 else:
                     s_out = str(s_in)
                     if s_out in namespace:
