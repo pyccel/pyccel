@@ -28,7 +28,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
-                              Rational, NumpyZeros, NumpyLinspace, \
+                              NumpyZeros, NumpyLinspace, \
                               Stencil,ceil,Break, \
                               NumpyOnes, NumpyArray, Shape, Len, \
                               Dot, Min, Max,SIGN,IndexedElement,\
@@ -184,6 +184,7 @@ def builtin_function(name, args, lhs=None):
         insert_variable(lhs, **d_var)
         return NumpyArray(lhs, arr, d_var['shape'])
     elif name == "dot":
+        # TODO do we keep or treat inside math_bin?
         if lhs is None:
             return Dot(*args)
         else:
@@ -194,6 +195,10 @@ def builtin_function(name, args, lhs=None):
             expr = Dot(*args)
             return Assign(Symbol(lhs), expr)
     elif name in builtin_funcs_math_un:
+        if not(len(args) == 1):
+            raise ValueError("pow takes exactly one argument")
+
+        # TODO use capitalyze
         func = eval(name)
         if lhs is None:
             return func(*args)
@@ -204,18 +209,19 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
-    elif name == 'pow' :
+    elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):
             raise ValueError("pow takes exactly two arguments")
 
+        func = eval(name.capitalize())
         if lhs is None:
-            return Pow(*args)
+            return func(*args)
         else:
             d_var = {}
             # TODO get dtype from args
             d_var['datatype'] = 'float'
             insert_variable(lhs, **d_var)
-            expr = Pow(*args)
+            expr = func(*args)
             return Assign(Symbol(lhs), expr)
     elif name == 'len':
         if not(len(args) == 1):
@@ -1286,8 +1292,6 @@ class FactorBinary(ExpressionElement):
 
         if self.name == "pow":
             return Pow(expr_l, expr_r)
-        elif self.name == "rational":
-            return Rational(expr_l, expr_r)
         elif self.name == "max":
             return Max(expr_l, expr_r)
         elif self.name == "min":
@@ -1309,7 +1313,6 @@ class Term(ExpressionElement):
 
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
-            print "expr = ", operand.expr
             if operation == '*':
                 ret *= operand.expr
             else:

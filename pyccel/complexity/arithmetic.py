@@ -28,7 +28,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
-                              Rational, NumpyZeros, NumpyLinspace, \
+                              NumpyZeros, NumpyLinspace, \
                               Stencil,ceil, \
                               NumpyOnes, NumpyArray, Len, Dot, Min, Max,IndexedElement)
 

@@ -35,7 +35,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "Return", "Len", "Min", "Max", "Dot", \
            "NumpyZeros", "NumpyOnes", "NumpyArray", "NumpyLinspace", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
-           "IndexedElement", "Slice", "If", "MultiAssign", "Rational", \
+           "IndexedElement", "Slice", "If", "MultiAssign", \
            "Thread", "ThreadID", "ThreadsNumber", "Stencil"]
 
 class Assign(Basic):
@@ -1334,39 +1334,6 @@ class MultiAssign(Basic):
         args    = ', '.join(sstr(i) for i in self.trailer)
         outputs = ', '.join(sstr(i) for i in self.lhs)
         return '{2} := {0}({1})'.format(self.rhs, args, outputs)
-
-class Rational(Basic):
-    """Represents a Rational numbers statement in the code.
-    This is different from sympy.Rational, as it allows for symbolic numbers.
-
-    numerator : Symbol or int
-        numerator of the Rational number
-
-    denominator : Symbol or int
-        denominator of the Rational number
-
-    >>> from sympy import symbols
-    >>> from pyccel.types.ast import Rational
-    >>> x, y, z = symbols('x, y, z')
-    >>> a = x**2 + y*z
-    >>> b = 2
-    >>> Rational(a, b)
-    (x**2 + y*z) / (2)
-    """
-    def __new__(cls, numerator, denominator):
-        return Basic.__new__(cls, numerator, denominator)
-
-    @property
-    def numerator(self):
-        return self._args[0]
-
-    @property
-    def denominator(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '({0}) / ({1})'.format(sstr(self.numerator), sstr(self.denominator))
 
 # TODO: to rewrite
 class Thread(Basic):
