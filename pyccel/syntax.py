@@ -5,6 +5,7 @@ from numpy import asarray
 
 from ast import literal_eval
 
+from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy import Symbol, sympify, Integer, Float, Add, Mul
 from sympy import true, false,pi
@@ -17,6 +18,19 @@ from sympy import preorder_traversal
 from sympy import (Abs,sqrt,sin,cos,exp,log,csc, cos, \
                    sec, tan, cot, asin, acsc, acos, asec, atan,\
                    acot, atan2)
+
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr, AtomicExpr
+from sympy.core.compatibility import string_types
+from sympy.core.operations import LatticeOp
+from sympy.core.function import Derivative
+from sympy.core.function import _coeff_isneg
+from sympy.core.singleton import S
+from sympy.utilities.iterables import iterable
+from sympy import Integral, Symbol
+from sympy.simplify.radsimp import fraction
+from sympy.logic.boolalg import BooleanFunction
+
 
 from pyccel.types.ast import DataType
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
@@ -102,6 +116,100 @@ builtin_funcs  = ['zeros', 'ones', 'array', \
                   'len', 'shape']
 builtin_funcs += builtin_funcs_math
 # ...
+
+def get_attributs(expr):
+    """
+    finds attributs of the expression
+    """
+    if isinstance(expr, Expr):
+        d_var = {}
+        d_var['datatype']    = None
+        d_var['allocatable'] = None
+        d_var['shape']       = None
+        d_var['rank']        = None
+
+        args = [expr]
+        while args:
+            a = args.pop()
+            print ">>>>> ", a, type(a)
+
+            # XXX: This is a hack to support non-Basic args
+            if isinstance(a, string_types):
+                continue
+
+            if a.is_Rational:
+                #-1/3 = NEG + DIV
+                if a is not S.One:
+                    continue
+            elif a.is_Mul:
+                if _coeff_isneg(a):
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+                n, d = fraction(a)
+                if n.is_Integer:
+                    args.append(d)
+                    continue  # won't be -Mul but could be Add
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                    args.append(n)
+                    continue  # could be -Mul
+            elif a.is_Add:
+                aargs = list(a.args)
+                negs = 0
+                for i, ai in enumerate(aargs):
+                    if _coeff_isneg(ai):
+                        negs += 1
+                        args.append(-ai)
+                    else:
+                        args.append(ai)
+                continue
+            if a.is_Pow and a.exp is S.NegativeOne:
+                args.append(a.base)  # won't be -Mul but could be Add
+                continue
+            if (a.is_Mul or
+                a.is_Pow or
+                a.is_Function or
+                isinstance(a, Derivative) or
+                    isinstance(a, Integral)):
+
+                o = Symbol(a.func.__name__.upper())
+            if (not a.is_Symbol) and (not isinstance(a, IndexedElement)):
+                args.extend(a.args)
+            if isinstance(a, IndexedVariable):
+                print ">>>>> is_IndexedVariable : ", a
+                name = str(a)
+                if name in namespace:
+                    var = variables[name]
+
+                    d_var['datatype']    = var.dtype
+                    d_var['allocatable'] = var.allocatable
+                    d_var['shape']       = var.shape
+                    d_var['rank']        = var.rank
+            if isinstance(a, IndexedElement):
+                print ">>>>> is_IndexedElement : ", a
+                name = str(a.base)
+                if name in namespace:
+                    var = variables[name]
+
+                    d_var['datatype']    = var.dtype
+                    d_var['allocatable'] = var.allocatable
+                    d_var['shape']       = d_var['shape']
+                    d_var['rank']        = d_var['rank']
+            if (a.is_Symbol) and (not isinstance(a, IndexedVariable)):
+                print ">>>>> is_Symbol : ", a
+                name = str(a)
+                if name in namespace:
+                    var = variables[name]
+
+                    d_var['datatype']    = var.dtype
+                    d_var['allocatable'] = False
+                    d_var['shape']       = d_var['shape']
+                    d_var['rank']        = d_var['rank']
+
+    return d_var
 
 # TODO add kwargs
 def builtin_function(name, args, lhs=None):
@@ -407,16 +515,19 @@ def insert_variable(var_name, \
     is_integer = (datatype == 'int')
 
     # we first create a sympy symbol
-    s = Symbol(var_name, integer=is_integer)
+    if not allocatable:
+        s = Symbol(var_name, integer=is_integer)
+    else:
+        s = IndexedVariable(var_name)
 
     # we create a variable (for annotation)
     if not is_argument:
-        var = Variable(datatype, s, \
+        var = Variable(datatype, var_name, \
                        rank=rank, \
                        allocatable=allocatable, \
                        shape=shape)
     else:
-        var = InArgument(datatype, s, \
+        var = InArgument(datatype, var_name, \
                          rank=rank, \
                          allocatable=allocatable, \
                          shape=shape)
@@ -911,7 +1022,11 @@ class AssignStmt(BasicStmt):
 
             # TODO check if var is a return value
             rank = 0
-            d_var=Check_type(self.lhs,self.rhs)
+#            d_var = Check_type(self.lhs,self.rhs)
+            expr  = self.rhs.expr
+            d_var = get_attributs(expr)
+            print ">>>>> name : ", var_name
+            print "           : ", d_var
             insert_variable(var_name,rank=d_var['rank'],
                             datatype=d_var['datatype'],
                             allocatable=d_var['allocatable'],
@@ -923,6 +1038,7 @@ class AssignStmt(BasicStmt):
         """
         Process the Assign statement by returning a pyccel.types.ast object
         """
+        self.update()
         if isinstance(self.rhs, Expression):
             rhs = self.rhs.expr
 
@@ -954,10 +1070,12 @@ class AssignStmt(BasicStmt):
             args = self.trailer.expr
             l = IndexedVariable(str(self.lhs))[args]
 
-        l = Assign(l, rhs)
+        name = self.lhs
+        if not (name in namespace):
+            raise Exception("lhs must be declared in namespace.")
 
-        self.update()
-        return l
+        l = namespace[name]
+        return Assign(l, rhs)
 
 class MultiAssignStmt(BasicStmt):
     """
