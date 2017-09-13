@@ -229,6 +229,15 @@ class FCodePrinter(CodePrinter):
             return self._get_statement('size((/%s/),1)'%(st))
         else:
             return self._get_statement('size(%s,1)'%(expr.rhs))
+
+    def _print_Shape(self,expr):
+        code = ''
+        for i,a in enumerate(expr.lhs):
+            a_str = self._print(a)
+            r_str = self._print(expr.rhs)
+            code += '{0} = size({1}, {2})\n'.format(a_str, r_str, str(i+1))
+        return code
+
     def _print_Min(self,expr):
         if isinstance(expr.expr_l,list):
             st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'

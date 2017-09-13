@@ -780,9 +780,6 @@ class Break(Basic):
 class Len(Function):
     """
     Represents a 'len' expression in the code.
-
-    rhs: symbol or number
-        input for the len function
     """
     # TODO : remove later
     def __str__(self):
@@ -795,10 +792,33 @@ class Len(Function):
     def rhs(self):
         return self._args[0]
 
-#    # TODO do we keep it? improve it
-#    @property
-#    def str(self):
-#        return 'size('+str(self._args[0])+',1)'
+# TODO add example
+class Shape(Basic):
+    """Represents a 'shape' call in the code.
+
+    lhs : list Expr
+        list of assignable objects
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Shape
+    """
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        outputs = ', '.join(sstr(i) for i in self.lhs)
+        return '{1} := shape({0})'.format(self.rhs, outputs)
 
 # TODO: improve by using args
 # TODO: add example

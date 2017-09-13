@@ -30,7 +30,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               ThreadID, ThreadsNumber, \
                               Rational, NumpyZeros, NumpyLinspace, \
                               Stencil,ceil,Break, \
-                              NumpyOnes, NumpyArray, Len, Dot, Min, Max,SIGN,IndexedElement,\
+                              NumpyOnes, NumpyArray, Shape, Len, \
+                              Dot, Min, Max,SIGN,IndexedElement,\
                               GOrEq,LOrEq,Lthan,Gter)
 
 DEBUG = False
@@ -965,18 +966,21 @@ class MultiAssignStmt(BasicStmt):
         """Statement variables."""
         return self.lhs
 
-    def update(self):
+    @property
+    def expr(self):
         """
-        Update before processing the MultiAssign statement
+        Process the MultiAssign statement by returning a pyccel.types.ast object
         """
         datatype = 'float'
         name = str(self.name)
-        if not(name in namespace):
-            raise Exception('Undefined function/subroutine {}'.format(name))
-        else:
-            F = namespace[name]
-            if not(isinstance(F, FunctionDefStmt)):
-                raise Exception('Expecting a {0} for {1}'.format(type(F), name))
+
+        if not(name in ['shape']):
+            if not(name in namespace):
+                raise Exception('Undefined function/subroutine {}'.format(name))
+            else:
+                F = namespace[name]
+                if not(isinstance(F, FunctionDefStmt)):
+                    raise Exception('Expecting a {0} for {1}'.format(type(F), name))
 
         for var_name in self.lhs:
             if not(var_name in namespace):
@@ -987,12 +991,6 @@ class MultiAssignStmt(BasicStmt):
                 rank = 0
                 insert_variable(var_name, datatype=datatype, rank=rank)
 
-    @property
-    def expr(self):
-        """
-        Process the MultiAssign statement by returning a pyccel.types.ast object
-        """
-        self.update()
         lhs = self.lhs
         rhs = self.name
         if not(self.trailer is None):
@@ -1000,7 +998,12 @@ class MultiAssignStmt(BasicStmt):
         else:
             raise Exception('Expecting a trailer')
 
-        return MultiAssign(lhs, rhs, args)
+        if name == 'shape':
+            if not(len(args) == 1):
+                raise ValueError('shape takes only one argument.')
+            return Shape(lhs, args[0])
+        else:
+            return MultiAssign(lhs, rhs, args)
 
 class ForStmt(BasicStmt):
     """Class representing a For statement."""
@@ -1335,6 +1338,9 @@ class Operand(ExpressionElement):
             print self.op
 
         op = self.op
+        if op in ['shape']:
+            raise ValueError('shape function can not be used in an expression.')
+
         if type(op) == int:
             return Integer(op)
         elif is_Float(op):

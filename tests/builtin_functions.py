@@ -12,6 +12,7 @@ b1 = ones(64, double)
 b2 = ones(3,2)
 b3 = ones(5, int)
 b4 = ones((2,3), double)
+b5 = ones((2,3,4), double)
 
 c1 = array((1,2,3,5,8,5),int)
 c2 = array(((5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2)),int)
@@ -57,6 +58,9 @@ e17 = 3.0 + 2.0 * ceil(e) # problem with check_compatibility with ints
 
 n1 = len(c1)
 #n2 = 3 + 2 * len(c1)  # problem with check_compatibility
+
+l1, l2 = shape(a4)
+l3, l4, l5 = shape(b5)
 
 #z1 = dot(c1, c1)
 #z2 = 3.0 + 2.0 * dot(c1, c1)
