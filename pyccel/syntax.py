@@ -16,7 +16,7 @@ from sympy.core.function import Function
 from sympy import preorder_traversal
 from sympy import (Abs,sqrt,sin,cos,exp,log,csc, cos, \
                    sec, tan, cot, asin, acsc, acos, asec, atan,\
-                   acot, atan2,factorial)
+                   acot, atan2)
 
 from pyccel.types.ast import DataType
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
@@ -1251,10 +1251,7 @@ class FactorUnary(ExpressionElement, BasicStmt):
         expr = self.op.expr
         rhs=expr
 
-        if self.name=='factorial':
-            return factorial(rhs)
-        else:
-            raise Exeption('function note supported')
+        raise Exeption('function note supported')
 
         if self.trailer is None:
             return expr
