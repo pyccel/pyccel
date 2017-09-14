@@ -145,6 +145,9 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
+#    print '>>>>> expr = ', expr
+#    print '>>>>> type = ', type(expr)
+
     if isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
@@ -175,7 +178,7 @@ def get_attributs(expr):
         args = [expr]
         while args:
             a = args.pop()
-#            print ">>>> ", a, type(a)
+#            print ">>>> get_attributs ", a, type(a)
 
             # XXX: This is a hack to support non-Basic args
             if isinstance(a, string_types):
@@ -226,7 +229,32 @@ def get_attributs(expr):
             if isinstance(a, (Ceil, Len, Dot)):
                 d_var = get_attributs(a)
             if isinstance(a, Function):
-                continue
+                name = str(type(a).__name__)
+                avail_funcs = builtin_funcs
+                avail_funcs = []
+                for n, F in namespace.items():
+                    if isinstance(F, FunctionDefStmt):
+                        avail_funcs.append(str(n))
+                avail_funcs += builtin_funcs
+                if not(name in avail_funcs):
+                    raise Exception("Could not find function {0}".format(name))
+
+                if name in namespace:
+                    F = namespace[name].expr
+                    results = F.results
+
+                    if not(len(results) == 1):
+                        raise ValueError("Expecting a function with one return.")
+
+                    var = results[0]
+                    d_var['datatype']    = var.dtype
+                    d_var['allocatable'] = var.allocatable
+                    if not(var.shape is None):
+                        d_var['shape'] = var.shape
+                    if var.rank > 0:
+                        d_var['rank']  = var.rank
+                elif name in builtin_funcs:
+                    continue
             if isinstance(a, IndexedVariable):
                 d_var = get_attributs(a)
             if isinstance(a, IndexedElement):
@@ -239,8 +267,10 @@ def get_attributs(expr):
 
                     d_var['datatype']    = var.dtype
                     d_var['allocatable'] = False
-                    d_var['shape']       = d_var['shape']
-                    d_var['rank']        = d_var['rank']
+                    if not(var.shape is None):
+                        d_var['shape'] = var.shape
+                    if var.rank > 0:
+                        d_var['rank']  = var.rank
 
     return d_var
 
@@ -422,8 +452,9 @@ def insert_variable(var_name, \
         return
 
     if DEBUG:
-        print ">>> trying to insert : ", var_name
-        txt = '    datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
+#    if True:
+        print ">>>> trying to insert : ", var_name
+        txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
                 .format(datatype, rank, allocatable, shape, is_argument)
         print txt
 
@@ -941,33 +972,19 @@ class AssignStmt(BasicStmt):
 
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
-#            print ">>>>> name : ", var_name
-#            print "           : ", d_var
-            insert_variable(var_name,rank=d_var['rank'],
-                            datatype=d_var['datatype'],
-                            allocatable=d_var['allocatable'],
-                            shape=d_var['shape'])
+            print ">>>> AssignStmt : ", var_name
+            print "                : ", d_var
+            insert_variable(var_name, **d_var)
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
-#                print str(rhs), rhs, type(rhs)
-#                name = str(rhs)
-            # TODO this is not good for other language like c
             if name.lower() in builtin_funcs:
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=self.lhs)
             else:
-                # TODO do we keep it?
-                name = str(type(rhs).__name__)
-                F = namespace[name]
-                f_expr = F.expr
-                results = f_expr.results
-                result = results[0]
-                insert_variable(self.lhs, \
-                                datatype=result.dtype, \
-                                allocatable=result.allocatable, \
-                                shape=result.shape, \
-                                rank=result.rank)
+                # is FunctionDef
+                print ">>>> agrs : ", rhs.args
+                return MultiAssign([self.lhs], name, rhs.args)
 
         if self.trailer is None:
             l = namespace[self.lhs]
@@ -1487,8 +1504,6 @@ class ReturnStmt(FlowStmt):
         Process the return flow statement
         """
         self.update()
-#        print "namespace = ", namespace
-#        print "variables = ", variables
 
         decs = []
         # TODO depending on additional options from the grammar
@@ -1496,6 +1511,7 @@ class ReturnStmt(FlowStmt):
         for var_name in self.variables:
             if var_name in namespace:
                 var = variables[var_name]
+                print var_name, var
                 if isinstance(var, Variable):
                     res = Result(var.dtype, var_name, \
                                  rank=var.rank, \
@@ -1544,23 +1560,6 @@ class FunctionDefStmt(BasicStmt):
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
-    # TODO: closure?
-    def update(self):
-        """Inserts arguments that are not in the namespace."""
-        for arg_name in self.args:
-            if not(arg_name in namespace):
-                if DEBUG:
-                    print("> Found new argument" + arg_name)
-
-                # TODO define datatype, rank
-                # TODO check if arg is a return value
-                rank = 0
-                datatype = 'float'
-                insert_variable(arg_name, datatype=datatype, rank=rank,
-                                is_argument=True)
-            else:
-                print("+++ found already declared argument : ", arg_name)
-
     @property
     def local_vars(self):
         """returns the local variables of the body."""
@@ -1571,13 +1570,27 @@ class FunctionDefStmt(BasicStmt):
         """returns the statement variables of the body."""
         return self.body.stmt_vars
 
+    # TODO scoop
     @property
     def expr(self):
         """
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-        self.update()
+        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+#        for arg_name in self.args:
+#            if not(arg_name in namespace):
+#                if DEBUG:
+#                    print("> Found new argument" + arg_name)
+#
+#                # TODO define datatype, rank
+#                # TODO check if arg is a return value
+#                rank = 0
+#                datatype = 'float'
+#                insert_variable(arg_name, datatype=datatype, rank=rank,
+#                                is_argument=True)
+#            else:
+#                print("+++ found already declared argument : ", arg_name)
 
         name = str(self.name)
 
@@ -1591,15 +1604,16 @@ class FunctionDefStmt(BasicStmt):
         for arg_name, d in zip(self.args, h.dtypes):
             rank = 0
             for i in d[1]:
-                print i, type(i)
+#                print i, type(i)
                 if isinstance(i, Slice):
                     rank += 1
+#            print ">>>> rank = ", rank
             d_var = {}
             d_var['datatype']    = d[0]
             d_var['allocatable'] = False
             d_var['shape']       = None
             d_var['rank']        = rank
-            insert_variable(arg_name, **d_var)
+            insert_variable(arg_name, is_argument=True, **d_var)
 
         body = self.body.expr
 
@@ -1611,7 +1625,6 @@ class FunctionDefStmt(BasicStmt):
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
                 results += stmt.results
-        print "results : ", results
         # ...
 
         # ... cleaning the namespace
@@ -2379,8 +2392,8 @@ class HeaderStmt(BasicStmt):
             attributs.append(attr)
 
         self.dtypes = zip(dtypes, attributs)
-        print self.name
-        print self.dtypes
+#        print self.name
+#        print self.dtypes
 
     @property
     def expr(self):

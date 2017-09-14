@@ -350,7 +350,10 @@ class FCodePrinter(CodePrinter):
         decs = []
         body = expr.body
         func_end  = ''
-        if len(expr.results) == 1:
+        if (len(expr.results) == 1) and \
+           (expr.results[0].rank == 0) and \
+           (not expr.results[0].allocatable) :
+
             result = expr.results[0]
 
             body = []
@@ -365,21 +368,10 @@ class FCodePrinter(CodePrinter):
             ret_type = self._print(result.dtype)
             func_type = 'function'
 
-            if result.allocatable:
-                sig = 'function {0}'.format(name)
-                for n in [result.name, name]:
-                    var = Variable(result.dtype, n, \
-                                 rank=result.rank, \
-                                 allocatable=result.allocatable, \
-                                 shape=result.shape)
-
-                    dec = Declare(result.dtype, var)
-                    decs.append(dec)
-                body.append(Assign(Symbol(name), result.name))
-            else:
-                sig = '{0} function {1}'.format(ret_type, name)
-                func_end  = ' result({0})'.format(result.name)
-        elif len(expr.results) > 1:
+            sig = '{0} function {1}'.format(ret_type, name)
+            func_end  = ' result({0})'.format(result.name)
+#        elif len(expr.results) > 1:
+        else:
             for result in expr.results:
                 arg = OutArgument(result.dtype, result.name, \
                                   rank=result.rank, \
@@ -403,9 +395,9 @@ class FCodePrinter(CodePrinter):
                         decs.append(stmt)
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
-        else:
-            sig = 'subroutine ' + name
-            func_type = 'subroutine'
+#        else:
+#            sig = 'subroutine ' + name
+#            func_type = 'subroutine'
         out_code  = ', '.join(self._print(i) for i in out_args)
 
         arg_code  = ', '.join(self._print(i) for i in expr.arguments)
