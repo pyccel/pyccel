@@ -324,9 +324,9 @@ class Codegen(object):
                     modules += stmt.dotted_name.names
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
-#            elif isinstance(stmt, HeaderStmt):
-#                print ("***************")
-#                stmt.expr
+            elif isinstance(stmt, HeaderStmt):
+                # will add the function definition to headers in syntax
+                stmt.expr
             elif isinstance(stmt, ZerosLikeStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, AssignStmt):

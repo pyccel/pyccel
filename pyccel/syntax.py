@@ -88,6 +88,7 @@ __all__ = ["Pyccel", \
 
 # Global variable namespace
 namespace    = {}
+headers      = {}
 stack        = {}
 settings     = {}
 variables    = {}
@@ -584,6 +585,7 @@ class Pyccel(object):
 
         # ... reset global variables
         namespace    = {}
+        headers      = {}
         stack        = {}
         settings     = {}
         variables    = {}
@@ -1575,9 +1577,25 @@ class FunctionDefStmt(BasicStmt):
         pyccel.types.ast
         """
         self.update()
-        body = self.body.expr
 
         name = str(self.name)
+
+        if not(name in headers):
+            raise Exception("Function header could not be found.")
+
+        if not(len(self.args) == len(headers[name].dtypes)):
+            raise Exception("Wrong number of arguments in the header.")
+
+        h = headers[name]
+        for arg_name, d in zip(self.args, h.dtypes):
+            d_var = {}
+            d_var['datatype']    = d[0]
+            d_var['allocatable'] = False
+            d_var['shape']       = None
+            d_var['rank']        = 0
+            insert_variable(arg_name, **d_var)
+
+        body = self.body.expr
 
         args    = [variables[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
@@ -2345,4 +2363,6 @@ class HeaderStmt(BasicStmt):
 
     @property
     def expr(self):
-        return Header(self.name, self.dtypes)
+        h = Header(self.name, self.dtypes)
+        headers[self.name] = h
+        return h
