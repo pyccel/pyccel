@@ -95,7 +95,7 @@ HeaderStmt:
 ;
 
 DeclareAtom:
-  dtype=ID (attr=ID)?
+  dtype=ID (trailer=TrailerSubscriptList)?
 ;
 
 ImportStmt: 
@@ -319,7 +319,7 @@ TrailerSubscriptList:
 ;
 
 TrailerSubscript: 
-  (TrailerSlice | TrailerSliceLeft | TrailerSliceRight | Expression)
+  (TrailerSlice | TrailerSliceLeft | TrailerSliceRight | TrailerSliceEmpty | Expression)
 ;
 
 TrailerSliceLeft:
@@ -332,6 +332,10 @@ TrailerSliceRight:
 
 TrailerSlice:
   (start=Expression ':' end=Expression)
+;
+
+TrailerSliceEmpty:
+  (dots=':')
 ;
 
 Array:

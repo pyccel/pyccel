@@ -29,7 +29,8 @@ from pyccel.syntax import (Pyccel, \
                            # Trailers
                            ArgList, \
                            Trailer, TrailerArgList, TrailerSubscriptList, \
-                           TrailerSlice, TrailerSliceRight, TrailerSliceLeft
+                           TrailerSlice, TrailerSliceRight, \
+                           TrailerSliceLeft, TrailerSliceEmpty
                            )
 
 from pyccel.openmp.syntax import (OpenmpStmt, \
@@ -221,7 +222,8 @@ class PyccelParser(Parser):
                    # Trailers
                    ArgList, \
                    Trailer, TrailerArgList, TrailerSubscriptList, \
-                   TrailerSlice, TrailerSliceRight, TrailerSliceLeft
+                   TrailerSlice, TrailerSliceRight, \
+                   TrailerSliceLeft, TrailerSliceEmpty
                    ]
 
         classes += [OpenmpStmt, \

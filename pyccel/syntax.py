@@ -82,7 +82,8 @@ __all__ = ["Pyccel", \
            # Trailers
            "ArgList", \
            "Trailer", "TrailerArgList", "TrailerSubscriptList", \
-           "TrailerSlice", "TrailerSliceRight", "TrailerSliceLeft"
+           "TrailerSlice", "TrailerSliceRight", \
+           "TrailerSliceLeft", "TrailerSliceEmpty"
            ]
 
 
@@ -1588,11 +1589,16 @@ class FunctionDefStmt(BasicStmt):
 
         h = headers[name]
         for arg_name, d in zip(self.args, h.dtypes):
+            rank = 0
+            for i in d[1]:
+                print i, type(i)
+                if isinstance(i, Slice):
+                    rank += 1
             d_var = {}
             d_var['datatype']    = d[0]
             d_var['allocatable'] = False
             d_var['shape']       = None
-            d_var['rank']        = 0
+            d_var['rank']        = rank
             insert_variable(arg_name, **d_var)
 
         body = self.body.expr
@@ -1605,6 +1611,7 @@ class FunctionDefStmt(BasicStmt):
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
                 results += stmt.results
+        print "results : ", results
         # ...
 
         # ... cleaning the namespace
@@ -1915,6 +1922,7 @@ class TrailerSubscriptList(BasicTrailer):
                 arg = a.expr
                 args.append(arg)
             else:
+                print "found : ", type(a)
                 raise Exception('Wrong instance')
         return args
 
@@ -1995,6 +2003,17 @@ class TrailerSliceLeft(BasicSlice):
     A left Slice is of the form ':b'
     """
     pass
+
+class TrailerSliceEmpty(BasicSlice):
+    """
+    Class representing an empty Slice in the grammar.
+    An empty Slice is of the form ':'
+    """
+    def __init__(self, **kwargs):
+        """
+        """
+        self.dots  = kwargs.pop('dots')
+        super(TrailerSliceEmpty, self).__init__(**kwargs)
 
 class ThreadStmt(BasicStmt):
     """Class representing a Thread call function in the grammar."""
@@ -2356,10 +2375,12 @@ class HeaderStmt(BasicStmt):
         dtypes    = [dec.dtype for dec in self.decs]
         attributs = []
         for dec in self.decs:
-            attr = dec.attr
+            attr = dec.trailer.expr
             attributs.append(attr)
 
         self.dtypes = zip(dtypes, attributs)
+        print self.name
+        print self.dtypes
 
     @property
     def expr(self):
