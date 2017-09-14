@@ -5,6 +5,7 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.syntax import ( \
                            # statements
+                           HeaderStmt, \
                            DeclarationStmt, \
                            ConstructorStmt, \
                            DelStmt, \
@@ -323,6 +324,9 @@ class Codegen(object):
                     modules += stmt.dotted_name.names
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
+#            elif isinstance(stmt, HeaderStmt):
+#                print ("***************")
+#                stmt.expr
             elif isinstance(stmt, ZerosLikeStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, AssignStmt):

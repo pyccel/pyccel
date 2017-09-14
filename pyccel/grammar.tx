@@ -87,7 +87,15 @@ CommentStmt:
 ;
 
 AnnotatedStmt:
-  OpenmpStmt
+  HeaderStmt | OpenmpStmt
+;
+
+HeaderStmt: 
+  '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')'
+;
+
+DeclareAtom:
+  dtype=ID (attr=ID)?
 ;
 
 ImportStmt: 
@@ -202,9 +210,6 @@ NumpyZerosLikeStmt:
   lhs=ID '=' ZEROSLIKE LPAREN rhs=ID RPAREN
 ;
 
-NumpyArrayStmt:
-   lhs=ID '=' 'array' LPAREN rhs=ArrayOrMatrix ',' 'dtype' '=' dtype=DataType RPAREN
-;
 NUMBEROrSTRING:
   (NUMBER|STRING)
 ;

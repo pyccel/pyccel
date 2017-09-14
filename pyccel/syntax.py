@@ -34,7 +34,7 @@ from sympy.logic.boolalg import BooleanFunction
 
 
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
+from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               Argument, InArgument, InOutArgument, \
@@ -59,6 +59,7 @@ sign = Sign
 __all__ = ["Pyccel", \
            "Expression", "Term", "Operand", \
            "FactorSigned", \
+           "HeaderStmt", \
            # statements
            "AssignStmt", "MultiAssignStmt", "DeclarationStmt", \
            # compound stmts
@@ -2320,3 +2321,28 @@ class EvalStmt(BasicStmt):
             ls.append(stmt)
 
         return ls
+
+class HeaderStmt(BasicStmt):
+    """Base class representing a function header statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Header statement
+
+        Parameters
+        ==========
+        """
+        self.name = kwargs.pop('name')
+        self.decs = kwargs.pop('decs')
+
+        dtypes    = [dec.dtype for dec in self.decs]
+        attributs = []
+        for dec in self.decs:
+            attr = dec.attr
+            attributs.append(attr)
+
+        self.dtypes = zip(dtypes, attributs)
+
+    @property
+    def expr(self):
+        return Header(self.name, self.dtypes)

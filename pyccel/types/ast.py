@@ -37,7 +37,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "Zeros", "Ones", "Array", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
            "IndexedElement", "Slice", "If", "MultiAssign", \
-           "Thread", "ThreadID", "ThreadsNumber", "Stencil"]
+           "Thread", "ThreadID", "ThreadsNumber", "Stencil", "Header"]
 
 class Assign(Basic):
     """Represents variable assignment for code generation.
@@ -1401,3 +1401,47 @@ class Stencil(Basic):
     @property
     def step(self):
         return self._args[2]
+
+# TODO add example
+class Header(Basic):
+    """Represents function/subroutine header in the code.
+
+    func: str
+        function/subroutine name
+
+    dtypes: tuple/list
+        a list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr)
+
+    Examples
+
+    >>> from pyccel.types.ast import Header
+    >>> Header('f', 'double')
+    """
+
+    def __new__(cls, func, dtypes):
+        if not(iterable(dtypes)):
+            raise TypeError("Expecting dtypes to be iterable.")
+
+        types = []
+        for d in dtypes:
+            if isinstance(d, str):
+                types.append((datatype(d), []))
+            elif isinstance(d, DataType):
+                types.append((d, []))
+            elif isinstance(d, (tuple, list)):
+                if not(len(d) == 2):
+                    raise ValueError("Expecting exactly two entries.")
+                types.append(d)
+            else:
+                raise TypeError("Wrong element in dtypes.")
+        return Basic.__new__(cls, func, types)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def dtypes(self):
+        return self._args[1]
+
