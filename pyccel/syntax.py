@@ -142,7 +142,33 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-    if isinstance(expr, Expr):
+    if isinstance(expr, ceil):
+        d_var['datatype']    = 'int'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+    elif isinstance(expr, Dot):
+        d_var['datatype']    = dtype_from_args(expr.args)
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+    elif isinstance(expr, IndexedVariable):
+        name = str(expr)
+        if name in namespace:
+            var = variables[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
+    elif isinstance(expr, IndexedElement):
+        name = str(expr.base)
+        if name in namespace:
+            var = variables[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = d_var['shape']
+            d_var['rank']        = d_var['rank']
+    elif isinstance(expr, Expr):
         args = [expr]
         while args:
             a = args.pop()
@@ -216,33 +242,6 @@ def get_attributs(expr):
                     d_var['allocatable'] = False
                     d_var['shape']       = d_var['shape']
                     d_var['rank']        = d_var['rank']
-
-    elif isinstance(expr, ceil):
-        d_var['datatype']    = 'int'
-        d_var['allocatable'] = False
-        d_var['rank']        = 0
-    elif isinstance(expr, Dot):
-        d_var['datatype']    = dtype_from_args(expr.args)
-        d_var['allocatable'] = False
-        d_var['rank']        = 0
-    elif isinstance(expr, IndexedVariable):
-        name = str(expr)
-        if name in namespace:
-            var = variables[name]
-
-            d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape']       = var.shape
-            d_var['rank']        = var.rank
-    elif isinstance(expr, IndexedElement):
-        name = str(expr.base)
-        if name in namespace:
-            var = variables[name]
-
-            d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape']       = d_var['shape']
-            d_var['rank']        = d_var['rank']
 
     return d_var
 
