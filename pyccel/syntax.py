@@ -15,9 +15,10 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy import preorder_traversal
-from sympy import (Abs,sqrt,sin,cos,exp,log,csc, cos, \
-                   sec, tan, cot, asin, acsc, acos, asec, atan,\
-                   acot, atan2)
+from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
+                   csc,  cos,  sec,  tan,  cot,  asin, \
+                   acsc, acos, asec, atan, acot, atan2)
+
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr, AtomicExpr
@@ -42,9 +43,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
-                              NumpyZeros, NumpyLinspace, \
-                              Stencil,ceil,Break, \
-                              NumpyOnes, NumpyArray, Shape, Len, \
+                              Stencil, Ceil, Break, \
+                              Zeros, Ones, Array, Shape, Len, \
                               Dot, Min, Max,Sign,IndexedElement,\
                               GOrEq,LOrEq,Lthan,Gter)
 
@@ -142,7 +142,7 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-    if isinstance(expr, ceil):
+    if isinstance(expr, Ceil):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
@@ -222,7 +222,7 @@ def get_attributs(expr):
                 args.extend(a.args)
             if isinstance(a, Dot):
                 d_var = get_attributs(a)
-            if isinstance(a, ceil):
+            if isinstance(a, Ceil):
                 d_var = get_attributs(a)
             if isinstance(a, Function):
 #                print ">>>>> is_Function : ", a
@@ -315,19 +315,19 @@ def builtin_function(name, args, lhs=None):
             raise ValueError("Expecting a lhs.")
         d_var = get_arguments()
         insert_variable(lhs, **d_var)
-        return NumpyZeros(lhs, d_var['shape'])
+        return Zeros(lhs, d_var['shape'])
     elif name == "ones":
         if not lhs:
             raise ValueError("Expecting a lhs.")
         d_var = get_arguments()
         insert_variable(lhs, **d_var)
-        return NumpyOnes(lhs, d_var['shape'])
+        return Ones(lhs, d_var['shape'])
     elif name == "array":
         if not lhs:
             raise ValueError("Expecting a lhs.")
         d_var, arr = get_arguments_array()
         insert_variable(lhs, **d_var)
-        return NumpyArray(lhs, arr, d_var['shape'])
+        return Array(lhs, arr, d_var['shape'])
     elif name == "dot":
         # TODO do we keep or treat inside math_bin?
         if lhs is None:
@@ -342,8 +342,14 @@ def builtin_function(name, args, lhs=None):
         if not(len(args) == 1):
             raise ValueError("pow takes exactly one argument")
 
-        # TODO use capitalyze
-        func = eval(name)
+        try:
+            func = eval(name.capitalize())
+        except:
+            try:
+                func = eval(name)
+            except:
+                raise ValueError("eval failed for {0}".format(name))
+
         if lhs is None:
             return func(*args)
         else:
@@ -360,7 +366,14 @@ def builtin_function(name, args, lhs=None):
         if not(len(args) == 2):
             raise ValueError("pow takes exactly two arguments")
 
-        func = eval(name.capitalize())
+        try:
+            func = eval(name.capitalize())
+        except:
+            try:
+                func = eval(name)
+            except:
+                raise ValueError("eval failed for {0}".format(name))
+
         if lhs is None:
             return func(*args)
         else:
@@ -1254,9 +1267,10 @@ class Term(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             if operation == '*':
-                ret *= operand.expr
+                ret = Mul(ret, operand.expr)
             else:
-                ret /= operand.expr
+                a   = Pow(operand.expr, -1)
+                ret = Mul(ret, a)
         return ret
 
 class Expression(ExpressionElement):
@@ -1274,9 +1288,10 @@ class Expression(ExpressionElement):
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
 
             if operation == '+':
-                ret += operand.expr
+                ret = Add(ret, operand.expr)
             else:
-                ret -= operand.expr
+                a   = Mul(-1, operand.expr)
+                ret = Add(ret, a)
 
         return ret
 
@@ -1616,7 +1631,7 @@ class FunctionDefStmt(BasicStmt):
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
 
-class NumpyZerosLikeStmt(AssignStmt):
+class ZerosLikeStmt(AssignStmt):
     """Class representing a zeroslike function call."""
     def __init__(self, **kwargs):
         """
@@ -1668,7 +1683,7 @@ class NumpyZerosLikeStmt(AssignStmt):
         var_name = self.lhs
         var = Symbol(var_name)
 
-        stmt = NumpyZeros(var, shape)
+        stmt = Zeros(var, shape)
 
         return stmt
 
@@ -2318,7 +2333,7 @@ class EvalStmt(BasicStmt):
             var = namespace[l]
 #            print type(r)
             if isinstance(r, ndarray):
-                stmt = NumpyArray(var, r, shape)
+                stmt = Array(var, r, shape)
             else:
                 stmt = Assign(var, r)
 

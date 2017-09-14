@@ -22,7 +22,8 @@ from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
-# TODO: rename ceil to Ceil
+
+# TODO: rename Ceil to Ceil
 # TODO: clean Thread objects
 # TODO: update code examples
 # TODO: add _sympystr whenever it's possible
@@ -31,9 +32,9 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
            "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
            "Argument", "Result", "InArgument", "OutArgument", \
-           "InOutArgument", "FunctionDef", "ceil", "Import", "Declare", \
+           "InOutArgument", "FunctionDef", "Ceil", "Import", "Declare", \
            "Return", "Len", "Min", "Max", "Dot", \
-           "NumpyZeros", "NumpyOnes", "NumpyArray", "NumpyLinspace", \
+           "Zeros", "Ones", "Array", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
            "IndexedElement", "Slice", "If", "MultiAssign", \
            "Thread", "ThreadID", "ThreadsNumber", "Stencil"]
@@ -659,8 +660,8 @@ class FunctionDef(Basic):
     def global_vars(self):
         return self._args[5]
 
-# TODO: rename and add example
-class ceil(Basic):
+# TODO: improve with __new__ from Function and add example
+class Ceil(Function):
     """
     Represents ceil expression in the code.
 
@@ -885,7 +886,7 @@ class Sign(Basic):
     def rhs(self):
         return self.args[0]
 
-class NumpyZeros(Basic):
+class Zeros(Basic):
     """Represents variable assignment using numpy.zeros for code generation.
 
     lhs : Expr
@@ -899,9 +900,9 @@ class NumpyZeros(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import NumpyZeros
+    >>> from pyccel.types.ast import Zeros
     >>> n,m,x = symbols('n,m,x')
-    >>> NumpyZeros(x, (n,m))
+    >>> Zeros(x, (n,m))
     x := 0
     """
     # TODO improve in the spirit of assign
@@ -940,7 +941,7 @@ class NumpyZeros(Basic):
     def shape(self):
         return self._args[1]
 
-class NumpyOnes(Basic):
+class Ones(Basic):
     """
     Represents variable assignment using numpy.ones for code generation.
 
@@ -980,7 +981,7 @@ class NumpyOnes(Basic):
         return self._args[1]
 
 # TODO: add example
-class NumpyArray(Basic):
+class Array(Basic):
     """Represents variable assignment using numpy.array for code generation.
 
     lhs : Expr
@@ -1028,54 +1029,6 @@ class NumpyArray(Basic):
     @property
     def shape(self):
         return self._args[2]
-
-# TODO: remove
-class NumpyLinspace(Basic):
-    """Represents variable assignment using numpy.linspace for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    start: expression
-        minimum of the grid
-    end: expression
-        maximum of the grid
-    size: int, Expr
-        number of elements of the grid
-    """
-
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs, start, end, size):
-        lhs   = _sympify(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs, start, end, size)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def start(self):
-        return self._args[1]
-
-    @property
-    def end(self):
-        return self._args[2]
-
-    @property
-    def size(self):
-        return self._args[3]
 
 class Print(Basic):
     """Represents a print function in the code.

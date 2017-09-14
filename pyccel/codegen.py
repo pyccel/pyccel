@@ -20,7 +20,7 @@ from pyccel.syntax import ( \
                            # python standard library statements
                            PythonPrintStmt, \
                            # numpy statments
-                           NumpyZerosLikeStmt, \
+                           ZerosLikeStmt, \
                            )
 
 from pyccel.openmp.syntax import OpenmpStmt
@@ -323,7 +323,7 @@ class Codegen(object):
                     modules += stmt.dotted_name.names
             elif isinstance(stmt, DeclarationStmt):
                 decs = stmt.expr
-            elif isinstance(stmt, NumpyZerosLikeStmt):
+            elif isinstance(stmt, ZerosLikeStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, AssignStmt):
                 body += printer(stmt.expr) + "\n"

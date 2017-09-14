@@ -22,9 +22,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
-                              NumpyZeros, NumpyLinspace, \
-                              Stencil,ceil, \
-                              NumpyOnes, NumpyArray, Len, Dot, Min, Max,IndexedElement)
+                              Stencil, \
+                              Zeros, Ones, Array, Len, Dot, Min, Max,IndexedElement)
 
 from pyccel.complexity.basic      import Complexity
 from pyccel.complexity.arithmetic import count_ops
@@ -88,7 +87,7 @@ def count_access(expr, visual=True, local_vars=[]):
             local_vars.append(e)
         ops = [count_access(i, visual=visual, local_vars=local_vars) for i in expr.body]
         ops = [i * (e-b) for i in ops]
-    elif isinstance(expr, (NumpyZeros, NumpyOnes)):
+    elif isinstance(expr, (Zeros, Ones)):
         ops = []
 
     if not ops:

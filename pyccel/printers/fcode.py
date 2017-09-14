@@ -168,7 +168,7 @@ class FCodePrinter(CodePrinter):
                                                          step_code, lhs_code)
         return self._get_statement(code)
 
-    def _print_NumpyZeros(self, expr):
+    def _print_Zeros(self, expr):
         lhs_code   = self._print(expr.lhs)
 
         if isinstance(expr.shape, Tuple):
@@ -181,7 +181,7 @@ class FCodePrinter(CodePrinter):
 #        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
         return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
 
-    def _print_NumpyOnes(self, expr):
+    def _print_Ones(self, expr):
         lhs_code   = self._print(expr.lhs)
 
         if isinstance(expr.shape, Tuple):
@@ -193,16 +193,7 @@ class FCodePrinter(CodePrinter):
 #        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
         return self._get_statement("allocate(%s(%s)) ; %s = 1" % (lhs_code, shape_code, lhs_code))
 
-
-    def _print_NumpyLinspace(self, expr):
-        lhs_code   = self._print(expr.lhs)
-        start_code = self._print(expr.start)
-        end_code   = self._print(expr.end)
-        size_code  = self._print(expr.size)
-
-        return self._get_statement("%s = linspace(%s, %s, %s)" % \
-                                   (lhs_code, start_code, end_code, size_code))
-    def _print_NumpyArray(self,expr):
+    def _print_Array(self,expr):
         lhs_code   = self._print(expr.lhs)
 
         if len(expr.shape)>1:
@@ -271,7 +262,7 @@ class FCodePrinter(CodePrinter):
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l),self._print(expr.expr_r)))
 
-    def _print_ceil(self,expr):
+    def _print_Ceil(self,expr):
         return self._get_statement('ceiling(%s)'%(self._print(expr.rhs)))
 
     def _print_Sign(self,expr):

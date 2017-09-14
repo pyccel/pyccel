@@ -57,7 +57,7 @@ e12 = 3.0 + 2.0 * atan(e)
 e14 = 3.0 + 2.0 * atan(e)
 #e15 = 3.0 + 2.0 * csc (e)
 #e16 = 3.0 + 2.0 * sec (e)
-e17 = 3.0 + 2.0 * ceil(e) # problem with check_compatibility with ints
+e17 = 3 + 2 * ceil(e)
 e18 = 3.0 + 2.0 * pow(e, 3)
 e19 = 3.0 + 2.0 * sign(e)
 
