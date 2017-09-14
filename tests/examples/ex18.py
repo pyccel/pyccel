@@ -1,7 +1,7 @@
 def F(t):
     y=pow(t,2)
     return y
-xStart=array([1,2,5],dtype=float)
+xStart=array((1,2,5),float)
 side=0.1
 tol=1.0e-6
 n = len(xStart)

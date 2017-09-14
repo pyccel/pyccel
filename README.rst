@@ -390,3 +390,16 @@ TODO
 - LAPACK
 
 - symbolic expressions (find a way to use directly functions that are defined in *sympy*)
+
+Validation
+**********
+
+OK tests
+********
+
+ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex14, ex16, ex17, ex19 
+
+KO tests
+********
+
+ex12, ex13, ex15, ex18

@@ -3,7 +3,7 @@ def A(x):
     z=x[1]+x[2]+x[3]
     t=x[1]+x[2]+x[3]
     return y,z,t
-    
+
 x=array([0,0,0],dtype=float)
 b=array([2,5,-1],dtype=float)
 tol=1.0e-9

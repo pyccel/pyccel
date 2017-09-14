@@ -1,6 +1,9 @@
-n = 5000
-m = 7000
-p = 5000
+n = int()
+m = int()
+p = int()
+n = 50
+m = 70
+p = 50
 a = zeros((n,m), double)
 b = zeros((m,p), double)
 c = zeros((n,p), double)

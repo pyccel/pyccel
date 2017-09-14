@@ -66,6 +66,3 @@ n4 = 3 + 2 * len(c1)
 
 l1, l2 = shape(a4)
 l3, l4, l5 = shape(b5)
-
-#z1 = dot(c1, c1)
-#z2 = 3.0 + 2.0 * dot(c1, c1)
