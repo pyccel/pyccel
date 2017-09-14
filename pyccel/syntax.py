@@ -142,7 +142,7 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-    if isinstance(expr, Ceil):
+    if isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
@@ -220,12 +220,9 @@ def get_attributs(expr):
             if     (not a.is_Symbol) \
                and (not isinstance(a, (IndexedElement, Function))):
                 args.extend(a.args)
-            if isinstance(a, Dot):
-                d_var = get_attributs(a)
-            if isinstance(a, Ceil):
+            if isinstance(a, (Ceil, Len, Dot)):
                 d_var = get_attributs(a)
             if isinstance(a, Function):
-#                print ">>>>> is_Function : ", a
                 continue
             if isinstance(a, IndexedVariable):
                 d_var = get_attributs(a)
@@ -233,7 +230,6 @@ def get_attributs(expr):
                 d_var = get_attributs(a)
             if (a.is_Symbol) \
                and (not isinstance(a, (IndexedVariable, Function))):
-#                print ">>>>> is_Symbol : ", a
                 name = str(a)
                 if name in namespace:
                     var = variables[name]
@@ -338,7 +334,7 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             expr = Dot(*args)
             return Assign(Symbol(lhs), expr)
-    elif name in builtin_funcs_math_un:
+    elif name in builtin_funcs_math_un + ['len']:
         if not(len(args) == 1):
             raise ValueError("pow takes exactly one argument")
 
@@ -355,7 +351,7 @@ def builtin_function(name, args, lhs=None):
         else:
             d_var = {}
             # TODO get dtype from args
-            if name in ['ceil']:
+            if name in ['ceil', 'len']:
                 d_var['datatype'] = 'int'
             else:
                 d_var['datatype'] = 'float'
@@ -382,20 +378,6 @@ def builtin_function(name, args, lhs=None):
             d_var['datatype'] = 'float'
             insert_variable(lhs, **d_var)
             expr = func(*args)
-            return Assign(Symbol(lhs), expr)
-    elif name == 'len':
-        if not(len(args) == 1):
-            raise ValueError("len takes only one argument")
-
-        arg = args[0]
-        if lhs is None:
-            return Len(arg)
-        else:
-            d_var = {}
-            d_var['datatype'] = 'int'
-            insert_variable(lhs, **d_var)
-
-            expr = Len(arg)
             return Assign(Symbol(lhs), expr)
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
@@ -1243,9 +1225,7 @@ class FactorSigned(ExpressionElement, BasicStmt):
                         ls.append(i)
                 args = ls
                 name = str(expr)
-                if name in builtin_funcs_math:
-                    expr = builtin_function(name, args)
-                elif name == 'len':
+                if name in builtin_funcs_math + ['len']:
                     expr = builtin_function(name, args)
                 else:
                     expr = Function(str(expr))(*args)
