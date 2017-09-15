@@ -23,6 +23,7 @@ from pyccel.syntax import ( \
                            # numpy statments
                            ZerosLikeStmt, \
                            )
+from pyccel.types.ast import subs
 
 from pyccel.openmp.syntax import OpenmpStmt
 
@@ -340,8 +341,13 @@ class Codegen(object):
             elif isinstance(stmt, IfStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, FunctionDefStmt):
+                expr = stmt.expr
+                if len(expr.results) == 1:
+                    result = expr.results[0]
+                    if result.allocatable:
+                        expr = subs(expr, result.name, expr.name)
                 sep = separator()
-                routines += sep + printer(stmt.expr) + "\n" \
+                routines += sep + printer(expr) + "\n" \
                           + sep + '\n'
             elif isinstance(stmt, PythonPrintStmt):
                 body += printer(stmt.expr) + "\n"

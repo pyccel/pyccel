@@ -47,6 +47,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
 # TODO treat Slice case
 # TODO treat Thread cases
 # TODO treat Stencil case
+# TODO treat Header case
 def subs(expr, a_old, a_new):
     """
     Substitutes old for new in an expression after sympifying args.
@@ -66,6 +67,29 @@ def subs(expr, a_old, a_new):
 
     if iterable(expr):
         return [subs(i, a_old, a_new) for i in expr]
+    elif isinstance(expr, Variable):
+        if expr.name == a_old:
+            args = [expr.dtype, a_new]
+
+            d_var = {}
+            d_var['allocatable'] = expr.allocatable
+            d_var['shape']       = expr.shape
+            d_var['rank']        = expr.rank
+
+            if isinstance(expr, Result):
+                return Result(*args, **d_var)
+            elif isinstance(expr, InArgument):
+                return InArgument(*args, **d_var)
+            elif isinstance(expr, OutArgument):
+                return OutArgument(*args, **d_var)
+            elif isinstance(expr, InOutArgument):
+                return InOutArgument(*args, **d_var)
+            elif isinstance(expr, Argument):
+                return Argument(*args, **d_var)
+            else:
+                return Variable(*args, **d_var)
+        else:
+            return expr
     elif isinstance(expr, Expr):
         return expr.subs({a_old: a_new})
     elif isinstance(expr, Assign):
@@ -96,9 +120,20 @@ def subs(expr, a_old, a_new):
             s = subs(stmts, a_old, a_new)
             args.append((t,s))
         return If(*args)
+    elif isinstance(expr, FunctionDef):
+        name        = subs(expr.name, a_old, a_new)
+        arguments   = subs(expr.arguments, a_old, a_new)
+        results     = subs(expr.results, a_old, a_new)
+        body        = subs(expr.body, a_old, a_new)
+        print ("body = ", body)
+        local_vars  = subs(expr.local_vars, a_old, a_new)
+        global_vars = subs(expr.global_vars, a_old, a_new)
+        return FunctionDef(name, arguments, results, \
+                           body, local_vars, global_vars)
     elif isinstance(expr, Declare):
         dtype     = subs(expr.dtype, a_old, a_new)
         variables = subs(expr.variables, a_old, a_new)
+        print (expr.variables, variables)
         return Declare(dtype, variables)
     elif isinstance(expr, Return):
         return Return(subs(expr.results, a_old, a_new))
@@ -623,7 +658,8 @@ class FunctionDef(Basic):
     FunctionDef(f, (InArgument(NativeFloat(), x, 0, False, None), InArgument(NativeInteger(), n, 0, False, None)), (Result(NativeFloat(), y, 0, False, None),), [y := n + x], [], [])
     """
 
-    def __new__(cls, name, arguments, results, body, local_vars, global_vars):
+    def __new__(cls, name, arguments, results, \
+                body, local_vars, global_vars):
         # name
         if isinstance(name, str):
             name = Symbol(name)

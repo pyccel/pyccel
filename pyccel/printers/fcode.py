@@ -369,25 +369,13 @@ class FCodePrinter(CodePrinter):
 
             if result.allocatable:
                 sig = 'function {0}'.format(name)
-                var = Variable(result.dtype, name, \
+                var = Variable(result.dtype, result.name, \
                              rank=result.rank, \
                              allocatable=result.allocatable, \
                              shape=result.shape)
 
                 dec = Declare(result.dtype, var)
                 decs.append(dec)
-                _body = []
-                for e in body:
-                    r = result.name
-                    a = Symbol(name)
-                    var = Variable(result.dtype, name, \
-                                 rank=result.rank, \
-                                 allocatable=result.allocatable, \
-                                 shape=result.shape)
-                    s_r = Symbol(str(result.name))
-                    s_f = Symbol(str(name))
-                    _body.append(subs(e, s_r, s_f))
-                body = _body
             else:
                 sig = '{0} function {1}'.format(ret_type, name)
                 func_end  = ' result({0})'.format(result.name)
