@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 from numpy import ndarray
 
+from sympy.core.expr import Expr
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
@@ -56,10 +57,31 @@ def subs(expr, a_old, a_new):
         a_old = Symbol(a_old)
     if isinstance(a_new, str):
         a_new = Symbol(a_new)
-    if isinstance(expr, Assign):
-        e_rhs = expr.rhs.subs({a_old: a_new})
-        e_lhs = expr.lhs.subs({a_old: a_new})
+
+    if iterable(expr):
+        return [subs(i, a_old, a_new) for i in expr]
+    elif isinstance(expr, Expr):
+        return expr.subs({a_old: a_new})
+    elif isinstance(expr, Assign):
+        e_rhs = subs(expr.rhs, a_old, a_new)
+        e_lhs = subs(expr.lhs, a_old, a_new)
         return Assign(e_lhs, e_rhs, strict=False)
+    elif isinstance(expr, While):
+        test = subs(expr.test, a_old, a_new)
+        body = subs(expr.body, a_old, a_new)
+        return While(test, body)
+    elif isinstance(expr, For):
+        # TODO treat iter correctly
+        target = subs(expr.target, a_old, a_new)
+        iter = subs(expr.iter, a_old, a_new)
+        body = subs(expr.body, a_old, a_new)
+        return For(target, iter, body)
+    elif isinstance(expr, Declare):
+        dtype     = subs(expr.dtype, a_old, a_new)
+        variables = subs(expr.variables, a_old, a_new)
+        return Declare(dtype, variables)
+    elif isinstance(expr, Return):
+        return Return(subs(expr.results, a_old, a_new))
     else:
         return expr
 
@@ -784,7 +806,6 @@ class Return(Basic):
 
     expr : sympy expr
         The expression to return.
-
     """
 
     def __new__(cls, expr):
@@ -792,8 +813,9 @@ class Return(Basic):
         return Basic.__new__(cls, expr)
 
     @property
-    def expr(self):
+    def results(self):
         return self._args[0]
+
 class Break(Basic):
     """Represents a function return in the code.
 
