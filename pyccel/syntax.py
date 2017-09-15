@@ -44,9 +44,9 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Stencil, Ceil, Break, \
-                              Zeros, Ones, Array, Shape, Len, \
-                              Dot, Min, Max,Sign,IndexedElement,\
-                              GOrEq,LOrEq,Lthan,Gter)
+                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
+                              Dot, Min, Max, Sign, IndexedElement,\
+                              GOrEq, LOrEq, Lthan, Gter)
 
 DEBUG = False
 #DEBUG = True
@@ -115,7 +115,7 @@ builtin_funcs_math_bin = ['dot', 'pow']
 builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
-builtin_funcs  = ['zeros', 'ones', 'array', \
+builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', \
                   'len', 'shape']
 builtin_funcs += builtin_funcs_math
 # ...
@@ -357,6 +357,26 @@ def builtin_function(name, args, lhs=None):
         d_var, arr = get_arguments_array()
         insert_variable(lhs, **d_var)
         return Array(lhs, arr, d_var['shape'])
+    elif name == "zeros_like":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) == 1):
+            raise ValueError("Expecting exactly one argument.")
+        if not(str(args[0]) in namespace):
+            raise ValueError("Undefined variable {0}".format(name))
+
+        name = str(args[0])
+        var = variables[name]
+
+        d_var = {}
+        d_var['datatype']    = var.dtype
+        d_var['allocatable'] = var.allocatable
+        d_var['shape']       = var.shape
+        d_var['rank']        = var.rank
+
+        insert_variable(lhs, **d_var)
+        return ZerosLike(lhs, d_var['shape'])
+#        return ZerosLike(lhs, var)
     elif name == "dot":
         # TODO do we keep or treat inside math_bin?
         if lhs is None:
@@ -1649,62 +1669,6 @@ class FunctionDefStmt(BasicStmt):
         global_vars = []
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
-
-class ZerosLikeStmt(AssignStmt):
-    """Class representing a zeroslike function call."""
-    def __init__(self, **kwargs):
-        """
-        Constructor for a zeros function call.
-
-        Parameters
-        ==========
-        lhs: str
-            variable name to create
-        rhs: str
-            input variable name
-        """
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = kwargs.pop('rhs')
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns the statement variables."""
-        return [self.lhs]
-
-    def update(self):
-        """updates the zeroslike function call."""
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print("> Found new variable " + var_name)
-        v=variables[self.rhs]
-
-        insert_variable(var_name, \
-                            datatype=v.dtype, \
-                            rank=v.rank, \
-                            allocatable=v.allocatable,shape=v.shape)
-
-    @property
-    def expr(self):
-        """
-        Process the zeroslike statement,
-        by returning the appropriate object from pyccel.types.ast
-        """
-        self.update()
-        v=variables[self.rhs]
-        shape = v.shape
-
-        if shape==None:
-            shape=1
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        stmt = Zeros(var, shape)
-
-        return stmt
 
 class ImportFromStmt(BasicStmt):
     """Class representing an Import statement in the grammar."""

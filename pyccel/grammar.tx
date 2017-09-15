@@ -206,17 +206,12 @@ StencilStmt:
   lhs=ID '=' 'stencil' LPAREN parameters+=ParameterSingle[','] RPAREN 
 ;
 
-NumpyZerosLikeStmt: 
-  lhs=ID '=' ZEROSLIKE LPAREN rhs=ID RPAREN
-;
-
 NUMBEROrSTRING:
   (NUMBER|STRING)
 ;
 ArrayOrMatrix:
-(Array|Matrix)
+  (Array | Matrix)
 ;
-
 
 ArrayOrID:
  ('[' NUMBEROrSTRING (',' NUMBEROrSTRING)* ']')|(ID)

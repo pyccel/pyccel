@@ -20,8 +20,6 @@ from pyccel.syntax import ( \
                            StencilStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
-                           # numpy statments
-                           ZerosLikeStmt, \
                            )
 from pyccel.types.ast import subs
 
@@ -328,8 +326,6 @@ class Codegen(object):
             elif isinstance(stmt, HeaderStmt):
                 # will add the function definition to headers in syntax
                 stmt.expr
-            elif isinstance(stmt, ZerosLikeStmt):
-                body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, AssignStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, MultiAssignStmt):

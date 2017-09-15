@@ -22,8 +22,6 @@ from pyccel.syntax import (Pyccel, \
                            StencilStmt, \
                            # python standard library statements
                            PythonPrintStmt, \
-                           # numpy statments
-                           ZerosLikeStmt, \
                            # test bool
                            Test, OrTest, AndTest, NotTest, Comparison, \
                            # Trailers
@@ -215,8 +213,6 @@ class PyccelParser(Parser):
                    StencilStmt, \
                    # python standard library statements
                    PythonPrintStmt, \
-                   # numpy statments
-                   ZerosLikeStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers

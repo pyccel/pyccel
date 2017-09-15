@@ -216,6 +216,19 @@ class FCodePrinter(CodePrinter):
             code += '{0} = (/{1}/)'.format(lhs_code, st)
         return code
 
+    def _print_ZerosLike(self, expr):
+        lhs_code   = self._print(expr.lhs)
+
+        if isinstance(expr.shape, Tuple):
+            # this is a correction. problem on LRZ
+            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
+        elif isinstance(expr.shape,str):
+            shape_code = '0:' + self._print(expr.shape) + '-1'
+        else:
+            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
+#        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
+        return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
+
     def _print_Len(self,expr):
         if isinstance(expr.rhs,list):
             st=','.join([str(i) for i in expr.rhs])
