@@ -39,6 +39,31 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "IndexedElement", "Slice", "If", "MultiAssign", \
            "Thread", "ThreadID", "ThreadsNumber", "Stencil", "Header"]
 
+# TODO add examples
+def subs(expr, a_old, a_new):
+    """
+    Substitutes old for new in an expression after sympifying args.
+
+    a_old: str, Symbol
+        name of the symbol to replace
+    a_new: str, Symbol
+        name of the new symbol
+
+    Examples
+    ========
+    """
+    if isinstance(a_old, str):
+        a_old = Symbol(a_old)
+    if isinstance(a_new, str):
+        a_new = Symbol(a_new)
+    if isinstance(expr, Assign):
+        e_rhs = expr.rhs.subs({a_old: a_new})
+        e_lhs = expr.lhs.subs({a_old: a_new})
+        return Assign(e_lhs, e_rhs, strict=False)
+    else:
+        return expr
+
+
 class Assign(Basic):
     """Represents variable assignment for code generation.
 

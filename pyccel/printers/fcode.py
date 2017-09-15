@@ -15,8 +15,10 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
-from pyccel.types.ast import (Assign, MultiAssign, Result, InArgument,
-        OutArgument, InOutArgument, Variable, Declare,Len,Dot,Min,Max,Sign)
+from pyccel.types.ast import (Assign, MultiAssign, \
+                              Variable, Declare, Result, \
+                              InArgument, OutArgument, InOutArgument, \
+                              Len, Dot, Min, Max, Sign, subs)
 from pyccel.printers.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -382,14 +384,9 @@ class FCodePrinter(CodePrinter):
                                  rank=result.rank, \
                                  allocatable=result.allocatable, \
                                  shape=result.shape)
-                    if isinstance(e, Assign):
-                        s_r = Symbol(str(result.name))
-                        s_f = Symbol(str(name))
-                        e_rhs = e.rhs.subs({s_r: s_f})
-                        e_lhs = e.lhs.subs({s_r: s_f})
-                        _body.append(Assign(e_lhs, e_rhs, strict=False))
-                    else:
-                        _body.append(e)
+                    s_r = Symbol(str(result.name))
+                    s_f = Symbol(str(name))
+                    _body.append(subs(e, s_r, s_f))
                 body = _body
             else:
                 sig = '{0} function {1}'.format(ret_type, name)

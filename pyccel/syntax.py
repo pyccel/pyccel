@@ -972,8 +972,8 @@ class AssignStmt(BasicStmt):
 
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
-            print ">>>> AssignStmt : ", var_name
-            print "                : ", d_var
+#            print ">>>> AssignStmt : ", var_name
+#            print "                : ", d_var
             insert_variable(var_name, **d_var)
 
         if isinstance(rhs, Function):
@@ -1511,7 +1511,7 @@ class ReturnStmt(FlowStmt):
         for var_name in self.variables:
             if var_name in namespace:
                 var = variables[var_name]
-                print var_name, var
+#                print var_name, var
                 if isinstance(var, Variable):
                     res = Result(var.dtype, var_name, \
                                  rank=var.rank, \
@@ -1577,7 +1577,7 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+#        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 #        for arg_name in self.args:
 #            if not(arg_name in namespace):
 #                if DEBUG:
