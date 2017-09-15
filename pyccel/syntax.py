@@ -228,6 +228,7 @@ def get_attributs(expr):
                 args.extend(a.args)
             if isinstance(a, (Ceil, Len, Dot)):
                 d_var = get_attributs(a)
+                continue
             if isinstance(a, Function):
                 name = str(type(a).__name__)
                 avail_funcs = builtin_funcs
