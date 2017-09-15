@@ -41,6 +41,12 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "Thread", "ThreadID", "ThreadsNumber", "Stencil", "Header"]
 
 # TODO add examples
+# TODO treat Function case
+# TODO treat Zeros, Ones, Array cases
+# TODO treat AnnotatedComment case
+# TODO treat Slice case
+# TODO treat Thread cases
+# TODO treat Stencil case
 def subs(expr, a_old, a_new):
     """
     Substitutes old for new in an expression after sympifying args.
@@ -66,6 +72,11 @@ def subs(expr, a_old, a_new):
         e_rhs = subs(expr.rhs, a_old, a_new)
         e_lhs = subs(expr.lhs, a_old, a_new)
         return Assign(e_lhs, e_rhs, strict=False)
+    elif isinstance(expr, MultiAssign):
+        e_rhs   = subs(expr.rhs, a_old, a_new)
+        e_lhs   = subs(expr.lhs, a_old, a_new)
+        trailer = subs(expr.trailer, a_old, a_new)
+        return MultiAssign(e_lhs, e_rhs, trailer)
     elif isinstance(expr, While):
         test = subs(expr.test, a_old, a_new)
         body = subs(expr.body, a_old, a_new)
@@ -76,6 +87,15 @@ def subs(expr, a_old, a_new):
         iter = subs(expr.iter, a_old, a_new)
         body = subs(expr.body, a_old, a_new)
         return For(target, iter, body)
+    elif isinstance(expr, If):
+        args = []
+        for block in expr.args:
+            test  = block[0]
+            stmts = block[1]
+            t = subs(test,  a_old, a_new)
+            s = subs(stmts, a_old, a_new)
+            args.append((t,s))
+        return If(*args)
     elif isinstance(expr, Declare):
         dtype     = subs(expr.dtype, a_old, a_new)
         variables = subs(expr.variables, a_old, a_new)
@@ -873,6 +893,7 @@ class Shape(Basic):
         outputs = ', '.join(sstr(i) for i in self.lhs)
         return '{1} := shape({0})'.format(self.rhs, outputs)
 
+# TODO: treat as a Function
 # TODO: improve by using args
 # TODO: add example
 class Min(Basic):
@@ -888,6 +909,7 @@ class Min(Basic):
     def expr_r(self):
         return self.args[1]
 
+# TODO: treat as a Function
 # TODO: improve by using args
 # TODO: add example
 class Max(Basic):
@@ -924,6 +946,8 @@ class Dot(Function):
     def expr_r(self):
         return self.args[1]
 
+# TODO: treat as a Function
+# TODO: add example
 class Sign(Basic):
 
     def __new__(cls,expr):
@@ -1077,6 +1101,7 @@ class Array(Basic):
     def shape(self):
         return self._args[2]
 
+# TODO: treat as a function
 class Print(Basic):
     """Represents a print function in the code.
 
