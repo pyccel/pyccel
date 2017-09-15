@@ -981,10 +981,10 @@ class AssignStmt(BasicStmt):
             if name.lower() in builtin_funcs:
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=self.lhs)
-            else:
-                # is FunctionDef
-                print ">>>> agrs : ", rhs.args
-                return MultiAssign([self.lhs], name, rhs.args)
+#            else:
+#                # is FunctionDef
+#                print ">>>> agrs : ", rhs.args
+#                return MultiAssign([self.lhs], name, rhs.args)
 
         if self.trailer is None:
             l = namespace[self.lhs]
@@ -2388,7 +2388,10 @@ class HeaderStmt(BasicStmt):
         dtypes    = [dec.dtype for dec in self.decs]
         attributs = []
         for dec in self.decs:
-            attr = dec.trailer.expr
+            if dec.trailer is None:
+                attr = ''
+            else:
+                attr = dec.trailer.expr
             attributs.append(attr)
 
         self.dtypes = zip(dtypes, attributs)

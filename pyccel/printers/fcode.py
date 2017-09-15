@@ -350,27 +350,55 @@ class FCodePrinter(CodePrinter):
         decs = []
         body = expr.body
         func_end  = ''
-        if (len(expr.results) == 1) and \
-           (expr.results[0].rank == 0) and \
-           (not expr.results[0].allocatable) :
-
+        if len(expr.results) == 1:
             result = expr.results[0]
 
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
-                    # TODO improve
+                    # TODO improve
                     if not(str(stmt.variables[0].name) == str(result.name)):
                         decs.append(stmt)
-                elif not isinstance(stmt, list): # for list of Results
+                elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 
             ret_type = self._print(result.dtype)
             func_type = 'function'
 
-            sig = '{0} function {1}'.format(ret_type, name)
-            func_end  = ' result({0})'.format(result.name)
-#        elif len(expr.results) > 1:
+            if result.allocatable:
+                sig = 'function {0}'.format(name)
+                for n in [result.name, name]:
+                    var = Variable(result.dtype, n, \
+                                 rank=result.rank, \
+                                 allocatable=result.allocatable, \
+                                 shape=result.shape)
+
+                    dec = Declare(result.dtype, var)
+                    decs.append(dec)
+                body.append(Assign(Symbol(name), result.name))
+            else:
+                sig = '{0} function {1}'.format(ret_type, name)
+                func_end  = ' result({0})'.format(result.name)
+        elif len(expr.results) > 1:
+            for result in expr.results:
+                arg = OutArgument(result.dtype, result.name)
+                out_args.append(arg)
+
+                dec = Declare(result.dtype, arg)
+                decs.append(dec)
+            sig = 'subroutine ' + name
+            func_type = 'subroutine'
+
+            names = [str(res.name) for res in expr.results]
+            body = []
+            for stmt in expr.body:
+                if isinstance(stmt, Declare):
+                    # TODO improve
+                    nm = str(stmt.variables[0].name)
+                    if not(nm in names):
+                        decs.append(stmt)
+                elif not isinstance(stmt, list): # for list of Results
+                    body.append(stmt)
         else:
             for result in expr.results:
                 arg = OutArgument(result.dtype, result.name, \

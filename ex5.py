@@ -11,12 +11,6 @@ def fi(x):
     y = x+1
     return y
 
-#$ header gd(double[:])
-def gd(x):
-    y = x+1
-    return y
-
-
 xd = double()
 xd = 1
 yd = fd(xd)
