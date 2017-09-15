@@ -16,8 +16,9 @@ def fd(x):
 
 xd = ones(6, double)
 yd = zeros(6, double)
-#yd = 2.0 * fd(xd)
-yd = fd(xd)
+yd = 2.0 * fd(xd) + 1.0
+print(yd)
+yd = 3.0 * fd(2.0 * fd(xd) + 1.0) + 1.0
 print(yd)
 #yd = gd(xd)
 #print(yd)

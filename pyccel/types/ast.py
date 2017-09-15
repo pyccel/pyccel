@@ -125,7 +125,6 @@ def subs(expr, a_old, a_new):
         arguments   = subs(expr.arguments, a_old, a_new)
         results     = subs(expr.results, a_old, a_new)
         body        = subs(expr.body, a_old, a_new)
-        print ("body = ", body)
         local_vars  = subs(expr.local_vars, a_old, a_new)
         global_vars = subs(expr.global_vars, a_old, a_new)
         return FunctionDef(name, arguments, results, \
@@ -133,7 +132,6 @@ def subs(expr, a_old, a_new):
     elif isinstance(expr, Declare):
         dtype     = subs(expr.dtype, a_old, a_new)
         variables = subs(expr.variables, a_old, a_new)
-        print (expr.variables, variables)
         return Declare(dtype, variables)
     elif isinstance(expr, Return):
         return Return(subs(expr.results, a_old, a_new))
