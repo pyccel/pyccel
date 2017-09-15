@@ -683,8 +683,14 @@ class BasicStmt(object):
         ==========
         statements : list
             list of statements from pyccel.types.ast
+        pre_stmts  : list
+            list of statements to be placed before the actual statement
+        post_stmts : list
+            list of statements to be placed after the actual statement
         """
-        self.statements = []
+        self.statements  = []
+        self.pre_stmts   = []
+        self.post_stmts  = []
 
     @property
     def declarations(self):
@@ -991,19 +997,21 @@ class AssignStmt(BasicStmt):
 
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
+
 #            print ">>>> AssignStmt : ", var_name
 #            print "                : ", d_var
+
+            d_var['allocatable'] = not(d_var['shape'] is None)
             insert_variable(var_name, **d_var)
+            if d_var['shape']:
+                stmt = Zeros(var_name, d_var['shape'])
+                self.pre_stmts.append(stmt)
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
             if name.lower() in builtin_funcs:
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=self.lhs)
-#            else:
-#                # is FunctionDef
-#                print ">>>> agrs : ", rhs.args
-#                return MultiAssign([self.lhs], name, rhs.args)
 
         if self.trailer is None:
             l = namespace[self.lhs]

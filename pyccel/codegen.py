@@ -310,7 +310,8 @@ class Codegen(object):
         ast    = pyccel.parse_from_file(filename)
         # ...
 
-        # ...
+        # ... TODO use pre/post stmts for every statement.
+        #          only done for Assign
         for stmt in ast.statements:
 #            print ("=====================================")
             if isinstance(stmt, CommentStmt):
@@ -327,7 +328,12 @@ class Codegen(object):
                 # will add the function definition to headers in syntax
                 stmt.expr
             elif isinstance(stmt, AssignStmt):
-                body += printer(stmt.expr) + "\n"
+                expr = stmt.expr
+                for s in stmt.pre_stmts:
+                    body += printer(s) + "\n"
+                body += printer(expr) + "\n"
+                for s in stmt.post_stmts:
+                    body += printer(s) + "\n"
             elif isinstance(stmt, MultiAssignStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ForStmt):

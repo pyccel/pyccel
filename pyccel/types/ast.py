@@ -547,7 +547,8 @@ class Gter(Relational):
         rhs = _sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
-class Variable(Basic):
+#class Variable(Basic):
+class Variable(Symbol):
     """Represents a typed variable.
 
     dtype : str, DataType
@@ -604,9 +605,13 @@ class Variable(Basic):
     @property
     def allocatable(self):
         return self._args[3]
+
     @property
     def shape(self):
         return self._args[4]
+
+    def __str__(self):
+        return self.name
 
 class Argument(Variable):
     """An abstract Argument data structure."""
