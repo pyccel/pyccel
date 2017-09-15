@@ -1135,6 +1135,7 @@ class Array(Basic):
     def shape(self):
         return self._args[2]
 
+# TODO add examples
 class ZerosLike(Basic):
     """Represents variable assignment using numpy.zeros_like for code generation.
 
@@ -1144,39 +1145,27 @@ class ZerosLike(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    shape : int or list of integers
+    rhs : Variable
+        the input variable
 
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Zeros
+    >>> from pyccel.types.ast import Zeros, ZerosLike
     >>> n,m,x = symbols('n,m,x')
-    >>> Zeros(x, (n,m))
-    x := 0
+    >>> y = Zeros(x, (n,m))
+    >>> z = ZerosLike(y)
     """
     # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape):
+    def __new__(cls, lhs, rhs):
         lhs   = _sympify(lhs)
-        if isinstance(shape, list):
-            # this is a correction. otherwise it is not working on LRZ
-            if isinstance(shape[0], list):
-                shape = Tuple(*(_sympify(i) for i in shape[0]))
-            else:
-                shape = Tuple(*(_sympify(i) for i in shape))
-        elif isinstance(shape, int):
-            shape = Tuple(_sympify(shape))
-        elif isinstance(shape, Basic) and not isinstance(shape,Len):
-            shape = str(shape)
-        elif isinstance(shape,Len):
-            shape=shape.str
-        else:
-            shape = shape
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs, shape)
+
+        return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -1187,7 +1176,7 @@ class ZerosLike(Basic):
         return self._args[0]
 
     @property
-    def shape(self):
+    def rhs(self):
         return self._args[1]
 
 # TODO: treat as a function

@@ -3,14 +3,16 @@
 from numpy import zeros
 from numpy import ones
 
-a = ones(64, float)
+n = int()
+n = 64
+a = ones(n, float)
 b = ones(64, int)
 
 f0 = 1.0
 f1 = f0 + 2.0 * a[2]
 f2 = a[2] + 2.0 * f1
 
-#TODO allocate a1, a2
+#TODO allocate a2
 a1 = zeros_like(a)
 #a2 = 2.0 * a1 + 1.0
 

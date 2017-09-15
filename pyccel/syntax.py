@@ -375,8 +375,7 @@ def builtin_function(name, args, lhs=None):
         d_var['rank']        = var.rank
 
         insert_variable(lhs, **d_var)
-        return ZerosLike(lhs, d_var['shape'])
-#        return ZerosLike(lhs, var)
+        return ZerosLike(lhs, var)
     elif name == "dot":
         # TODO do we keep or treat inside math_bin?
         if lhs is None:

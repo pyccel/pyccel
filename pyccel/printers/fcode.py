@@ -22,6 +22,7 @@ from pyccel.types.ast import (Assign, MultiAssign, \
 from pyccel.printers.codeprinter import CodePrinter
 
 # TODO: add examples
+# TODO: use _get_statement when returning a string
 
 __all__ = ["FCodePrinter", "fcode"]
 
@@ -217,17 +218,19 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_ZerosLike(self, expr):
-        lhs_code   = self._print(expr.lhs)
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        rank = expr.rhs.rank
+        rs = []
+        for i in range(1, rank+1):
+            l = 'lbound({0},{1})'.format(rhs, str(i))
+            u = 'ubound({0},{1})'.format(rhs, str(i))
+            r = '{0}:{1}'.format(l,u)
+            rs.append(r)
+        shape = ', '.join(self._print(i) for i in rs)
+        code  = 'allocate({0}({1})) ; {0} = 0'.format(lhs, shape)
 
-        if isinstance(expr.shape, Tuple):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        elif isinstance(expr.shape,str):
-            shape_code = '0:' + self._print(expr.shape) + '-1'
-        else:
-            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
-#        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
-        return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
+        return self._get_statement(code)
 
     def _print_Len(self,expr):
         if isinstance(expr.rhs,list):
