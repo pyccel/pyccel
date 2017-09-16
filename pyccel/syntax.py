@@ -678,19 +678,8 @@ class ConstructorStmt(BasicStmt):
         var_name    = str(self.lhs)
         constructor = str(self.constructor)
         # TODO improve
-        if constructor in ["array_1", "array_2", "array_3"]:
-            if constructor == "array_2":
-                rank = 2
-                datatype = 'float'
-            elif constructor == "array_3":
-                rank = 3
-                datatype = 'float'
-            else:
-                rank = 1
-                datatype = 'float'
-        else:
-            rank     = 0
-            datatype = constructor
+        rank     = 0
+        datatype = constructor
         insert_variable(var_name, datatype=datatype, rank=rank)
         return Comment("")
 

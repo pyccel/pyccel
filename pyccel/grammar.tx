@@ -140,7 +140,7 @@ DeclarationStmt:
 ;
 
 DataType:
-  ('double' | 'float' | 'int' | 'complex' | 'array_1' | 'array_2' | 'array_3')
+  ('double' | 'float' | 'int' | 'complex')
 ;
 
 ParameterTest:
