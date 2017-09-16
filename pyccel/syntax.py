@@ -48,7 +48,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               GOrEq, LOrEq, Lthan, Gter)
 
 from pyccel.core.syntax     import BasicStmt
-from pyccel.patterns.syntax import ImportFromStmt
+from pyccel.imports.syntax import ImportFromStmt
 from pyccel.openmp.syntax   import OpenmpStmt
 
 

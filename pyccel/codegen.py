@@ -23,7 +23,7 @@ from pyccel.syntax import ( \
 from pyccel.types.ast import subs
 
 from pyccel.openmp.syntax import OpenmpStmt
-from pyccel.patterns.syntax import ImportFromStmt
+from pyccel.imports.syntax import ImportFromStmt
 
 
 __all__ = ["Codegen", "FCodegen", "PyccelCodegen", \
@@ -741,7 +741,7 @@ def build_file(filename, language, compiler, \
     ============================
     """
     # ...
-    from pyccel.patterns.utilities import find_imports
+    from pyccel.imports.utilities import find_imports
 
     d = find_imports(filename=filename)
     imports = {}

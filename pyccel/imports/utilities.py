@@ -4,7 +4,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
-from pyccel.patterns.syntax import ImportFromStmt
+from pyccel.imports.syntax import ImportFromStmt
 
 __all__ = ['find_imports']
 
@@ -20,7 +20,7 @@ def find_imports(filename, debug=False):
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
-    grammar = join(this_folder, 'import.tx')
+    grammar = join(this_folder, 'grammar.tx')
     meta = metamodel_from_file(grammar, debug=debug, classes=[ImportFromStmt])
 
     # Instantiate model

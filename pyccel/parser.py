@@ -2,7 +2,7 @@
 
 import os
 
-from pyccel.patterns.syntax import ImportFromStmt
+from pyccel.imports.syntax import ImportFromStmt
 
 from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
