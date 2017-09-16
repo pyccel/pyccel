@@ -354,14 +354,9 @@ def get_attributs(expr):
                         d_var['rank']  = var.rank
                 elif name in builtin_funcs:
                     continue
-            if isinstance(a, IndexedVariable):
+            if isinstance(a, (Variable, IndexedVariable, IndexedElement)):
                 d_var = get_attributs(a)
-            if isinstance(a, IndexedElement):
-                d_var = get_attributs(a)
-            if isinstance(a, Variable):
-                d_var = get_attributs(a)
-            if (a.is_Symbol) \
-               and (not isinstance(a, (Variable, IndexedVariable, Function))):
+            elif (a.is_Symbol) and (not isinstance(a, Function)):
                 name = str(a)
                 if name in namespace:
                     var = namespace[name]
