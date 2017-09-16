@@ -23,6 +23,19 @@ from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr, AtomicExpr
+from sympy.core.compatibility import string_types
+from sympy.core.operations import LatticeOp
+from sympy.core.function import Derivative
+from sympy.core.function import _coeff_isneg
+from sympy.core.singleton import S
+from sympy.utilities.iterables import iterable
+from sympy import Integral, Symbol
+from sympy.simplify.radsimp import fraction
+from sympy.logic.boolalg import BooleanFunction
+
+
 
 # TODO: add EmptyStmt => empty lines
 # TODO: rename Ceil to Ceil
@@ -39,7 +52,8 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "Zeros", "Ones", "Array", "ZerosLike", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
            "IndexedElement", "Slice", "If", "MultiAssign", \
-           "Thread", "ThreadID", "ThreadsNumber", "Stencil", "Header"]
+           "Thread", "ThreadID", "ThreadsNumber", "Stencil", "Header", \
+           "subs", "allocatable_like"]
 
 # TODO add examples
 # TODO treat Function case
@@ -136,6 +150,71 @@ def subs(expr, a_old, a_new):
     else:
         return expr
 
+def allocatable_like(expr):
+    """
+    finds attributs of the expression
+    """
+#    print '>>>>> expr = ', expr
+#    print '>>>>> type = ', type(expr)
+
+    if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
+        return expr
+    elif isinstance(expr, Expr):
+        args = [expr]
+        while args:
+            a = args.pop()
+#            print ">>>> ", a, type(a)
+
+            # XXX: This is a hack to support non-Basic args
+            if isinstance(a, string_types):
+                continue
+
+            if a.is_Mul:
+                if _coeff_isneg(a):
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+                n, d = fraction(a)
+                if n.is_Integer:
+                    args.append(d)
+                    continue  # won't be -Mul but could be Add
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                    args.append(n)
+                    continue  # could be -Mul
+            elif a.is_Add:
+                aargs = list(a.args)
+                negs = 0
+                for i, ai in enumerate(aargs):
+                    if _coeff_isneg(ai):
+                        negs += 1
+                        args.append(-ai)
+                    else:
+                        args.append(ai)
+                continue
+            if a.is_Pow and a.exp is S.NegativeOne:
+                args.append(a.base)  # won't be -Mul but could be Add
+                continue
+            if (a.is_Mul or
+                a.is_Pow or
+                a.is_Function or
+                isinstance(a, Derivative) or
+                    isinstance(a, Integral)):
+
+                o = Symbol(a.func.__name__.upper())
+            if     (not a.is_Symbol) \
+               and (not isinstance(a, (IndexedElement, Function))):
+                args.extend(a.args)
+            if isinstance(a, Function):
+                raise Exception("Functions not yet available")
+            elif isinstance(a, (Variable, IndexedVariable, IndexedElement)):
+                return a
+            elif a.is_Symbol:
+                raise TypeError("Found an unknown symbol {0}".format(str(a)))
+    else:
+        raise TypeError("Unexpected type")
 
 class Assign(Basic):
     """Represents variable assignment for code generation.
