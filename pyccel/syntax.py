@@ -541,22 +541,6 @@ def do_arg(a):
 # ...
 
 # ...
-def is_integer_expression(expr):
-    """
-    Determines if an expression is an integer expression.
-    We check if there is an integer Symbol.
-
-    expr: sympy.expression
-        a sympy expression
-    """
-    for arg in preorder_traversal(expr):
-        if isinstance(arg, Symbol):
-            if arg.is_integer:
-                return True
-    return False
-# ...
-
-# ...
 def convert_to_integer_expression(expr):
     """
     converts an expression to an integer expression.
