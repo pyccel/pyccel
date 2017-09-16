@@ -669,60 +669,63 @@ class Pyccel(object):
         ast = []
         for stmt in self.statements:
             expr = stmt.expr
-            if isinstance(stmt, CommentStmt):
+            if not(expr is None):
                 ast.append(expr)
-#            elif isinstance(stmt, ImportFromStmt):
-#                # TODO: this only works if names contains one entry
-#                name = stmt.dotted_name.names[0]
-#                if not(name in ignored_modules):
-#                    imports += printer(stmt.expr) + "\n"
-#                    modules += stmt.dotted_name.names
-            elif isinstance(stmt, DeclarationStmt):
-                ast.append(expr)
-            elif isinstance(stmt, HeaderStmt):
-                # calling expr will add the function definition to headers in syntax
-                # nothing to do
-                continue
-            elif isinstance(stmt, AssignStmt):
-                ast.append(expr)
-            elif isinstance(stmt, MultiAssignStmt):
-                ast.append(expr)
-            elif isinstance(stmt, ForStmt):
-                ast.append(expr)
-            elif isinstance(stmt,WhileStmt):
-                ast.append(expr)
-            elif isinstance(stmt, IfStmt):
-                ast.append(expr)
-            elif isinstance(stmt, FunctionDefStmt):
-                ast.append(expr)
-#                # TODO must be done only for fortran
-#                if len(expr.results) == 1:
-#                    result = expr.results[0]
-#                    if result.allocatable:
-#                        expr = subs(expr, result.name, expr.name)
-#                sep = separator()
-#                routines += sep + printer(expr) + "\n" \
-#                          + sep + '\n'
-            elif isinstance(stmt, PythonPrintStmt):
-                ast.append(expr)
-#            elif isinstance(stmt, ConstructorStmt):
-#                # this statement does not generate any code
+#            # there are some statements that do not return an expression
+#            if isinstance(stmt, CommentStmt):
 #                ast.append(expr)
-            elif isinstance(stmt, OpenmpStmt):
-                ast.append(expr)
-            elif isinstance(stmt, ThreadStmt):
-                ast.append(expr)
-            elif isinstance(stmt, StencilStmt):
-                ast.append(expr)
-#            elif isinstance(stmt, EvalStmt):
-#                for s in stmt.expr:
-#                    body += printer(s) + "\n"
-            else:
-                if True:
-                    print "> uncovered statement of type : ", type(stmt)
-                else:
-                    raise Exception('Statement not yet handled.')
-        # ...
+##            elif isinstance(stmt, ImportFromStmt):
+##                # TODO: this only works if names contains one entry
+##                name = stmt.dotted_name.names[0]
+##                if not(name in ignored_modules):
+##                    imports += printer(stmt.expr) + "\n"
+##                    modules += stmt.dotted_name.names
+#            elif isinstance(stmt, DeclarationStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, HeaderStmt):
+#                # calling expr will add the function definition to headers in syntax
+#                # nothing to do
+#                continue
+#            elif isinstance(stmt, AssignStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, MultiAssignStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, ForStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt,WhileStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, IfStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, FunctionDefStmt):
+#                ast.append(expr)
+##                # TODO must be done only for fortran
+##                if len(expr.results) == 1:
+##                    result = expr.results[0]
+##                    if result.allocatable:
+##                        expr = subs(expr, result.name, expr.name)
+##                sep = separator()
+##                routines += sep + printer(expr) + "\n" \
+##                          + sep + '\n'
+#            elif isinstance(stmt, PythonPrintStmt):
+#                ast.append(expr)
+##            elif isinstance(stmt, ConstructorStmt):
+##                # this statement does not generate any code
+##                ast.append(expr)
+#            elif isinstance(stmt, OpenmpStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, ThreadStmt):
+#                ast.append(expr)
+#            elif isinstance(stmt, StencilStmt):
+#                ast.append(expr)
+##            elif isinstance(stmt, EvalStmt):
+##                for s in stmt.expr:
+##                    body += printer(s) + "\n"
+#            else:
+#                if True:
+#                    print "> uncovered statement of type : ", type(stmt)
+#                else:
+#                    raise Exception('Statement not yet handled.')
+#        # ...
 
         return ast
 

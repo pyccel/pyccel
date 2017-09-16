@@ -3,24 +3,22 @@
 import os
 from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
-from pyccel.syntax import ( \
-                           # statements
-                           HeaderStmt, \
-                           DeclarationStmt, \
-                           ConstructorStmt, \
-                           DelStmt, \
-                           PassStmt, \
-                           AssignStmt, MultiAssignStmt, \
-                           IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
-                           CommentStmt, \
-                           EvalStmt, \
-                           # Multi-threading
-                           ThreadStmt, \
-                           StencilStmt, \
-                           # python standard library statements
-                           PythonPrintStmt, \
-                           )
 from pyccel.types.ast import subs
+from pyccel.types.ast import DataType
+from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
+                              datatype, While, NativeFloat, \
+                              EqualityStmt, NotequalStmt, \
+                              Argument, InArgument, InOutArgument, \
+                              MultiAssign, OutArgument, Result, \
+                              FunctionDef, Print, Import, \
+                              Comment, AnnotatedComment, \
+                              IndexedVariable, Slice, If, \
+                              ThreadID, ThreadsNumber, \
+                              Stencil, Ceil, Break, \
+                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
+                              Dot, Min, Max, Sign, IndexedElement,\
+                              GOrEq, LOrEq, Lthan, Gter)
+
 
 from pyccel.openmp.syntax import OpenmpStmt
 from pyccel.imports.syntax import ImportFromStmt
@@ -310,42 +308,39 @@ class Codegen(object):
         ast    = pyccel.parse_from_file(filename)
         # ...
 
-#        # ...
-#        ast = ast.expr
-#        import sys; sys.exit(0)
-#        # ...
-
-        # ... TODO use pre/post stmts for every statement.
-        #          only done for Assign
-        for stmt in ast.statements:
-            if isinstance(stmt, CommentStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, ImportFromStmt):
-                # TODO: this only works if names contains one entry
-                name = stmt.dotted_name.names[0]
+        # ...
+        stmts = ast.expr
+        for stmt in stmts:
+            if isinstance(stmt, (Comment, AnnotatedComment)):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, Import):
+                name = str(stmt.fil)
                 if not(name in ignored_modules):
-                    imports += printer(stmt.expr) + "\n"
-                    modules += stmt.dotted_name.names
-            elif isinstance(stmt, DeclarationStmt):
-                decs = stmt.expr
-            elif isinstance(stmt, HeaderStmt):
+                    imports += printer(stmt) + "\n"
+                    modules += [name]
+            elif isinstance(stmt, Declare):
+                decs = stmt
+            elif isinstance(stmt, Header):
                 # will add the function definition to headers in syntax
-                stmt.expr
-            elif isinstance(stmt, AssignStmt):
-                expr = stmt.expr
-                for key, s in stmt.unallocated.items():
-                    body += printer(s) + "\n"
-                body += printer(expr) + "\n"
-            elif isinstance(stmt, MultiAssignStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, ForStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt,WhileStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, IfStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, FunctionDefStmt):
-                expr = stmt.expr
+                continue
+            elif isinstance(stmt, Assign):
+#                for key, s in stmt.unallocated.items():
+#                    body += printer(s) + "\n"
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, MultiAssign):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, (Zeros, Ones, ZerosLike, Array)):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, (Shape, Len)):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, For):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, While):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, If):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, FunctionDef):
+                expr = stmt
                 if len(expr.results) == 1:
                     result = expr.results[0]
                     if result.allocatable:
@@ -353,25 +348,17 @@ class Codegen(object):
                 sep = separator()
                 routines += sep + printer(expr) + "\n" \
                           + sep + '\n'
-            elif isinstance(stmt, PythonPrintStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, ConstructorStmt):
-                # this statement does not generate any code
-                stmt.expr
-            elif isinstance(stmt, OpenmpStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, ThreadStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, StencilStmt):
-                body += printer(stmt.expr) + "\n"
-            elif isinstance(stmt, EvalStmt):
-                for s in stmt.expr:
+            elif isinstance(stmt, Print):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, Stencil):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, list):
+                for s in stmt:
                     body += printer(s) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)
                 else:
-
                     raise Exception('Statement not yet handled.')
         # ...
 
@@ -383,8 +370,9 @@ class Codegen(object):
         # ...
         if not self.is_module:
             is_module = True
-            for stmt in ast.statements:
-                if not(isinstance(stmt, (CommentStmt, ConstructorStmt, FunctionDefStmt))):
+            for stmt in stmts:
+#                if not(isinstance(stmt, (Comment, Constructor, FunctionDef))):
+                if not(isinstance(stmt, (Comment, FunctionDef))):
                     is_module = False
                     break
         else:
