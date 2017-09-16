@@ -55,7 +55,35 @@ from pyccel.openmp.syntax   import OpenmpStmt
 DEBUG = False
 #DEBUG = True
 
-sign = Sign
+known_functions = {
+    "abs": "Abs",
+    "asin": "asin",
+    "acsc": "acsc",
+    "acot": "acot",
+    "acos": "acos",
+    "asec": "asec",
+    "atan": "atan",
+    "atan2": "atan2",
+    "ceil": "Ceil",
+    "cos": "cos",
+    "cosh": "cosh",
+    "cot": "cot",
+    "csc": "csc",
+    "dot": "dot",
+    "exp": "exp",
+    "len": "Len",
+    "log": "log",
+    "min": "Min",
+    "max": "Max",
+    "pow": "pow",
+    "sec": "sec",
+    "sign": "Sign",
+    "sin": "sin",
+    "sinh": "sinh",
+    "sqrt": "sqrt",
+    "tan": "tan",
+    "tanh": "tanh"
+}
 
 # TODO: 1. check that every stmt is well implementing
 #          the local_vars and stmt_vars properties.
@@ -106,19 +134,17 @@ builtin_types  = ['int', 'float', 'double', 'complex']
 # ...
 
 # ... builtin functions
-builtin_funcs_math_un = ['abs', 'sqrt', 'exp', 'log', \
-                         'cos', 'sin', 'tan', 'cot', \
-                         'asin', 'acsc', 'acos', \
-                         'asec', 'atan', 'acot', \
-                         'atan2','csc', 'sec', 'ceil', \
-                         'sign' \
-                        ]
+builtin_funcs_math_un = ['abs', 'asin', 'acsc', 'acot', \
+                         'acos', 'asec', 'atan', 'atan2', \
+                         'ceil', 'cos', 'cosh', 'cot', 'csc', \
+                         'exp', 'log', 'max', 'min' \
+                         'sec', 'sign', 'sin', 'sinh', \
+                         'sqrt', 'tan', 'tanh']
 builtin_funcs_math_bin = ['dot', 'pow']
 builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
-builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', \
-                  'len', 'shape', 'max', 'min']
+builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 # ...
 
@@ -467,7 +493,7 @@ def builtin_function(name, args, lhs=None):
             expr = Dot(*args)
             return Assign(Symbol(lhs), expr)
     elif name in ['max', 'min']:
-        func = eval(name.capitalize())
+        func = eval(known_functions[name])
         if lhs is None:
             return func(*args)
         else:
@@ -480,14 +506,7 @@ def builtin_function(name, args, lhs=None):
         if not(len(args) == 1):
             raise ValueError("pow takes exactly one argument")
 
-        try:
-            func = eval(name.capitalize())
-        except:
-            try:
-                func = eval(name)
-            except:
-                raise ValueError("eval failed for {0}".format(name))
-
+        func = eval(known_functions[name])
         if lhs is None:
             return func(*args)
         else:
@@ -504,14 +523,7 @@ def builtin_function(name, args, lhs=None):
         if not(len(args) == 2):
             raise ValueError("pow takes exactly two arguments")
 
-        try:
-            func = eval(name.capitalize())
-        except:
-            try:
-                func = eval(name)
-            except:
-                raise ValueError("eval failed for {0}".format(name))
-
+        func = eval(known_functions[name])
         if lhs is None:
             return func(*args)
         else:
