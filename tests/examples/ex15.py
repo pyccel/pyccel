@@ -1,11 +1,14 @@
-def A(x):
-    y=x[1]+x[2]+x[3]
-    z=x[1]+x[2]+x[3]
-    t=x[1]+x[2]+x[3]
-    return y,z,t
 
-x=array([0,0,0],dtype=float)
-b=array([2,5,-1],dtype=float)
+#$ header A(double [:])
+def A(x):
+    y=x[0]+x[1]+x[2]
+    z=x[0]+x[1]+x[2]
+    t=x[0]+x[1]+x[2]
+    w=array((y,z,t),float)
+    return w
+
+x=array((0,0,0),float)
+b=array((2,5,-1),float)
 tol=1.0e-9
 n = len(b)
 r = b - A(x)

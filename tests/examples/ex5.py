@@ -1,9 +1,12 @@
 # coding: utf-8
 
+
+#$ header f(double, double)
 def f(u,v):
     t = u - v
     return t
 
+#$ header g(double, double)
 def g(x,v):
     m = x - v
     t =  2.0 * m

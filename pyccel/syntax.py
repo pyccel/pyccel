@@ -56,6 +56,9 @@ from pyccel.openmp.syntax   import OpenmpStmt
 DEBUG = False
 #DEBUG = True
 
+# TODO set to None
+DEFAULT_TYPE = 'double'
+
 known_functions = {
     "abs": "Abs",
     "asin": "asin",
@@ -493,7 +496,7 @@ def insert_variable(var_name, \
             is_argument = True
     else:
         if datatype is None:
-            datatype = 'float'
+            datatype = DEFAULT_TYPE
         if rank is None:
             rank = 0
         if allocatable is None:
@@ -957,7 +960,7 @@ class MultiAssignStmt(BasicStmt):
         """
         Process the MultiAssign statement by returning a pyccel.types.ast object
         """
-        datatype = 'float'
+        datatype = DEFAULT_TYPE
         name = str(self.name)
 
         if not(name in ['shape']):

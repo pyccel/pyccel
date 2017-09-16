@@ -1,3 +1,4 @@
+#$ header f(double)
 def F(t):
     y=pow(t,2)
     return y

@@ -2,11 +2,13 @@ n = int()
 n=100
 Pi_estime = double()
 Pi_estime=acos(-1.0)
+
+#$ header f(double)
 def f(x):
-    x = double()
     z=1+x*x
     y=1/z
     return y
+
 h = double()
 h = 1.0 /n
 for k in range(1,100):
