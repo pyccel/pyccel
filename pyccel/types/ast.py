@@ -24,6 +24,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 
 
+# TODO: add EmptyStmt => empty lines
 # TODO: rename Ceil to Ceil
 # TODO: clean Thread objects
 # TODO: update code examples

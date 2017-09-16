@@ -201,6 +201,8 @@ def allocatable_like(expr):
                 return a
             elif a.is_Symbol:
                 raise TypeError("Found an unknown symbol {0}".format(str(a)))
+    else:
+        raise TypeError("Unexpected type")
 
 def get_attributs(expr):
     """
@@ -1086,11 +1088,17 @@ class AssignStmt(BasicStmt):
         status   = None
         like     = None
 
+        if isinstance(rhs, Function):
+            name = str(type(rhs).__name__)
+            if name.lower() in builtin_funcs:
+                args = rhs.args
+                return builtin_function(name.lower(), args, lhs=self.lhs)
+
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
 
-            print ">>>> AssignStmt : ", var_name
-            print "                : ", d_var
+#            print ">>>> AssignStmt : ", var_name
+#            print "                : ", d_var
 
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:
@@ -1098,14 +1106,8 @@ class AssignStmt(BasicStmt):
                     print "> Found an unallocated variable: ", var_name
                 status = 'unallocated'
                 like   = allocatable_like(rhs)
-                print ">>>> Found variable : ", like
+#                print ">>>> Found variable : ", like
             insert_variable(var_name, **d_var)
-
-        if isinstance(rhs, Function):
-            name = str(type(rhs).__name__)
-            if name.lower() in builtin_funcs:
-                args = rhs.args
-                return builtin_function(name.lower(), args, lhs=self.lhs)
 
         if self.trailer is None:
             l = namespace[self.lhs]
