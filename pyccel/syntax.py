@@ -357,16 +357,7 @@ def get_attributs(expr):
             if isinstance(a, (Variable, IndexedVariable, IndexedElement)):
                 d_var = get_attributs(a)
             elif (a.is_Symbol) and (not isinstance(a, Function)):
-                name = str(a)
-                if name in namespace:
-                    var = namespace[name]
-
-                    d_var['datatype']    = var.dtype
-                    d_var['allocatable'] = False
-                    if not(var.shape is None):
-                        d_var['shape'] = var.shape
-                    if var.rank > 0:
-                        d_var['rank']  = var.rank
+                raise Exception("Wrong type")
 
     return d_var
 
