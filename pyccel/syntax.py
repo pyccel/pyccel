@@ -138,6 +138,70 @@ def dtype_from_args(args, strict=True):
     return dtypes[0]
 
 
+def allocatable_like(expr):
+    """
+    finds attributs of the expression
+    """
+#    print '>>>>> expr = ', expr
+#    print '>>>>> type = ', type(expr)
+
+    if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
+        return expr
+    elif isinstance(expr, Expr):
+        args = [expr]
+        while args:
+            a = args.pop()
+#            print ">>>> ", a, type(a)
+
+            # XXX: This is a hack to support non-Basic args
+            if isinstance(a, string_types):
+                continue
+
+            if a.is_Mul:
+                if _coeff_isneg(a):
+                    if a.args[0] is S.NegativeOne:
+                        a = a.as_two_terms()[1]
+                    else:
+                        a = -a
+                n, d = fraction(a)
+                if n.is_Integer:
+                    args.append(d)
+                    continue  # won't be -Mul but could be Add
+                elif d is not S.One:
+                    if not d.is_Integer:
+                        args.append(d)
+                    args.append(n)
+                    continue  # could be -Mul
+            elif a.is_Add:
+                aargs = list(a.args)
+                negs = 0
+                for i, ai in enumerate(aargs):
+                    if _coeff_isneg(ai):
+                        negs += 1
+                        args.append(-ai)
+                    else:
+                        args.append(ai)
+                continue
+            if a.is_Pow and a.exp is S.NegativeOne:
+                args.append(a.base)  # won't be -Mul but could be Add
+                continue
+            if (a.is_Mul or
+                a.is_Pow or
+                a.is_Function or
+                isinstance(a, Derivative) or
+                    isinstance(a, Integral)):
+
+                o = Symbol(a.func.__name__.upper())
+            if     (not a.is_Symbol) \
+               and (not isinstance(a, (IndexedElement, Function))):
+                args.extend(a.args)
+            if isinstance(a, Function):
+                raise Exception("Functions not yet available")
+            elif isinstance(a, (Variable, IndexedVariable, IndexedElement)):
+                return a
+            elif a.is_Symbol:
+                raise TypeError("Found an unknown symbol {0}".format(str(a)))
+
 def get_attributs(expr):
     """
     finds attributs of the expression
@@ -177,6 +241,15 @@ def get_attributs(expr):
             d_var['allocatable'] = var.allocatable
             d_var['shape']       = d_var['shape']
             d_var['rank']        = d_var['rank']
+    elif isinstance(expr, Variable):
+        name = str(expr)
+        if name in namespace:
+            var = variables[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
     elif isinstance(expr, Expr):
         args = [expr]
         while args:
@@ -263,8 +336,10 @@ def get_attributs(expr):
                 d_var = get_attributs(a)
             if isinstance(a, IndexedElement):
                 d_var = get_attributs(a)
+            if isinstance(a, Variable):
+                d_var = get_attributs(a)
             if (a.is_Symbol) \
-               and (not isinstance(a, (IndexedVariable, Function))):
+               and (not isinstance(a, (Variable, IndexedVariable, Function))):
                 name = str(a)
                 if name in namespace:
                     var = variables[name]
@@ -366,10 +441,10 @@ def builtin_function(name, args, lhs=None):
             raise ValueError("Expecting a lhs.")
         if not(len(args) == 1):
             raise ValueError("Expecting exactly one argument.")
-        if not(str(args[0]) in namespace):
+        if not(args[0].name in namespace):
             raise ValueError("Undefined variable {0}".format(name))
 
-        name = str(args[0])
+        name = args[0].name
         var = variables[name]
 
         d_var = {}
@@ -529,7 +604,7 @@ def insert_variable(var_name, \
         variables.pop(var_name)
         declarations.pop(var_name)
 
-    namespace[var_name]    = s
+    namespace[var_name]    = var
     variables[var_name]    = var
     declarations[var_name] = dec
 
@@ -1014,15 +1089,16 @@ class AssignStmt(BasicStmt):
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
 
-#            print ">>>> AssignStmt : ", var_name
-#            print "                : ", d_var
+            print ">>>> AssignStmt : ", var_name
+            print "                : ", d_var
 
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:
                 if DEBUG:
                     print "> Found an unallocated variable: ", var_name
                 status = 'unallocated'
-                like   = variables['a']
+                like   = allocatable_like(rhs)
+                print ">>>> Found variable : ", like
             insert_variable(var_name, **d_var)
 
         if isinstance(rhs, Function):
@@ -1296,7 +1372,8 @@ class FactorSigned(ExpressionElement, BasicStmt):
                 else:
                     expr = Function(str(expr))(*args)
             elif self.trailer.subs:
-                expr = IndexedVariable(str(expr))[args]
+                # TODO check that expr.name is IndexedElement
+                expr = IndexedVariable(expr.name)[args]
             return -expr if self.sign == '-' else expr
 
 class Term(ExpressionElement):

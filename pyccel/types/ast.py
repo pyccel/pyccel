@@ -570,7 +570,7 @@ class Variable(Symbol):
     dtype : str, DataType
         The type of the variable. Can be either a DataType, or a str (bool,
         int, float, double).
-    name : Symbol, MatrixSymbol
+    name : str, Symbol, MatrixSymbol
         The sympy object the variable represents.
     rank : int
         used for arrays. [Default value: 0]
@@ -594,10 +594,11 @@ class Variable(Symbol):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
-        if isinstance(name, str):
-            name = Symbol(name)
-        elif not isinstance(name, (Symbol, MatrixSymbol)):
+        if isinstance(name, (str, Symbol, MatrixSymbol)):
+            name = str(name)
+        else:
             raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
+
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
 #        if not shape==None:
