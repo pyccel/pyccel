@@ -12,7 +12,6 @@ from pyccel.syntax import ( \
                            PassStmt, \
                            AssignStmt, MultiAssignStmt, \
                            IfStmt, ForStmt,WhileStmt, FunctionDefStmt, \
-                           ImportFromStmt, \
                            CommentStmt, \
                            EvalStmt, \
                            # Multi-threading
@@ -24,6 +23,7 @@ from pyccel.syntax import ( \
 from pyccel.types.ast import subs
 
 from pyccel.openmp.syntax import OpenmpStmt
+from pyccel.patterns.syntax import ImportFromStmt
 
 
 __all__ = ["Codegen", "FCodegen", "PyccelCodegen", \
@@ -310,10 +310,14 @@ class Codegen(object):
         ast    = pyccel.parse_from_file(filename)
         # ...
 
+#        # ...
+#        ast = ast.expr
+#        import sys; sys.exit(0)
+#        # ...
+
         # ... TODO use pre/post stmts for every statement.
         #          only done for Assign
         for stmt in ast.statements:
-#            print ("=====================================")
             if isinstance(stmt, CommentStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ImportFromStmt):
@@ -329,11 +333,9 @@ class Codegen(object):
                 stmt.expr
             elif isinstance(stmt, AssignStmt):
                 expr = stmt.expr
-                for s in stmt.pre_stmts:
+                for key, s in stmt.unallocated.items():
                     body += printer(s) + "\n"
                 body += printer(expr) + "\n"
-                for s in stmt.post_stmts:
-                    body += printer(s) + "\n"
             elif isinstance(stmt, MultiAssignStmt):
                 body += printer(stmt.expr) + "\n"
             elif isinstance(stmt, ForStmt):

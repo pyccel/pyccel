@@ -2,6 +2,8 @@
 
 import os
 
+from pyccel.patterns.syntax import ImportFromStmt
+
 from pyccel.syntax import (Pyccel, \
                            Expression, Term, Operand, \
                            FactorSigned, \
@@ -14,7 +16,6 @@ from pyccel.syntax import (Pyccel, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
                            IfStmt, ForStmt, FunctionDefStmt,WhileStmt,\
-                           ImportFromStmt, \
                            CommentStmt, SuiteStmt, \
                            EvalStmt, \
                            # Multi-threading
@@ -122,7 +123,7 @@ class Parser(object):
             list of instructions to parse.
         """
         # ... parse the DSL code
-        return self.model.model_from_str(instructions)
+        return  self.model.model_from_str(instructions)
         # ...
 
     def parse_from_file(self, filename):

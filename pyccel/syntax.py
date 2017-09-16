@@ -32,14 +32,13 @@ from sympy import Integral, Symbol
 from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
-
 from pyccel.types.ast import DataType
 from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               Argument, InArgument, InOutArgument, \
                               MultiAssign, OutArgument, Result, \
-                              FunctionDef, Import, Print, \
+                              FunctionDef, Print, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -47,6 +46,11 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Min, Max, Sign, IndexedElement,\
                               GOrEq, LOrEq, Lthan, Gter)
+
+from pyccel.core.syntax     import BasicStmt
+from pyccel.patterns.syntax import ImportFromStmt
+from pyccel.openmp.syntax   import OpenmpStmt
+
 
 DEBUG = False
 #DEBUG = True
@@ -68,7 +72,6 @@ __all__ = ["Pyccel", \
            "FlowStmt", "BreakStmt", "ContinueStmt", \
            "RaiseStmt", "YieldStmt", "ReturnStmt", \
            "DelStmt", "PassStmt", "FunctionDefStmt", \
-           "ImportFromStmt", \
            "ConstructorStmt", \
            "CommentStmt", \
            "EvalStmt", \
@@ -659,62 +662,69 @@ class Pyccel(object):
                 d[key] = dec
         return d
 
-class BasicStmt(object):
-    """
-    Base class for all objects in Pyccel.
-    """
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the base class.
-
-        Conventions:
-
-        1) Every extension class must provide the properties stmt_vars and
-        local_vars
-        2) stmt_vars describes the list of all variables that are
-        created by the statement.
-        3) local_vars describes the list of all local variables to the
-        statement, like the index of a For statement.
-        4) Every extension must implement the update function. This function is
-        called to prepare for the applied property (for example the expr
-        property.)
-
-        Parameters
-        ==========
-        statements : list
-            list of statements from pyccel.types.ast
-        pre_stmts  : list
-            list of statements to be placed before the actual statement
-        post_stmts : list
-            list of statements to be placed after the actual statement
-        """
-        self.statements  = []
-        self.pre_stmts   = []
-        self.post_stmts  = []
-
+    # TODO add example
     @property
-    def declarations(self):
-        """
-        Returns all declarations related to the current statement by looking
-        into the global dictionary declarations. the filter is given by
-        stmt_vars and local_vars, which must be provided by every extension of
-        the base class.
-        """
-        return [declarations[v] for v in self.stmt_vars + self.local_vars]
+    def expr(self):
+        """Converts the IR into AST that is fully compatible with sympy."""
+        ast = []
+        for stmt in self.statements:
+            expr = stmt.expr
+            if isinstance(stmt, CommentStmt):
+                ast.append(expr)
+#            elif isinstance(stmt, ImportFromStmt):
+#                # TODO: this only works if names contains one entry
+#                name = stmt.dotted_name.names[0]
+#                if not(name in ignored_modules):
+#                    imports += printer(stmt.expr) + "\n"
+#                    modules += stmt.dotted_name.names
+            elif isinstance(stmt, DeclarationStmt):
+                ast.append(expr)
+            elif isinstance(stmt, HeaderStmt):
+                # calling expr will add the function definition to headers in syntax
+                # nothing to do
+                continue
+            elif isinstance(stmt, AssignStmt):
+                ast.append(expr)
+            elif isinstance(stmt, MultiAssignStmt):
+                ast.append(expr)
+            elif isinstance(stmt, ForStmt):
+                ast.append(expr)
+            elif isinstance(stmt,WhileStmt):
+                ast.append(expr)
+            elif isinstance(stmt, IfStmt):
+                ast.append(expr)
+            elif isinstance(stmt, FunctionDefStmt):
+                ast.append(expr)
+#                # TODO must be done only for fortran
+#                if len(expr.results) == 1:
+#                    result = expr.results[0]
+#                    if result.allocatable:
+#                        expr = subs(expr, result.name, expr.name)
+#                sep = separator()
+#                routines += sep + printer(expr) + "\n" \
+#                          + sep + '\n'
+            elif isinstance(stmt, PythonPrintStmt):
+                ast.append(expr)
+#            elif isinstance(stmt, ConstructorStmt):
+#                # this statement does not generate any code
+#                ast.append(expr)
+            elif isinstance(stmt, OpenmpStmt):
+                ast.append(expr)
+            elif isinstance(stmt, ThreadStmt):
+                ast.append(expr)
+            elif isinstance(stmt, StencilStmt):
+                ast.append(expr)
+#            elif isinstance(stmt, EvalStmt):
+#                for s in stmt.expr:
+#                    body += printer(s) + "\n"
+            else:
+                if True:
+                    print "> uncovered statement of type : ", type(stmt)
+                else:
+                    raise Exception('Statement not yet handled.')
+        # ...
 
-    @property
-    def local_vars(self):
-        """must be defined by the statement."""
-        return []
-
-    @property
-    def stmt_vars(self):
-        """must be defined by the statement."""
-        return []
-
-    def update(self):
-        pass
+        return ast
 
 class ConstructorStmt(BasicStmt):
     """
@@ -1005,8 +1015,10 @@ class AssignStmt(BasicStmt):
             d_var['allocatable'] = not(d_var['shape'] is None)
             insert_variable(var_name, **d_var)
             if d_var['shape']:
+                if DEBUG:
+                    print "> Found an unallocated variable: ", var_name
                 stmt = Zeros(var_name, d_var['shape'])
-                self.pre_stmts.append(stmt)
+                self.unallocated[var_name] = stmt
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
@@ -1605,21 +1617,6 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-#        print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-#        for arg_name in self.args:
-#            if not(arg_name in namespace):
-#                if DEBUG:
-#                    print("> Found new argument" + arg_name)
-#
-#                # TODO define datatype, rank
-#                # TODO check if arg is a return value
-#                rank = 0
-#                datatype = 'float'
-#                insert_variable(arg_name, datatype=datatype, rank=rank,
-#                                is_argument=True)
-#            else:
-#                print("+++ found already declared argument : ", arg_name)
-
         name = str(self.name)
 
         if not(name in headers):
@@ -1677,37 +1674,6 @@ class FunctionDefStmt(BasicStmt):
         global_vars = []
 
         return FunctionDef(name, args, results, body, local_vars, global_vars)
-
-class ImportFromStmt(BasicStmt):
-    """Class representing an Import statement in the grammar."""
-    def __init__(self, **kwargs):
-        """
-        Constructor for an Import statement.
-
-        Parameters
-        ==========
-        dotted_name: list
-            modules path
-        import_as_names: textX object
-            everything that can be imported
-        """
-        self.dotted_name     = kwargs.pop('dotted_name')
-        self.import_as_names = kwargs.pop('import_as_names')
-
-        super(ImportFromStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the Import statement,
-        by returning the appropriate object from pyccel.types.ast
-        """
-        self.update()
-
-        # TODO how to handle dotted packages?
-        fil = self.dotted_name.names[0]
-        funcs = self.import_as_names.names
-        return Import(fil, funcs)
 
 class PythonPrintStmt(BasicStmt):
     """Class representing a Print statement as described in the grammar."""
@@ -2375,3 +2341,4 @@ class HeaderStmt(BasicStmt):
         h = Header(self.name, self.dtypes)
         headers[self.name] = h
         return h
+

@@ -4,7 +4,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
-from pyccel.syntax import ImportFromStmt
+from pyccel.patterns.syntax import ImportFromStmt
 
 __all__ = ['find_imports']
 
