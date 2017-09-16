@@ -121,7 +121,6 @@ __all__ = ["Pyccel", \
 # Global variable namespace
 namespace    = {}
 headers      = {}
-stack        = {}
 settings     = {}
 declarations = {}
 
@@ -137,7 +136,7 @@ builtin_types  = ['int', 'float', 'double', 'complex']
 builtin_funcs_math_un = ['abs', 'asin', 'acsc', 'acot', \
                          'acos', 'asec', 'atan', 'atan2', \
                          'ceil', 'cos', 'cosh', 'cot', 'csc', \
-                         'exp', 'log', 'max', 'min' \
+                         'exp', 'log', 'max', 'min', \
                          'sec', 'sign', 'sin', 'sinh', \
                          'sqrt', 'tan', 'tanh']
 builtin_funcs_math_bin = ['dot', 'pow']
@@ -737,7 +736,6 @@ class Pyccel(object):
         # ... reset global variables
         namespace    = {}
         headers      = {}
-        stack        = {}
         settings     = {}
         declarations = {}
 
@@ -880,8 +878,6 @@ class DelStmt(BasicStmt):
         for var in self.variables:
             if var in namespace:
                 namespace.pop(var)
-            elif var in stack:
-                stack.pop(var)
             else:
                 raise Exception('Unknown variable "{}" at position {}'
                                 .format(var, self._tx_position))
@@ -1363,7 +1359,6 @@ class Operand(ExpressionElement):
         """
         if DEBUG:
             print "> Operand "
-            print "> stack : ", stack
             print self.op
 
         op = self.op
@@ -1380,10 +1375,6 @@ class Operand(ExpressionElement):
             for O in op:
                 if O in namespace:
                     return namespace[O]
-                elif O in stack:
-                    if DEBUG:
-                        print ">>> found local variables: " + O
-                    return Symbol(O)
                 elif type(O) == int:
                     return Integer(O)
                 elif type(O) == float:
@@ -1393,10 +1384,6 @@ class Operand(ExpressionElement):
                                     .format(O, self._tx_position))
         elif isinstance(op, ExpressionElement):
             return op.expr
-        elif op in stack:
-            if DEBUG:
-                print ">>> found local variables: " + op
-            return Symbol(op)
         elif op in namespace:
             if isinstance(namespace[op], FunctionDefStmt):
                 return Function(op)
@@ -1406,8 +1393,6 @@ class Operand(ExpressionElement):
             return Function(op)
         elif op in builtin_types:
             return datatype(op)
-        elif(type(op)==unicode):
-            return op
         else:
             raise Exception('Undefined variable "{}"'.format(op))
 

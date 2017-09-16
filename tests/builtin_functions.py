@@ -69,6 +69,10 @@ l3, l4, l5 = shape(b5)
 
 r1 = max(a4)
 r2 = max(b5)
+r3 = min(a4)
+r4 = min(b5)
 
 rr1 = 3.0 + 2.0 * max(a4)
 rr2 = 3 + 2 * max(b5)
+rr3 = 3.0 + 2.0 * min(a4)
+rr4 = 3 + 2 * min(b5)
