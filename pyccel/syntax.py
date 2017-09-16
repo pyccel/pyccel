@@ -148,20 +148,6 @@ builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 # ...
 
-def dtype_from_args(args, strict=True):
-    # ...
-    def _get_dtype(a):
-        name = str(a)
-        if not(name in namespace):
-            raise Exception("Undefined variable {0}".format(name))
-        return namespace[name].dtype
-    # ...
-
-    dtypes = list(set([_get_dtype(a) for a in args]))
-    if strict:
-        assert(len(dtypes) == 1)
-    return dtypes[0]
-
 def get_attributs(expr):
     """
     finds attributs of the expression
@@ -180,7 +166,7 @@ def get_attributs(expr):
         d_var['allocatable'] = False
         d_var['rank']        = 0
     elif isinstance(expr, (Dot, Min, Max)):
-        d_var['datatype']    = dtype_from_args(expr.args)
+        d_var['datatype']    = expr.args[0].dtype
         d_var['allocatable'] = False
         d_var['rank']        = 0
     elif isinstance(expr, IndexedVariable):
@@ -402,7 +388,7 @@ def builtin_function(name, args, lhs=None):
             return Dot(*args)
         else:
             d_var = {}
-            d_var['datatype'] = dtype_from_args(args)
+            d_var['datatype'] = args[0].dtype
             insert_variable(lhs, **d_var)
             expr = Dot(*args)
             return Assign(Symbol(lhs), expr)
@@ -412,7 +398,7 @@ def builtin_function(name, args, lhs=None):
             return func(*args)
         else:
             d_var = {}
-            d_var['datatype'] = dtype_from_args(args)
+            d_var['datatype'] = args[0].dtype
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
