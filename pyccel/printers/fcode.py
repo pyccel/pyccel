@@ -371,11 +371,11 @@ class FCodePrinter(CodePrinter):
             ret_type = self._print(result.dtype)
             func_type = 'function'
 
-            if result.allocatable:
+            if result.allocatable or (result.rank > 0):
                 sig = 'function {0}'.format(name)
                 var = Variable(result.dtype, result.name, \
                              rank=result.rank, \
-                             allocatable=result.allocatable, \
+                             allocatable=True, \
                              shape=result.shape)
 
                 dec = Declare(result.dtype, var)

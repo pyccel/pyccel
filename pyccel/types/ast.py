@@ -53,23 +53,20 @@ def subs(expr, a_old, a_new):
     """
     Substitutes old for new in an expression after sympifying args.
 
-    a_old: str, Symbol
+    a_old: str, Symbol, Variable
         name of the symbol to replace
-    a_new: str, Symbol
+    a_new: str, Symbol, Variable
         name of the new symbol
 
     Examples
     ========
     """
-    if isinstance(a_old, str):
-        a_old = Symbol(a_old)
-    if isinstance(a_new, str):
-        a_new = Symbol(a_new)
+    a_new = a_old.clone(str(a_new))
 
     if iterable(expr):
         return [subs(i, a_old, a_new) for i in expr]
     elif isinstance(expr, Variable):
-        if expr.name == a_old:
+        if expr.name == str(a_old):
             args = [expr.dtype, a_new]
 
             d_var = {}
@@ -630,6 +627,13 @@ class Variable(Symbol):
 
     def __str__(self):
         return self.name
+
+    def clone(self, name):
+        cls = eval(self.__class__.__name__)
+        return cls(self.dtype, name, \
+                   rank=self.rank, \
+                   allocatable=self.allocatable, \
+                   shape=self.shape)
 
 class Argument(Variable):
     """An abstract Argument data structure."""
