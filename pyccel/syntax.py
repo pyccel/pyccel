@@ -95,7 +95,6 @@ namespace    = {}
 headers      = {}
 stack        = {}
 settings     = {}
-variables    = {}
 declarations = {}
 
 namespace["True"]  = true
@@ -129,7 +128,7 @@ def dtype_from_args(args, strict=True):
         name = str(a)
         if not(name in namespace):
             raise Exception("Undefined variable {0}".format(name))
-        return variables[name].dtype
+        return namespace[name].dtype
     # ...
 
     dtypes = list(set([_get_dtype(a) for a in args]))
@@ -228,7 +227,7 @@ def get_attributs(expr):
     elif isinstance(expr, IndexedVariable):
         name = str(expr)
         if name in namespace:
-            var = variables[name]
+            var = namespace[name]
 
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
@@ -237,7 +236,7 @@ def get_attributs(expr):
     elif isinstance(expr, IndexedElement):
         name = str(expr.base)
         if name in namespace:
-            var = variables[name]
+            var = namespace[name]
 
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
@@ -246,7 +245,7 @@ def get_attributs(expr):
     elif isinstance(expr, Variable):
         name = str(expr)
         if name in namespace:
-            var = variables[name]
+            var = namespace[name]
 
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
@@ -344,7 +343,7 @@ def get_attributs(expr):
                and (not isinstance(a, (Variable, IndexedVariable, Function))):
                 name = str(a)
                 if name in namespace:
-                    var = variables[name]
+                    var = namespace[name]
 
                     d_var['datatype']    = var.dtype
                     d_var['allocatable'] = False
@@ -447,7 +446,7 @@ def builtin_function(name, args, lhs=None):
             raise ValueError("Undefined variable {0}".format(name))
 
         name = args[0].name
-        var = variables[name]
+        var = namespace[name]
 
         d_var = {}
         d_var['datatype']    = var.dtype
@@ -559,7 +558,7 @@ def insert_variable(var_name, \
         print txt
 
     if var_name in namespace:
-        var = variables[var_name]
+        var = namespace[var_name]
         if datatype is None:
             datatype = var.dtype
         if rank is None:
@@ -603,11 +602,9 @@ def insert_variable(var_name, \
 
     if var_name in namespace:
         namespace.pop(var_name)
-        variables.pop(var_name)
         declarations.pop(var_name)
 
     namespace[var_name]    = var
-    variables[var_name]    = var
     declarations[var_name] = dec
 
 # ...
@@ -720,7 +717,6 @@ class Pyccel(object):
         headers      = {}
         stack        = {}
         settings     = {}
-        variables    = {}
         declarations = {}
 
         namespace["True"]  = true
@@ -955,36 +951,6 @@ class PassStmt(BasicStmt):
         self.update()
 
         return self.label
-
-#class ElifStmt(BasicStmt):
-#    """Class representing an Elif statement."""
-#
-#    def __init__(self, **kwargs):
-#        """
-#        Constructor for the Elif statement class.
-#        This class does not have the expr property,
-#        since it is used inside the IfStmt
-#
-#        Parameters
-#        ==========
-#        body: list
-#            statements tree as given by the textX, for the true block (if)
-#        test: Test
-#            represents the condition for the Elif statement.
-#        """
-#        self.body = kwargs.pop('body')
-#        self.test = kwargs.pop('test')
-#
-#        super(ElifStmt, self).__init__(**kwargs)
-#
-#    @property
-#    def stmt_vars(self):
-#        """Returns the statement variables."""
-#        ls = []
-#        for stmt in self.body.stmts:
-#            ls += stmt.local_vars
-#            ls += stmt.stmt_vars
-#        return ls
 
 # TODO: improve by allowing for the elif statements
 class IfStmt(BasicStmt):
@@ -1634,7 +1600,7 @@ class ReturnStmt(FlowStmt):
         # TODO check that var is in namespace
         for var_name in self.variables:
             if var_name in namespace:
-                var = variables[var_name]
+                var = namespace[var_name]
 #                print var_name, var
                 if isinstance(var, Variable):
                     res = Result(var.dtype, var_name, \
@@ -1726,7 +1692,7 @@ class FunctionDefStmt(BasicStmt):
 
         body = self.body.expr
 
-        args    = [variables[arg_name] for arg_name in self.args]
+        args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
 
         # ...
@@ -1739,14 +1705,12 @@ class FunctionDefStmt(BasicStmt):
         # ... cleaning the namespace
         for arg_name in self.args:
             declarations.pop(arg_name)
-            variables.pop(arg_name)
             namespace.pop(arg_name)
 
         ls = self.local_vars + self.stmt_vars
         for var_name in ls:
             if var_name in namespace:
                 namespace.pop(var_name, None)
-                variables.pop(var_name, None)
                 dec = declarations.pop(var_name, None)
                 if dec:
                     prelude.append(dec)
@@ -2129,7 +2093,7 @@ class ArgList(BasicStmt):
                 ls.append(float(arg))
             else:
                 if arg in namespace:
-                    ls.append(variables[arg])
+                    ls.append(namespace[arg])
                 else:
                     ls.append(arg)
         return ls
