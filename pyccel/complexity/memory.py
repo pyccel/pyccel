@@ -23,7 +23,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
                               Stencil, \
-                              Zeros, Ones, Array, Len, Dot, Min, Max,IndexedElement)
+                              Zeros, Ones, Array, Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic      import Complexity
 from pyccel.complexity.arithmetic import count_ops

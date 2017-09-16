@@ -18,7 +18,7 @@ from sympy.sets.fancysets import Range
 from pyccel.types.ast import (Assign, MultiAssign, \
                               Variable, Declare, Result, \
                               InArgument, OutArgument, InOutArgument, \
-                              Len, Dot, Min, Max, Sign, subs)
+                              Len, Dot, Sign, subs)
 from pyccel.printers.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -232,50 +232,38 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_Len(self,expr):
+    def _print_Len(self, expr):
         if isinstance(expr.rhs,list):
             st=','.join([str(i) for i in expr.rhs])
             return self._get_statement('size((/%s/),1)'%(st))
         else:
             return self._get_statement('size(%s,1)'%(expr.rhs))
 
-    def _print_Shape(self,expr):
+    def _print_Shape(self, expr):
         code = ''
         for i,a in enumerate(expr.lhs):
             a_str = self._print(a)
             r_str = self._print(expr.rhs)
             code += '{0} = size({1}, {2})\n'.format(a_str, r_str, str(i+1))
-        return code
+        return self._get_statement(code)
 
-    def _print_Min(self,expr):
-        if isinstance(expr.expr_l,list):
-            st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'
-
+    def _print_Min(self, expr):
+        args = expr.args
+        if len(args) == 1:
+            arg = args[0]
+            code = 'minval({0})'.format(self._print(arg))
         else:
-            st_l=expr.expr_l
-
-        if isinstance(expr.expr_r,list):
-            st_r='(/'+','.join([str(i) for i in expr.expr_r])+'/)'
-
-        else:
-            st_r=expr.expr_r
-        return self._get_statement('min(%s,%s)'%(st_l,st_r))
-
+            raise ValueError("Expecting one argument for the moment.")
+        return self._get_statement(code)
 
     def _print_Max(self,expr):
-        if isinstance(expr.expr_l,list):
-            st_l='(/'+','.join([str(i) for i in expr.expr_l])+'/)'
-
+        args = expr.args
+        if len(args) == 1:
+            arg = args[0]
+            code = 'maxval({0})'.format(self._print(arg))
         else:
-            st_l=expr.expr_l
-
-        if isinstance(expr.expr_r,list):
-            st_r='(/'+','.join([str(i) for i in expr.expr_r])+'/)'
-
-        else:
-            st_r=expr.expr_r
-        return self._get_statement('max(%s,%s)'%(st_l,st_r))
-
+            raise ValueError("Expecting one argument for the moment.")
+        return self._get_statement(code)
 
     def _print_Dot(self,expr):
         return self._get_statement('dot_product(%s,%s)'%(self._print(expr.expr_l),self._print(expr.expr_r)))

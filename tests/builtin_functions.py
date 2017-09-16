@@ -66,3 +66,9 @@ n4 = 3 + 2 * len(c1)
 
 l1, l2 = shape(a4)
 l3, l4, l5 = shape(b5)
+
+r1 = max(a4)
+r2 = max(b5)
+
+rr1 = 3.0 + 2.0 * max(a4)
+rr2 = 3 + 2 * max(b5)

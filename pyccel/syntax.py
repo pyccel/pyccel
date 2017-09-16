@@ -44,8 +44,8 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               ThreadID, ThreadsNumber, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
-                              Dot, Min, Max, Sign, IndexedElement,\
-                              GOrEq, LOrEq, Lthan, Gter)
+                              Dot, Sign, IndexedElement,\
+                              GOrEq, LOrEq, Lthan, Gter, Min, Max)
 
 from pyccel.core.syntax     import BasicStmt
 from pyccel.imports.syntax import ImportFromStmt
@@ -118,7 +118,7 @@ builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', \
-                  'len', 'shape']
+                  'len', 'shape', 'max', 'min']
 builtin_funcs += builtin_funcs_math
 # ...
 
@@ -220,7 +220,7 @@ def get_attributs(expr):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
-    elif isinstance(expr, Dot):
+    elif isinstance(expr, (Dot, Min, Max)):
         d_var['datatype']    = dtype_from_args(expr.args)
         d_var['allocatable'] = False
         d_var['rank']        = 0
@@ -303,7 +303,7 @@ def get_attributs(expr):
             if     (not a.is_Symbol) \
                and (not isinstance(a, (IndexedElement, Function))):
                 args.extend(a.args)
-            if isinstance(a, (Ceil, Len, Dot)):
+            if isinstance(a, (Ceil, Len, Dot, Min, Max)):
                 d_var = get_attributs(a)
                 continue
             if isinstance(a, Function):
@@ -465,6 +465,16 @@ def builtin_function(name, args, lhs=None):
             d_var['datatype'] = dtype_from_args(args)
             insert_variable(lhs, **d_var)
             expr = Dot(*args)
+            return Assign(Symbol(lhs), expr)
+    elif name in ['max', 'min']:
+        func = eval(name.capitalize())
+        if lhs is None:
+            return func(*args)
+        else:
+            d_var = {}
+            d_var['datatype'] = dtype_from_args(args)
+            insert_variable(lhs, **d_var)
+            expr = func(*args)
             return Assign(Symbol(lhs), expr)
     elif name in builtin_funcs_math_un + ['len']:
         if not(len(args) == 1):
@@ -744,61 +754,6 @@ class Pyccel(object):
             expr = stmt.expr
             if not(expr is None):
                 ast.append(expr)
-#            # there are some statements that do not return an expression
-#            if isinstance(stmt, CommentStmt):
-#                ast.append(expr)
-##            elif isinstance(stmt, ImportFromStmt):
-##                # TODO: this only works if names contains one entry
-##                name = stmt.dotted_name.names[0]
-##                if not(name in ignored_modules):
-##                    imports += printer(stmt.expr) + "\n"
-##                    modules += stmt.dotted_name.names
-#            elif isinstance(stmt, DeclarationStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, HeaderStmt):
-#                # calling expr will add the function definition to headers in syntax
-#                # nothing to do
-#                continue
-#            elif isinstance(stmt, AssignStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, MultiAssignStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, ForStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt,WhileStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, IfStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, FunctionDefStmt):
-#                ast.append(expr)
-##                # TODO must be done only for fortran
-##                if len(expr.results) == 1:
-##                    result = expr.results[0]
-##                    if result.allocatable:
-##                        expr = subs(expr, result.name, expr.name)
-##                sep = separator()
-##                routines += sep + printer(expr) + "\n" \
-##                          + sep + '\n'
-#            elif isinstance(stmt, PythonPrintStmt):
-#                ast.append(expr)
-##            elif isinstance(stmt, ConstructorStmt):
-##                # this statement does not generate any code
-##                ast.append(expr)
-#            elif isinstance(stmt, OpenmpStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, ThreadStmt):
-#                ast.append(expr)
-#            elif isinstance(stmt, StencilStmt):
-#                ast.append(expr)
-##            elif isinstance(stmt, EvalStmt):
-##                for s in stmt.expr:
-##                    body += printer(s) + "\n"
-#            else:
-#                if True:
-#                    print "> uncovered statement of type : ", type(stmt)
-#                else:
-#                    raise Exception('Statement not yet handled.')
-#        # ...
 
         return ast
 

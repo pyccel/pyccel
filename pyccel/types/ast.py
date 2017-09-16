@@ -950,37 +950,17 @@ class Shape(Basic):
         outputs = ', '.join(sstr(i) for i in self.lhs)
         return '{1} := shape({0})'.format(self.rhs, outputs)
 
-# TODO: treat as a Function
-# TODO: improve by using args
 # TODO: add example
-class Min(Basic):
+class Min(Function):
     """Represents a 'min' expression in the code."""
-    def __new__(cls, expr_l, expr_r):
-        return Basic.__new__(cls, expr_l, expr_r)
+    def __new__(cls, *args):
+        return Basic.__new__(cls, *args)
 
-    @property
-    def expr_l(self):
-        return self.args[0]
-
-    @property
-    def expr_r(self):
-        return self.args[1]
-
-# TODO: treat as a Function
-# TODO: improve by using args
 # TODO: add example
-class Max(Basic):
+class Max(Function):
     """Represents a 'max' expression in the code."""
-    def __new__(cls, expr_l, expr_r):
-        return Basic.__new__(cls, expr_l, expr_r)
-
-    @property
-    def expr_l(self):
-        return self.args[0]
-
-    @property
-    def expr_r(self):
-        return self.args[1]
+    def __new__(cls, *args):
+        return Basic.__new__(cls, *args)
 
 # TODO: improve with __new__ from Function and add example
 class Dot(Function):
