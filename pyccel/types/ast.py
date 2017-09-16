@@ -158,6 +158,13 @@ class Assign(Basic):
         if True, we do some verifications. In general, this can be more
         complicated and is treated in pyccel.syntax.
 
+    status: None, str
+        if lhs is not allocatable, then status is None.
+        otherwise, status is {'allocated', 'unallocated'}
+
+    like: None, Variable
+        contains the name of the variable from which the lhs will be cloned.
+
     Examples
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
@@ -176,7 +183,7 @@ class Assign(Basic):
 
     """
 
-    def __new__(cls, lhs, rhs, strict=True):
+    def __new__(cls, lhs, rhs, strict=True, status=None, like=None):
         if strict:
             lhs = _sympify(lhs)
             rhs = _sympify(rhs)
@@ -197,7 +204,7 @@ class Assign(Basic):
                     raise ValueError("Dimensions of lhs and rhs don't align.")
             elif rhs_is_mat and not lhs_is_mat:
                 raise ValueError("Cannot assign a matrix to a scalar.")
-        return Basic.__new__(cls, lhs, rhs)
+        return Basic.__new__(cls, lhs, rhs, status, like)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -211,9 +218,18 @@ class Assign(Basic):
     def rhs(self):
         return self._args[1]
 
+    # TODO : remove
     @property
     def expr(self):
         return self.rhs
+
+    @property
+    def status(self):
+        return self._args[2]
+
+    @property
+    def like(self):
+        return self._args[3]
 
 
 # The following are defined to be sympy approved nodes. If there is something

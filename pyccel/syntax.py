@@ -1008,6 +1008,8 @@ class AssignStmt(BasicStmt):
 
         var_name = self.lhs
         rhs      = self.rhs.expr
+        status   = None
+        like     = None
 
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
@@ -1016,12 +1018,12 @@ class AssignStmt(BasicStmt):
 #            print "                : ", d_var
 
             d_var['allocatable'] = not(d_var['shape'] is None)
-            insert_variable(var_name, **d_var)
             if d_var['shape']:
                 if DEBUG:
                     print "> Found an unallocated variable: ", var_name
-                stmt = Zeros(var_name, d_var['shape'])
-                self.unallocated[var_name] = stmt
+                status = 'unallocated'
+                like   = variables['a']
+            insert_variable(var_name, **d_var)
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
@@ -1035,7 +1037,7 @@ class AssignStmt(BasicStmt):
             args = self.trailer.expr
             l = IndexedVariable(str(self.lhs))[args]
 
-        return Assign(l, rhs, strict=False)
+        return Assign(l, rhs, strict=False, status=status, like=like)
 
 class MultiAssignStmt(BasicStmt):
     """

@@ -14,6 +14,7 @@ from sympy.printing.precedence import precedence
 
 from pyccel.types.ast import Assign
 from pyccel.types.ast import FunctionDef
+from pyccel.types.ast import ZerosLike
 
 # TODO: add examples
 
@@ -83,12 +84,18 @@ class CodePrinter(StrPrinter):
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
-#        print(">>>>>>>>> type : ", type(expr.rhs), str(expr.rhs))
         if isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
         else:
             rhs_code = self._print(expr.rhs)
-        return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+        code = ''
+        if expr.status == 'unallocated':
+            stmt = ZerosLike(lhs_code, expr.like)
+            code += self._print(stmt)
+            code += '\n'
+        code += '{0} = {1}'.format(lhs_code, rhs_code)
+        return self._get_statement(code)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
