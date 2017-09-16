@@ -452,8 +452,7 @@ def builtin_function(name, args, lhs=None):
         if not(args[0].name in namespace):
             raise ValueError("Undefined variable {0}".format(name))
 
-        name = args[0].name
-        var = namespace[name]
+        var = args[0]
 
         d_var = {}
         d_var['datatype']    = var.dtype
