@@ -579,14 +579,6 @@ def insert_variable(var_name, \
         if allocatable is None:
             allocatable = False
 
-    is_integer = (datatype == 'int')
-
-    # we first create a sympy symbol
-    if not allocatable:
-        s = Symbol(var_name, integer=is_integer)
-    else:
-        s = IndexedVariable(var_name)
-
     # we create a variable (for annotation)
     if not is_argument:
         var = Variable(datatype, var_name, \
