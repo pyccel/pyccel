@@ -268,14 +268,10 @@ def get_attributs(expr):
             d_var['shape']       = d_var['shape']
             d_var['rank']        = d_var['rank']
     elif isinstance(expr, Variable):
-        name = str(expr)
-        if name in namespace:
-            var = namespace[name]
-
-            d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape']       = var.shape
-            d_var['rank']        = var.rank
+        d_var['datatype']    = expr.dtype
+        d_var['allocatable'] = expr.allocatable
+        d_var['shape']       = expr.shape
+        d_var['rank']        = expr.rank
     elif isinstance(expr, Expr):
         args = [expr]
         while args:
