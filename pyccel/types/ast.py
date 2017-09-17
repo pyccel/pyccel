@@ -1323,7 +1323,6 @@ class IndexedVariable(IndexedBase):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch.")
-            print (">>>> indices : ", indices)
             return IndexedElement(self, *indices, **kw_args)
         else:
             if self.shape and len(self.shape) != 1:

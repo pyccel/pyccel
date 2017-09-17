@@ -160,8 +160,8 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-    print '>>>>> expr = ', expr
-    print '>>>>> type = ', type(expr)
+#    print '>>>>> expr = ', expr
+#    print '>>>>> type = ', type(expr)
 
     if isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
@@ -189,8 +189,11 @@ def get_attributs(expr):
             rank = var.rank - expr.rank
             if rank > 0:
                 d_var['allocatable'] = var.allocatable
-            # TODO compute shape
-            d_var['shape']       = None
+            shape = []
+            for s,i in zip(var.shape, expr.indices):
+                if not(isinstance(i, Slice)):
+                    shape.append(i)
+            d_var['shape']       = shape
             d_var['rank']        = rank
     elif isinstance(expr, Variable):
         d_var['datatype']    = expr.dtype
@@ -885,8 +888,8 @@ class AssignStmt(BasicStmt):
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
 
-            print ">>>> AssignStmt : ", var_name
-            print "                : ", d_var
+#            print ">>>> AssignStmt : ", var_name
+#            print "                : ", d_var
 
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:
