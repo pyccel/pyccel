@@ -17,7 +17,8 @@ from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, \
                               Variable, Declare, \
-                              Len, Dot, Sign, subs)
+                              Len, Dot, Sign, subs, \
+                              IndexedElement, Slice)
 from pyccel.printers.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -219,7 +220,14 @@ class FCodePrinter(CodePrinter):
     def _print_ZerosLike(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        rank = expr.rhs.rank
+        if isinstance(expr.rhs, IndexedElement):
+            shape = []
+            for i in expr.rhs.indices:
+                if isinstance(i, Slice):
+                    shape.append(i)
+            rank = len(shape)
+        else:
+            rank = expr.rhs.rank
         rs = []
         for i in range(1, rank+1):
             l = 'lbound({0},{1})'.format(rhs, str(i))

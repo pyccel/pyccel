@@ -156,8 +156,8 @@ def allocatable_like(expr):
     """
     finds attributs of the expression
     """
-#    print '>>>>> expr = ', expr
-#    print '>>>>> type = ', type(expr)
+#    print ('>>>>> expr = ', expr)
+#    print ('>>>>> type = ', type(expr))
 
     if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
         return expr
@@ -165,7 +165,7 @@ def allocatable_like(expr):
         args = [expr]
         while args:
             a = args.pop()
-#            print ">>>> ", a, type(a)
+#            print (">>>> ", a, type(a))
 
             # XXX: This is a hack to support non-Basic args
             if isinstance(a, string_types):

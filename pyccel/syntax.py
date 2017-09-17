@@ -186,13 +186,19 @@ def get_attributs(expr):
             var = namespace[name]
 
             d_var['datatype']    = var.dtype
+
+            if iterable(var.shape):
+                shape = []
+                for s,i in zip(var.shape, expr.indices):
+                    if isinstance(i, Slice):
+                        shape.append(i)
+            else:
+                shape = None
+
             rank = var.rank - expr.rank
             if rank > 0:
                 d_var['allocatable'] = var.allocatable
-            shape = []
-            for s,i in zip(var.shape, expr.indices):
-                if not(isinstance(i, Slice)):
-                    shape.append(i)
+
             d_var['shape']       = shape
             d_var['rank']        = rank
     elif isinstance(expr, Variable):
