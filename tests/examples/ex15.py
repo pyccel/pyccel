@@ -1,30 +1,26 @@
-
 #$ header A(double [:])
 def A(x):
-    y=x[0]+x[1]+x[2]
-    z=x[0]+x[1]+x[2]
-    t=x[0]+x[1]+x[2]
-    w=array((y,z,t),float)
-    return w
+    y[0] = x[0] + 1.0
+    return y
 
-x=array((0,0,0),float)
-b=array((2,5,-1),float)
-tol=1.0e-9
-n = len(b)
-r = b - A(x)
-s = r
-alpha=0.5
-ss=dot(r,r)
-for i in range(1,n):
-    u = 2.0*x
-    l=dot(s,u)
-    ll=dot(s,r)
-    alpha = ll/l
-    x = x + alpha*s
-    r = b - 2.0*x
-    ss=dot(r,r)
-    l=dot(s,u)
-    ll=dot(r,u)
-    beta = -ll/l
-    s = r + beta*s
-print(x,i)
+x     = ones(3, float)
+b     = ones(3, float)
+#tol   = 1.0e-9
+#m     = 10
+#r     = b - A(x)
+#s     = r
+#alpha = 0.5
+#ss    = dot(r,r)
+#for i in range(1,m):
+#    u     = 2.0*x
+#    l     = dot(s,u)
+#    ll    = dot(s,r)
+#    alpha = ll/l
+#    x  = x + alpha*s
+#    r  = b - 2.0*x
+#    ss = dot(r,r)
+#    l  = dot(s,u)
+#    ll = dot(r,u)
+#    beta = -ll/l
+#    s = r + beta*s
+#print(x,i)

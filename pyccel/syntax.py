@@ -188,8 +188,8 @@ def get_attributs(expr):
 
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
-            d_var['shape']       = d_var['shape']
-            d_var['rank']        = d_var['rank']
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
     elif isinstance(expr, Variable):
         d_var['datatype']    = expr.dtype
         d_var['allocatable'] = expr.allocatable
@@ -533,7 +533,7 @@ def do_arg(a):
         arg = a
     elif isinstance(a, Expression):
         arg = a.expr
-        if isinstance(arg, Symbol):
+        if isinstance(arg, (Symbol, Variable)):
             arg = Symbol(arg.name, integer=True)
         else:
             arg = convert_to_integer_expression(arg)
@@ -543,23 +543,19 @@ def do_arg(a):
     return arg
 # ...
 
-# ...
+# ... TODO improve. this version is not working with function calls
 def convert_to_integer_expression(expr):
     """
     converts an expression to an integer expression.
-    this function replaces the float numbers like 1.0 to 1
 
     expr: sympy.expression
         a sympy expression
     """
-    numbers = []
-    for arg in preorder_traversal(expr):
-        if isinstance(arg, Float):
-            numbers.append(arg)
-    e = expr
-    for n in numbers:
-        e = e.subs(n, int(n))
-    return e
+    args_old = expr.free_symbols
+    args = [Symbol(str(a), integer=True) for a in args_old]
+    for a,b in zip(args_old, args):
+        expr = expr.subs(a,b)
+    return expr
 # ...
 
 # ...
@@ -1228,7 +1224,7 @@ class Operand(ExpressionElement):
         """
         if DEBUG:
             print "> Operand "
-            print self.op
+            print self.op, type(self.op)
 
         op = self.op
         if op in ['shape']:
@@ -1263,7 +1259,9 @@ class Operand(ExpressionElement):
         elif op in builtin_types:
             return datatype(op)
         else:
-            raise Exception('Undefined variable "{}"'.format(op))
+            print namespace
+            txt = 'Undefined variable "{0}" of type {1}'.format(op, type(op))
+            raise Exception(txt)
 
 class Test(ExpressionElement):
     """Class representing a test expression as described in the grammmar."""
@@ -1500,7 +1498,7 @@ class FunctionDefStmt(BasicStmt):
         for arg_name, d in zip(self.args, h.dtypes):
             rank = 0
             for i in d[1]:
-#                print i, type(i)
+#                print ">>>> ", i, type(i)
                 if isinstance(i, Slice):
                     rank += 1
 #            print ">>>> rank = ", rank
@@ -1742,7 +1740,6 @@ class TrailerSubscriptList(BasicTrailer):
                 arg = a.expr
                 args.append(arg)
             else:
-                print "found : ", type(a)
                 raise Exception('Wrong instance')
         return args
 
@@ -2202,12 +2199,9 @@ class HeaderStmt(BasicStmt):
             attributs.append(attr)
 
         self.dtypes = zip(dtypes, attributs)
-#        print self.name
-#        print self.dtypes
 
     @property
     def expr(self):
         h = Header(self.name, self.dtypes)
         headers[self.name] = h
         return h
-

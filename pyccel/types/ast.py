@@ -76,37 +76,34 @@ def subs(expr, a_old, a_new):
     ========
     """
     a_new = a_old.clone(str(a_new))
+    print(">>>> a_old, a_new", type(a_old), type(a_new))
 
     if iterable(expr):
         return [subs(i, a_old, a_new) for i in expr]
     elif isinstance(expr, Variable):
+#        print(">>>> expr : ", expr)
+#        print(">>>> ", type(a_old), type(a_new))
         if expr.name == str(a_old):
-            args = [expr.dtype, a_new]
-
-            d_var = {}
-            d_var['allocatable'] = expr.allocatable
-            d_var['shape']       = expr.shape
-            d_var['rank']        = expr.rank
-
-            if isinstance(expr, Result):
-                return Result(*args, **d_var)
-            elif isinstance(expr, InArgument):
-                return InArgument(*args, **d_var)
-            elif isinstance(expr, OutArgument):
-                return OutArgument(*args, **d_var)
-            elif isinstance(expr, InOutArgument):
-                return InOutArgument(*args, **d_var)
-            elif isinstance(expr, Argument):
-                return Argument(*args, **d_var)
-            else:
-                return Variable(*args, **d_var)
+#            print("PAR LA : ", a_new)
+            return a_new
         else:
+#            print("PAR ICI")
             return expr
+    elif isinstance(expr, IndexedVariable):
+        print(">>>> IndexedVariable : ", expr)
+#        print(">>>> ", type(a_old), type(a_new))
+        return expr
+    elif isinstance(expr, IndexedElement):
+        print(">>>> IndexedElement : ", expr)
+        e = subs(expr.base, a_old, a_new)
+        print(">>>> ", e, type(e))
+        return e
     elif isinstance(expr, Expr):
         return expr.subs({a_old: a_new})
     elif isinstance(expr, Assign):
         e_rhs = subs(expr.rhs, a_old, a_new)
         e_lhs = subs(expr.lhs, a_old, a_new)
+        print (expr)
         return Assign(e_lhs, e_rhs, strict=False)
     elif isinstance(expr, MultiAssign):
         e_rhs   = subs(expr.rhs, a_old, a_new)
@@ -119,10 +116,12 @@ def subs(expr, a_old, a_new):
         return While(test, body)
     elif isinstance(expr, For):
         # TODO treat iter correctly
-        target = subs(expr.target, a_old, a_new)
-        iter = subs(expr.iter, a_old, a_new)
-        body = subs(expr.body, a_old, a_new)
-        return For(target, iter, body)
+#        target   = subs(expr.target, a_old, a_new)
+#        it       = subs(expr.iterable, a_old, a_new)
+        target   = expr.target
+        it       = expr.iterable
+        body     = subs(expr.body, a_old, a_new)
+        return For(target, it, body)
     elif isinstance(expr, If):
         args = []
         for block in expr.args:
@@ -136,6 +135,7 @@ def subs(expr, a_old, a_new):
         name        = subs(expr.name, a_old, a_new)
         arguments   = subs(expr.arguments, a_old, a_new)
         results     = subs(expr.results, a_old, a_new)
+#        print ("body : ", expr.body)
         body        = subs(expr.body, a_old, a_new)
         local_vars  = subs(expr.local_vars, a_old, a_new)
         global_vars = subs(expr.global_vars, a_old, a_new)
@@ -1388,6 +1388,7 @@ class IndexedVariable(IndexedBase):
             if self.shape and len(self.shape) != 1:
                 raise IndexException("Rank mismatch.")
             return IndexedElement(self, indices, **kw_args)
+
 
 class IndexedElement(Indexed):
     """
