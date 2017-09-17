@@ -72,7 +72,6 @@ def subs(expr, a_old, a_new):
         name of the new symbol
 
     Examples
-    ========
     """
     a_new = a_old.clone(str(a_new))
 #    print(">>>> a_old, a_new", type(a_old), type(a_new))
@@ -1369,7 +1368,6 @@ class IndexedElement(Indexed):
         Returns the rank of the ``IndexedElement`` object.
 
         Examples
-        ========
 
         >>> from sympy import Indexed, Idx, symbols
         >>> i, j, k, l, m = symbols('i:m', cls=Idx)

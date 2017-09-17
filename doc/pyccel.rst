@@ -188,6 +188,9 @@ Syntax (IR)
 
 .. inheritance-diagram:: pyccel.syntax
 
+.. automodule:: pyccel.core.syntax
+   :members:
+
 .. automodule:: pyccel.syntax
    :members:
 
@@ -225,10 +228,13 @@ Printers
 .. automodule:: pyccel.printers.luacode
    :members:
 
-Patterns
-^^^^^^^^
+Imports
+^^^^^^^
 
-.. automodule:: pyccel.patterns.utilities
+.. automodule:: pyccel.imports.syntax
+   :members:
+
+.. automodule:: pyccel.imports.utilities
    :members:
 
 Calculus
@@ -251,12 +257,18 @@ Complexity
 Arithmetic
 __________
 
-.. automodule:: pyccel.complexity.operation
+.. automodule:: pyccel.complexity.arithmetic
    :members:
 
 Memory
 ______
 
 .. automodule:: pyccel.complexity.memory
+   :members:
+
+Basic
+_____
+
+.. automodule:: pyccel.complexity.basic
    :members:
 
