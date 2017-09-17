@@ -30,3 +30,26 @@ r2 = 2.0 + 3.0 * dot(a, a)
 
 i1 = dot(b, b)
 i2 = 2 + 3 * dot(b, b)
+
+#$ header fd(double [:])
+def fd(x):
+    z = zeros_like(x)
+    z = x+1
+    y = 2 * z
+    return y
+
+#$ header gd(double [:])
+def gd(x):
+    y = 2 * x + 1
+    return y
+
+xd = ones(6, double)
+yd = zeros(6, double)
+yd = 2.0 * fd(xd) + 1.0
+print(yd)
+yd = 3.0 * fd(2.0 * fd(xd) + 1.0) + 1.0
+print(yd)
+
+yd = gd(xd)
+print(yd)
+

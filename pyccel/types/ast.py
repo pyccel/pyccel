@@ -101,7 +101,7 @@ def subs(expr, a_old, a_new):
     elif isinstance(expr, Assign):
         e_rhs = subs(expr.rhs, a_old, a_new)
         e_lhs = subs(expr.lhs, a_old, a_new)
-        print (expr)
+#        print (expr)
         return Assign(e_lhs, e_rhs, strict=False)
     elif isinstance(expr, MultiAssign):
         e_rhs   = subs(expr.rhs, a_old, a_new)

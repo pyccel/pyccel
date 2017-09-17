@@ -390,7 +390,7 @@ def builtin_function(name, args, lhs=None):
 
         d_var = {}
         d_var['datatype']    = var.dtype
-        d_var['allocatable'] = var.allocatable
+        d_var['allocatable'] = True
         d_var['shape']       = var.shape
         d_var['rank']        = var.rank
 
