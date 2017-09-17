@@ -186,9 +186,12 @@ def get_attributs(expr):
             var = namespace[name]
 
             d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape']       = var.shape
-            d_var['rank']        = var.rank
+            rank = var.rank - expr.rank
+            if rank > 0:
+                d_var['allocatable'] = var.allocatable
+            # TODO compute shape
+            d_var['shape']       = None
+            d_var['rank']        = rank
     elif isinstance(expr, Variable):
         d_var['datatype']    = expr.dtype
         d_var['allocatable'] = expr.allocatable

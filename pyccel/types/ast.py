@@ -75,7 +75,7 @@ def subs(expr, a_old, a_new):
     ========
     """
     a_new = a_old.clone(str(a_new))
-    print(">>>> a_old, a_new", type(a_old), type(a_new))
+#    print(">>>> a_old, a_new", type(a_old), type(a_new))
 
     if iterable(expr):
         return [subs(i, a_old, a_new) for i in expr]
