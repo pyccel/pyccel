@@ -160,8 +160,8 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-#    print '>>>>> expr = ', expr
-#    print '>>>>> type = ', type(expr)
+    print '>>>>> expr = ', expr
+    print '>>>>> type = ', type(expr)
 
     if isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
@@ -885,8 +885,8 @@ class AssignStmt(BasicStmt):
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
 
-#            print ">>>> AssignStmt : ", var_name
-#            print "                : ", d_var
+            print ">>>> AssignStmt : ", var_name
+            print "                : ", d_var
 
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:

@@ -36,6 +36,9 @@ from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
 
+import collections
+from sympy.core.compatibility import is_sequence
+
 
 # TODO: add EmptyStmt => empty lines
 # TODO: rename Ceil to Ceil
@@ -1320,7 +1323,7 @@ class IndexedVariable(IndexedBase):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch.")
-#            print ("indices : ", indices)
+            print (">>>> indices : ", indices)
             return IndexedElement(self, *indices, **kw_args)
         else:
             if self.shape and len(self.shape) != 1:
@@ -1350,7 +1353,50 @@ class IndexedElement(Indexed):
     **todo:** fix bug. the last result must be : True
     """
     def __new__(cls, base, *args, **kw_args):
-        return Indexed.__new__(cls, base, *args, **kw_args)
+        from sympy.utilities.misc import filldedent
+        from sympy.tensor.array.ndim_array import NDimArray
+        from sympy.matrices.matrices import MatrixBase
+
+        if not args:
+            raise IndexException("Indexed needs at least one index.")
+        if isinstance(base, (string_types, Symbol)):
+            base = IndexedBase(base)
+        elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
+            raise TypeError(filldedent("""
+                Indexed expects string, Symbol, or IndexedBase as base."""))
+        args = list(map(_sympify, args))
+        if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+            if len(args) == 1:
+                return base[args[0]]
+            else:
+                return base[args]
+
+        return Expr.__new__(cls, base, *args, **kw_args)
+
+    @property
+    def rank(self):
+        """
+        Returns the rank of the ``IndexedElement`` object.
+
+        Examples
+        ========
+
+        >>> from sympy import Indexed, Idx, symbols
+        >>> i, j, k, l, m = symbols('i:m', cls=Idx)
+        >>> Indexed('A', i, j).rank
+        2
+        >>> q = Indexed('A', i, j, k, l, m)
+        >>> q.rank
+        5
+        >>> q.rank == len(q.indices)
+        True
+
+        """
+        n = 0
+        for a in self.args[1:]:
+            if not(isinstance(a, Slice)):
+                n += 1
+        return n
 
 # TODO check that args are integers
 class Slice(Basic):
