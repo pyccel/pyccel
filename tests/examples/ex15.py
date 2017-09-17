@@ -1,3 +1,11 @@
+
+
+
+#    y[0] = -2.0 * x[0] + x[1]
+#    for i in range(1, n-1):
+#        y[i] = x[i-1] - 2.0 * x[i] + x[i+1]
+#    y[n-1] = x[n-2] - 2.0 * x[n-1]
+
 #$ header A(double [:])
 def A(x):
     y[0] = x[0] + 1.0

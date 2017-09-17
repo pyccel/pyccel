@@ -37,8 +37,7 @@ from pyccel.types.ast import DataType
 from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              Argument, InArgument, InOutArgument, \
-                              MultiAssign, OutArgument, Result, \
+                              MultiAssign, \
                               FunctionDef, Print, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
@@ -445,7 +444,7 @@ def insert_variable(var_name, \
                     rank=None, \
                     allocatable=None, \
                     shape=None, \
-                    is_argument=False, \
+                    intent=None, \
                     var=None):
     """
     Inserts a variable as a symbol into the namespace. Appends also its
@@ -466,8 +465,8 @@ def insert_variable(var_name, \
     shape: int or list of int
         shape of the array.
 
-    is_argument: bool
-        if the variable is a function argument.
+    intent: None, str
+        used to specify if the variable is in, out or inout argument.
 
     var: pyccel.types.ast.Variable
         if attributs are not given, then var must be provided.
@@ -478,8 +477,8 @@ def insert_variable(var_name, \
     if DEBUG:
 #    if True:
         print ">>>> trying to insert : ", var_name
-        txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, is_argument={4}'\
-                .format(datatype, rank, allocatable, shape, is_argument)
+        txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
+                .format(datatype, rank, allocatable, shape, intent)
         print txt
 
     if var_name in namespace:
@@ -492,8 +491,6 @@ def insert_variable(var_name, \
             allocatable = var.allocatable
         if shape is None:
             shape = var.shape
-        if isinstance(var, InArgument):
-            is_argument = True
     else:
         if datatype is None:
             datatype = DEFAULT_TYPE
@@ -503,19 +500,13 @@ def insert_variable(var_name, \
             allocatable = False
 
     # we create a variable (for annotation)
-    if not is_argument:
-        var = Variable(datatype, var_name, \
-                       rank=rank, \
-                       allocatable=allocatable, \
-                       shape=shape)
-    else:
-        var = InArgument(datatype, var_name, \
-                         rank=rank, \
-                         allocatable=allocatable, \
-                         shape=shape)
+    var = Variable(datatype, var_name, \
+                   rank=rank, \
+                   allocatable=allocatable, \
+                   shape=shape)
 
     # we create a declaration for code generation
-    dec = Declare(datatype, var)
+    dec = Declare(datatype, var, intent=intent)
 
     if var_name in namespace:
         namespace.pop(var_name)
@@ -627,7 +618,7 @@ class Pyccel(object):
         """
         d = {}
         for key,dec in declarations.items():
-            if not(isinstance(dec, Argument)):
+            if dec.intent is None:
                 d[key] = dec
         return d
 
@@ -710,8 +701,8 @@ class DeclarationStmt(BasicStmt):
         decs = []
         # TODO depending on additional options from the grammar
         for var in self.variables:
-            dec = InArgument(datatype, var.expr)
-            decs.append(Declare(datatype, dec))
+            dec = Variable(datatype, var.expr)
+            decs.append(Declare(datatype, dec, intent='in'))
 
         self.update()
 
@@ -1421,15 +1412,15 @@ class ReturnStmt(FlowStmt):
             if var_name in namespace:
                 var = namespace[var_name]
 #                print var_name, var
-                if isinstance(var, Variable):
-                    res = Result(var.dtype, var_name, \
-                                 rank=var.rank, \
-                                 allocatable=var.allocatable, \
-                                 shape=var.shape)
+                if isinstance(var, Variable): # TODO intent must be out => result
+                    res = Variable(var.dtype, var_name, \
+                                   rank=var.rank, \
+                                   allocatable=var.allocatable, \
+                                   shape=var.shape)
                 else:
                     # TODO is it correct? raise?
                     datatype = var.datatype
-                    res = Result(datatype, var_name)
+                    res = Variable(datatype, var_name)
             else:
                 raise()
 
@@ -1507,7 +1498,8 @@ class FunctionDefStmt(BasicStmt):
             d_var['allocatable'] = False
             d_var['shape']       = None
             d_var['rank']        = rank
-            insert_variable(arg_name, is_argument=True, **d_var)
+            d_var['intent']      = 'in'
+            insert_variable(arg_name, **d_var)
 
         body = self.body.expr
 

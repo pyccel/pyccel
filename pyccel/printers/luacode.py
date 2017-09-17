@@ -31,8 +31,7 @@ from sympy.sets.fancysets import Range
 from sympy.tensor import Idx
 
 from pyccel.printers.codeprinter import CodePrinter
-from pyccel.types.ast import (Assign, Result, InArgument,
-        OutArgument, InOutArgument, Variable)
+from pyccel.types.ast import (Assign, Variable)
 
 
 __all__ = ["LuaCodePrinter", "lua_code"]
@@ -446,21 +445,6 @@ class LuaCodePrinter(CodePrinter):
         arg_code = ', '.join(self._print(i) for i in expr.arguments)
         body = '\n'.join(self._print(i) for i in expr.body)
         return '{0} {1}({2}) {{\n{3}\n}}'.format(ret_type, name, arg_code, body)
-
-    def _print_InArgument(self, expr):
-        dtype = self._print(expr.dtype)
-        arg = self._print(expr.name)
-        return '{0} {1}'.format(dtype, arg)
-
-    def _print_OutArgument(self, expr):
-        dtype = self._print(expr.dtype)
-        arg = self._print(expr.name)
-        return '{0} {1}'.format(dtype, arg)
-
-    def _print_InOutArgument(self, expr):
-        dtype = self._print(expr.dtype)
-        arg = self._print(expr.name)
-        return '{0} {1}'.format(dtype, arg)
 
     def _print_Return(self, expr):
         return 'return {0}'.format(self._print(expr.expr))

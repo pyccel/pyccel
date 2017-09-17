@@ -46,8 +46,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "ModOp", "AugAssign", "While", "For", "DataType", "NativeBool", \
            "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
            "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
-           "Argument", "Result", "InArgument", "OutArgument", \
-           "InOutArgument", "FunctionDef", "Ceil", "Import", "Declare", \
+           "FunctionDef", "Ceil", "Import", "Declare", \
            "Return", "Len", "Min", "Max", "Dot", \
            "Zeros", "Ones", "Array", "ZerosLike", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
@@ -714,35 +713,15 @@ class Variable(Symbol):
                    allocatable=self.allocatable, \
                    shape=self.shape)
 
-class Argument(Variable):
-    """An abstract Argument data structure."""
-    pass
-
-class Result(Variable):
-    """Represents a result directly returned from a routine."""
-    pass
-
-class InArgument(Argument):
-    """Argument provided as input only."""
-    pass
-
-class OutArgument(Argument):
-    """OutputArgument are always initialized in the routine."""
-    pass
-
-class InOutArgument(Argument):
-    """InOutArgument are never initialized in the routine."""
-    pass
-
 class FunctionDef(Basic):
     """Represents a function definition.
 
     name : str
         The name of the function.
     arguments : iterable
-        The arguments to the function, of type `Argument`.
+        The arguments to the function.
     results : iterable
-        The direct outputs of the function, of type `Result`.
+        The direct outputs of the function.
     body : iterable
         The body of the function.
     local_vars : list of Symbols
@@ -751,15 +730,15 @@ class FunctionDef(Basic):
         Variables which will not be passed into the function.
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Assign, InArgument, Result, FunctionDef
+    >>> from pyccel.types.ast import Assign, Variable, FunctionDef
     >>> n,x,y = symbols('n,x,y')
-    >>> args        = [InArgument('float', x), InArgument('int', n)]
-    >>> results     = [Result('float', y)]
+    >>> args        = [Variable('float', x), Variable('int', n)]
+    >>> results     = [Variable('float', y)]
     >>> body        = [Assign(y,x+n)]
     >>> local_vars  = []
     >>> global_vars = []
     >>> FunctionDef('f', args, results, body, local_vars, global_vars)
-    FunctionDef(f, (InArgument(NativeFloat(), x, 0, False, None), InArgument(NativeInteger(), n, 0, False, None)), (Result(NativeFloat(), y, 0, False, None),), [y := n + x], [], [])
+    FunctionDef(f, (Variable(NativeFloat(), x, 0, False, None), Variable(NativeInteger(), n, 0, False, None)), (Variable(NativeFloat(), y, 0, False, None),), [y := n + x], [], [])
     """
 
     def __new__(cls, name, arguments, results, \
@@ -772,8 +751,9 @@ class FunctionDef(Basic):
         # arguments
         if not iterable(arguments):
             raise TypeError("arguments must be an iterable")
-        if not all(isinstance(a, Argument) for a in arguments):
-            raise TypeError("All arguments must be of type Argument")
+        # TODO improve and uncomment
+#        if not all(isinstance(a, Argument) for a in arguments):
+#            raise TypeError("All arguments must be of type Argument")
         arguments = Tuple(*arguments)
         # body
         if not iterable(body):
@@ -782,61 +762,10 @@ class FunctionDef(Basic):
         # results
         if not iterable(results):
             raise TypeError("results must be an iterable")
-        if not all(isinstance(i, Result) for i in results):
-            raise TypeError("All results must be of type Result")
+        # TODO improve and uncomment
+#        if not all(isinstance(i, Result) for i in results):
+#            raise TypeError("All results must be of type Result")
         results = Tuple(*results)
-
-        # ...
-        # extract all input symbols and all symbols appearing in an expression
-        input_symbols = set([])
-        symbols = set([])
-#        print("<>>>>> arguments : ", str(arguments))
-        for arg in arguments:
-            if isinstance(arg, OutArgument):
-                symbols.update(arg.expr.free_symbols)
-            elif isinstance(arg, InArgument):
-                input_symbols.add(arg.name)
-            elif isinstance(arg, InOutArgument):
-                input_symbols.add(arg.name)
-                symbols.update(arg.expr.free_symbols)
-            else:
-                raise ValueError("Unknown Routine argument: %s" % arg)
-
-        for r in results:
-            if not isinstance(r, Result):
-                raise ValueError("Unknown Routine result: %s" % r)
-
-            try:
-                symbols.update(r.expr.free_symbols)
-            except:
-                pass
-
-            try:
-                symbols.update(r.expr)
-            except:
-                pass
-
-#        for stmt in statements:
-#            if not isinstance(stmt, (Assign, Equality, For)):
-#                raise ValueError("Unknown Routine statement: %s" % stmt)
-
-        symbols = set([s.label if isinstance(s, Idx) else s for s in symbols])
-
-        # Check that all symbols in the expressions are covered by
-        # InputArguments/InOutArguments---subset because user could
-        # specify additional (unused) InputArguments or local_vars.
-        notcovered = symbols.difference(
-            input_symbols.union(local_vars).union(global_vars))
-
-#        print (">>>>>>>>>>>>>>>>>>>> input_symbols :", str(input_symbols))
-#        print (">>>>>>>>>>>>>>>>>>>> symbols       :", str(symbols))
-#        print (">>>>>>>>>>>>>>>>>>>> not covered   :", str(notcovered))
-
-#        if notcovered != set([]):
-#            raise ValueError("Symbols needed for output are not in input or local " +
-#                             ", ".join([str(x) for x in notcovered]))
-        # ...
-
 
         return Basic.__new__(cls, name, \
                              arguments, results, \
@@ -926,6 +855,8 @@ class Declare(Basic):
     variable(s)
         A single variable or an iterable of Variables. If iterable, all
         Variables must be of the same type.
+    intent: None, str
+        one among {'in', 'out', 'inout'}
 
     Examples
 
@@ -937,7 +868,7 @@ class Declare(Basic):
     Declare(NativeInteger(), (Variable(NativeInteger(), n, 0, False, None),))
     """
 
-    def __new__(cls, dtype, variables):
+    def __new__(cls, dtype, variables, intent=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
@@ -950,7 +881,10 @@ class Declare(Basic):
             if var.dtype != dtype:
                 raise ValueError("All variables must have the same dtype")
         variables = Tuple(*variables)
-        return Basic.__new__(cls, dtype, variables)
+        if intent:
+            if not(intent in ['in', 'out', 'inout']):
+                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
+        return Basic.__new__(cls, dtype, variables, intent)
 
     @property
     def dtype(self):
@@ -959,6 +893,10 @@ class Declare(Basic):
     @property
     def variables(self):
         return self._args[1]
+
+    @property
+    def intent(self):
+        return self._args[2]
 
 # TODO: not used. do we keep it?
 class Return(Basic):

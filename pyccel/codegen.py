@@ -8,8 +8,7 @@ from pyccel.types.ast import DataType
 from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              Argument, InArgument, InOutArgument, \
-                              MultiAssign, OutArgument, Result, \
+                              MultiAssign, \
                               FunctionDef, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \

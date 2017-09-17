@@ -22,8 +22,7 @@ from pyccel.syntax import ( \
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              Argument, InArgument, InOutArgument, \
-                              MultiAssign, OutArgument, Result, \
+                              MultiAssign, \
                               FunctionDef, Import, Print, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \

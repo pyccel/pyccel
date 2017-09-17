@@ -16,8 +16,7 @@ from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
 from pyccel.types.ast import (Assign, MultiAssign, \
-                              Variable, Declare, Result, \
-                              InArgument, OutArgument, InOutArgument, \
+                              Variable, Declare, \
                               Len, Dot, Sign, subs)
 from pyccel.printers.codeprinter import CodePrinter
 
@@ -277,43 +276,37 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
-        intent_lookup = {InArgument: 'in',
-                         OutArgument: 'out',
-                         InOutArgument: 'inout',
-                         Variable: None}
         # Group the variables by intent
-        f = lambda x: intent_lookup[type(x)]
 
         arg_types        = [type(v) for v in expr.variables]
-        var_list         = groupby(sorted(expr.variables, key=f), f)
         arg_ranks        = [v.rank for v in expr.variables]
         arg_allocatables = [v.allocatable for v in expr.variables]
 
         decs = []
-        for intent, g in var_list:
-            vstr = ', '.join(self._print(i.name) for i in g)
+        intent = expr.intent
+        vstr = ', '.join(self._print(i.name) for i in expr.variables)
 
-            # TODO ARA improve
-            rank        = arg_ranks[0]
-            allocatable = arg_allocatables[0]
+        # TODO ARA improve
+        rank        = arg_ranks[0]
+        allocatable = arg_allocatables[0]
 
-            if rank == 0:
-                rankstr =  ''
-            else:
-                rankstr = ', '.join(':' for f in range(0, rank))
-                rankstr = '(' + rankstr + ')'
+        if rank == 0:
+            rankstr =  ''
+        else:
+            rankstr = ', '.join(':' for f in range(0, rank))
+            rankstr = '(' + rankstr + ')'
 
-            if allocatable:
-                allocatablestr = ', allocatable'
-            else:
-                allocatablestr = ''
+        if allocatable:
+            allocatablestr = ', allocatable'
+        else:
+            allocatablestr = ''
 
-            if intent:
-                decs.append('{0}, intent({1}) {2} :: {3} {4}'.
-                            format(dtype, intent, allocatablestr, vstr, rankstr))
-            else:
-                decs.append('{0}{1} :: {2} {3}'.
-                            format(dtype, allocatablestr, vstr, rankstr))
+        if intent:
+            decs.append('{0}, intent({1}) {2} :: {3} {4}'.
+                        format(dtype, intent, allocatablestr, vstr, rankstr))
+        else:
+            decs.append('{0}{1} :: {2} {3}'.
+                        format(dtype, allocatablestr, vstr, rankstr))
 
         return '\n'.join(decs)
 
@@ -385,7 +378,7 @@ class FCodePrinter(CodePrinter):
                 func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
             for result in expr.results:
-                arg = OutArgument(result.dtype, result.name)
+                arg = Variable(result.dtype, result.name)
                 out_args.append(arg)
 
                 dec = Declare(result.dtype, arg)
@@ -405,7 +398,7 @@ class FCodePrinter(CodePrinter):
                     body.append(stmt)
         else:
             for result in expr.results:
-                arg = OutArgument(result.dtype, result.name, \
+                arg = Variable(result.dtype, result.name, \
                                   rank=result.rank, \
                                   allocatable=result.allocatable, \
                                   shape=result.shape)
@@ -447,17 +440,9 @@ class FCodePrinter(CodePrinter):
                 '{3}\n\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
-    def _print_InArgument(self, expr):
-        return self._print(expr.name)
-
-    def _print_OutArgument(self, expr):
-        return self._print(expr.name)
-
-    def _print_InOutArgument(self, expr):
-        return self._print(expr.name)
-
     def _print_Return(self, expr):
         return 'return'
+
     def _print_Break(self,expr):
         return 'Exit'
 
