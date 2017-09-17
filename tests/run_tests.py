@@ -3,10 +3,13 @@ import os
 
 language = "--language=fortran"
 compiler = "--compiler=gfortran"
-execute  = ""
-show     = "--show"
+execute  = "--execute"
+show     = ""
 
-not_working = ["ex11.py"]
+not_working = []
+for i in ['11', '15', '16', '18', '20', '21']:
+    ex = "ex{}.py".format(str(i))
+    not_working.append(ex)
 
 examples = []
 for i in range(1, 21 + 1):

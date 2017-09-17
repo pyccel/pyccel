@@ -51,12 +51,13 @@ Let us consider the following *Python* file (*helloworld.py*)
 
 .. code-block:: python
 
+  #$ header helloworld()
   def helloworld():
       print("* Hello World!!")
 
 Now, run the command::
 
-  pyccel --language="fortran" --compiler="gfortran" --filename=helloworld.py
+  pyccel --language="fortran" --compiler="gfortran" --filename=tests/helloworld.py
 
 The generated *Fortran* code is
 
@@ -86,10 +87,12 @@ Let's take a look at the file *tests/examples/ex5.py*, listed below
 
 .. code-block:: python
 
+  #$ header f(double, double)
   def f(u,v):
       t = u - v
       return t
 
+  #$ header g(double, double)
   def g(x,v):
       m = x - v
       t =  2.0 * m
@@ -173,13 +176,17 @@ Let's take a look at the file *tests/matrix_product.py*, listed below
 
 .. code-block:: python
 
+  n = int()
+  m = int()
+  p = int()
+
   n = 2
   m = 4
   p = 2
 
-  a = zeros(shape=(n,m), dtype=float)
-  b = zeros(shape=(m,p), dtype=float)
-  c = zeros(shape=(n,p), dtype=float)
+  a = zeros((n,m), double)
+  b = zeros((m,p), double)
+  c = zeros((n,p), double)
 
   for i in range(0, n):
       for j in range(0, m):
@@ -262,13 +269,17 @@ Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed 
 
   from numpy import zeros
 
+  n = int()
+  m = int()
+  p = int()
+
   n = 2000
   m = 4000
   p = 2000
 
-  a = zeros(shape=(n,m), dtype=float)
-  b = zeros(shape=(m,p), dtype=float)
-  c = zeros(shape=(n,p), dtype=float)
+  a = zeros((n,m), double)
+  b = zeros((m,p), double)
+  c = zeros((n,p), double)
 
   x = 0
   y = 0
@@ -402,4 +413,4 @@ ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex12, ex13, ex14, ex17, ex19
 KO tests
 ********
 
-ex15, ex16, ex18
+ex15, ex16, ex18, ex20, ex21
