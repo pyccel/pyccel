@@ -11,10 +11,7 @@ from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.function import Function
-# TODO rename _sympify to sympify. Before we were using _sympify from sympy.core
-#      but then sympy will keep in memory all used variables. we don't need it,
-#      since the in syntax.py we always check the namespace for any new variable.
-from sympy import sympify as _sympify
+from sympy import sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range
@@ -35,16 +32,16 @@ from sympy import Integral, Symbol
 from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
-
 import collections
 from sympy.core.compatibility import is_sequence
 
+# TODO: add examples: Return, Break, Len, Shape,
+#                     Min, Max, Dot, Sign, Array,
+#                     Thread, ThreadID, ThreadNumber
 
 # TODO: add EmptyStmt => empty lines
-# TODO: rename Ceil to Ceil
 # TODO: clean Thread objects
 # TODO: update code examples
-# TODO: add _sympystr whenever it's possible
 __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "ModOp", "AugAssign", "While", "For", "DataType", "NativeBool", \
            "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
@@ -92,13 +89,13 @@ def subs(expr, a_old, a_new):
 #            print("PAR ICI")
             return expr
     elif isinstance(expr, IndexedVariable):
-        print(">>>> IndexedVariable : ", expr)
+#        print(">>>> IndexedVariable : ", expr)
 #        print(">>>> ", type(a_old), type(a_new))
         return expr
     elif isinstance(expr, IndexedElement):
-        print(">>>> IndexedElement : ", expr)
+#        print(">>>> IndexedElement : ", expr)
         e = subs(expr.base, a_old, a_new)
-        print(">>>> ", e, type(e))
+#        print(">>>> ", e, type(e))
         return e
     elif isinstance(expr, Expr):
         return expr.subs({a_old: a_new})
@@ -154,7 +151,10 @@ def subs(expr, a_old, a_new):
 
 def allocatable_like(expr):
     """
-    finds attributs of the expression
+    finds attributs of an expression
+
+    expr: Expr
+        a pyccel expression
     """
 #    print ('>>>>> expr = ', expr)
 #    print ('>>>>> type = ', type(expr))
@@ -264,8 +264,8 @@ class Assign(Basic):
 
     def __new__(cls, lhs, rhs, strict=True, status=None, like=None):
         if strict:
-            lhs = _sympify(lhs)
-            rhs = _sympify(rhs)
+            lhs = sympify(lhs)
+            rhs = sympify(rhs)
             # Tuple of things that can be on the lhs of an assignment
             assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
             #if not isinstance(lhs, assignable):
@@ -376,8 +376,8 @@ class AugAssign(Basic):
     """
 
     def __new__(cls, lhs, op, rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
+        lhs = sympify(lhs)
+        rhs = sympify(rhs)
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
         if not isinstance(lhs, assignable):
@@ -439,11 +439,11 @@ class While(Basic):
     While(n > 1, (n := n - 1,))
     """
     def __new__(cls, test, body):
-        test = _sympify(test)
+        test = sympify(test)
 
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        body = Tuple(*(_sympify(i) for i in body))
+        body = Tuple(*(sympify(i) for i in body))
         return Basic.__new__(cls, test, body)
 
     @property
@@ -480,7 +480,7 @@ class For(Basic):
     """
 
     def __new__(cls, target, iter, body):
-        target = _sympify(target)
+        target = sympify(target)
         if not iterable(iter):
             raise TypeError("iter must be an iterable")
         if type(iter) == tuple:
@@ -490,11 +490,11 @@ class For(Basic):
             r._args = iter
             iter = r
         else:
-            iter = _sympify(iter)
+            iter = sympify(iter)
 
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        body = Tuple(*(_sympify(i) for i in body))
+        body = Tuple(*(sympify(i) for i in body))
         return Basic.__new__(cls, target, iter, body)
 
     @property
@@ -592,7 +592,7 @@ def datatype(arg):
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
     else:
-        arg = _sympify(arg)
+        arg = sympify(arg)
         if isinstance(arg, ImmutableDenseMatrix):
             dts = [infer_dtype(i) for i in arg]
             if all([i is Bool for i in dts]):
@@ -607,39 +607,15 @@ def datatype(arg):
 class EqualityStmt(Relational):
     """Represents a relational equality expression in the code."""
     def __new__(cls,lhs,rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
+        lhs = sympify(lhs)
+        rhs = sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
 class NotequalStmt(Relational):
     """Represents a relational not equality expression in the code."""
     def __new__(cls,lhs,rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        return Relational.__new__(cls,lhs,rhs)
-
-class GOrEq(Relational):
-    def __new__(cls,lhs,rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        return Relational.__new__(cls,lhs,rhs)
-
-class LOrEq(Relational):
-    def __new__(cls,lhs,rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        return Relational.__new__(cls,lhs,rhs)
-
-class Lthan(Relational):
-    def __new__(cls,lhs,rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
-        return Relational.__new__(cls,lhs,rhs)
-
-class Gter(Relational):
-    def __new__(cls,lhs,rhs):
-        lhs = _sympify(lhs)
-        rhs = _sympify(rhs)
+        lhs = sympify(lhs)
+        rhs = sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
 #class Variable(Basic):
@@ -664,9 +640,9 @@ class Variable(Symbol):
     >>> from pyccel.types.ast import Variable
     >>> x, n = symbols('x, n')
     >>> Variable('int', 'n')
-    Variable(NativeInteger(), n, 0, False, None)
+    n
     >>> Variable('float', x, rank=2, shape=(n,2), allocatable=True)
-    Variable(NativeFloat(), x, 2, True, (n, 2)
+    x
     """
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
@@ -741,7 +717,7 @@ class FunctionDef(Basic):
     >>> local_vars  = []
     >>> global_vars = []
     >>> FunctionDef('f', args, results, body, local_vars, global_vars)
-    FunctionDef(f, (Variable(NativeFloat(), x, 0, False, None), Variable(NativeInteger(), n, 0, False, None)), (Variable(NativeFloat(), y, 0, False, None),), [y := n + x], [], [])
+    FunctionDef(f, (x, n), (y,), [y := n + x], [], [])
     """
 
     def __new__(cls, name, arguments, results, \
@@ -799,13 +775,21 @@ class FunctionDef(Basic):
     def global_vars(self):
         return self._args[5]
 
-# TODO: improve with __new__ from Function and add example
 class Ceil(Function):
     """
     Represents ceil expression in the code.
 
     rhs: symbol or number
         input for the ceil function
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Ceil, Variable
+    >>> n,x,y = symbols('n,x,y')
+    >>> var = Variable('float', x)
+    >>> Ceil(x)
+    Ceil(x)
+    >>> Ceil(var)
+    Ceil(x)
     """
     def __new__(cls,rhs):
         return Basic.__new__(cls,rhs)
@@ -863,12 +847,11 @@ class Declare(Basic):
 
     Examples
 
-    >>> from sympy import Symbol
     >>> from pyccel.types.ast import Declare, Variable
-    >>> n = Symbol('n')
-    >>> var = Variable('int', 'n')
-    >>> Declare('int', var)
-    Declare(NativeInteger(), (Variable(NativeInteger(), n, 0, False, None),))
+    >>> Declare('int', Variable('int', 'n'))
+    Declare(NativeInteger(), (n,), None)
+    >>> Declare('double', Variable('double', 'x'), intent='out')
+    Declare(NativeDouble(), (x,), out)
     """
 
     def __new__(cls, dtype, variables, intent=None):
@@ -910,7 +893,7 @@ class Return(Basic):
     """
 
     def __new__(cls, expr):
-        expr = _sympify(expr)
+        expr = sympify(expr)
         return Basic.__new__(cls, expr)
 
     @property
@@ -1039,15 +1022,15 @@ class Zeros(Basic):
     """
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, shape):
-        lhs   = _sympify(lhs)
+        lhs   = sympify(lhs)
         if isinstance(shape, list):
             # this is a correction. otherwise it is not working on LRZ
             if isinstance(shape[0], list):
-                shape = Tuple(*(_sympify(i) for i in shape[0]))
+                shape = Tuple(*(sympify(i) for i in shape[0]))
             else:
-                shape = Tuple(*(_sympify(i) for i in shape))
+                shape = Tuple(*(sympify(i) for i in shape))
         elif isinstance(shape, int):
-            shape = Tuple(_sympify(shape))
+            shape = Tuple(sympify(shape))
         elif isinstance(shape, Basic) and not isinstance(shape,Len):
             shape = str(shape)
         elif isinstance(shape,Len):
@@ -1084,12 +1067,20 @@ class Ones(Basic):
         subclass these types are also supported.
 
     shape : int or list of integers
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.types.ast import Ones
+    >>> n,m,x = symbols('n,m,x')
+    >>> Ones(x, (n,m))
+    x := 1
     """
     # TODO improve in the spirit of assign
     def __new__(cls, lhs,shape):
-        lhs   = _sympify(lhs)
+        lhs   = sympify(lhs)
         if isinstance(shape, list):
-            shape = Tuple(*(_sympify(i) for i in shape))
+            shape = Tuple(*(sympify(i) for i in shape))
         else:
             shape = shape
 
@@ -1102,7 +1093,7 @@ class Ones(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
+        return '{0} := 1'.format(sstr(self.lhs))
 
     @property
     def lhs(self):
@@ -1131,7 +1122,7 @@ class Array(Basic):
     shape : int or list of integers
     """
     def __new__(cls, lhs,rhs,shape):
-        lhs   = _sympify(lhs)
+        lhs   = sympify(lhs)
 
 
         # Tuple of things that can be on the lhs of an assignment
@@ -1185,7 +1176,7 @@ class ZerosLike(Basic):
     """
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, rhs):
-        lhs   = _sympify(lhs)
+        lhs   = sympify(lhs)
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
@@ -1224,7 +1215,7 @@ class Print(Basic):
 
     def __new__(cls, expr):
         if not isinstance(expr, list):
-            expr = _sympify(expr)
+            expr = sympify(expr)
         return Basic.__new__(cls, expr)
 
     @property
@@ -1363,7 +1354,7 @@ class IndexedElement(Indexed):
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
-        args = list(map(_sympify, args))
+        args = list(map(sympify, args))
         if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
                 return base[args[0]]
@@ -1528,7 +1519,7 @@ class Thread(Basic):
     """
 
     def __new__(cls, lhs):
-        lhs   = _sympify(lhs)
+        lhs   = sympify(lhs)
 
         # Tuple of things that can be on the lhs of an assignment
         if not isinstance(lhs, Symbol):
@@ -1584,11 +1575,11 @@ class Stencil(Basic):
             if isinstance(s_in, list):
                 # this is a correction. otherwise it is not working on LRZ
                 if isinstance(s_in[0], list):
-                    s_out = Tuple(*(_sympify(i) for i in s_in[0]))
+                    s_out = Tuple(*(sympify(i) for i in s_in[0]))
                 else:
-                    s_out = Tuple(*(_sympify(i) for i in s_in))
+                    s_out = Tuple(*(sympify(i) for i in s_in))
             elif isinstance(s_in, int):
-                s_out = Tuple(_sympify(s_in))
+                s_out = Tuple(sympify(s_in))
             elif isinstance(s_in, Basic) and not isinstance(s_in,Len):
                 s_out = str(s_in)
             elif isinstance(s_in,Len):
@@ -1599,7 +1590,7 @@ class Stencil(Basic):
         # ...
 
         # ...
-        lhs   = _sympify(lhs)
+        lhs   = sympify(lhs)
         shape = format_entry(shape)
         step  = format_entry(step)
         # ...

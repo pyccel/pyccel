@@ -45,7 +45,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement,\
-                              GOrEq, LOrEq, Lthan, Gter, Min, Max)
+                              Min, Max)
 
 from pyccel.core.syntax     import BasicStmt
 from pyccel.imports.syntax import ImportFromStmt
@@ -783,7 +783,6 @@ class PassStmt(BasicStmt):
 
         return self.label
 
-# TODO: improve by allowing for the elif statements
 class IfStmt(BasicStmt):
     """Class representing an If statement."""
 
@@ -1329,7 +1328,6 @@ class NotTest(ExpressionElement):
         ret = (not ret)
         return ret
 
-# TODO ARA finish
 class Comparison(ExpressionElement):
     """Class representing the comparison expression as described in the grammmar."""
 
@@ -1346,16 +1344,12 @@ class Comparison(ExpressionElement):
             if operation == "==":
                 ret = EqualityStmt(ret, operand.expr)
             elif operation == ">":
-#                ret = Gter(ret, operand.expr)
                 ret = Gt(ret, operand.expr)
             elif operation == ">=":
-#                ret = GOrEq(ret, operand.expr)
                 ret = Ge(ret, operand.expr)
             elif operation == "<":
-#                ret = Lthan(ret, operand.expr)
                 ret = Lt(ret, operand.expr)
             elif operation == "<=":
-#                ret = LOrEq(ret, operand.expr)
                 ret = Le(ret, operand.expr)
             elif operation == "<>":
                 ret = NotequalStmt(ret, operand.expr)
@@ -1482,7 +1476,7 @@ class FunctionDefStmt(BasicStmt):
         """returns the statement variables of the body."""
         return self.body.stmt_vars
 
-    # TODO scoop
+    # TODO scope
     @property
     def expr(self):
         """

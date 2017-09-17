@@ -15,8 +15,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               ThreadID, ThreadsNumber, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
-                              Dot, Sign, IndexedElement,\
-                              GOrEq, LOrEq, Lthan, Gter)
+                              Dot, Sign, IndexedElement)
 
 
 from pyccel.openmp.syntax import OpenmpStmt
