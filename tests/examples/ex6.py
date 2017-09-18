@@ -20,9 +20,7 @@ e[1,1] = 1
 f = e[0,2]
 print(f)
 
-n = int()
 n = 2
-m = int()
 m = 3
 x = zeros((n,m,2), double)
 

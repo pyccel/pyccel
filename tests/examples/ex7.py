@@ -15,6 +15,5 @@ for i in range(0,9):
     a[i,i+1] = -1.0
 
 n = 5
-n = int()
 for i in range(0, n):
     x = 1

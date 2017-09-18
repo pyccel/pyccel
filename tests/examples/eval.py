@@ -1,9 +1,7 @@
 # coding: utf-8
 
 n = 5
-n = int()
 m = 3
-m = int()
 
 x = eval('numpy', 'sqrt', (25))
 print("sqrt(25) = ", x)

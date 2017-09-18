@@ -11,10 +11,8 @@ def fi(x):
     y = x+1
     return y
 
-xd = double()
-xd = 1
+xd = 1.0
 yd = fd(xd)
 
-xi = int()
 xi = 1
 yi = fi(xi)

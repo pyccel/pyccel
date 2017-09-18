@@ -1,6 +1,3 @@
-n = int()
-m = int()
-p = int()
 n = 50
 m = 70
 p = 50

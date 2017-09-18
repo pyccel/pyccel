@@ -6,7 +6,6 @@ x=a
 y=2*a+b
 print(x)
 
-m = int()
 m = 5
 print(y)
 t = complex()

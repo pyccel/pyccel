@@ -6,7 +6,6 @@
 #    with its derivatives dp = p' and ddp = p"
 #    at x.
 a=zeros(65,int)
-x=float()
 n = len(a)
 p = a[n-1]
 dp = 0.0

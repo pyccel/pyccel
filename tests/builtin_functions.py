@@ -37,7 +37,6 @@ d14 = atan(2.0)
 d18 = pow  (2,3)
 d19 = sign (-2.0)
 
-e   = double()
 e   = 1.0
 #e0  = 3.0 + 2.0 * abs(e)  # TODO fix
 e1  = 3.0 + 2.0 * sqrt(e)

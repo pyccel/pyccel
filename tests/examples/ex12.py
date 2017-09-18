@@ -14,7 +14,6 @@ print('len(a) = ',len(a))
 #print('len([1,2,3])= ',len([1,2,3])) # TODO not working
 print(' k =',k)
 x=1.0
-t=int()
 t=10
 #print('factorial(x) = ',factorial(t))
 print('sqrt(x) =',sqrt(x))

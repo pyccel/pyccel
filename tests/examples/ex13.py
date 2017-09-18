@@ -1,7 +1,5 @@
 # coding: utf-8
 
-n = int()
-m = int()
 n = 10
 m = 5
 a0 = zeros((m,n), double)

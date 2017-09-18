@@ -1050,7 +1050,11 @@ class ForStmt(BasicStmt):
         Update before processing the statement
         """
         # check that start and end were declared, if they are symbols
-        insert_variable(self.iterable, datatype='int')
+        d_var = {}
+        d_var['datatype']    = 'int'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+        insert_variable(self.iterable, **d_var)
 
     @property
     def expr(self):

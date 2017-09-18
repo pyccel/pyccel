@@ -1,6 +1,5 @@
 # coding: utf-8
 
-x = double()
 x = 0
 for i in range(0,10):
     if i == 5:

@@ -408,8 +408,8 @@ Validation
 OK tests
 ********
 
-ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex12, ex13, ex14, ex17, ex19 
-
+ex1, ex2, ex3, ex4, ex6, ex7, ex8, ex9, ex10, ex12, ex13, ex17, ex19 
+ex5, ex14,  
 KO tests
 ********
 

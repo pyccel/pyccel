@@ -3,8 +3,6 @@
 from numpy import zeros
 from numpy import ones
 
-n = int()
-m = int()
 n = 64
 m = 5
 a = ones(n, float)
