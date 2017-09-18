@@ -1,7 +1,7 @@
 # coding: utf-8
 
+#$ header legendre(int)
 def legendre(p):
-    p = int()
     k = p + 1
     x = zeros(k, double)
     w = zeros(k, double)
@@ -67,8 +67,6 @@ def legendre(p):
         w[6] = 0.129484966168869693
     return x,w
 p = 4
-x = array_1()
-w = array_1()
 x,w = legendre(p)
 print(x)
 print(w)
