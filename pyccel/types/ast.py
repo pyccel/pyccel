@@ -1476,13 +1476,19 @@ class MultiAssign(Basic):
 
     >>> from sympy import symbols
     >>> from pyccel.types.ast import MultiAssign
+    >>> from pyccel.types.ast import Assign, Variable, FunctionDef
     >>> x, y, z, t = symbols('x, y, z, t')
-    >>> args = [x,y]
-    >>> MultiAssign((z,t), 'f', args)
-    z, t := f(x, y)
+    >>> args        = [Variable('float', x), Variable('float', y)]
+    >>> results     = [Variable('float', z), Variable('float', t)]
+    >>> body        = [Assign(z,x+y), Assign(t,x*y)]
+    >>> local_vars  = []
+    >>> global_vars = []
+    >>> f = FunctionDef('f', args, results, body, local_vars, global_vars)
+    >>> MultiAssign((z,t), f)
+    z, t := FunctionDef(f, (x, y), (z, t), [z := x + y, t := x*y], [], [])
     """
-    def __new__(cls, lhs, rhs, trailer):
-        return Basic.__new__(cls, lhs, rhs, trailer)
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
 
     @property
     def lhs(self):
@@ -1492,15 +1498,11 @@ class MultiAssign(Basic):
     def rhs(self):
         return self._args[1]
 
-    @property
-    def trailer(self):
-        return self._args[2]
-
     def _sympystr(self, printer):
-        sstr = printer.doprint
-        args    = ', '.join(sstr(i) for i in self.trailer)
+        sstr    = printer.doprint
+        rhs     = sstr(self.rhs)
         outputs = ', '.join(sstr(i) for i in self.lhs)
-        return '{2} := {0}({1})'.format(self.rhs, args, outputs)
+        return '{0} := {1}'.format(outputs, rhs)
 
 # TODO: to rewrite
 class Thread(Basic):

@@ -385,11 +385,10 @@ class FCodePrinter(CodePrinter):
                 sig = '{0} function {1}'.format(ret_type, name)
                 func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
+            # TODO compute intent
+            out_args = expr.results
             for result in expr.results:
-                arg = Variable(result.dtype, result.name)
-                out_args.append(arg)
-
-                dec = Declare(result.dtype, arg)
+                dec = Declare(result.dtype, result, intent='out')
                 decs.append(dec)
             sig = 'subroutine ' + name
             func_type = 'subroutine'
@@ -405,6 +404,7 @@ class FCodePrinter(CodePrinter):
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
         else:
+            # TODO remove this part
             for result in expr.results:
                 arg = Variable(result.dtype, result.name, \
                                   rank=result.rank, \
@@ -455,18 +455,17 @@ class FCodePrinter(CodePrinter):
         return 'Exit'
 
     def _print_AugAssign(self, expr):
-        raise NotImplementedError("Fortran doesn't support AugAssign")
+        raise NotImplementedError('Fortran does not support AugAssign')
 
     def _print_MultiAssign(self, expr):
-        # TODO improve, case where no input args, etc ...
-        if isinstance(expr.rhs, str):
-            args    = ', '.join(self._print(i) for i in expr.trailer)
-            outputs = ', '.join(self._print(i) for i in expr.lhs)
-
-            return 'call {0} ({1}, {2})'.format(expr.rhs, args, outputs)
-        else:
-            raise TypeError("Expecting a string for the rhs.")
-
+        if not isinstance(expr.rhs, Function):
+            raise TypeError('Expecting a Function call.')
+        prec =  self._settings['precision']
+        args = [N(a, prec) for a in expr.rhs.args]
+        func = expr.rhs.func
+        args    = ', '.join(self._print(i) for i in args)
+        outputs = ', '.join(self._print(i) for i in expr.lhs)
+        return 'call {0} ({1}, {2})'.format(func, args, outputs)
 
     def _print_For(self, expr):
         target = self._print(expr.target)

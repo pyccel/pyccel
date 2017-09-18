@@ -222,7 +222,7 @@ AssignStmt:
 ;
 
 MultiAssignStmt: 
-  lhs+=ID[','] '=' name=ID (trailer=Trailer)?
+  lhs+=ID[','] '=' rhs=Expression
 ;
 
 EvalStmt: 

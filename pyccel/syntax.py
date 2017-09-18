@@ -88,6 +88,7 @@ known_functions = {
     "tanh": "tanh"
 }
 
+# TODO: treat the inout case
 # TODO: 1. check that every stmt is well implementing
 #          the local_vars and stmt_vars properties.
 
@@ -487,7 +488,6 @@ def insert_variable(var_name, \
         return
 
     if DEBUG:
-#    if True:
         print ">>>> trying to insert : ", var_name
         txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
                 .format(datatype, rank, allocatable, shape, intent)
@@ -503,13 +503,6 @@ def insert_variable(var_name, \
             allocatable = var.allocatable
         if shape is None:
             shape = var.shape
-    else:
-        if datatype is None:
-            datatype = DEFAULT_TYPE
-        if rank is None:
-            rank = 0
-        if allocatable is None:
-            allocatable = False
 
     # we create a variable (for annotation)
     var = Variable(datatype, var_name, \
@@ -926,14 +919,11 @@ class MultiAssignStmt(BasicStmt):
         ==========
         lhs: list of str
             variables to assign to
-        name: str
-            function/subroutine name
-        trailer: Trailer
-            a trailer is used for a function call or Array indexing.
+        rhs: Expression
+            expression to assign to the lhs
         """
-        self.lhs     = kwargs.pop('lhs')
-        self.name    = kwargs.pop('name')
-        self.trailer = kwargs.pop('trailer', None)
+        self.lhs = kwargs.pop('lhs')
+        self.rhs = kwargs.pop('rhs')
 
         super(MultiAssignStmt, self).__init__(**kwargs)
 
@@ -947,39 +937,62 @@ class MultiAssignStmt(BasicStmt):
         """
         Process the MultiAssign statement by returning a pyccel.types.ast object
         """
-        datatype = DEFAULT_TYPE
-        name = str(self.name)
-
-        if not(name in ['shape']):
-            if not(name in namespace):
-                raise Exception('Undefined function/subroutine {}'.format(name))
-            else:
-                F = namespace[name]
-                if not(isinstance(F, FunctionDefStmt)):
-                    raise Exception('Expecting a {0} for {1}'.format(type(F), name))
-
-        for var_name in self.lhs:
-            if not(var_name in namespace):
-                if DEBUG:
-                    print("> Found new variable " + var_name)
-
-                # TODO get info from FunctionDefStmt
-                rank = 0
-                insert_variable(var_name, datatype=datatype, rank=rank)
+        # TODO: treat the `shape` function case
+#        if not(name in ['shape']):
+#            if not(name in namespace):
+#                raise Exception('Undefined function/subroutine {}'.format(name))
+#            else:
+#                F = namespace[name]
+#                if not(isinstance(F, FunctionDefStmt)):
+#                    raise Exception('Expecting a {0} for {1}'.format(type(F), name))
 
         lhs = self.lhs
-        rhs = self.name
-        if not(self.trailer is None):
-            args = self.trailer.expr
-        else:
-            raise Exception('Expecting a trailer')
+        rhs = self.rhs.expr
 
-        if name == 'shape':
-            if not(len(args) == 1):
-                raise ValueError('shape takes only one argument.')
-            return Shape(lhs, args[0])
-        else:
-            return MultiAssign(lhs, rhs, args)
+        if not(isinstance(rhs, Function)):
+            raise TypeError("Expecting a Function")
+
+        f_name = str(type(rhs).__name__)
+        # TODO additional functions like : shape
+        if not(f_name in namespace):
+            raise ValueError("Undefined function call {}.".format(f_name))
+
+        F = namespace[f_name]
+        if not(isinstance(F, FunctionDefStmt)):
+            raise TypeError("Expecting a FunctionDefStmt")
+
+        F = F.expr
+        if not(len(F.results) == len(self.lhs)):
+            raise ValueError("Wrong number of outputs.")
+
+        for (var_name, result) in zip(self.lhs, F.results):
+            if not(var_name in namespace):
+                d_var = {}
+                d_var['datatype']    = result.dtype
+                d_var['allocatable'] = result.allocatable
+                d_var['shape']       = result.shape
+                d_var['rank']        = result.rank
+                d_var['intent']      = None
+
+#                print ">>>> MultiAssignStmt : ", var_name
+#                print "                     : ", d_var
+
+                d_var['allocatable'] = not(d_var['shape'] is None)
+#                if d_var['shape']:
+#                    if DEBUG:
+#                        print "> Found an unallocated variable: ", var_name
+#                    status = 'unallocated'
+#                    like   = allocatable_like(rhs)
+#                    print ">>>> Found variable : ", like
+                insert_variable(var_name, **d_var)
+        return MultiAssign(lhs, rhs)
+
+#        if name == 'shape':
+#            if not(len(args) == 1):
+#                raise ValueError('shape takes only one argument.')
+#            return Shape(lhs, args[0])
+#        else:
+#            return MultiAssign(lhs, rhs, args)
 
 class ForStmt(BasicStmt):
     """Class representing a For statement."""
@@ -1495,10 +1508,11 @@ class FunctionDefStmt(BasicStmt):
         for arg_name, d in zip(self.args, h.dtypes):
             rank = 0
             for i in d[1]:
-#                print ">>>> ", i, type(i)
+                print ">>>> ", i, type(i)
                 if isinstance(i, Slice):
                     rank += 1
 #            print ">>>> rank = ", rank
+#            print ">>>> arg_name = ", arg_name
             d_var = {}
             d_var['datatype']    = d[0]
             d_var['allocatable'] = False

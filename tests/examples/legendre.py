@@ -66,7 +66,8 @@ def legendre(p):
         w[5] = 0.279705391489276667
         w[6] = 0.129484966168869693
     return x,w
-p = 4
-x,w = legendre(p)
+m = int()
+m = 3
+x,w = legendre(m)
 print(x)
 print(w)
