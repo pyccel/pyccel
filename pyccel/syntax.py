@@ -161,8 +161,8 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-#    print '>>>>> expr = ', expr
-#    print '>>>>> type = ', type(expr)
+#    print '>>>> expr = ', expr
+#    print '>>>> type = ', type(expr)
 
     if isinstance(expr, Integer):
         d_var['datatype']    = 'int'
@@ -294,8 +294,8 @@ def get_attributs(expr):
                     d_var['allocatable'] = var.allocatable
                     if not(var.shape is None):
                         d_var['shape'] = var.shape
-                    if var.rank > 0:
-                        d_var['rank']  = var.rank
+#                    if var.rank > 0:
+                    d_var['rank']  = var.rank
                 elif name in builtin_funcs:
                     continue
             if isinstance(a, (Variable, IndexedVariable, IndexedElement)):
@@ -438,8 +438,9 @@ def builtin_function(name, args, lhs=None):
             # TODO get dtype from args
             if name in ['ceil', 'len']:
                 d_var['datatype'] = 'int'
+                d_var['rank']     = 0
             else:
-                d_var['datatype'] = 'float'
+                d_var['datatype'] = DEFAULT_TYPE
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
