@@ -60,11 +60,11 @@ DEFAULT_TYPE = 'double'
 
 known_functions = {
     "abs": "Abs",
-    "asin": "asin",
-    "acsc": "acsc",
-    "acot": "acot",
-    "acos": "acos",
-    "asec": "asec",
+#    "asin": "asin",
+#    "acsc": "acsc",
+#    "acot": "acot",
+#    "acos": "acos",
+#    "asec": "asec",
     "atan": "atan",
     "atan2": "atan2",
     "ceil": "Ceil",
@@ -137,8 +137,10 @@ builtin_types  = ['int', 'float', 'double', 'complex']
 # ...
 
 # ... builtin functions
-builtin_funcs_math_un = ['abs', 'asin', 'acsc', 'acot', \
-                         'acos', 'asec', 'atan', 'atan2', \
+builtin_funcs_math_un = ['abs', \
+#                         'asin', 'acsc', 'acot', \
+#                         'acos', 'asec', \
+                         'atan', 'atan2', \
                          'ceil', 'cos', 'cosh', 'cot', 'csc', \
                          'exp', 'log', 'max', 'min', \
                          'sec', 'sign', 'sin', 'sinh', \
@@ -177,8 +179,14 @@ def get_attributs(expr):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
-    elif isinstance(expr, (Dot, Min, Max)):
-        d_var['datatype']    = expr.args[0].dtype
+    elif isinstance(expr, (Dot, Min, Max, Sign)):
+        arg = expr.args[0]
+        if isinstance(arg, Integer):
+            d_var['datatype'] = 'int'
+        elif isinstance(arg, Float):
+            d_var['datatype'] = DEFAULT_TYPE
+        elif isinstance(arg, Variable):
+            d_var['datatype'] = arg.dtype
         d_var['allocatable'] = False
         d_var['rank']        = 0
     elif isinstance(expr, IndexedVariable):
@@ -279,6 +287,13 @@ def get_attributs(expr):
                     if isinstance(F, FunctionDefStmt):
                         avail_funcs.append(str(n))
                 avail_funcs += builtin_funcs
+
+                # this is to treat the upper/lower cases
+                _known_functions = []
+                for k, n in known_functions.items():
+                    _known_functions += [k, n]
+                avail_funcs += _known_functions
+
                 if not(name in avail_funcs):
                     raise Exception("Could not find function {0}".format(name))
 
@@ -292,12 +307,27 @@ def get_attributs(expr):
                     var = results[0]
                     d_var['datatype']    = var.dtype
                     d_var['allocatable'] = var.allocatable
+                    d_var['rank']        = var.rank
                     if not(var.shape is None):
                         d_var['shape'] = var.shape
-#                    if var.rank > 0:
-                    d_var['rank']  = var.rank
-                elif name in builtin_funcs:
-                    continue
+                elif name in _known_functions:
+                    var = a.args[0]
+                    if isinstance(var, Integer):
+                        d_var['datatype'] = 'int'
+                        d_var['allocatable'] = False
+                        d_var['rank']        = 0
+                    elif isinstance(var, Float):
+                        d_var['datatype'] = DEFAULT_TYPE
+                        d_var['allocatable'] = False
+                        d_var['rank']        = 0
+                    elif isinstance(var, Variable):
+                        d_var['datatype']    = var.dtype
+                        d_var['allocatable'] = var.allocatable
+                        d_var['rank']        = var.rank
+                        d_var['shape']       = var.shape
+                else:
+                    raise ValueError("Undefined function {}".format(name))
+
             if isinstance(a, (Variable, IndexedVariable, IndexedElement)):
                 d_var = get_attributs(a)
             elif (a.is_Symbol) and (not isinstance(a, Function)):
@@ -1525,7 +1555,7 @@ class FunctionDefStmt(BasicStmt):
         for arg_name, d in zip(self.args, h.dtypes):
             rank = 0
             for i in d[1]:
-                print ">>>> ", i, type(i)
+#                print ">>>> ", i, type(i)
                 if isinstance(i, Slice):
                     rank += 1
 #            print ">>>> rank = ", rank
