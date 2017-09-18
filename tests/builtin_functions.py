@@ -63,8 +63,8 @@ n2 = 3 + 2 * ceil(e)
 n3 = len(c1)
 n4 = 3 + 2 * len(c1)
 
-l1, l2 = shape(a4)
-l3, l4, l5 = shape(b5)
+#l1, l2 = shape(a4)
+#l3, l4, l5 = shape(b5)
 
 r1 = max(a4)
 r2 = max(b5)

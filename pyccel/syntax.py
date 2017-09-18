@@ -413,6 +413,7 @@ def builtin_function(name, args, lhs=None):
         else:
             d_var = {}
             d_var['datatype'] = args[0].dtype
+            d_var['rank']     = 0
             insert_variable(lhs, **d_var)
             expr = Dot(*args)
             return Assign(Symbol(lhs), expr)
@@ -423,6 +424,7 @@ def builtin_function(name, args, lhs=None):
         else:
             d_var = {}
             d_var['datatype'] = args[0].dtype
+            d_var['rank']     = 0
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
@@ -454,7 +456,7 @@ def builtin_function(name, args, lhs=None):
         else:
             d_var = {}
             # TODO get dtype from args
-            d_var['datatype'] = 'float'
+            d_var['datatype'] = DEFAULT_TYPE
             insert_variable(lhs, **d_var)
             expr = func(*args)
             return Assign(Symbol(lhs), expr)
