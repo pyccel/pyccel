@@ -164,7 +164,16 @@ def get_attributs(expr):
 #    print '>>>>> expr = ', expr
 #    print '>>>>> type = ', type(expr)
 
-    if isinstance(expr, (Ceil, Len)):
+    if isinstance(expr, Integer):
+        d_var['datatype']    = 'int'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+    elif isinstance(expr, Float):
+        # TODO choose precision
+        d_var['datatype']    = 'double'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+    elif isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
@@ -1238,6 +1247,7 @@ class Operand(ExpressionElement):
         Process the operand, by returning a sympy atom
         """
         if DEBUG:
+#        if True:
             print "> Operand "
             print self.op, type(self.op)
 
