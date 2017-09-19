@@ -234,11 +234,12 @@ def get_attributs(expr):
             if isinstance(a, string_types):
                 continue
 
-            if a.is_Rational:
-                #-1/3 = NEG + DIV
-                if a is not S.One:
-                    continue
-            elif a.is_Mul:
+#            if a.is_Rational:
+#                #-1/3 = NEG + DIV
+#                if a is not S.One:
+#                    continue
+            if a.is_Mul:
+                print ("PAR ICI : ", a)
                 if _coeff_isneg(a):
                     if a.args[0] is S.NegativeOne:
                         a = a.as_two_terms()[1]
@@ -255,10 +256,8 @@ def get_attributs(expr):
                     continue  # could be -Mul
             elif a.is_Add:
                 aargs = list(a.args)
-                negs = 0
                 for i, ai in enumerate(aargs):
                     if _coeff_isneg(ai):
-                        negs += 1
                         args.append(-ai)
                     else:
                         args.append(ai)
@@ -266,13 +265,6 @@ def get_attributs(expr):
             if a.is_Pow and a.exp is S.NegativeOne:
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if (a.is_Mul or
-                a.is_Pow or
-                a.is_Function or
-                isinstance(a, Derivative) or
-                    isinstance(a, Integral)):
-
-                o = Symbol(a.func.__name__.upper())
             if     (not a.is_Symbol) \
                and (not isinstance(a, (IndexedElement, Function))):
                 args.extend(a.args)
