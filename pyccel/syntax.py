@@ -284,7 +284,7 @@ def get_attributs(expr):
                 avail_funcs = builtin_funcs
                 avail_funcs = []
                 for n, F in namespace.items():
-                    if isinstance(F, FunctionDefStmt):
+                    if isinstance(F, FunctionDef):
                         avail_funcs.append(str(n))
                 avail_funcs += builtin_funcs
 
@@ -298,7 +298,7 @@ def get_attributs(expr):
                     raise Exception("Could not find function {0}".format(name))
 
                 if name in namespace:
-                    F = namespace[name].expr
+                    F = namespace[name]
                     results = F.results
 
                     if not(len(results) == 1):
@@ -985,7 +985,7 @@ class MultiAssignStmt(BasicStmt):
 #                raise Exception('Undefined function/subroutine {}'.format(name))
 #            else:
 #                F = namespace[name]
-#                if not(isinstance(F, FunctionDefStmt)):
+#                if not(isinstance(F, FunctionDef)):
 #                    raise Exception('Expecting a {0} for {1}'.format(type(F), name))
 
         lhs = self.lhs
@@ -1000,10 +1000,9 @@ class MultiAssignStmt(BasicStmt):
             raise ValueError("Undefined function call {}.".format(f_name))
 
         F = namespace[f_name]
-        if not(isinstance(F, FunctionDefStmt)):
-            raise TypeError("Expecting a FunctionDefStmt")
+        if not(isinstance(F, FunctionDef)):
+            raise TypeError("Expecting a FunctionDef")
 
-        F = F.expr
         if not(len(F.results) == len(self.lhs)):
             raise ValueError("Wrong number of outputs.")
 
@@ -1312,7 +1311,7 @@ class Operand(ExpressionElement):
         elif isinstance(op, ExpressionElement):
             return op.expr
         elif op in namespace:
-            if isinstance(namespace[op], FunctionDefStmt):
+            if isinstance(namespace[op], FunctionDef):
                 return Function(op)
             else:
                 return namespace[op]
@@ -1521,9 +1520,6 @@ class FunctionDefStmt(BasicStmt):
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
 
-        # TODO improve
-        namespace[str(self.name)] = self
-
         super(FunctionDefStmt, self).__init__(**kwargs)
 
     @property
@@ -1551,8 +1547,18 @@ class FunctionDefStmt(BasicStmt):
         if not(len(self.args) == len(headers[name].dtypes)):
             raise Exception("Wrong number of arguments in the header.")
 
+        # old occurence of args will be stored in scope
+        scope_vars = {}
+        scope_decs = {}
         h = headers[name]
         for arg_name, d in zip(self.args, h.dtypes):
+            if arg_name in namespace:
+                var = namespace.pop(arg_name)
+                dec = declarations.pop(arg_name)
+
+                scope_vars[arg_name] = var
+                scope_decs[arg_name] = dec
+
             rank = 0
             for i in d[1]:
 #                print ">>>> ", i, type(i)
@@ -1594,12 +1600,26 @@ class FunctionDefStmt(BasicStmt):
                     prelude.append(dec)
         # ...
 
+        # ...
+        for arg_name, var in scope_vars.items():
+            var = scope_vars.pop(arg_name)
+            namespace[arg_name] = var
+
+        for arg_name, dec in scope_decs.items():
+            dec = scope_decs.pop(arg_name)
+            declarations[arg_name] = dec
+        # ...
+
         body = prelude + body
 
         local_vars  = []
         global_vars = []
 
-        return FunctionDef(name, args, results, body, local_vars, global_vars)
+        stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
+        namespace[name] = stmt
+#        namespace[name] = self
+
+        return stmt
 
 class PythonPrintStmt(BasicStmt):
     """Class representing a Print statement as described in the grammar."""

@@ -44,10 +44,12 @@ def gd(x):
 xd = ones(6, double)
 yd = zeros(6, double)
 yd = 2.0 * fd(xd) + 1.0
-print(yd)
 yd = 3.0 * fd(2.0 * fd(xd) + 1.0) + 1.0
-print(yd)
+
+x = ones(6, double)
+y = zeros(6, double)
+y = 2.0 * fd(x) + 1.0
+y = 3.0 * fd(2.0 * fd(x) + 1.0) + 1.0
 
 yd = gd(xd)
-print(yd)
-
+y  = gd(x)
