@@ -12,6 +12,7 @@ from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.function import Function
 from sympy import sympify
+#from sympy.core.sympify import _sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range
@@ -35,7 +36,12 @@ from sympy.logic.boolalg import BooleanFunction
 import collections
 from sympy.core.compatibility import is_sequence
 
-# TODO: add examples: Return, Break, Len, Shape,
+#sympify = _sympify
+#def sympify(expr):
+#    print (expr)
+#    return expr
+
+# TODO: add examples: Break, Len, Shape,
 #                     Min, Max, Dot, Sign, Array,
 #                     Thread, ThreadID, ThreadNumber
 
@@ -47,7 +53,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
            "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
            "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
            "FunctionDef", "Ceil", "Import", "Declare", \
-           "Return", "Len", "Min", "Max", "Dot", \
+           "Len", "Min", "Max", "Dot", \
            "Zeros", "Ones", "Array", "ZerosLike", \
            "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
            "IndexedElement", "Slice", "If", "MultiAssign", \
@@ -143,8 +149,6 @@ def subs(expr, a_old, a_new):
         dtype     = subs(expr.dtype, a_old, a_new)
         variables = subs(expr.variables, a_old, a_new)
         return Declare(dtype, variables)
-    elif isinstance(expr, Return):
-        return Return(subs(expr.results, a_old, a_new))
     else:
         return expr
 
@@ -261,7 +265,7 @@ class Assign(Basic):
 
     """
 
-    def __new__(cls, lhs, rhs, strict=True, status=None, like=None):
+    def __new__(cls, lhs, rhs, strict=False, status=None, like=None):
         if strict:
             lhs = sympify(lhs)
             rhs = sympify(rhs)
@@ -659,7 +663,7 @@ class Variable(Symbol):
 #            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
 #                raise TypeError("shape must be an instance of int or tuple of int")
 
-        return Basic.__new__(cls, dtype, name, rank, allocatable,shape)
+        return Basic.__new__(cls, dtype, name, rank, allocatable, shape)
 
     @property
     def dtype(self):
@@ -882,22 +886,6 @@ class Declare(Basic):
     @property
     def intent(self):
         return self._args[2]
-
-# TODO: not used. do we keep it?
-class Return(Basic):
-    """Represents a function return in the code.
-
-    expr : sympy expr
-        The expression to return.
-    """
-
-    def __new__(cls, expr):
-        expr = sympify(expr)
-        return Basic.__new__(cls, expr)
-
-    @property
-    def results(self):
-        return self._args[0]
 
 class Break(Basic):
     """Represents a function return in the code.

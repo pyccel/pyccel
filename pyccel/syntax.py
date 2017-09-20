@@ -7,7 +7,7 @@ from ast import literal_eval
 
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
-from sympy import Symbol, sympify, Integer, Float, Add, Mul
+from sympy import Symbol, Integer, Float, Add, Mul
 from sympy import true, false,pi
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
@@ -125,7 +125,6 @@ __all__ = ["Pyccel", \
 # Global variable namespace
 namespace    = {}
 headers      = {}
-settings     = {}
 declarations = {}
 
 namespace["True"]  = true
@@ -153,6 +152,18 @@ builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 # ...
 
+# ...
+def print_namespace():
+    print "-------- namespace --------"
+    for key, value in namespace.items():
+        if not(key in ['True', 'False', 'pi']):
+            if isinstance(value, Variable):
+                print key, type(value), value.rank, id(value)
+            else:
+                print key, type(value)
+    print "---------------------------"
+# ...
+
 def get_attributs(expr):
     """
     finds attributs of the expression
@@ -163,8 +174,11 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-#    print '>>>> expr = ', expr
-#    print '>>>> type = ', type(expr)
+#    print '>>>> expr = ', expr, type(expr)
+#    if isinstance(expr, Variable):
+#        print '>>>> expr = ', expr, " rank = ", expr.rank, " id = ", id(expr)
+#    else:
+#        print '>>>> expr = ', expr, type(expr), " id = ", id(expr)
 
     if isinstance(expr, dict):
         d_var['datatype']    = expr['datatype']
@@ -307,14 +321,25 @@ def get_attributs(expr):
             raise ValueError("Undefined function {}".format(name))
         return d_var
     elif isinstance(expr, Expr):
-        skipped = (Variable, IndexedVariable, IndexedElement, Function)
+        skipped = (Variable, IndexedVariable, IndexedElement, \
+                   Function, FunctionDef)
+#        skipped = (Variable, IndexedVariable, IndexedElement, \
+#                   Function)
         args = []
         for arg in expr.args:
+#            print id(arg)
             if not(isinstance(arg, skipped)):
                 args.append(arg)
             else:
-                return get_attributs(arg)
+                if isinstance(arg, (Variable, IndexedVariable, FunctionDef)):
+                    name = arg.name
+                    var = namespace[name]
+                    return get_attributs(var)
+                else:
+                    return get_attributs(arg)
         return get_attributs(args)
+    else:
+        raise TypeError("get_attributs is not available for {0}".format(type(expr)))
 
     return d_var
 
@@ -388,18 +413,21 @@ def builtin_function(name, args, lhs=None):
             raise ValueError("Expecting a lhs.")
         d_var = get_arguments()
         insert_variable(lhs, **d_var)
+        lhs = namespace[lhs]
         return Zeros(lhs, d_var['shape'])
     elif name == "ones":
         if not lhs:
             raise ValueError("Expecting a lhs.")
         d_var = get_arguments()
         insert_variable(lhs, **d_var)
+        lhs = namespace[lhs]
         return Ones(lhs, d_var['shape'])
     elif name == "array":
         if not lhs:
             raise ValueError("Expecting a lhs.")
         d_var, arr = get_arguments_array()
         insert_variable(lhs, **d_var)
+        lhs = namespace[lhs]
         return Array(lhs, arr, d_var['shape'])
     elif name == "zeros_like":
         if not lhs:
@@ -418,6 +446,7 @@ def builtin_function(name, args, lhs=None):
         d_var['rank']        = var.rank
 
         insert_variable(lhs, **d_var)
+        lhs = namespace[lhs]
         return ZerosLike(lhs, var)
     elif name == "dot":
         # TODO do we keep or treat inside math_bin?
@@ -439,8 +468,9 @@ def builtin_function(name, args, lhs=None):
             d_var['datatype'] = args[0].dtype
             d_var['rank']     = 0
             insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(Symbol(lhs), expr)
+            return Assign(lhs, expr)
     elif name in builtin_funcs_math_un + ['len']:
         if not(len(args) == 1):
             raise ValueError("pow takes exactly one argument")
@@ -457,8 +487,9 @@ def builtin_function(name, args, lhs=None):
             else:
                 d_var['datatype'] = DEFAULT_TYPE
             insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(Symbol(lhs), expr)
+            return Assign(lhs, expr)
     elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):
             raise ValueError("pow takes exactly two arguments")
@@ -471,8 +502,9 @@ def builtin_function(name, args, lhs=None):
             # TODO get dtype from args
             d_var['datatype'] = DEFAULT_TYPE
             insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(Symbol(lhs), expr)
+            return Assign(lhs, expr)
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
@@ -513,6 +545,7 @@ def insert_variable(var_name, \
         return
 
     if DEBUG:
+#    if True:
         print ">>>> trying to insert : ", var_name
         txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
                 .format(datatype, rank, allocatable, shape, intent)
@@ -633,7 +666,6 @@ class Pyccel(object):
         # ... reset global variables
         namespace    = {}
         headers      = {}
-        settings     = {}
         declarations = {}
 
         namespace["True"]  = true
@@ -908,11 +940,11 @@ class AssignStmt(BasicStmt):
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=self.lhs)
 
+#        print_namespace()
         if not(var_name in namespace):
             d_var = get_attributs(rhs)
 
-#            print ">>>> AssignStmt : ", var_name
-#            print "                : ", d_var
+#            print ">>>> AssignStmt : ", var_name, d_var
 
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:
@@ -1299,6 +1331,7 @@ class Operand(ExpressionElement):
             if isinstance(namespace[op], FunctionDef):
                 return Function(op)
             else:
+#                print ">>>> Found ", op, " id = ", id(namespace[op])
                 return namespace[op]
         elif op in builtin_funcs:
             return Function(op)
@@ -1524,6 +1557,7 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
+#        print "*********** Begin"
         name = str(self.name)
 
         if not(name in headers):
@@ -1546,11 +1580,8 @@ class FunctionDefStmt(BasicStmt):
 
             rank = 0
             for i in d[1]:
-#                print ">>>> ", i, type(i)
                 if isinstance(i, Slice):
                     rank += 1
-#            print ">>>> rank = ", rank
-#            print ">>>> arg_name = ", arg_name
             d_var = {}
             d_var['datatype']    = d[0]
             d_var['allocatable'] = False
@@ -1558,8 +1589,14 @@ class FunctionDefStmt(BasicStmt):
             d_var['rank']        = rank
             d_var['intent']      = 'in'
             insert_variable(arg_name, **d_var)
+            var = namespace[arg_name]
+#            print   "VARIABLE = ", var.name, \
+#                    " RANK = ", var.rank, \
+#                    " ID = ", id(var)
 
+#        print_namespace()
         body = self.body.expr
+#        print_namespace()
 
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
@@ -1573,16 +1610,16 @@ class FunctionDefStmt(BasicStmt):
 
         # ... cleaning the namespace
         for arg_name in self.args:
-            declarations.pop(arg_name)
-            namespace.pop(arg_name)
+            del declarations[arg_name]
+            del namespace[arg_name]
 
         ls = self.local_vars + self.stmt_vars
         for var_name in ls:
             if var_name in namespace:
-                namespace.pop(var_name, None)
-                dec = declarations.pop(var_name, None)
-                if dec:
-                    prelude.append(dec)
+                prelude.append(declarations[var_name])
+
+                del namespace[var_name]
+                del declarations[var_name]
         # ...
 
         # ...
@@ -1603,6 +1640,7 @@ class FunctionDefStmt(BasicStmt):
         stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
         namespace[name] = stmt
 #        namespace[name] = self
+#        print "*********** End"
 
         return stmt
 
@@ -1713,6 +1751,8 @@ class SuiteStmt(BasicStmt):
         Process the Suite statement,
         by returning a list of appropriate objects from pyccel.types.ast
         """
+#        print "local_vars = ", self.local_vars
+#        print "stmt_vars  = ", self.stmt_vars
         self.update()
         ls = [stmt.expr for stmt in  self.stmts]
         return ls
