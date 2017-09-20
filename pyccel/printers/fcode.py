@@ -8,6 +8,7 @@ import string
 from itertools import groupby
 
 from sympy.core import Symbol
+from sympy.core import Float
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
@@ -576,7 +577,10 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
+            one = Float(1.0)
+            code = '{0}/{1}'.format(self._print(one), \
+                                    self.parenthesize(expr.base, PREC))
+            return code
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument

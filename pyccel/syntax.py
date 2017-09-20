@@ -166,19 +166,48 @@ def get_attributs(expr):
 #    print '>>>> expr = ', expr
 #    print '>>>> type = ', type(expr)
 
-    if isinstance(expr, Integer):
+    if isinstance(expr, dict):
+        d_var['datatype']    = expr['datatype']
+        d_var['allocatable'] = expr['allocatable']
+        d_var['shape']       = expr['shape']
+        d_var['rank']        = expr['rank']
+        return d_var
+    elif isinstance(expr, (list, tuple)):
+        ds = [get_attributs(a) for a in expr]
+
+        a = ds[0]
+        d_var['datatype']    = a['datatype']
+        d_var['allocatable'] = a['allocatable']
+        d_var['shape']       = a['shape']
+        d_var['rank']        = a['rank']
+        if len(ds) == 1:
+            return d_var
+        for a in ds[1:]:
+            if a['datatype'] == 'double':
+                d_var['datatype'] = a['datatype']
+            if a['allocatable']:
+                d_var['allocatable'] = a['allocatable']
+            if a['shape']:
+                d_var['shape'] = a['shape']
+            if a['rank'] > 0:
+                d_var['rank'] = a['rank']
+        return d_var
+    elif isinstance(expr, Integer):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
+        return d_var
     elif isinstance(expr, Float):
         # TODO choose precision
         d_var['datatype']    = 'double'
         d_var['allocatable'] = False
         d_var['rank']        = 0
+        return d_var
     elif isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
         d_var['rank']        = 0
+        return d_var
     elif isinstance(expr, (Dot, Min, Max, Sign)):
         arg = expr.args[0]
         if isinstance(arg, Integer):
@@ -189,6 +218,7 @@ def get_attributs(expr):
             d_var['datatype'] = arg.dtype
         d_var['allocatable'] = False
         d_var['rank']        = 0
+        return d_var
     elif isinstance(expr, IndexedVariable):
         name = str(expr)
         if name in namespace:
@@ -198,6 +228,7 @@ def get_attributs(expr):
             d_var['allocatable'] = var.allocatable
             d_var['shape']       = var.shape
             d_var['rank']        = var.rank
+            return d_var
     elif isinstance(expr, IndexedElement):
         name = str(expr.base)
         if name in namespace:
@@ -219,111 +250,71 @@ def get_attributs(expr):
 
             d_var['shape']       = shape
             d_var['rank']        = rank
+            return d_var
     elif isinstance(expr, Variable):
         d_var['datatype']    = expr.dtype
         d_var['allocatable'] = expr.allocatable
         d_var['shape']       = expr.shape
         d_var['rank']        = expr.rank
+        return d_var
+    elif isinstance(expr, Function):
+        name = str(type(expr).__name__)
+        avail_funcs = builtin_funcs
+        avail_funcs = []
+        for n, F in namespace.items():
+            if isinstance(F, FunctionDef):
+                avail_funcs.append(str(n))
+        avail_funcs += builtin_funcs
+
+        # this is to treat the upper/lower cases
+        _known_functions = []
+        for k, n in known_functions.items():
+            _known_functions += [k, n]
+        avail_funcs += _known_functions
+
+        if not(name in avail_funcs):
+            raise Exception("Could not find function {0}".format(name))
+
+        if name in namespace:
+            F = namespace[name]
+            results = F.results
+
+            if not(len(results) == 1):
+                raise ValueError("Expecting a function with one return.")
+
+            var = results[0]
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['rank']        = var.rank
+            if not(var.shape is None):
+                d_var['shape'] = var.shape
+        elif name in _known_functions:
+            var = expr.args[0]
+            if isinstance(var, Integer):
+                d_var['datatype'] = 'int'
+                d_var['allocatable'] = False
+                d_var['rank']        = 0
+            elif isinstance(var, Float):
+                d_var['datatype'] = DEFAULT_TYPE
+                d_var['allocatable'] = False
+                d_var['rank']        = 0
+            elif isinstance(var, Variable):
+                d_var['datatype']    = var.dtype
+                d_var['allocatable'] = var.allocatable
+                d_var['rank']        = var.rank
+                d_var['shape']       = var.shape
+        else:
+            raise ValueError("Undefined function {}".format(name))
+        return d_var
     elif isinstance(expr, Expr):
-        args = [expr]
-        while args:
-            a = args.pop()
-#            print ">>>> get_attributs ", a, type(a)
-
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
-                continue
-
-#            if a.is_Rational:
-#                #-1/3 = NEG + DIV
-#                if a is not S.One:
-#                    continue
-            if a.is_Mul:
-                print ("PAR ICI : ", a)
-                if _coeff_isneg(a):
-                    if a.args[0] is S.NegativeOne:
-                        a = a.as_two_terms()[1]
-                    else:
-                        a = -a
-                n, d = fraction(a)
-                if n.is_Integer:
-                    args.append(d)
-                    continue  # won't be -Mul but could be Add
-                elif d is not S.One:
-                    if not d.is_Integer:
-                        args.append(d)
-                    args.append(n)
-                    continue  # could be -Mul
-            elif a.is_Add:
-                aargs = list(a.args)
-                for i, ai in enumerate(aargs):
-                    if _coeff_isneg(ai):
-                        args.append(-ai)
-                    else:
-                        args.append(ai)
-                continue
-            if a.is_Pow and a.exp is S.NegativeOne:
-                args.append(a.base)  # won't be -Mul but could be Add
-                continue
-            if     (not a.is_Symbol) \
-               and (not isinstance(a, (IndexedElement, Function))):
-                args.extend(a.args)
-            if isinstance(a, (Ceil, Len, Dot, Min, Max)):
-                d_var = get_attributs(a)
-                continue
-            if isinstance(a, Function):
-                name = str(type(a).__name__)
-                avail_funcs = builtin_funcs
-                avail_funcs = []
-                for n, F in namespace.items():
-                    if isinstance(F, FunctionDef):
-                        avail_funcs.append(str(n))
-                avail_funcs += builtin_funcs
-
-                # this is to treat the upper/lower cases
-                _known_functions = []
-                for k, n in known_functions.items():
-                    _known_functions += [k, n]
-                avail_funcs += _known_functions
-
-                if not(name in avail_funcs):
-                    raise Exception("Could not find function {0}".format(name))
-
-                if name in namespace:
-                    F = namespace[name]
-                    results = F.results
-
-                    if not(len(results) == 1):
-                        raise ValueError("Expecting a function with one return.")
-
-                    var = results[0]
-                    d_var['datatype']    = var.dtype
-                    d_var['allocatable'] = var.allocatable
-                    d_var['rank']        = var.rank
-                    if not(var.shape is None):
-                        d_var['shape'] = var.shape
-                elif name in _known_functions:
-                    var = a.args[0]
-                    if isinstance(var, Integer):
-                        d_var['datatype'] = 'int'
-                        d_var['allocatable'] = False
-                        d_var['rank']        = 0
-                    elif isinstance(var, Float):
-                        d_var['datatype'] = DEFAULT_TYPE
-                        d_var['allocatable'] = False
-                        d_var['rank']        = 0
-                    elif isinstance(var, Variable):
-                        d_var['datatype']    = var.dtype
-                        d_var['allocatable'] = var.allocatable
-                        d_var['rank']        = var.rank
-                        d_var['shape']       = var.shape
-                else:
-                    raise ValueError("Undefined function {}".format(name))
-
-            if isinstance(a, (Variable, IndexedVariable, IndexedElement)):
-                d_var = get_attributs(a)
-            elif (a.is_Symbol) and (not isinstance(a, Function)):
-                raise Exception("Wrong type")
+        skipped = (Variable, IndexedVariable, IndexedElement, Function)
+        args = []
+        for arg in expr.args:
+            if not(isinstance(arg, skipped)):
+                args.append(arg)
+            else:
+                return get_attributs(arg)
+        return get_attributs(args)
 
     return d_var
 

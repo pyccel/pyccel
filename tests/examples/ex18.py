@@ -1,23 +1,29 @@
-#$ header f(double)
-def F(t):
+#$ header func(double)
+def func(t):
     y=pow(t,2)
     return y
-xStart=array((1,2,5),float)
-side=0.1
-tol=1.0e-6
-n = len(xStart)
-n=n+1
-k=n-1              # Number of variables
-x = zeros((n,n), double)
-f = zeros((n,n), double)
+
+xStart = array((1,2,5),float)
+side   = 0.1
+tol    = 1.0e-6
+n      = len(xStart)
+
+n = n+1
+k = n-1 # Number of variables
+
+x = zeros(n, double)
+f = zeros(n, double)
+
 # Generate starting simplex
 x[0] = xStart
 for i in range(1,n):
     x[i] = xStart
-    x[i,i-1] = xStart[i-1] + side
-# Compute values of F at the vertices of the simplex
+    x[i] = xStart[i-1] + side
+
+# Compute values of func at the vertices of the simplex
 for i in range(1,n+1):
-    f[i] = F(x[i])
+    f[i] = func(x[i])
+
 # Main loop
 for k in range(1,500):
     # Find highest and lowest vertices
@@ -30,14 +36,14 @@ for k in range(1,500):
         n=n+1
     # Try reflection
     xNew = x[iHi] + 2.0*d
-    fNew = F(xNew)
+    fNew = func(xNew)
     if fNew <= f[iLo]:
         # Accept reflection
         x[iHi] = xNew
         f[iHi] = fNew
         # Try expanding the reflection
         xNew = x[iHi] + d
-        fNew = F(xNew)
+        fNew = func(xNew)
         if fNew <= f[iLo]:
             x[iHi] = xNew
             f[iHi] = fNew
@@ -50,7 +56,7 @@ for k in range(1,500):
         else:
             # Try contraction
             xNew = x[iHi] + 0.5*d
-            fNew = F(xNew)
+            fNew = func(xNew)
             if fNew <= f[iHi]:
                 # Accept contraction
                 x[iHi] = xNew
@@ -61,6 +67,6 @@ for k in range(1,500):
                 for i in range(1,s):
                     if i <> iLo:
                         x[i] = x[i]*0.5 - x[iLo]*0.5
-                        f[i] = F(x[i])
+                        f[i] = func(x[i])
 print("Too many iterations in downhill")
 print(x[iLo])
