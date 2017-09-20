@@ -199,7 +199,7 @@ def get_attributs(expr):
         return d_var
     elif isinstance(expr, Float):
         # TODO choose precision
-        d_var['datatype']    = 'double'
+        d_var['datatype']    = DEFAULT_TYPE
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
@@ -333,7 +333,7 @@ def builtin_function(name, args, lhs=None):
     # ...
     def get_arguments():
         # TODO appropriate default type
-        dtype = 'float'
+        dtype = DEFAULT_TYPE
         allocatable = True
         shape = []
         for i in args:
@@ -360,7 +360,7 @@ def builtin_function(name, args, lhs=None):
     # ...
     def get_arguments_array():
         # TODO appropriate default type
-        dtype = 'float'
+        dtype = DEFAULT_TYPE
         allocatable = True
         for i in args:
             if isinstance(i, DataType):
@@ -607,7 +607,7 @@ def convert_numpy_type(dtype):
     if dtype == int:
         datatype = 'int'
     elif dtype == float:
-        datatype = 'float'
+        datatype = DEFAULT_TYPE
     elif dtype == complex:
         datatype = 'complex'
     else:
@@ -1278,6 +1278,7 @@ class Operand(ExpressionElement):
             return Integer(op)
         elif is_Float(op):
             # op is here a string that can be converted to a number
+            # TODO use Default precision
             return Float(float(op))
         elif type(op) == list:
             # op is a list
@@ -1287,6 +1288,7 @@ class Operand(ExpressionElement):
                 elif type(O) == int:
                     return Integer(O)
                 elif type(O) == float:
+                    # TODO use Default precision
                     return Float(O)
                 else:
                     raise Exception('Unknown variable "{}" at position {}'
@@ -2005,7 +2007,7 @@ class StencilStmt(AssignStmt):
         try:
             self.datatype = self.parameters['dtype']
         except:
-            self.datatype = 'float'
+            self.datatype = DEFAULT_TYPE
 
         try:
             self.shape = self.parameters['shape']

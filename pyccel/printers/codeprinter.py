@@ -113,7 +113,10 @@ class CodePrinter(StrPrinter):
             # inlined function
             return self._print(expr._imp_(*expr.args))
         else:
-            return str(expr)
+            name      = expr.func.__name__
+            code_args = self.stringify(expr.args, ", ")
+            code = '{0}({1})'.format(name, code_args)
+            return code
 
     def _print_NumberSymbol(self, expr):
         return str(expr)
