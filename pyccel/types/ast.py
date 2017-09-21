@@ -91,8 +91,9 @@ def subs(expr, a_old, a_new):
     elif isinstance(expr, IndexedVariable):
         return expr
     elif isinstance(expr, IndexedElement):
-        e = subs(expr.base, a_old, a_new)
-        return e
+        base    = subs(expr.base   , a_old, a_new)
+        indices = subs(expr.indices, a_old, a_new)
+        return base[indices]
     elif isinstance(expr, Expr):
         return expr.subs({a_old: a_new})
     elif isinstance(expr, Zeros):
