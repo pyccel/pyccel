@@ -89,7 +89,10 @@ def subs(expr, a_old, a_new):
         else:
             return expr
     elif isinstance(expr, IndexedVariable):
-        return expr
+        if str(expr) == str(a_old):
+            return IndexedVariable(str(a_new))
+        else:
+            return expr
     elif isinstance(expr, IndexedElement):
         base    = subs(expr.base   , a_old, a_new)
         indices = subs(expr.indices, a_old, a_new)

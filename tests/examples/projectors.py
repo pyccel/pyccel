@@ -71,10 +71,10 @@ def integrate_1d(t, n, p):
     for i in range(0,n-1):
         x_min = t[i]
         x_max = t[i+1]
+        r = integrate_element_1d(us, ws, x_min, x_max, p)
+        rs[i] = r
     return rs
 
-#        r = integrate_element_1d(us, ws, x_min, x_max, p)
-#        rs[i] = r
 
 n_elements = 4
 p = 2
