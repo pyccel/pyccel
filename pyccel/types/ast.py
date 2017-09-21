@@ -156,12 +156,15 @@ def subs(expr, a_old, a_new):
     else:
         return expr
 
-def allocatable_like(expr):
+def allocatable_like(expr, verbose=False):
     """
     finds attributs of an expression
 
     expr: Expr
         a pyccel expression
+
+    verbose: bool
+        talk more
     """
 #    print ('>>>>> expr = ', expr)
 #    print ('>>>>> type = ', type(expr))
@@ -217,7 +220,9 @@ def allocatable_like(expr):
                and (not isinstance(a, (IndexedElement, Function))):
                 args.extend(a.args)
             if isinstance(a, Function):
-                raise Exception("Functions not yet available")
+                if verbose:
+                    print ("Functions not yet available")
+                return None
             elif isinstance(a, (Variable, IndexedVariable, IndexedElement)):
                 return a
             elif a.is_Symbol:

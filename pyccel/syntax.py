@@ -951,7 +951,7 @@ class AssignStmt(BasicStmt):
                 if DEBUG:
                     print "> Found an unallocated variable: ", var_name
                 status = 'unallocated'
-                like   = allocatable_like(rhs)
+                like = allocatable_like(rhs)
 #                print ">>>> Found variable : ", like
             insert_variable(var_name, **d_var)
 

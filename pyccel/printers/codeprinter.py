@@ -90,7 +90,7 @@ class CodePrinter(StrPrinter):
             rhs_code = self._print(expr.rhs)
 
         code = ''
-        if expr.status == 'unallocated':
+        if (expr.status == 'unallocated') and not (expr.like is None):
             stmt = ZerosLike(lhs_code, expr.like)
             code += self._print(stmt)
             code += '\n'

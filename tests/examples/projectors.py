@@ -28,6 +28,30 @@ def legendre(p):
         w[3] = 0.34785484513745386
     return x,w
 
+#$ header make_knots(int, int)
+def make_knots(n,p):
+    n_elements = n-p
+    m = n+p+1
+    knots = zeros(m, double)
+    for i in range(0, p+1):
+        knots[i] = 0.0
+    for i in range(p+1, n):
+        j = i-p
+        knots[i] = j / n_elements
+    for i in range(n, n+p+1):
+        knots[i] = 1.0
+    return knots
+
+#$ header make_greville(double [:], int, int)
+def make_greville(knots, n,p):
+    greville = zeros(n, double)
+    for i in range(0, n):
+        s = 0.0
+        for j in range(i+1, i+p+1):
+            s = s + knots[j]
+        greville[i] = s / p
+    return greville
+
 #$ header knots_and_greville(int, int)
 def knots_and_greville(n,p):
     n_elements = n-p
@@ -80,10 +104,12 @@ n_elements = 4
 p = 2
 n = p+n_elements
 
-knots, greville = knots_and_greville(n, p)
-#r = integrate_1d(greville, n, p)
-x_min = 0.0
-x_max = 0.25
-us, ws = legendre(p)
-r = integrate_element_1d(us, ws, x_min, x_max, p)
-print(r)
+knots    = make_knots(n, p)
+#greville = make_greville(knots, n, p)
+#
+##r = integrate_1d(greville, n, p)
+#x_min = 0.0
+#x_max = 0.25
+#us, ws = legendre(p)
+#r = integrate_element_1d(us, ws, x_min, x_max, p)
+#print(r)
