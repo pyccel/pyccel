@@ -83,15 +83,21 @@ def preprocess_as_str(lines):
     tab   = 4
     depth = 0
     old_line = ""
+    annotated = ""
     for i,line in enumerate(lines):
         n = delta(line)
-        is_empty = (len(line.lstrip()) == 0)
+        is_empty   = (len(line.lstrip()) == 0)
+        is_comment = False
+        if not is_empty:
+            is_comment = (line.lstrip()[0] == '#')
+        skipped = is_empty or is_comment
+        is_annotated = (line.lstrip()[0:2] == '#$')
 
         if n == depth * tab + tab:
             depth += 1
             lines_new += "indent" + "\n"
             lines_new += line
-        elif not is_empty:
+        elif not skipped:
             d = n // tab
             if (d > 0) or (n==0):
                 old = delta(old_line)
@@ -99,10 +105,14 @@ def preprocess_as_str(lines):
                 depth -= m
                 for j in range(0, m):
                     lines_new += "dedent" + "\n"
+                lines_new += annotated
+                annotated = ""
             lines_new += line
+        elif is_annotated:
+            annotated += line
         else:
             lines_new += line
-        if not is_empty:
+        if not skipped:
             old_line = line
     for i in range(0, depth):
         lines_new += "dedent" + "\n"
