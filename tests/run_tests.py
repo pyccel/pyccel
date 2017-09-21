@@ -7,7 +7,7 @@ execute  = "--execute"
 show     = ""
 
 not_working = []
-for i in ['11', '15', '16', '18', '20', '21']:
+for i in ['11', '15', '18', '20', '21']:
     ex = "ex{}.py".format(str(i))
     not_working.append(ex)
 

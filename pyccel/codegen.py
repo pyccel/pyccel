@@ -70,8 +70,8 @@ def preprocess_as_str(lines):
         for l in ls:
             lines.append(l + "\n")
 
-    # to be sure that we dedent at the end
-    lines += "\n"
+#    # to be sure that we dedent at the end
+#    lines += "\n"
 
     lines_new = ""
 
@@ -82,24 +82,31 @@ def preprocess_as_str(lines):
 
     tab   = 4
     depth = 0
+    old_line = ""
     for i,line in enumerate(lines):
         n = delta(line)
+        is_empty = (len(line.lstrip()) == 0)
 
         if n == depth * tab + tab:
             depth += 1
             lines_new += "indent" + "\n"
             lines_new += line
-        else:
-
+        elif not is_empty:
             d = n // tab
             if (d > 0) or (n==0):
-                old = delta(lines[i-1])
+                old = delta(old_line)
                 m = (old - n) // tab
                 depth -= m
                 for j in range(0, m):
                     lines_new += "dedent" + "\n"
-
             lines_new += line
+        else:
+            lines_new += line
+        if not is_empty:
+            old_line = line
+    for i in range(0, depth):
+        lines_new += "dedent" + "\n"
+
     return lines_new
 # ...
 
