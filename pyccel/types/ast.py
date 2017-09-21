@@ -99,6 +99,10 @@ def subs(expr, a_old, a_new):
         e_lhs   = subs(expr.lhs, a_old, a_new)
         e_shape = subs(expr.shape, a_old, a_new)
         return Zeros(e_lhs, e_shape)
+    elif isinstance(expr, Ones):
+        e_lhs   = subs(expr.lhs, a_old, a_new)
+        e_shape = subs(expr.shape, a_old, a_new)
+        return Ones(e_lhs, e_shape)
     elif isinstance(expr, ZerosLike):
         e_rhs = subs(expr.rhs, a_old, a_new)
         e_lhs = subs(expr.lhs, a_old, a_new)
