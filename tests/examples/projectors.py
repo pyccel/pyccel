@@ -48,23 +48,32 @@ def knots_and_greville(n,p):
         greville[i] = s / p
     return knots, greville
 
+#$ header integrate_element_1d(double [:], double [:], double, double, int)
+def integrate_element_1d(us, ws, x_min, x_max, p):
+    r = 0.0
+    d = x_max - x_min
+    for j in range(0, p+1):
+        u = us[j]
+        w = ws[j]
+        x = x_min + d * u
+        w = 0.5 * d * w
+        f = x * w
+        r = r + f
+    return r
+
 #$ header integrate_1d(double [:], int, int)
 def integrate_1d(t, n, p):
     n_elements = n-p
-    r = 0.0
     us, ws = legendre(p)
     us = us + 1.0
     us = 0.5 * us
+    rs = zeros(n_elements, double)
     for i in range(0,n-1):
         x_min = t[i]
         x_max = t[i+1]
-        d = x_max - x_min
-        for j in range(0, p+1):
-            x = x_min + d * us[j]
-            w = 0.5 * d * ws[j]
-            f = sin(x) * w
-            r = r + f
-    return r
+        r = integrate_element_1d(us, ws, x_min, x_max, p)
+        rs[i] = r
+    return rs
 
 
 n_elements = 4
@@ -72,5 +81,9 @@ p = 2
 n = p+n_elements
 
 knots, greville = knots_and_greville(n, p)
-r = integrate_1d(greville, n, p)
+#r = integrate_1d(greville, n, p)
+x_min = 0.0
+x_max = 0.25
+us, ws = legendre(p)
+r = integrate_element_1d(us, ws, x_min, x_max, p)
 print(r)
