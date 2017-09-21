@@ -80,40 +80,37 @@ def subs(expr, a_old, a_new):
     Examples
     """
     a_new = a_old.clone(str(a_new))
-#    print(">>>> a_old, a_new", type(a_old), type(a_new))
 
     if iterable(expr):
         return [subs(i, a_old, a_new) for i in expr]
     elif isinstance(expr, Variable):
-#        print(">>>> expr : ", expr)
-#        print(">>>> ", type(a_old), type(a_new))
         if expr.name == str(a_old):
-#            print("PAR LA : ", a_new)
             return a_new
         else:
-#            print("PAR ICI")
             return expr
     elif isinstance(expr, IndexedVariable):
-#        print(">>>> IndexedVariable : ", expr)
-#        print(">>>> ", type(a_old), type(a_new))
         return expr
     elif isinstance(expr, IndexedElement):
-#        print(">>>> IndexedElement : ", expr)
         e = subs(expr.base, a_old, a_new)
-#        print(">>>> ", e, type(e))
         return e
     elif isinstance(expr, Expr):
         return expr.subs({a_old: a_new})
+    elif isinstance(expr, Zeros):
+        e_lhs   = subs(expr.lhs, a_old, a_new)
+        e_shape = subs(expr.shape, a_old, a_new)
+        return Zeros(e_lhs, e_shape)
+    elif isinstance(expr, ZerosLike):
+        e_rhs = subs(expr.rhs, a_old, a_new)
+        e_lhs = subs(expr.lhs, a_old, a_new)
+        return ZerosLike(e_lhs, e_rhs)
     elif isinstance(expr, Assign):
         e_rhs = subs(expr.rhs, a_old, a_new)
         e_lhs = subs(expr.lhs, a_old, a_new)
-#        print (expr)
         return Assign(e_lhs, e_rhs, strict=False)
     elif isinstance(expr, MultiAssign):
         e_rhs   = subs(expr.rhs, a_old, a_new)
         e_lhs   = subs(expr.lhs, a_old, a_new)
-        trailer = subs(expr.trailer, a_old, a_new)
-        return MultiAssign(e_lhs, e_rhs, trailer)
+        return MultiAssign(e_lhs, e_rhs)
     elif isinstance(expr, While):
         test = subs(expr.test, a_old, a_new)
         body = subs(expr.body, a_old, a_new)
@@ -139,7 +136,6 @@ def subs(expr, a_old, a_new):
         name        = subs(expr.name, a_old, a_new)
         arguments   = subs(expr.arguments, a_old, a_new)
         results     = subs(expr.results, a_old, a_new)
-#        print ("body : ", expr.body)
         body        = subs(expr.body, a_old, a_new)
         local_vars  = subs(expr.local_vars, a_old, a_new)
         global_vars = subs(expr.global_vars, a_old, a_new)

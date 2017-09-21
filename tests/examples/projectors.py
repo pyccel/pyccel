@@ -61,20 +61,20 @@ def integrate_element_1d(us, ws, x_min, x_max, p):
         r = r + f
     return r
 
-##$ header integrate_1d(double [:], int, int)
-#def integrate_1d(t, n, p):
-#    n_elements = n-p
-#    us, ws = legendre(p)
-#    us = us + 1.0
-#    us = 0.5 * us
-#    rs = zeros(n_elements, double)
-#    for i in range(0,n-1):
-#        x_min = t[i]
-#        x_max = t[i+1]
+#$ header integrate_1d(double [:], int, int)
+def integrate_1d(t, n, p):
+    n_elements = n-p
+    us, ws = legendre(p)
+    us = us + 1.0
+    us = 0.5 * us
+    rs = zeros(n_elements, double)
+    for i in range(0,n-1):
+        x_min = t[i]
+        x_max = t[i+1]
+    return rs
+
 #        r = integrate_element_1d(us, ws, x_min, x_max, p)
 #        rs[i] = r
-#    return rs
-
 
 n_elements = 4
 p = 2
