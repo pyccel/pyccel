@@ -43,7 +43,7 @@ def make_knots(n,p):
     return knots
 
 #$ header make_greville(double [:], int, int)
-def make_greville(knots, n,p):
+def make_greville(knots, n, p):
     greville = zeros(n, double)
     for i in range(0, n):
         s = 0.0
@@ -51,26 +51,6 @@ def make_greville(knots, n,p):
             s = s + knots[j]
         greville[i] = s / p
     return greville
-
-#$ header knots_and_greville(int, int)
-def knots_and_greville(n,p):
-    n_elements = n-p
-    m = n+p+1
-    knots    = zeros(m, double)
-    greville = zeros(n, double)
-    for i in range(0, p+1):
-        knots[i] = 0.0
-    for i in range(p+1, n):
-        j = i-p
-        knots[i] = j / n_elements
-    for i in range(n, n+p+1):
-        knots[i] = 1.0
-    for i in range(0, n):
-        s = 0.0
-        for j in range(i+1, i+p+1):
-            s = s + knots[j]
-        greville[i] = s / p
-    return knots, greville
 
 #$ header integrate_element_1d(double [:], double [:], double, double, int)
 def integrate_element_1d(us, ws, x_min, x_max, p):
@@ -92,7 +72,7 @@ def integrate_1d(t, n, p):
     us = us + 1.0
     us = 0.5 * us
     rs = zeros(n_elements, double)
-    for i in range(0,n-1):
+    for i in range(0, n_elements):
         x_min = t[i]
         x_max = t[i+1]
         r = integrate_element_1d(us, ws, x_min, x_max, p)
@@ -105,11 +85,9 @@ p = 2
 n = p+n_elements
 
 knots    = make_knots(n, p)
-#greville = make_greville(knots, n, p)
-#
-##r = integrate_1d(greville, n, p)
-#x_min = 0.0
-#x_max = 0.25
-#us, ws = legendre(p)
-#r = integrate_element_1d(us, ws, x_min, x_max, p)
+greville = make_greville(knots, n, p)
+print(knots)
+print(greville)
+
+r = integrate_1d(greville, n, p)
 #print(r)

@@ -299,10 +299,14 @@ class FCodePrinter(CodePrinter):
         rank        = arg_ranks[0]
         allocatable = arg_allocatables[0]
 
+        # arrays are 0-based in pyccel, to avoid ambiguity with range
+        base = '0'
+        if allocatable:
+            base = ''
         if rank == 0:
             rankstr =  ''
         else:
-            rankstr = ', '.join(':' for f in range(0, rank))
+            rankstr = ', '.join(base+':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
         if allocatable:
