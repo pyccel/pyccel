@@ -52,13 +52,13 @@ def make_greville(knots, n, p):
         greville[i] = s / p
     return greville
 
-#$ header func_V_0(double, double)
-def func_V_0(x, y):
+#$ header f_scalar(double, double)
+def f_scalar(x, y):
     f = x * y
     return f
 
-#$ header func_V_1(double, double)
-def func_V_1(x, y):
+#$ header f_vector(double, double)
+def f_vector(x, y):
     f1 = x*y
     f2 = x*y
     return f1, f2
@@ -73,9 +73,9 @@ def integrate_edge(component, axis, y, us, ws, x_min, x_max, p):
         x = x_min + d * u
         w = 0.5 * d * w
         if axis==0:
-            f1, f2 = func_V_1(x, y)
+            f1, f2 = f_vector(x, y)
         else:
-            f1, f2 = func_V_1(y, x)
+            f1, f2 = f_vector(y, x)
         if component == 0:
             f = f1
         else:
@@ -95,7 +95,7 @@ def interpolate_V_0(t_u, t_v, n_u, n_v, p_u, p_v):
     i = 0
     for i_u in range(0, n_elements_u+1):
         for i_v in range(0, n_elements_v+1):
-            r[i] = func_V_0(t_u[i_u], t_v[i_v])
+            r[i] = f_scalar(t_u[i_u], t_v[i_v])
             i = i + 1
     return r
 
@@ -135,6 +135,7 @@ def interpolate_V_1(t_u, t_v, n_u, n_v, p_u, p_v):
             x_min = t_v[i_v]
             x_max = t_v[i_v+1]
             r_1[i_u, i_v] = integrate_edge(component, axis, y, vs, wvs, x_min, x_max, p_v)
+
     m = nu1 * nv1 + nu2 * nv2
     r = zeros(m, double)
     i = 0
@@ -145,6 +146,94 @@ def interpolate_V_1(t_u, t_v, n_u, n_v, p_u, p_v):
     for i_u in range(0, nu2):
         for i_v in range(0, nv2):
             r[i] = r_1[i_u, i_v]
+            i = i + 1
+    return r
+
+#$ header interpolate_V_2(double [:], double [:], int, int, int, int)
+def interpolate_V_2(t_u, t_v, n_u, n_v, p_u, p_v):
+    n_elements_u = n_u-p_u
+    n_elements_v = n_v-p_v
+    us, wus = legendre(p_u)
+    vs, wvs = legendre(p_v)
+    us = us + 1.0
+    us = 0.5 * us
+    vs = vs + 1.0
+    vs = 0.5 * vs
+
+    nu1 = n_elements_u+1
+    nv1 = n_elements_v
+    nu2 = n_elements_u
+    nv2 = n_elements_v+1
+
+    r_0 = zeros((nu1, nv1), double)
+    r_1 = zeros((nu2, nv2), double)
+
+    component = 0
+    axis      = 1
+    for i_u in range(0, n_elements_u+1):
+        y = t_u[i_u]
+        for i_v in range(0, n_elements_v):
+            x_min = t_v[i_v]
+            x_max = t_v[i_v+1]
+            r_0[i_u, i_v] = integrate_edge(component, axis, y, vs, wvs, x_min, x_max, p_v)
+
+    component = 1
+    axis      = 0
+    for i_u in range(0, n_elements_u):
+        x_min = t_u[i_u]
+        x_max = t_u[i_u+1]
+        for i_v in range(0, n_elements_v+1):
+            y = t_v[i_v]
+            r_1[i_u, i_v] = integrate_edge(component, axis, y, us, wus, x_min, x_max, p_u)
+
+    m = nu1 * nv1 + nu2 * nv2
+    r = zeros(m, double)
+    i = 0
+    for i_u in range(0, nu1):
+        for i_v in range(0, nv1):
+            r[i] = r_0[i_u, i_v]
+            i = i + 1
+    for i_u in range(0, nu2):
+        for i_v in range(0, nv2):
+            r[i] = r_1[i_u, i_v]
+            i = i + 1
+    return r
+
+#$ header interpolate_V_3(double [:], double [:], int, int, int, int)
+def interpolate_V_3(t_u, t_v, n_u, n_v, p_u, p_v):
+    n_elements_u = n_u-p_u
+    n_elements_v = n_v-p_v
+
+    us, wus = legendre(p_u)
+    vs, wvs = legendre(p_v)
+    us = us + 1.0
+    us = 0.5 * us
+    vs = vs + 1.0
+    vs = 0.5 * vs
+
+    r = zeros(n_elements_u*n_elements_v, double)
+    i = 0
+    for i_u in range(0, n_elements_u):
+        x_min = t_u[i_u]
+        x_max = t_u[i_u+1]
+        dx = x_max - x_min
+        for i_v in range(0, n_elements_v):
+            y_min = t_v[i_v]
+            y_max = t_v[i_v+1]
+            dy = y_max - y_min
+
+            contribution = 0.0
+            for j_u in range(0, p_u+1):
+                x = x_min + dx * us[j_u]
+                for j_v in range(0, p_v+1):
+                    y = y_min + dy * vs[j_v]
+
+                    w = wus[j_u] * wvs[j_v]
+                    w = 0.5 * dx * dy * w
+
+                    f = f_scalar(x,y)
+                    contribution = contribution + w * f
+            r[i] = contribution
             i = i + 1
     return r
 
@@ -167,5 +256,9 @@ greville_v = make_greville(knots_v, n_v, p_v)
 
 r_0 = interpolate_V_0(greville_u, greville_v, n_u, n_v, p_u, p_v)
 r_1 = interpolate_V_1(greville_u, greville_v, n_u, n_v, p_u, p_v)
-print(r_0)
-print(r_1)
+r_2 = interpolate_V_2(greville_u, greville_v, n_u, n_v, p_u, p_v)
+r_3 = interpolate_V_3(greville_u, greville_v, n_u, n_v, p_u, p_v)
+print("r_0 = ", r_0)
+print("r_1 = ", r_1)
+print("r_2 = ", r_2)
+print("r_3 = ", r_3)
