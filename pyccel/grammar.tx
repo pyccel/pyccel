@@ -5,7 +5,8 @@ Pyccel:
 ;
 
 Statement:
-  (SimpleStmt | CompoundStmt)
+    SimpleStmt 
+  | CompoundStmt
 ;
 
 SimpleStmt:
@@ -13,11 +14,44 @@ SimpleStmt:
 ;
 
 SmallStmt:
-  (AnnotatedStmt | CommentStmt | PassStmt | FlowStmt | DelStmt | ImportStmt | ConstructorStmt | DeclarationStmt | ExprStmt | PythonStdLibStmt)
+    AnnotatedStmt 
+  | CommentStmt 
+  | PassStmt 
+  | FlowStmt 
+  | DelStmt 
+  | ImportStmt 
+  | ConstructorStmt 
+  | DeclarationStmt 
+  | ExprStmt 
+  | PythonStdLibStmt
+;
+
+FlowStmt:
+    BreakStmt 
+  | ContinueStmt 
+  | ReturnStmt 
+  | RaiseStmt 
+  | YieldStmt
 ;
 
 CompoundStmt:
-  (IfStmt | ForStmt | DecoratedStmt|WhileStmt)
+    IfStmt 
+  | ForStmt 
+  | DecoratedStmt
+  | WhileStmt
+;
+
+AnnotatedStmt:
+    HeaderStmt 
+  | OpenmpStmt
+;
+
+ExprStmt: 
+    StencilStmt 
+  | ThreadStmt 
+  | EvalStmt 
+  | AssignStmt 
+  | MultiAssignStmt
 ;
 
 SuiteStmt: 
@@ -42,19 +76,15 @@ DecoratedStmt:
 ;
 
 FunctionDefStmt: 
-  'def' name=ID LPAREN args*=ID[','] RPAREN ':'
+  'def' name=ID '(' args*=ID[','] ')' ':'
   body=SuiteStmt
 ;
 FunctionCall:
-   ID LPAREN args*=ID[','] RPAREN
+   ID '(' args*=ID[','] ')'
 ;
 
 PassStmt:
   label='pass'
-;
-
-FlowStmt:
-  (BreakStmt | ContinueStmt | ReturnStmt | RaiseStmt | YieldStmt)
 ;
 
 BreakStmt:
@@ -86,10 +116,6 @@ CommentStmt:
   '#' text=/.*$/
 ;
 
-AnnotatedStmt:
-  HeaderStmt | OpenmpStmt
-;
-
 HeaderStmt: 
   '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')'
 ;
@@ -107,8 +133,10 @@ ImportNameStmt:
 ;
 
 // note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
-ImportFromStmt: ('from' (('.' | '...')* dotted_name=DottedName | ('.' | '...')+)
-              'import' ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames));
+ImportFromStmt: 
+  ('from'  (('.' | '...')* dotted_name=DottedName | ('.' | '...')+) 
+   'import' ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames))
+;
 
 ImportAsName: 
   ID ('as' ID)?
@@ -140,7 +168,10 @@ DeclarationStmt:
 ;
 
 DataType:
-  ('double' | 'float' | 'int' | 'complex')
+    'double' 
+  | 'float' 
+  | 'int' 
+  | 'complex'
 ;
 
 ParameterTest:
@@ -152,7 +183,7 @@ Variable:
 ;
 
 ConstructorStmt:
-  lhs=ID '=' constructor=Constructor LPAREN RPAREN 
+  lhs=ID '=' constructor=Constructor '(' ')' 
 ;
 
 Constructor:
@@ -160,27 +191,26 @@ Constructor:
 ;
 
 IdentifierOrNumber:
-  (Float | INT | ID)
+    Float 
+  | INT 
+  | ID
 ;
 
 ArgList:
-  LPAREN args+=Args[','] RPAREN
-;
-Args:
-  (ArgList | IdentifierOrNumber)
+  '(' args+=Args[','] ')'
 ;
 
+Args:
+    ArgList 
+  | IdentifierOrNumber
+;
 
 PythonStdLibStmt:
   (PythonPrintStmt)
 ;
 
-ExprStmt: 
-  (StencilStmt | ThreadStmt | EvalStmt | AssignStmt | MultiAssignStmt)
-;
-
 PythonPrintStmt: 
-  name='print' LPAREN   (args+=PrintStmt[',']) RPAREN 
+  name='print' '('   (args+=PrintStmt[',']) ')' 
 ;
 PrintStmt:
   (STRING|Expression)
@@ -195,26 +225,16 @@ ParameterSingle:
 ;
 
 ThreadStmt: 
-  lhs=ID '=' func=ThreadFunction LPAREN RPAREN 
+  lhs=ID '=' func=ThreadFunction '(' ')' 
 ;
 
 ThreadFunction:
-  ('thread_id' | 'thread_number')
+    'thread_id' 
+  | 'thread_number'
 ;
 
 StencilStmt: 
-  lhs=ID '=' 'stencil' LPAREN parameters+=ParameterSingle[','] RPAREN 
-;
-
-NUMBEROrSTRING:
-  (NUMBER|STRING)
-;
-ArrayOrMatrix:
-  (Array | Matrix)
-;
-
-ArrayOrID:
- ('[' NUMBEROrSTRING (',' NUMBEROrSTRING)* ']')|(ID)
+  lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' 
 ;
 
 AssignStmt: 
@@ -231,9 +251,9 @@ EvalStmt:
 
 ForStmt: 
   'for' iterable=ID 'in' 
-  'range' LPAREN start=Expression COMMA 
+  'range' '(' start=Expression ',' 
                  end=Expression 
-                (COMMA step=Expression)? RPAREN ':' 
+                (',' step=Expression)? ')' ':' 
   body=SuiteStmt
 ;
 
@@ -276,7 +296,17 @@ Comparison:
 // <> isn't actually a valid comparison operator in Python. It's here for the
 // sake of a __future__ import described in PEP 401 (which really works :-)
 CompOp: 
-  '>='|'<='|'<>'|'<'|'>'|'=='|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+    '>='
+  | '<='
+  | '<>'
+  | '<'
+  | '>'
+  | '=='
+  | '!='
+  | 'in'
+  | 'not' 'in'
+  | 'is'
+  | 'is' 'not'
 ;
 
 Expression: 
@@ -306,7 +336,8 @@ TrailerArgList:
 ;
 
 TrailerArg: 
-  (TrailerArgList | Expression)
+    TrailerArgList 
+  | Expression
 ;
 
 TrailerSubscriptList: 
@@ -314,7 +345,11 @@ TrailerSubscriptList:
 ;
 
 TrailerSubscript: 
-  (TrailerSlice | TrailerSliceLeft | TrailerSliceRight | TrailerSliceEmpty | Expression)
+    TrailerSlice 
+  | TrailerSliceLeft 
+  | TrailerSliceRight 
+  | TrailerSliceEmpty 
+  | Expression
 ;
 
 TrailerSliceLeft:
@@ -333,20 +368,11 @@ TrailerSliceEmpty:
   (dots=':')
 ;
 
-Array:
-  '[' NUMBER (',' NUMBER)* ']'
-;
-
-Matrix:
-  '[' Array (',' Array)* ']'
-;
-
 Operand: 
     (op=Float) 
   | (op=INT) 
   | (op=ID) 
   | (op=BOOLEAN) 
-  | (op=Array)
 ;
 
 Float:
@@ -354,30 +380,12 @@ Float:
 ;
 
 BOOLEAN:
-   ('True'|'False')
+    'True'
+  | 'False'
 ;
 
-//// TODO: remove pi from here
 //UnaryOp:
 //   ('transpose')
-//;
-//
-//BinaryOp:
-//   ('min' | 'max')
-//;
-
-
-COMMA:
-  ","
-;
-
-LPAREN:
-  "("
-;
-
-RPAREN:
-  ")"
-;
 
 PlusOrMinus: 
   '+' | '-'
@@ -397,12 +405,4 @@ INDENT:
 
 DEDENT:
   'dedent'
-;
-
-ZEROSLIKE:
-  'zeroslike'
-;
-
-AWAIT:
-  'await'
 ;
