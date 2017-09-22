@@ -54,14 +54,13 @@ def make_greville(knots, n, p):
 
 #$ header func_V_0(double, double)
 def func_V_0(x, y):
-    f = 1.0-x
-    f = x * y * f
+    f = x * y
     return f
 
 #$ header func_V_1(double, double)
 def func_V_1(x, y):
-    f1 = 1.0-2.0*x
-    f2 = 1.0-2.0*y
+    f1 = x*y
+    f2 = x*y
     return f1, f2
 
 #$ header integrate_edge(int, int, double, double [:], double [:], double, double, int)
@@ -88,11 +87,17 @@ def integrate_edge(component, axis, y, us, ws, x_min, x_max, p):
 def interpolate_V_0(t_u, t_v, n_u, n_v, p_u, p_v):
     n_elements_u = n_u-p_u
     n_elements_v = n_v-p_v
-    rs = zeros((n_elements_u+1, n_elements_v+1), double)
+
+    nu1 = n_elements_u+1
+    nv1 = n_elements_v+1
+
+    r = zeros(nu1*nv1, double)
+    i = 0
     for i_u in range(0, n_elements_u+1):
         for i_v in range(0, n_elements_v+1):
-            rs[i_u, i_v] = func_V_0(t_u[i_u], t_v[i_v])
-    return rs
+            r[i] = func_V_0(t_u[i_u], t_v[i_v])
+            i = i + 1
+    return r
 
 #$ header interpolate_V_1(double [:], double [:], int, int, int, int)
 def interpolate_V_1(t_u, t_v, n_u, n_v, p_u, p_v):
@@ -105,8 +110,13 @@ def interpolate_V_1(t_u, t_v, n_u, n_v, p_u, p_v):
     vs = vs + 1.0
     vs = 0.5 * vs
 
-    r_0 = zeros((n_elements_u, n_elements_v+1), double)
-    r_1 = zeros((n_elements_u+1, n_elements_v), double)
+    nu1 = n_elements_u
+    nv1 = n_elements_v+1
+    nu2 = n_elements_u+1
+    nv2 = n_elements_v
+
+    r_0 = zeros((nu1, nv1), double)
+    r_1 = zeros((nu2, nv2), double)
 
     component = 0
     axis      = 0
@@ -115,8 +125,7 @@ def interpolate_V_1(t_u, t_v, n_u, n_v, p_u, p_v):
         x_max = t_u[i_u+1]
         for i_v in range(0, n_elements_v+1):
             y = t_v[i_v]
-            r = integrate_edge(component, axis, y, us, wus, x_min, x_max, p_u)
-            r_0[i_u, i_v] = r
+            r_0[i_u, i_v] = integrate_edge(component, axis, y, us, wus, x_min, x_max, p_u)
 
     component = 1
     axis      = 1
@@ -125,12 +134,22 @@ def interpolate_V_1(t_u, t_v, n_u, n_v, p_u, p_v):
         for i_v in range(0, n_elements_v):
             x_min = t_v[i_v]
             x_max = t_v[i_v+1]
-            r = integrate_edge(component, axis, y, vs, wvs, x_min, x_max, p_v)
-            r_1[i_u, i_v] = r
-    return r_0, r_1
+            r_1[i_u, i_v] = integrate_edge(component, axis, y, vs, wvs, x_min, x_max, p_v)
+    m = nu1 * nv1 + nu2 * nv2
+    r = zeros(m, double)
+    i = 0
+    for i_u in range(0, nu1):
+        for i_v in range(0, nv1):
+            r[i] = r_0[i_u, i_v]
+            i = i + 1
+    for i_u in range(0, nu2):
+        for i_v in range(0, nv2):
+            r[i] = r_1[i_u, i_v]
+            i = i + 1
+    return r
 
-n_elements_u = 4
-n_elements_v = 4
+n_elements_u = 2
+n_elements_v = 2
 p_u = 2
 p_v = 2
 n_u = p_u + n_elements_u
@@ -140,10 +159,13 @@ knots_u    = make_knots(n_u, p_u)
 knots_v    = make_knots(n_v, p_v)
 greville_u = make_greville(knots_u, n_u, p_u)
 greville_v = make_greville(knots_v, n_v, p_v)
-print("knots_u = ", knots_u)
-print("knots_v = ", knots_v)
-print("greville_u = ", greville_u)
-print("greville_v = ", greville_v)
 
-#r = integrate_1d(greville, n, p)
-#print(r)
+#print("knots_u = ", knots_u)
+#print("knots_v = ", knots_v)
+#print("greville_u = ", greville_u)
+#print("greville_v = ", greville_v)
+
+r_0 = interpolate_V_0(greville_u, greville_v, n_u, n_v, p_u, p_v)
+r_1 = interpolate_V_1(greville_u, greville_v, n_u, n_v, p_u, p_v)
+print(r_0)
+print(r_1)
