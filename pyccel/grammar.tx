@@ -76,39 +76,25 @@ DecoratedStmt:
 ;
 
 FunctionDefStmt: 
-  'def' name=ID '(' args*=ID[','] ')' ':'
+  DEF name=ID '(' args*=ID[','] ')' ':'
   body=SuiteStmt
 ;
 FunctionCall:
    ID '(' args*=ID[','] ')'
 ;
 
-PassStmt:
-  label='pass'
-;
-
-BreakStmt:
-  label='break'
-;
-
-ContinueStmt:
-  label='continue'
-;
+PassStmt: label=PASS;
+BreakStmt: label=BREAK;
+ContinueStmt: label=CONTINUE;
+RaiseStmt: label=RAISE;
+YieldStmt: label=YIELD;
 
 ReturnStmt:
-  label='return' (variables*=ID[','])
-;
-
-RaiseStmt:
-  label='raise'
-;
-
-YieldStmt:
-  label='yield'
+  label=RETURN (variables*=ID[','])
 ;
 
 DelStmt:
-  'del' variables*=ID[',']
+  DEL variables*=ID[',']
 ;
 
 CommentStmt:
@@ -125,35 +111,27 @@ DeclareAtom:
 ;
 
 ImportStmt: 
-  ImportNameStmt | ImportFromStmt 
+    ImportNameStmt 
+  | ImportFromStmt 
 ;
 
-ImportNameStmt: 
-  'import' DottedAsNames
-;
+ImportNameStmt: IMPORT DottedAsNames;
 
 // note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
 ImportFromStmt: 
-  ('from'  (('.' | '...')* dotted_name=DottedName | ('.' | '...')+) 
-   'import' ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames))
+  (FROM  (('.' | '...')* dotted_name=DottedName | ('.' | '...')+) 
+   IMPORT ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames))
 ;
 
-ImportAsName: 
-  ID ('as' ID)?
-;
-
-DottedAsName: 
-  DottedName ('as' ID)?
-;
+ImportAsName: ID (AS ID)?;
+DottedAsName: DottedName (AS ID)?;
 
 ImportAsNames: 
 //  ImportAsName (',' ImportAsName)* (',')?
   names+=ImportAsName[','] 
 ;
 
-DottedAsNames: 
-  DottedAsName (',' DottedAsName)*
-;
+DottedAsNames: DottedAsName (',' DottedAsName)*;
 
 DottedName: 
   names+=ID['.'] 
@@ -175,20 +153,17 @@ DataType:
 ;
 
 ParameterTest:
-  ID | STRING
+    ID 
+  | STRING
 ;
 
-Variable:
-  ID
-;
+Variable: ID;
 
 ConstructorStmt:
   lhs=ID '=' constructor=Constructor '(' ')' 
 ;
 
-Constructor:
-  DataType 
-;
+Constructor: DataType ;
 
 IdentifierOrNumber:
     Float 
@@ -258,31 +233,31 @@ ForStmt:
 ;
 
 WhileStmt:
-  'while' test=OrTest ':'
+  WHILE test=OrTest ':'
   body=SuiteStmt
 ;
 
 IfStmt: 
-  'if' test=Test ':' body_true=SuiteStmt
+  IF test=Test ':' body_true=SuiteStmt
   (body_elif*=ElifStmt)? 
-  ('else' ':' body_false=SuiteStmt)? 
+  (ELSE ':' body_false=SuiteStmt)? 
 ;
 
 ElifStmt:
-  ('elif' test=Test ':' body=SuiteStmt) 
+  (ELIF test=Test ':' body=SuiteStmt) 
 ;
 
 Test: 
-  op=OrTest ('if' OrTest 'else' Test)? 
+  op=OrTest (IF OrTest ELSE Test)? 
 ;
 
 OrTest: 
-  op=AndTest ('or' op=AndTest)*
+  op=AndTest (OR op=AndTest)*
 ;
 
 AndTest: 
 //  op=NotTest ('and' op=NotTest)*
-  op=Comparison ('and' op=Comparison)*
+  op=Comparison (AND op=Comparison)*
 ;
 
 //NotTest: 
@@ -379,30 +354,54 @@ Float:
   /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/
 ;
 
-BOOLEAN:
-    'True'
-  | 'False'
-;
+BOOLEAN: TRUE | FALSE;
 
 //UnaryOp:
 //   ('transpose')
 
-PlusOrMinus: 
-  '+' | '-'
-;
-
-MulOrDiv: 
-  '*' | '/' 
-;
+PlusOrMinus: '+' | '-';
+MulOrDiv: '*' | '/' ;
 
 //Comment:
 //  /#.*$/
 //;
 
-INDENT:
-  'indent'
-;
+// indent/dedent are here since textX does not handle indentation yet
+INDENT: 'indent';
+DEDENT: 'dedent';
 
-DEDENT:
-  'dedent'
-;
+AND : 'and';
+AS : 'as';
+ASSERT : 'assert';
+ASYNC : 'async';
+AWAIT : 'await';
+BREAK : 'break';
+CLASS : 'class';
+CONTINUE : 'continue';
+DEL : 'del';
+DEF : 'def';
+ELIF : 'elif';
+ELSE : 'else';
+EXCEPT : 'except';
+FALSE : 'False';
+FINALLY : 'finally';
+FOR : 'for';
+FROM : 'from';
+GLOBAL : 'global';
+IF : 'if';
+IN : 'in';
+IS : 'is';
+IMPORT : 'import';
+LAMBDA : 'lambda';
+NONE : 'None';
+NONLOCAL : 'nonlocal';
+NOT : 'not';
+OR : 'or';
+PASS : 'pass';
+RETURN : 'return';
+RAISE : 'raise';
+TRUE : 'True';
+TRY : 'try';
+WHILE : 'while';
+WITH : 'with';
+YIELD : 'yield';
