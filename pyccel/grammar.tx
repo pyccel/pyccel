@@ -275,13 +275,6 @@ TrailerSliceRight: (':' end=Expression);
 TrailerSlice: (start=Expression ':' end=Expression);
 TrailerSliceEmpty: (dots=':');
 
-Operand: 
-    (op=Float) 
-  | (op=INT) 
-  | (op=ID) 
-  | (op=BOOLEAN) 
-;
-
 Float:
   /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/
 ;
