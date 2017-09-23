@@ -5,8 +5,8 @@ import os
 from pyccel.imports.syntax import ImportFromStmt
 
 from pyccel.syntax import (Pyccel, \
-                           Expression, Term, Operand, \
-                           FactorSigned, \
+                           ArithmeticExpression, Term, Operand, \
+                           FactorSigned, AtomExpr, AtomExpr, Power, \
                            HeaderStmt, \
                            # statements
                            DeclarationStmt, ConstructorStmt, \
@@ -195,8 +195,8 @@ class PyccelParser(Parser):
         It takes the same arguments as the Parser class.
         """
         classes = [Pyccel, \
-                   Expression, Term, Operand, \
-                   FactorSigned, \
+                   ArithmeticExpression, Term, Operand, \
+                   FactorSigned, AtomExpr, AtomExpr, Power, \
                    HeaderStmt, \
                    # statements
                    DeclarationStmt, ConstructorStmt, \

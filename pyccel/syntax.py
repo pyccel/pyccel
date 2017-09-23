@@ -21,7 +21,7 @@ from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
 
 
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr, AtomicExpr
+from sympy.core.expr import Expr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Derivative
@@ -93,8 +93,8 @@ known_functions = {
 #          the local_vars and stmt_vars properties.
 
 __all__ = ["Pyccel", \
-           "Expression", "Term", "Operand", \
-           "FactorSigned", \
+           "ArithmeticExpression", "Term", "Operand", \
+           "FactorSigned", "AtomExpr", "Power", \
            "HeaderStmt", \
            # statements
            "AssignStmt", "MultiAssignStmt", "DeclarationStmt", \
@@ -585,7 +585,7 @@ def do_arg(a):
         arg = Symbol(a, integer=True)
     elif isinstance(a, (Integer, Float)):
         arg = a
-    elif isinstance(a, Expression):
+    elif isinstance(a, ArithmeticExpression):
         arg = a.expr
         if isinstance(arg, (Symbol, Variable)):
             arg = Symbol(arg.name, integer=True)
@@ -905,7 +905,7 @@ class AssignStmt(BasicStmt):
         ==========
         lhs: str
             variable to assign to
-        rhs: Expression
+        rhs: ArithmeticExpression
             expression to assign to the lhs
         trailer: Trailer
             a trailer is used for a function call or Array indexing.
@@ -926,7 +926,7 @@ class AssignStmt(BasicStmt):
         """
         Process the Assign statement by returning a pyccel.types.ast object
         """
-        if not isinstance(self.rhs, Expression):
+        if not isinstance(self.rhs, ArithmeticExpression):
             raise TypeError("Expecting an expression")
 
         var_name = self.lhs
@@ -976,7 +976,7 @@ class MultiAssignStmt(BasicStmt):
         ==========
         lhs: list of str
             variables to assign to
-        rhs: Expression
+        rhs: ArithmeticExpression
             expression to assign to the lhs
         """
         self.lhs = kwargs.pop('lhs')
@@ -1183,10 +1183,10 @@ class ExpressionElement(object):
 
         Parameters
         ==========
-        parent: Expression
-            parent Expression
+        parent: ArithmeticExpression
+            parent ArithmeticExpression
         op:
-            attribut in the Expression (see the grammar)
+            attribut in the ArithmeticExpression (see the grammar)
         """
         # textX will pass in parent attribute used for parent-child
         # relationships. We can use it if we want to.
@@ -1208,11 +1208,8 @@ class FactorSigned(ExpressionElement, BasicStmt):
         ==========
         sign: str
             one among {'+', '-'}
-        trailer: Trailer
-            a trailer is used for a function call or Array indexing.
         """
         self.sign    = kwargs.pop('sign', '+')
-        self.trailer = kwargs.pop('trailer', None)
 
         super(FactorSigned, self).__init__(**kwargs)
 
@@ -1224,9 +1221,35 @@ class FactorSigned(ExpressionElement, BasicStmt):
         if DEBUG:
             print "> FactorSigned "
         expr = self.op.expr
+        return -expr if self.sign == '-' else expr
+
+class AtomExpr(ExpressionElement, BasicStmt):
+    """Class representing an atomic expression."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a atomic expression.
+
+        Parameters
+        ==========
+        trailer: Trailer
+            a trailer is used for a function call or Array indexing.
+        """
+        self.trailer = kwargs.pop('trailer', None)
+
+        super(AtomExpr, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the atomic expression, by returning a sympy expression
+        """
+        if DEBUG:
+            print "> AtomExpr "
+        expr = self.op.expr
 
         if self.trailer is None:
-            return -expr if self.sign == '-' else expr
+            return expr
         else:
             args = self.trailer.expr
             if self.trailer.args:
@@ -1245,7 +1268,37 @@ class FactorSigned(ExpressionElement, BasicStmt):
             elif self.trailer.subs:
                 # TODO check that expr.name is IndexedElement
                 expr = IndexedVariable(expr.name)[args]
-            return -expr if self.sign == '-' else expr
+            return expr
+
+class Power(ExpressionElement, BasicStmt):
+    """Class representing an atomic expression."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a atomic expression.
+
+        Parameters
+        ==========
+        exponent: str
+            a exponent.
+        """
+        self.exponent = kwargs.pop('exponent', None)
+
+        super(Power, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the atomic expression, by returning a sympy expression
+        """
+        if DEBUG:
+            print "> AtomExpr "
+        expr = self.op.expr
+        if self.exponent is None:
+            return expr
+        else:
+            exponent = self.exponent.expr
+            return Pow(expr, exponent)
 
 class Term(ExpressionElement):
     """Class representing a term in the grammar."""
@@ -1267,7 +1320,7 @@ class Term(ExpressionElement):
                 ret = Mul(ret, a)
         return ret
 
-class Expression(ExpressionElement):
+class ArithmeticExpression(ExpressionElement):
     """Class representing an expression in the grammar."""
 
     @property
@@ -1276,7 +1329,7 @@ class Expression(ExpressionElement):
         Process the expression, by returning a sympy expression
         """
         if DEBUG:
-            print "> Expression "
+            print "> ArithmeticExpression "
 
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
@@ -1833,7 +1886,7 @@ class TrailerSubscriptList(BasicTrailer):
         self.update()
         args = []
         for a in self.args:
-            if isinstance(a, Expression):
+            if isinstance(a, ArithmeticExpression):
                 arg = do_arg(a)
 
                 # TODO treat n correctly
@@ -1856,9 +1909,9 @@ class BasicSlice(BasicStmt):
 
         Parameters
         ==========
-        start: str, int, Expression
+        start: str, int, ArithmeticExpression
             Starting index of the slice.
-        end: str, int, Expression
+        end: str, int, ArithmeticExpression
             Ending index of the slice.
         """
         self.start = kwargs.pop('start', None)
@@ -1886,7 +1939,7 @@ class BasicSlice(BasicStmt):
                 var = namespace[name]
             else:
                 raise Exception("could not find {} in namespace ".format(name))
-        elif isinstance(name, Expression):
+        elif isinstance(name, ArithmeticExpression):
             var = do_arg(name)
         else:
             raise Exception("Unexpected type {0} for {1}".format(type(name), name))

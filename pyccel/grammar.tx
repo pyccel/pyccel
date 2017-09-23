@@ -1,3 +1,22 @@
+// TODO: - decorators
+//       - continuation line
+//       - augassign 
+//       - dotted names 
+//       - boolean expr in factor
+//       - class 
+//       - io files  
+//       - command line args 
+//       - OpFactor: add '//'
+//       - OpFactorSigned: add '~'
+//       - Atom: add dictorsetmaker 
+//       - Atom: add  '...'
+//       - Atom: add STRING+ 
+//       - Atom: add yield expr 
+//       - AtomExpr: allow multiple trailers 
+//       -  
+//       -  
+//       -  
+
 import openmp.grammar
 
 Pyccel:
@@ -79,9 +98,6 @@ FunctionDefStmt:
   DEF name=ID '(' args*=ID[','] ')' ':'
   body=SuiteStmt
 ;
-FunctionCall:
-   ID '(' args*=ID[','] ')'
-;
 
 PassStmt: label=PASS;
 BreakStmt: label=BREAK;
@@ -102,19 +118,10 @@ CommentStmt:
   '#' text=/.*$/
 ;
 
-HeaderStmt: 
-  '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')'
-;
+HeaderStmt: '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')';
+DeclareAtom: dtype=ID (trailer=TrailerSubscriptList)?;
 
-DeclareAtom:
-  dtype=ID (trailer=TrailerSubscriptList)?
-;
-
-ImportStmt: 
-    ImportNameStmt 
-  | ImportFromStmt 
-;
-
+ImportStmt: ImportNameStmt | ImportFromStmt ;
 ImportNameStmt: IMPORT DottedAsNames;
 
 // note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
@@ -132,18 +139,13 @@ ImportAsNames:
 ;
 
 DottedAsNames: DottedAsName (',' DottedAsName)*;
-
-DottedName: 
-  names+=ID['.'] 
-;
+DottedName: names+=ID['.'];
 
 //global_stmt: 'global' ID (',' ID)*;
 //nonlocal_stmt: 'nonlocal' ID (',' ID)*;
 //assert_stmt: 'assert' test (',' test)?;
 
-DeclarationStmt: 
-  datatype=DataType variables+=ID[',']
-;
+DeclarationStmt: datatype=DataType variables+=ID[','];
 
 DataType:
     'double' 
@@ -152,77 +154,38 @@ DataType:
   | 'complex'
 ;
 
-ParameterTest:
-    ID 
-  | STRING
-;
-
+ParameterTest: ID | STRING;
 Variable: ID;
 
-ConstructorStmt:
-  lhs=ID '=' constructor=Constructor '(' ')' 
-;
-
+ConstructorStmt: lhs=ID '=' constructor=Constructor '(' ')' ;
 Constructor: DataType ;
 
-IdentifierOrNumber:
-    Float 
-  | INT 
-  | ID
-;
+IdentifierOrNumber: Number | ID;
 
-ArgList:
-  '(' args+=Args[','] ')'
-;
+ArgList: '(' args+=Args[','] ')';
+Args: ArgList | IdentifierOrNumber;
 
-Args:
-    ArgList 
-  | IdentifierOrNumber
-;
+// TODO: remove
+PythonStdLibStmt: PythonPrintStmt;
 
-PythonStdLibStmt:
-  (PythonPrintStmt)
-;
+PythonPrintStmt: name='print' '('   (args+=PrintStmt[',']) ')';
+PrintStmt: STRING | Expression;
 
-PythonPrintStmt: 
-  name='print' '('   (args+=PrintStmt[',']) ')' 
-;
-PrintStmt:
-  (STRING|Expression)
-;
+// TODO: remove
+ParameterValue: (value=IdentifierOrNumber |value=ArgList);
+ParameterSingle: label=ParameterTest '=' value=ParameterValue;
 
-ParameterValue:
-  (value=IdentifierOrNumber |value=ArgList)
-;
+AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=Expression;
+MultiAssignStmt: lhs+=ID[','] '=' rhs=Expression;
 
-ParameterSingle: 
-  label=ParameterTest '=' value=ParameterValue
-;
-
-ThreadStmt: 
-  lhs=ID '=' func=ThreadFunction '(' ')' 
-;
-
-ThreadFunction:
-    'thread_id' 
-  | 'thread_number'
-;
-
-StencilStmt: 
-  lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' 
-;
-
-AssignStmt: 
-  lhs=ID (trailer=Trailer)? '=' rhs=Expression 
-;
-
-MultiAssignStmt: 
-  lhs+=ID[','] '=' rhs=Expression
-;
-
+StencilStmt: lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' ;
 EvalStmt: 
   lhs+=ID[','] '=' 'eval' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
 ;
+
+// TODO: improve
+ThreadStmt: lhs=ID '=' func=ThreadFunction '(' ')';
+ThreadFunction: 'thread_id' | 'thread_number';
 
 ForStmt: 
   'for' iterable=ID 'in' 
@@ -247,30 +210,36 @@ ElifStmt:
   (ELIF test=Test ':' body=SuiteStmt) 
 ;
 
-Test: 
-  op=OrTest (IF OrTest ELSE Test)? 
+Test: op=OrTest (IF OrTest ELSE Test)?;
+OrTest: op=AndTest (OR op=AndTest)*;
+AndTest: op=Comparison (AND op=Comparison)*;
+Comparison: op=Expression (op=OpComp op=Expression)*;
+
+Expression: ArithmeticExpression;
+ArithmeticExpression: op=Term (op=OpPlusOrMinus op=Term)*;
+Term: op=Factor (op=OpFactor op=Factor)*;
+Factor: Power | FactorSigned;
+FactorSigned: (sign=OpFactorSigned)?  op=AtomExpr;
+Power: op=AtomExpr '**' exponent=Factor;
+AtomExpr: op=Operand (trailer=Trailer)?;
+
+Number: Float | INT;
+Atom: 
+    TrailerArgList
+  | TrailerSubscriptList
+  | ID
+  | Number 
+  | NONE
+  | TRUE
+  | FALSE
 ;
 
-OrTest: 
-  op=AndTest (OR op=AndTest)*
-;
-
-AndTest: 
-//  op=NotTest ('and' op=NotTest)*
-  op=Comparison (AND op=Comparison)*
-;
-
-//NotTest: 
-//  (op='not')? op=Comparison
-//;
-
-Comparison: 
-  op=Expression (op=CompOp op=Expression)* 
-;
-
+OpPlusOrMinus: '+' | '-';
+OpFactor: '*' | '@' | '/' | '%' ;
+OpFactorSigned: '+' | '-';
 // <> isn't actually a valid comparison operator in Python. It's here for the
 // sake of a __future__ import described in PEP 401 (which really works :-)
-CompOp: 
+OpComp: 
     '>='
   | '<='
   | '<>'
@@ -284,40 +253,15 @@ CompOp:
   | 'is' 'not'
 ;
 
-Expression: 
-  op=Term (op=PlusOrMinus op=Term)* 
-;
-
-Term: 
-  op=Factor (op=MulOrDiv op=Factor)*
-;
-
-Factor: 
-  FactorSigned
-;
-
-// TODO trailer must be a list 
-FactorSigned: 
-  (sign=PlusOrMinus)?  op=Operand (trailer=Trailer)?
-;
-
+// TODO: only use args
 Trailer: 
-  (args=TrailerArgList)?
+    (args=TrailerArgList)?
   | (subs=TrailerSubscriptList)?
 ;
 
-TrailerArgList: 
-  '(' args+=TrailerArg[','] ')'
-;
-
-TrailerArg: 
-    TrailerArgList 
-  | Expression
-;
-
-TrailerSubscriptList: 
-  '[' args+=TrailerSubscript[','] ']'
-;
+TrailerArgList: '(' args+=TrailerArg[','] ')';
+TrailerArg: TrailerArgList | Expression;
+TrailerSubscriptList: '[' args+=TrailerSubscript[','] ']';
 
 TrailerSubscript: 
     TrailerSlice 
@@ -327,21 +271,10 @@ TrailerSubscript:
   | Expression
 ;
 
-TrailerSliceLeft:
-  (start=Expression ':')
-;
-
-TrailerSliceRight:
-  (':' end=Expression)
-;
-
-TrailerSlice:
-  (start=Expression ':' end=Expression)
-;
-
-TrailerSliceEmpty:
-  (dots=':')
-;
+TrailerSliceLeft: (start=Expression ':');
+TrailerSliceRight: (':' end=Expression);
+TrailerSlice: (start=Expression ':' end=Expression);
+TrailerSliceEmpty: (dots=':');
 
 Operand: 
     (op=Float) 
@@ -355,16 +288,6 @@ Float:
 ;
 
 BOOLEAN: TRUE | FALSE;
-
-//UnaryOp:
-//   ('transpose')
-
-PlusOrMinus: '+' | '-';
-MulOrDiv: '*' | '/' ;
-
-//Comment:
-//  /#.*$/
-//;
 
 // indent/dedent are here since textX does not handle indentation yet
 INDENT: 'indent';
