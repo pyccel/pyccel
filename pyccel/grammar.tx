@@ -221,18 +221,24 @@ Term: op=Factor (op=OpFactor op=Factor)*;
 Factor: Power | FactorSigned;
 FactorSigned: (sign=OpFactorSigned)?  op=AtomExpr;
 Power: op=AtomExpr '**' exponent=Factor;
-AtomExpr: op=Operand (trailer=Trailer)?;
+AtomExpr: op=Atom (trailer=Trailer)?;
 
 Number: Float | INT;
 Atom: 
-    TrailerArgList
-  | TrailerSubscriptList
-  | ID
-  | Number 
-  | NONE
-  | TRUE
-  | FALSE
+    (op=Number) 
+  | (op=ID) 
+  | (op=NONE)
+  | (op=TRUE)
+  | (op=FALSE)
 ;
+//Atom: 
+//    '(' Factor ')'
+//  | ID
+//  | Number 
+//  | NONE
+//  | TRUE
+//  | FALSE
+//;
 
 OpPlusOrMinus: '+' | '-';
 OpFactor: '*' | '@' | '/' | '%' ;

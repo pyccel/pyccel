@@ -8,7 +8,7 @@ from ast import literal_eval
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy import Symbol, Integer, Float, Add, Mul
-from sympy import true, false,pi
+from sympy import true, false, pi
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
@@ -93,7 +93,7 @@ known_functions = {
 #          the local_vars and stmt_vars properties.
 
 __all__ = ["Pyccel", \
-           "ArithmeticExpression", "Term", "Operand", \
+           "ArithmeticExpression", "Term", "Operand", "Atom", \
            "FactorSigned", "AtomExpr", "Power", \
            "HeaderStmt", \
            # statements
@@ -1341,6 +1341,65 @@ class ArithmeticExpression(ExpressionElement):
                 ret = Add(ret, a)
 
         return ret
+
+class Atom(ExpressionElement):
+    """Class representing an atom in the grammar."""
+
+    @property
+    def expr(self):
+        """
+        Process the atom, by returning a sympy atom
+        """
+        if DEBUG:
+#        if True:
+            print "> Atom "
+            print self.op, type(self.op)
+
+        op = self.op
+        if op in ['shape']:
+            raise ValueError('shape function can not be used in an expression.')
+
+        if type(op) == int:
+            return Integer(op)
+        elif is_Float(op):
+            # op is here a string that can be converted to a number
+            # TODO use Default precision
+            return Float(float(op))
+        elif type(op) == list:
+            # op is a list
+            for O in op:
+                if O in namespace:
+                    return namespace[O]
+                elif type(O) == int:
+                    return Integer(O)
+                elif type(O) == float:
+                    # TODO use Default precision
+                    return Float(O)
+                else:
+                    raise Exception('Unknown variable "{}" at position {}'
+                                    .format(O, self._tx_position))
+        elif isinstance(op, ExpressionElement):
+            return op.expr
+        elif op in namespace:
+            if isinstance(namespace[op], FunctionDef):
+                return Function(op)
+            else:
+#                print ">>>> Found ", op, " id = ", id(namespace[op])
+                return namespace[op]
+        elif op in builtin_funcs:
+            return Function(op)
+        elif op in builtin_types:
+            return datatype(op)
+        elif op == 'None':
+            raise ValueError("Atom None not yet available.")
+        elif op == 'True':
+            return true
+        elif op == 'False':
+            return false
+        else:
+            print namespace
+            txt = 'Undefined variable "{0}" of type {1}'.format(op, type(op))
+            raise Exception(txt)
 
 class Operand(ExpressionElement):
     """Class representing an operand in the grammar."""
