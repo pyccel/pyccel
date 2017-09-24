@@ -13,7 +13,7 @@
 //       - Atom: add STRING+ 
 //       - Atom: add yield expr 
 //       - AtomExpr: allow multiple trailers 
-//       -  
+//       - DecoratedStmt: add async_funcdef 
 //       -  
 //       -  
 
@@ -84,18 +84,18 @@ SuiteStmt:
 //DecoratorStmt: 
 //  '@' dotted_name ( '(' (arglist)? ')' )? NEWLINE
 //;
-//
-//DecoratorsStmt: 
-//  decorator+
-//;
 
 DecoratedStmt: 
-//  decorators (classdef | funcdef | async_funcdef)
-  FunctionDefStmt
+  FunctionDefStmt | ClassDefStmt
 ;
 
 FunctionDefStmt: 
   DEF name=ID '(' args*=ID[','] ')' ':'
+  body=SuiteStmt
+;
+
+ClassDefStmt:
+  CLASS name=ID '(' base=ID ')' ':'
   body=SuiteStmt
 ;
 

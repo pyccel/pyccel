@@ -9,7 +9,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
-                              FunctionDef, Print, Import, \
+                              FunctionDef, ClassDef, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -363,6 +363,8 @@ class Codegen(object):
                 sep = separator()
                 routines += sep + printer(expr) + "\n" \
                           + sep + '\n'
+            elif isinstance(stmt, ClassDef):
+                body += printer(stmt) + "\n"
             elif isinstance(stmt, Print):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):

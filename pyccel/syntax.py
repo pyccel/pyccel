@@ -38,7 +38,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
-                              FunctionDef, Print, \
+                              FunctionDef, ClassDef, Print, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -1667,6 +1667,53 @@ class FunctionDefStmt(BasicStmt):
         stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
         namespace[name] = stmt
 #        print "*********** End"
+
+        return stmt
+
+class ClassDefStmt(BasicStmt):
+    """Class representing the definition of a class in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the definition of a class.
+        We only allow for single inheritence, to match with Fortran specs.
+
+        Parameters
+        ==========
+        name: str
+            name of the class
+        base: list
+            base class
+        body: list
+            list of statements as given by the parser.
+        """
+        self.name = kwargs.pop('name')
+        self.base = kwargs.pop('base')
+        self.body = kwargs.pop('body')
+
+        super(ClassDefStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Class Definition by returning the appropriate object from
+        pyccel.types.ast
+        """
+        print "*********** Begin"
+        name = str(self.name)
+
+        body = self.body.expr
+
+        attributs = []
+        methods = []
+        for stmt in body:
+            if isinstance(stmt, FunctionDef):
+                methods.append(stmt)
+
+        stmt = ClassDef(name, attributs, methods)
+        namespace[name] = stmt
+
+        print "*********** End"
 
         return stmt
 

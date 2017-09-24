@@ -58,6 +58,7 @@ class FCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'source_format': 'fixed',
+        'tabwidth': 2,
         'contract': True,
         'standard': 77
     }
@@ -456,6 +457,54 @@ class FCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         return 'return'
 
+    def _print_ClassDef(self, expr):
+        _default_methods = {
+            '__init__': 'create',
+            '__del__' : 'free',
+        }
+        name = expr.name
+        base = None # TODO: add base in ClassDef
+        decs = []
+        names = []
+        ls = [self._print(i.name) for i in expr.methods]
+        for i in ls:
+            if i in _default_methods:
+                names.append(_default_methods[i])
+            else:
+                names.append(i)
+        methods = '\n'.join('procedure :: {0}'.format(i) for i in names)
+
+        public = False
+        abstract = False
+
+        if public:
+            sig = 'type, public'
+        else:
+            sig = 'type, private'
+        if abstract:
+            sig = '{0}, abstract'.format(sig)
+        if not(base is None):
+            sig = '{0}, extends({1})'.format(sig, base)
+
+        code = ('{0} :: {1}').format(sig, name)
+        if len(decs) > 0:
+            code = ('{0}\n'
+                    '{1}').format(code, decs)
+        if len(methods) > 0:
+            code = ('{0}\n'
+                    'contains\n'
+                    '{1}').format(code, methods)
+        code = ('{0}\n'
+                'end type {1}').format(code, name)
+
+        methods = '\n\n'.join(self._print(i) for i in expr.methods)
+        if len(methods) > 0:
+            code = ('{0}\n\n'
+                    'contains\n\n'
+                    '{1}').format(code, methods)
+
+        return code
+
     def _print_Break(self,expr):
         return 'Exit'
 
@@ -709,8 +758,12 @@ class FCodePrinter(CodePrinter):
 
         code = [ line.lstrip(' \t') for line in code ]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
-        dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n', \
+                       'else', 'type', 'subroutine', 'function')
+        dec_keyword = ('end do', 'enddo', 'end if', 'endif', \
+                       'else', 'endtype', 'end type', \
+                       'endfunction', 'end function', \
+                       'endsubroutine', 'end subroutine')
 
         increase = [ int(any(map(line.startswith, inc_keyword)))
                      for line in code ]
@@ -721,7 +774,7 @@ class FCodePrinter(CodePrinter):
 
         level = 0
         cont_padding = 0
-        tabwidth = 4
+        tabwidth = self._default_settings['tabwidth']
         new_code = []
         for i, line in enumerate(code):
             if line == '' or line == '\n':

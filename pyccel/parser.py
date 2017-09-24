@@ -15,7 +15,8 @@ from pyccel.syntax import (Pyccel, \
                            AssignStmt, MultiAssignStmt, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
-                           IfStmt, ForStmt, FunctionDefStmt,WhileStmt,\
+                           IfStmt, ForStmt, WhileStmt, \
+                           FunctionDefStmt, ClassDefStmt, \
                            CommentStmt, SuiteStmt, \
                            EvalStmt, \
                            # Multi-threading
@@ -206,7 +207,8 @@ class PyccelParser(Parser):
                    PassStmt, \
                    FlowStmt, BreakStmt, ContinueStmt, \
                    RaiseStmt, YieldStmt, ReturnStmt, \
-                   IfStmt, ForStmt, FunctionDefStmt,WhileStmt, \
+                   IfStmt, ForStmt, WhileStmt, \
+                   FunctionDefStmt, ClassDefStmt, \
                    ImportFromStmt, \
                    CommentStmt, SuiteStmt, \
                    EvalStmt, \
