@@ -28,6 +28,7 @@ from pyccel.syntax import (Pyccel, \
                            # Trailers
                            ArgList, \
                            Trailer, TrailerArgList, TrailerSubscriptList, \
+                           TrailerDots, \
                            TrailerSlice, TrailerSliceRight, \
                            TrailerSliceLeft, TrailerSliceEmpty
                            )
@@ -219,6 +220,7 @@ class PyccelParser(Parser):
                    # Trailers
                    ArgList, \
                    Trailer, TrailerArgList, TrailerSubscriptList, \
+                   TrailerDots, \
                    TrailerSlice, TrailerSliceRight, \
                    TrailerSliceLeft, TrailerSliceEmpty
                    ]

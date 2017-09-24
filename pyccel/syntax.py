@@ -92,36 +92,6 @@ known_functions = {
 # TODO: 1. check that every stmt is well implementing
 #          the local_vars and stmt_vars properties.
 
-__all__ = ["Pyccel", \
-           "ArithmeticExpression", "Term", "Atom", \
-           "FactorSigned", "AtomExpr", "Power", \
-           "HeaderStmt", \
-           # statements
-           "AssignStmt", "MultiAssignStmt", "DeclarationStmt", \
-           # compound stmts
-           "ForStmt", "IfStmt", "SuiteStmt", \
-           # Flow statements
-           "FlowStmt", "BreakStmt", "ContinueStmt", \
-           "RaiseStmt", "YieldStmt", "ReturnStmt", \
-           "DelStmt", "PassStmt", "FunctionDefStmt", \
-           "ConstructorStmt", \
-           "CommentStmt", \
-           "EvalStmt", \
-           # Multi-threading
-           "ThreadStmt", \
-           "StencilStmt", \
-           # python standard library statements
-           "PythonPrintStmt", \
-           # Test
-           "Test", "OrTest", "AndTest", "NotTest", "Comparison", \
-           # Trailers
-           "ArgList", \
-           "Trailer", "TrailerArgList", "TrailerSubscriptList", \
-           "TrailerSlice", "TrailerSliceRight", \
-           "TrailerSliceLeft", "TrailerSliceEmpty"
-           ]
-
-
 # Global variable namespace
 namespace    = {}
 headers      = {}
@@ -1263,6 +1233,16 @@ class AtomExpr(ExpressionElement, BasicStmt):
         elif isinstance(trailer, TrailerSubscriptList):
             # TODO check that expr.name is IndexedElement
             expr = IndexedVariable(expr.name)[args]
+        elif isinstance(trailer, TrailerDots):
+            # TODO add Function?
+            dottables = (Variable, IndexedVariable, IndexedElement)
+            if not(isinstance(expr, dottables)):
+                raise TypeError("Expecting Variable, IndexedVariable, IndexedElement")
+            print ">>> expr = ", expr
+            print ">>> expr.name = ", expr.name
+            print ">>> args = ", args
+            print "PAR ICI"
+            import sys; sys.exit(0)
         return expr
 
 class Power(ExpressionElement, BasicStmt):
@@ -1882,6 +1862,25 @@ class TrailerSubscriptList(BasicTrailer):
             else:
                 raise Exception('Wrong instance')
         return args
+
+class TrailerDots(BasicTrailer):
+    """Class representing a Trailer with dots in the grammar."""
+    def __init__(self, **kwargs):
+        """
+        Constructor of the Trailer
+        """
+        super(TrailerDots, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process a Trailer by returning the approriate objects from
+        pyccel.types.ast
+        """
+        self.update()
+        # args is not a list
+        return self.args
+#        return [arg.expr for arg in  self.args]
 
 class BasicSlice(BasicStmt):
     """Base class representing a Slice in the grammar."""

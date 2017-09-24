@@ -255,11 +255,13 @@ OpComp:
 Trailer: 
     (args=TrailerArgList)?
   | (args=TrailerSubscriptList)?
+  | (args=TrailerDots)?
 ;
 
 TrailerArgList: '(' args+=TrailerArg[','] ')';
 TrailerArg: TrailerArgList | Expression;
 TrailerSubscriptList: '[' args+=TrailerSubscript[','] ']';
+TrailerDots: '.' args=ID;
 
 TrailerSubscript: 
     TrailerSlice 
