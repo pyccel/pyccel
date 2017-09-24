@@ -146,7 +146,7 @@ class FCodePrinter(CodePrinter):
         return '(/ {0} /)'.format(fs)
 
     def _print_Variable(self, expr):
-        return '{}'.format(expr.name)
+        return '{}'.format(self._print(expr.name))
 
     def _print_Stencil(self, expr):
         lhs_code = self._print(expr.lhs)

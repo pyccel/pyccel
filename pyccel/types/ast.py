@@ -637,8 +637,9 @@ class Variable(Symbol):
     dtype : str, DataType
         The type of the variable. Can be either a DataType, or a str (bool,
         int, float, double).
-    name : str, Symbol, MatrixSymbol
-        The sympy object the variable represents.
+    name : str, list
+        The sympy object the variable represents. This can be either a string or a
+    dotted name, when using a Class attribut.
     rank : int
         used for arrays. [Default value: 0]
     allocatable: False
@@ -655,16 +656,22 @@ class Variable(Symbol):
     n
     >>> Variable('float', x, rank=2, shape=(n,2), allocatable=True)
     x
+    >>> Variable('int', ('matrix', 'n_rows'))
+    matrix.n_rows
     """
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
-        if isinstance(name, (str, Symbol, MatrixSymbol)):
-            name = str(name)
-        else:
-            raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
+
+#        if isinstance(name, (str, Symbol, MatrixSymbol)):
+#            name = str(name)
+#        else:
+#            raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
+
+        if not isinstance(name, (str, list, tuple)):
+            raise TypeError("Expecting a string or list/tuple of strings.")
 
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
@@ -695,7 +702,17 @@ class Variable(Symbol):
         return self._args[4]
 
     def __str__(self):
-        return self.name
+        if isinstance(self.name, str):
+            return self.name
+        else:
+            return '.'.join(print(n) for n in self.name)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        if isinstance(self.name, str):
+            return '{}'.format(sstr(self.name))
+        else:
+            return '.'.join(sstr(n) for n in self.name)
 
     def clone(self, name):
         cls = eval(self.__class__.__name__)

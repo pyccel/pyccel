@@ -551,6 +551,9 @@ def insert_variable(var_name, \
                 .format(datatype, rank, allocatable, shape, intent)
         print txt
 
+    if not isinstance(var_name, str):
+        raise TypeError("Expecting a string for var_name.")
+
     if var_name in namespace:
         var = namespace[var_name]
         if datatype is None:
@@ -994,15 +997,6 @@ class MultiAssignStmt(BasicStmt):
         """
         Process the MultiAssign statement by returning a pyccel.types.ast object
         """
-        # TODO: treat the `shape` function case
-#        if not(name in ['shape']):
-#            if not(name in namespace):
-#                raise Exception('Undefined function/subroutine {}'.format(name))
-#            else:
-#                F = namespace[name]
-#                if not(isinstance(F, FunctionDef)):
-#                    raise Exception('Expecting a {0} for {1}'.format(type(F), name))
-
         lhs = self.lhs
         rhs = self.rhs.expr
 
@@ -1384,7 +1378,6 @@ class Atom(ExpressionElement):
             if isinstance(namespace[op], FunctionDef):
                 return Function(op)
             else:
-#                print ">>>> Found ", op, " id = ", id(namespace[op])
                 return namespace[op]
         elif op in builtin_funcs:
             return Function(op)
@@ -1397,7 +1390,6 @@ class Atom(ExpressionElement):
         elif op == 'False':
             return false
         else:
-            print namespace
             txt = 'Undefined variable "{0}" of type {1}'.format(op, type(op))
             raise Exception(txt)
 
@@ -1649,13 +1641,8 @@ class FunctionDefStmt(BasicStmt):
             d_var['intent']      = 'in'
             insert_variable(arg_name, **d_var)
             var = namespace[arg_name]
-#            print   "VARIABLE = ", var.name, \
-#                    " RANK = ", var.rank, \
-#                    " ID = ", id(var)
 
-#        print_namespace()
         body = self.body.expr
-#        print_namespace()
 
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
@@ -1698,7 +1685,6 @@ class FunctionDefStmt(BasicStmt):
 
         stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
         namespace[name] = stmt
-#        namespace[name] = self
 #        print "*********** End"
 
         return stmt
