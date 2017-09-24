@@ -804,6 +804,63 @@ class FunctionDef(Basic):
     def global_vars(self):
         return self._args[5]
 
+class ClassDef(Basic):
+    """Represents a class definition.
+
+    name : str
+        The name of the class.
+    attributs: iterable
+        The attributs to the class.
+    methods: iterable
+        Class methods
+
+    Examples
+
+    >>> from pyccel.types.ast import Assign, Variable, FunctionDef, ClassDef
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> n = Variable('int', 'n')
+    >>> args        = [x, n]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+n)]
+    >>> f = FunctionDef('f', args, results, body, [], [])
+    >>> n_rows = Variable('int', 'n_rows')
+    >>> n_cols = Variable('int', 'n_cols')
+    >>> attributs   = [n_rows, n_cols]
+    >>> methods     = [f]
+    >>> ClassDef('Matrix', attributs, methods)
+    ClassDef(Matrix, (n_rows, n_cols), (FunctionDef(f, (x, n), (y,), [y := n + x], [], []),))
+    """
+
+    def __new__(cls, name, attributs, methods):
+        # name
+        if isinstance(name, str):
+            name = Symbol(name)
+        elif not isinstance(name, Symbol):
+            raise TypeError("Function name must be Symbol or string")
+        # attributs
+        if not iterable(attributs):
+            raise TypeError("attributs must be an iterable")
+        attributs = Tuple(*attributs)
+        # methods
+        if not iterable(methods):
+            raise TypeError("methods must be an iterable")
+        methods = Tuple(*methods)
+
+        return Basic.__new__(cls, name, attributs, methods)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def attributs(self):
+        return self._args[1]
+
+    @property
+    def methods(self):
+        return self._args[2]
+
 class Ceil(Function):
     """
     Represents ceil expression in the code.
