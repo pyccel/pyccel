@@ -1244,25 +1244,26 @@ class AtomExpr(ExpressionElement, BasicStmt):
 
         if self.trailer is None:
             return expr
-        else:
-            args = self.trailer.expr
-            if self.trailer.args:
-                ls = []
-                for i in args:
-                    if isinstance(i, (list, tuple)):
-                        ls.append(Tuple(*i))
-                    else:
-                        ls.append(i)
-                args = ls
-                name = str(expr)
-                if name in builtin_funcs_math + ['len']:
-                    expr = builtin_function(name, args)
+
+        trailer = self.trailer.args
+        args = trailer.expr
+        if isinstance(trailer, TrailerArgList):
+            ls = []
+            for i in args:
+                if isinstance(i, (list, tuple)):
+                    ls.append(Tuple(*i))
                 else:
-                    expr = Function(str(expr))(*args)
-            elif self.trailer.subs:
-                # TODO check that expr.name is IndexedElement
-                expr = IndexedVariable(expr.name)[args]
-            return expr
+                    ls.append(i)
+            args = ls
+            name = str(expr)
+            if name in builtin_funcs_math + ['len']:
+                expr = builtin_function(name, args)
+            else:
+                expr = Function(str(expr))(*args)
+        elif isinstance(trailer, TrailerSubscriptList):
+            # TODO check that expr.name is IndexedElement
+            expr = IndexedVariable(expr.name)[args]
+        return expr
 
 class Power(ExpressionElement, BasicStmt):
     """Class representing an atomic expression."""
@@ -1822,14 +1823,7 @@ class Trailer(BasicTrailer):
     def __init__(self, **kwargs):
         """
         Constructor for a Trailer.
-
-        Parameters
-        ==========
-        subs: list or subscripts
-            subscripts of the trailer
         """
-        self.subs = kwargs.pop('subs', None)
-
         super(Trailer, self).__init__(**kwargs)
 
     @property
@@ -1839,10 +1833,7 @@ class Trailer(BasicTrailer):
         pyccel.types.ast
         """
         self.update()
-        if self.args:
-            return self.args.expr
-        if self.subs:
-            return self.subs.expr
+        return self.args.expr
 
 class TrailerArgList(BasicTrailer):
     """Class representing a Trailer with list of arguments in the grammar."""

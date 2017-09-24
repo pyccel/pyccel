@@ -252,10 +252,9 @@ OpComp:
   | 'is' 'not'
 ;
 
-// TODO: only use args
 Trailer: 
     (args=TrailerArgList)?
-  | (subs=TrailerSubscriptList)?
+  | (args=TrailerSubscriptList)?
 ;
 
 TrailerArgList: '(' args+=TrailerArg[','] ')';
