@@ -1705,7 +1705,6 @@ class ClassDefStmt(BasicStmt):
 
         header  = headers[name]
         options = header.options
-        print ">>>> options = ", options
 
         body    = self.body.expr
 
