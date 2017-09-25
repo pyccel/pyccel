@@ -2318,10 +2318,17 @@ class FunctionHeaderStmt(BasicStmt):
             function name
         decs: list, tuple
             list of argument types
+        results: list, tuple
+            list of output types
         """
-        self.name = kwargs.pop('name')
-        self.decs = kwargs.pop('decs')
+        self.name    = kwargs.pop('name')
+        self.decs    = kwargs.pop('decs')
+        self.results = kwargs.pop('results', None)
 
+        super(FunctionHeaderStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
         dtypes    = [dec.dtype for dec in self.decs]
         attributs = []
         for dec in self.decs:
@@ -2333,11 +2340,18 @@ class FunctionHeaderStmt(BasicStmt):
 
         self.dtypes = zip(dtypes, attributs)
 
-        super(FunctionHeaderStmt, self).__init__(**kwargs)
+        if not (self.results is None):
+            r_dtypes    = [dec.dtype for dec in self.results.decs]
+            attributs = []
+            for dec in self.results.decs:
+                if dec.trailer is None:
+                    attr = ''
+                else:
+                    attr = dec.trailer.expr
+                attributs.append(attr)
+            self.results = zip(r_dtypes, attributs)
 
-    @property
-    def expr(self):
-        h = FunctionHeader(self.name, self.dtypes)
+        h = FunctionHeader(self.name, self.dtypes, self.results)
         headers[self.name] = h
         return h
 
@@ -2383,6 +2397,10 @@ class MethodHeaderStmt(BasicStmt):
         self.decs    = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 
+        super(MethodHeaderStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
         dtypes    = [dec.dtype for dec in self.decs]
         attributs = []
         for dec in self.decs:
@@ -2391,14 +2409,21 @@ class MethodHeaderStmt(BasicStmt):
             else:
                 attr = dec.trailer.expr
             attributs.append(attr)
-
         self.dtypes = zip(dtypes, attributs)
 
-        super(MethodHeaderStmt, self).__init__(**kwargs)
+        if not (self.results is None):
+            r_dtypes    = [dec.dtype for dec in self.results.decs]
+            attributs = []
+            for dec in self.results.decs:
+                if dec.trailer is None:
+                    attr = ''
+                else:
+                    attr = dec.trailer.expr
+                attributs.append(attr)
+            self.results = zip(r_dtypes, attributs)
 
-    @property
-    def expr(self):
-        h = MethodHeader(self.name, self.dtypes)
+        h = MethodHeader(self.name, self.dtypes, self.results)
+        print h
         headers[self.name] = h
         return h
 

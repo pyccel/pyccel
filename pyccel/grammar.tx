@@ -124,13 +124,23 @@ CommentStmt:
   '#' text=/.*$/
 ;
 
-FunctionHeaderStmt: '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')';
-ClassHeaderStmt: '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')';
-MethodHeaderStmt: '#$' 'header' 'method' name=ID '(' decs*=DeclareAtom[','] ')';
+ClassHeaderStmt: 
+  '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')'
+;
+
+MethodHeaderStmt: 
+  '#$' 'header' 'method' name=ID '(' decs*=DeclareAtom[','] ')'
+  (results=HeaderResults)?
+;
+
+FunctionHeaderStmt: 
+  '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')'
+  (results=HeaderResults)?
+;
 
 ClassOptions: 'abstract' | 'private' | 'public';
 DeclareAtom: dtype=ID (trailer=TrailerSubscriptList)?;
-//HeaderResults: 'results' '(' args*=DeclareAtom[','] ')'; 
+HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
 
 ImportStmt: ImportNameStmt | ImportFromStmt ;
 ImportNameStmt: IMPORT DottedAsNames;

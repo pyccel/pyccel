@@ -1677,6 +1677,10 @@ class FunctionHeader(Basic):
         a list of datatypes. an element of this list can be str/DataType of a
         tuple (str/DataType, attr)
 
+    results: tuple/list
+        a list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr)
+
     Examples
 
     >>> from pyccel.types.ast import FunctionHeader
@@ -1684,7 +1688,7 @@ class FunctionHeader(Basic):
     FunctionHeader(f, [(NativeDouble(), [])])
     """
 
-    def __new__(cls, func, dtypes):
+    def __new__(cls, func, dtypes, results=None):
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -1700,7 +1704,26 @@ class FunctionHeader(Basic):
                 types.append(d)
             else:
                 raise TypeError("Wrong element in dtypes.")
-        return Basic.__new__(cls, func, types)
+
+        r_types = []
+        if results:
+            if not(iterable(results)):
+                raise TypeError("Expecting results to be iterable.")
+
+            r_types = []
+            for d in results:
+                if isinstance(d, str):
+                    r_types.append((datatype(d), []))
+                elif isinstance(d, DataType):
+                    r_types.append((d, []))
+                elif isinstance(d, (tuple, list)):
+                    if not(len(d) == 2):
+                        raise ValueError("Expecting exactly two entries.")
+                    r_types.append(d)
+                else:
+                    raise TypeError("Wrong element in r_types.")
+
+        return Basic.__new__(cls, func, types, r_types)
 
     @property
     def func(self):
@@ -1709,6 +1732,10 @@ class FunctionHeader(Basic):
     @property
     def dtypes(self):
         return self._args[1]
+
+    @property
+    def results(self):
+        return self._args[2]
 
 class MethodHeader(FunctionHeader):
     """Represents class method header in the code.
