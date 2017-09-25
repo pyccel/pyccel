@@ -1563,7 +1563,7 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-        print "*********** FunctionDefStmt.expr: Begin"
+#        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.args
 
@@ -1665,7 +1665,7 @@ class FunctionDefStmt(BasicStmt):
             name = name.split('.')[-1]
         stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
         namespace[name] = stmt
-        print "*********** FunctionDefStmt.expr: End"
+#        print "*********** FunctionDefStmt.expr: End"
 
         return stmt
 
@@ -1696,7 +1696,7 @@ class ClassDefStmt(BasicStmt):
         Process the Class Definition by returning the appropriate object from
         pyccel.types.ast
         """
-        print "*********** ClassDefStmt.expr: Begin"
+#        print "*********** ClassDefStmt.expr: Begin"
         name = str(self.name)
 
         if not(name in headers):
@@ -1714,7 +1714,7 @@ class ClassDefStmt(BasicStmt):
         stmt = ClassDef(name, attributs, methods)
         namespace[name] = stmt
 
-        print "*********** ClassDefStmt.expr: End"
+#        print "*********** ClassDefStmt.expr: End"
 
         return stmt
 

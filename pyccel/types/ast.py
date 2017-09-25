@@ -566,7 +566,7 @@ def DataTypeFactory(name, argnames, BaseClass=DataType):
                     % (key, self.__class__.__name__))
             setattr(self, key, value)
         BaseClass.__init__(self, name[:-len("Class")])
-    newclass = type(name, (BaseClass,),{"__init__": __init__})
+    newclass = type('Pyccel'+name, (BaseClass,),{"__init__": __init__})
     return newclass
 
 # TODO check the use of floats
@@ -652,8 +652,6 @@ class Variable(Symbol):
     matrix.n_rows
     """
     def __new__(cls, dtype, name, rank=0, allocatable=False,shape=None):
-        print("dtype = ", dtype)
-        print(isinstance(dtype, DataType))
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):

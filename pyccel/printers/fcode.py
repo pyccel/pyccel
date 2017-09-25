@@ -344,7 +344,9 @@ class FCodePrinter(CodePrinter):
         return 'complex(kind=8)'
 
     def _print_DataType(self, expr):
-        return 'class({0})'.format(expr.__class__.__name__)
+        name = expr.__class__.__name__
+        name = name.split('Pyccel')[-1]
+        return 'class({0})'.format(name)
 
     def _print_EqualityStmt(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
