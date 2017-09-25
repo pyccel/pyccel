@@ -1738,15 +1738,84 @@ class FunctionHeader(Basic):
         return self._args[2]
 
 class MethodHeader(FunctionHeader):
-    """Represents class method header in the code.
+    """Represents method header in the code.
+
+    name: iterable
+        method name as a list/tuple
+
+    dtypes: tuple/list
+        a list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr)
+
+    results: tuple/list
+        a list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr)
 
     Examples
 
     >>> from pyccel.types.ast import MethodHeader
-    >>> MethodHeader('f', ['double'])
-    MethodHeader(f, [(NativeDouble(), [])])
+    >>> m = MethodHeader(('point', 'rotate'), ['double'])
+    >>> m
+    MethodHeader((point, rotate), [(NativeDouble(), [])], [])
+    >>> m.name
+    'point.rotate'
     """
-    pass
+
+    def __new__(cls, name, dtypes, results=None):
+        if not isinstance(name, (list, tuple)):
+            raise TypeError("Expecting a list/tuple of strings.")
+
+        if not(iterable(dtypes)):
+            raise TypeError("Expecting dtypes to be iterable.")
+
+        types = []
+        for d in dtypes:
+            if isinstance(d, str):
+                types.append((datatype(d), []))
+            elif isinstance(d, DataType):
+                types.append((d, []))
+            elif isinstance(d, (tuple, list)):
+                if not(len(d) == 2):
+                    raise ValueError("Expecting exactly two entries.")
+                types.append(d)
+            else:
+                raise TypeError("Wrong element in dtypes.")
+
+        r_types = []
+        if results:
+            if not(iterable(results)):
+                raise TypeError("Expecting results to be iterable.")
+
+            r_types = []
+            for d in results:
+                if isinstance(d, str):
+                    r_types.append((datatype(d), []))
+                elif isinstance(d, DataType):
+                    r_types.append((d, []))
+                elif isinstance(d, (tuple, list)):
+                    if not(len(d) == 2):
+                        raise ValueError("Expecting exactly two entries.")
+                    r_types.append(d)
+                else:
+                    raise TypeError("Wrong element in r_types.")
+
+        return Basic.__new__(cls, name, types, r_types)
+
+    @property
+    def name(self):
+        _name = self._args[0]
+        if isinstance(_name, str):
+            return _name
+        else:
+            return '.'.join(str(n) for n in _name)
+
+    @property
+    def dtypes(self):
+        return self._args[1]
+
+    @property
+    def results(self):
+        return self._args[2]
 
 class ClassHeader(Basic):
     """Represents class header in the code.

@@ -1,7 +1,6 @@
 # coding: utf-8
 
 #$ header class Matrix(abstract, public)
-#$ header method __init__(int, int, int)
-#$ header method dot(int, double [:]) results(double [:], double)
+#$ header method __init__(Matrix, int, int)
 
 n = 1

@@ -2375,7 +2375,6 @@ class ClassHeaderStmt(BasicStmt):
     @property
     def expr(self):
         h = ClassHeader(self.name, self.options)
-        print h
         headers[self.name] = h
         return h
 
@@ -2422,8 +2421,10 @@ class MethodHeaderStmt(BasicStmt):
                 attributs.append(attr)
             self.results = zip(r_dtypes, attributs)
 
-        h = MethodHeader(self.name, self.dtypes, self.results)
-        print h
-        headers[self.name] = h
+        cls_instance = self.dtypes[0]
+        cls_instance = cls_instance[0] # remove the attribut
+        dtypes = self.dtypes[1:]
+        h = MethodHeader((cls_instance, self.name), dtypes, self.results)
+        headers[h.name] = h
         return h
 
