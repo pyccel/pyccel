@@ -805,6 +805,8 @@ class ClassDef(Basic):
         The attributs to the class.
     methods: iterable
         Class methods
+    options: list, tuple
+        list of options ('public', 'private', 'abstract')
 
     Examples
 
@@ -824,7 +826,7 @@ class ClassDef(Basic):
     ClassDef(Matrix, (n_rows, n_cols), (FunctionDef(f, (x, n), (y,), [y := n + x], [], []),))
     """
 
-    def __new__(cls, name, attributs, methods):
+    def __new__(cls, name, attributs, methods, options=['public']):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -838,8 +840,11 @@ class ClassDef(Basic):
         if not iterable(methods):
             raise TypeError("methods must be an iterable")
         methods = Tuple(*methods)
+        # options
+        if not iterable(options):
+            raise TypeError("options must be an iterable")
 
-        return Basic.__new__(cls, name, attributs, methods)
+        return Basic.__new__(cls, name, attributs, methods, options)
 
     @property
     def name(self):
@@ -852,6 +857,10 @@ class ClassDef(Basic):
     @property
     def methods(self):
         return self._args[2]
+
+    @property
+    def options(self):
+        return self._args[3]
 
 class Ceil(Function):
     """

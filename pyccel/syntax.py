@@ -1703,7 +1703,11 @@ class ClassDefStmt(BasicStmt):
             raise Exception('Class header could not be found for {0}.'
                            .format(name))
 
-        body = self.body.expr
+        header  = headers[name]
+        options = header.options
+        print ">>>> options = ", options
+
+        body    = self.body.expr
 
         attributs = []
         methods = []
@@ -1711,7 +1715,7 @@ class ClassDefStmt(BasicStmt):
             if isinstance(stmt, FunctionDef):
                 methods.append(stmt)
 
-        stmt = ClassDef(name, attributs, methods)
+        stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
 
 #        print "*********** ClassDefStmt.expr: End"

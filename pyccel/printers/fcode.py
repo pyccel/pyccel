@@ -479,15 +479,9 @@ class FCodePrinter(CodePrinter):
                 names.append(i)
         methods = '\n'.join('procedure :: {0}'.format(i) for i in names)
 
-        public = False
-        abstract = False
+        options = ', '.join(i for i in expr.options)
 
-        if public:
-            sig = 'type, public'
-        else:
-            sig = 'type, private'
-        if abstract:
-            sig = '{0}, abstract'.format(sig)
+        sig = 'type, {0}'.format(options)
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
