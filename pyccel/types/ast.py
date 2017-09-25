@@ -36,29 +36,12 @@ from sympy.logic.boolalg import BooleanFunction
 import collections
 from sympy.core.compatibility import is_sequence
 
-#sympify = _sympify
-#def sympify(expr):
-#    print (expr)
-#    return expr
-
 # TODO: add examples: Break, Len, Shape,
 #                     Min, Max, Dot, Sign, Array,
 #                     Thread, ThreadID, ThreadNumber
-
 # TODO: add EmptyStmt => empty lines
 # TODO: clean Thread objects
 # TODO: update code examples
-__all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
-           "ModOp", "AugAssign", "While", "For", "DataType", "NativeBool", \
-           "NativeInteger", "NativeFloat", "NativeDouble", "NativeComplex", \
-           "NativeVoid", "EqualityStmt", "NotequalStmt", "Variable", \
-           "FunctionDef", "Ceil", "Import", "Declare", \
-           "Len", "Min", "Max", "Dot", \
-           "Zeros", "Ones", "Array", "ZerosLike", \
-           "Print", "Comment", "AnnotatedComment", "IndexedVariable", \
-           "IndexedElement", "Slice", "If", "MultiAssign", \
-           "Thread", "ThreadID", "ThreadsNumber", "Stencil", "Header", \
-           "subs", "allocatable_like"]
 
 # TODO add examples
 # TODO treat Function case
@@ -67,7 +50,7 @@ __all__ = ["Assign", "NativeOp", "AddOp", "SubOp", "MulOp", "DivOp", \
 # TODO treat Slice case
 # TODO treat Thread cases
 # TODO treat Stencil case
-# TODO treat Header case
+# TODO treat FunctionHeader case
 def subs(expr, a_old, a_new):
     """
     Substitutes old for new in an expression after sympifying args.
@@ -1684,8 +1667,7 @@ class Stencil(Basic):
     def step(self):
         return self._args[2]
 
-# TODO add example
-class Header(Basic):
+class FunctionHeader(Basic):
     """Represents function/subroutine header in the code.
 
     func: str
@@ -1697,8 +1679,9 @@ class Header(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Header
-    >>> Header('f', 'double')
+    >>> from pyccel.types.ast import FunctionHeader
+    >>> FunctionHeader('f', ['double'])
+    FunctionHeader(f, [(NativeDouble(), [])])
     """
 
     def __new__(cls, func, dtypes):
@@ -1727,3 +1710,43 @@ class Header(Basic):
     def dtypes(self):
         return self._args[1]
 
+class MethodHeader(FunctionHeader):
+    """Represents class method header in the code.
+
+    Examples
+
+    >>> from pyccel.types.ast import MethodHeader
+    >>> MethodHeader('f', ['double'])
+    MethodHeader(f, [(NativeDouble(), [])])
+    """
+    pass
+
+class ClassHeader(Basic):
+    """Represents class header in the code.
+
+    name: str
+        class name
+
+    options: str, list, tuple
+        a list of options
+
+    Examples
+
+    >>> from pyccel.types.ast import ClassHeader
+    >>> ClassHeader('Matrix', ('abstract', 'public'))
+    ClassHeader(Matrix, (abstract, public))
+    """
+
+    def __new__(cls, name, options):
+        if not(iterable(options)):
+            raise TypeError("Expecting options to be iterable.")
+
+        return Basic.__new__(cls, name, options)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def options(self):
+        return self._args[1]

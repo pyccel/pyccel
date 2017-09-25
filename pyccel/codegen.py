@@ -5,7 +5,8 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
+from pyccel.types.ast import (For, Assign, Declare, Variable, \
+                              FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
@@ -335,8 +336,7 @@ class Codegen(object):
                     modules += [name]
             elif isinstance(stmt, Declare):
                 decs = stmt
-            elif isinstance(stmt, Header):
-                # will add the function definition to headers in syntax
+            elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
 #                for key, s in stmt.unallocated.items():

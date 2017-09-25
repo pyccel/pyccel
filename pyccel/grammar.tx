@@ -14,6 +14,10 @@
 //       - Atom: add yield expr 
 //       - AtomExpr: allow multiple trailers 
 //       - DecoratedStmt: add async_funcdef 
+//       - FunctionHeaderStmt: add HeaderResults  
+//       - MethodHeaderStmt: add HeaderResults  
+//       -  
+//       -  
 //       -  
 //       -  
 
@@ -61,7 +65,9 @@ CompoundStmt:
 ;
 
 AnnotatedStmt:
-    HeaderStmt 
+    FunctionHeaderStmt 
+  | ClassHeaderStmt
+  | MethodHeaderStmt
   | OpenmpStmt
 ;
 
@@ -118,8 +124,13 @@ CommentStmt:
   '#' text=/.*$/
 ;
 
-HeaderStmt: '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')';
+FunctionHeaderStmt: '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')';
+ClassHeaderStmt: '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')';
+MethodHeaderStmt: '#$' 'header' 'method' name=ID '(' decs*=DeclareAtom[','] ')';
+
+ClassOptions: 'abstract' | 'private' | 'public';
 DeclareAtom: dtype=ID (trailer=TrailerSubscriptList)?;
+//HeaderResults: 'results' '(' args*=DeclareAtom[','] ')'; 
 
 ImportStmt: ImportNameStmt | ImportFromStmt ;
 ImportNameStmt: IMPORT DottedAsNames;

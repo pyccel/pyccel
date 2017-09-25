@@ -7,7 +7,7 @@ from pyccel.imports.syntax import ImportFromStmt
 from pyccel.syntax import (Pyccel, \
                            ArithmeticExpression, Term, Atom, \
                            FactorSigned, AtomExpr, AtomExpr, Power, \
-                           HeaderStmt, \
+                           FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                            # statements
                            DeclarationStmt, ConstructorStmt, \
                            DelStmt, \
@@ -199,7 +199,7 @@ class PyccelParser(Parser):
         classes = [Pyccel, \
                    ArithmeticExpression, Term, Atom, \
                    FactorSigned, AtomExpr, AtomExpr, Power, \
-                   HeaderStmt, \
+                   FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                    # statements
                    DeclarationStmt, ConstructorStmt, \
                    AssignStmt, MultiAssignStmt, \

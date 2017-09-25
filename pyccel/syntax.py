@@ -34,7 +34,8 @@ from sympy.logic.boolalg import BooleanFunction
 
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (For, Assign, Declare, Variable, Header, \
+from pyccel.types.ast import (For, Assign, Declare, Variable, \
+                              FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
@@ -629,8 +630,6 @@ class Pyccel(object):
         """
         Constructor for Pyccel.
 
-        Parameters
-        ==========
         statements : list
             list of parsed statements.
         """
@@ -679,8 +678,6 @@ class ConstructorStmt(BasicStmt):
         """
         Constructor for the Constructor statement class.
 
-        Parameters
-        ==========
         lhs: str
             variable to construct
         constructor: str
@@ -712,8 +709,6 @@ class DeclarationStmt(BasicStmt):
         """
         Constructor for the declaration statement.
 
-        Parameters
-        ==========
         variables_names: list of str
             list of variable names.
         datatype: str
@@ -751,8 +746,6 @@ class DelStmt(BasicStmt):
         """
         Constructor for the Delete statement class.
 
-        Parameters
-        ==========
         variables: list of str
             variables to delete
         """
@@ -788,8 +781,6 @@ class PassStmt(BasicStmt):
         """
         Constructor for the Pass statement class.
 
-        Parameters
-        ==========
         label: str
             label must be equal to 'pass'
         """
@@ -813,8 +804,6 @@ class IfStmt(BasicStmt):
         """
         Constructor for the If statement class.
 
-        Parameters
-        ==========
         body_true: list
             statements tree as given by the textX, for the true block (if)
         body_false: list
@@ -874,8 +863,6 @@ class AssignStmt(BasicStmt):
         """
         Constructor for the Assign statement.
 
-        Parameters
-        ==========
         lhs: str
             variable to assign to
         rhs: ArithmeticExpression
@@ -945,8 +932,6 @@ class MultiAssignStmt(BasicStmt):
         """
         Constructor for the multi Assign statement.
 
-        Parameters
-        ==========
         lhs: list of str
             variables to assign to
         rhs: ArithmeticExpression
@@ -1021,8 +1006,6 @@ class ForStmt(BasicStmt):
         """
         Constructor for the For statement.
 
-        Parameters
-        ==========
         iterable: str
             the iterable variable
         start: str
@@ -1105,8 +1088,6 @@ class WhileStmt(BasicStmt):
         """
         Constructor for the While statement.
 
-        Parameters
-        ==========
         test: Test
             a test expression
         body: list
@@ -1145,8 +1126,6 @@ class ExpressionElement(object):
         """
         Constructor for the ExpessionElement class.
 
-        Parameters
-        ==========
         parent: ArithmeticExpression
             parent ArithmeticExpression
         op:
@@ -1168,8 +1147,6 @@ class FactorSigned(ExpressionElement, BasicStmt):
         """
         Constructor for a signed factor.
 
-        Parameters
-        ==========
         sign: str
             one among {'+', '-'}
         """
@@ -1194,8 +1171,6 @@ class AtomExpr(ExpressionElement, BasicStmt):
         """
         Constructor for a atomic expression.
 
-        Parameters
-        ==========
         trailer: Trailer
             a trailer is used for a function call or Array indexing.
         """
@@ -1252,8 +1227,6 @@ class Power(ExpressionElement, BasicStmt):
         """
         Constructor for a atomic expression.
 
-        Parameters
-        ==========
         exponent: str
             a exponent.
         """
@@ -1474,8 +1447,6 @@ class FlowStmt(BasicStmt):
         """
         Constructor for a Flow statement
 
-        Parameters
-        ==========
         label: str
             name of the flow statement.
             One among {'break', 'continue', 'return', 'raise', 'yield'}
@@ -1501,8 +1472,6 @@ class ReturnStmt(FlowStmt):
         """
         Constructor for a return statement flow.
 
-        Parameters
-        ==========
         variables: list
             list of variables to return, as strings
         results: list
@@ -1557,8 +1526,6 @@ class FunctionDefStmt(BasicStmt):
         """
         Constructor for the definition of a function.
 
-        Parameters
-        ==========
         name: str
             name of the function
         args: list
@@ -1678,8 +1645,6 @@ class ClassDefStmt(BasicStmt):
         Constructor for the definition of a class.
         We only allow for single inheritence, to match with Fortran specs.
 
-        Parameters
-        ==========
         name: str
             name of the class
         base: list
@@ -1724,8 +1689,6 @@ class PythonPrintStmt(BasicStmt):
         """
         Constructor for a Print statement.
 
-        Parameters
-        ==========
         name: str
             is equal to 'print'
         args: list
@@ -1762,8 +1725,6 @@ class CommentStmt(BasicStmt):
         """
         Constructor for a Comment.
 
-        Parameters
-        ==========
         text: str
             text that appears in the comment
         """
@@ -1791,8 +1752,6 @@ class SuiteStmt(BasicStmt):
         """
         Constructor for a Suite statement.
 
-        Parameters
-        ==========
         stmts: list
             list of statements as given by the parser.
         """
@@ -1836,8 +1795,6 @@ class BasicTrailer(BasicStmt):
         """
         Constructor for a Base Trailer.
 
-        Parameters
-        ==========
         args: list or ArgList
             arguments of the trailer
         """
@@ -1936,8 +1893,6 @@ class BasicSlice(BasicStmt):
         Constructor for the base slice.
         The general form of slices is 'a:b'
 
-        Parameters
-        ==========
         start: str, int, ArithmeticExpression
             Starting index of the slice.
         end: str, int, ArithmeticExpression
@@ -1952,8 +1907,6 @@ class BasicSlice(BasicStmt):
         """
         returns an argument as a variable, given its name
 
-        Parameters
-        ==========
         name: str
             variable name
         """
@@ -2025,8 +1978,6 @@ class ThreadStmt(BasicStmt):
         """
         Constructor for a Thread function call.
 
-        Parameters
-        ==========
         lhs: str
             variable name to create
         func: str
@@ -2072,8 +2023,6 @@ class ArgList(BasicStmt):
         """
         Constructor for ArgList statement.
 
-        Parameters
-        ==========
         args: list
             list of arguments
         """
@@ -2109,8 +2058,6 @@ class StencilStmt(AssignStmt):
         """
         Constructor for a Stencil statement.
 
-        Parameters
-        ==========
         lhs: str
             variable name to create
         parameters: list
@@ -2254,8 +2201,6 @@ class EvalStmt(BasicStmt):
         """
         Constructor for a eval statement.
 
-        Parameters
-        ==========
         lhs: str
             variable name to create
         module: str
@@ -2362,15 +2307,17 @@ class EvalStmt(BasicStmt):
 
         return ls
 
-class HeaderStmt(BasicStmt):
+class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""
 
     def __init__(self, **kwargs):
         """
-        Constructor for a Header statement
+        Constructor for a FunctionHeader statement
 
-        Parameters
-        ==========
+        name: str
+            function name
+        decs: list, tuple
+            list of argument types
         """
         self.name = kwargs.pop('name')
         self.decs = kwargs.pop('decs')
@@ -2386,8 +2333,72 @@ class HeaderStmt(BasicStmt):
 
         self.dtypes = zip(dtypes, attributs)
 
+        super(FunctionHeaderStmt, self).__init__(**kwargs)
+
     @property
     def expr(self):
-        h = Header(self.name, self.dtypes)
+        h = FunctionHeader(self.name, self.dtypes)
         headers[self.name] = h
         return h
+
+class ClassHeaderStmt(BasicStmt):
+    """Base class representing a class header statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Header statement
+
+        name: str
+            class name
+        options: list, tuple
+            list of class options
+        """
+        self.name    = kwargs.pop('name')
+        self.options = kwargs.pop('options')
+
+        super(ClassHeaderStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        h = ClassHeader(self.name, self.options)
+        print h
+        headers[self.name] = h
+        return h
+
+class MethodHeaderStmt(BasicStmt):
+    """Base class representing a function header statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a MethodHeader statement
+
+        name: str
+            function name
+        decs: list, tuple
+            list of input types
+        results: list, tuple
+            list of output types
+        """
+        self.name    = kwargs.pop('name')
+        self.decs    = kwargs.pop('decs')
+        self.results = kwargs.pop('results', None)
+
+        dtypes    = [dec.dtype for dec in self.decs]
+        attributs = []
+        for dec in self.decs:
+            if dec.trailer is None:
+                attr = ''
+            else:
+                attr = dec.trailer.expr
+            attributs.append(attr)
+
+        self.dtypes = zip(dtypes, attributs)
+
+        super(MethodHeaderStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        h = MethodHeader(self.name, self.dtypes)
+        headers[self.name] = h
+        return h
+
