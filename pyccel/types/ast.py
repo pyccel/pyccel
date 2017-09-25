@@ -519,16 +519,13 @@ class NativeBool(DataType):
     _name = 'Bool'
     pass
 
-
 class NativeInteger(DataType):
     _name = 'Int'
     pass
 
-
 class NativeFloat(DataType):
     _name = 'Float'
     pass
-
 
 class NativeDouble(DataType):
     _name = 'Double'
@@ -537,8 +534,6 @@ class NativeDouble(DataType):
 class NativeComplex(DataType):
     _name = 'Complex'
     pass
-
-
 
 class NativeVoid(DataType):
     _name = 'Void'
