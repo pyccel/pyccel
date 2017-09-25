@@ -728,6 +728,8 @@ class FunctionDef(Basic):
         These are used internally by the routine.
     global_vars : list of Symbols
         Variables which will not be passed into the function.
+    cls_name: str
+        Class name if the function is a method of cls_name
 
     >>> from sympy import symbols
     >>> from pyccel.types.ast import Assign, Variable, FunctionDef
@@ -742,7 +744,8 @@ class FunctionDef(Basic):
     """
 
     def __new__(cls, name, arguments, results, \
-                body, local_vars, global_vars):
+                body, local_vars, global_vars, \
+                cls_name=None):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -766,11 +769,16 @@ class FunctionDef(Basic):
 #        if not all(isinstance(i, Result) for i in results):
 #            raise TypeError("All results must be of type Result")
         results = Tuple(*results)
+        # if method
+        if cls_name:
+            if not(isinstance(cls_name, str)):
+                raise TypeError("cls_name must be a string")
 
         return Basic.__new__(cls, name, \
                              arguments, results, \
                              body, \
-                             local_vars, global_vars)
+                             local_vars, global_vars, \
+                             cls_name)
 
     @property
     def name(self):
@@ -795,6 +803,10 @@ class FunctionDef(Basic):
     @property
     def global_vars(self):
         return self._args[5]
+
+    @property
+    def cls_name(self):
+        return self._args[6]
 
 class ClassDef(Basic):
     """Represents a class definition.

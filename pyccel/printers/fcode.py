@@ -46,6 +46,11 @@ known_functions = {
     "conjugate": "conjg"
 }
 
+_default_methods = {
+    '__init__': 'create',
+    '__del__' : 'free',
+}
+
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode"
@@ -364,6 +369,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
+        if expr.cls_name:
+            if name in _default_methods:
+                name = _default_methods[name]
+            name = '{0}_{1}'.format(expr.cls_name, name)
         out_args = []
         decs = []
         body = expr.body
@@ -463,21 +472,20 @@ class FCodePrinter(CodePrinter):
         return 'return'
 
     def _print_ClassDef(self, expr):
-        _default_methods = {
-            '__init__': 'create',
-            '__del__' : 'free',
-        }
         name = expr.name
         base = None # TODO: add base in ClassDef
         decs = []
-        names = []
+        aliases = []
+        names   = []
         ls = [self._print(i.name) for i in expr.methods]
         for i in ls:
+            j = i
             if i in _default_methods:
-                names.append(_default_methods[i])
-            else:
-                names.append(i)
-        methods = '\n'.join('procedure :: {0}'.format(i) for i in names)
+                j = _default_methods[i]
+            aliases.append(j)
+            names.append('{0}_{1}'.format(name, self._print(j)))
+        methods = '\n'.join('procedure :: {0} => {1}'.format(i,j) for i,j in
+                            zip(aliases, names))
 
         options = ', '.join(i for i in expr.options)
 

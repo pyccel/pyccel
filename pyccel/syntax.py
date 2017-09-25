@@ -1661,10 +1661,17 @@ class FunctionDefStmt(BasicStmt):
         global_vars = []
 
         # rename the method in the class case
+        f_name = name
+        cls_name = None
         if cls_instance:
-            name = name.split('.')[-1]
-        stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
+            f_name   = name.split('.')[-1]
+            cls_name = name.split('.')[0]
+#            name = name.replace('.', '_')
+        stmt = FunctionDef(f_name, args, results, body, \
+                           local_vars, global_vars, \
+                           cls_name=cls_name)
         namespace[name] = stmt
+#        print namespace
 #        print "*********** FunctionDefStmt.expr: End"
 
         return stmt

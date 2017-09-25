@@ -760,7 +760,6 @@ def build_file(filename, language, compiler, \
                          ignored_modules=ignored_modules)
         ms.append(codegen_m)
 
-
     codegen = FCodegen(filename=filename, name=name)
     s=codegen.doprint(language=language, accelerator=accelerator, \
                      ignored_modules=ignored_modules)
@@ -771,7 +770,6 @@ def build_file(filename, language, compiler, \
         print ">>> Codegen :", name, " done."
 
     modules   = codegen.modules
-
     # ...
 
     # ...
