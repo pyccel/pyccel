@@ -3,4 +3,6 @@
 #$ header class Matrix(abstract, public)
 #$ header method __init__(Matrix, int, int)
 
-n = 1
+class Matrix(object):
+    def __init__(self, n_rows, n_cols):
+        x = n_rows + n_cols

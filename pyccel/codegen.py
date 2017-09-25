@@ -389,7 +389,7 @@ class Codegen(object):
             is_module = True
             for stmt in stmts:
 #                if not(isinstance(stmt, (Comment, Constructor, FunctionDef))):
-                if not(isinstance(stmt, (Comment, FunctionDef))):
+                if not(isinstance(stmt, (Comment, FunctionDef, ClassDef))):
                     is_module = False
                     break
         else:

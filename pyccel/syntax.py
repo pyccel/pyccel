@@ -1532,10 +1532,13 @@ class FunctionDefStmt(BasicStmt):
             list of the function arguments
         body: list
             list of statements as given by the parser.
+        parent: stmt
+            parent statement.
         """
         self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
         self.body = kwargs.pop('body')
+        self.parent = kwargs.get('parent', None)
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
@@ -1556,20 +1559,41 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-#        print "*********** Begin"
+        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
+        args = self.args
+
+        cls_instance = None
+        if isinstance(self.parent, SuiteStmt):
+            if isinstance(self.parent.parent, ClassDefStmt):
+                cls_instance = self.parent.parent.name
+
+        if cls_instance:
+            name = '{0}.{1}'.format(cls_instance, name)
+            # remove self from args
+            args = args[1:]
+
+            # insert self to namespace
+            d_var = {}
+            d_var['datatype']    = 'double'
+            d_var['allocatable'] = False
+            d_var['shape']       = None
+            d_var['rank']        = 0
+            d_var['intent']      = 'inout'
+            insert_variable('self', **d_var)
 
         if not(name in headers):
-            raise Exception("Function header could not be found.")
+            raise Exception('Function header could not be found for {0}.'
+                           .format(name))
 
-        if not(len(self.args) == len(headers[name].dtypes)):
+        if not(len(args) == len(headers[name].dtypes)):
             raise Exception("Wrong number of arguments in the header.")
 
         # old occurence of args will be stored in scope
         scope_vars = {}
         scope_decs = {}
         h = headers[name]
-        for arg_name, d in zip(self.args, h.dtypes):
+        for arg_name, d in zip(args, h.dtypes):
             if arg_name in namespace:
                 var = namespace.pop(arg_name)
                 dec = declarations.pop(arg_name)
@@ -1631,9 +1655,12 @@ class FunctionDefStmt(BasicStmt):
         local_vars  = []
         global_vars = []
 
+        # rename the method in the class case
+        if cls_instance:
+            name = name.split('.')[-1]
         stmt = FunctionDef(name, args, results, body, local_vars, global_vars)
         namespace[name] = stmt
-#        print "*********** End"
+        print "*********** FunctionDefStmt.expr: End"
 
         return stmt
 
@@ -1664,8 +1691,12 @@ class ClassDefStmt(BasicStmt):
         Process the Class Definition by returning the appropriate object from
         pyccel.types.ast
         """
-        print "*********** Begin"
+        print "*********** ClassDefStmt.expr: Begin"
         name = str(self.name)
+
+        if not(name in headers):
+            raise Exception('Class header could not be found for {0}.'
+                           .format(name))
 
         body = self.body.expr
 
@@ -1678,7 +1709,7 @@ class ClassDefStmt(BasicStmt):
         stmt = ClassDef(name, attributs, methods)
         namespace[name] = stmt
 
-        print "*********** End"
+        print "*********** ClassDefStmt.expr: End"
 
         return stmt
 
@@ -1754,8 +1785,11 @@ class SuiteStmt(BasicStmt):
 
         stmts: list
             list of statements as given by the parser.
+        parent: stmt
+            parent statement.
         """
-        self.stmts = kwargs.pop('stmts')
+        self.stmts  = kwargs.pop('stmts')
+        self.parent = kwargs.get('parent', None)
 
         super(SuiteStmt, self).__init__(**kwargs)
 
