@@ -33,7 +33,7 @@ from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
 from pyccel.types.ast import allocatable_like
-from pyccel.types.ast import DataType
+from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -104,6 +104,10 @@ namespace["pi"]    = pi
 
 # ... builtin types
 builtin_types  = ['int', 'float', 'double', 'complex']
+# ...
+
+# ... will contain user defined types
+custom_types   = {}
 # ...
 
 # ... builtin functions
@@ -494,7 +498,7 @@ def insert_variable(var_name, \
     var_name: str
         variable name
 
-    datatype: str
+    datatype: str, DataType
         datatype variable attribut. One among {'int', 'float', 'complex'}
 
     allocatable: bool
@@ -1575,7 +1579,8 @@ class FunctionDefStmt(BasicStmt):
 
             # insert self to namespace
             d_var = {}
-            d_var['datatype']    = 'double'
+            dtype = custom_types[cls_instance]()
+            d_var['datatype']    = dtype
             d_var['allocatable'] = False
             d_var['shape']       = None
             d_var['rank']        = 0
@@ -2408,6 +2413,9 @@ class ClassHeaderStmt(BasicStmt):
 
     @property
     def expr(self):
+        # create a new Datatype for the current class
+        custom_types[self.name] = DataTypeFactory(self.name, ("_name"))
+
         h = ClassHeader(self.name, self.options)
         headers[self.name] = h
         return h

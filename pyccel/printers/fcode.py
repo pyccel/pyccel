@@ -343,6 +343,9 @@ class FCodePrinter(CodePrinter):
         # TODO add precision
         return 'complex(kind=8)'
 
+    def _print_DataType(self, expr):
+        return 'class({0})'.format(expr.__class__.__name__)
+
     def _print_EqualityStmt(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
