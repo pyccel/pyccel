@@ -897,12 +897,6 @@ class AssignStmt(BasicStmt):
         status   = None
         like     = None
 
-        if isinstance(rhs, Function):
-            name = str(type(rhs).__name__)
-            if name.lower() in builtin_funcs:
-                args = rhs.args
-                return builtin_function(name.lower(), args, lhs=self.lhs)
-
         var_name = self.lhs
         trailer  = None
         args     = None
@@ -911,6 +905,13 @@ class AssignStmt(BasicStmt):
             args    = self.trailer.expr
             if isinstance(trailer, TrailerDots):
                 var_name = '{0}.{1}'.format(self.lhs, args)
+
+        if isinstance(rhs, Function):
+            name = str(type(rhs).__name__)
+            if name.lower() in builtin_funcs:
+                args = rhs.args
+                return builtin_function(name.lower(), args, lhs=var_name)
+
         found_var = (var_name in namespace)
 
         if not(found_var):
