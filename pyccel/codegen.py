@@ -18,14 +18,11 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement)
 
-
 from pyccel.openmp.syntax import OpenmpStmt
 from pyccel.imports.syntax import ImportFromStmt
 
-
-__all__ = ["Codegen", "FCodegen", "PyccelCodegen", \
-           "Compiler", \
-           "build_file", "load_module"]
+_module_stmt = (Comment, FunctionDef, ClassDef, \
+                FunctionHeader, ClassHeader, MethodHeader)
 
 # ...
 def clean(filename):
@@ -170,6 +167,7 @@ class Codegen(object):
                  preludes=None, \
                  body=None, \
                  routines=None, \
+                 classes=None, \
                  modules=None, \
                  is_module=False):
         """Constructor for the Codegen class.
@@ -187,6 +185,8 @@ class Codegen(object):
             list of body statements.
         routines: list
             list of all routines (functions/subroutines) definitions.
+        classes: list
+            list of all classes definitions.
         modules: list
             list of used modules.
         is_module: bool
@@ -206,6 +206,8 @@ class Codegen(object):
             body = []
         if routines is None:
             routines = []
+        if classes is None:
+            classes = []
         if modules is None:
             modules = []
 
@@ -218,6 +220,7 @@ class Codegen(object):
         self._body         = body
         self._preludes     = preludes
         self._routines     = routines
+        self._classes      = classes
         self._modules      = modules
 
     @property
@@ -266,6 +269,11 @@ class Codegen(object):
         return self._routines
 
     @property
+    def classes(self):
+        """Returns the classes of the Codegen class"""
+        return self._classes
+
+    @property
     def modules(self):
         """Returns the modules of the Codegen class"""
         return self._modules
@@ -301,6 +309,7 @@ class Codegen(object):
         preludes = ""
         body     = ""
         routines = ""
+        classes  = ""
         modules  = []
         # ...
 
@@ -364,7 +373,7 @@ class Codegen(object):
                 routines += sep + printer(expr) + "\n" \
                           + sep + '\n'
             elif isinstance(stmt, ClassDef):
-                body += printer(stmt) + "\n"
+                classes += printer(stmt) + "\n"
             elif isinstance(stmt, Print):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):
@@ -388,8 +397,7 @@ class Codegen(object):
         if not self.is_module:
             is_module = True
             for stmt in stmts:
-#                if not(isinstance(stmt, (Comment, Constructor, FunctionDef))):
-                if not(isinstance(stmt, (Comment, FunctionDef, ClassDef))):
+                if not(isinstance(stmt, _module_stmt)):
                     is_module = False
                     break
         else:
@@ -402,6 +410,7 @@ class Codegen(object):
         self._preludes  = preludes
         self._body      = body
         self._routines  = routines
+        self._classes   = classes
         self._modules   = modules
         self._is_module = is_module
         self._language  = language
@@ -437,6 +446,7 @@ class FCodegen(Codegen):
         preludes = self.preludes
         body     = self.body
         routines = self.routines
+        classes  = self.classes
         modules  = self.modules
 
         code  = "module " + str(name)     + "\n"
@@ -447,6 +457,8 @@ class FCodegen(Codegen):
         if len(routines) > 0:
             code += "contains"            + "\n"
             code += routines              + "\n"
+        if len(classes) > 0:
+            code += classes               + "\n"
         code += "end module " + str(name) + "\n"
 
         return code
@@ -458,6 +470,7 @@ class FCodegen(Codegen):
         preludes = self.preludes
         body     = self.body
         routines = self.routines
+        classes  = self.classes
         modules  = self.modules
 
         code  = "program " + str(name)    + "\n"
@@ -470,6 +483,8 @@ class FCodegen(Codegen):
         if len(routines) > 0:
             code += "contains"            + "\n"
             code += routines              + "\n"
+        if len(classes) > 0:
+            code += classes               + "\n"
         code += "end"                     + "\n"
 
         return code
