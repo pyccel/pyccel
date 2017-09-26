@@ -311,9 +311,9 @@ The generated *Fortran* code is
   program main
   use omp_lib 
   implicit none
-  real, allocatable :: a (:, :)
-  real, allocatable :: c (:, :)
-  real, allocatable :: b (:, :)
+  real(kind=8), allocatable :: a (:, :)
+  real(kind=8), allocatable :: c (:, :)
+  real(kind=8), allocatable :: b (:, :)
   integer :: i
   integer :: k
   integer :: j
@@ -322,7 +322,6 @@ The generated *Fortran* code is
   integer :: p
 
   !  
-  ! from numpy import zeros 
   n = 500
   m = 700
   p = 500
@@ -332,25 +331,25 @@ The generated *Fortran* code is
   !$omp parallel
   !$omp do schedule(runtime)
   do i = 0, n - 1, 1
-      do j = 0, m - 1, 1
-          a(i, j) = i - j
-      end do
+    do j = 0, m - 1, 1
+      a(i, j) = i - j
+    end do
   end do
   !$omp end do  nowait
   !$omp do schedule(runtime)
   do i = 0, m - 1, 1
-      do j = 0, p - 1, 1
-          b(i, j) = i + j
-      end do
+    do j = 0, p - 1, 1
+      b(i, j) = i + j
+    end do
   end do
   !$omp end do  nowait
   !$omp do schedule(runtime)
   do i = 0, n - 1, 1
-      do j = 0, p - 1, 1
-          do k = 0, p - 1, 1
-              c(i, j) = a(i, k)*b(k, j) + c(i, j)
-          end do
+    do j = 0, p - 1, 1
+      do k = 0, p - 1, 1
+        c(i, j) = a(i, k)*b(k, j) + c(i, j)
       end do
+    end do
   end do
   !$omp end do
   !$omp end parallel
