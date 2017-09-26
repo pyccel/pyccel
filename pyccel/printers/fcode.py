@@ -152,7 +152,11 @@ class FCodePrinter(CodePrinter):
         return '(/ {0} /)'.format(fs)
 
     def _print_Variable(self, expr):
-        return '{}'.format(self._print(expr.name))
+        name = expr.name
+        if isinstance(name, str):
+            return name
+        else:
+            return '%'.join(self._print(n) for n in name)
 
     def _print_Stencil(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -474,7 +478,9 @@ class FCodePrinter(CodePrinter):
     def _print_ClassDef(self, expr):
         name = expr.name
         base = None # TODO: add base in ClassDef
-        decs = []
+
+        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributs)
+
         aliases = []
         names   = []
         ls = [self._print(i.name) for i in expr.methods]

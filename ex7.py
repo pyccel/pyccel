@@ -6,7 +6,8 @@
 
 class Matrix(object):
     def __init__(self, n_rows, n_cols):
-        x = n_rows + n_cols
+        self.n_rows = n_rows
+        self.n_cols = n_cols
 
     def __del__(self):
         x = 0

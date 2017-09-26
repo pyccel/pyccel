@@ -657,11 +657,11 @@ class Variable(Symbol):
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
-#        if isinstance(name, (str, Symbol, MatrixSymbol)):
-#            name = str(name)
-#        else:
-#            raise TypeError("Only Symbols and MatrixSymbols can be Variables.")
-
+        # if class attribut
+        if isinstance(name, str):
+            name = name.split('.')
+            if len(name) == 1:
+                name = name[0]
         if not isinstance(name, (str, list, tuple)):
             raise TypeError("Expecting a string or list/tuple of strings.")
 

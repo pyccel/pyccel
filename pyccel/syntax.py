@@ -893,7 +893,6 @@ class AssignStmt(BasicStmt):
         if not isinstance(self.rhs, ArithmeticExpression):
             raise TypeError("Expecting an expression")
 
-        var_name = self.lhs
         rhs      = self.rhs.expr
         status   = None
         like     = None
@@ -904,8 +903,17 @@ class AssignStmt(BasicStmt):
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=self.lhs)
 
-#        print_namespace()
-        if not(var_name in namespace):
+        var_name = self.lhs
+        trailer  = None
+        args     = None
+        if self.trailer:
+            trailer = self.trailer.args
+            args    = self.trailer.expr
+            if isinstance(trailer, TrailerDots):
+                var_name = '{0}.{1}'.format(self.lhs, args)
+        found_var = (var_name in namespace)
+
+        if not(found_var):
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
@@ -916,14 +924,18 @@ class AssignStmt(BasicStmt):
                     print "> Found an unallocated variable: ", var_name
                 status = 'unallocated'
                 like = allocatable_like(rhs)
-#                print ">>>> Found variable : ", like
             insert_variable(var_name, **d_var)
 
         if self.trailer is None:
             l = namespace[self.lhs]
         else:
-            args = self.trailer.expr
-            l = IndexedVariable(str(self.lhs))[args]
+            if isinstance(trailer, TrailerArgList):
+                l = IndexedVariable(str(self.lhs))[args]
+            elif isinstance(trailer, TrailerDots):
+                # class attribut
+                l = namespace[var_name]
+            else:
+                raise TypeError("Expecting ArgList or Dot")
 
         return Assign(l, rhs, strict=False, status=status, like=like)
 
@@ -1715,7 +1727,17 @@ class ClassDefStmt(BasicStmt):
 
         body    = self.body.expr
 
+        # ...
         attributs = []
+        d = {}
+        for key,v in namespace.items():
+            if key.startswith('self.'):
+                d[key] = v
+                n = key.split('self.')[-1]
+                var = v.clone(n)
+                attributs.append(var)
+        # ...
+
         methods = []
         for stmt in body:
             if isinstance(stmt, FunctionDef):
@@ -1723,6 +1745,12 @@ class ClassDefStmt(BasicStmt):
 
         stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
+
+        # ... cleaning
+        for k,v in d.items():
+            namespace.pop(k)
+            declarations.pop(k)
+        # ...
 
 #        print "*********** ClassDefStmt.expr: End"
 
