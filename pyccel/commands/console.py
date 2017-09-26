@@ -86,7 +86,7 @@ def pyccel():
         build_file(filename, language, compiler, \
                 execute=execute, accelerator=accelerator, \
                 debug=debug, verbose=verbose, show=show, \
-                name="main")
+                name=None)
     else:
         from pyccel.complexity.memory import MemComplexity
 

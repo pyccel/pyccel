@@ -176,7 +176,8 @@ class Codegen(object):
             name of the file to parse.
         name: str
             name of the generated module or program.
-            If not given, 'main' will be used
+            If not given, 'main' will be used in the case of a program, and
+            'pyccel_m_${filename}' in the case of a module.
         imports: list
             list of imports statements as strings.
         preludes: list
@@ -200,8 +201,6 @@ class Codegen(object):
         filename = filename_tmp
         # ...
 
-        if name is None:
-            name = "main"
         if body is None:
             body = []
         if routines is None:
@@ -452,6 +451,11 @@ class FCodegen(Codegen):
         classes  = self.classes
         modules  = self.modules
 
+        if name is None:
+            name = self.filename.split(".")[0]
+            name = name.replace('/', '_')
+            name = 'm_{0}'.format(name)
+
         code  = "module " + str(name)     + "\n"
         code += imports                   + "\n"
         code += "implicit none"           + "\n"
@@ -475,6 +479,9 @@ class FCodegen(Codegen):
         routines = self.routines
         classes  = self.classes
         modules  = self.modules
+
+        if name is None:
+            name = 'main'
 
         code  = "program " + str(name)    + "\n"
         code += imports                   + "\n"
@@ -697,7 +704,7 @@ class Compiler(object):
 def build_file(filename, language, compiler, \
                execute=False, accelerator=None, \
                debug=False, verbose=False, show=False, \
-               inline=False, name="main", \
+               inline=False, name=None, \
                ignored_modules=['numpy', 'scipy', 'sympy']):
     """
     User friendly interface for code generation.
@@ -723,7 +730,8 @@ def build_file(filename, language, compiler, \
         set to True, if the file is being load inside a python session.
     name: str
         name of the generated module or program.
-        If not given, 'main' will be used
+        If not given, 'main' will be used in the case of a program, and
+        'pyccel_m_${filename}' in the case of a module.
     ignored_modules: list
         list of modules to ignore (like 'numpy', 'sympy').
         These modules do not have a correspondence in Fortran.

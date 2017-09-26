@@ -63,22 +63,23 @@ The generated *Fortran* code is
 
 .. code-block:: fortran
 
-  module pyccel_m_helloworld
+  module m_tests_helloworld
 
   implicit none
 
   contains
   ! ........................................
   subroutine helloworld()
-  implicit none
+    implicit none
 
-  print *, '* Hello World!!'
+
+    print * ,'* Hello World!!'
 
   end subroutine
   ! ........................................
 
 
-  end module pyccel_m_helloworld
+  end module m_tests_helloworld
 
 Functions and Subroutines
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -99,11 +100,11 @@ Let's take a look at the file *tests/examples/ex5.py*, listed below
       z =  2.0 * t
       return t, z
 
-  x = 1.0
-  y = 2.0
+  x1 = 1.0
+  y1 = 2.0
 
-  w    = 2 * f(x,y) + 1.0
-  z, t = g(x,w)
+  w    = 2 * f(x1,y1) + 1.0
+  z, t = g(x1,w)
 
   print(z)
   print(t)
@@ -114,8 +115,8 @@ Now, run the command::
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
-   4.00000000    
-   8.00000000 
+   4.0000000000000000 
+   8.0000000000000000 
 
 Now, let us take a look at the *Fortran* file
 
@@ -124,26 +125,26 @@ Now, let us take a look at the *Fortran* file
   program main
 
   implicit none
-  real :: y
-  real :: x
-  real :: z
-  real :: t
-  real :: w
+  real(kind=8) :: y1
+  real(kind=8) :: x1
+  real(kind=8) :: z
+  real(kind=8) :: t
+  real(kind=8) :: w
 
   !  
-  x = 1.0d0
-  y = 2.0d0
-  w = 2*f(x, y) + 1.0d0
-  call g (x, w, z, t)
+  x1 = 1.0d0
+  y1 = 2.0d0
+  w = 1.0d0 + 2*f(x1, y1)
+  call g (x1, w, z, t)
   print * ,z
   print * ,t
 
   contains
   ! ........................................
-  real function f(u, v)  result(t)
+  real(kind=8) function f(u, v)  result(t)
   implicit none
-  real, intent(in)  :: u
-  real, intent(in)  :: v
+  real(kind=8), intent(in)  :: u
+  real(kind=8), intent(in)  :: v
 
   t = u - v
 
@@ -152,16 +153,16 @@ Now, let us take a look at the *Fortran* file
 
   ! ........................................
   subroutine g(x, v, t, z)
-  implicit none
-  real, intent(out)  :: t
-  real, intent(out)  :: z
-  real, intent(in)  :: x
-  real, intent(in)  :: v
-  real :: m
+    implicit none
+    real(kind=8), intent(out)  :: t
+    real(kind=8), intent(out)  :: z
+    real(kind=8), intent(in)  :: x
+    real(kind=8), intent(in)  :: v
+    real(kind=8) :: m
 
-  m = -v + x
-  t = 2.0d0*m
-  z = 2.0d0*t
+    m = -v + x
+    t = 2.0d0*m
+    z = 2.0d0*t
 
   end subroutine
   ! ........................................
@@ -176,9 +177,7 @@ Let's take a look at the file *tests/matrix_product.py*, listed below
 
 .. code-block:: python
 
-  n = int()
-  m = int()
-  p = int()
+  from numpy import zeros
 
   n = 2
   m = 4
@@ -209,7 +208,7 @@ Now, run the command::
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
-  -1.00000000       0.00000000      -2.00000000       1.00000000
+  -1.0000000000000000        0.0000000000000000       -2.0000000000000000        1.0000000000000000
 
 Now, let us take a look at the *Fortran* file
 
@@ -218,9 +217,9 @@ Now, let us take a look at the *Fortran* file
   program main
 
   implicit none
-  real, allocatable :: a (:, :)
-  real, allocatable :: c (:, :)
-  real, allocatable :: b (:, :)
+  real(kind=8), allocatable :: a (:, :)
+  real(kind=8), allocatable :: c (:, :)
+  real(kind=8), allocatable :: b (:, :)
   integer :: i
   integer :: k
   integer :: j
@@ -229,7 +228,6 @@ Now, let us take a look at the *Fortran* file
   integer :: p
 
   !  
-  ! from numpy import zeros 
   n = 2
   m = 4
   p = 2
@@ -237,21 +235,21 @@ Now, let us take a look at the *Fortran* file
   allocate(b(0:m-1, 0:p-1)) ; b = 0
   allocate(c(0:n-1, 0:p-1)) ; c = 0
   do i = 0, n - 1, 1
-      do j = 0, m - 1, 1
-          a(i, j) = i - j
-      end do
+    do j = 0, m - 1, 1
+      a(i, j) = i - j
+    end do
   end do
   do i = 0, m - 1, 1
-      do j = 0, p - 1, 1
-          b(i, j) = i + j
-      end do
+    do j = 0, p - 1, 1
+      b(i, j) = i + j
+    end do
   end do
   do i = 0, n - 1, 1
-      do j = 0, p - 1, 1
-          do k = 0, p - 1, 1
-              c(i, j) = a(i, k)*b(k, j) + c(i, j)
-          end do
+    do j = 0, p - 1, 1
+      do k = 0, p - 1, 1
+        c(i, j) = a(i, k)*b(k, j) + c(i, j)
       end do
+    end do
   end do
   print * ,c
 
