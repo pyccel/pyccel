@@ -39,7 +39,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
-                              FunctionDef, ClassDef, Print, \
+                              FunctionDef, ClassDef, Del, Print, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -762,20 +762,16 @@ class DelStmt(BasicStmt):
         """
         Process the Delete statement by returning a pyccel.types.ast object
         """
-        lines = []
-        for var in self.variables:
-            if var in namespace:
-                namespace.pop(var)
+        ls = []
+        for name in self.variables:
+            if name in namespace:
+                ls.append(namespace[name])
             else:
-                raise Exception('Unknown variable "{}" at position {}'
-                                .format(var, self._tx_position))
-
-            line = "del " + str(var)
-            lines.append(line)
+                raise Exception('Unknown variable {}'.format(name))
 
         self.update()
 
-        return lines
+        return Del(ls)
 
 # TODO: improve by creating the corresponding object in pyccel.types.ast
 class PassStmt(BasicStmt):

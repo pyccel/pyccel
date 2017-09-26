@@ -1305,6 +1305,28 @@ class Print(Basic):
     def expr(self):
         return self._args[0]
 
+class Del(Basic):
+    """Represents a memory deallocation in the code.
+
+    variables : list, tuple
+        a list of pyccel variables
+
+    Examples
+
+    >>> from pyccel.types.ast import Del, Variable
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> Del([x])
+    Del([x])
+    """
+
+    def __new__(cls, expr):
+        # TODO: check that the variable is allocatable
+        return Basic.__new__(cls, expr)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
 class Comment(Basic):
     """Represents a Comment in the code.
 

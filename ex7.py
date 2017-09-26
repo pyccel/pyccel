@@ -11,5 +11,5 @@ class Matrix(object):
         self.a = zeros((n_rows, n_cols), double)
 
     def __del__(self):
-        x = 0
+        del self.a
 

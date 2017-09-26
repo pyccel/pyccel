@@ -10,7 +10,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
-                              FunctionDef, ClassDef, Print, Import, \
+                              FunctionDef, ClassDef, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -375,6 +375,9 @@ class Codegen(object):
             elif isinstance(stmt, ClassDef):
                 classes += printer(stmt) + "\n"
             elif isinstance(stmt, Print):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, Del):
+                # TODO is it ok to put it in the body?
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):
                 body += printer(stmt) + "\n"

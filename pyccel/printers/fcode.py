@@ -475,6 +475,12 @@ class FCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         return 'return'
 
+    def _print_Del(self, expr):
+        # TODO: treate class case
+        variables = '\n'.join('deallocate({})'.format(self._print(i)) for i in expr.variables)
+        code = '{}'.format(variables)
+        return code
+
     def _print_ClassDef(self, expr):
         name = expr.name
         base = None # TODO: add base in ClassDef
