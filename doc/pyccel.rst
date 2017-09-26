@@ -48,7 +48,8 @@ Types
 Dynamic *vs* Static typing
 __________________________
 
-Since our aim is to generate code in a low-level language, which is in most cases of static typed, we will have to *enforce* the given *Python* variables to mimic, in some sens, static types. This can be done by including the concept of *constructors* that can be implemented easily in order to still run your code inside *Python* .
+Since our aim is to generate code in a low-level language, which is in most cases of static typed, we will have to devise an alternative way to construct/find the appropriate type of a given variable. 
+This can be done by including the concept of *constructors* or use specific *headers* to assist *Pyccel* in finding/infering the appropriate type.
 
 Let's explain this more precisely; we consider the following code
 
@@ -57,7 +58,7 @@ Let's explain this more precisely; we consider the following code
   n = 5
   x = 2.0 * n
 
-In this example, **n** will be interprated as an **integer** while **x** will be a **float** number, so everything is fine.
+In this example, **n** will be interprated as an **integer** while **x** will be a **double** number, so everything is fine.
 
 The problem arises when using a function, like in the following example
 
@@ -76,19 +77,19 @@ To overcome this ambiguity, we rewrite our function as
 
 .. code-block:: python
 
+  #$ header f(int)
   def f(n):
-    n = int()
     x = 2.0 * n
     return x
 
-Such an implementation still makes sens inside *Python*.
+Such an implementation still makes sens inside *Python*. As you can see, the type of *x* is infered by analysing our *expressions*.
 
 Built-in Types
 ______________
 
 The following are the built-in types in **Pyccel**::
 
-  int, float, double, complex, array, matrix, stencil
+  int, float, double, complex, array, stencil
 
 .. todo:: boolean expressions not tested yet
 
@@ -98,7 +99,7 @@ Built-in Functions
 Mathematical functions
 ______________________
 
-Functions of one argument are ::
+Mathematical functions are ::
 
    'transpose'
    'len'
@@ -122,14 +123,12 @@ Functions of one argument are ::
    'atan2'
    'factorial'
    'ceil'
-
-Functions of two arguments are ::
-
    'pow'
-   'rational'
    'dot'
    'min'
    'max'
+
+.. todo:: add transpose
 
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
