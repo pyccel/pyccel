@@ -762,8 +762,12 @@ class DelStmt(BasicStmt):
         """
         Process the Delete statement by returning a pyccel.types.ast object
         """
+        variables = [v.expr for v in self.variables]
         ls = []
-        for name in self.variables:
+        for var in variables:
+            name = var.name
+            if isinstance(name, (list, tuple)):
+                name = '{0}.{1}'.format(name[0], name[1])
             if name in namespace:
                 ls.append(namespace[name])
             else:
@@ -909,7 +913,6 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=var_name)
 
         found_var = (var_name in namespace)
-
         if not(found_var):
             d_var = get_attributs(rhs)
 
@@ -1223,14 +1226,16 @@ class AtomExpr(ExpressionElement, BasicStmt):
             expr = IndexedVariable(expr.name)[args]
         elif isinstance(trailer, TrailerDots):
             # TODO add Function?
-            dottables = (Variable, IndexedVariable, IndexedElement)
+#            dottables = (Variable, IndexedVariable, IndexedElement)
+            dottables = (Variable)
             if not(isinstance(expr, dottables)):
-                raise TypeError("Expecting Variable, IndexedVariable, IndexedElement")
-            print ">>> expr = ", expr
-            print ">>> expr.name = ", expr.name
-            print ">>> args = ", args
-            print "PAR ICI"
-            import sys; sys.exit(0)
+#                raise TypeError("Expecting Variable, IndexedVariable, IndexedElement")
+                raise TypeError("Expecting Variable")
+            var_name = '{0}.{1}'.format(expr.name, args)
+            found_var = (var_name in namespace)
+            if not(found_var):
+                raise ValueError("Undefined variable {}".format(var_name))
+            expr = namespace[var_name]
         return expr
 
 class Power(ExpressionElement, BasicStmt):

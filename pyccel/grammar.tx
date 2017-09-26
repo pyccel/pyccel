@@ -116,7 +116,7 @@ ReturnStmt:
 ;
 
 DelStmt:
-  DEL variables*=ID[',']
+  DEL variables*=AtomExpr[',']
 ;
 
 CommentStmt:
