@@ -280,10 +280,10 @@ Trailer:
 ;
 
 TrailerArgList: '(' args+=TrailerArg[','] ')';
-TrailerArg: TrailerArgList | Expression;
 TrailerSubscriptList: '[' args+=TrailerSubscript[','] ']';
 TrailerDots: '.' args=ID;
 
+TrailerArg: TrailerArgList | Expression;
 TrailerSubscript: 
     TrailerSlice 
   | TrailerSliceLeft 

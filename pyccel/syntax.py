@@ -929,7 +929,8 @@ class AssignStmt(BasicStmt):
         if self.trailer is None:
             l = namespace[self.lhs]
         else:
-            if isinstance(trailer, TrailerArgList):
+#            if isinstance(trailer, TrailerArgList):
+            if isinstance(trailer, TrailerSubscriptList):
                 l = IndexedVariable(str(self.lhs))[args]
             elif isinstance(trailer, TrailerDots):
                 # class attribut
