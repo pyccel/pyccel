@@ -267,20 +267,13 @@ Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed 
 
   from numpy import zeros
 
-  n = int()
-  m = int()
-  p = int()
-
-  n = 2000
-  m = 4000
-  p = 2000
+  n = 500
+  m = 700
+  p = 500
 
   a = zeros((n,m), double)
   b = zeros((m,p), double)
   c = zeros((n,p), double)
-
-  x = 0
-  y = 0
 
   #$ omp parallel
   #$ omp do schedule(runtime)
@@ -288,7 +281,6 @@ Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed 
       for j in range(0, m):
           a[i,j] = i-j
   #$ omp end do nowait
-
 
   #$ omp do schedule(runtime)
   for i in range(0, m):

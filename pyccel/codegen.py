@@ -114,6 +114,7 @@ def preprocess_as_str(lines):
             old_line = line
     for i in range(0, depth):
         lines_new += "dedent" + "\n"
+    lines_new += annotated
 
     return lines_new
 # ...
