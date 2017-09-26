@@ -929,14 +929,13 @@ class AssignStmt(BasicStmt):
         if self.trailer is None:
             l = namespace[self.lhs]
         else:
-#            if isinstance(trailer, TrailerArgList):
             if isinstance(trailer, TrailerSubscriptList):
                 l = IndexedVariable(str(self.lhs))[args]
             elif isinstance(trailer, TrailerDots):
                 # class attribut
                 l = namespace[var_name]
             else:
-                raise TypeError("Expecting ArgList or Dot")
+                raise TypeError("Expecting SubscriptList or Dot")
 
         return Assign(l, rhs, strict=False, status=status, like=like)
 
