@@ -2,6 +2,8 @@
 
 # This example is the python implementation of collapse.3.f from OpenMP 4.5 examples
 
+#TODO not working
+
 
 #$ omp parallel num_threads(2)
 #$ omp do collapse(2) ordered private(j,k) schedule(static,3)
