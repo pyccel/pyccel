@@ -94,6 +94,43 @@ known_functions = {
 # TODO: 1. check that every stmt is well implementing
 #          the local_vars and stmt_vars properties.
 
+# ...
+def append_mpi(namespace):
+    """Adds MPI functions and constants to the namespace
+
+    namespace: dict
+        dictorionary containing all declared variables/functions/classes.
+    """
+    body        = []
+    local_vars  = []
+    global_vars = []
+    hide        = True
+    kind        = 'procedure'
+
+    args        = []
+    datatype    = 'int'
+    allocatable = False
+    shape       = None
+    rank        = 0
+
+    var_name = 'result_%d' % abs(hash(datatype))
+
+    for f_name in ['mpi_init', 'mpi_finalize']:
+        var = Variable(datatype, var_name, \
+                       rank=rank, \
+                       allocatable=allocatable, \
+                       shape=shape)
+        results = [var]
+
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide, kind=kind)
+
+        namespace[f_name] = stmt
+
+    return namespace
+# ...
+
 # Global variable namespace
 namespace    = {}
 headers      = {}
@@ -102,6 +139,7 @@ declarations = {}
 namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
+namespace = append_mpi(namespace)
 
 # ... builtin types
 builtin_types  = ['int', 'float', 'double', 'complex']
@@ -659,6 +697,8 @@ class Pyccel(object):
         namespace["True"]  = true
         namespace["False"] = false
         namespace["pi"]    = pi
+
+        #namespace = append_mpi(namespace)
         # ...
 
     @property
