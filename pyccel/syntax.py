@@ -128,6 +128,17 @@ def append_mpi(namespace):
 
         namespace[f_name] = stmt
 
+    var_name = 'mpi_comm_world'
+    datatype    = 'int'
+    allocatable = False
+    shape       = None
+    rank        = 0
+    var = Variable(datatype, var_name, \
+                   rank=rank, \
+                   allocatable=allocatable, \
+                   shape=shape)
+    namespace[var_name] = var
+
     return namespace
 # ...
 
