@@ -1491,7 +1491,7 @@ class ReturnStmt(FlowStmt):
         Constructor for a return statement flow.
 
         variables: list
-            list of variables to return, as strings
+            list of variables to return, as Expression
         results: list
             list of variables to return, as pyccel.types.ast objects
         """
@@ -1510,7 +1510,11 @@ class ReturnStmt(FlowStmt):
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
-        for var_name in self.variables:
+        k=1
+        for var_var in self.variables:
+            var_expr=var_var.expr
+            var_name=str(var_expr)
+            
             if var_name in namespace:
                 var = namespace[var_name]
 #                print var_name, var
@@ -1523,6 +1527,13 @@ class ReturnStmt(FlowStmt):
                     # TODO is it correct? raise?
                     datatype = var.datatype
                     res = Variable(datatype, var_name)
+            elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
+                var=get_attributs(var_expr)
+                res = Variable(var['datatype'], 'fun_result%s'%(k), \
+                                   rank=var['rank'], \
+                                   allocatable=var['allocatable'], \
+                                   shape=var['shape'])
+                k=k+1
             else:
                 raise()
 
@@ -1580,6 +1591,8 @@ class FunctionDefStmt(BasicStmt):
 #        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.args
+        local_vars  = []
+        global_vars = []
 
         cls_instance = None
         if isinstance(self.parent, SuiteStmt):
@@ -1632,13 +1645,25 @@ class FunctionDefStmt(BasicStmt):
             d_var['intent']      = 'in'
             insert_variable(arg_name, **d_var)
             var = namespace[arg_name]
-
+     
         body = self.body.expr
+        
+        
 
+        
+        # ...
+        k=1
+        for stmt in self.body.stmts:
+            if isinstance(stmt, ReturnStmt):
+                for i in stmt.variables:
+                    if isinstance(i.expr,(Integer, Float, Add, Mul,Pow)):
+                        dic={'lhs':'fun_result%s'%(k),'rhs':i}
+                        body.append(Assign('fun_result%s'%(k),i.expr))
+                        k=k+1
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
 
-        # ...
+        
         results = []
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
@@ -1671,8 +1696,7 @@ class FunctionDefStmt(BasicStmt):
 
         body = prelude + body
 
-        local_vars  = []
-        global_vars = []
+        
 
         # rename the method in the class case
         f_name = name

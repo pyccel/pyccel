@@ -412,7 +412,10 @@ class FCodePrinter(CodePrinter):
             # TODO compute intent
             out_args = expr.results
             for result in expr.results:
-                dec = Declare(result.dtype, result, intent='out')
+                if result in expr.arguments:
+                    dec = Declare(result.dtype, result, intent='inout')
+                else:
+                    dec = Declare(result.dtype, result, intent='out')
                 decs.append(dec)
             sig = 'subroutine ' + name
             func_type = 'subroutine'

@@ -3,9 +3,7 @@ n=100
 
 #$ header f(double)
 def f(x):
-    z = 1.0 + x*x
-    y = 1.0/z
-    return y
+    return 1.0/(1.0 + x*x)
 
 #TODO fix h is processed as int
 h = 1.0/n
@@ -18,3 +16,4 @@ for k in range(1,1000):
 print(Pi_calcule)
 #ecart = Pi_estime - Pi_calcule
 #print(ecart)
+

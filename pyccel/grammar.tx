@@ -112,7 +112,7 @@ RaiseStmt: label=RAISE;
 YieldStmt: label=YIELD;
 
 ReturnStmt:
-  label=RETURN (variables*=ID[','])
+  label=RETURN (variables*=Expression[','])
 ;
 
 DelStmt:
