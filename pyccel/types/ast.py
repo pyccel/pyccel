@@ -754,20 +754,30 @@ class FunctionDef(Basic):
 
     name : str
         The name of the function.
+
     arguments : iterable
         The arguments to the function.
+
     results : iterable
         The direct outputs of the function.
+
     body : iterable
         The body of the function.
+
     local_vars : list of Symbols
         These are used internally by the routine.
+
     global_vars : list of Symbols
         Variables which will not be passed into the function.
+
     cls_name: str
         Class name if the function is a method of cls_name
+
     hide: bool
         if True, the function definition will not be generated.
+
+    kind: str
+        'function' or 'procedure'. default value: 'function'
 
     >>> from sympy import symbols
     >>> from pyccel.types.ast import Assign, Variable, FunctionDef
@@ -783,7 +793,7 @@ class FunctionDef(Basic):
 
     def __new__(cls, name, arguments, results, \
                 body, local_vars, global_vars, \
-                cls_name=None, hide=False):
+                cls_name=None, hide=False, kind='function'):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -812,11 +822,17 @@ class FunctionDef(Basic):
             if not(isinstance(cls_name, str)):
                 raise TypeError("cls_name must be a string")
 
+        if not isinstance(kind, str):
+            raise TypeError("Expecting a string for kind.")
+
+        if not (kind in ['function', 'procedure']):
+            raise ValueError("kind must be one among {'function', 'procedure'}")
+
         return Basic.__new__(cls, name, \
                              arguments, results, \
                              body, \
                              local_vars, global_vars, \
-                             cls_name, hide)
+                             cls_name, hide, kind)
 
     @property
     def name(self):
@@ -849,6 +865,10 @@ class FunctionDef(Basic):
     @property
     def hide(self):
         return self._args[7]
+
+    @property
+    def kind(self):
+        return self._args[8]
 
 class ClassDef(Basic):
     """Represents a class definition.
@@ -1775,6 +1795,9 @@ class FunctionHeader(Basic):
         a list of datatypes. an element of this list can be str/DataType of a
         tuple (str/DataType, attr)
 
+    kind: str
+        'function' or 'procedure'. default value: 'function'
+
     Examples
 
     >>> from pyccel.types.ast import FunctionHeader
@@ -1782,7 +1805,7 @@ class FunctionHeader(Basic):
     FunctionHeader(f, [(NativeDouble(), [])])
     """
 
-    def __new__(cls, func, dtypes, results=None):
+    def __new__(cls, func, dtypes, results=None, kind='function'):
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -1817,7 +1840,13 @@ class FunctionHeader(Basic):
                 else:
                     raise TypeError("Wrong element in r_types.")
 
-        return Basic.__new__(cls, func, types, r_types)
+        if not isinstance(kind, str):
+            raise TypeError("Expecting a string for kind.")
+
+        if not (kind in ['function', 'procedure']):
+            raise ValueError("kind must be one among {'function', 'procedure'}")
+
+        return Basic.__new__(cls, func, types, r_types, kind)
 
     @property
     def func(self):
@@ -1830,6 +1859,10 @@ class FunctionHeader(Basic):
     @property
     def results(self):
         return self._args[2]
+
+    @property
+    def kind(self):
+        return self._args[3]
 
 class MethodHeader(FunctionHeader):
     """Represents method header in the code.

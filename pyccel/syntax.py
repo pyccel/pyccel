@@ -1697,7 +1697,6 @@ class FunctionDefStmt(BasicStmt):
         if cls_instance:
             f_name   = name.split('.')[-1]
             cls_name = name.split('.')[0]
-#            name = name.replace('.', '_')
         stmt = FunctionDef(f_name, args, results, body, \
                            local_vars, global_vars, \
                            cls_name=cls_name)
@@ -2362,7 +2361,7 @@ class EvalStmt(BasicStmt):
         hide        = True
         stmt = FunctionDef(f_name, args, results, \
                            body, local_vars, global_vars, \
-                           hide=hide)
+                           hide=hide, kind=h.kind)
         namespace[f_name] = stmt
 
         return stmt
@@ -2528,7 +2527,9 @@ class FunctionHeaderStmt(BasicStmt):
                 attributs.append(attr)
             self.results = zip(r_dtypes, attributs)
 
-        h = FunctionHeader(self.name, self.dtypes, self.results)
+        kind = str(self.kind)
+
+        h = FunctionHeader(self.name, self.dtypes, self.results, kind=kind)
         headers[self.name] = h
         return h
 

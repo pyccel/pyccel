@@ -14,6 +14,7 @@ from sympy.printing.precedence import precedence
 
 from pyccel.types.ast import Assign
 from pyccel.types.ast import FunctionDef
+from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
 
 # TODO: add examples
@@ -84,8 +85,14 @@ class CodePrinter(StrPrinter):
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
+        is_procedure = False
         if isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
+            is_procedure = (expr.rhs.kind == 'procedure')
+        elif isinstance(expr.rhs, FunctionCall):
+            func = expr.rhs.func
+            rhs_code = self._print(func.name)
+            is_procedure = (func.kind == 'procedure')
         else:
             rhs_code = self._print(expr.rhs)
 
@@ -94,7 +101,16 @@ class CodePrinter(StrPrinter):
             stmt = ZerosLike(lhs_code, expr.like)
             code += self._print(stmt)
             code += '\n'
-        code += '{0} = {1}'.format(lhs_code, rhs_code)
+        if not is_procedure:
+            code += '{0} = {1}'.format(lhs_code, rhs_code)
+        else:
+            code_args = ''
+            if (not func.arguments is None) and (len(func.arguments) > 0):
+                code_args = ', '.join(sstr(i) for i in func.arguments)
+                code_args = '{0},{1}'.format(code_args, lhs_code)
+            else:
+                code_args = lhs_code
+            code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
     def _print_Function(self, expr):
