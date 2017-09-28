@@ -1656,7 +1656,6 @@ class FunctionDefStmt(BasicStmt):
         k=1
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
-                print(len(stmt.variables),len(stmt.expr))
                 for j in range(0,len(stmt.variables)):
                     i=stmt.variables[j]
                     if isinstance(i.expr,(Integer, Float, Add, Mul,Pow)):
