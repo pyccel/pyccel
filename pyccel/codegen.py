@@ -291,7 +291,7 @@ class Codegen(object):
         """Generate code as a program. Every extension must implement this method."""
         pass
 
-    def doprint(self, language, accelerator=None, ignored_modules=[]):
+    def doprint(self, language, accelerator=None, ignored_modules=[], with_mpi=False):
         """Generate code for a given language.
 
         language: str
@@ -302,6 +302,8 @@ class Codegen(object):
         ignored_modules: list
             list of modules to ignore (like 'numpy', 'sympy').
             These modules do not have a correspondence in Fortran.
+        with_mpi: bool
+            True if using MPI
         """
         # ...
         filename = self.filename
@@ -326,6 +328,11 @@ class Codegen(object):
                 imports += "use omp_lib "
             else:
                 raise ValueError("Only openmp is available")
+        # ...
+
+        # ...
+        if with_mpi:
+            imports += "use MPI"
         # ...
 
         # ...
@@ -636,23 +643,31 @@ class Compiler(object):
         """
         Constructs compiling flags
         """
+        # TODO use constructor and a dict to map flags w.r.t the compiler
+        _avail_compilers = ['gfortran', 'mpif90']
+
         compiler    = self.compiler
         debug       = self.debug
         inline      = self.inline
         accelerator = self.accelerator
+
+        if not(compiler in _avail_compilers):
+            raise ValueError("Only {0} are available.".format(_avail_compilers))
 
         flags = " -O2 "
         if compiler == "gfortran":
             if debug:
                 flags += " -fbounds-check "
 
-            if not (accelerator is None):
-                if accelerator == "openmp":
-                    flags += " -fopenmp "
-                else:
-                    raise ValueError("Only openmp is available")
-        else:
-            raise ValueError("Only gfortran is available")
+        if compiler == "mpif90":
+            if debug:
+                flags += " -fbounds-check "
+
+        if not (accelerator is None):
+            if accelerator == "openmp":
+                flags += " -fopenmp "
+            else:
+                raise ValueError("Only openmp is available")
 
         return flags
 
@@ -775,6 +790,12 @@ def build_file(filename, language, compiler, \
     ============================
     """
     # ...
+    with_mpi = False
+    if 'mpi' in compiler:
+        with_mpi = True
+    # ...
+
+    # ...
     from pyccel.imports.utilities import find_imports
 
     d = find_imports(filename=filename)
@@ -786,12 +807,12 @@ def build_file(filename, language, compiler, \
     for module, names in imports.items():
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
         codegen_m.doprint(language=language, accelerator=accelerator, \
-                         ignored_modules=ignored_modules)
+                         ignored_modules=ignored_modules, with_mpi=with_mpi)
         ms.append(codegen_m)
 
     codegen = FCodegen(filename=filename, name=name)
     s=codegen.doprint(language=language, accelerator=accelerator, \
-                     ignored_modules=ignored_modules)
+                     ignored_modules=ignored_modules, with_mpi=with_mpi)
     if show:
         print('========Fortran_Code========')
         print(s)
