@@ -106,7 +106,7 @@ class CodePrinter(StrPrinter):
         else:
             code_args = ''
             if (not func.arguments is None) and (len(func.arguments) > 0):
-                code_args = ', '.join(sstr(i) for i in func.arguments)
+                code_args = ', '.join(self._print(i) for i in func.arguments)
                 code_args = '{0},{1}'.format(code_args, lhs_code)
             else:
                 code_args = lhs_code
