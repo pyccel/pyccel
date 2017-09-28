@@ -140,7 +140,7 @@ def append_mpi(namespace):
     var_name = 'result_%d' % abs(hash(i))
     err_name = 'error_%d' % abs(hash(i))
 
-    for f_name in ['mpi_comm_size']:
+    for f_name in ['mpi_comm_size', 'mpi_comm_rank', 'mpi_abort']:
         var = Variable(datatype, var_name)
         err = Variable(datatype, err_name)
         results = [var, err]
