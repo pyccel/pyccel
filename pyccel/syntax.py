@@ -1529,7 +1529,8 @@ class ReturnStmt(FlowStmt):
                     res = Variable(datatype, var_name)
             elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
                 var=get_attributs(var_expr)
-                res = Variable(var['datatype'], 'fun_result%s'%(k), \
+                res = Variable(var['datatype'], \
+                               'result_%s'%abs(hash(str(var['datatype'])+str(k))), \
                                    rank=var['rank'], \
                                    allocatable=var['allocatable'], \
                                    shape=var['shape'])
@@ -1655,10 +1656,11 @@ class FunctionDefStmt(BasicStmt):
         k=1
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
-                for i in stmt.variables:
+                print(len(stmt.variables),len(stmt.expr))
+                for j in range(0,len(stmt.variables)):
+                    i=stmt.variables[j]
                     if isinstance(i.expr,(Integer, Float, Add, Mul,Pow)):
-                        dic={'lhs':'fun_result%s'%(k),'rhs':i}
-                        body.append(Assign('fun_result%s'%(k),i.expr))
+                        body.append(Assign(stmt.expr[j],i.expr))
                         k=k+1
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
