@@ -630,6 +630,15 @@ class FCodePrinter(CodePrinter):
         else:
             return CodePrinter._print_Function(self, expr.func(*args))
 
+    def _print_FunctionCall(self, expr):
+        # for the moment, this is only used if the function has not arguments
+        func = expr.func
+        name = self._print(func.name)
+        code_args = ''
+        if not(func.arguments) is None:
+            code_args = ', '.join(sstr(i) for i in func.arguments)
+        return '{0}({1})'.format(name, code_args)
+
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
         return "cmplx(0,1)"

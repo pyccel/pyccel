@@ -74,6 +74,7 @@ AnnotatedStmt:
 ExprStmt: 
     StencilStmt 
   | ThreadStmt 
+  | ExecStmt 
   | EvalStmt 
   | AssignStmt 
   | MultiAssignStmt
@@ -134,9 +135,11 @@ MethodHeaderStmt:
 ;
 
 FunctionHeaderStmt: 
-  '#$' 'header' name=ID '(' decs*=DeclareAtom[','] ')'
+  '#$' 'header' (kind=FunctionKind)? name=ID '(' decs*=DeclareAtom[','] ')'
   (results=HeaderResults)?
 ;
+
+FunctionKind: 'function' | 'procedure';
 
 ClassOptions: 'abstract' | 'private' | 'public';
 DeclareAtom: dtype=ID (trailer=TrailerSubscriptList)?;
@@ -200,9 +203,11 @@ AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=Expression;
 MultiAssignStmt: lhs+=ID[','] '=' rhs=Expression;
 
 StencilStmt: lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' ;
-EvalStmt: 
-  lhs+=ID[','] '=' 'eval' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
+ExecStmt: 
+  lhs+=ID[','] '=' 'exec' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
 ;
+
+EvalStmt: lhs=ID '=' 'eval' '(' expression=STRING ')';
 
 // TODO: improve
 ThreadStmt: lhs=ID '=' func=ThreadFunction '(' ')';
@@ -246,7 +251,7 @@ AtomExpr: op=Atom (trailer=Trailer)?;
 
 Number: Float | INT;
 Atom: 
-    '(' op=Expression ')'
+   '(' op=Expression ')'
   | (op=Number) 
   | (op=ID) 
   | (op=NONE)
@@ -279,8 +284,8 @@ Trailer:
   | (args=TrailerDots)?
 ;
 
-TrailerArgList: '(' args+=TrailerArg[','] ')';
-TrailerSubscriptList: '[' args+=TrailerSubscript[','] ']';
+TrailerArgList: '(' args*=TrailerArg[','] ')';
+TrailerSubscriptList: '[' args*=TrailerSubscript[','] ']';
 TrailerDots: '.' args=ID;
 
 TrailerArg: TrailerArgList | Expression;

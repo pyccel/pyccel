@@ -365,6 +365,8 @@ class Codegen(object):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, FunctionDef):
                 expr = stmt
+                if expr.hide:
+                    continue
                 if len(expr.results) == 1:
                     result = expr.results[0]
                     if result.allocatable or (result.rank > 0):

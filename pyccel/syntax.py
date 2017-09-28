@@ -33,6 +33,7 @@ from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
 from pyccel.types.ast import allocatable_like
+from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
@@ -245,6 +246,17 @@ def get_attributs(expr):
         d_var['allocatable'] = expr.allocatable
         d_var['shape']       = expr.shape
         d_var['rank']        = expr.rank
+        return d_var
+    elif isinstance(expr, FunctionCall):
+        func = expr.func
+        results = func.results
+        if not(len(results) == 1):
+            raise ValueError("Expecting one result.")
+        result = results[0]
+        d_var['datatype']    = result.dtype
+        d_var['allocatable'] = result.allocatable
+        d_var['shape']       = result.shape
+        d_var['rank']        = result.rank
         return d_var
     elif isinstance(expr, Function):
         name = str(type(expr).__name__)
@@ -1208,6 +1220,7 @@ class AtomExpr(ExpressionElement, BasicStmt):
 
         trailer = self.trailer.args
         args = trailer.expr
+
         if isinstance(trailer, TrailerArgList):
             ls = []
             for i in args:
@@ -1220,7 +1233,11 @@ class AtomExpr(ExpressionElement, BasicStmt):
             if name in builtin_funcs_math + ['len']:
                 expr = builtin_function(name, args)
             else:
-                expr = Function(str(expr))(*args)
+                if len(args) > 0:
+                    expr = Function(str(expr))(*args)
+                else:
+                    func = namespace[str(expr)]
+                    expr = FunctionCall(func, None)
         elif isinstance(trailer, TrailerSubscriptList):
             # TODO check that expr.name is IndexedElement
             expr = IndexedVariable(expr.name)[args]
@@ -1685,7 +1702,6 @@ class FunctionDefStmt(BasicStmt):
                            local_vars, global_vars, \
                            cls_name=cls_name)
         namespace[name] = stmt
-#        print namespace
 #        print "*********** FunctionDefStmt.expr: End"
 
         return stmt
@@ -2282,6 +2298,85 @@ class EvalStmt(BasicStmt):
 
         lhs: str
             variable name to create
+        expression: str
+            Expression to be evaluated
+        """
+        self.lhs        = kwargs.pop('lhs')
+        self.expression = kwargs.pop('expression')
+
+        super(EvalStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Eval statement,
+        by returning a list of appropriate objects from pyccel.types.ast
+        """
+        f_name = str(self.lhs)
+
+        if not(f_name in headers):
+            raise Exception('Function header could not be found for {0}.'
+                           .format(f_name))
+
+        h = headers[f_name]
+
+        # ... treating function/procedure arguments
+        args = []
+        for d in h.dtypes:
+            var_name = 'arg_%d' % abs(hash(d))
+            rank = 0
+            for i in d[1]:
+                if isinstance(i, Slice):
+                    rank += 1
+            datatype    = d[0]
+            allocatable = False
+            shape       = None
+            var = Variable(datatype, var_name, \
+                           rank=rank, \
+                           allocatable=allocatable, \
+                           shape=shape)
+            args.append(var)
+        # ...
+
+        # ... treating function/procedure results
+        results = []
+        for d in h.results:
+            var_name = 'result_%d' % abs(hash(d))
+            rank = 0
+            for i in d[1]:
+                if isinstance(i, Slice):
+                    rank += 1
+            datatype    = d[0]
+            allocatable = False
+            shape       = None
+            var = Variable(datatype, var_name, \
+                           rank=rank, \
+                           allocatable=allocatable, \
+                           shape=shape)
+            results.append(var)
+        # ...
+
+        body        = []
+        local_vars  = []
+        global_vars = []
+        hide        = True
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide)
+        namespace[f_name] = stmt
+
+        return stmt
+
+class ExecStmt(BasicStmt):
+    """
+    Class representing an Exec statement in the grammar
+    """
+    def __init__(self, **kwargs):
+        """
+        Constructor for a eval statement.
+
+        lhs: str
+            variable name to create
         module: str
             module where the function lives
         function: str
@@ -2294,7 +2389,7 @@ class EvalStmt(BasicStmt):
         self.function = kwargs.pop('function')
         self.args     = kwargs.pop('args')
 
-        super(EvalStmt, self).__init__(**kwargs)
+        super(ExecStmt, self).__init__(**kwargs)
 
     @property
     def stmt_vars(self):
@@ -2312,7 +2407,7 @@ class EvalStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Eval statement,
+        Process the Exec statement,
         by returning a list of appropriate objects from pyccel.types.ast
         """
         # TODO must check compatibility
@@ -2395,12 +2490,15 @@ class FunctionHeaderStmt(BasicStmt):
 
         name: str
             function name
+        kind: str
+            function or procedure
         decs: list, tuple
             list of argument types
         results: list, tuple
             list of output types
         """
         self.name    = kwargs.pop('name')
+        self.kind    = kwargs.pop('kind', 'function')
         self.decs    = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 

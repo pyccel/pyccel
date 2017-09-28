@@ -12,7 +12,6 @@ from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.function import Function
 from sympy import sympify
-#from sympy.core.sympify import _sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range
@@ -622,7 +621,44 @@ class NotequalStmt(Relational):
         rhs = sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
-#class Variable(Basic):
+class FunctionCall(Basic):
+    """
+    Base class for applied mathematical functions.
+
+    It also serves as a constructor for undefined function classes.
+
+    func: FunctionDef
+        an instance of FunctionDef
+
+    arguments: list, tuple, None
+        a list of arguments.
+
+    Examples
+
+    """
+
+    def __new__(cls, func, arguments):
+        if not isinstance(func, FunctionDef):
+            raise TypeError("Expecting func to be a FunctionDef")
+
+        return Basic.__new__(cls, func, arguments)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        name = sstr(self.func.name)
+        args = ''
+        if not(self.arguments) is None:
+            args = ', '.join(sstr(i) for i in self.arguments)
+        return '{0}({1})'.format(name, args)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def arguments(self):
+        return self._args[1]
+
 class Variable(Symbol):
     """Represents a typed variable.
 
@@ -730,6 +766,8 @@ class FunctionDef(Basic):
         Variables which will not be passed into the function.
     cls_name: str
         Class name if the function is a method of cls_name
+    hide: bool
+        if True, the function definition will not be generated.
 
     >>> from sympy import symbols
     >>> from pyccel.types.ast import Assign, Variable, FunctionDef
@@ -745,7 +783,7 @@ class FunctionDef(Basic):
 
     def __new__(cls, name, arguments, results, \
                 body, local_vars, global_vars, \
-                cls_name=None):
+                cls_name=None, hide=False):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -778,7 +816,7 @@ class FunctionDef(Basic):
                              arguments, results, \
                              body, \
                              local_vars, global_vars, \
-                             cls_name)
+                             cls_name, hide)
 
     @property
     def name(self):
@@ -807,6 +845,10 @@ class FunctionDef(Basic):
     @property
     def cls_name(self):
         return self._args[6]
+
+    @property
+    def hide(self):
+        return self._args[7]
 
 class ClassDef(Basic):
     """Represents a class definition.
