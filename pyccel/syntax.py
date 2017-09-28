@@ -101,12 +101,21 @@ def append_mpi(namespace):
     namespace: dict
         dictorionary containing all declared variables/functions/classes.
     """
+    # ...
+    var_name = 'mpi_comm_world'
+    var = Variable('int', var_name)
+    namespace[var_name] = var
+    # ...
+
+    # ...
     body        = []
     local_vars  = []
     global_vars = []
     hide        = True
     kind        = 'procedure'
+    # ...
 
+    # ...
     args        = []
     datatype    = 'int'
     allocatable = False
@@ -116,10 +125,7 @@ def append_mpi(namespace):
     var_name = 'result_%d' % abs(hash(datatype))
 
     for f_name in ['mpi_init', 'mpi_finalize']:
-        var = Variable(datatype, var_name, \
-                       rank=rank, \
-                       allocatable=allocatable, \
-                       shape=shape)
+        var = Variable(datatype, var_name)
         results = [var]
 
         stmt = FunctionDef(f_name, args, results, \
@@ -127,17 +133,25 @@ def append_mpi(namespace):
                            hide=hide, kind=kind)
 
         namespace[f_name] = stmt
+    # ...
 
-    var_name = 'mpi_comm_world'
-    datatype    = 'int'
-    allocatable = False
-    shape       = None
-    rank        = 0
-    var = Variable(datatype, var_name, \
-                   rank=rank, \
-                   allocatable=allocatable, \
-                   shape=shape)
-    namespace[var_name] = var
+    # ...
+    i = np.random.randint(10)
+    var_name = 'result_%d' % abs(hash(i))
+    err_name = 'error_%d' % abs(hash(i))
+
+    for f_name in ['mpi_comm_size']:
+        var = Variable(datatype, var_name)
+        err = Variable(datatype, err_name)
+        results = [var, err]
+
+        args = [namespace['mpi_comm_world']]
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide, kind=kind)
+
+        namespace[f_name] = stmt
+    # ...
 
     return namespace
 # ...
