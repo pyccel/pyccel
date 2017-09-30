@@ -7,12 +7,11 @@ from ast import literal_eval
 
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
-from sympy import Symbol, Integer, Float, Add, Mul
+from sympy import Symbol, Integer, Float, Add, Mul,Pow
 from sympy import true, false, pi
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy import preorder_traversal
 from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
@@ -32,10 +31,11 @@ from sympy import Integral, Symbol
 from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
+
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import DataType, DataTypeFactory
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
-                              FunctionHeader, ClassHeader, MethodHeader, \
+from pyccel.types.ast import (For, Assign, Declare, Variable,Result,\
+                              FunctionHeader, ClassHeader, MethodHeader,\
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
@@ -1519,21 +1519,21 @@ class ReturnStmt(FlowStmt):
                 var = namespace[var_name]
 #                print var_name, var
                 if isinstance(var, Variable): # TODO intent must be out => result
-                    res = Variable(var.dtype, var_name, \
+                    res = (Variable(var.dtype, var_name, \
                                    rank=var.rank, \
                                    allocatable=var.allocatable, \
-                                   shape=var.shape)
+                                   shape=var.shape),None)
                 else:
                     # TODO is it correct? raise?
                     datatype = var.datatype
                     res = Variable(datatype, var_name)
             elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
-                var=get_attributs(var_expr)
-                res = Variable(var['datatype'], \
-                               'result_%s'%abs(hash(str(var['datatype'])+str(k))), \
-                                   rank=var['rank'], \
-                                   allocatable=var['allocatable'], \
-                                   shape=var['shape'])
+                var_d=get_attributs(var_expr)
+                res = (Variable(var_d['datatype'],\
+                               'result_%s'%abs(hash(str(var_d['datatype'])+str(k))), \
+                                   rank=var_d['rank'], \
+                                   allocatable=var_d['allocatable'], \
+                                   shape=var_d['shape']),var_expr)
                 k=k+1
             else:
                 raise()
@@ -1541,7 +1541,7 @@ class ReturnStmt(FlowStmt):
             decs.append(res)
 
         self.results = decs
-        return decs
+        return Result(decs)
 
 class RaiseStmt(FlowStmt):
     """Base class representing a Raise statement in the grammar."""
@@ -1649,18 +1649,6 @@ class FunctionDefStmt(BasicStmt):
      
         body = self.body.expr
         
-        
-
-        
-        # ...
-        k=1
-        for stmt in self.body.stmts:
-            if isinstance(stmt, ReturnStmt):
-                for j in range(0,len(stmt.variables)):
-                    i=stmt.variables[j]
-                    if isinstance(i.expr,(Integer, Float, Add, Mul,Pow)):
-                        body.append(Assign(stmt.expr[j],i.expr))
-                        k=k+1
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
 
@@ -1669,6 +1657,7 @@ class FunctionDefStmt(BasicStmt):
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
                 results += stmt.results
+                
         # ...
 
         # ... cleaning the namespace

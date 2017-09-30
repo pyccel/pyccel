@@ -12,6 +12,8 @@ from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
 from sympy.core.function import Function
 from sympy import sympify
+from sympy import Symbol, Integer, Add, Mul,Pow
+from sympy import Float as Sympy_Float
 #from sympy.core.sympify import _sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
@@ -931,8 +933,42 @@ class Import(Basic):
     @property
     def funcs(self):
         return self._args[1]
+    
+    
+    
+class Result(Basic):
+    
+    """Represents a list of return variables and there return value in a fcuntion in the code.
+        
+    result_variables: a list of tuples each tuple have the variable return
+                    and it's return value if it's an expression
+    Example:
+    >>> from pyccel.types.ast import  Variable
+    >>> Result([(Variable('int', 'n'),n*2]),(Variable('int', 'x'),None]))
+        
+    """
+    def __new__(cls,result_variables):
+        if isinstance(result_variables,list):
+            for i in result_variables:
+                if not isinstance(i[0],Variable):
+                    raise TypeError("{0} must be of type Variable".format(i[0]))
+                if not i[1]==None:
+                    if not isinstance(i[1],(Integer,Sympy_Float,Add,Mul,Pow)):
+                        raise TypeError("{0} must be a sympy Expression".format(i[1]))
+        else:
+            raise TypeError("result_variables must be a type list ")
+                    
+        return Basic.__new__(cls,result_variables)
+    
+    @property
+    def result_variables(self):
+        return self._args[0]
+        
+        
 
 # TODO: Should Declare have an optional init value for each var?
+
+
 class Declare(Basic):
     """Represents a variable declaration in the code.
 

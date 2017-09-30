@@ -366,7 +366,7 @@ class Codegen(object):
             elif isinstance(stmt, FunctionDef):
                 expr = stmt
                 if len(expr.results) == 1:
-                    result = expr.results[0]
+                    result,_val = expr.results[0]
                     if result.allocatable or (result.rank > 0):
                         expr = subs(expr, result, str(expr.name))
                 sep = separator()
