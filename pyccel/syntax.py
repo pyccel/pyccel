@@ -3,8 +3,6 @@ import numpy as np
 from numpy import ndarray
 from numpy import asarray
 
-from ast import literal_eval
-
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy import Symbol, Integer, Float, Add, Mul
