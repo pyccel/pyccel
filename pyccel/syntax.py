@@ -32,6 +32,7 @@ from sympy.logic.boolalg import BooleanFunction
 
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
+from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
@@ -50,6 +51,9 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
 from pyccel.core.syntax     import BasicStmt
 from pyccel.imports.syntax import ImportFromStmt
 from pyccel.openmp.syntax   import OpenmpStmt
+
+from pyccel.parallel.mpi import MPI
+from pyccel.parallel.mpi import MPI_world_comm, MPI_WORLD_COMM
 
 
 DEBUG = False
@@ -100,9 +104,7 @@ def append_mpi(namespace):
         dictorionary containing all declared variables/functions/classes.
     """
     # ...
-    var_name = 'mpi_comm_world'
-    var = Variable('int', var_name)
-    namespace[var_name] = var
+    namespace['mpi_comm_world'] = MPI_WORLD_COMM
     # ...
 
     # ...
@@ -170,6 +172,9 @@ builtin_types  = ['int', 'float', 'double', 'complex']
 
 # ... will contain user defined types
 custom_types   = {}
+
+# TODO MPI
+#custom_types['Communicator'] = Communicator
 # ...
 
 # ... builtin functions
@@ -212,6 +217,7 @@ def get_attributs(expr):
     d_var['rank']        = None
 
 #    print '>>>> expr = ', expr, type(expr)
+    print '>>>> expr = ', type(expr)
 #    if isinstance(expr, Variable):
 #        print '>>>> expr = ', expr, " rank = ", expr.rank, " id = ", id(expr)
 #    else:
@@ -253,6 +259,31 @@ def get_attributs(expr):
         d_var['datatype']    = DEFAULT_TYPE
         d_var['allocatable'] = False
         d_var['rank']        = 0
+        return d_var
+    elif isinstance(expr, DottedVariable):
+        comm = expr.name[0]
+        attr = expr.name[-1]
+        base = comm.cls_base
+        if not isinstance(base, MPI):
+            raise TypeError("Expecting MPI instance")
+
+        dtype = base.dtype(attr)
+
+        d_var['datatype']    = dtype
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+        d_var['cls_base']    = None
+        return d_var
+    elif isinstance(expr, MPI_world_comm):
+        if expr.is_integer:
+            d_var['datatype']    = 'int'
+        else:
+            raise ValueError("Expecting a integer")
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+        d_var['cls_base']    = MPI_WORLD_COMM
         return d_var
     elif isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
@@ -563,7 +594,8 @@ def insert_variable(var_name, \
                     allocatable=None, \
                     shape=None, \
                     intent=None, \
-                    var=None):
+                    var=None, \
+                    cls_base=None):
     """
     Inserts a variable as a symbol into the namespace. Appends also its
     declaration and the corresponding variable.
@@ -588,6 +620,9 @@ def insert_variable(var_name, \
 
     var: pyccel.types.ast.Variable
         if attributs are not given, then var must be provided.
+
+    cls_base: class
+        class base if variable is an object or an object member
     """
     if type(var_name) in [int, float]:
         return
@@ -617,7 +652,8 @@ def insert_variable(var_name, \
     var = Variable(datatype, var_name, \
                    rank=rank, \
                    allocatable=allocatable, \
-                   shape=shape)
+                   shape=shape, \
+                   cls_base=cls_base)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var, intent=intent)
@@ -1313,9 +1349,14 @@ class AtomExpr(ExpressionElement, BasicStmt):
                 raise TypeError("Expecting Variable")
             var_name = '{0}.{1}'.format(expr.name, args)
             found_var = (var_name in namespace)
-            if not(found_var):
-                raise ValueError("Undefined variable {}".format(var_name))
-            expr = namespace[var_name]
+#            if not(found_var):
+#                raise ValueError("Undefined variable {}".format(var_name))
+            if var_name in namespace:
+                expr = namespace[var_name]
+            else:
+                if not(expr.name in namespace):
+                    raise ValueError("Undefined variable {}".format(expr.name))
+                expr = DottedVariable(expr, args)
         return expr
 
 class Power(ExpressionElement, BasicStmt):

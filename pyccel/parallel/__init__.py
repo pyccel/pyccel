@@ -2,3 +2,4 @@
 
 from .communicator import *
 from .group        import *
+from .mpi          import *

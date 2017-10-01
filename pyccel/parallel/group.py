@@ -237,6 +237,11 @@ class UniversalGroup(Naturals):
         from pyccel.parallel.communicator import UniversalCommunicator
         return UniversalCommunicator()
 
+    @property
+    def size(self):
+        """the total number of processes."""
+        return self.np
+
 
 # TODO check size between colors and group
 class Split(Group):

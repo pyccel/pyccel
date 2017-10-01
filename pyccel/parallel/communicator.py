@@ -1,11 +1,27 @@
 # coding: utf-8
 
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic as sm_Basic
 from sympy.sets.sets import Set
 
+class Basic(sm_Basic):
+    is_integer = False
+    _dtypes = {}
+    _dtypes['size'] = 'int'
+    _dtypes['rank'] = 'int'
+
+    def __new__(cls, *args, **options):
+        return super(Basic, cls).__new__(cls, *args, **options)
+
+    def dtype(self, attr):
+        """Returns the datatype of a given attribut/member."""
+        return self._dtypes[attr]
 
 class UniversalCommunicator(Basic):
     """Represents the communicator to all processes."""
+
+    @property
+    def size(self):
+        return self.group.size
 
     @property
     def group(self):
@@ -69,6 +85,15 @@ class Communicator(Basic):
         """
         pass
 
+def Size(Basic):
+    is_integer = True
+
+    def __new__(cls, *args, **kwargs):
+        return super(Size, cls).__new__(*args, **kwargs)
+
+    @property
+    def communicator(self):
+        self._args[0]
 
 def split(comm, group, rank=None):
     """
