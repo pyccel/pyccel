@@ -13,7 +13,8 @@ class UniversalCommunicator(Basic):
         return UniversalGroup()
 
 class Communicator(Basic):
-    """Represents a communicator in the code.
+    """
+    Represents a communicator in the code.
 
     size: int
         the number of processes in the group associated with the
@@ -25,9 +26,6 @@ class Communicator(Basic):
 
     Examples
 
-    >>> from pyccel.ast.mpi import Communicator
-    >>> Communicator()
-    mpi_comm_world
     """
 
     def __new__(cls, group, rank=None):
@@ -56,26 +54,29 @@ class Communicator(Basic):
 
         Examples
 
-        >>> from pyccel.ast.mpi import Communicator
-        >>> c = Communicator(is_root=True)
-        >>> o = c.duplicate()
         """
         rank    = self.rank
         group   = self.group
         return Communicator(rank=rank, group=group)
 
     def split(self, group):
-        """Split the communicator over colors by returning the new comm
+        """
+        Split the communicator over colors by returning the new comm
         associated to the processes with defined color.
 
-        colors: iterable
-            map over all available processes.
+        Examples
+
         """
         pass
 
 
 def split(comm, group, rank=None):
-    """Splits the communicator over a given color."""
+    """
+    Splits the communicator over a given color.
+
+    Examples
+
+    """
     from pyccel.parallel.group import Split
     if not isinstance(group, Split):
         raise TypeError("Expecting a group of instance Split.")
