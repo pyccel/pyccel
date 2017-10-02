@@ -913,12 +913,7 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=var_name)
 
         found_var = (var_name in namespace)
-        if not(found_var):
-            try:
-                x=get_attributs(rhs)
-            except:
-                print(rhs,'##')
-            
+        if not(found_var):  
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
