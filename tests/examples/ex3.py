@@ -2,10 +2,11 @@
 
 x = 0
 y = 0 # TODO not compiled if y is not declared
-if 1==0:
+z=3
+if 1<0:
     x=4
 
-if x==2 and y==1:
+if (x==2 or y==1) and z>3 :
     x=3
     y=4
 

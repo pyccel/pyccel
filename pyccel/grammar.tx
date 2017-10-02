@@ -252,6 +252,7 @@ Atom:
   | (op=NONE)
   | (op=TRUE)
   | (op=FALSE)
+  | '(' op=Test ')'
 ;
 
 OpPlusOrMinus: '+' | '-';
