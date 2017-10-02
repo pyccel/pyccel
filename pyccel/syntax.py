@@ -273,7 +273,6 @@ def get_attributs(expr):
                 raise ValueError("Expecting a function with one return.")
 
             var = results[0][0]
-            print(var,'get')
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
             d_var['rank']        = var.rank
