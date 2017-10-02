@@ -2,6 +2,9 @@
 
 x = 0
 y = 0 # TODO not compiled if y is not declared
+if 1==0:
+    x=4
+
 if x==2 and y==1:
     x=3
     y=4
