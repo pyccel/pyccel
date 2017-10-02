@@ -9,6 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy import Symbol, Integer, Float, Add, Mul,Pow
 from sympy import true, false, pi
+from sympy.logic.boolalg import And,Or
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
@@ -271,7 +272,8 @@ def get_attributs(expr):
             if not(len(results) == 1):
                 raise ValueError("Expecting a function with one return.")
 
-            var = results[0]
+            var = results[0][0]
+            print(var,'get')
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
             d_var['rank']        = var.rank
@@ -848,7 +850,6 @@ class IfStmt(BasicStmt):
         Process the If statement by returning a pyccel.types.ast object
         """
         self.update()
-
         args = [(self.test.expr, self.body_true.expr)]
 
         if not self.body_elif==None:
@@ -914,6 +915,11 @@ class AssignStmt(BasicStmt):
 
         found_var = (var_name in namespace)
         if not(found_var):
+            try:
+                x=get_attributs(rhs)
+            except:
+                print(rhs,'##')
+            
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
@@ -989,10 +995,10 @@ class MultiAssignStmt(BasicStmt):
         for (var_name, result) in zip(self.lhs, F.results):
             if not(var_name in namespace):
                 d_var = {}
-                d_var['datatype']    = result.dtype
-                d_var['allocatable'] = result.allocatable
-                d_var['shape']       = result.shape
-                d_var['rank']        = result.rank
+                d_var['datatype']    = result[0].dtype
+                d_var['allocatable'] = result[0].allocatable
+                d_var['shape']       = result[0].shape
+                d_var['rank']        = result[0].rank
                 d_var['intent']      = None
 
 #                print ">>>> MultiAssignStmt : ", var_name
@@ -1391,8 +1397,9 @@ class OrTest(ExpressionElement):
             print "> DEBUG "
 
         ret = self.op[0].expr
-        for operation, operand in zip(self.op[1::2], self.op[2::2]):
-            ret = (ret or operand.expr)
+        for operand in self.op[1:]:
+            ret = Or(ret,operand.expr)
+        
         return ret
 
 # TODO improve using sympy And, Or, Not, ...
@@ -1408,8 +1415,10 @@ class AndTest(ExpressionElement):
             print "> DEBUG "
 
         ret = self.op[0].expr
-        for operation, operand in zip(self.op[1::2], self.op[2::2]):
-            ret = (ret and operand.expr)
+
+        
+        for operand in self.op[1:]:
+            ret = And(ret,operand.expr)
         return ret
 
 # TODO improve using sympy And, Or, Not, ...
@@ -1442,7 +1451,7 @@ class Comparison(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             if operation == "==":
-                ret = EqualityStmt(ret, operand.expr)
+                ret = Eq(ret, operand.expr)
             elif operation == ">":
                 ret = Gt(ret, operand.expr)
             elif operation == ">=":
@@ -1452,7 +1461,7 @@ class Comparison(ExpressionElement):
             elif operation == "<=":
                 ret = Le(ret, operand.expr)
             elif operation == "<>":
-                ret = NotequalStmt(ret, operand.expr)
+                ret = Ne(ret, operand.expr)
             else:
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))
@@ -1585,6 +1594,7 @@ class FunctionDefStmt(BasicStmt):
     # TODO scope
     @property
     def expr(self):
+        
         """
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
@@ -1594,17 +1604,17 @@ class FunctionDefStmt(BasicStmt):
         args = self.args
         local_vars  = []
         global_vars = []
-
+        
         cls_instance = None
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
-
+    
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
             # remove self from args
             args = args[1:]
-
+            
             # insert self to namespace
             d_var = {}
             dtype = custom_types[cls_instance]()
@@ -1614,14 +1624,14 @@ class FunctionDefStmt(BasicStmt):
             d_var['rank']        = 0
             d_var['intent']      = 'inout'
             insert_variable('self', **d_var)
-
+        
         if not(name in headers):
             raise Exception('Function header could not be found for {0}.'
                            .format(name))
-
+        
         if not(len(args) == len(headers[name].dtypes)):
             raise Exception("Wrong number of arguments in the header.")
-
+        
         # old occurence of args will be stored in scope
         scope_vars = {}
         scope_decs = {}
@@ -1630,10 +1640,10 @@ class FunctionDefStmt(BasicStmt):
             if arg_name in namespace:
                 var = namespace.pop(arg_name)
                 dec = declarations.pop(arg_name)
-
+                    
                 scope_vars[arg_name] = var
                 scope_decs[arg_name] = dec
-
+    
             rank = 0
             for i in d[1]:
                 if isinstance(i, Slice):
@@ -1651,7 +1661,7 @@ class FunctionDefStmt(BasicStmt):
         
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
-
+    
         
         results = []
         for stmt in self.body.stmts:
@@ -1659,35 +1669,35 @@ class FunctionDefStmt(BasicStmt):
                 results += stmt.results
                 
         # ...
-
+    
         # ... cleaning the namespace
         for arg_name in self.args:
             del declarations[arg_name]
             del namespace[arg_name]
-
+    
         ls = self.local_vars + self.stmt_vars
         for var_name in ls:
             if var_name in namespace:
                 prelude.append(declarations[var_name])
-
+    
                 del namespace[var_name]
                 del declarations[var_name]
         # ...
-
+    
         # ...
         for arg_name, var in scope_vars.items():
             var = scope_vars.pop(arg_name)
             namespace[arg_name] = var
-
+    
         for arg_name, dec in scope_decs.items():
             dec = scope_decs.pop(arg_name)
             declarations[arg_name] = dec
         # ...
-
+    
         body = prelude + body
-
+    
         
-
+    
         # rename the method in the class case
         f_name = name
         cls_name = None
@@ -1699,9 +1709,9 @@ class FunctionDefStmt(BasicStmt):
                            local_vars, global_vars, \
                            cls_name=cls_name)
         namespace[name] = stmt
+        
 #        print namespace
 #        print "*********** FunctionDefStmt.expr: End"
-
         return stmt
 
 class ClassDefStmt(BasicStmt):

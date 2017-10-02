@@ -42,5 +42,3 @@ def integrate(x,y,xStop,h):
         Y[i]=y
         i=i+1
     return X,Y
-
-

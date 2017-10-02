@@ -15,12 +15,15 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
+from sympy import Eq,Ne,true,false
+from sympy.logic.boolalg import BooleanTrue,BooleanFalse
 
 from pyccel.types.ast import (Assign, MultiAssign,Result, \
                               Variable, Declare, \
                               Len, Dot, Sign, subs, \
                               IndexedElement, Slice)
 from pyccel.printers.codeprinter import CodePrinter
+
 
 # TODO: add examples
 # TODO: use _get_statement when returning a string
@@ -79,6 +82,7 @@ class FCodePrinter(CodePrinter):
     _relationals = {
         '!=': '/=',
     }
+    
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -357,20 +361,18 @@ class FCodePrinter(CodePrinter):
         name = name.split('Pyccel')[-1]
         return 'class({0})'.format(name)
 
-    def _print_EqualityStmt(self, expr):
+    def _print_Equality(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
-    def _print_NotequalStmt(self, expr):
+    def _print_Unequality(self, expr):
         return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_LOrEq(self, expr):
-        return '{0} <= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_Lthan(self, expr):
-        return '{0} < {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_GOrEq(self, expr):
-        return '{0} >= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_Gter(self, expr):
-        return '{0} > {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-
+    
+    def _print_BooleanTrue(self, expr):
+        return '.True.'
+        
+    def _print_BooleanFalse(self,expr):
+        return '.False.'
+    
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
         if expr.cls_name:

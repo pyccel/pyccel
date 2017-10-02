@@ -6,7 +6,7 @@ from numpy import ndarray
 
 from sympy.core.expr import Expr
 from sympy.core import Symbol, Tuple
-from sympy.core.relational import Equality, Relational
+from sympy.core.relational import Equality, Relational,Ne,Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.basic import Basic
@@ -616,6 +616,9 @@ class EqualityStmt(Relational):
         lhs = sympify(lhs)
         rhs = sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
+    @property
+    def canonical(self):
+        return self
 
 class NotequalStmt(Relational):
     """Represents a relational not equality expression in the code."""
