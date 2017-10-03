@@ -1317,7 +1317,7 @@ class AtomExpr(ExpressionElement, BasicStmt):
         trailer: Trailer
             a trailer is used for a function call or Array indexing.
         """
-        self.trailer = kwargs.pop('trailer', None)
+        self.trailers = kwargs.pop('trailers', None)
 
         super(AtomExpr, self).__init__(**kwargs)
 
@@ -1330,10 +1330,13 @@ class AtomExpr(ExpressionElement, BasicStmt):
             print "> AtomExpr "
         expr = self.op.expr
 
-        if self.trailer is None:
+        if self.trailers is None:
             return expr
 
-        trailer = self.trailer.args
+        if len(self.trailers) == 0:
+            return expr
+
+        trailer = self.trailers[0].args
         args = trailer.expr
 
         if isinstance(trailer, TrailerArgList):

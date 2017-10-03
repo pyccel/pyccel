@@ -247,7 +247,7 @@ Term: op=Factor (op=OpFactor op=Factor)*;
 Factor: Power | FactorSigned;
 FactorSigned: (sign=OpFactorSigned)?  op=AtomExpr;
 Power: op=AtomExpr '**' exponent=Factor;
-AtomExpr: op=Atom (trailer=Trailer)?;
+AtomExpr: op=Atom (trailers*=Trailer)?;
 
 Number: Float | INT;
 Atom: 
