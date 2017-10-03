@@ -53,10 +53,11 @@ from pyccel.imports.syntax import ImportFromStmt
 from pyccel.openmp.syntax   import OpenmpStmt
 
 from pyccel.parallel.mpi import MPI
-from pyccel.parallel.mpi import MPI_ERROR
-from pyccel.parallel.mpi import MPI_Assign
+from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
+from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
+from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 
 
 DEBUG = False
@@ -111,10 +112,12 @@ def append_mpi(namespace, declarations):
     """
     # ...
     namespace['mpi_comm_world'] = MPI_COMM_WORLD
-    namespace['mpi_error']      = MPI_ERROR
 
-    dec = Declare('int', MPI_ERROR)
-    declarations[MPI_ERROR.name] = dec
+    for i in [MPI_ERROR, MPI_STATUS]:
+        namespace[i.name] = i
+
+        dec = MPI_Declare('int', i)
+        declarations[i.name] = dec
     # ...
 
     # ...

@@ -17,10 +17,6 @@ from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
 
-from pyccel.parallel.mpi import MPI
-from pyccel.parallel.mpi import MPI_ERROR
-from pyccel.parallel.mpi import MPI_comm_world
-from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 
 # TODO: add examples
 
@@ -127,28 +123,11 @@ class CodePrinter(StrPrinter):
     def _print_MPI_comm_rank(self, expr):
         return 'MPI_comm_rank'
 
-    def _print_MPI_ERROR(self, expr):
-        return 'i_mpi_error'
+    def _print_MPI_comm_recv(self, expr):
+        return 'MPI_recv'
 
-    def _print_MPI_Assign(self, expr):
-        lhs_code = self._print(expr.lhs)
-        is_procedure = False
-        if isinstance(expr.rhs, MPI_comm_world):
-            rhs_code = self._print(expr.rhs)
-            code = '{0} = {1}'.format(lhs_code, rhs_code)
-        elif isinstance(expr.rhs, MPI_comm_size):
-            rhs_code = self._print(expr.rhs)
-            comm = self._print(expr.rhs.comm)
-            size = self._print(expr.lhs)
-            ierr = self._print(MPI_ERROR)
-            code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
-        elif isinstance(expr.rhs, MPI_comm_rank):
-            rhs_code = self._print(expr.rhs)
-            comm = self._print(expr.rhs.comm)
-            rank = self._print(expr.lhs)
-            ierr = self._print(MPI_ERROR)
-            code = 'call mpi_comm_rank ({0}, {1}, {2})'.format(comm, rank, ierr)
-        return code
+    def _print_MPI_comm_send(self, expr):
+        return 'MPI_send'
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:

@@ -4,7 +4,7 @@ from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 
 from pyccel.types.ast             import Variable
-from pyccel.types.ast             import Assign
+from pyccel.types.ast             import Assign, Declare
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
@@ -16,6 +16,9 @@ class MPI_Statement(Basic):
     pass
 
 class MPI_Assign(Assign, MPI_Statement):
+    pass
+
+class MPI_Declare(Declare, MPI_Statement):
     pass
 
 class MPI_comm_world(UniversalCommunicator, MPI):
@@ -46,6 +49,27 @@ class MPI_comm_rank(MPI):
     def comm(self):
         return self.args[0]
 
+class MPI_comm_recv(MPI):
+    is_integer = True
 
-MPI_ERROR = Variable('int', 'i_mpi_error')
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_recv, cls).__new__(cls, *args, **options)
+
+    @property
+    def comm(self):
+        return self.args[0]
+
+class MPI_comm_send(MPI):
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_send, cls).__new__(cls, *args, **options)
+
+    @property
+    def comm(self):
+        return self.args[0]
+
+
+MPI_ERROR  = Variable('int', 'i_mpi_error')
+MPI_STATUS = Variable('int', 'i_mpi_status', rank=1)
 MPI_COMM_WORLD = MPI_comm_world()

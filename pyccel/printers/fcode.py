@@ -22,6 +22,13 @@ from pyccel.types.ast import (Assign, MultiAssign, \
                               IndexedElement, Slice)
 from pyccel.printers.codeprinter import CodePrinter
 
+from pyccel.parallel.mpi import MPI
+from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
+from pyccel.parallel.mpi import MPI_comm_world
+from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
+from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
+
+
 # TODO: add examples
 # TODO: use _get_statement when returning a string
 
@@ -337,6 +344,82 @@ class FCodePrinter(CodePrinter):
 
         return '\n'.join(decs)
 
+    def _print_MPI_Declare(self, expr):
+        dtype = self._print(expr.dtype)
+        # Group the variables by intent
+
+        arg_types        = [type(v) for v in expr.variables]
+        arg_ranks        = [v.rank for v in expr.variables]
+        arg_allocatables = [v.allocatable for v in expr.variables]
+
+        decs = []
+        intent = expr.intent
+        vstr = ', '.join(self._print(i.name) for i in expr.variables)
+
+        # TODO ARA improve
+        rank        = arg_ranks[0]
+        allocatable = arg_allocatables[0]
+
+        # arrays are 0-based in pyccel, to avoid ambiguity with range
+        base = '0'
+        if allocatable:
+            base = ''
+        if rank == 0:
+            rankstr =  ''
+        else:
+            rankstr = ', '.join(base+':' for f in range(0, rank))
+            rankstr = '(' + rankstr + ')'
+
+        if allocatable:
+            allocatablestr = ', allocatable'
+        else:
+            allocatablestr = ''
+
+        if intent:
+            decs.append('{0}, intent({1}) {2} :: {3} {4}'.
+                        format(dtype, intent, allocatablestr, vstr, rankstr))
+        else:
+            decs.append('{0}{1} :: {2} {3}'.
+                        format(dtype, allocatablestr, vstr, rankstr))
+
+        return '\n'.join(decs)
+
+    def _print_MPI_Assign(self, expr):
+        lhs_code = self._print(expr.lhs)
+        is_procedure = False
+        if isinstance(expr.rhs, MPI_comm_world):
+            rhs_code = self._print(expr.rhs)
+            code = '{0} = {1}'.format(lhs_code, rhs_code)
+        elif isinstance(expr.rhs, MPI_comm_size):
+            rhs_code = self._print(expr.rhs)
+            comm = self._print(expr.rhs.comm)
+            size = self._print(expr.lhs)
+            ierr = self._print(MPI_ERROR)
+            code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
+        elif isinstance(expr.rhs, MPI_comm_rank):
+            rhs_code = self._print(expr.rhs)
+            comm = self._print(expr.rhs.comm)
+            rank = self._print(expr.lhs)
+            ierr = self._print(MPI_ERROR)
+            code = 'call mpi_comm_rank ({0}, {1}, {2})'.format(comm, rank, ierr)
+        elif isinstance(expr.rhs, MPI_comm_recv):
+            rhs_code = self._print(expr.rhs)
+            comm = self._print(expr.rhs.comm)
+            rank = self._print(expr.lhs)
+            ierr = self._print(MPI_ERROR)
+            istatus = self._print(MPI_STATUS)
+
+            data    = 'rank'
+            length  = 1
+            dtype   = 'MPI_INTEGER'
+            partner = 1
+            tag     = 1111
+            args = (data, length, dtype, partner, tag, comm, istatus, ierr)
+            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
+            code = 'call mpi_recv ({0})'.format(args)
+        else:
+            raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
+        return self._get_statement(code)
 
 
 
