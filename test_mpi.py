@@ -3,24 +3,20 @@
 ierr = mpi_init()
 
 comm = mpi_comm_world
-#print("mpi_comm = ", comm)
-
 size = comm.size
-#print("mpi_size = ", size)
-
 rank = comm.rank
-#print("mpi_rank = ", rank)
 
 x = zeros(4, double)
 
+source = 0
+dest   = 1
 if rank == 0:
     x = 1.0
 
-ierr = comm.send(x)
-
-print('PROC ', rank, ' x = ', x)
-
-if rank == 0:
-    print('That is all for now!')
+if rank == source:
+    ierr = comm.send(x, rank, dest)
+    print("processor ", rank, " sent ", x)
+if rank == dest:
+    print("recv")
 
 ierr = mpi_finalize()

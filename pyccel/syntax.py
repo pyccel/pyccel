@@ -685,9 +685,20 @@ def expr_with_trailer(expr, trailer=None):
     if isinstance(trailer, (tuple, list)):
         if len(trailer) == 0:
             return expr
-        return expr_with_trailer(expr, trailer[0])
+        if len(trailer) == 1:
+            return expr_with_trailer(expr, trailer[0])
+        if expr.cls_base:
+            if isinstance(expr.cls_base, MPI):
+                comm = expr
+                func = trailer[0].expr
+                args = trailer[1].expr
+                args += [comm]
+                expr = eval('MPI_comm_{0}'.format(func))(*args)
+        else:
+            raise ValueError('Unable to construct expr from trailers.')
+        return expr
     if isinstance(trailer, Trailer):
-        trailer = trailer.args
+        return expr_with_trailer(expr, trailer.args)
 
     if isinstance(trailer, TrailerArgList):
         args = trailer.expr
