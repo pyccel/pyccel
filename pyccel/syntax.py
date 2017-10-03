@@ -679,6 +679,71 @@ def insert_variable(var_name, \
     declarations[var_name] = dec
 
 # ...
+def expr_with_trailer(expr, trailer=None):
+    if trailer is None:
+        return expr
+    if isinstance(trailer, (tuple, list)):
+        if len(trailer) == 0:
+            return expr
+        return expr_with_trailer(expr, trailer[0])
+    if isinstance(trailer, Trailer):
+        trailer = trailer.args
+
+    if isinstance(trailer, TrailerArgList):
+        args = trailer.expr
+
+        ls = []
+        for i in args:
+            if isinstance(i, (list, tuple)):
+                ls.append(Tuple(*i))
+            else:
+                ls.append(i)
+        args = ls
+        name = str(expr)
+        if name in builtin_funcs_math + ['len']:
+            expr = builtin_function(name, args)
+        else:
+            if len(args) > 0:
+                expr = Function(str(expr))(*args)
+            else:
+                func = namespace[str(expr)]
+                expr = FunctionCall(func, None)
+    elif isinstance(trailer, TrailerSubscriptList):
+        # TODO check that expr.name is IndexedElement
+        args = trailer.expr
+
+        expr = IndexedVariable(expr.name)[args]
+    elif isinstance(trailer, TrailerDots):
+        args = trailer.expr
+
+        # TODO add Function?
+#            dottables = (Variable, IndexedVariable, IndexedElement)
+        dottables = (Variable)
+        if not(isinstance(expr, dottables)):
+#                raise TypeError("Expecting Variable, IndexedVariable, IndexedElement")
+            raise TypeError("Expecting Variable")
+        var_name = '{0}.{1}'.format(expr.name, args)
+        found_var = (var_name in namespace)
+#            if not(found_var):
+#                raise ValueError("Undefined variable {}".format(var_name))
+        if var_name in namespace:
+            expr = namespace[var_name]
+        else:
+            if not(expr.name in namespace):
+                raise ValueError("Undefined variable {}".format(expr.name))
+            expr = DottedVariable(expr, args)
+
+            obj  = expr.name[0]
+            attr = expr.name[-1]
+            base = obj.cls_base
+            if isinstance(base, MPI):
+                expr = eval('MPI_comm_{0}'.format(attr))(obj)
+            else:
+                expr = DottedVariable(expr, args)
+    return expr
+# ...
+
+# ...
 # TODO: refactoring
 def do_arg(a):
     if isinstance(a, str):
@@ -1330,61 +1395,7 @@ class AtomExpr(ExpressionElement, BasicStmt):
             print "> AtomExpr "
         expr = self.op.expr
 
-        if self.trailers is None:
-            return expr
-
-        if len(self.trailers) == 0:
-            return expr
-
-        trailer = self.trailers[0].args
-        args = trailer.expr
-
-        if isinstance(trailer, TrailerArgList):
-            ls = []
-            for i in args:
-                if isinstance(i, (list, tuple)):
-                    ls.append(Tuple(*i))
-                else:
-                    ls.append(i)
-            args = ls
-            name = str(expr)
-            if name in builtin_funcs_math + ['len']:
-                expr = builtin_function(name, args)
-            else:
-                if len(args) > 0:
-                    expr = Function(str(expr))(*args)
-                else:
-                    func = namespace[str(expr)]
-                    expr = FunctionCall(func, None)
-        elif isinstance(trailer, TrailerSubscriptList):
-            # TODO check that expr.name is IndexedElement
-            expr = IndexedVariable(expr.name)[args]
-        elif isinstance(trailer, TrailerDots):
-            # TODO add Function?
-#            dottables = (Variable, IndexedVariable, IndexedElement)
-            dottables = (Variable)
-            if not(isinstance(expr, dottables)):
-#                raise TypeError("Expecting Variable, IndexedVariable, IndexedElement")
-                raise TypeError("Expecting Variable")
-            var_name = '{0}.{1}'.format(expr.name, args)
-            found_var = (var_name in namespace)
-#            if not(found_var):
-#                raise ValueError("Undefined variable {}".format(var_name))
-            if var_name in namespace:
-                expr = namespace[var_name]
-            else:
-                if not(expr.name in namespace):
-                    raise ValueError("Undefined variable {}".format(expr.name))
-                expr = DottedVariable(expr, args)
-
-                obj  = expr.name[0]
-                attr = expr.name[-1]
-                base = obj.cls_base
-                if isinstance(base, MPI):
-                    expr = eval('MPI_comm_{0}'.format(attr))(obj)
-                else:
-                    expr = DottedVariable(expr, args)
-        return expr
+        return expr_with_trailer(expr, self.trailers)
 
 class Power(ExpressionElement, BasicStmt):
     """Class representing an atomic expression."""
