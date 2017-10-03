@@ -18,6 +18,7 @@ from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
 
 from pyccel.parallel.mpi import MPI
+from pyccel.parallel.mpi import MPI_ERROR
 from pyccel.parallel.mpi import MPI_comm_world, MPI_comm_size
 
 # TODO: add examples
@@ -120,8 +121,10 @@ class CodePrinter(StrPrinter):
         return 'MPI_comm_world'
 
     def _print_MPI_comm_size(self, expr):
-#        'call mpi_comm_size ({0}, size, ierr)'.format(mpi_comm_world)
         return 'MPI_comm_size'
+
+    def _print_MPI_ERROR(self, expr):
+        return 'i_mpi_error'
 
     def _print_MPI_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -133,7 +136,7 @@ class CodePrinter(StrPrinter):
             rhs_code = self._print(expr.rhs)
             comm = self._print(expr.rhs.comm)
             size = self._print(expr.lhs)
-            ierr = self._print(expr.rhs.ierr)
+            ierr = self._print(MPI_ERROR)
             code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
         return code
 

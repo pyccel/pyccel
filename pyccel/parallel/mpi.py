@@ -10,7 +10,6 @@ from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
 
 class MPI(Basic):
-    ierr = Variable('int', 'i_mpi_error')
     pass
 
 class MPI_Statement(Basic):
@@ -27,8 +26,6 @@ class MPI_comm_world(UniversalCommunicator, MPI):
         sstr = printer.doprint
         return 'mpi_comm_world'
 
-MPI_COMM_WORLD = MPI_comm_world()
-
 class MPI_comm_size(MPI):
     is_integer = True
 
@@ -39,3 +36,6 @@ class MPI_comm_size(MPI):
     def comm(self):
         return self.args[0]
 
+
+MPI_ERROR = Variable('int', 'i_mpi_error')
+MPI_COMM_WORLD = MPI_comm_world()

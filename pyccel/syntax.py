@@ -53,6 +53,7 @@ from pyccel.imports.syntax import ImportFromStmt
 from pyccel.openmp.syntax   import OpenmpStmt
 
 from pyccel.parallel.mpi import MPI
+from pyccel.parallel.mpi import MPI_ERROR
 from pyccel.parallel.mpi import MPI_Assign
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_comm_size
@@ -99,14 +100,21 @@ known_functions = {
 #          the local_vars and stmt_vars properties.
 
 # ...
-def append_mpi(namespace):
+def append_mpi(namespace, declarations):
     """Adds MPI functions and constants to the namespace
 
     namespace: dict
         dictorionary containing all declared variables/functions/classes.
+
+    declarations: dict
+        dictorionary containing all declarations.
     """
     # ...
     namespace['mpi_comm_world'] = MPI_COMM_WORLD
+    namespace['mpi_error']      = MPI_ERROR
+
+    dec = Declare('int', MPI_ERROR)
+    declarations[MPI_ERROR.name] = dec
     # ...
 
     # ...
@@ -155,7 +163,7 @@ def append_mpi(namespace):
         namespace[f_name] = stmt
     # ...
 
-    return namespace
+    return namespace, declarations
 # ...
 
 # Global variable namespace
@@ -166,7 +174,7 @@ declarations = {}
 namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
-namespace = append_mpi(namespace)
+namespace, declarations = append_mpi(namespace, declarations)
 
 # ... builtin types
 builtin_types  = ['int', 'float', 'double', 'complex']
@@ -1053,15 +1061,6 @@ class AssignStmt(BasicStmt):
         if not isinstance(rhs, MPI):
             return Assign(l, rhs, strict=False, status=status, like=like)
         else:
-            ierr = rhs.ierr # this is a Variable
-            if not(ierr.name in namespace):
-                d_var = {}
-                d_var['datatype']    = 'int'
-                d_var['allocatable'] = False
-                d_var['shape']       = None
-                d_var['rank']        = 0
-                d_var['cls_base']    = None
-                insert_variable(ierr.name, **d_var)
             return MPI_Assign(l, rhs, strict=False, status=status, like=like)
 
 class MultiAssignStmt(BasicStmt):
