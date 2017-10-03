@@ -355,8 +355,6 @@ class Codegen(object):
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
-#                for key, s in stmt.unallocated.items():
-#                    body += printer(s) + "\n"
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, MultiAssign):
                 body += printer(stmt) + "\n"
@@ -415,6 +413,14 @@ class Codegen(object):
         else:
             is_module = True
         # ...
+
+#        # ...
+#        if with_mpi:
+#            for stmt in stmts:
+#                if isinstance(stmt, _module_stmt)):
+#                    is_module = False
+#                    break
+#        # ...
 
         # ...
         self._ast       = ast

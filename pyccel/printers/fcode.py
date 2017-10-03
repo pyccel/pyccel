@@ -162,9 +162,6 @@ class FCodePrinter(CodePrinter):
         name = expr.name
         return '%'.join(self._print(n) for n in name)
 
-    def _print_MPI_world_comm(self, expr):
-        return 'MPI_world_comm'
-
     def _print_Stencil(self, expr):
         lhs_code = self._print(expr.lhs)
 

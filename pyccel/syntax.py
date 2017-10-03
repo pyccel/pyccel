@@ -53,7 +53,9 @@ from pyccel.imports.syntax import ImportFromStmt
 from pyccel.openmp.syntax   import OpenmpStmt
 
 from pyccel.parallel.mpi import MPI
-from pyccel.parallel.mpi import MPI_world_comm, MPI_WORLD_COMM
+from pyccel.parallel.mpi import MPI_Assign
+from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
+from pyccel.parallel.mpi import MPI_comm_size
 
 
 DEBUG = False
@@ -104,7 +106,7 @@ def append_mpi(namespace):
         dictorionary containing all declared variables/functions/classes.
     """
     # ...
-    namespace['mpi_comm_world'] = MPI_WORLD_COMM
+    namespace['mpi_comm_world'] = MPI_COMM_WORLD
     # ...
 
     # ...
@@ -275,7 +277,7 @@ def get_attributs(expr):
         d_var['rank']        = 0
         d_var['cls_base']    = None
         return d_var
-    elif isinstance(expr, MPI_world_comm):
+    elif isinstance(expr, MPI):
         if expr.is_integer:
             d_var['datatype']    = 'int'
         else:
@@ -283,7 +285,7 @@ def get_attributs(expr):
         d_var['allocatable'] = False
         d_var['shape']       = None
         d_var['rank']        = 0
-        d_var['cls_base']    = MPI_WORLD_COMM
+        d_var['cls_base']    = MPI_COMM_WORLD
         return d_var
     elif isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
@@ -1048,7 +1050,19 @@ class AssignStmt(BasicStmt):
             else:
                 raise TypeError("Expecting SubscriptList or Dot")
 
-        return Assign(l, rhs, strict=False, status=status, like=like)
+        if not isinstance(rhs, MPI):
+            return Assign(l, rhs, strict=False, status=status, like=like)
+        else:
+            ierr = rhs.ierr # this is a Variable
+            if not(ierr.name in namespace):
+                d_var = {}
+                d_var['datatype']    = 'int'
+                d_var['allocatable'] = False
+                d_var['shape']       = None
+                d_var['rank']        = 0
+                d_var['cls_base']    = None
+                insert_variable(ierr.name, **d_var)
+            return MPI_Assign(l, rhs, strict=False, status=status, like=like)
 
 class MultiAssignStmt(BasicStmt):
     """
@@ -1357,6 +1371,15 @@ class AtomExpr(ExpressionElement, BasicStmt):
                 if not(expr.name in namespace):
                     raise ValueError("Undefined variable {}".format(expr.name))
                 expr = DottedVariable(expr, args)
+
+                obj  = expr.name[0]
+                attr = expr.name[-1]
+                base = obj.cls_base
+                if isinstance(base, MPI):
+                    if attr == 'size':
+                        expr = MPI_comm_size(obj)
+                else:
+                    expr = DottedVariable(expr, args)
         return expr
 
 class Power(ExpressionElement, BasicStmt):

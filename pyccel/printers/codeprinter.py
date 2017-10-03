@@ -17,6 +17,9 @@ from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
 
+from pyccel.parallel.mpi import MPI
+from pyccel.parallel.mpi import MPI_comm_world, MPI_comm_size
+
 # TODO: add examples
 
 __all__ = ["CodePrinter"]
@@ -112,6 +115,27 @@ class CodePrinter(StrPrinter):
                 code_args = lhs_code
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
+
+    def _print_MPI_comm_world(self, expr):
+        return 'MPI_comm_world'
+
+    def _print_MPI_comm_size(self, expr):
+#        'call mpi_comm_size ({0}, size, ierr)'.format(mpi_comm_world)
+        return 'MPI_comm_size'
+
+    def _print_MPI_Assign(self, expr):
+        lhs_code = self._print(expr.lhs)
+        is_procedure = False
+        if isinstance(expr.rhs, MPI_comm_world):
+            rhs_code = self._print(expr.rhs)
+            code = '{0} = {1}'.format(lhs_code, rhs_code)
+        elif isinstance(expr.rhs, MPI_comm_size):
+            rhs_code = self._print(expr.rhs)
+            comm = self._print(expr.rhs.comm)
+            size = self._print(expr.lhs)
+            ierr = self._print(expr.rhs.ierr)
+            code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
+        return code
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
