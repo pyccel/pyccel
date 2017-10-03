@@ -344,6 +344,9 @@ class FCodePrinter(CodePrinter):
 
         return '\n'.join(decs)
 
+    def _print_MPI_status_type(self, expr):
+        return 'integer, dimension(MPI_STATUS_SIZE)'
+
     def _print_MPI_Declare(self, expr):
         dtype = self._print(expr.dtype)
         # Group the variables by intent

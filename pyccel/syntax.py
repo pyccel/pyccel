@@ -116,7 +116,7 @@ def append_mpi(namespace, declarations):
     for i in [MPI_ERROR, MPI_STATUS]:
         namespace[i.name] = i
 
-        dec = MPI_Declare('int', i)
+        dec = MPI_Declare(i.dtype, i)
         declarations[i.name] = dec
     # ...
 

@@ -3,8 +3,10 @@
 from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 
-from pyccel.types.ast             import Variable
-from pyccel.types.ast             import Assign, Declare
+from pyccel.types.ast import Variable
+from pyccel.types.ast import Assign, Declare
+from pyccel.types.ast import DataType
+from pyccel.types.ast import DataTypeFactory
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
@@ -69,7 +71,13 @@ class MPI_comm_send(MPI):
     def comm(self):
         return self.args[0]
 
+class MPI_status_type(DataType):
+    _name = 'Int'
+    pass
+
 
 MPI_ERROR  = Variable('int', 'i_mpi_error')
-MPI_STATUS = Variable('int', 'i_mpi_status', rank=1)
+MPI_STATUS = Variable(MPI_status_type(), 'i_mpi_status')
 MPI_COMM_WORLD = MPI_comm_world()
+
+
