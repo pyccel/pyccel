@@ -17,8 +17,9 @@ if rank == 0:
     x = 1.0
 
 if rank == 0:
+    ierr = comm.send
+else:
     for partner in range(1, size):
-        print('> partner : ', partner)
         tag = 1
         ierr = comm.recv
 

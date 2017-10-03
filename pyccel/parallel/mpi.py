@@ -72,7 +72,6 @@ class MPI_comm_send(MPI):
         return self.args[0]
 
 class MPI_status_type(DataType):
-    _name = 'Int'
     pass
 
 
