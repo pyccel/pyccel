@@ -27,6 +27,7 @@ from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.parallel.mpi import MPI_comm_world
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
+from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
 
 
 # TODO: add examples
@@ -434,6 +435,36 @@ class FCodePrinter(CodePrinter):
             args = (data, count, dtype, dest, tag, comm, ierr)
             args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}'.format(*args)
             code = 'call mpi_send ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_irecv):
+            rhs_code = self._print(expr.rhs)
+            ierr     = self._print(MPI_ERROR)
+
+            data    = expr.rhs.data
+            count   = expr.rhs.count
+            dtype   = expr.rhs.datatype
+            source  = expr.rhs.source
+            tag     = expr.rhs.tag
+            comm    = expr.rhs.comm
+            request = expr.rhs.request
+
+            args = (data, count, dtype, source, tag, comm, request, ierr)
+            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
+            code = 'call mpi_irecv ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_isend):
+            rhs_code = self._print(expr.rhs)
+            ierr     = self._print(MPI_ERROR)
+
+            data    = expr.rhs.data
+            count   = expr.rhs.count
+            dtype   = expr.rhs.datatype
+            dest    = expr.rhs.dest
+            tag     = expr.rhs.tag
+            comm    = expr.rhs.comm
+            request = expr.rhs.request
+
+            args = (data, count, dtype, dest, tag, comm, request, ierr)
+            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
+            code = 'call mpi_isend ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)

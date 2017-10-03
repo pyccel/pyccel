@@ -58,6 +58,7 @@ from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
+from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
 
 
 DEBUG = False

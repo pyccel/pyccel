@@ -129,6 +129,12 @@ class CodePrinter(StrPrinter):
     def _print_MPI_comm_send(self, expr):
         return 'MPI_send'
 
+    def _print_MPI_comm_irecv(self, expr):
+        return 'MPI_irecv'
+
+    def _print_MPI_comm_isend(self, expr):
+        return 'MPI_isend'
+
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]

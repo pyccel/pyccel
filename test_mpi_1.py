@@ -24,3 +24,14 @@ if rank == dest:
     print("processor ", rank, " got  ", x)
 
 ierr = mpi_finalize()
+
+
+
+#   integer numtasks, rank, next, prev, buf(2), tag1, tag2, ierr
+#   integer reqs(4)   ! required variable for non-blocking calls
+#   integer stats(MPI_STATUS_SIZE,4)   ! required variable for WAITALL routine
+#
+#
+#   ! wait for all non-blocking operations to complete
+#   call MPI_WAITALL(4, reqs, stats, ierr);
+
