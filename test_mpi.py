@@ -6,13 +6,14 @@ comm = mpi_comm_world
 size = comm.size
 rank = comm.rank
 
-x = zeros(4, double)
+n = 4
+x = zeros(n, double)
 
-source = 0
-dest   = 1
 if rank == 0:
     x = 1.0
 
+source = 0
+dest   = 1
 tag = 1234
 if rank == source:
     ierr = comm.send(x, dest, tag)

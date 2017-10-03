@@ -411,13 +411,13 @@ class FCodePrinter(CodePrinter):
             istatus  = self._print(MPI_STATUS)
 
             data   = expr.rhs.data
-            size   = expr.rhs.size
+            count   = expr.rhs.count
             dtype  = expr.rhs.datatype
             source = expr.rhs.source
             tag    = expr.rhs.tag
             comm   = expr.rhs.comm
 
-            args = (data, size, dtype, source, tag, comm, istatus, ierr)
+            args = (data, count, dtype, source, tag, comm, istatus, ierr)
             args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
             code = 'call mpi_recv ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_send):
@@ -425,13 +425,13 @@ class FCodePrinter(CodePrinter):
             ierr     = self._print(MPI_ERROR)
 
             data  = expr.rhs.data
-            size  = expr.rhs.size
+            count  = expr.rhs.count
             dtype = expr.rhs.datatype
             dest  = expr.rhs.dest
             tag   = expr.rhs.tag
             comm  = expr.rhs.comm
 
-            args = (data, size, dtype, dest, tag, comm, ierr)
+            args = (data, count, dtype, dest, tag, comm, ierr)
             args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}'.format(*args)
             code = 'call mpi_send ({0})'.format(args)
         else:
