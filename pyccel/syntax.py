@@ -1521,7 +1521,7 @@ class ReturnStmt(FlowStmt):
             if var_name in namespace:
                 var = namespace[var_name]
 #                print var_name, var
-                if isinstance(var, Variable): # TODO intent must be out => result
+                if isinstance(var, (Variable,IndexedElement,IndexedVariable)): # TODO intent must be out => result
                     res = (Variable(var.dtype, var_name, \
                                    rank=var.rank, \
                                    allocatable=var.allocatable, \
