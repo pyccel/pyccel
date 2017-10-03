@@ -19,7 +19,8 @@ from pyccel.types.ast import ZerosLike
 
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR
-from pyccel.parallel.mpi import MPI_comm_world, MPI_comm_size
+from pyccel.parallel.mpi import MPI_comm_world
+from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 
 # TODO: add examples
 
@@ -123,6 +124,9 @@ class CodePrinter(StrPrinter):
     def _print_MPI_comm_size(self, expr):
         return 'MPI_comm_size'
 
+    def _print_MPI_comm_rank(self, expr):
+        return 'MPI_comm_rank'
+
     def _print_MPI_ERROR(self, expr):
         return 'i_mpi_error'
 
@@ -138,6 +142,12 @@ class CodePrinter(StrPrinter):
             size = self._print(expr.lhs)
             ierr = self._print(MPI_ERROR)
             code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
+        elif isinstance(expr.rhs, MPI_comm_rank):
+            rhs_code = self._print(expr.rhs)
+            comm = self._print(expr.rhs.comm)
+            rank = self._print(expr.lhs)
+            ierr = self._print(MPI_ERROR)
+            code = 'call mpi_comm_rank ({0}, {1}, {2})'.format(comm, rank, ierr)
         return code
 
     def _print_Function(self, expr):

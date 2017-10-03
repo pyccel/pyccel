@@ -56,7 +56,7 @@ from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR
 from pyccel.parallel.mpi import MPI_Assign
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
-from pyccel.parallel.mpi import MPI_comm_size
+from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 
 
 DEBUG = False
@@ -1375,8 +1375,7 @@ class AtomExpr(ExpressionElement, BasicStmt):
                 attr = expr.name[-1]
                 base = obj.cls_base
                 if isinstance(base, MPI):
-                    if attr == 'size':
-                        expr = MPI_comm_size(obj)
+                    expr = eval('MPI_comm_{0}'.format(attr))(obj)
                 else:
                     expr = DottedVariable(expr, args)
         return expr

@@ -36,6 +36,16 @@ class MPI_comm_size(MPI):
     def comm(self):
         return self.args[0]
 
+class MPI_comm_rank(MPI):
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_rank, cls).__new__(cls, *args, **options)
+
+    @property
+    def comm(self):
+        return self.args[0]
+
 
 MPI_ERROR = Variable('int', 'i_mpi_error')
 MPI_COMM_WORLD = MPI_comm_world()
