@@ -227,7 +227,7 @@ def get_attributs(expr):
     d_var['rank']        = None
 
 #    print '>>>> expr = ', expr, type(expr)
-    print '>>>> expr = ', type(expr)
+#    print '>>>> expr = ', type(expr)
 #    if isinstance(expr, Variable):
 #        print '>>>> expr = ', expr, " rank = ", expr.rank, " id = ", id(expr)
 #    else:
