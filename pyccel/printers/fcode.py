@@ -407,22 +407,22 @@ class FCodePrinter(CodePrinter):
             code = 'call mpi_comm_rank ({0}, {1}, {2})'.format(comm, rank, ierr)
         elif isinstance(expr.rhs, MPI_comm_recv):
             rhs_code = self._print(expr.rhs)
-            comm = self._print(expr.rhs.comm)
-            rank = self._print(expr.lhs)
-            ierr = self._print(MPI_ERROR)
-            istatus = self._print(MPI_STATUS)
+            ierr     = self._print(MPI_ERROR)
+            istatus  = self._print(MPI_STATUS)
 
-            data    = 'rank'
-            length  = 1
-            dtype   = 'MPI_INTEGER'
-            partner = 1
-            tag     = 1111
-            args = (data, length, dtype, partner, tag, comm, istatus, ierr)
+            data   = expr.rhs.data
+            size   = expr.rhs.size
+            dtype  = expr.rhs.datatype
+            source = expr.rhs.source
+            tag    = expr.rhs.tag
+            comm   = expr.rhs.comm
+
+            args = (data, size, dtype, source, tag, comm, istatus, ierr)
             args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
             code = 'call mpi_recv ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_send):
             rhs_code = self._print(expr.rhs)
-            ierr = self._print(MPI_ERROR)
+            ierr     = self._print(MPI_ERROR)
 
             data  = expr.rhs.data
             size  = expr.rhs.size
