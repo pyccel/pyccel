@@ -15,9 +15,13 @@ nsteps    = 10
 
 ao        = 1.0
 sigmao    = 1.0
+time      = 0.0
 
 old       = 1
 new       = 2
+
+lefttag   = 1
+righttag  = 2
 
 locnpoints = totpoints/comsize
 
@@ -63,7 +67,33 @@ theory  = ao*exp(-xx)
 xxl = (xleft  - dx)**2 / (2.0 *sigmao**2)
 xxr = (xright + dx)**2 / (2.0 *sigmao**2)
 
-fixedlefttemp = ao*exp(-xxl)
-fixedrighttemp= ao*exp(-xxr)
+fixedlefttemp  = ao*exp(-xxl)
+fixedrighttemp = ao*exp(-xxr)
+
+#evolve
+#step-1: boundary conditions: keep endpoint temperatures fixed.
+for step in range(0, nsteps):
+    temperature[1,old] = fixedlefttemp
+    temperature[locnpoints+2,old] = fixedrighttemp
+
+    #exchange boundary information
+
+    #update solution
+    for i in range(2,locnpoints+1):
+        temperature[i,new] = temperature[i,old] + dt*kappa/dx**2 * (temperature[i+1,old] - 2*temperature[i,old] + temperature[i-1,old])
+
+    time = time + dt
+
+    #update correct solution
+    s = 2.0 * kappa * time + sigmao**2
+    sigma  = sqrt(s)
+    a      = ao*sigmao/sigma
+    xx     = x**2 / (2.0*sigma**2)
+    theory = a*exp(-xx)
+
+    old = new
+    new = new + 1
+    if new > 2:
+        new = 1
 
 ierr = mpi_finalize()
