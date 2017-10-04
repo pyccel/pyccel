@@ -55,7 +55,10 @@ from pyccel.openmp.syntax   import OpenmpStmt
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
+from pyccel.parallel.mpi import MPI_Request
+from pyccel.parallel.mpi import MPI_INTEGER, MPI_FLOAT, MPI_DOUBLE
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
+from pyccel.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
@@ -101,6 +104,27 @@ known_functions = {
 # TODO: 1. check that every stmt is well implementing
 #          the local_vars and stmt_vars properties.
 
+# ...
+def datatype_from_string(txt):
+    if not isinstance(txt, str):
+        raise TypeError('Expecting a string')
+
+    if txt == 'int':
+        return NativeInteger()
+    elif txt == 'float':
+        return NativeFloat()
+    elif txt == 'double':
+        return NativeDouble()
+    elif txt == 'complex':
+        return NativeComplex()
+    elif txt == 'mpi_int':
+        return MPI_INTEGER()
+    elif txt == 'mpi_float':
+        return MPI_FLOAT()
+    elif txt == 'mpi_double':
+        return MPI_DOUBLE()
+# ...
+
 # ...
 def append_mpi(namespace, declarations):
     """Adds MPI functions and constants to the namespace
@@ -112,8 +136,11 @@ def append_mpi(namespace, declarations):
         dictorionary containing all declarations.
     """
     # ...
-    namespace['mpi_comm_world'] = MPI_COMM_WORLD
+    namespace['mpi_comm_world']  = MPI_COMM_WORLD
+    namespace['mpi_status_size'] = MPI_STATUS_SIZE
+    # ...
 
+    # ...
     for i in [MPI_ERROR, MPI_STATUS]:
         namespace[i.name] = i
 

@@ -24,7 +24,7 @@ from pyccel.printers.codeprinter import CodePrinter
 
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
-from pyccel.parallel.mpi import MPI_comm_world
+from pyccel.parallel.mpi import MPI_comm_world, MPI_status_size
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
@@ -345,6 +345,9 @@ class FCodePrinter(CodePrinter):
 
         return '\n'.join(decs)
 
+    def _print_MPI_status_size(self, expr):
+        return 'MPI_status_size'
+
     def _print_MPI_status_type(self, expr):
         return 'integer, dimension(MPI_STATUS_SIZE)'
 
@@ -392,6 +395,9 @@ class FCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
         if isinstance(expr.rhs, MPI_comm_world):
+            rhs_code = self._print(expr.rhs)
+            code = '{0} = {1}'.format(lhs_code, rhs_code)
+        elif isinstance(expr.rhs, MPI_status_size):
             rhs_code = self._print(expr.rhs)
             code = '{0} = {1}'.format(lhs_code, rhs_code)
         elif isinstance(expr.rhs, MPI_comm_size):

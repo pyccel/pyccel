@@ -135,6 +135,15 @@ class CodePrinter(StrPrinter):
     def _print_MPI_comm_isend(self, expr):
         return 'MPI_isend'
 
+    def _print_MPI_INTEGER(self, expr):
+        return 'MPI_INTEGER'
+
+    def _print_MPI_FLOAT(self, expr):
+        return 'MPI_FLOAT'
+
+    def _print_MPI_DOUBLE(self, expr):
+        return 'MPI_DOUBLE'
+
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]

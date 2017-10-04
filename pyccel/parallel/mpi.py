@@ -33,6 +33,20 @@ class MPI_status_type(DataType):
     """Represents the datatype of MPI status."""
     pass
 
+class MPI_INTEGER(DataType):
+    _name = 'MPI_INTEGER'
+    pass
+
+class MPI_FLOAT(DataType):
+    _name = 'MPI_FLOAT'
+    pass
+
+
+class MPI_DOUBLE(DataType):
+    _name = 'MPI_DOUBLE'
+    pass
+
+
 def mpi_datatype(dtype):
     """Converts Pyccel datatypes into MPI datatypes."""
     if isinstance(dtype, NativeInteger):
@@ -51,6 +65,14 @@ class MPI_comm_world(UniversalCommunicator, MPI):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'mpi_comm_world'
+
+class MPI_status_size(MPI):
+    """Represents the status size in mpi."""
+    is_integer     = True
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'mpi_status_size'
 
 class MPI_comm_size(MPI):
     """Represents the size of a given communicator."""
@@ -365,7 +387,27 @@ class MPI_comm_sendrecv(MPI):
     def datatype(self):
         return mpi_datatype(self.data.dtype)
 
+class MPI_Request(Variable, MPI):
+    """
+    Represents a MPI request variable.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_Request
+    >>> req = MPI_Request('req')
+    >>> req.dtype
+    MPI_INTEGER()
+    >>> req = MPI_Request('req', rank=1, shape=4)
+    """
+
+    def __new__(cls, *args, **options):
+        dtype = MPI_INTEGER()
+        args = [dtype] + list(args)
+        return super(MPI_Request, cls).__new__(cls, *args, **options)
+
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
 MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')
-MPI_COMM_WORLD = MPI_comm_world()
+
+MPI_COMM_WORLD  = MPI_comm_world()
+MPI_STATUS_SIZE = MPI_status_size()
