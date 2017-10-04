@@ -13,6 +13,12 @@ totpoints = 100
 kappa     = 1.0
 nsteps    = 10
 
+ao        = 1.0
+sigmao    = 1.0
+
+old       = 1
+new       = 2
+
 locnpoints = totpoints/comsize
 
 startn = rank*locnpoints + 1
@@ -33,5 +39,31 @@ dx = (xright-xleft)/(totpoints-1)
 dt = dx**2 * kappa/10.0
 
 locxleft = xleft + dx*(startn-1)
+
+#print
+
+#allocate data, including ghost cells: old and new timestep
+#theory doesn't need ghost cells, but we include it for simplicity
+
+temperature = zeros((locnpoints+2,2), double)
+theory      = zeros(locnpoints+2, double)
+x           = zeros(locnpoints+2, double)
+xx          = zeros(locnpoints+2, double)
+
+#setup initial conditions
+
+time = 0.0
+for i in range(1,locnpoints+2):
+    x[i] = locxleft + (i-1)*dx
+
+xx = x**2 / (2.0 * sigmao**2)
+temperature[:,old] = ao*exp(-xx)
+theory  = ao*exp(-xx)
+
+xxl = (xleft  - dx)**2 / (2.0 *sigmao**2)
+xxr = (xright + dx)**2 / (2.0 *sigmao**2)
+
+fixedlefttemp = ao*exp(-xxl)
+fixedrighttemp= ao*exp(-xxr)
 
 ierr = mpi_finalize()
