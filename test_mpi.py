@@ -2,47 +2,36 @@
 
 ierr = mpi_init()
 
-comm = mpi_comm_world
-size = comm.size
-rank = comm.rank
+comm    = mpi_comm_world
+comsize = comm.size
+rank    = comm.rank
 
-n = 4
-x = zeros(n, double)
-y = zeros(n, double)
+xleft  = -12.0
+xright =  12.0
 
-if rank == 0:
-    x = 1.0
-    y = 2.0
+totpoints = 100
+kappa     = 1.0
+nsteps    = 10
 
-tag0 = 1234
-tag1 = 5678
+locnpoints = totpoints/comsize
 
-prev = rank - 1
-next = rank + 1
-if rank == 0:
-    prev = size - 1
-if rank == size - 1:
-    next = 0
+startn = rank*locnpoints + 1
+endn   = startn + locnpoints
+if rank == comsize-1:
+    endn = totpoints+1
+locnpoints = endn-startn
 
-req0 = 0
-req1 = 0
-req2 = 0
-req3 = 0
+left = rank-1
+if left < 0:
+    left = mpi_proc_null
 
-ierr = comm.irecv(x, prev, tag0, req0)
-ierr = comm.irecv(y, next, tag1, req1)
-ierr = comm.isend(x, prev, tag1, req2)
-ierr = comm.isend(y, next, tag0, req3)
+right = rank+1
+if right >= comsize:
+    right = mpi_proc_null
 
-status_size = mpi_status_size
-reqs  = zeros(4, int)
-stats = zeros((status_size,4), int)
+dx = (xright-xleft)/(totpoints-1)
+dt = dx**2 * kappa/10.0
 
-reqs[0] = req0
-reqs[1] = req1
-reqs[2] = req2
-reqs[3] = req3
-
-ierr = mpi_waitall(reqs, stats)
+locxleft = xleft + dx*(startn-1)
 
 ierr = mpi_finalize()

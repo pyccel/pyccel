@@ -58,14 +58,6 @@ def mpi_datatype(dtype):
     else:
         raise TypeError("Uncovered datatype.")
 
-class MPI_comm_world(UniversalCommunicator, MPI):
-    """Represents the world comm in mpi."""
-    is_integer     = True
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'mpi_comm_world'
-
 class MPI_status_size(MPI):
     """Represents the status size in mpi."""
     is_integer     = True
@@ -73,6 +65,22 @@ class MPI_status_size(MPI):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'mpi_status_size'
+
+class MPI_proc_null(MPI):
+    """Represents the null process in mpi."""
+    is_integer     = True
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'mpi_proc_null'
+
+class MPI_comm_world(UniversalCommunicator, MPI):
+    """Represents the world comm in mpi."""
+    is_integer     = True
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'mpi_comm_world'
 
 class MPI_comm_size(MPI):
     """Represents the size of a given communicator."""
@@ -426,3 +434,4 @@ MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')
 
 MPI_COMM_WORLD  = MPI_comm_world()
 MPI_STATUS_SIZE = MPI_status_size()
+MPI_PROC_NULL   = MPI_proc_null()

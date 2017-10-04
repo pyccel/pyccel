@@ -59,6 +59,7 @@ from pyccel.parallel.mpi import MPI_waitall
 from pyccel.parallel.mpi import MPI_INTEGER, MPI_FLOAT, MPI_DOUBLE
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
+from pyccel.parallel.mpi import MPI_proc_null, MPI_PROC_NULL
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
@@ -138,6 +139,7 @@ def append_mpi(namespace, declarations):
     # ...
     namespace['mpi_comm_world']  = MPI_COMM_WORLD
     namespace['mpi_status_size'] = MPI_STATUS_SIZE
+    namespace['mpi_proc_null']   = MPI_PROC_NULL
     # ...
 
     # ...
