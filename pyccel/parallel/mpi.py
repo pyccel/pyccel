@@ -149,6 +149,8 @@ class MPI_comm_recv(MPI):
     @property
     def count(self):
         shape = self.data.shape
+        if shape is None:
+            return 1
         if isinstance(shape, (list, tuple)):
             n = 1
             for i in shape:
@@ -204,6 +206,8 @@ class MPI_comm_send(MPI):
     @property
     def count(self):
         shape = self.data.shape
+        if shape is None:
+            return 1
         if isinstance(shape, (list, tuple)):
             n = 1
             for i in shape:
@@ -267,6 +271,8 @@ class MPI_comm_irecv(MPI):
     @property
     def count(self):
         shape = self.data.shape
+        if shape is None:
+            return 1
         if isinstance(shape, (list, tuple)):
             n = 1
             for i in shape:
@@ -328,61 +334,8 @@ class MPI_comm_isend(MPI):
     @property
     def count(self):
         shape = self.data.shape
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
-
-    @property
-    def datatype(self):
-        return mpi_datatype(self.data.dtype)
-
-class MPI_comm_sendrecv(MPI):
-    """
-    Represents the MPI_sendrecv statement.
-    MPI_sendrecv syntax is
-    `MPI_SENDRECV (data, count, datatype, dest, tag, comm)`
-
-    data:
-        initial address of send buffer (choice) [IN]
-    count:
-        number of elements in send buffer (non-negative integer) [IN]
-    datatype:
-        datatype of each send buffer element (handle) [IN]
-    dest:
-        rank of destination (integer) [IN]
-    tag:
-        message tag (integer) [IN]
-    comm:
-        communicator (handle) [IN]
-    """
-    is_integer = True
-
-    def __new__(cls, *args, **options):
-        return super(MPI_comm_send, cls).__new__(cls, *args, **options)
-
-    @property
-    def data(self):
-        return self.args[0]
-
-    @property
-    def dest(self):
-        return self.args[1]
-
-    @property
-    def tag(self):
-        return self.args[2]
-
-    @property
-    def comm(self):
-        return self.args[3]
-
-    @property
-    def count(self):
-        shape = self.data.shape
+        if shape is None:
+            return 1
         if isinstance(shape, (list, tuple)):
             n = 1
             for i in shape:
@@ -421,6 +374,8 @@ class MPI_waitall(MPI):
     @property
     def count(self):
         shape = self.requests.shape
+        if shape is None:
+            return 1
         if isinstance(shape, (list, tuple)):
             n = 1
             for i in shape:
@@ -428,6 +383,105 @@ class MPI_waitall(MPI):
             return n
         else:
             return shape
+
+class MPI_comm_sendrecv(MPI):
+    """
+    Represents the MPI_sendrecv statement.
+    MPI_sendrecv syntax is
+    `MPI_SENDRECV(senddata, sendcount, sendtype, dest, sendtag, recvdata, recvcount, recvtype, source, recvtag, comm, istatus, ierr)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+    sendcount:
+        number of elements in send buffer (non-negative integer) [IN]
+    senddatatype:
+        datatype of each receive buffer element (handle) [IN]
+    dest:
+        rank of destination (integer) [IN]
+    sendtag:
+        message tag (integer) [IN]
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+    recvcount:
+        number of elements in receive buffer (non-negative integer) [IN]
+    recvdatatype:
+        datatype of each send buffer element (handle) [IN]
+    source:
+        rank of source or MPI_ANY_SOURCE (integer) [IN]
+    recvtag:
+        message tag or MPI_ANY_TAG (integer) [IN]
+    comm:
+        communicator (handle) [IN]
+    status:
+        status object (Status) [OUT]
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_sendrecv, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def dest(self):
+        return self.args[1]
+
+    @property
+    def sendtag(self):
+        return self.args[2]
+
+    @property
+    def recvdata(self):
+        return self.args[3]
+
+    @property
+    def source(self):
+        return self.args[4]
+
+    @property
+    def recvtag(self):
+        return self.args[5]
+
+    @property
+    def comm(self):
+        return self.args[6]
+
+    @property
+    def sendcount(self):
+        shape = self.senddata.shape
+        if shape is None:
+            return 1
+        if isinstance(shape, (list, tuple)):
+            n = 1
+            for i in shape:
+                n *= i
+            return n
+        else:
+            return shape
+
+    @property
+    def recvcount(self):
+        shape = self.recvdata.shape
+        if shape is None:
+            return 1
+        if isinstance(shape, (list, tuple)):
+            n = 1
+            for i in shape:
+                n *= i
+            return n
+        else:
+            return shape
+
+    @property
+    def senddatatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    @property
+    def recvdatatype(self):
+        return mpi_datatype(self.recvdata.dtype)
+
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
 MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')

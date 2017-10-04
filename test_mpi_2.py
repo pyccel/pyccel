@@ -46,4 +46,3 @@ reqs[3] = req3
 ierr = mpi_waitall(reqs, stats)
 
 ierr = mpi_finalize()
-
