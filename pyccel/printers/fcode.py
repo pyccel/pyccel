@@ -28,6 +28,7 @@ from pyccel.parallel.mpi import MPI_comm_world, MPI_status_size
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
+from pyccel.parallel.mpi import MPI_waitall
 
 
 # TODO: add examples
@@ -345,6 +346,39 @@ class FCodePrinter(CodePrinter):
 
         return '\n'.join(decs)
 
+    def _print_MPI_comm_world(self, expr):
+        return 'MPI_comm_world'
+
+    def _print_MPI_comm_size(self, expr):
+        return 'MPI_comm_size'
+
+    def _print_MPI_comm_rank(self, expr):
+        return 'MPI_comm_rank'
+
+    def _print_MPI_comm_recv(self, expr):
+        return 'MPI_recv'
+
+    def _print_MPI_comm_send(self, expr):
+        return 'MPI_send'
+
+    def _print_MPI_comm_irecv(self, expr):
+        return 'MPI_irecv'
+
+    def _print_MPI_comm_isend(self, expr):
+        return 'MPI_isend'
+
+    def _print_MPI_waitall(self, expr):
+        return 'MPI_waitall'
+
+    def _print_MPI_INTEGER(self, expr):
+        return 'MPI_INTEGER'
+
+    def _print_MPI_FLOAT(self, expr):
+        return 'MPI_FLOAT'
+
+    def _print_MPI_DOUBLE(self, expr):
+        return 'MPI_DOUBLE'
+
     def _print_MPI_status_size(self, expr):
         return 'MPI_status_size'
 
@@ -471,6 +505,17 @@ class FCodePrinter(CodePrinter):
             args = (data, count, dtype, dest, tag, comm, request, ierr)
             args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
             code = 'call mpi_isend ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_waitall):
+            rhs_code = self._print(expr.rhs)
+            ierr     = self._print(MPI_ERROR)
+
+            requests = expr.rhs.requests
+            count    = expr.rhs.count
+            status   = expr.rhs.status
+
+            args = (count, requests, status, ierr)
+            args = '{0}, {1}, {2}, {3}'.format(*args)
+            code = 'call mpi_waitall ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)

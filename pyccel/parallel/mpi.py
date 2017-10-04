@@ -387,24 +387,39 @@ class MPI_comm_sendrecv(MPI):
     def datatype(self):
         return mpi_datatype(self.data.dtype)
 
-class MPI_Request(Variable, MPI):
+class MPI_waitall(MPI):
     """
-    Represents a MPI request variable.
+    Represents the MPI_waitall statement.
+    MPI_waitall syntax is
+    `MPI_WAITALL (count, reqs, statuts)`
 
     Examples
 
-    >>> from pyccel.parallel.mpi import MPI_Request
-    >>> req = MPI_Request('req')
-    >>> req.dtype
-    MPI_INTEGER()
-    >>> req = MPI_Request('req', rank=1, shape=4)
+    >>> from pyccel.parallel.mpi import MPI_waitall
     """
+    is_integer = True
 
     def __new__(cls, *args, **options):
-        dtype = MPI_INTEGER()
-        args = [dtype] + list(args)
-        return super(MPI_Request, cls).__new__(cls, *args, **options)
+        return super(MPI_waitall, cls).__new__(cls, *args, **options)
 
+    @property
+    def requests(self):
+        return self.args[0]
+
+    @property
+    def status(self):
+        return self.args[1]
+
+    @property
+    def count(self):
+        shape = self.requests.shape
+        if isinstance(shape, (list, tuple)):
+            n = 1
+            for i in shape:
+                n *= i
+            return n
+        else:
+            return shape
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
 MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')

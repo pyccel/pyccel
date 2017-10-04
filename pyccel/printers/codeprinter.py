@@ -114,36 +114,6 @@ class CodePrinter(StrPrinter):
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
-    def _print_MPI_comm_world(self, expr):
-        return 'MPI_comm_world'
-
-    def _print_MPI_comm_size(self, expr):
-        return 'MPI_comm_size'
-
-    def _print_MPI_comm_rank(self, expr):
-        return 'MPI_comm_rank'
-
-    def _print_MPI_comm_recv(self, expr):
-        return 'MPI_recv'
-
-    def _print_MPI_comm_send(self, expr):
-        return 'MPI_send'
-
-    def _print_MPI_comm_irecv(self, expr):
-        return 'MPI_irecv'
-
-    def _print_MPI_comm_isend(self, expr):
-        return 'MPI_isend'
-
-    def _print_MPI_INTEGER(self, expr):
-        return 'MPI_INTEGER'
-
-    def _print_MPI_FLOAT(self, expr):
-        return 'MPI_FLOAT'
-
-    def _print_MPI_DOUBLE(self, expr):
-        return 'MPI_DOUBLE'
-
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]

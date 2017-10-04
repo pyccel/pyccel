@@ -55,7 +55,7 @@ from pyccel.openmp.syntax   import OpenmpStmt
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
-from pyccel.parallel.mpi import MPI_Request
+from pyccel.parallel.mpi import MPI_waitall
 from pyccel.parallel.mpi import MPI_INTEGER, MPI_FLOAT, MPI_DOUBLE
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
@@ -233,6 +233,9 @@ builtin_funcs_math = builtin_funcs_math_un + \
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
+
+builtin_funcs_mpi = ['mpi_waitall']
+builtin_funcs += builtin_funcs_mpi
 # ...
 
 # ...
@@ -625,6 +628,24 @@ def builtin_function(name, args, lhs=None):
             lhs = namespace[lhs]
             expr = func(*args)
             return Assign(lhs, expr)
+    elif name == "mpi_waitall":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) == 2):
+            raise ValueError("Expecting exactly two arguments.")
+        if not(args[0].name in namespace):
+            raise ValueError("Undefined variable {0}".format(name))
+
+        d_var = {}
+        d_var['datatype']    = 'int'
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+
+        insert_variable(lhs, **d_var)
+        lhs = namespace[lhs]
+        rhs = MPI_waitall(*args)
+        return MPI_Assign(lhs, rhs, strict=False)
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
