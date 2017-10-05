@@ -424,29 +424,11 @@ class MPI_comm_sendrecv(MPI):
 
     @property
     def sendcount(self):
-        shape = self.senddata.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.senddata)
 
     @property
     def recvcount(self):
-        shape = self.recvdata.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.recvdata)
 
     @property
     def senddatatype(self):

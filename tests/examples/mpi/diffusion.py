@@ -77,15 +77,8 @@ for step in range(0, nsteps):
     temperature[locnpoints+2,old] = fixedrighttemp
 
     #exchange boundary information
-    bc = temperature[locnpoints+1,old]
-    y  = 0.0
-    ierr = comm.sendrecv(bc, right, righttag, y, left,  righttag)
-    temperature[1,old] = y
-
-    bc = temperature[2,old]
-    y  = 0.0
-    ierr = comm.sendrecv(bc, left, lefttag, y, right,  lefttag)
-    temperature[locnpoints+2,old] = y
+    ierr = comm.sendrecv(temperature[locnpoints+1,old], right, righttag, temperature[1,old], left, righttag)
+    ierr = comm.sendrecv(temperature[2,old], left, lefttag, temperature[locnpoints+2,old], right, lefttag)
 
     #update solution
     for i in range(2,locnpoints+1):
@@ -106,12 +99,3 @@ for step in range(0, nsteps):
         new = 1
 
 ierr = mpi_finalize()
-
-
-
-#    #exchange boundary information
-#    call MPI_Sendrecv(temperature(locnpoints+1,old), 1, MPI_REAL, right, righttag,  &
-#    temperature(1,old), 1, MPI_REAL, left,  righttag, MPI_COMM_WORLD, rstatus, ierr)
-#
-#    call MPI_Sendrecv(temperature(2,old), 1, MPI_REAL, left, lefttag,  &
-#    temperature(locnpoints+2,old), 1, MPI_REAL, right,  lefttag, MPI_COMM_WORLD, rstatus, ierr)
