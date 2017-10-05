@@ -75,7 +75,7 @@ def mpi_datatype(dtype):
     elif isinstance(dtype, NativeDouble):
         return 'MPI_DOUBLE'
     else:
-        raise TypeError("Uncovered datatype.")
+        raise TypeError("Uncovered datatype : ", type(dtype))
 
 class MPI_status_size(MPI):
     """Represents the status size in mpi."""

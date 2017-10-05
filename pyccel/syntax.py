@@ -34,6 +34,7 @@ from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import DataType, DataTypeFactory
+from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -246,7 +247,7 @@ def print_namespace():
     for key, value in namespace.items():
         if not(key in ['True', 'False', 'pi']):
             if isinstance(value, Variable):
-                print key, type(value), value.rank, id(value)
+                print key, type(value), value.rank #, id(value)
             else:
                 print key, type(value)
     print "---------------------------"
@@ -448,11 +449,8 @@ def get_attributs(expr):
     elif isinstance(expr, Expr):
         skipped = (Variable, IndexedVariable, IndexedElement, \
                    Function, FunctionDef)
-#        skipped = (Variable, IndexedVariable, IndexedElement, \
-#                   Function)
         args = []
         for arg in expr.args:
-#            print id(arg)
             if not(isinstance(arg, skipped)):
                 args.append(arg)
             else:
@@ -772,18 +770,16 @@ def expr_with_trailer(expr, trailer=None):
                 func = namespace[str(expr)]
                 expr = FunctionCall(func, None)
     elif isinstance(trailer, TrailerSubscriptList):
-        # TODO check that expr.name is IndexedElement
         args = trailer.expr
 
-        expr = IndexedVariable(expr.name)[args]
+        v = namespace[expr.name]
+        expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
         args = trailer.expr
 
-        # TODO add Function?
-#            dottables = (Variable, IndexedVariable, IndexedElement)
+        # TODO add IndexedVariable, IndexedElement
         dottables = (Variable)
         if not(isinstance(expr, dottables)):
-#                raise TypeError("Expecting Variable, IndexedVariable, IndexedElement")
             raise TypeError("Expecting Variable")
         var_name = '{0}.{1}'.format(expr.name, args)
         found_var = (var_name in namespace)
@@ -1182,7 +1178,8 @@ class AssignStmt(BasicStmt):
             l = namespace[self.lhs]
         else:
             if isinstance(trailer, TrailerSubscriptList):
-                l = IndexedVariable(str(self.lhs))[args]
+                v = namespace[str(self.lhs)]
+                l = IndexedVariable(v.name, dtype=v.dtype)[args]
             elif isinstance(trailer, TrailerDots):
                 # class attribut
                 l = namespace[var_name]

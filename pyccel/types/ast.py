@@ -1511,8 +1511,10 @@ class IndexedVariable(IndexedBase):
     **todo:** fix bug. the last result must be : (o,p)
     """
 
-    def __new__(cls, label, shape=None, **kw_args):
-        return IndexedBase.__new__(cls, label, shape=shape, **kw_args)
+    def __new__(cls, label, shape=None, dtype=None, **kw_args):
+        obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
+        obj._dtype = dtype
+        return obj
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):
@@ -1527,7 +1529,7 @@ class IndexedVariable(IndexedBase):
 
     @property
     def dtype(self):
-        return NativeDouble()
+        return self._dtype
 
 
 class IndexedElement(Indexed):
