@@ -2,12 +2,12 @@
 
 ierr = mpi_init()
 
-comm    = mpi_comm_world
-comsize = comm.size
-rank    = comm.rank
+comm      = mpi_comm_world
+comsize   = comm.size
+rank      = comm.rank
 
-xleft  = -12.0
-xright =  12.0
+xleft     = -12.0
+xright    =  12.0
 
 totpoints = 100
 kappa     = 1.0
@@ -43,8 +43,6 @@ dx = (xright-xleft)/(totpoints-1)
 dt = dx**2 * kappa/10.0
 
 locxleft = xleft + dx*(startn-1)
-
-#print
 
 #allocate data, including ghost cells: old and new timestep
 #theory doesn't need ghost cells, but we include it for simplicity
