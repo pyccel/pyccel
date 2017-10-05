@@ -465,7 +465,7 @@ class FCodePrinter(CodePrinter):
             comm   = expr.rhs.comm
 
             args = (data, count, dtype, source, tag, comm, istatus, ierr)
-            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_recv ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_send):
             rhs_code = self._print(expr.rhs)
@@ -479,7 +479,8 @@ class FCodePrinter(CodePrinter):
             comm  = expr.rhs.comm
 
             args = (data, count, dtype, dest, tag, comm, ierr)
-            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}'.format(*args)
+            t = self._print(data)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_send ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_irecv):
             rhs_code = self._print(expr.rhs)
@@ -494,7 +495,7 @@ class FCodePrinter(CodePrinter):
             request = expr.rhs.request
 
             args = (data, count, dtype, source, tag, comm, request, ierr)
-            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_irecv ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_isend):
             rhs_code = self._print(expr.rhs)
@@ -509,7 +510,7 @@ class FCodePrinter(CodePrinter):
             request = expr.rhs.request
 
             args = (data, count, dtype, dest, tag, comm, request, ierr)
-            args = '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}'.format(*args)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_isend ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_waitall):
             rhs_code = self._print(expr.rhs)
@@ -520,7 +521,7 @@ class FCodePrinter(CodePrinter):
             status   = expr.rhs.status
 
             args = (count, requests, status, ierr)
-            args = '{0}, {1}, {2}, {3}'.format(*args)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_waitall ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_sendrecv):
             rhs_code = self._print(expr.rhs)

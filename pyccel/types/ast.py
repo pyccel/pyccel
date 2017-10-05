@@ -1512,7 +1512,7 @@ class IndexedVariable(IndexedBase):
     """
 
     def __new__(cls, label, shape=None, **kw_args):
-        return IndexedBase.__new__(cls, label, shape=None, **kw_args)
+        return IndexedBase.__new__(cls, label, shape=shape, **kw_args)
 
     def __getitem__(self, indices, **kw_args):
         if is_sequence(indices):
@@ -1524,6 +1524,10 @@ class IndexedVariable(IndexedBase):
             if self.shape and len(self.shape) != 1:
                 raise IndexException("Rank mismatch.")
             return IndexedElement(self, indices, **kw_args)
+
+    @property
+    def dtype(self):
+        return NativeDouble()
 
 
 class IndexedElement(Indexed):
@@ -1591,6 +1595,10 @@ class IndexedElement(Indexed):
             if not(isinstance(a, Slice)):
                 n += 1
         return n
+
+    @property
+    def dtype(self):
+        return self.base.dtype
 
 # TODO check that args are integers
 class Slice(Basic):

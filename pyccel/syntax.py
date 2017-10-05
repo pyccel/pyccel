@@ -744,6 +744,7 @@ def expr_with_trailer(expr, trailer=None):
                 func = trailer[0].expr
                 args = trailer[1].expr
                 args += [comm]
+#                print [type(a) for a in args]
                 expr = eval('MPI_comm_{0}'.format(func))(*args)
         else:
             raise ValueError('Unable to construct expr from trailers.')

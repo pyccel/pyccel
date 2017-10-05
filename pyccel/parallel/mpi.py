@@ -4,7 +4,7 @@ from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 
 
-from pyccel.types.ast import Variable
+from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
@@ -12,6 +12,25 @@ from pyccel.types.ast import DataTypeFactory
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
+
+def get_shape(expr):
+    """Returns the shape of a given variable."""
+    if not isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
+        raise TypeError('shape is only defined for Variable, IndexedVariable, IndexedElement')
+
+    if isinstance(expr, (Variable, IndexedVariable)):
+        shape = expr.shape
+        if shape is None:
+            return 1
+        if isinstance(shape, (list, tuple)):
+            n = 1
+            for i in shape:
+                n *= i
+            return n
+        else:
+            return shape
+    elif isinstance(expr, IndexedElement):
+        return get_shape(expr.base)
 
 class MPI(Basic):
     """Base class for MPI."""
@@ -148,16 +167,7 @@ class MPI_comm_recv(MPI):
 
     @property
     def count(self):
-        shape = self.data.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.data)
 
     @property
     def datatype(self):
@@ -205,16 +215,7 @@ class MPI_comm_send(MPI):
 
     @property
     def count(self):
-        shape = self.data.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.data)
 
     @property
     def datatype(self):
@@ -270,16 +271,7 @@ class MPI_comm_irecv(MPI):
 
     @property
     def count(self):
-        shape = self.data.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.data)
 
     @property
     def datatype(self):
@@ -333,16 +325,7 @@ class MPI_comm_isend(MPI):
 
     @property
     def count(self):
-        shape = self.data.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.data)
 
     @property
     def datatype(self):
@@ -373,16 +356,7 @@ class MPI_waitall(MPI):
 
     @property
     def count(self):
-        shape = self.requests.shape
-        if shape is None:
-            return 1
-        if isinstance(shape, (list, tuple)):
-            n = 1
-            for i in shape:
-                n *= i
-            return n
-        else:
-            return shape
+        return get_shape(self.data)
 
 class MPI_comm_sendrecv(MPI):
     """
