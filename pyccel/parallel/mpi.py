@@ -821,6 +821,104 @@ class MPI_waitall(MPI):
         code = 'MPI_waitall ({0})'.format(args)
         return code
 
+##########################################################
+#                  Synchronization
+##########################################################
+class MPI_comm_barrier(MPI):
+    """
+    Represents the size of a given communicator.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_barrier
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_barrier(comm)
+    mpi_comm_world.barrier
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_barrier, cls).__new__(cls, *args, **options)
+
+    @property
+    def comm(self):
+        return self.args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0}.{1}'.format(sstr(self.comm), 'barrier')
+
+class MPI_comm_bcast(MPI):
+    """
+    Represents the MPI_bcast statement.
+    MPI_bcast syntax is
+    `MPI_BCAST(data, count, datatype, root, comm)`
+
+    data:
+        initial address of send buffer (choice) [IN]
+    count:
+        number of elements in send buffer (non-negative integer) [IN]
+    datatype:
+        datatype of each send buffer element (handle) [IN]
+    root:
+        rank of broadcast root (integer)
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_bcast
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> root = Variable('int', 'root')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_bcast(x, root, comm)
+    MPI_bcast (x, 2*n, MPI_DOUBLE, root, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_bcast, cls).__new__(cls, *args, **options)
+
+    @property
+    def data(self):
+        return self.args[0]
+
+    @property
+    def root(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def count(self):
+        return get_shape(self.data)
+
+    @property
+    def datatype(self):
+        return mpi_datatype(self.data.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        data  = self.data
+        count = self.count
+        dtype = self.datatype
+        root  = self.root
+        comm  = self.comm
+        ierr  = MPI_ERROR
+
+        args = (data, count, dtype, root, comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_bcast ({0})'.format(args)
+        return code
+##########################################################
+
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
 MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')

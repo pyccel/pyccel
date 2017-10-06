@@ -19,3 +19,6 @@ ierr = comm.sendrecv_replace (msg, partner, tag, partner, tag)
 print('I, process ', rank, ', I received', msg, ' from process ', partner)
 
 ierr = mpi_finalize()
+
+# TODO: - example barrier
+#       - example bcast

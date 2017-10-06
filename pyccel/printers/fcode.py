@@ -30,6 +30,8 @@ from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
 from pyccel.parallel.mpi import MPI_comm_sendrecv
 from pyccel.parallel.mpi import MPI_comm_sendrecv_replace
+from pyccel.parallel.mpi import MPI_comm_barrier
+from pyccel.parallel.mpi import MPI_comm_bcast
 from pyccel.parallel.mpi import MPI_waitall
 
 
@@ -378,6 +380,12 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_waitall(self, expr):
         return 'MPI_waitall'
 
+    def _print_MPI_comm_barrier(self, expr):
+        return 'MPI_barrier'
+
+    def _print_MPI_comm_bcast(self, expr):
+        return 'MPI_comm_bcast'
+
     def _print_MPI_INTEGER(self, expr):
         return 'MPI_INTEGER'
 
@@ -567,10 +575,28 @@ class FCodePrinter(CodePrinter):
             args = (count, requests, status, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_waitall ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_barrier):
+            rhs_code = self._print(expr.rhs)
+            comm     = self._print(expr.rhs.comm)
+            ierr     = self._print(MPI_ERROR)
+
+            code = 'call mpi_barrier ({0}, {1})'.format(comm, ierr)
+        elif isinstance(expr.rhs, MPI_comm_bcast):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+
+            data      = expr.rhs.data
+            count     = expr.rhs.count
+            dtype     = expr.rhs.datatype
+            root      = expr.rhs.root
+            comm      = expr.rhs.comm
+
+            args = (data, count, dtype, root, comm, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_bcast ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)
-
 
 
     def _print_NativeBool(self, expr):
