@@ -65,6 +65,7 @@ from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
 from pyccel.parallel.mpi import MPI_comm_sendrecv
+from pyccel.parallel.mpi import MPI_comm_sendrecv_replace
 
 DEBUG = False
 #DEBUG = True

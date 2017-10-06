@@ -29,6 +29,7 @@ from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
 from pyccel.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
 from pyccel.parallel.mpi import MPI_comm_sendrecv
+from pyccel.parallel.mpi import MPI_comm_sendrecv_replace
 from pyccel.parallel.mpi import MPI_waitall
 
 
@@ -371,6 +372,9 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_comm_sendrecv(self, expr):
         return 'MPI_sendrecv'
 
+    def _print_MPI_comm_sendrecv_replace(self, expr):
+        return 'MPI_sendrecv_replace'
+
     def _print_MPI_waitall(self, expr):
         return 'MPI_waitall'
 
@@ -534,6 +538,24 @@ class FCodePrinter(CodePrinter):
                     comm, istatus, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_sendrecv ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_sendrecv_replace):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+            istatus   = self._print(MPI_STATUS)
+
+            data      = expr.rhs.data
+            count     = expr.rhs.count
+            dtype     = expr.rhs.datatype
+            dest      = expr.rhs.dest
+            source    = expr.rhs.source
+            sendtag   = expr.rhs.sendtag
+            recvtag   = expr.rhs.recvtag
+            comm      = expr.rhs.comm
+
+            args = (data, count, dtype, dest, sendtag, source, recvtag, \
+                    comm, istatus, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_sendrecv_replace ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_waitall):
             rhs_code = self._print(expr.rhs)
             ierr     = self._print(MPI_ERROR)

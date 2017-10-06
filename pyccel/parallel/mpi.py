@@ -668,6 +668,111 @@ class MPI_comm_sendrecv(MPI):
         code = 'MPI_sendrecv ({0})'.format(args)
         return code
 
+class MPI_comm_sendrecv_replace(MPI):
+    """
+    Represents the MPI_sendrecv_replace statement.
+    MPI_sendrecv_replace syntax is
+    `MPI_SENDRECV_REPLACE(senddata, sendcount, sendtype, dest, sendtag, source, recvtag, comm, istatus, ierr)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    sendcount:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    senddatatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    dest:
+        rank of destination (integer) [IN]
+
+    sendtag:
+        message tag (integer) [IN]
+
+    source:
+        rank of source or MPI_ANY_SOURCE (integer) [IN]
+
+    recvtag:
+        message tag or MPI_ANY_TAG (integer) [IN]
+
+    comm:
+        communicator (handle) [IN]
+
+    status:
+        status object (Status) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_sendrecv_replace
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> source = Variable('int', 'source')
+    >>> dest   = Variable('int', 'dest')
+    >>> sendtag  = Variable('int', 'sendtag')
+    >>> recvtag  = Variable('int', 'recvtag')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_sendrecv_replace(x, dest, sendtag, source, recvtag, comm)
+    MPI_sendrecv_replace (x, 2*n, MPI_DOUBLE, dest, sendtag, source, recvtag, mpi_comm_world, i_mpi_status, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_sendrecv_replace, cls).__new__(cls, *args, **options)
+
+    @property
+    def data(self):
+        return self.args[0]
+
+    @property
+    def dest(self):
+        return self.args[1]
+
+    @property
+    def sendtag(self):
+        return self.args[2]
+
+    @property
+    def source(self):
+        return self.args[3]
+
+    @property
+    def recvtag(self):
+        return self.args[4]
+
+    @property
+    def comm(self):
+        return self.args[5]
+
+    @property
+    def count(self):
+        return get_shape(self.data)
+
+    @property
+    def datatype(self):
+        return mpi_datatype(self.data.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        data      = self.data
+        count     = self.count
+        dtype     = self.datatype
+        dest      = self.dest
+        source    = self.source
+        sendtag   = self.sendtag
+        recvtag   = self.recvtag
+        comm      = self.comm
+        ierr      = MPI_ERROR
+        istatus   = MPI_STATUS
+
+        args = (data, count, dtype, dest, sendtag, source, recvtag, \
+                comm, istatus, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_sendrecv_replace ({0})'.format(args)
+        return code
+
 class MPI_waitall(MPI):
     """
     Represents the MPI_waitall statement.
