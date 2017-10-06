@@ -35,6 +35,8 @@ from pyccel.parallel.mpi import MPI_comm_bcast
 from pyccel.parallel.mpi import MPI_waitall
 from pyccel.parallel.mpi import MPI_comm_scatter
 from pyccel.parallel.mpi import MPI_comm_gather
+from pyccel.parallel.mpi import MPI_comm_allgather
+from pyccel.parallel.mpi import MPI_comm_alltoall
 
 
 # TODO: add examples
@@ -394,6 +396,12 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_comm_gather(self, expr):
         return 'MPI_comm_gather'
 
+    def _print_MPI_comm_allgather(self, expr):
+        return 'MPI_comm_allgather'
+
+    def _print_MPI_comm_alltoall(self, expr):
+        return 'MPI_comm_alltoall'
+
     def _print_MPI_INTEGER(self, expr):
         return 'MPI_INTEGER'
 
@@ -636,6 +644,38 @@ class FCodePrinter(CodePrinter):
                     root, comm, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_gather ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_allgather):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+
+            senddata  = expr.rhs.senddata
+            recvdata  = expr.rhs.recvdata
+            sendcount = expr.rhs.sendcount
+            recvcount = expr.rhs.recvcount
+            sendtype  = expr.rhs.senddatatype
+            recvtype  = expr.rhs.recvdatatype
+            comm      = expr.rhs.comm
+
+            args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                    comm, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_allgather ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_alltoall):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+
+            senddata  = expr.rhs.senddata
+            recvdata  = expr.rhs.recvdata
+            sendcount = expr.rhs.sendcount
+            recvcount = expr.rhs.recvcount
+            sendtype  = expr.rhs.senddatatype
+            recvtype  = expr.rhs.recvdatatype
+            comm      = expr.rhs.comm
+
+            args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                    comm, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_alltoall ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)

@@ -24,3 +24,5 @@ ierr = mpi_finalize()
 #       - example bcast
 #       - example scatter
 #       - example gather
+#       - example allgather
+#       - example alltoall

@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# TODO - MPI_comm_gatherv: needs a new data structure for the variable
+
 from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 
@@ -1115,6 +1117,186 @@ class MPI_comm_gather(MPI):
                 root, comm, ierr)
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_gather ({0})'.format(args)
+        return code
+
+class MPI_comm_allgather(MPI):
+    """
+    Represents the MPI_allgather statement.
+    MPI_allgather syntax is
+    `MPI_ALLGATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    sendcount:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    senddatatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+
+    recvcount:
+        number of elements in receive buffer (non-negative integer) [IN]
+
+    recvdatatype:
+        datatype of each send buffer element (handle) [IN]
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_allgather
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_allgather(x, y, comm)
+    MPI_allgather (x, 2*n, MPI_DOUBLE, y, 2*n, MPI_DOUBLE, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_allgather, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def recvdata(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def sendcount(self):
+        return get_shape(self.senddata)
+
+    @property
+    def recvcount(self):
+        return get_shape(self.recvdata)
+
+    @property
+    def senddatatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    @property
+    def recvdatatype(self):
+        return mpi_datatype(self.recvdata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata  = self.senddata
+        recvdata  = self.recvdata
+        sendcount = self.sendcount
+        recvcount = self.recvcount
+        sendtype  = self.senddatatype
+        recvtype  = self.recvdatatype
+        comm      = self.comm
+        ierr      = MPI_ERROR
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_allgather ({0})'.format(args)
+        return code
+
+class MPI_comm_alltoall(MPI):
+    """
+    Represents the MPI_alltoall statement.
+    MPI_alltoall syntax is
+    `MPI_ALLGATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    sendcount:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    senddatatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+
+    recvcount:
+        number of elements in receive buffer (non-negative integer) [IN]
+
+    recvdatatype:
+        datatype of each send buffer element (handle) [IN]
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_alltoall
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_alltoall(x, y, comm)
+    MPI_alltoall (x, 2*n, MPI_DOUBLE, y, 2*n, MPI_DOUBLE, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_alltoall, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def recvdata(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def sendcount(self):
+        return get_shape(self.senddata)
+
+    @property
+    def recvcount(self):
+        return get_shape(self.recvdata)
+
+    @property
+    def senddatatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    @property
+    def recvdatatype(self):
+        return mpi_datatype(self.recvdata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata  = self.senddata
+        recvdata  = self.recvdata
+        sendcount = self.sendcount
+        recvcount = self.recvcount
+        sendtype  = self.senddatatype
+        recvtype  = self.recvdatatype
+        comm      = self.comm
+        ierr      = MPI_ERROR
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_alltoall ({0})'.format(args)
         return code
 ##########################################################
 
