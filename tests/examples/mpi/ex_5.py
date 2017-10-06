@@ -26,3 +26,5 @@ ierr = mpi_finalize()
 #       - example gather
 #       - example allgather
 #       - example alltoall
+#       - example reduce
+#       - example allreduce

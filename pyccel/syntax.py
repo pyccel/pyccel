@@ -72,6 +72,8 @@ from pyccel.parallel.mpi import MPI_comm_scatter
 from pyccel.parallel.mpi import MPI_comm_gather
 from pyccel.parallel.mpi import MPI_comm_allgather
 from pyccel.parallel.mpi import MPI_comm_alltoall
+from pyccel.parallel.mpi import MPI_comm_reduce
+from pyccel.parallel.mpi import MPI_comm_allreduce
 
 DEBUG = False
 #DEBUG = True

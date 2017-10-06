@@ -4,7 +4,8 @@
 
 from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
-
+from sympy.core.compatibility import with_metaclass
+from sympy.core.singleton import Singleton
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
@@ -112,27 +113,39 @@ class MPI_status_type(DataType):
 
 class MPI_INTEGER(DataType):
     _name = 'MPI_INTEGER'
-    pass
+
+    def _sympystr(self, printer):
+        return 'MPI_INTEGER'
 
 class MPI_REAL(DataType):
     _name = 'MPI_REAL'
-    pass
+
+    def _sympystr(self, printer):
+        return 'MPI_REAL'
 
 class MPI_DOUBLE(DataType):
     _name = 'MPI_DOUBLE'
-    pass
+
+    def _sympystr(self, printer):
+        return 'MPI_DOUBLE'
 
 class MPI_COMPLEX(DataType):
     _name = 'MPI_COMPLEX'
-    pass
+
+    def _sympystr(self, printer):
+        return 'MPI_COMPLEX'
 
 class MPI_LOGICAL(DataType):
     _name = 'MPI_LOGICAL'
-    pass
+
+    def _sympystr(self, printer):
+        return 'MPI_LOGICAL'
 
 class MPI_CHARACTER(DataType):
     _name = 'MPI_CHARACTER'
-    pass
+
+    def _sympystr(self, printer):
+        return 'MPI_CHARACTER'
 
 def mpi_datatype(dtype):
     """Converts Pyccel datatypes into MPI datatypes."""
@@ -148,6 +161,32 @@ def mpi_datatype(dtype):
         return 'MPI_COMPLEX'
     else:
         raise TypeError("Uncovered datatype : ", type(dtype))
+##########################################################
+
+##########################################################
+#                    Operations
+##########################################################
+# The following are defined to be sympy approved nodes. If there is something
+# smaller that could be used, that would be preferable. We only use them as
+# tokens.
+
+class MPI_Operation(with_metaclass(Singleton, Basic)):
+    """Base type for native operands."""
+    pass
+
+class MPI_SUM(MPI_Operation):
+    _name   = 'MPI_SUM'
+    _symbol = '+'
+
+    def _sympystr(self, printer):
+        return 'MPI_SUM'
+
+class MPI_PROD(MPI_Operation):
+    _name   = 'MPI_PROD'
+    _symbol = '*'
+
+    def _sympystr(self, printer):
+        return 'MPI_PROD'
 ##########################################################
 
 ##########################################################
@@ -1297,6 +1336,181 @@ class MPI_comm_alltoall(MPI):
                 comm, ierr)
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_alltoall ({0})'.format(args)
+        return code
+
+class MPI_comm_reduce(MPI):
+    """
+    Represents the MPI_reduce statement.
+    MPI_reduce syntax is
+    `MPI_REDUCE(senddata, recvdata, count, datatype, op, root, comm)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+
+    count:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    datatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    op:
+        reduce operation (handle)
+
+    root:
+        rank of broadcast root (integer)
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_reduce
+    >>> from pyccel.parallel.mpi import MPI_SUM
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> root   = Variable('int', 'root')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_reduce(x, y, MPI_SUM(), root, comm)
+    MPI_reduce (x, y, 2*n, MPI_DOUBLE, MPI_SUM, root, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_reduce, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def recvdata(self):
+        return self.args[1]
+
+    @property
+    def op(self):
+        return self.args[2]
+
+    @property
+    def root(self):
+        return self.args[3]
+
+    @property
+    def comm(self):
+        return self.args[4]
+
+    @property
+    def count(self):
+        return get_shape(self.senddata)
+
+    @property
+    def datatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata = self.senddata
+        recvdata = self.recvdata
+        count    = self.count
+        dtype    = self.datatype
+        op       = self.op
+        root     = self.root
+        comm     = self.comm
+        ierr     = MPI_ERROR
+
+        args = (senddata, recvdata, count, dtype, \
+                op, root, comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_reduce ({0})'.format(args)
+        return code
+
+class MPI_comm_allreduce(MPI):
+    """
+    Represents the MPI_allreduce statement.
+    MPI_allreduce syntax is
+    `MPI_ALLREDUCE(senddata, recvdata, count, datatype, op, comm)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+
+    count:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    datatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    op:
+        reduce operation (handle)
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_allreduce
+    >>> from pyccel.parallel.mpi import MPI_SUM
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_allreduce(x, y, MPI_SUM(), comm)
+    MPI_allreduce (x, y, 2*n, MPI_DOUBLE, MPI_SUM, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_allreduce, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def recvdata(self):
+        return self.args[1]
+
+    @property
+    def op(self):
+        return self.args[2]
+
+    @property
+    def comm(self):
+        return self.args[3]
+
+    @property
+    def count(self):
+        return get_shape(self.senddata)
+
+    @property
+    def datatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata = self.senddata
+        recvdata = self.recvdata
+        count    = self.count
+        dtype    = self.datatype
+        op       = self.op
+        comm     = self.comm
+        ierr     = MPI_ERROR
+
+        args = (senddata, recvdata, count, dtype, \
+                op, comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_allreduce ({0})'.format(args)
         return code
 ##########################################################
 
