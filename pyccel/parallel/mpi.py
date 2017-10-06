@@ -36,15 +36,11 @@ class MPI(Basic):
     """Base class for MPI."""
     pass
 
-class MPI_Statement(Basic):
-    """Base class for MPI statements."""
-    pass
-
-class MPI_Assign(Assign, MPI_Statement):
+class MPI_Assign(Assign, MPI):
     """MPI statement that can be written as an assignment in pyccel."""
     pass
 
-class MPI_Declare(Declare, MPI_Statement):
+class MPI_Declare(Declare, MPI):
     """MPI declaration of a variable."""
     pass
 

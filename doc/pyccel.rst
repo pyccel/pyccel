@@ -242,13 +242,47 @@ Calculus
 .. automodule:: pyccel.calculus.finite_differences
    :members:
 
+Parallel Computation
+^^^^^^^^^^^^^^^^^^^^
+
+.. inheritance-diagram:: pyccel.parallel.communicator
+
+.. inheritance-diagram:: pyccel.parallel.group
+
+.. automodule:: pyccel.parallel.basic
+   :members:
+
+.. automodule:: pyccel.parallel.communicator
+   :members:
+
+.. automodule:: pyccel.parallel.group
+   :members:
+
+
+MPI
+___
+
+.. inheritance-diagram:: pyccel.parallel.mpi
+
+.. automodule:: pyccel.parallel.mpi
+   :members:
+
 OpenMP
-^^^^^^
+______
 
 .. inheritance-diagram:: pyccel.openmp.syntax
 
 .. automodule:: pyccel.openmp.syntax
    :members:
+
+OpenACC
+_______
+
+.. .. inheritance-diagram:: pyccel.openmp.syntax
+.. 
+.. .. automodule:: pyccel.openmp.syntax
+..    :members:
+
 
 Complexity
 ^^^^^^^^^^
