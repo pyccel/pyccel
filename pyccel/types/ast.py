@@ -692,17 +692,22 @@ class Variable(Symbol):
     """Represents a typed variable.
 
     dtype : str, DataType
-        The type of the variable. Can be either a DataType, or a str (bool,
-        int, float, double).
+        The type of the variable. Can be either a DataType,
+        or a str (bool, int, float, double).
+
     name : str, list
-        The sympy object the variable represents. This can be either a string or a
-    dotted name, when using a Class attribut.
+        The sympy object the variable represents. This can be either a string
+        or a dotted name, when using a Class attribut.
+
     rank : int
         used for arrays. [Default value: 0]
+
     allocatable: False
         used for arrays, if we need to allocate memory [Default value: False]
+
     shape: int or list
         shape of the array. [Default value: None]
+
     cls_base: class
         class base if variable is an object or an object member
 
@@ -1086,8 +1091,6 @@ class Declare(Basic):
 class Break(Basic):
     """Represents a function return in the code.
 
-    Parameters
-    ----------
     expr : sympy expr
         The expression to return.
 
