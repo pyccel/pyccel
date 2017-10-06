@@ -458,7 +458,7 @@ class FCodePrinter(CodePrinter):
             istatus  = self._print(MPI_STATUS)
 
             data   = expr.rhs.data
-            count   = expr.rhs.count
+            count  = expr.rhs.count
             dtype  = expr.rhs.datatype
             source = expr.rhs.source
             tag    = expr.rhs.tag
@@ -472,7 +472,7 @@ class FCodePrinter(CodePrinter):
             ierr     = self._print(MPI_ERROR)
 
             data  = expr.rhs.data
-            count  = expr.rhs.count
+            count = expr.rhs.count
             dtype = expr.rhs.datatype
             dest  = expr.rhs.dest
             tag   = expr.rhs.tag
@@ -512,6 +512,28 @@ class FCodePrinter(CodePrinter):
             args = (data, count, dtype, dest, tag, comm, request, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_isend ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_sendrecv):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+            istatus   = self._print(MPI_STATUS)
+
+            senddata  = expr.rhs.senddata
+            recvdata  = expr.rhs.recvdata
+            sendcount = expr.rhs.sendcount
+            recvcount = expr.rhs.recvcount
+            sendtype  = expr.rhs.senddatatype
+            recvtype  = expr.rhs.recvdatatype
+            dest      = expr.rhs.dest
+            source    = expr.rhs.source
+            sendtag   = expr.rhs.sendtag
+            recvtag   = expr.rhs.recvtag
+            comm      = expr.rhs.comm
+
+            args = (senddata, sendcount, sendtype, dest,   sendtag, \
+                    recvdata, recvcount, recvtype, source, recvtag, \
+                    comm, istatus, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_sendrecv ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_waitall):
             rhs_code = self._print(expr.rhs)
             ierr     = self._print(MPI_ERROR)
@@ -523,28 +545,6 @@ class FCodePrinter(CodePrinter):
             args = (count, requests, status, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_waitall ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_sendrecv):
-            rhs_code = self._print(expr.rhs)
-            ierr     = self._print(MPI_ERROR)
-            istatus  = self._print(MPI_STATUS)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            sendcount  = expr.rhs.sendcount
-            recvcount  = expr.rhs.recvcount
-            sendtype = expr.rhs.senddatatype
-            recvtype = expr.rhs.recvdatatype
-            dest    = expr.rhs.dest
-            source  = expr.rhs.source
-            sendtag = expr.rhs.sendtag
-            recvtag = expr.rhs.recvtag
-            comm    = expr.rhs.comm
-
-            args = (senddata, sendcount, sendtype, dest,   sendtag, \
-                    recvdata, recvcount, recvtype, source, recvtag, \
-                    comm, istatus, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_sendrecv ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)

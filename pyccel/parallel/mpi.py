@@ -36,6 +36,9 @@ class MPI(Basic):
     """Base class for MPI."""
     pass
 
+##########################################################
+#                 Basic Statements
+##########################################################
 class MPI_Assign(Assign, MPI):
     """MPI statement that can be written as an assignment in pyccel."""
     pass
@@ -43,7 +46,64 @@ class MPI_Assign(Assign, MPI):
 class MPI_Declare(Declare, MPI):
     """MPI declaration of a variable."""
     pass
+##########################################################
 
+##########################################################
+#                  Constants
+##########################################################
+class MPI_status_size(MPI):
+    """
+    Represents the status size in mpi.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_status_size
+    >>> MPI_status_size()
+    mpi_status_size
+    """
+    is_integer     = True
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'mpi_status_size'
+
+class MPI_proc_null(MPI):
+    """
+    Represents the null process in mpi.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_proc_null
+    >>> MPI_proc_null()
+    mpi_proc_null
+    """
+    is_integer     = True
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'mpi_proc_null'
+
+class MPI_comm_world(UniversalCommunicator, MPI):
+    """
+    Represents the world comm in mpi.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> MPI_comm_world()
+    mpi_comm_world
+    """
+    is_integer     = True
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'mpi_comm_world'
+##########################################################
+
+##########################################################
+#                      Datatypes
+##########################################################
+# TODO to be removed
 class MPI_status_type(DataType):
     """Represents the datatype of MPI status."""
     pass
@@ -52,15 +112,25 @@ class MPI_INTEGER(DataType):
     _name = 'MPI_INTEGER'
     pass
 
-class MPI_FLOAT(DataType):
-    _name = 'MPI_FLOAT'
+class MPI_REAL(DataType):
+    _name = 'MPI_REAL'
     pass
-
 
 class MPI_DOUBLE(DataType):
     _name = 'MPI_DOUBLE'
     pass
 
+class MPI_COMPLEX(DataType):
+    _name = 'MPI_COMPLEX'
+    pass
+
+class MPI_LOGICAL(DataType):
+    _name = 'MPI_LOGICAL'
+    pass
+
+class MPI_CHARACTER(DataType):
+    _name = 'MPI_CHARACTER'
+    pass
 
 def mpi_datatype(dtype):
     """Converts Pyccel datatypes into MPI datatypes."""
@@ -70,35 +140,29 @@ def mpi_datatype(dtype):
         return 'MPI_REAL'
     elif isinstance(dtype, NativeDouble):
         return 'MPI_DOUBLE'
+    elif isinstance(dtype, NativeBool):
+        return 'MPI_LOGICAL'
+    elif isinstance(dtype, NativeComplex):
+        return 'MPI_COMPLEX'
     else:
         raise TypeError("Uncovered datatype : ", type(dtype))
+##########################################################
 
-class MPI_status_size(MPI):
-    """Represents the status size in mpi."""
-    is_integer     = True
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'mpi_status_size'
-
-class MPI_proc_null(MPI):
-    """Represents the null process in mpi."""
-    is_integer     = True
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'mpi_proc_null'
-
-class MPI_comm_world(UniversalCommunicator, MPI):
-    """Represents the world comm in mpi."""
-    is_integer     = True
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'mpi_comm_world'
-
+##########################################################
+#           Communicator Accessors
+##########################################################
 class MPI_comm_size(MPI):
-    """Represents the size of a given communicator."""
+    """
+    Represents the size of a given communicator.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_size
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_size(comm)
+    mpi_comm_world.size
+    """
     is_integer = True
 
     def __new__(cls, *args, **options):
@@ -108,8 +172,22 @@ class MPI_comm_size(MPI):
     def comm(self):
         return self.args[0]
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0}.{1}'.format(sstr(self.comm), 'size')
+
 class MPI_comm_rank(MPI):
-    """Represents the process rank within a given communicator."""
+    """
+    Represents the process rank within a given communicator.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_rank
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_rank(comm)
+    mpi_comm_world.rank
+    """
     is_integer = True
 
     def __new__(cls, *args, **options):
@@ -118,7 +196,11 @@ class MPI_comm_rank(MPI):
     @property
     def comm(self):
         return self.args[0]
+##########################################################
 
+##########################################################
+#          Point-to-Point Communication
+##########################################################
 class MPI_comm_recv(MPI):
     """
     Represents the MPI_recv statement.
@@ -139,6 +221,19 @@ class MPI_comm_recv(MPI):
         communicator (handle) [IN]
     status:
         status object (Status) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_recv
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> source = Variable('int', 'source')
+    >>> tag  = Variable('int', 'tag')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_recv(x, source, tag, comm)
+    MPI_recv (x, 2*n, MPI_DOUBLE, source, tag, mpi_comm_world, i_mpi_status, i_mpi_error)
     """
     is_integer = True
 
@@ -169,6 +264,24 @@ class MPI_comm_recv(MPI):
     def datatype(self):
         return mpi_datatype(self.data.dtype)
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        data    = self.data
+        count   = self.count
+        dtype   = self.datatype
+        source  = self.source
+        tag     = self.tag
+        comm    = self.comm
+        ierr    = MPI_ERROR
+        istatus = MPI_STATUS
+
+        args = (data, count, dtype, source, tag, comm, istatus, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_recv ({0})'.format(args)
+
+        return code
+
 class MPI_comm_send(MPI):
     """
     Represents the MPI_send statement.
@@ -187,6 +300,19 @@ class MPI_comm_send(MPI):
         message tag (integer) [IN]
     comm:
         communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_send
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> dest = Variable('int', 'dest')
+    >>> tag  = Variable('int', 'tag')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_send(x, dest, tag, comm)
+    MPI_send (x, 2*n, MPI_DOUBLE, dest, tag, mpi_comm_world, i_mpi_error)
     """
     is_integer = True
 
@@ -217,6 +343,27 @@ class MPI_comm_send(MPI):
     def datatype(self):
         return mpi_datatype(self.data.dtype)
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        data  = self.data
+        count = self.count
+        dtype = self.datatype
+        dest  = self.dest
+        tag   = self.tag
+        comm  = self.comm
+        ierr  = MPI_ERROR
+
+        args = (data, count, dtype, dest, tag, comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_send ({0})'.format(args)
+        return code
+
+##########################################################
+
+##########################################################
+#
+##########################################################
 class MPI_comm_irecv(MPI):
     """
     Represents the MPI_irecv statement.
@@ -239,6 +386,20 @@ class MPI_comm_irecv(MPI):
         status object (Status) [OUT]
     request:
         communication request [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_irecv
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> source = Variable('int', 'source')
+    >>> tag  = Variable('int', 'tag')
+    >>> requests = Variable('int', 'requests', rank=1, shape=4, allocatable=True)
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_irecv(x, source, tag, requests, comm)
+    MPI_irecv (x, 2*n, MPI_DOUBLE, source, tag, mpi_comm_world, requests, i_mpi_error)
     """
     is_integer = True
 
@@ -273,6 +434,24 @@ class MPI_comm_irecv(MPI):
     def datatype(self):
         return mpi_datatype(self.data.dtype)
 
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        data    = self.data
+        count   = self.count
+        dtype   = self.datatype
+        source  = self.source
+        tag     = self.tag
+        comm    = self.comm
+        request = self.request
+        ierr    = MPI_ERROR
+
+        args = (data, count, dtype, source, tag, comm, request, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_irecv ({0})'.format(args)
+
+        return code
+
 class MPI_comm_isend(MPI):
     """
     Represents the MPI_isend statement.
@@ -293,6 +472,20 @@ class MPI_comm_isend(MPI):
         communicator (handle) [IN]
     request:
         communication request [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_isend
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> dest = Variable('int', 'dest')
+    >>> tag  = Variable('int', 'tag')
+    >>> requests = Variable('int', 'requests', rank=1, shape=4, allocatable=True)
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_isend(x, dest, tag, requests, comm)
+    MPI_isend (x, 2*n, MPI_DOUBLE, dest, tag, mpi_comm_world, requests, i_mpi_error)
     """
     is_integer = True
 
@@ -327,32 +520,22 @@ class MPI_comm_isend(MPI):
     def datatype(self):
         return mpi_datatype(self.data.dtype)
 
-class MPI_waitall(MPI):
-    """
-    Represents the MPI_waitall statement.
-    MPI_waitall syntax is
-    `MPI_WAITALL (count, reqs, statuts)`
+    def _sympystr(self, printer):
+        sstr = printer.doprint
 
-    Examples
+        data    = self.data
+        count   = self.count
+        dtype   = self.datatype
+        dest    = self.dest
+        tag     = self.tag
+        comm    = self.comm
+        request = self.request
+        ierr    = MPI_ERROR
 
-    >>> from pyccel.parallel.mpi import MPI_waitall
-    """
-    is_integer = True
-
-    def __new__(cls, *args, **options):
-        return super(MPI_waitall, cls).__new__(cls, *args, **options)
-
-    @property
-    def requests(self):
-        return self.args[0]
-
-    @property
-    def status(self):
-        return self.args[1]
-
-    @property
-    def count(self):
-        return get_shape(self.data)
+        args = (data, count, dtype, dest, tag, comm, request, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_isend ({0})'.format(args)
+        return code
 
 class MPI_comm_sendrecv(MPI):
     """
@@ -362,28 +545,55 @@ class MPI_comm_sendrecv(MPI):
 
     senddata:
         initial address of send buffer (choice) [IN]
+
     sendcount:
         number of elements in send buffer (non-negative integer) [IN]
+
     senddatatype:
         datatype of each receive buffer element (handle) [IN]
+
     dest:
         rank of destination (integer) [IN]
+
     sendtag:
         message tag (integer) [IN]
+
     recvdata:
         initial address of receive buffer (choice) [OUT]
+
     recvcount:
         number of elements in receive buffer (non-negative integer) [IN]
+
     recvdatatype:
         datatype of each send buffer element (handle) [IN]
+
     source:
         rank of source or MPI_ANY_SOURCE (integer) [IN]
+
     recvtag:
         message tag or MPI_ANY_TAG (integer) [IN]
+
     comm:
         communicator (handle) [IN]
+
     status:
         status object (Status) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_sendrecv
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> source = Variable('int', 'source')
+    >>> dest   = Variable('int', 'dest')
+    >>> sendtag  = Variable('int', 'sendtag')
+    >>> recvtag  = Variable('int', 'recvtag')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_sendrecv(x, dest, sendtag, y, source, recvtag, comm)
+    MPI_sendrecv (x, 2*n, MPI_DOUBLE, dest, sendtag, y, 2*n, MPI_DOUBLE, source, recvtag, mpi_comm_world, i_mpi_status, i_mpi_error)
     """
     is_integer = True
 
@@ -433,6 +643,78 @@ class MPI_comm_sendrecv(MPI):
     @property
     def recvdatatype(self):
         return mpi_datatype(self.recvdata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata  = self.senddata
+        recvdata  = self.recvdata
+        sendcount = self.sendcount
+        recvcount = self.recvcount
+        sendtype  = self.senddatatype
+        recvtype  = self.recvdatatype
+        dest      = self.dest
+        source    = self.source
+        sendtag   = self.sendtag
+        recvtag   = self.recvtag
+        comm      = self.comm
+        ierr      = MPI_ERROR
+        istatus   = MPI_STATUS
+
+        args = (senddata, sendcount, sendtype, dest,   sendtag, \
+                recvdata, recvcount, recvtype, source, recvtag, \
+                comm, istatus, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_sendrecv ({0})'.format(args)
+        return code
+
+class MPI_waitall(MPI):
+    """
+    Represents the MPI_waitall statement.
+    MPI_waitall syntax is
+    `MPI_WAITALL (count, reqs, statuts)`
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_waitall
+    >>> from pyccel.parallel.mpi import MPI_status_type
+    >>> requests = Variable('int', 'requests', rank=1, shape=4, allocatable=True)
+    >>> mpi_status_size = MPI_status_size()
+    >>> stats = Variable('int', 'stats', rank=1, shape=(mpi_status_size,4), allocatable=True)
+    >>> MPI_waitall(requests, stats)
+    MPI_waitall (4, requests, stats, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_waitall, cls).__new__(cls, *args, **options)
+
+    @property
+    def requests(self):
+        return self.args[0]
+
+    @property
+    def status(self):
+        return self.args[1]
+
+    @property
+    def count(self):
+        return get_shape(self.requests)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        requests = self.requests
+        count    = self.count
+        status   = self.status
+        ierr    = MPI_ERROR
+
+        args = (count, requests, status, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_waitall ({0})'.format(args)
+        return code
 
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')

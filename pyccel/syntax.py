@@ -57,7 +57,7 @@ from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
 from pyccel.parallel.mpi import MPI_waitall
-from pyccel.parallel.mpi import MPI_INTEGER, MPI_FLOAT, MPI_DOUBLE
+from pyccel.parallel.mpi import MPI_INTEGER, MPI_REAL, MPI_DOUBLE
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
 from pyccel.parallel.mpi import MPI_proc_null, MPI_PROC_NULL
