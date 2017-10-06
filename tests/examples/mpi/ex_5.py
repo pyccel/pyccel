@@ -22,3 +22,5 @@ ierr = mpi_finalize()
 
 # TODO: - example barrier
 #       - example bcast
+#       - example scatter
+#       - example gather

@@ -917,6 +917,205 @@ class MPI_comm_bcast(MPI):
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_bcast ({0})'.format(args)
         return code
+
+class MPI_comm_scatter(MPI):
+    """
+    Represents the MPI_scatter statement.
+    MPI_scatter syntax is
+    `MPI_SCATTER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype,
+    root, comm, ierr)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    sendcount:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    senddatatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+
+    recvcount:
+        number of elements in receive buffer (non-negative integer) [IN]
+
+    recvdatatype:
+        datatype of each send buffer element (handle) [IN]
+
+    root:
+        rank of broadcast root (integer)
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_scatter
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> root   = Variable('int', 'root')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_scatter(x, y, root, comm)
+    MPI_scatter (x, 2*n, MPI_DOUBLE, y, 2*n, MPI_DOUBLE, root, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_scatter, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def recvdata(self):
+        return self.args[1]
+
+    @property
+    def root(self):
+        return self.args[2]
+
+    @property
+    def comm(self):
+        return self.args[3]
+
+    @property
+    def sendcount(self):
+        return get_shape(self.senddata)
+
+    @property
+    def recvcount(self):
+        return get_shape(self.recvdata)
+
+    @property
+    def senddatatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    @property
+    def recvdatatype(self):
+        return mpi_datatype(self.recvdata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata  = self.senddata
+        recvdata  = self.recvdata
+        sendcount = self.sendcount
+        recvcount = self.recvcount
+        sendtype  = self.senddatatype
+        recvtype  = self.recvdatatype
+        root      = self.root
+        comm      = self.comm
+        ierr      = MPI_ERROR
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                root, comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_scatter ({0})'.format(args)
+        return code
+
+class MPI_comm_gather(MPI):
+    """
+    Represents the MPI_gather statement.
+    MPI_gather syntax is
+    `MPI_GATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, root, comm)`
+
+    senddata:
+        initial address of send buffer (choice) [IN]
+
+    sendcount:
+        number of elements in send buffer (non-negative integer) [IN]
+
+    senddatatype:
+        datatype of each receive buffer element (handle) [IN]
+
+    recvdata:
+        initial address of receive buffer (choice) [OUT]
+
+    recvcount:
+        number of elements in receive buffer (non-negative integer) [IN]
+
+    recvdatatype:
+        datatype of each send buffer element (handle) [IN]
+
+    root:
+        rank of broadcast root (integer)
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_gather
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
+    >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> root   = Variable('int', 'root')
+    >>> comm = MPI_comm_world()
+    >>> MPI_comm_gather(x, y, root, comm)
+    MPI_gather (x, 2*n, MPI_DOUBLE, y, 2*n, MPI_DOUBLE, root, mpi_comm_world, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_gather, cls).__new__(cls, *args, **options)
+
+    @property
+    def senddata(self):
+        return self.args[0]
+
+    @property
+    def recvdata(self):
+        return self.args[1]
+
+    @property
+    def root(self):
+        return self.args[2]
+
+    @property
+    def comm(self):
+        return self.args[3]
+
+    @property
+    def sendcount(self):
+        return get_shape(self.senddata)
+
+    @property
+    def recvcount(self):
+        return get_shape(self.recvdata)
+
+    @property
+    def senddatatype(self):
+        return mpi_datatype(self.senddata.dtype)
+
+    @property
+    def recvdatatype(self):
+        return mpi_datatype(self.recvdata.dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        senddata  = self.senddata
+        recvdata  = self.recvdata
+        sendcount = self.sendcount
+        recvcount = self.recvcount
+        sendtype  = self.senddatatype
+        recvtype  = self.recvdatatype
+        root      = self.root
+        comm      = self.comm
+        ierr      = MPI_ERROR
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                root, comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_gather ({0})'.format(args)
+        return code
 ##########################################################
 
 
