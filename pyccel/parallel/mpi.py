@@ -1670,6 +1670,7 @@ class MPI_comm_free(MPI):
     >>> newcomm = MPI_comm('newcomm')
     >>> MPI_comm_split(comm, color, key, newcomm)
     >>> MPI_free(newcomm)
+    MPI_comm_free (newcomm, i_mpi_error)
     """
     is_integer = True
 
@@ -1777,6 +1778,62 @@ class MPI_comm_cart_create(MPI):
         args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_cart_create ({0})'.format(args)
+        return code
+
+class MPI_dims_create(MPI):
+    """
+    Represents the MPI_dims_create statement.
+    MPI_comm_free syntax is
+    `MPI_DIMS_CREATE(nnodes, ndims, dims)`
+
+    nnodes:
+        number of nodes in a grid (integer) [IN]
+
+    ndims:
+        number of Cartesian dimensions (integer) [IN]
+
+    dims:
+        integer array of size ndims specifying the number
+        of nodes in each dimension [INOUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_dims_create
+    >>> nnodes = Variable('int', 'nnodes')
+    >>> n = Variable('int', 'n')
+    >>> dims = Variable('int', 'dims', rank=1, shape=n, allocatable=True)
+    >>> MPI_dims_create(nnodes, dims)
+    MPI_dims_create (nnodes, n, dims, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_dims_create, cls).__new__(cls, *args, **options)
+
+    @property
+    def nnodes(self):
+        return self.args[0]
+
+    @property
+    def dims(self):
+        return self.args[1]
+
+    @property
+    def ndims(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        nnodes  = self.nnodes
+        ndims   = self.ndims
+        dims    = self.dims
+        ierr    = MPI_ERROR
+
+        args = (nnodes, ndims, dims, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_dims_create ({0})'.format(args)
         return code
 
 ##########################################################

@@ -42,6 +42,7 @@ from pyccel.parallel.mpi import MPI_comm_allreduce
 from pyccel.parallel.mpi import MPI_comm_split
 from pyccel.parallel.mpi import MPI_comm_free
 from pyccel.parallel.mpi import MPI_comm_cart_create
+from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import MPI_SUM, MPI_PROD
 
 
@@ -423,6 +424,9 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_comm_cart_create(self, expr):
         return 'MPI_comm_cart_create'
 
+    def _print_MPI_dims_create(self, expr):
+        return 'MPI_dims_create'
+
     def _print_MPI_INTEGER(self, expr):
         return 'MPI_INTEGER'
 
@@ -769,6 +773,17 @@ class FCodePrinter(CodePrinter):
             args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_cart_create ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_dims_create):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+
+            nnodes  = self.nnodes
+            ndims   = self.ndims
+            dims    = self.dims
+
+            args = (nnodes, ndims, dims, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_dims_create ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)
