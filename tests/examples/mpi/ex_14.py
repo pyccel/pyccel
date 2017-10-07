@@ -20,17 +20,17 @@ periods = array((False, True), bool)
 reorder = False
 ierr = comm.cart_create(dims, periods, reorder, comm_2d)
 
-##Know my coordinates in the topology
+#Know my coordinates in the topology
 rank_in_topo = comm_2d.rank
 ierr = comm_2d.cart_coords(rank_in_topo, coords)
 
-###Search of my West and East neigbors
-#ierr = comm_2d.cart_shift(0, 1, neighbor(west), neighbor(east))
-##call MPI_CART_SHIFT(comm_2D,0,1,neighbor(west),neighbor(east),code)
-#
-###Search of my South and North neighbors
-#ierr = comm_2d.cart_shift(1, 1, neighbor(south), neighbor(north))
-##call MPI_CART_SHIFT(comm_2D,1,1,neighbor(south),neighbor(north),code)
+#Search of my West and East neigbors
+ierr = comm_2d.cart_shift(0, 1, neighbor(west), neighbor(east))
+
+#Search of my South and North neighbors
+ierr = comm_2d.cart_shift(1, 1, neighbor(south), neighbor(north))
+
+print ("I, ", rank_in_topo, " process, has neighbor :", neighbor)
 
 #Destruction of the communicators
 ierr = comm_2d.free()

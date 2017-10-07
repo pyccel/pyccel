@@ -1846,7 +1846,82 @@ class MPI_comm_cart_coords(MPI):
         code = 'MPI_cart_coords ({0})'.format(args)
         return code
 
+class MPI_comm_cart_shift(MPI):
+    """
+    Represents the MPI_cart_shift statement.
+    MPI_cart_shift syntax is
+    `MPI_CART_SHIFT(comm, direction, disp, rank_source, rank_dest)`
 
+    comm:
+        communicator with Cartesian structure (handle) [IN]
+
+    direction:
+        coordinate dimension of shift (integer) [IN]
+
+    disp:
+        displacement (> 0: upwards shift, < 0: downwards shift) (integer)[IN]
+
+    rank_source:
+        rank of source process (integer) [OUT]
+
+    rank_dest:
+        rank of destination process (integer) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_shift
+    >>> direction = Variable('int', 'direction')
+    >>> disp = Variable('int', 'disp')
+    >>> source = Variable('int', 'source')
+    >>> dest = Variable('int', 'dest')
+    >>> comm  = MPI_comm_world()
+    >>> MPI_comm_cart_shift(direction, disp, source, dest, comm)
+    MPI_cart_shift (mpi_comm_world, direction, disp, source, dest, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_shift, cls).__new__(cls, *args, **options)
+
+    @property
+    def direction(self):
+        return self.args[0]
+
+    @property
+    def disp(self):
+        return self.args[1]
+
+    @property
+    def source(self):
+        return self.args[2]
+
+    @property
+    def dest(self):
+        return self.args[3]
+
+    @property
+    def comm(self):
+        return self.args[4]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        direction = self.direction
+        disp      = self.disp
+        source    = self.source
+        dest      = self.dest
+        comm      = self.comm
+        ierr      = MPI_ERROR
+
+        args = (comm, direction, disp, source, dest, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_shift ({0})'.format(args)
+        return code
+
+
+# TODO not working yet in pyccel
 class MPI_dims_create(MPI):
     """
     Represents the MPI_dims_create statement.
