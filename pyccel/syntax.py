@@ -79,6 +79,7 @@ from pyccel.parallel.mpi import MPI_comm_allreduce
 from pyccel.parallel.mpi import MPI_comm_split
 from pyccel.parallel.mpi import MPI_comm_free
 from pyccel.parallel.mpi import MPI_comm_cart_create
+from pyccel.parallel.mpi import MPI_comm_cart_coords
 from pyccel.parallel.mpi import MPI_dims_create
 
 DEBUG = False

@@ -19,7 +19,9 @@ from pyccel.parallel.communicator import UniversalCommunicator
 def get_shape(expr):
     """Returns the shape of a given variable."""
     if not isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
-        raise TypeError('shape is only defined for Variable, IndexedVariable, IndexedElement')
+        txt  = 'shape is only defined for Variable, IndexedVariable, IndexedElement.'
+        txt += 'given {0}'.format(type(expr))
+        raise TypeError(txt)
 
     if isinstance(expr, (Variable, IndexedVariable)):
         shape = expr.shape
@@ -1700,7 +1702,7 @@ class MPI_comm_free(MPI):
 class MPI_comm_cart_create(MPI):
     """
     Represents the MPI_cart_create statement.
-    MPI_comm_split syntax is
+    MPI_cart_create syntax is
     `MPI_CART_CREATE(comm, ndims, dims, periods, reorder, newcomm)`
 
     comm:
@@ -1779,6 +1781,71 @@ class MPI_comm_cart_create(MPI):
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_cart_create ({0})'.format(args)
         return code
+
+class MPI_comm_cart_coords(MPI):
+    """
+    Represents the MPI_cart_coords statement.
+    MPI_cart_coords syntax is
+    `MPI_CART_COORDS(comm, rank, maxdims, coords)`
+
+    comm:
+        communicator with Cartesian structure (handle) [IN]
+
+    rank:
+        rank of a process within group of comm (integer) [IN]
+
+    maxdims:
+        length of vector coords in the calling program (integer) [IN]
+
+    coords: integer array (of size ndims) containing the Cartesian coordinates of specified process (array of integers) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_coords
+    >>> n = Variable('int', 'n')
+    >>> coords = Variable('int', 'coords', rank=1, shape=n, allocatable=True)
+    >>> rank = Variable('int', 'rank')
+    >>> comm  = MPI_comm_world()
+    >>> MPI_comm_cart_coords(rank, coords, comm)
+    MPI_cart_coords (mpi_comm_world, rank, n, coords, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_coords, cls).__new__(cls, *args, **options)
+
+    @property
+    def rank(self):
+        return self.args[0]
+
+    @property
+    def coords(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def ndims(self):
+        return get_shape(self.coords)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        rank    = self.rank
+        ndims   = self.ndims
+        coords  = self.coords
+        comm    = self.comm
+        ierr    = MPI_ERROR
+
+        args = (comm, rank, ndims, coords, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_coords ({0})'.format(args)
+        return code
+
 
 class MPI_dims_create(MPI):
     """
