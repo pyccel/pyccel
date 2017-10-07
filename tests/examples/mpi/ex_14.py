@@ -1,5 +1,7 @@
 # coding: utf-8
 
+#must be run with mpirun -n 4
+
 ierr = mpi_init()
 
 comm = mpi_comm_world
