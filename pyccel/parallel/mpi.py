@@ -966,6 +966,8 @@ class MPI_comm_scatter(MPI):
     `MPI_SCATTER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype,
     root, comm, ierr)`
 
+    Note that we use sendcount = recvcount for the moment.
+
     senddata:
         initial address of send buffer (choice) [IN]
 
@@ -1066,6 +1068,8 @@ class MPI_comm_gather(MPI):
     MPI_gather syntax is
     `MPI_GATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, root, comm)`
 
+    Note that we use recvcount = sendcount for the moment.
+
     senddata:
         initial address of send buffer (choice) [IN]
 
@@ -1130,7 +1134,7 @@ class MPI_comm_gather(MPI):
 
     @property
     def recvcount(self):
-        return get_shape(self.recvdata)
+        return get_shape(self.senddata)
 
     @property
     def senddatatype(self):
