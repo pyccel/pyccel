@@ -44,6 +44,7 @@ from pyccel.parallel.mpi import MPI_comm_free
 from pyccel.parallel.mpi import MPI_comm_cart_create
 from pyccel.parallel.mpi import MPI_comm_cart_coords
 from pyccel.parallel.mpi import MPI_comm_cart_shift
+from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import MPI_SUM, MPI_PROD
 
@@ -432,6 +433,9 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_comm_cart_shift(self, expr):
         return 'MPI_comm_cart_shift'
 
+    def _print_MPI_comm_cart_sub(self, expr):
+        return 'MPI_comm_cart_sub'
+
     def _print_MPI_dims_create(self, expr):
         return 'MPI_dims_create'
 
@@ -806,6 +810,17 @@ class FCodePrinter(CodePrinter):
             args = (comm, direction, disp, source, dest, ierr)
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_cart_shift ({0})'.format(args)
+        elif isinstance(expr.rhs, MPI_comm_cart_sub):
+            rhs_code  = self._print(expr.rhs)
+            ierr      = self._print(MPI_ERROR)
+
+            dims      = expr.rhs.dims
+            comm      = expr.rhs.comm
+            newcomm   = expr.rhs.newcomm
+
+            args = (comm, dims, newcomm, ierr)
+            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+            code = 'call mpi_cart_sub ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_dims_create):
             rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)

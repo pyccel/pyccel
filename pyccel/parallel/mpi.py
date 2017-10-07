@@ -1920,6 +1920,68 @@ class MPI_comm_cart_shift(MPI):
         code = 'MPI_cart_shift ({0})'.format(args)
         return code
 
+class MPI_comm_cart_sub(MPI):
+    """
+    Represents the MPI_cart_sub statement.
+    MPI_cart_create syntax is
+    `MPI_CART_SUB(comm, remain_dims, newcomm)`
+
+    comm:
+        input communicator (handle) [IN]
+
+    dims:
+        the i-th entry of remain_dims specifies whether the i-th dimension
+        is kept in the subgrid (true) or is dropped (false) (logical vector) [IN]
+
+    newcomm:
+        communicator containing the subgrid that includes the calling process (handle) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_sub
+    >>> n = Variable('int', 'n')
+    >>> dims = Variable('int', 'dims', rank=1, shape=n, allocatable=True)
+    >>> comm  = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_cart_sub(dims, newcomm, comm)
+    MPI_cart_sub (mpi_comm_world, dims, newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_sub, cls).__new__(cls, *args, **options)
+
+    @property
+    def dims(self):
+        return self.args[0]
+
+    @property
+    def newcomm(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def ndims(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        dims    = self.dims
+        comm    = self.comm
+        newcomm = self.newcomm
+        ierr    = MPI_ERROR
+
+        args = (comm, dims, newcomm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_sub ({0})'.format(args)
+        return code
+
 
 # TODO not working yet in pyccel
 class MPI_dims_create(MPI):
