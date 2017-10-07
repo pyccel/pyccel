@@ -47,7 +47,7 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement,\
-                              Min, Max)
+                              Min, Max, Mod)
 
 from pyccel.core.syntax     import BasicStmt
 from pyccel.imports.syntax import ImportFromStmt
@@ -58,6 +58,7 @@ from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
 from pyccel.parallel.mpi import MPI_waitall
 from pyccel.parallel.mpi import MPI_INTEGER, MPI_REAL, MPI_DOUBLE
+from pyccel.parallel.mpi import MPI_comm
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
 from pyccel.parallel.mpi import MPI_proc_null, MPI_PROC_NULL
@@ -74,6 +75,8 @@ from pyccel.parallel.mpi import MPI_comm_allgather
 from pyccel.parallel.mpi import MPI_comm_alltoall
 from pyccel.parallel.mpi import MPI_comm_reduce
 from pyccel.parallel.mpi import MPI_comm_allreduce
+from pyccel.parallel.mpi import MPI_comm_split
+from pyccel.parallel.mpi import MPI_comm_free
 
 DEBUG = False
 #DEBUG = True
@@ -102,6 +105,7 @@ known_functions = {
     "min": "Min",
     "max": "Max",
     "pow": "pow",
+    "mod": "Mod",
     "sec": "sec",
     "sign": "Sign",
     "sin": "sin",
@@ -239,7 +243,7 @@ builtin_funcs_math_un = ['abs', \
                          'exp', 'log', 'max', 'min', \
                          'sec', 'sign', 'sin', 'sinh', \
                          'sqrt', 'tan', 'tanh']
-builtin_funcs_math_bin = ['dot', 'pow']
+builtin_funcs_math_bin = ['dot', 'pow', 'mod']
 builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
@@ -603,9 +607,21 @@ def builtin_function(name, args, lhs=None):
             lhs = namespace[lhs]
             expr = func(*args)
             return Assign(lhs, expr)
+    elif name in ['mod']:
+        func = eval(known_functions[name])
+        if lhs is None:
+            return func(*args)
+        else:
+            d_var = {}
+            d_var['datatype'] = args[0].dtype
+            d_var['rank']     = 0
+            insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
+            expr = func(*args)
+            return Assign(lhs, expr)
     elif name in builtin_funcs_math_un + ['len']:
         if not(len(args) == 1):
-            raise ValueError("pow takes exactly one argument")
+            raise ValueError("function takes exactly one argument")
 
         func = eval(known_functions[name])
         if lhs is None:
@@ -624,7 +640,7 @@ def builtin_function(name, args, lhs=None):
             return Assign(lhs, expr)
     elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):
-            raise ValueError("pow takes exactly two arguments")
+            raise ValueError("function takes exactly two arguments")
 
         func = eval(known_functions[name])
         if lhs is None:
@@ -750,8 +766,23 @@ def expr_with_trailer(expr, trailer=None):
                 comm = expr
                 func = trailer[0].expr
                 args = trailer[1].expr
+                if func == 'split':
+                    newcomm = args[-1]
+                    if not newcomm in namespace:
+                        d_var = {}
+                        d_var['datatype']    = 'int'
+                        d_var['allocatable'] = False
+                        d_var['shape']       = None
+                        d_var['rank']        = 0
+
+                        insert_variable(newcomm, **d_var)
+
+#                        COMM = MPI_comm(newcomm)
+#
+#                        namespace[newcomm]    = COMM
+#                        declarations[newcomm] = MPI_Declare('int', COMM)
+
                 args += [comm]
-#                print [type(a) for a in args]
                 expr = eval('MPI_comm_{0}'.format(func))(*args)
         else:
             raise ValueError('Unable to construct expr from trailers.')

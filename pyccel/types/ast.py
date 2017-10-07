@@ -1063,8 +1063,12 @@ class Declare(Basic):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
+        # the following is not working for other concept than Variable
+        # needed for example for MPI atoms
         if isinstance(variables, Variable):
             variables = [variables]
+#        if not isinstance(variables, (list, tuple)):
+#            variables = [variables]
         for var in variables:
             if not isinstance(var, Variable):
                 raise TypeError("var must be of type Variable")
@@ -1152,6 +1156,12 @@ class Min(Function):
 # TODO: add example
 class Max(Function):
     """Represents a 'max' expression in the code."""
+    def __new__(cls, *args):
+        return Basic.__new__(cls, *args)
+
+# TODO: add example
+class Mod(Function):
+    """Represents a 'mod' expression in the code."""
     def __new__(cls, *args):
         return Basic.__new__(cls, *args)
 

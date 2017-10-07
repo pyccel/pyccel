@@ -86,7 +86,35 @@ class MPI_proc_null(MPI):
         sstr = printer.doprint
         return 'mpi_proc_null'
 
-class MPI_comm_world(UniversalCommunicator, MPI):
+class MPI_comm(MPI):
+    """
+    Represents a communicator in mpi.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_comm
+    >>> MPI_comm('comm')
+    comm
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        if len(args) == 1:
+            name = args[0]
+            if not isinstance(name, str):
+                raise TypeError('Expecting a string')
+
+        return super(MPI_comm, cls).__new__(cls, *args, **options)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return sstr(self.name)
+
+class MPI_comm_world(UniversalCommunicator, MPI_comm):
     """
     Represents the world comm in mpi.
 
@@ -1552,6 +1580,117 @@ class MPI_comm_allreduce(MPI):
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_allreduce ({0})'.format(args)
         return code
+##########################################################
+
+##########################################################
+#                   Communicators
+##########################################################
+class MPI_comm_split(MPI):
+    """
+    Represents the MPI_split statement.
+    MPI_comm_split syntax is
+    `MPI_COMM_SPLIT(comm, color, key, newcomm)`
+
+    color:
+        control of subset assignment (integer) [IN]
+
+    key:
+        control of rank assigment (integer) [IN]
+
+    comm:
+        communicator (handle) [IN]
+
+    newcomm:
+        newcomm new communicator (handle) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_split
+    >>> color = Variable('int', 'color')
+    >>> key   = Variable('int', 'key')
+    >>> comm  = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_split(comm, color, key, newcomm)
+    MPI_comm_split (mpi_comm_world, color, key, newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_split, cls).__new__(cls, *args, **options)
+
+    @property
+    def color(self):
+        return self.args[0]
+
+    @property
+    def key(self):
+        return self.args[1]
+
+    @property
+    def newcomm(self):
+        return self.args[2]
+
+    @property
+    def comm(self):
+        return self.args[3]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        color   = self.color
+        key     = self.key
+        comm    = self.comm
+        newcomm = self.newcomm
+        ierr    = MPI_ERROR
+
+        args = (comm, color, key, newcomm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_comm_split ({0})'.format(args)
+        return code
+
+class MPI_comm_free(MPI):
+    """
+    Represents the MPI_comm_free statement.
+    MPI_comm_free syntax is
+    `MPI_COMM_FREE(comm)`
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_split
+    >>> color = Variable('int', 'color')
+    >>> key = Variable('int', 'key')
+    >>> comm = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_split(comm, color, key, newcomm)
+    >>> MPI_free(newcomm)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_free, cls).__new__(cls, *args, **options)
+
+    @property
+    def comm(self):
+        return self.args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        comm    = self.comm
+        ierr    = MPI_ERROR
+
+        args = (comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_comm_free ({0})'.format(args)
+        return code
+
 ##########################################################
 
 
