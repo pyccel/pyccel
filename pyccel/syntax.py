@@ -16,6 +16,7 @@ from sympy import preorder_traversal
 from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
                    csc,  cos,  sec,  tan,  cot,  asin, \
                    acsc, acos, asec, atan, acot, atan2)
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 
 from sympy.core.basic import Basic
@@ -317,6 +318,12 @@ def get_attributs(expr):
     elif isinstance(expr, Float):
         # TODO choose precision
         d_var['datatype']    = DEFAULT_TYPE
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+        return d_var
+    elif isinstance(expr, Boolean):
+        # TODO choose precision
+        d_var['datatype']    = NativeBool()
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var

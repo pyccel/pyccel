@@ -772,6 +772,12 @@ class FCodePrinter(CodePrinter):
         # TODO add precision
         return 'complex(kind=8)'
 
+    def _print_BooleanTrue(self, expr):
+        return '.true.'
+
+    def _print_BooleanFalse(self, expr):
+        return '.false.'
+
     def _print_DataType(self, expr):
         name = expr.__class__.__name__
         name = name.split('Pyccel')[-1]
