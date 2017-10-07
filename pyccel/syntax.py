@@ -5,12 +5,12 @@ from numpy import asarray
 
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
-from sympy import Symbol, Integer, Float, Add, Mul
+from sympy import Symbol, Integer, Float, Add, Mul,Pow
 from sympy import true, false, pi
+from sympy.logic.boolalg import And,Or
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy import preorder_traversal
 from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
@@ -30,13 +30,14 @@ from sympy import Integral, Symbol
 from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
 
+
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
-                              FunctionHeader, ClassHeader, MethodHeader, \
+from pyccel.types.ast import (For, Assign, Declare, Variable, Result,\
+                              FunctionHeader, ClassHeader, MethodHeader,\
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
@@ -431,7 +432,7 @@ def get_attributs(expr):
             if not(len(results) == 1):
                 raise ValueError("Expecting a function with one return.")
 
-            var = results[0]
+            var = results[0][0]
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
             d_var['rank']        = var.rank
@@ -1105,7 +1106,6 @@ class IfStmt(BasicStmt):
         Process the If statement by returning a pyccel.types.ast object
         """
         self.update()
-
         args = [(self.test.expr, self.body_true.expr)]
 
         if not self.body_elif==None:
@@ -1250,10 +1250,10 @@ class MultiAssignStmt(BasicStmt):
         for (var_name, result) in zip(self.lhs, F.results):
             if not(var_name in namespace):
                 d_var = {}
-                d_var['datatype']    = result.dtype
-                d_var['allocatable'] = result.allocatable
-                d_var['shape']       = result.shape
-                d_var['rank']        = result.rank
+                d_var['datatype']    = result[0].dtype
+                d_var['allocatable'] = result[0].allocatable
+                d_var['shape']       = result[0].shape
+                d_var['rank']        = result[0].rank
                 d_var['intent']      = None
 
 #                print ">>>> MultiAssignStmt : ", var_name
@@ -1619,8 +1619,9 @@ class OrTest(ExpressionElement):
             print "> DEBUG "
 
         ret = self.op[0].expr
-        for operation, operand in zip(self.op[1::2], self.op[2::2]):
-            ret = (ret or operand.expr)
+        for operand in self.op[1:]:
+            ret = Or(ret,operand.expr)
+
         return ret
 
 # TODO improve using sympy And, Or, Not, ...
@@ -1636,8 +1637,10 @@ class AndTest(ExpressionElement):
             print "> DEBUG "
 
         ret = self.op[0].expr
-        for operation, operand in zip(self.op[1::2], self.op[2::2]):
-            ret = (ret and operand.expr)
+
+
+        for operand in self.op[1:]:
+            ret = And(ret,operand.expr)
         return ret
 
 # TODO improve using sympy And, Or, Not, ...
@@ -1670,7 +1673,7 @@ class Comparison(ExpressionElement):
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
             if operation == "==":
-                ret = EqualityStmt(ret, operand.expr)
+                ret = Eq(ret, operand.expr)
             elif operation == ">":
                 ret = Gt(ret, operand.expr)
             elif operation == ">=":
@@ -1680,7 +1683,7 @@ class Comparison(ExpressionElement):
             elif operation == "<=":
                 ret = Le(ret, operand.expr)
             elif operation == "<>":
-                ret = NotequalStmt(ret, operand.expr)
+                ret = Ne(ret, operand.expr)
             else:
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))
@@ -1719,7 +1722,7 @@ class ReturnStmt(FlowStmt):
         Constructor for a return statement flow.
 
         variables: list
-            list of variables to return, as strings
+            list of variables to return, as Expression
         results: list
             list of variables to return, as pyccel.types.ast objects
         """
@@ -1738,26 +1741,38 @@ class ReturnStmt(FlowStmt):
         decs = []
         # TODO depending on additional options from the grammar
         # TODO check that var is in namespace
-        for var_name in self.variables:
+        k=1
+        for var_var in self.variables:
+            var_expr=var_var.expr
+            var_name=str(var_expr)
+
             if var_name in namespace:
                 var = namespace[var_name]
 #                print var_name, var
-                if isinstance(var, Variable): # TODO intent must be out => result
-                    res = Variable(var.dtype, var_name, \
+                if isinstance(var, (Variable,IndexedElement,IndexedVariable)): # TODO intent must be out => result
+                    res = (Variable(var.dtype, var_name, \
                                    rank=var.rank, \
                                    allocatable=var.allocatable, \
-                                   shape=var.shape)
+                                   shape=var.shape),None)
                 else:
                     # TODO is it correct? raise?
                     datatype = var.datatype
                     res = Variable(datatype, var_name)
+            elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
+                var_d=get_attributs(var_expr)
+                res = (Variable(var_d['datatype'],\
+                               'result_%s'%abs(hash(str(var_d['datatype'])+str(k))), \
+                                   rank=var_d['rank'], \
+                                   allocatable=var_d['allocatable'], \
+                                   shape=var_d['shape']),var_expr)
+                k=k+1
             else:
                 raise()
 
             decs.append(res)
 
         self.results = decs
-        return decs
+        return Result(decs)
 
 class RaiseStmt(FlowStmt):
     """Base class representing a Raise statement in the grammar."""
@@ -1801,6 +1816,7 @@ class FunctionDefStmt(BasicStmt):
     # TODO scope
     @property
     def expr(self):
+
         """
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
@@ -1808,6 +1824,8 @@ class FunctionDefStmt(BasicStmt):
 #        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.args
+        local_vars  = []
+        global_vars = []
 
         cls_instance = None
         if isinstance(self.parent, SuiteStmt):
@@ -1866,11 +1884,12 @@ class FunctionDefStmt(BasicStmt):
         args    = [namespace[arg_name] for arg_name in self.args]
         prelude = [declarations[arg_name] for arg_name in self.args]
 
-        # ...
+
         results = []
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
                 results += stmt.results
+
         # ...
 
         # ... cleaning the namespace
@@ -1899,8 +1918,7 @@ class FunctionDefStmt(BasicStmt):
 
         body = prelude + body
 
-        local_vars  = []
-        global_vars = []
+
 
         # rename the method in the class case
         f_name = name
@@ -1913,7 +1931,6 @@ class FunctionDefStmt(BasicStmt):
                            cls_name=cls_name)
         namespace[name] = stmt
 #        print "*********** FunctionDefStmt.expr: End"
-
         return stmt
 
 class ClassDefStmt(BasicStmt):

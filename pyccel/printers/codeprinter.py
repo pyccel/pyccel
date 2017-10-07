@@ -32,7 +32,7 @@ class CodePrinter(StrPrinter):
         'or': '||',
         'not': '!',
     }
-
+    
     def doprint(self, expr, assign_to=None):
         """
         Print the expression as code.
@@ -61,6 +61,8 @@ class CodePrinter(StrPrinter):
 
         # Format the output
         return "\n".join(self._format_code(lines))
+    
+    
 
     def _get_statement(self, codestring):
         """Formats a codestring with the proper line ending."""
@@ -83,7 +85,7 @@ class CodePrinter(StrPrinter):
         This may include indenting, wrapping long lines, etc..."""
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
-
+    
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -215,6 +217,7 @@ class CodePrinter(StrPrinter):
                 return sign + '*'.join(a_str) + "/%s" % b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
+    
 
     def _print_not_supported(self, expr):
         raise TypeError("{0} not supported in {1}".format(type(expr), self.language))

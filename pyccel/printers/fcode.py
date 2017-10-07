@@ -15,8 +15,10 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
+from sympy import Eq,Ne,true,false
+from sympy.logic.boolalg import BooleanTrue,BooleanFalse
 
-from pyccel.types.ast import (Assign, MultiAssign, \
+from pyccel.types.ast import (Assign, MultiAssign,Result, \
                               Variable, Declare, \
                               Len, Dot, Sign, subs, \
                               IndexedElement, Slice)
@@ -98,6 +100,7 @@ class FCodePrinter(CodePrinter):
     _relationals = {
         '!=': '/=',
     }
+
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -741,19 +744,17 @@ class FCodePrinter(CodePrinter):
         name = name.split('Pyccel')[-1]
         return 'class({0})'.format(name)
 
-    def _print_EqualityStmt(self, expr):
+    def _print_Equality(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
-    def _print_NotequalStmt(self, expr):
+    def _print_Unequality(self, expr):
         return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_LOrEq(self, expr):
-        return '{0} <= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_Lthan(self, expr):
-        return '{0} < {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_GOrEq(self, expr):
-        return '{0} >= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
-    def _print_Gter(self, expr):
-        return '{0} > {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+
+    def _print_BooleanTrue(self, expr):
+        return '.True.'
+
+    def _print_BooleanFalse(self,expr):
+        return '.False.'
 
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
@@ -766,7 +767,8 @@ class FCodePrinter(CodePrinter):
         body = expr.body
         func_end  = ''
         if len(expr.results) == 1:
-            result = expr.results[0]
+            result,val_result = expr.results[0]
+
 
             body = []
             for stmt in expr.body:
@@ -774,10 +776,15 @@ class FCodePrinter(CodePrinter):
                     # TODO improve
                     if not(str(stmt.variables[0].name) == str(result.name)):
                         decs.append(stmt)
+                elif isinstance(stmt,Result):
+                    for i,j in stmt.result_variables:
+                        if not j==None:
+                            body.append(Assign(i,j))
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 
             ret_type = self._print(result.dtype)
+
             func_type = 'function'
 
             if result.allocatable or (result.rank > 0):
@@ -794,14 +801,17 @@ class FCodePrinter(CodePrinter):
                 func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
             # TODO compute intent
-            out_args = expr.results
-            for result in expr.results:
-                dec = Declare(result.dtype, result, intent='out')
+            out_args = [result for result,val_result in expr.results]
+            for result,val_result in expr.results:
+                if result in expr.arguments:
+                    dec = Declare(result.dtype, result, intent='inout')
+                else:
+                    dec = Declare(result.dtype, result, intent='out')
                 decs.append(dec)
             sig = 'subroutine ' + name
             func_type = 'subroutine'
 
-            names = [str(res.name) for res in expr.results]
+            names = [str(res.name) for res,i in expr.results]
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
@@ -809,11 +819,15 @@ class FCodePrinter(CodePrinter):
                     nm = str(stmt.variables[0].name)
                     if not(nm in names):
                         decs.append(stmt)
+                elif isinstance(stmt,Result):
+                    for i,j in stmt.result_variables:
+                        if not j==None:
+                            body.append(Assign(i,j))
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
         else:
             # TODO remove this part
-            for result in expr.results:
+            for result,val_result in expr.results:
                 arg = Variable(result.dtype, result.name, \
                                   rank=result.rank, \
                                   allocatable=result.allocatable, \
@@ -826,7 +840,7 @@ class FCodePrinter(CodePrinter):
             sig = 'subroutine ' + name
             func_type = 'subroutine'
 
-            names = [str(res.name) for res in expr.results]
+            names = [str(res.name) for res,i in expr.results]
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
@@ -839,11 +853,17 @@ class FCodePrinter(CodePrinter):
 #        else:
 #            sig = 'subroutine ' + name
 #            func_type = 'subroutine'
+        #remove parametres intent(inout) from out_args to prevent repetition
+        for i in expr.arguments:
+            if i in out_args:
+                out_args.remove(i)
+
         out_code  = ', '.join(self._print(i) for i in out_args)
 
         arg_code  = ', '.join(self._print(i) for i in expr.arguments)
         if len(out_code) > 0:
             arg_code  = ', '.join(i for i in [arg_code, out_code])
+
 
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)

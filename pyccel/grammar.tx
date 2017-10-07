@@ -113,7 +113,7 @@ RaiseStmt: label=RAISE;
 YieldStmt: label=YIELD;
 
 ReturnStmt:
-  label=RETURN (variables*=ID[','])
+  label=RETURN (variables*=Expression[','])
 ;
 
 DelStmt:
@@ -257,6 +257,7 @@ Atom:
   | (op=NONE)
   | (op=TRUE)
   | (op=FALSE)
+  | '(' op=Test ')'
 ;
 
 OpPlusOrMinus: '+' | '-';
