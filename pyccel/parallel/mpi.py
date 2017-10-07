@@ -1169,6 +1169,8 @@ class MPI_comm_allgather(MPI):
     MPI_allgather syntax is
     `MPI_ALLGATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
 
+    Note that we use recvcount = sendcount for the moment.
+
     senddata:
         initial address of send buffer (choice) [IN]
 
@@ -1225,7 +1227,7 @@ class MPI_comm_allgather(MPI):
 
     @property
     def recvcount(self):
-        return get_shape(self.recvdata)
+        return get_shape(self.senddata)
 
     @property
     def senddatatype(self):
