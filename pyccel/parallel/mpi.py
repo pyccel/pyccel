@@ -1026,7 +1026,8 @@ class MPI_comm_scatter(MPI):
 
     @property
     def sendcount(self):
-        return get_shape(self.senddata)
+        # sendcount = recvcount
+        return get_shape(self.recvdata)
 
     @property
     def recvcount(self):
