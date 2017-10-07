@@ -21,6 +21,4 @@ print('I, process ', rank, ', I received', msg, ' from process ', partner)
 ierr = mpi_finalize()
 
 # TODO: - example barrier
-#       - example alltoall
-#       - example reduce
 #       - example allreduce

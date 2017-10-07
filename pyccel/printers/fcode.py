@@ -39,6 +39,7 @@ from pyccel.parallel.mpi import MPI_comm_allgather
 from pyccel.parallel.mpi import MPI_comm_alltoall
 from pyccel.parallel.mpi import MPI_comm_reduce
 from pyccel.parallel.mpi import MPI_comm_allreduce
+from pyccel.parallel.mpi import MPI_SUM, MPI_PROD
 
 
 # TODO: add examples
@@ -413,11 +414,17 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_INTEGER(self, expr):
         return 'MPI_INTEGER'
 
-    def _print_MPI_FLOAT(self, expr):
-        return 'MPI_FLOAT'
+    def _print_MPI_REAL(self, expr):
+        return 'MPI_REAL'
 
     def _print_MPI_DOUBLE(self, expr):
         return 'MPI_DOUBLE'
+
+    def _print_MPI_SUM(self, expr):
+        return 'MPI_SUM'
+
+    def _print_MPI_PROD(self, expr):
+        return 'MPI_PROD'
 
     def _print_MPI_status_size(self, expr):
         return 'MPI_status_size'

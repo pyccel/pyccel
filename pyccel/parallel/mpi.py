@@ -187,6 +187,16 @@ class MPI_PROD(MPI_Operation):
 
     def _sympystr(self, printer):
         return 'MPI_PROD'
+
+_op_registry = {'+': MPI_SUM(), '*': MPI_PROD()}
+
+
+def mpi_operation(op):
+    """Returns the operator singleton for the given operator"""
+
+    if op.lower() not in _op_registry:
+        raise ValueError("Unrecognized MPI operation " + op)
+    return _op_registry[op]
 ##########################################################
 
 ##########################################################
@@ -1396,6 +1406,14 @@ class MPI_comm_reduce(MPI):
     is_integer = True
 
     def __new__(cls, *args, **options):
+        args = list(args)
+        op = args[2]
+        if not isinstance(op, (str, MPI_Operation)):
+            raise TypeError('Expecting a string or MPI_Operation for args[2]')
+
+        if isinstance(op, str):
+            args[2] = mpi_operation(op)
+
         return super(MPI_comm_reduce, cls).__new__(cls, *args, **options)
 
     @property
