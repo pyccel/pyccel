@@ -12,8 +12,6 @@ periods = array((False, True), bool)
 reorder = False
 ierr = comm.cart_create(dims, periods, reorder, comm_2d)
 
-#MPI_DIMS_CREATE(nnodes, ndims, dims)
-
 #Destruction of the communicators
 ierr = comm_2d.free()
 

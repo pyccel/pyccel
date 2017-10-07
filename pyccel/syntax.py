@@ -135,7 +135,7 @@ def datatype_from_string(txt):
         return NativeDouble()
     elif txt == 'complex':
         return NativeComplex()
-    if txt == 'bool':
+    elif txt == 'bool':
         return NativeBool()
     elif txt == 'mpi_int':
         return MPI_INTEGER()
@@ -325,8 +325,7 @@ def get_attributs(expr):
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
-    elif isinstance(expr, Boolean):
-        # TODO choose precision
+    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
         d_var['datatype']    = NativeBool()
         d_var['allocatable'] = False
         d_var['rank']        = 0

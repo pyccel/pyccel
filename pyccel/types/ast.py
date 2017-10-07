@@ -1864,6 +1864,8 @@ class FunctionHeader(Basic):
     >>> from pyccel.types.ast import FunctionHeader
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
+    >>> FunctionHeader('mpi_dims_create', ['int', 'int', ('int', [Slice(None,None)])], results=['int'])
+    FunctionHeader(mpi_dims_create, [(NativeInteger(), []), (NativeInteger(), []), (int, [ : ])], [(NativeInteger(), [])], function)
     """
 
     def __new__(cls, func, dtypes, results=None, kind='function'):
