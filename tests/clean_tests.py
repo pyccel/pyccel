@@ -19,7 +19,7 @@ for root, dirs, files in os.walk("."):
     for f in _files:
         f_name = '{0}/{1}'.format(dirname, f)
         if os.path.isfile(f_name):
-            cmd = 'rm -f '.f_name
+            cmd = 'rm -f '+f_name
             os.system(cmd)
             for ext in ['f90', 'pyccel']:
                 cmd = 'rm -f {0}.{1}'.format(f_name, ext)
