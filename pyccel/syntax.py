@@ -133,6 +133,8 @@ def datatype_from_string(txt):
         return NativeDouble()
     elif txt == 'complex':
         return NativeComplex()
+    if txt == 'bool':
+        return NativeBool()
     elif txt == 'mpi_int':
         return MPI_INTEGER()
     elif txt == 'mpi_float':
@@ -225,7 +227,7 @@ namespace["pi"]    = pi
 namespace, declarations = append_mpi(namespace, declarations)
 
 # ... builtin types
-builtin_types  = ['int', 'float', 'double', 'complex']
+builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
 # ...
 
 # ... will contain user defined types
