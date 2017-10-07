@@ -36,7 +36,7 @@ from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
+from pyccel.types.ast import (Range, For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -1320,6 +1320,51 @@ class MultiAssignStmt(BasicStmt):
 #            return Shape(lhs, args[0])
 #        else:
 #            return MultiAssign(lhs, rhs, args)
+
+class RangeStmt(BasicStmt):
+    """Class representing a Range statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the Range statement.
+
+        start: str
+            start index
+        end: str
+            end index
+        step: str
+            step for the iterable. if not given, 1 will be used.
+        """
+        self.start    = kwargs.pop('start')
+        self.end      = kwargs.pop('end')
+        self.step     = kwargs.pop('step', None)
+
+        super(RangeStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Range statement by returning a pyccel.types.ast object
+        """
+        if self.start in namespace:
+            b = namespace[self.start]
+        else:
+            b = do_arg(self.start)
+
+        if self.end in namespace:
+            e = namespace[self.end]
+        else:
+            e = do_arg(self.end)
+
+        if self.step is None:
+            s = 1
+        else:
+            if self.step in namespace:
+                s = namespace[self.step]
+            else:
+                s = do_arg(self.step)
+
+        return Range(b,e,s)
 
 class ForStmt(BasicStmt):
     """Class representing a For statement."""

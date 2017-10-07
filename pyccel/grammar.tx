@@ -213,6 +213,10 @@ EvalStmt: lhs=ID '=' 'eval' '(' expression=STRING ')';
 ThreadStmt: lhs=ID '=' func=ThreadFunction '(' ')';
 ThreadFunction: 'thread_id' | 'thread_number';
 
+RangeStmt:
+  'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
+;
+
 ForStmt: 
   'for' iterable=ID 'in' 
   'range' '(' start=Expression ',' 

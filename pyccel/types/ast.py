@@ -14,7 +14,7 @@ from sympy.core.function import Function
 from sympy import sympify
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
-from sympy.sets.fancysets import Range
+from sympy.sets.fancysets import Range as sm_Range
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
@@ -477,6 +477,33 @@ class While(Basic):
     @property
     def body(self):
         return self._args[1]
+
+class Range(sm_Range):
+    """
+    Representes a range.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import Range
+    >>> from sympy import Symbol
+    >>> s = Variable('int', 's')
+    >>> e = Symbol('e')
+    >>> Range(s, e, 1)
+    Range(0, n, 1)
+    """
+
+    def __new__(cls, *args):
+        _args = []
+        for a in args:
+            if isinstance(a, Symbol):
+                _args.append(0)
+            else:
+                _args.append(a)
+        r = sm_Range.__new__(cls, *_args)
+        r._args = args
+
+        return r
 
 class For(Basic):
     """Represents a 'for-loop' in the code.

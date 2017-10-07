@@ -5,7 +5,7 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
+from pyccel.types.ast import (Range, For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
