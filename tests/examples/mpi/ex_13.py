@@ -29,9 +29,9 @@ ierr = comm.split (color, key, newcomm)
 
 #Broadcast of the message by the rank process 0 of
 #each communicator to the processes of its group
-#ierr = newcomm.bcast (a, root)
+ierr = newcomm.bcast (a, root)
 
 #Destruction of the communicators
-#ierr = newcomm.free()
+ierr = newcomm.free()
 
 ierr = mpi_finalize()

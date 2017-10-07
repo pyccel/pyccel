@@ -774,6 +774,7 @@ def expr_with_trailer(expr, trailer=None):
                         d_var['allocatable'] = False
                         d_var['shape']       = None
                         d_var['rank']        = 0
+                        d_var['cls_base']    = MPI_comm()
 
                         insert_variable(newcomm, **d_var)
 
