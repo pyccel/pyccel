@@ -1502,6 +1502,14 @@ class MPI_comm_allreduce(MPI):
     is_integer = True
 
     def __new__(cls, *args, **options):
+        args = list(args)
+        op = args[2]
+        if not isinstance(op, (str, MPI_Operation)):
+            raise TypeError('Expecting a string or MPI_Operation for args[2]')
+
+        if isinstance(op, str):
+            args[2] = mpi_operation(op)
+
         return super(MPI_comm_allreduce, cls).__new__(cls, *args, **options)
 
     @property
