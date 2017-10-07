@@ -1612,7 +1612,7 @@ class MPI_comm_split(MPI):
     >>> key   = Variable('int', 'key')
     >>> comm  = MPI_comm_world()
     >>> newcomm = MPI_comm('newcomm')
-    >>> MPI_comm_split(comm, color, key, newcomm)
+    >>> MPI_comm_split(color, key, newcomm, comm)
     MPI_comm_split (mpi_comm_world, color, key, newcomm, i_mpi_error)
     """
     is_integer = True
@@ -1689,6 +1689,94 @@ class MPI_comm_free(MPI):
         args = (comm, ierr)
         args  = ', '.join('{0}'.format(sstr(a)) for a in args)
         code = 'MPI_comm_free ({0})'.format(args)
+        return code
+
+##########################################################
+
+##########################################################
+#                  Topologies
+##########################################################
+class MPI_comm_cart_create(MPI):
+    """
+    Represents the MPI_cart_create statement.
+    MPI_comm_split syntax is
+    `MPI_CART_CREATE(comm, ndims, dims, periods, reorder, newcomm)`
+
+    comm:
+        input communicator (handle) [IN]
+
+    ndims:
+        number of dimensions of Cartesian grid (integer) [IN]
+
+    dims:
+        integer array of size ndims specifying the number of processes in each dimension [IN]
+
+    periods:
+        logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each dimension [IN]
+
+    reorder:
+        ranking may be reordered (true) or not (false) (logical) [IN]
+
+    newcomm:
+        communicator with new Cartesian topology (handle) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_create
+    >>> n = Variable('int', 'n')
+    >>> dims    = Variable('int',     'dims', rank=1, shape=n, allocatable=True)
+    >>> periods = Variable('bool', 'periods', rank=1, shape=n, allocatable=True)
+    >>> reorder = Variable('bool', 'reorder')
+    >>> comm  = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_cart_create(dims, periods, reorder, newcomm, comm)
+    MPI_cart_create (mpi_comm_world, n, dims, periods, reorder, newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_create, cls).__new__(cls, *args, **options)
+
+    @property
+    def dims(self):
+        return self.args[0]
+
+    @property
+    def periods(self):
+        return self.args[1]
+
+    @property
+    def reorder(self):
+        return self.args[2]
+
+    @property
+    def newcomm(self):
+        return self.args[3]
+
+    @property
+    def comm(self):
+        return self.args[4]
+
+    @property
+    def ndims(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        ndims   = self.ndims
+        dims    = self.dims
+        periods = self.periods
+        reorder = self.reorder
+        comm    = self.comm
+        newcomm = self.newcomm
+        ierr    = MPI_ERROR
+
+        args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_create ({0})'.format(args)
         return code
 
 ##########################################################

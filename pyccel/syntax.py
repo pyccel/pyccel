@@ -78,6 +78,7 @@ from pyccel.parallel.mpi import MPI_comm_reduce
 from pyccel.parallel.mpi import MPI_comm_allreduce
 from pyccel.parallel.mpi import MPI_comm_split
 from pyccel.parallel.mpi import MPI_comm_free
+from pyccel.parallel.mpi import MPI_comm_cart_create
 
 DEBUG = False
 #DEBUG = True
@@ -775,7 +776,7 @@ def expr_with_trailer(expr, trailer=None):
                 comm = expr
                 func = trailer[0].expr
                 args = trailer[1].expr
-                if func == 'split':
+                if func in ['split', 'cart_create']:
                     newcomm = args[-1]
                     if not newcomm in namespace:
                         d_var = {}
