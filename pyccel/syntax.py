@@ -1589,6 +1589,8 @@ class Atom(ExpressionElement):
             return true
         elif op == 'False':
             return false
+        elif isinstance(op, str):
+            return op
         else:
             txt = 'Undefined variable "{0}" of type {1}'.format(op, type(op))
             raise Exception(txt)

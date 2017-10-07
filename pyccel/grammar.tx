@@ -254,6 +254,7 @@ Atom:
    '(' op=Expression ')'
   | (op=Number) 
   | (op=ID) 
+  | (op=STRING) 
   | (op=NONE)
   | (op=TRUE)
   | (op=FALSE)
