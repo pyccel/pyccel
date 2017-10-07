@@ -13,7 +13,7 @@ block_length = nb_values / nb_procs
 
 values = zeros(block_length, double)
 for i in range(0, block_length):
-    values[i] = (rank + 1)* 1000 + i
+    values[i] = 1000 + rank*nb_values + i
 print ('I, process ', rank, 'sent my values array : ', values)
 
 data = zeros(nb_values, double)

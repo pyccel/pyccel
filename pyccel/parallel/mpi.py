@@ -1259,7 +1259,9 @@ class MPI_comm_alltoall(MPI):
     """
     Represents the MPI_alltoall statement.
     MPI_alltoall syntax is
-    `MPI_ALLGATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+    `MPI_ALLTOALL(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+
+    Note that we use sendcount = recvcount = count for the moment.
 
     senddata:
         initial address of send buffer (choice) [IN]
@@ -1290,9 +1292,10 @@ class MPI_comm_alltoall(MPI):
     >>> n = Variable('int', 'n')
     >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
     >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> count = Variable('int', 'count')
     >>> comm = MPI_comm_world()
-    >>> MPI_comm_alltoall(x, y, comm)
-    MPI_alltoall (x, 2*n, MPI_DOUBLE, y, 2*n, MPI_DOUBLE, mpi_comm_world, i_mpi_error)
+    >>> MPI_comm_alltoall(x, y, count, comm)
+    MPI_alltoall (x, count, MPI_DOUBLE, y, count, MPI_DOUBLE, mpi_comm_world, i_mpi_error)
     """
     is_integer = True
 
@@ -1308,16 +1311,20 @@ class MPI_comm_alltoall(MPI):
         return self.args[1]
 
     @property
-    def comm(self):
+    def count(self):
         return self.args[2]
 
     @property
+    def comm(self):
+        return self.args[3]
+
+    @property
     def sendcount(self):
-        return get_shape(self.senddata)
+        return self.count
 
     @property
     def recvcount(self):
-        return get_shape(self.recvdata)
+        return self.count
 
     @property
     def senddatatype(self):
