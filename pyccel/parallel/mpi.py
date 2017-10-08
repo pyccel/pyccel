@@ -2081,7 +2081,9 @@ class MPI_Tensor(MPI, Block):
     is_integer = True
 
     def __new__(cls, tensor, \
-                comm_parent=None, dims=None, periods=None, reorder=False):
+                comm_parent=None, \
+                dims=None, periods=None, reorder=False, \
+                disp=1):
         # ...
         if not isinstance(tensor, Tensor):
             raise TypeError('Expecting a Tensor')
@@ -2106,16 +2108,6 @@ class MPI_Tensor(MPI, Block):
         body.append(stmt)
 
         cls._ndim = ndim
-        # ...
-
-        # ...
-        neighbor = Variable('int', 'neighbor', \
-                            rank=1, shape=2*ndim, allocatable=True)
-        stmt = Zeros(neighbor, 2*ndim)
-        variables.append(neighbor)
-        body.append(stmt)
-
-        cls._neighbor = neighbor
         # ...
 
         # ... TODO use MPI_dims_create
@@ -2238,6 +2230,39 @@ class MPI_Tensor(MPI, Block):
         body.append(stmt)
 
         cls._coords = coords
+        # ...
+
+        # ... TODO treat disp properly
+        neighbor = Variable('int', 'neighbor', \
+                            rank=1, shape=2*ndim, allocatable=True)
+        stmt = Zeros(neighbor, 2*ndim)
+        variables.append(neighbor)
+        body.append(stmt)
+
+        cls._neighbor = neighbor
+
+        _map_neighbor = {}
+        if tensor.dim == 2:
+            _map_neighbor['north'] = 0
+            _map_neighbor['east']  = 1
+            _map_neighbor['south'] = 2
+            _map_neighbor['west']  = 3
+        else:
+            raise NotImplementedError('Only 2d is available')
+
+        source = Variable('int', 'source')
+        dest   = Variable('int', 'dest')
+        variables.append(source)
+        variables.append(dest)
+
+        for axis in range(0, tensor.dim):
+            body.append(Assign(source, 0))
+            body.append(Assign(dest,   1))
+#            body.append(Assign(source, neighbor[0]))
+#            body.append(Assign(dest,   neighbor[1]))
+            rhs  = MPI_comm_cart_shift(axis, disp, source, dest, comm)
+            stmt = MPI_Assign(ierr, rhs, strict=False)
+            body.append(stmt)
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
