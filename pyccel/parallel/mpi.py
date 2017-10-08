@@ -2179,7 +2179,7 @@ class MPI_Tensor(MPI, Block):
         else:
             reorder_val = BooleanFalse()
 
-        reorder = Variable('bool', 'reorder', rank=0)
+        reorder = Variable('bool', 'reorder')
         stmt = Assign(reorder, reorder_val)
         variables.append(reorder)
         body.append(stmt)
@@ -2233,36 +2233,37 @@ class MPI_Tensor(MPI, Block):
         # ...
 
         # ... TODO treat disp properly
-        neighbor = Variable('int', 'neighbor', \
-                            rank=1, shape=2*ndim, allocatable=True)
+        neighbor = Variable('int', 'neighbor', rank=1, shape=2*ndim, allocatable=True)
         stmt = Zeros(neighbor, 2*ndim)
         variables.append(neighbor)
         body.append(stmt)
 
+        neighbor = IndexedVariable(neighbor.name, dtype=neighbor.dtype)
         cls._neighbor = neighbor
 
         _map_neighbor = {}
         if tensor.dim == 2:
-            _map_neighbor['north'] = 0
-            _map_neighbor['east']  = 1
-            _map_neighbor['south'] = 2
-            _map_neighbor['west']  = 3
-        else:
-            raise NotImplementedError('Only 2d is available')
+            north = 0 ; east = 1 ; south = 2 ; west = 3
 
-        source = Variable('int', 'source')
-        dest   = Variable('int', 'dest')
-        variables.append(source)
-        variables.append(dest)
-
-        for axis in range(0, tensor.dim):
-            body.append(Assign(source, 0))
-            body.append(Assign(dest,   1))
-#            body.append(Assign(source, neighbor[0]))
-#            body.append(Assign(dest,   neighbor[1]))
-            rhs  = MPI_comm_cart_shift(axis, disp, source, dest, comm)
+            # ...
+            axis = 0
+            rhs  = MPI_comm_cart_shift(axis, disp, \
+                                       neighbor[west], neighbor[east], \
+                                       comm)
             stmt = MPI_Assign(ierr, rhs, strict=False)
             body.append(stmt)
+            # ...
+
+            # ...
+            axis = 1
+            rhs  = MPI_comm_cart_shift(axis, disp, \
+                                       neighbor[south], neighbor[north], \
+                                       comm)
+            stmt = MPI_Assign(ierr, rhs, strict=False)
+            body.append(stmt)
+            # ...
+        else:
+            raise NotImplementedError('Only 2d is available')
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
