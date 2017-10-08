@@ -2227,6 +2227,15 @@ class MPI_Tensor(MPI, Block):
         cls._comm = comm
         # ...
 
+        # ...
+        rank_in_cart = Variable('int', 'rank_in_cart')
+        stmt = MPI_Assign(rank_in_cart, MPI_comm_rank(comm))
+        variables.append(rank_in_cart)
+        body.append(stmt)
+
+        cls._rank_in_cart = rank_in_cart
+        # ...
+
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
     @property
@@ -2272,6 +2281,10 @@ class MPI_Tensor(MPI, Block):
     @property
     def reorder(self):
         return self._reorder
+
+    @property
+    def rank_in_cart(self):
+        return self._rank_in_cart
 
     def _sympystr(self, printer):
         sstr = printer.doprint
