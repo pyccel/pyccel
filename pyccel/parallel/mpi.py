@@ -2184,6 +2184,20 @@ class MPI_Tensor(MPI, Block):
         cls._periods = periods
         # ...
 
+        # ...
+        if reorder:
+            reorder_val = BooleanTrue()
+        else:
+            reorder_val = BooleanFalse()
+
+        reorder = Variable('bool', 'reorder', rank=0)
+        stmt = Assign(reorder, reorder_val)
+        variables.append(reorder)
+        body.append(stmt)
+
+        cls._reorder = reorder
+        # ...
+
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
     @property
@@ -2199,8 +2213,20 @@ class MPI_Tensor(MPI, Block):
         return self._coords
 
     @property
+    def dim(self):
+        return self.tensor.dim
+
+    @property
     def dims(self):
         return self._dims
+
+    @property
+    def peridos(self):
+        return self._periods
+
+    @property
+    def reorder(self):
+        return self._reorder
 
     def _sympystr(self, printer):
         sstr = printer.doprint
