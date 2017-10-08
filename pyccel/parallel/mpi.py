@@ -2150,12 +2150,12 @@ class MPI_Tensor(MPI, Block):
         variables.append(dims)
         body.append(stmt)
 
-        dims = IndexedVariable(dims.name, dtype=dims.dtype)
+        var = IndexedVariable(dims.name, dtype=dims.dtype)
         for i in range(0, tensor.dim):
-            stmt = Assign(dims[i], _dims[i])
+            stmt = Assign(var[i], _dims[i])
             body.append(stmt)
 
-        cls._dims = dims
+        cls._dims = var
         # ...
 
         # ...
