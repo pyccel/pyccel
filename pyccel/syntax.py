@@ -37,8 +37,8 @@ from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import NativeRange
-from pyccel.types.ast import (Range, For, Assign, Declare, Variable, \
+from pyccel.types.ast import NativeRange, NativeTensor
+from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -260,7 +260,7 @@ builtin_funcs_math = builtin_funcs_math_un + \
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 
-builtin_funcs_iter = ['range']
+builtin_funcs_iter = ['range', 'tensor']
 builtin_funcs += builtin_funcs_iter
 
 builtin_funcs_mpi = ['mpi_waitall']
@@ -684,8 +684,25 @@ def builtin_function(name, args, lhs=None):
         d_var['rank']        = 0
 
         insert_variable(lhs, **d_var)
+        namespace[lhs] = Range(*args)
         lhs = namespace[lhs]
         rhs = Range(*args)
+        return Assign(lhs, rhs, strict=False)
+    elif name == "tensor":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        d_var = {}
+        d_var['datatype']    = NativeTensor()
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+
+        insert_variable(lhs, **d_var)
+        lhs = namespace[lhs]
+        rhs = Tensor(*args)
         return Assign(lhs, rhs, strict=False)
     elif name == "mpi_waitall":
         if not lhs:

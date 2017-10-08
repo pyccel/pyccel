@@ -5,8 +5,8 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (Range, For, Assign, Declare, Variable, \
-                              NativeRange, \
+from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
+                              NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -356,7 +356,7 @@ class Codegen(object):
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
-                if not isinstance(stmt.rhs, Range):
+                if not isinstance(stmt.rhs, (Range, Tensor)):
                     body += printer(stmt) + "\n"
             elif isinstance(stmt, MultiAssign):
                 body += printer(stmt) + "\n"
@@ -402,7 +402,7 @@ class Codegen(object):
 
         # ...
         for key, dec in ast.declarations.items():
-            if not isinstance(dec.dtype, NativeRange):
+            if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 preludes += printer(dec) + "\n"
         # ...
 

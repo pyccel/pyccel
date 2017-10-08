@@ -505,6 +505,39 @@ class Range(sm_Range):
 
         return r
 
+# TODO: implement it as an extension of sympy Tensor?
+class Tensor(Basic):
+    """
+    Base class for tensor.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import Range, Tensor
+    >>> from sympy import Symbol
+    >>> s1 = Variable('int', 's1')
+    >>> s2 = Variable('int', 's2')
+    >>> e1 = Variable('int', 'e1')
+    >>> e2 = Variable('int', 'e2')
+    >>> r1 = Range(s1, e1, 1)
+    >>> r2 = Range(s2, e2, 1)
+    >>> Tensor(r1, r2)
+    Tensor(Range(s1, e1, 1), Range(s2, e2, 1))
+    """
+
+    def __new__(cls, *args):
+        for r in args:
+            if not isinstance(r, (Range, Tensor)):
+                raise TypeError("Expecting a Range or Tensor")
+
+        return Basic.__new__(cls, *args)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        txt  = ', '.join(sstr(n) for n in self._args)
+        txt  = 'Tensor({0})'.format(txt)
+        return txt
+
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -596,6 +629,10 @@ class NativeVoid(DataType):
 
 class NativeRange(DataType):
     _name = 'Range'
+    pass
+
+class NativeTensor(DataType):
+    _name = 'Tensor'
     pass
 
 

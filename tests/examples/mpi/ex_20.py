@@ -9,4 +9,6 @@ rank = comm.rank
 u = range(0, 4)
 v = range(0, 4)
 
+uv = tensor(u, v)
+
 ierr = mpi_finalize()
