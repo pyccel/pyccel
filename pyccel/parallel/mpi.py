@@ -2,6 +2,8 @@
 
 # TODO - MPI_comm_gatherv: needs a new data structure for the variable
 
+from itertools import groupby
+
 from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 from sympy.core.compatibility import with_metaclass
@@ -2079,26 +2081,31 @@ class MPI_Tensor(MPI, Block):
     is_integer = True
 
     def __new__(cls, tensor, \
-                comm=None, dims=None, periods=None, reorder=False):
+                comm_parent=None, dims=None, periods=None, reorder=False):
+        # ...
         if not isinstance(tensor, Tensor):
             raise TypeError('Expecting a Tensor')
         cls._tensor = tensor
-
-        if comm is None:
-            comm = MPI_comm_world()
-        else:
-            if not isinstance(comm, MPI_comm):
-                raise TypeError('Expecting a valid MPI communicator')
-        cls._comm   = comm
-
+        # ...
 
         # ...
         variables = []
         body      = []
         # ...
 
+        # ... we don't need to append ierr to variables, since it will be
+        #     defined in the program
+        ierr = MPI_ERROR
+        #variables.append(ierr)
         # ...
-        ndim = tensor.dim
+
+        # ...
+        ndim = Variable('int', 'ndim')
+        stmt = Assign(ndim, tensor.dim)
+        variables.append(ndim)
+        body.append(stmt)
+
+        cls._ndim = ndim
         # ...
 
         # ...
@@ -2144,7 +2151,7 @@ class MPI_Tensor(MPI, Block):
         body.append(stmt)
 
         dims = IndexedVariable(dims.name, dtype=dims.dtype)
-        for i in range(0, ndim):
+        for i in range(0, tensor.dim):
             stmt = Assign(dims[i], _dims[i])
             body.append(stmt)
 
@@ -2177,7 +2184,7 @@ class MPI_Tensor(MPI, Block):
         body.append(stmt)
 
         periods = IndexedVariable(periods.name, dtype=periods.dtype)
-        for i in range(0, ndim):
+        for i in range(0, tensor.dim):
             stmt = Assign(periods[i], _periods[i])
             body.append(stmt)
 
@@ -2198,11 +2205,45 @@ class MPI_Tensor(MPI, Block):
         cls._reorder = reorder
         # ...
 
+        # ... set the parent comm
+        if comm_parent is None:
+            comm_parent = MPI_comm_world()
+        else:
+            if not isinstance(comm_parent, MPI_comm):
+                raise TypeError('Expecting a valid MPI communicator')
+        cls._comm_parent = comm_parent
+        # ...
+
+        # ... create the cart comm
+        comm_name = 'comm_cart'
+        comm = Variable('int', comm_name, rank=0, cls_base=MPI_comm())
+        variables.append(comm)
+
+        comm = MPI_comm(comm_name)
+        rhs  = MPI_comm_cart_create(dims, periods, reorder, comm, comm_parent)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+
+        cls._comm = comm
+        # ...
+
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
     @property
     def tensor(self):
-        return get_shape(self.dims)
+        return self._tensor
+
+    @property
+    def comm_parent(self):
+        return self._comm_parent
+
+    @property
+    def comm(self):
+        return self._comm
+
+    @property
+    def reorder(self):
+        return self._reorder
 
     @property
     def neighbor(self):
@@ -2217,11 +2258,15 @@ class MPI_Tensor(MPI, Block):
         return self.tensor.dim
 
     @property
+    def ndim(self):
+        return self._ndim
+
+    @property
     def dims(self):
         return self._dims
 
     @property
-    def peridos(self):
+    def periods(self):
         return self._periods
 
     @property

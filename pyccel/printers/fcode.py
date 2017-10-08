@@ -489,6 +489,9 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_proc_null(self, expr):
         return 'MPI_proc_null'
 
+    def _print_MPI_comm(self, expr):
+        return expr.name
+
     def _print_MPI_Declare(self, expr):
         dtype = self._print(expr.dtype)
         # Group the variables by intent
