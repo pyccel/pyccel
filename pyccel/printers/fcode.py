@@ -14,9 +14,9 @@ from sympy.core import Tuple
 from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
-from sympy.sets.fancysets import Range
 from sympy.utilities.iterables import iterable
 
+from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import (Assign, MultiAssign, \
                               Variable, Declare, \
                               Len, Dot, Sign, subs, \
@@ -1050,25 +1050,37 @@ class FCodePrinter(CodePrinter):
 
     # TODO iterators
     def _print_For(self, expr):
-        if not iterable(expr.target):
-            target = self._print(expr.target)
-        else:
-            # TODO remove this line
-            return ''
+        prolog = ''
+        epilog = ''
+
+        def _do_range(target, iter, prolog, epilog):
+            if not isinstance(iter, Range):
+                raise NotImplementedError("Only iterable currently supported is Range")
+
+            tar   = self._print(target)
+            start = self._print(iter.start)
+            # decrement stop by 1 because of the python convention
+            stop  = self._print(iter.stop-1)
+            step  = self._print(iter.step)
+
+            prolog += 'do {0} = {1}, {2}, {3}\n'.format(tar, start, stop, step)
+            epilog += 'end do\n'
+
+            return prolog, epilog
+
+        if not isinstance(expr.iterable, (Range, Tensor)):
+            raise NotImplementedError("Only iterable currently supported are Range and Tensor")
+
         if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
-        else:
-            # TODO remove this line
-            return ''
-#            raise NotImplementedError("Only iterable currently supported is Range")
-        # decrement stop by 1 because of the python convention
-        stop = stop - 1
+            prolog, epilog = _do_range(expr.target[0], expr.iterable, prolog, epilog)
+        elif isinstance(expr.iterable, Tensor):
+            for i,a in zip(expr.target, expr.iterable.ranges):
+                prolog, epilog = _do_range(i, a, prolog, epilog)
 
         body = '\n'.join(self._print(i) for i in expr.body)
-        return ('do {target} = {start}, {stop}, {step}\n'
+        return ('{prolog}\n'
                 '{body}\n'
-                'end do').format(target=target, start=start, stop=stop,
-                        step=step, body=body)
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     def _print_While(self,expr):
         body = '\n'.join(self._print(i) for i in expr.body)

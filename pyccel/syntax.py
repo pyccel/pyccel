@@ -1464,7 +1464,7 @@ class ForStmt(BasicStmt):
         else:
             i = Symbol(self.iterable, integer=True)
 
-        if isinstance(self.range, Range):
+        if isinstance(self.range, RangeStmt):
             r = self.range.expr
         elif isinstance(self.range, str):
             if not self.range in namespace:
@@ -1476,6 +1476,7 @@ class ForStmt(BasicStmt):
                 raise TypeError('Expecting an Iterable')
             r = namespace[self.range]
         else:
+            print ">>>> ", type(self.range)
             raise TypeError('Expecting an Iterable')
 
         self.update()

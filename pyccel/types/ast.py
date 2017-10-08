@@ -505,6 +505,21 @@ class Range(sm_Range):
 
         return r
 
+    @property
+    def start(self):
+        return self._args[0]
+
+    @property
+    def stop(self):
+        return self._args[1]
+
+    @property
+    def step(self):
+        if len(self._args) == 2:
+            return 1
+        else:
+            return self._args[2]
+
 # TODO: implement it as an extension of sympy Tensor?
 class Tensor(Basic):
     """
@@ -531,6 +546,10 @@ class Tensor(Basic):
                 raise TypeError("Expecting a Range or Tensor")
 
         return Basic.__new__(cls, *args)
+
+    @property
+    def ranges(self):
+        return self._args
 
     def _sympystr(self, printer):
         sstr = printer.doprint
