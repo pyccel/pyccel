@@ -24,6 +24,7 @@ from pyccel.openmp.syntax import OpenmpStmt
 from pyccel.imports.syntax import ImportFromStmt
 
 from pyccel.parallel.mpi import MPI_Tensor
+from pyccel.parallel.mpi import mpify
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)
@@ -346,7 +347,8 @@ class Codegen(object):
 
         # ...
         stmts = ast.expr
-        for stmt in stmts:
+        for _stmt in stmts:
+            stmt = mpify(_stmt)
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):

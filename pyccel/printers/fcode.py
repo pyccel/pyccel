@@ -51,6 +51,7 @@ from pyccel.parallel.mpi import MPI_comm_cart_shift
 from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import MPI_SUM, MPI_PROD
+from pyccel.parallel.mpi import MPI_Tensor
 
 
 # TODO: add examples
@@ -1095,12 +1096,13 @@ class FCodePrinter(CodePrinter):
 
             return prolog, epilog
 
-        if not isinstance(expr.iterable, (Range, Tensor)):
-            raise NotImplementedError("Only iterable currently supported are Range and Tensor")
+        if not isinstance(expr.iterable, (Range, Tensor, MPI_Tensor)):
+            txt = "Only iterable currently supported are Range, Tensor and MPI_Tensor"
+            raise NotImplementedError(txt)
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target[0], expr.iterable, prolog, epilog)
-        elif isinstance(expr.iterable, Tensor):
+        elif isinstance(expr.iterable, (Tensor, MPI_Tensor)):
             for i,a in zip(expr.target, expr.iterable.ranges):
                 prolog, epilog = _do_range(i, a, prolog, epilog)
 

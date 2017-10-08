@@ -1478,8 +1478,6 @@ class ForStmt(BasicStmt):
                 raise ValueError('Undefined range.')
             r = namespace[self.range]
             if not isinstance(namespace[self.range], (Range, Tensor)):
-                print r, type(r)
-                print_namespace()
                 raise TypeError('Expecting an Iterable')
             r = namespace[self.range]
         else:

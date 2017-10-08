@@ -17,8 +17,11 @@ from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
 from pyccel.types.ast import DataTypeFactory
 from pyccel.types.ast import Block
-from pyccel.types.ast import Tensor
+from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import Zeros
+
+from pyccel.types.ast import For, While, FunctionDef, ClassDef, If
+
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
@@ -2132,12 +2135,12 @@ class MPI_Tensor(MPI, Block):
         variables.append(dims)
         body.append(stmt)
 
-        var = IndexedVariable(dims.name, dtype=dims.dtype)
+        dims = IndexedVariable(dims.name, dtype=dims.dtype)
         for i in range(0, tensor.dim):
-            stmt = Assign(var[i], _dims[i])
+            stmt = Assign(dims[i], _dims[i])
             body.append(stmt)
 
-        cls._dims = var
+        cls._dims = dims
         # ...
 
         # ...
@@ -2229,6 +2232,7 @@ class MPI_Tensor(MPI, Block):
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
 
+        coords = IndexedVariable(coords.name, dtype=coords.dtype)
         cls._coords = coords
         # ...
 
@@ -2264,6 +2268,39 @@ class MPI_Tensor(MPI, Block):
             # ...
         else:
             raise NotImplementedError('Only 2d is available')
+        # ...
+
+        # ... compute local ranges
+        starts = [r.start for r in tensor.ranges]
+        ends   = [r.stop  for r in tensor.ranges]
+        steps  = [r.step  for r in tensor.ranges]
+
+        d = {}
+        labels = ['x','y','z'][:tensor.dim]
+        for i,label in enumerate(labels):
+            nn = (ends[0] - starts[0])/steps[0]
+
+            d['s'+label] = (coords[0] * nn) / dims[0]
+            d['e'+label] = ((coords[0]+1) * nn) / dims[0]
+
+        ranges = []
+        for label in labels:
+            dd = {}
+            for _n in ['s', 'e']:
+                n = _n+label
+                v    = Variable('int', n)
+                rhs  = d[n]
+                stmt = Assign(v, rhs)
+                variables.append(v)
+                body.append(stmt)
+
+                dd[n] = v
+
+            args = [i[1] for i in dd.items()]
+            r = Range(*args)
+            ranges.append(r)
+
+        cls._ranges = ranges
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
@@ -2316,6 +2353,10 @@ class MPI_Tensor(MPI, Block):
     def rank_in_cart(self):
         return self._rank_in_cart
 
+    @property
+    def ranges(self):
+        return self._ranges
+
     def _sympystr(self, printer):
         sstr = printer.doprint
 
@@ -2329,6 +2370,57 @@ class MPI_Tensor(MPI, Block):
         return code
 ##########################################################
 
+##########################################################
+#             useful functions
+##########################################################
+def mpify(stmt, **options):
+    """
+    Converts some statements to MPI statments.
+
+    stmt: stmt, list
+        statement or a list of statements
+    """
+    if isinstance(stmt, Tensor):
+        return MPI_Tensor(stmt, **options)
+    if isinstance(stmt, For):
+        iterable = MPI_Tensor(stmt.iterable, **options)
+        target   = stmt.target
+        body     = mpify(stmt.body, **options)
+        return For(target, iterable, body, strict=False)
+    if isinstance(stmt, list):
+        return [mpify(a, **options) for a in stmt]
+    if isinstance(stmt, While):
+        test = mpify(stmt.test, **options)
+        body = mpify(stmt.body, **options)
+        return While(test, body)
+    if isinstance(stmt, If):
+        args = []
+        for block in stmt.args:
+            test  = block[0]
+            stmts = block[1]
+            t = mpify(test,  **options)
+            s = mpify(stmts, **options)
+            args.append((t,s))
+        return If(*args)
+    if isinstance(stmt, FunctionDef):
+        name        = mpify(stmt.name,        **options)
+        arguments   = mpify(stmt.arguments,   **options)
+        results     = mpify(stmt.results,     **options)
+        body        = mpify(stmt.body,        **options)
+        local_vars  = mpify(stmt.local_vars,  **options)
+        global_vars = mpify(stmt.global_vars, **options)
+
+        return FunctionDef(name, arguments, results, \
+                           body, local_vars, global_vars)
+    if isinstance(stmt, ClassDef):
+        name        = mpify(stmt.name,        **options)
+        attributs   = mpify(stmt.attributs,   **options)
+        methods     = mpify(stmt.methods,     **options)
+        options     = mpify(stmt.options,     **options)
+
+        return ClassDef(name, attributs, methods, options)
+    return stmt
+##########################################################
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
 MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')

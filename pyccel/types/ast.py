@@ -495,9 +495,9 @@ class Range(sm_Range):
 
     def __new__(cls, *args):
         _args = []
-        for a in args:
+        for a in args[:-1]:
             if isinstance(a, Symbol):
-                _args.append(0)
+                _args.append(1) # we set to 1, to avoid problems with step
             else:
                 _args.append(a)
         r = sm_Range.__new__(cls, *_args)
@@ -629,15 +629,16 @@ class For(Basic):
     For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
     """
 
-    def __new__(cls, target, iter, body):
-        target = sympify(target)
-        if not iterable(iter) and not isinstance(iter, (Range, Tensor)):
-            raise TypeError("iter must be an iterable")
-        if not isinstance(iter, (Range, Tensor)):
-            raise TypeError("Expecting a Range or Tensor")
-        if not iterable(body):
-            raise TypeError("body must be an iterable")
-        body = Tuple(*(sympify(i) for i in body))
+    def __new__(cls, target, iter, body, strict=True):
+        if strict:
+            target = sympify(target)
+            if not iterable(iter) and not isinstance(iter, (Range, Tensor)):
+                raise TypeError("iter must be an iterable")
+            if not isinstance(iter, (Range, Tensor)):
+                raise TypeError("Expecting a Range or Tensor")
+            if not iterable(body):
+                raise TypeError("body must be an iterable")
+            body = Tuple(*(sympify(i) for i in body))
         return Basic.__new__(cls, target, iter, body)
 
     @property
