@@ -1413,19 +1413,13 @@ class ForStmt(BasicStmt):
 
         iterable: str
             the iterable variable
-        start: str
-            start index
-        end: str
-            end index
-        step: str
-            step for the iterable. if not given, 1 will be used.
+        range: Range
+            range for indices
         body: list
             a list of statements for the body of the For statement.
         """
         self.iterable = kwargs.pop('iterable')
-        self.start    = kwargs.pop('start')
-        self.end      = kwargs.pop('end')
-        self.step     = kwargs.pop('step', None)
+        self.range    = kwargs.pop('range')
         self.body     = kwargs.pop('body')
 
         super(ForStmt, self).__init__(**kwargs)
@@ -1461,30 +1455,13 @@ class ForStmt(BasicStmt):
         Process the For statement by returning a pyccel.types.ast object
         """
         i = Symbol(self.iterable, integer=True)
-
-        if self.start in namespace:
-            b = namespace[self.start]
-        else:
-            b = do_arg(self.start)
-
-        if self.end in namespace:
-            e = namespace[self.end]
-        else:
-            e = do_arg(self.end)
-
-        if self.step is None:
-            s = 1
-        else:
-            if self.step in namespace:
-                s = namespace[self.step]
-            else:
-                s = do_arg(self.step)
+        r = self.range.expr
 
         self.update()
 
         body = self.body.expr
 
-        return For(i, (b,e,s), body)
+        return For(i, r, body)
 
 class WhileStmt(BasicStmt):
     """Class representing a While statement."""

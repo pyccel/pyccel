@@ -566,15 +566,8 @@ class For(Basic):
         target = sympify(target)
         if not iterable(iter):
             raise TypeError("iter must be an iterable")
-        if type(iter) == tuple:
-            # this is a hack, since Range does not accept non valued Integers.
-#            r = Range(iter[0], 10000000, iter[2])
-            r = Range(0, 10000000, 1)
-            r._args = iter
-            iter = r
-        else:
-            iter = sympify(iter)
-
+        if not isinstance(iter, Range):
+            raise TypeError("Expecting a Range")
         if not iterable(body):
             raise TypeError("body must be an iterable")
         body = Tuple(*(sympify(i) for i in body))
