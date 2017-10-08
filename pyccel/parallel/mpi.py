@@ -2383,7 +2383,7 @@ def mpify(stmt, **options):
     if isinstance(stmt, Tensor):
         return MPI_Tensor(stmt, **options)
     if isinstance(stmt, For):
-        iterable = MPI_Tensor(stmt.iterable, **options)
+        iterable = mpify(stmt.iterable, **options)
         target   = stmt.target
         body     = mpify(stmt.body, **options)
         return For(target, iterable, body, strict=False)
