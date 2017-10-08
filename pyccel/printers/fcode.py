@@ -1047,12 +1047,15 @@ class FCodePrinter(CodePrinter):
         outputs = ', '.join(self._print(i) for i in expr.lhs)
         return 'call {0} ({1}, {2})'.format(func, args, outputs)
 
+    # TODO iterators
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
             start, stop, step = expr.iterable.args
         else:
-            raise NotImplementedError("Only iterable currently supported is Range")
+            # TODO remove this line
+            return ''
+#            raise NotImplementedError("Only iterable currently supported is Range")
         # decrement stop by 1 because of the python convention
         stop = stop - 1
 

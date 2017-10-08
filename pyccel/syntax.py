@@ -701,6 +701,7 @@ def builtin_function(name, args, lhs=None):
         d_var['rank']        = 0
 
         insert_variable(lhs, **d_var)
+        namespace[lhs] = Tensor(*args)
         lhs = namespace[lhs]
         rhs = Tensor(*args)
         return Assign(lhs, rhs, strict=False)
@@ -1455,7 +1456,20 @@ class ForStmt(BasicStmt):
         Process the For statement by returning a pyccel.types.ast object
         """
         i = Symbol(self.iterable, integer=True)
-        r = self.range.expr
+
+        if isinstance(self.range, Range):
+            r = self.range.expr
+        elif isinstance(self.range, str):
+            if not self.range in namespace:
+                raise ValueError('Undefined range.')
+            r = namespace[self.range]
+            if not isinstance(namespace[self.range], (Range, Tensor)):
+                print r, type(r)
+                print_namespace()
+                raise TypeError('Expecting an Iterable')
+            r = namespace[self.range]
+        else:
+            raise TypeError('Expecting an Iterable')
 
         self.update()
 

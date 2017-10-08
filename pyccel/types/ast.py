@@ -564,10 +564,10 @@ class For(Basic):
 
     def __new__(cls, target, iter, body):
         target = sympify(target)
-        if not iterable(iter):
+        if not iterable(iter) and not isinstance(iter, (Range, Tensor)):
             raise TypeError("iter must be an iterable")
-        if not isinstance(iter, Range):
-            raise TypeError("Expecting a Range")
+        if not isinstance(iter, (Range, Tensor)):
+            raise TypeError("Expecting a Range or Tensor")
         if not iterable(body):
             raise TypeError("body must be an iterable")
         body = Tuple(*(sympify(i) for i in body))
