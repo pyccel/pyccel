@@ -1428,7 +1428,10 @@ class ForStmt(BasicStmt):
     @property
     def local_vars(self):
         """Local variables of the For statement."""
-        return [self.iterable]
+        if isinstance(self.iterable, list):
+            return self.iterable
+        else:
+            return [self.iterable]
 
     @property
     def stmt_vars(self):
@@ -1444,18 +1447,22 @@ class ForStmt(BasicStmt):
         Update before processing the statement
         """
         # check that start and end were declared, if they are symbols
-        d_var = {}
-        d_var['datatype']    = 'int'
-        d_var['allocatable'] = False
-        d_var['rank']        = 0
-        insert_variable(self.iterable, **d_var)
+        for i in self.local_vars:
+            d_var = {}
+            d_var['datatype']    = 'int'
+            d_var['allocatable'] = False
+            d_var['rank']        = 0
+            insert_variable(str(i), **d_var)
 
     @property
     def expr(self):
         """
         Process the For statement by returning a pyccel.types.ast object
         """
-        i = Symbol(self.iterable, integer=True)
+        if isinstance(self.iterable, list):
+            i = [Symbol(a, integer=True) for a in self.iterable]
+        else:
+            i = Symbol(self.iterable, integer=True)
 
         if isinstance(self.range, Range):
             r = self.range.expr

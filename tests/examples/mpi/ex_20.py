@@ -12,7 +12,7 @@ v = range(0, 4)
 uv = tensor(u, v)
 
 x = 0
-for i in uv:
+for i,j in uv:
     x = x + 1
 
 ierr = mpi_finalize()

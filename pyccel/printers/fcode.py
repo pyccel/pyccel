@@ -15,6 +15,7 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
+from sympy.utilities.iterables import iterable
 
 from pyccel.types.ast import (Assign, MultiAssign, \
                               Variable, Declare, \
@@ -1049,7 +1050,11 @@ class FCodePrinter(CodePrinter):
 
     # TODO iterators
     def _print_For(self, expr):
-        target = self._print(expr.target)
+        if not iterable(expr.target):
+            target = self._print(expr.target)
+        else:
+            # TODO remove this line
+            return ''
         if isinstance(expr.iterable, Range):
             start, stop, step = expr.iterable.args
         else:

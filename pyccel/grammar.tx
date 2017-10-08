@@ -217,9 +217,9 @@ RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
 ;
 
-Iterable: RangeStmt | ID;
+IterableRange: RangeStmt | ID;
 
-ForStmt: 'for' iterable=ID 'in' range=Iterable ':' 
+ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':' 
                body=SuiteStmt
 ;
 
