@@ -2118,16 +2118,6 @@ class MPI_Tensor(MPI, Block):
         cls._neighbor = neighbor
         # ...
 
-        # ...
-        coords = Variable('int', 'coords', \
-                          rank=1, shape=ndim, allocatable=True)
-        stmt = Zeros(coords, ndim)
-        variables.append(coords)
-        body.append(stmt)
-
-        cls._coords = coords
-        # ...
-
         # ... TODO use MPI_dims_create
         if dims is None:
             dims = (2,2)
@@ -2234,6 +2224,20 @@ class MPI_Tensor(MPI, Block):
         body.append(stmt)
 
         cls._rank_in_cart = rank_in_cart
+        # ...
+
+        # ... compute the coordinates of the process
+        coords = Variable('int', 'coords', \
+                          rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(coords, ndim)
+        variables.append(coords)
+        body.append(stmt)
+
+        rhs  = MPI_comm_cart_coords(rank_in_cart, coords, comm)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+
+        cls._coords = coords
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
