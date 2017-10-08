@@ -557,6 +557,50 @@ class Tensor(Basic):
         txt  = 'Tensor({0})'.format(txt)
         return txt
 
+# TODO add a name to a block?
+class Block(Basic):
+    """Represents a block in the code. A block consists of the following inputs
+
+    variables: list
+        list of the variables that appear in the block.
+
+    declarations: list
+        list of declarations of the variables that appear in the block.
+
+    body: list
+        a list of statements
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('int', 'x')
+    >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
+    Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
+    """
+
+    def __new__(cls, variables, body):
+        if not iterable(variables):
+            raise TypeError("variables must be an iterable")
+        for var in variables:
+            if not isinstance(var, Variable):
+                raise TypeError("Only a Variable instance is allowed.")
+        if not iterable(body):
+            raise TypeError("body must be an iterable")
+        return Basic.__new__(cls, variables, body)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    @property
+    def body(self):
+        return self._args[1]
+
+    @property
+    def declarations(self):
+        return [Declare(i.dtype, i) for i in self.variables]
+
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
