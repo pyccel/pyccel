@@ -85,12 +85,16 @@ from pyccel.parallel.mpi import MPI_comm_cart_coords
 from pyccel.parallel.mpi import MPI_comm_cart_shift
 from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
+from pyccel.parallel.mpi import MPI_Tensor
 
 DEBUG = False
 #DEBUG = True
 
 # TODO set to None
 DEFAULT_TYPE = 'double'
+
+# TODO pass to the Parser
+MPI_ENABLED = True
 
 known_functions = {
     "abs": "Abs",
@@ -704,6 +708,9 @@ def builtin_function(name, args, lhs=None):
         namespace[lhs] = Tensor(*args)
         lhs = namespace[lhs]
         rhs = Tensor(*args)
+        # TODO allow for user defined comm
+        if MPI_ENABLED:
+            rhs = MPI_Tensor(rhs)
         return Assign(lhs, rhs, strict=False)
     elif name == "mpi_waitall":
         if not lhs:

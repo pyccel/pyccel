@@ -13,6 +13,8 @@ from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDoubl
 from pyccel.types.ast import DataType
 from pyccel.types.ast import DataTypeFactory
 from pyccel.types.ast import Block
+from pyccel.types.ast import Tensor
+from pyccel.types.ast import Zeros
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
@@ -2075,6 +2077,8 @@ class MPI_Tensor(MPI, Block):
     is_integer = True
 
     def __new__(cls, tensor, comm=None):
+        if not isinstance(tensor, Tensor):
+            raise TypeError('Expecting a Tensor')
         cls._tensor = tensor
 
         if comm is None:
@@ -2084,8 +2088,19 @@ class MPI_Tensor(MPI, Block):
                 raise TypeError('Expecting a valid MPI communicator')
         cls._comm   = comm
 
+
         variables = []
         body      = []
+
+        # ...
+        ndim = tensor.dim
+        neighbor = Variable('int', 'neighbor', \
+                            rank=1, shape=2*ndim, allocatable=True)
+        stmt = Zeros(neighbor, 2*ndim)
+        variables.append(neighbor)
+        body.append(stmt)
+        # ...
+
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
     @property

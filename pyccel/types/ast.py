@@ -551,6 +551,10 @@ class Tensor(Basic):
     def ranges(self):
         return self._args
 
+    @property
+    def dim(self):
+        return len(self.ranges)
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         txt  = ', '.join(sstr(n) for n in self._args)

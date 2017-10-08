@@ -5,7 +5,8 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
+from pyccel.types.ast import (Range, Tensor, Block, \
+                              For, Assign, Declare, Variable, \
                               NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -21,6 +22,8 @@ from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
 
 from pyccel.openmp.syntax import OpenmpStmt
 from pyccel.imports.syntax import ImportFromStmt
+
+from pyccel.parallel.mpi import MPI_Tensor
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)
@@ -356,8 +359,13 @@ class Codegen(object):
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
-                if not isinstance(stmt.rhs, (Range, Tensor)):
+                if not isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
                     body += printer(stmt) + "\n"
+                elif isinstance(stmt.rhs, MPI_Tensor):
+                    for dec in stmt.rhs.declarations:
+                        preludes += printer(dec) + "\n"
+                    for s in stmt.rhs.body:
+                        body += printer(s) + "\n"
             elif isinstance(stmt, MultiAssign):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, (Zeros, Ones, ZerosLike, Array)):
@@ -393,6 +401,9 @@ class Codegen(object):
             elif isinstance(stmt, list):
                 for s in stmt:
                     body += printer(s) + "\n"
+            elif isinstance(stmt, Block):
+                for s in stmt.body:
+                    body += printer(s) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)
@@ -404,6 +415,11 @@ class Codegen(object):
         for key, dec in ast.declarations.items():
             if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 preludes += printer(dec) + "\n"
+
+        for stmt in stmts:
+            if isinstance(stmt, Block):
+                for dec in stmt.declarations:
+                    preludes += printer(dec) + "\n"
         # ...
 
         # ...
