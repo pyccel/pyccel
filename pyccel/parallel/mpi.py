@@ -6,10 +6,12 @@ from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton import Singleton
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
-from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
+from pyccel.types.ast import NativeBool, NativeFloat
+from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
 from pyccel.types.ast import DataTypeFactory
 from pyccel.types.ast import Block
@@ -2076,7 +2078,8 @@ class MPI_Tensor(MPI, Block):
     """
     is_integer = True
 
-    def __new__(cls, tensor, comm=None):
+    def __new__(cls, tensor, \
+                comm=None, dims=None, periods=None, reorder=False):
         if not isinstance(tensor, Tensor):
             raise TypeError('Expecting a Tensor')
         cls._tensor = tensor
@@ -2089,16 +2092,96 @@ class MPI_Tensor(MPI, Block):
         cls._comm   = comm
 
 
+        # ...
         variables = []
         body      = []
+        # ...
 
         # ...
         ndim = tensor.dim
+        # ...
+
+        # ...
         neighbor = Variable('int', 'neighbor', \
                             rank=1, shape=2*ndim, allocatable=True)
         stmt = Zeros(neighbor, 2*ndim)
         variables.append(neighbor)
         body.append(stmt)
+
+        cls._neighbor = neighbor
+        # ...
+
+        # ...
+        coords = Variable('int', 'coords', \
+                          rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(coords, ndim)
+        variables.append(coords)
+        body.append(stmt)
+
+        cls._coords = coords
+        # ...
+
+        # ... TODO use MPI_dims_create
+        if dims is None:
+            dims = (2,2)
+
+        if not isinstance(dims, (list, tuple)):
+           raise TypeError('Expecting a tuple or list')
+
+        dims  = list(dims)
+        _dims = []
+        for a in dims:
+            if isinstance(a, int):
+                _dims.append(a)
+            elif isinstance(a, Variable) and isinstance(a.dtype, NativeInteger):
+                _dims.append(a)
+            else:
+               raise TypeError('Expecting an integer')
+
+        dims = Variable('int', 'dims', rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(dims, ndim)
+        variables.append(dims)
+        body.append(stmt)
+
+        dims = IndexedVariable(dims.name, dtype=dims.dtype)
+        for i in range(0, ndim):
+            stmt = Assign(dims[i], _dims[i])
+            body.append(stmt)
+
+        cls._dims = dims
+        # ...
+
+        # ...
+        if periods is None:
+            periods = (False,False)
+
+        if not isinstance(periods, (list, tuple)):
+           raise TypeError('Expecting a tuple or list')
+
+        periods  = list(periods)
+        _periods = []
+        for a in periods:
+            if isinstance(a, bool):
+                if a:
+                    _periods.append(BooleanTrue())
+                else:
+                    _periods.append(BooleanFalse())
+            elif isinstance(a, Variable) and isinstance(a.dtype, NativeBool):
+                _periods.append(a)
+            else:
+               raise TypeError('Expecting a Boolean')
+
+        periods = Variable('bool', 'periods', rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(periods, ndim)
+        variables.append(periods)
+        body.append(stmt)
+
+        periods = IndexedVariable(periods.name, dtype=periods.dtype)
+        for i in range(0, ndim):
+            stmt = Assign(periods[i], _periods[i])
+            body.append(stmt)
+
+        cls._periods = periods
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
@@ -2106,6 +2189,18 @@ class MPI_Tensor(MPI, Block):
     @property
     def tensor(self):
         return get_shape(self.dims)
+
+    @property
+    def neighbor(self):
+        return self._neighbor
+
+    @property
+    def coords(self):
+        return self._coords
+
+    @property
+    def dims(self):
+        return self._dims
 
     def _sympystr(self, printer):
         sstr = printer.doprint

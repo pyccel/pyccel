@@ -15,7 +15,10 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.utilities.iterables import iterable
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
+from pyccel.types.ast import NativeBool, NativeFloat
+from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import (Assign, MultiAssign, \
                               Variable, Declare, \
@@ -224,8 +227,29 @@ class FCodePrinter(CodePrinter):
             shape_code = '0:' + self._print(expr.shape) + '-1'
         else:
             raise TypeError('Unknown type of shape'+str(type(expr.shape)))
-#        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
-        return self._get_statement("allocate(%s(%s)) ; %s = 0" % (lhs_code, shape_code, lhs_code))
+
+        if not isinstance(expr.lhs, Variable):
+            raise TypeError('Expecting lhs to be a Variable')
+
+        init_value = None
+        dtype = expr.lhs.dtype
+        if isinstance(dtype, NativeInteger):
+            init_value = 0
+        elif isinstance(dtype, NativeFloat):
+            init_value = 0.0
+        elif isinstance(dtype, NativeDouble):
+            init_value = 0.0
+        elif isinstance(dtype, NativeComplex):
+            init_value = 0.0
+        elif isinstance(dtype, NativeBool):
+            init_value = BooleanFalse()
+        else:
+            raise TypeError('Unknown type')
+
+        code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
+        code_init = "{0} = {1}".format(lhs_code, self._print(init_value))
+        code = "{0}; {1}".format(code_alloc, code_init)
+        return self._get_statement(code)
 
     def _print_Ones(self, expr):
         lhs_code   = self._print(expr.lhs)
