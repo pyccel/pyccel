@@ -594,6 +594,10 @@ class NativeVoid(DataType):
     _name = 'Void'
     pass
 
+class NativeRange(DataType):
+    _name = 'Range'
+    pass
+
 
 Bool = NativeBool()
 Int = NativeInteger()

@@ -6,6 +6,7 @@ from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType
 from pyccel.types.ast import (Range, For, Assign, Declare, Variable, \
+                              NativeRange, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -355,7 +356,8 @@ class Codegen(object):
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
-                body += printer(stmt) + "\n"
+                if not isinstance(stmt.rhs, Range):
+                    body += printer(stmt) + "\n"
             elif isinstance(stmt, MultiAssign):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, (Zeros, Ones, ZerosLike, Array)):
@@ -400,7 +402,8 @@ class Codegen(object):
 
         # ...
         for key, dec in ast.declarations.items():
-            preludes += printer(dec) + "\n"
+            if not isinstance(dec.dtype, NativeRange):
+                preludes += printer(dec) + "\n"
         # ...
 
         # ...
