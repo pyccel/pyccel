@@ -12,6 +12,7 @@ from pyccel.types.ast import Assign, Declare
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
 from pyccel.types.ast import DataTypeFactory
+from pyccel.types.ast import Block
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
@@ -37,9 +38,13 @@ def get_shape(expr):
     elif isinstance(expr, IndexedElement):
         return get_shape(expr.base)
 
+##########################################################
+#               Base class for MPI
+##########################################################
 class MPI(Basic):
     """Base class for MPI."""
     pass
+##########################################################
 
 ##########################################################
 #                 Basic Statements
@@ -2040,6 +2045,64 @@ class MPI_dims_create(MPI):
         code = 'MPI_dims_create ({0})'.format(args)
         return code
 
+##########################################################
+
+##########################################################
+# The following classes are to
+# provide user friendly support of MPI
+##########################################################
+class MPI_Tensor(MPI, Block):
+    """
+    Represents a Tensor object using MPI.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import Range, Tensor
+    >>> from pyccel.parallel.mpi import MPI_Tensor
+    >>> from sympy import Symbol
+    >>> s1 = Variable('int', 's1')
+    >>> s2 = Variable('int', 's2')
+    >>> e1 = Variable('int', 'e1')
+    >>> e2 = Variable('int', 'e2')
+    >>> r1 = Range(s1, e1, 1)
+    >>> r2 = Range(s2, e2, 1)
+    >>> tensor = Tensor(r1, r2)
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> comm = MPI_comm_world()
+    >>> MPI_Tensor(tensor, comm)
+    """
+    is_integer = True
+
+    def __new__(cls, tensor, comm=None):
+        cls._tensor = tensor
+
+        if comm is None:
+            comm = MPI_comm_world()
+        else:
+            if not isinstance(comm, MPI_comm):
+                raise TypeError('Expecting a valid MPI communicator')
+        cls._comm   = comm
+
+        variables = []
+        body      = []
+        return super(MPI_Tensor, cls).__new__(cls, variables, body)
+
+    @property
+    def tensor(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        variables = self.variables
+        body      = self.body
+        ierr      = MPI_ERROR
+
+        variables  = ', '.join('{0}'.format(sstr(a)) for a in variables)
+        body       = ', '.join('{0}'.format(sstr(a)) for a in body)
+        code = 'MPI_Tensor ([{0}], [{1}])'.format(variables, body)
+        return code
 ##########################################################
 
 
