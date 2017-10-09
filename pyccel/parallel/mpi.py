@@ -2422,6 +2422,15 @@ def mpify(stmt, **options):
         options     = mpify(stmt.options,     **options)
 
         return ClassDef(name, attributs, methods, options)
+    if isinstance(stmt, Assign):
+        if isinstance(stmt.rhs, Tensor):
+            lhs = stmt.lhs
+            rhs = mpify(stmt.rhs, **options)
+
+            return Assign(lhs, rhs, \
+                          strict=stmt.strict, \
+                          status=stmt.status, \
+                          like=stmt.like)
     return stmt
 ##########################################################
 

@@ -312,6 +312,7 @@ class Assign(Basic):
     """
 
     def __new__(cls, lhs, rhs, strict=False, status=None, like=None):
+        cls._strict = strict
         if strict:
             lhs = sympify(lhs)
             rhs = sympify(rhs)
@@ -358,6 +359,10 @@ class Assign(Basic):
     @property
     def like(self):
         return self._args[3]
+
+    @property
+    def strict(self):
+        return self._strict
 
 
 # The following are defined to be sympy approved nodes. If there is something
