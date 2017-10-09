@@ -400,52 +400,259 @@ class FCodePrinter(CodePrinter):
         return 'MPI_comm_rank'
 
     def _print_MPI_comm_recv(self, expr):
-        return 'MPI_recv'
+        ierr     = self._print(MPI_ERROR)
+        istatus  = self._print(MPI_STATUS)
+
+        data   = expr.data
+        count  = expr.count
+        dtype  = expr.datatype
+        source = expr.source
+        tag    = expr.tag
+        comm   = expr.comm
+
+        args = (data, count, dtype, source, tag, comm, istatus, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_recv ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_send(self, expr):
-        return 'MPI_send'
+        ierr  = self._print(MPI_ERROR)
+
+        data  = expr.data
+        count = expr.count
+        dtype = expr.datatype
+        dest  = expr.dest
+        tag   = expr.tag
+        comm  = expr.comm
+
+        args = (data, count, dtype, dest, tag, comm, ierr)
+        t = self._print(data)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_send ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_irecv(self, expr):
-        return 'MPI_irecv'
+        ierr     = self._print(MPI_ERROR)
+
+        data    = expr.data
+        count   = expr.count
+        dtype   = expr.datatype
+        source  = expr.source
+        tag     = expr.tag
+        comm    = expr.comm
+        request = expr.request
+
+        args = (data, count, dtype, source, tag, comm, request, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_irecv ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_isend(self, expr):
-        return 'MPI_isend'
+        ierr     = self._print(MPI_ERROR)
+
+        data    = expr.data
+        count   = expr.count
+        dtype   = expr.datatype
+        dest    = expr.dest
+        tag     = expr.tag
+        comm    = expr.comm
+        request = expr.request
+
+        args = (data, count, dtype, dest, tag, comm, request, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_isend ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_sendrecv(self, expr):
-        return 'MPI_sendrecv'
+        ierr      = self._print(MPI_ERROR)
+        istatus   = self._print(MPI_STATUS)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        sendcount = expr.sendcount
+        recvcount = expr.recvcount
+        sendtype  = expr.senddatatype
+        recvtype  = expr.recvdatatype
+        dest      = expr.dest
+        source    = expr.source
+        sendtag   = expr.sendtag
+        recvtag   = expr.recvtag
+        comm      = expr.comm
+
+        args = (senddata, sendcount, sendtype, dest,   sendtag, \
+                recvdata, recvcount, recvtype, source, recvtag, \
+                comm, istatus, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_sendrecv ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_sendrecv_replace(self, expr):
-        return 'MPI_sendrecv_replace'
+        ierr      = self._print(MPI_ERROR)
+        istatus   = self._print(MPI_STATUS)
+
+        data      = expr.data
+        count     = expr.count
+        dtype     = expr.datatype
+        dest      = expr.dest
+        source    = expr.source
+        sendtag   = expr.sendtag
+        recvtag   = expr.recvtag
+        comm      = expr.comm
+
+        args = (data, count, dtype, dest, sendtag, source, recvtag, \
+                comm, istatus, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_sendrecv_replace ({0})'.format(args)
+        return code
 
     def _print_MPI_waitall(self, expr):
-        return 'MPI_waitall'
+        ierr     = self._print(MPI_ERROR)
+
+        requests = expr.requests
+        count    = expr.count
+        status   = expr.status
+
+        args = (count, requests, status, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_waitall ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_barrier(self, expr):
-        return 'MPI_barrier'
+        comm     = self._print(expr.comm)
+        ierr     = self._print(MPI_ERROR)
+
+        code = 'call mpi_barrier ({0}, {1})'.format(comm, ierr)
+        return code
 
     def _print_MPI_comm_bcast(self, expr):
-        return 'MPI_comm_bcast'
+        ierr      = self._print(MPI_ERROR)
+
+        data      = expr.data
+        count     = expr.count
+        dtype     = expr.datatype
+        root      = expr.root
+        comm      = expr.comm
+
+        args = (data, count, dtype, root, comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_bcast ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_scatter(self, expr):
-        return 'MPI_comm_scatter'
+        ierr      = self._print(MPI_ERROR)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        sendcount = expr.sendcount
+        recvcount = expr.recvcount
+        sendtype  = expr.senddatatype
+        recvtype  = expr.recvdatatype
+        root      = expr.root
+        comm      = expr.comm
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                root, comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_scatter ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_gather(self, expr):
-        return 'MPI_comm_gather'
+        ierr      = self._print(MPI_ERROR)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        sendcount = expr.sendcount
+        recvcount = expr.recvcount
+        sendtype  = expr.senddatatype
+        recvtype  = expr.recvdatatype
+        root      = expr.root
+        comm      = expr.comm
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                root, comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_gather ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_allgather(self, expr):
-        return 'MPI_comm_allgather'
+        ierr      = self._print(MPI_ERROR)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        sendcount = expr.sendcount
+        recvcount = expr.recvcount
+        sendtype  = expr.senddatatype
+        recvtype  = expr.recvdatatype
+        comm      = expr.comm
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_allgather ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_alltoall(self, expr):
-        return 'MPI_comm_alltoall'
+        ierr      = self._print(MPI_ERROR)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        sendcount = expr.sendcount
+        recvcount = expr.recvcount
+        sendtype  = expr.senddatatype
+        recvtype  = expr.recvdatatype
+        comm      = expr.comm
+
+        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
+                comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_alltoall ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_reduce(self, expr):
-        return 'MPI_comm_reduce'
+        ierr      = self._print(MPI_ERROR)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        count     = expr.count
+        dtype     = expr.datatype
+        op        = expr.op
+        root      = expr.root
+        comm      = expr.comm
+
+        args = (senddata, recvdata, count, dtype, op, \
+                root, comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_reduce ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_allreduce(self, expr):
-        return 'MPI_comm_allreduce'
+        ierr      = self._print(MPI_ERROR)
+
+        senddata  = expr.senddata
+        recvdata  = expr.recvdata
+        count     = expr.count
+        dtype     = expr.datatype
+        op        = expr.op
+        comm      = expr.comm
+
+        args = (senddata, recvdata, count, dtype, op, \
+                comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_allreduce ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_split(self, expr):
-        return 'MPI_comm_split'
+        ierr      = self._print(MPI_ERROR)
+
+        color     = expr.color
+        key       = expr.key
+        comm      = expr.comm
+        newcomm   = expr.newcomm
+
+        args = (comm, color, key, newcomm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_comm_split ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_free(self, expr):
         ierr = self._print(MPI_ERROR)
@@ -457,19 +664,70 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_MPI_comm_cart_create(self, expr):
-        return 'MPI_comm_cart_create'
+        ierr      = self._print(MPI_ERROR)
+
+        ndims     = expr.ndims
+        dims      = expr.dims
+        periods   = expr.periods
+        reorder   = expr.reorder
+        comm      = expr.comm
+        newcomm   = expr.newcomm
+
+        args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_cart_create ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_cart_coords(self, expr):
-        return 'MPI_comm_cart_coords'
+        ierr      = self._print(MPI_ERROR)
+
+        rank   = expr.rank
+        ndims  = expr.ndims
+        coords = expr.coords
+        comm   = expr.comm
+
+        args = (comm, rank, ndims, coords, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_cart_coords ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_cart_shift(self, expr):
-        return 'MPI_comm_cart_shift'
+        ierr      = self._print(MPI_ERROR)
+
+        direction = expr.direction
+        disp      = expr.disp
+        source    = expr.source
+        dest      = expr.dest
+        comm      = expr.comm
+
+        args = (comm, direction, disp, source, dest, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_cart_shift ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_cart_sub(self, expr):
-        return 'MPI_comm_cart_sub'
+        ierr      = self._print(MPI_ERROR)
+
+        dims      = expr.dims
+        comm      = expr.comm
+        newcomm   = expr.newcomm
+
+        args = (comm, dims, newcomm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_cart_sub ({0})'.format(args)
+        return code
 
     def _print_MPI_dims_create(self, expr):
-        return 'MPI_dims_create'
+        ierr      = self._print(MPI_ERROR)
+
+        nnodes  = expr.nnodes
+        ndims   = expr.ndims
+        dims    = expr.dims
+
+        args = (nnodes, ndims, dims, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_dims_create ({0})'.format(args)
+        return code
 
     def _print_MPI_INTEGER(self, expr):
         return 'MPI_INTEGER'
@@ -547,313 +805,17 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             code = '{0} = {1}'.format(lhs_code, rhs_code)
         elif isinstance(expr.rhs, MPI_comm_size):
-            rhs_code = self._print(expr.rhs)
             comm = self._print(expr.rhs.comm)
             size = self._print(expr.lhs)
             ierr = self._print(MPI_ERROR)
             code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
         elif isinstance(expr.rhs, MPI_comm_rank):
-            rhs_code = self._print(expr.rhs)
             comm = self._print(expr.rhs.comm)
             rank = self._print(expr.lhs)
             ierr = self._print(MPI_ERROR)
             code = 'call mpi_comm_rank ({0}, {1}, {2})'.format(comm, rank, ierr)
-        elif isinstance(expr.rhs, MPI_comm_recv):
-            rhs_code = self._print(expr.rhs)
-            ierr     = self._print(MPI_ERROR)
-            istatus  = self._print(MPI_STATUS)
-
-            data   = expr.rhs.data
-            count  = expr.rhs.count
-            dtype  = expr.rhs.datatype
-            source = expr.rhs.source
-            tag    = expr.rhs.tag
-            comm   = expr.rhs.comm
-
-            args = (data, count, dtype, source, tag, comm, istatus, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_recv ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_send):
-            rhs_code = self._print(expr.rhs)
-            ierr     = self._print(MPI_ERROR)
-
-            data  = expr.rhs.data
-            count = expr.rhs.count
-            dtype = expr.rhs.datatype
-            dest  = expr.rhs.dest
-            tag   = expr.rhs.tag
-            comm  = expr.rhs.comm
-
-            args = (data, count, dtype, dest, tag, comm, ierr)
-            t = self._print(data)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_send ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_irecv):
-            rhs_code = self._print(expr.rhs)
-            ierr     = self._print(MPI_ERROR)
-
-            data    = expr.rhs.data
-            count   = expr.rhs.count
-            dtype   = expr.rhs.datatype
-            source  = expr.rhs.source
-            tag     = expr.rhs.tag
-            comm    = expr.rhs.comm
-            request = expr.rhs.request
-
-            args = (data, count, dtype, source, tag, comm, request, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_irecv ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_isend):
-            rhs_code = self._print(expr.rhs)
-            ierr     = self._print(MPI_ERROR)
-
-            data    = expr.rhs.data
-            count   = expr.rhs.count
-            dtype   = expr.rhs.datatype
-            dest    = expr.rhs.dest
-            tag     = expr.rhs.tag
-            comm    = expr.rhs.comm
-            request = expr.rhs.request
-
-            args = (data, count, dtype, dest, tag, comm, request, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_isend ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_sendrecv):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-            istatus   = self._print(MPI_STATUS)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            sendcount = expr.rhs.sendcount
-            recvcount = expr.rhs.recvcount
-            sendtype  = expr.rhs.senddatatype
-            recvtype  = expr.rhs.recvdatatype
-            dest      = expr.rhs.dest
-            source    = expr.rhs.source
-            sendtag   = expr.rhs.sendtag
-            recvtag   = expr.rhs.recvtag
-            comm      = expr.rhs.comm
-
-            args = (senddata, sendcount, sendtype, dest,   sendtag, \
-                    recvdata, recvcount, recvtype, source, recvtag, \
-                    comm, istatus, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_sendrecv ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_sendrecv_replace):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-            istatus   = self._print(MPI_STATUS)
-
-            data      = expr.rhs.data
-            count     = expr.rhs.count
-            dtype     = expr.rhs.datatype
-            dest      = expr.rhs.dest
-            source    = expr.rhs.source
-            sendtag   = expr.rhs.sendtag
-            recvtag   = expr.rhs.recvtag
-            comm      = expr.rhs.comm
-
-            args = (data, count, dtype, dest, sendtag, source, recvtag, \
-                    comm, istatus, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_sendrecv_replace ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_waitall):
-            rhs_code = self._print(expr.rhs)
-            ierr     = self._print(MPI_ERROR)
-
-            requests = expr.rhs.requests
-            count    = expr.rhs.count
-            status   = expr.rhs.status
-
-            args = (count, requests, status, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_waitall ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_barrier):
-            rhs_code = self._print(expr.rhs)
-            comm     = self._print(expr.rhs.comm)
-            ierr     = self._print(MPI_ERROR)
-
-            code = 'call mpi_barrier ({0}, {1})'.format(comm, ierr)
-        elif isinstance(expr.rhs, MPI_comm_bcast):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            data      = expr.rhs.data
-            count     = expr.rhs.count
-            dtype     = expr.rhs.datatype
-            root      = expr.rhs.root
-            comm      = expr.rhs.comm
-
-            args = (data, count, dtype, root, comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_bcast ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_scatter):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            sendcount = expr.rhs.sendcount
-            recvcount = expr.rhs.recvcount
-            sendtype  = expr.rhs.senddatatype
-            recvtype  = expr.rhs.recvdatatype
-            root      = expr.rhs.root
-            comm      = expr.rhs.comm
-
-            args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                    root, comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_scatter ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_gather):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            sendcount = expr.rhs.sendcount
-            recvcount = expr.rhs.recvcount
-            sendtype  = expr.rhs.senddatatype
-            recvtype  = expr.rhs.recvdatatype
-            root      = expr.rhs.root
-            comm      = expr.rhs.comm
-
-            args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                    root, comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_gather ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_allgather):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            sendcount = expr.rhs.sendcount
-            recvcount = expr.rhs.recvcount
-            sendtype  = expr.rhs.senddatatype
-            recvtype  = expr.rhs.recvdatatype
-            comm      = expr.rhs.comm
-
-            args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                    comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_allgather ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_alltoall):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            sendcount = expr.rhs.sendcount
-            recvcount = expr.rhs.recvcount
-            sendtype  = expr.rhs.senddatatype
-            recvtype  = expr.rhs.recvdatatype
-            comm      = expr.rhs.comm
-
-            args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                    comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_alltoall ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_reduce):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            count     = expr.rhs.count
-            dtype     = expr.rhs.datatype
-            op        = expr.rhs.op
-            root      = expr.rhs.root
-            comm      = expr.rhs.comm
-
-            args = (senddata, recvdata, count, dtype, op, \
-                    root, comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_reduce ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_allreduce):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            senddata  = expr.rhs.senddata
-            recvdata  = expr.rhs.recvdata
-            count     = expr.rhs.count
-            dtype     = expr.rhs.datatype
-            op        = expr.rhs.op
-            comm      = expr.rhs.comm
-
-            args = (senddata, recvdata, count, dtype, op, \
-                    comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_allreduce ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_split):
-            ierr      = self._print(MPI_ERROR)
-
-            color     = expr.rhs.color
-            key       = expr.rhs.key
-            comm      = expr.rhs.comm
-            newcomm   = expr.rhs.newcomm
-
-            args = (comm, color, key, newcomm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_comm_split ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_free):
+        elif isinstance(expr.rhs, MPI):
             code = self._print(expr.rhs)
-        elif isinstance(expr.rhs, MPI_comm_cart_create):
-            ierr      = self._print(MPI_ERROR)
-
-            ndims     = expr.rhs.ndims
-            dims      = expr.rhs.dims
-            periods   = expr.rhs.periods
-            reorder   = expr.rhs.reorder
-            comm      = expr.rhs.comm
-            newcomm   = expr.rhs.newcomm
-
-            args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_cart_create ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_cart_coords):
-            ierr      = self._print(MPI_ERROR)
-
-            rank   = expr.rhs.rank
-            ndims  = expr.rhs.ndims
-            coords = expr.rhs.coords
-            comm   = expr.rhs.comm
-
-            args = (comm, rank, ndims, coords, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_cart_coords ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_cart_shift):
-            ierr      = self._print(MPI_ERROR)
-
-            direction = expr.rhs.direction
-            disp      = expr.rhs.disp
-            source    = expr.rhs.source
-            dest      = expr.rhs.dest
-            comm      = expr.rhs.comm
-
-            args = (comm, direction, disp, source, dest, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_cart_shift ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_comm_cart_sub):
-            ierr      = self._print(MPI_ERROR)
-
-            dims      = expr.rhs.dims
-            comm      = expr.rhs.comm
-            newcomm   = expr.rhs.newcomm
-
-            args = (comm, dims, newcomm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_cart_sub ({0})'.format(args)
-        elif isinstance(expr.rhs, MPI_dims_create):
-            ierr      = self._print(MPI_ERROR)
-
-            nnodes  = self.nnodes
-            ndims   = self.ndims
-            dims    = self.dims
-
-            args = (nnodes, ndims, dims, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_dims_create ({0})'.format(args)
         else:
             raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
         return self._get_statement(code)
