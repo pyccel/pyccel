@@ -10,6 +10,7 @@ from sympy.core.numbers import Integer
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton import Singleton
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy.core import Tuple
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
@@ -40,7 +41,7 @@ def get_shape(expr):
         shape = expr.shape
         if shape is None:
             return 1
-        if isinstance(shape, (list, tuple)):
+        elif isinstance(shape, (list, tuple, Tuple)):
             n = 1
             for i in shape:
                 n *= i
@@ -2133,12 +2134,13 @@ class MPI_Tensor(MPI, Block):
             else:
                raise TypeError('Expecting an integer')
 
-        dims = Variable('int', 'dims', rank=1, shape=ndim, allocatable=True)
+        dims = Variable('int', 'dims', \
+                        rank=1, shape=ndim, allocatable=True)
         stmt = Zeros(dims, ndim)
         variables.append(dims)
         body.append(stmt)
 
-        dims = IndexedVariable(dims.name, dtype=dims.dtype)
+        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
         for i in range(0, tensor.dim):
             stmt = Assign(dims[i], _dims[i])
             body.append(stmt)
@@ -2235,7 +2237,9 @@ class MPI_Tensor(MPI, Block):
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
 
-        coords = IndexedVariable(coords.name, dtype=coords.dtype)
+        coords = IndexedVariable(coords.name, \
+                                 dtype=coords.dtype, \
+                                 shape=coords.shape)
         cls._coords = coords
         # ...
 
