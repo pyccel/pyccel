@@ -19,4 +19,6 @@ for i,j in uv:
 
     print ('(i,j) = (', i, j,')')
 
+del uv
+
 ierr = mpi_finalize()

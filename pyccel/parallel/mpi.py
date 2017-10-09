@@ -22,7 +22,7 @@ from pyccel.types.ast import Block
 from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import Zeros
 
-from pyccel.types.ast import For, While, FunctionDef, ClassDef, If
+from pyccel.types.ast import For, While, FunctionDef, ClassDef, If, Del
 
 
 from pyccel.parallel.basic        import Basic
@@ -2364,6 +2364,15 @@ class MPI_Tensor(MPI, Block):
     def ranges(self):
         return self._ranges
 
+    def free_statements(self):
+        """Returns a list of Free ast objects."""
+        ls = []
+
+        stmt = MPI_comm_free(self.comm)
+        ls.append(stmt)
+
+        return ls
+
     def _sympystr(self, printer):
         sstr = printer.doprint
 
@@ -2435,6 +2444,9 @@ def mpify(stmt, **options):
                           strict=stmt.strict, \
                           status=stmt.status, \
                           like=stmt.like)
+    if isinstance(stmt, Del):
+        variables = [mpify(a, **options) for a in stmt.variables]
+        return Del(variables)
     return stmt
 ##########################################################
 

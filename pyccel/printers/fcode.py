@@ -448,7 +448,13 @@ class FCodePrinter(CodePrinter):
         return 'MPI_comm_split'
 
     def _print_MPI_comm_free(self, expr):
-        return 'MPI_comm_free'
+        ierr = self._print(MPI_ERROR)
+        comm = expr.comm
+
+        args = (comm, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call mpi_comm_free ({0})'.format(args)
+        return code
 
     def _print_MPI_comm_cart_create(self, expr):
         return 'MPI_comm_cart_create'
@@ -780,7 +786,6 @@ class FCodePrinter(CodePrinter):
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_allreduce ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_split):
-            rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)
 
             color     = expr.rhs.color
@@ -792,16 +797,8 @@ class FCodePrinter(CodePrinter):
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_comm_split ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_free):
-            rhs_code  = self._print(expr.rhs)
-            ierr      = self._print(MPI_ERROR)
-
-            comm      = expr.rhs.comm
-
-            args = (comm, ierr)
-            args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-            code = 'call mpi_comm_free ({0})'.format(args)
+            code = self._print(expr.rhs)
         elif isinstance(expr.rhs, MPI_comm_cart_create):
-            rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)
 
             ndims     = expr.rhs.ndims
@@ -815,7 +812,6 @@ class FCodePrinter(CodePrinter):
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_cart_create ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_cart_coords):
-            rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)
 
             rank   = expr.rhs.rank
@@ -827,7 +823,6 @@ class FCodePrinter(CodePrinter):
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_cart_coords ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_cart_shift):
-            rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)
 
             direction = expr.rhs.direction
@@ -840,7 +835,6 @@ class FCodePrinter(CodePrinter):
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_cart_shift ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_comm_cart_sub):
-            rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)
 
             dims      = expr.rhs.dims
@@ -851,7 +845,6 @@ class FCodePrinter(CodePrinter):
             args  = ', '.join('{0}'.format(self._print(a)) for a in args)
             code = 'call mpi_cart_sub ({0})'.format(args)
         elif isinstance(expr.rhs, MPI_dims_create):
-            rhs_code  = self._print(expr.rhs)
             ierr      = self._print(MPI_ERROR)
 
             nnodes  = self.nnodes
@@ -1013,8 +1006,18 @@ class FCodePrinter(CodePrinter):
 
     def _print_Del(self, expr):
         # TODO: treate class case
-        variables = '\n'.join('deallocate({})'.format(self._print(i)) for i in expr.variables)
-        code = '{}'.format(variables)
+        code = ''
+        for var in expr.variables:
+            if isinstance(var, Variable):
+                code = 'deallocate({0})\n{1}\n'.format(self._print(var), code)
+            elif isinstance(var, MPI_Tensor):
+                stmts = var.free_statements()
+                for stmt in stmts:
+                    code = '{0}\n{1}\n'.format(self._print(stmt), code)
+            else:
+                msg  = 'Only Variable and MPI_Tensor are treated.'
+                msg += ' Given {0}'.format(type(var))
+                raise NotImplementedError(msg)
         return code
 
     def _print_ClassDef(self, expr):

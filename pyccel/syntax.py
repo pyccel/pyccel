@@ -1036,13 +1036,18 @@ class DelStmt(BasicStmt):
         variables = [v.expr for v in self.variables]
         ls = []
         for var in variables:
-            name = var.name
-            if isinstance(name, (list, tuple)):
-                name = '{0}.{1}'.format(name[0], name[1])
-            if name in namespace:
-                ls.append(namespace[name])
+            if isinstance(var, Variable):
+                name = var.name
+                if isinstance(name, (list, tuple)):
+                    name = '{0}.{1}'.format(name[0], name[1])
+                if name in namespace:
+                    ls.append(namespace[name])
+                else:
+                    raise Exception('Unknown variable {}'.format(name))
+            elif isinstance(var, Tensor):
+                ls.append(var)
             else:
-                raise Exception('Unknown variable {}'.format(name))
+                raise NotImplementedError('Only Variable is trated')
 
         self.update()
 
