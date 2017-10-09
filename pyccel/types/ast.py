@@ -1601,6 +1601,8 @@ class Del(Basic):
 
     def __new__(cls, expr):
         # TODO: check that the variable is allocatable
+        if not iterable(expr):
+            expr = Tuple(expr)
         return Basic.__new__(cls, expr)
 
     @property

@@ -971,11 +971,11 @@ class FCodePrinter(CodePrinter):
         code = ''
         for var in expr.variables:
             if isinstance(var, Variable):
-                code = 'deallocate({0})\n{1}\n'.format(self._print(var), code)
+                code = 'deallocate({0}){1}'.format(self._print(var), code)
             elif isinstance(var, MPI_Tensor):
                 stmts = var.free_statements()
                 for stmt in stmts:
-                    code = '{0}\n{1}\n'.format(self._print(stmt), code)
+                    code = '{0}\n{1}'.format(self._print(stmt), code)
             else:
                 msg  = 'Only Variable and MPI_Tensor are treated.'
                 msg += ' Given {0}'.format(type(var))
@@ -1074,7 +1074,7 @@ class FCodePrinter(CodePrinter):
         body = '\n'.join(self._print(i) for i in expr.body)
         return ('{prolog}\n'
                 '{body}\n'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
     def _print_While(self,expr):
         body = '\n'.join(self._print(i) for i in expr.body)

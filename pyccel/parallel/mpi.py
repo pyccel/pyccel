@@ -2371,6 +2371,10 @@ class MPI_Tensor(MPI, Block):
         stmt = MPI_comm_free(self.comm)
         ls.append(stmt)
 
+        for v in self.variables:
+            if isinstance(v, Variable):
+                if v.allocatable: ls.append(Del(v))
+
         return ls
 
     def _sympystr(self, printer):
