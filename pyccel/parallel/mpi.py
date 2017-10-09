@@ -3,6 +3,7 @@
 # TODO - MPI_comm_gatherv: needs a new data structure for the variable
 
 from itertools import groupby
+import numpy as np
 
 from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
@@ -25,6 +26,8 @@ from pyccel.types.ast import For, While, FunctionDef, ClassDef, If
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
+
+
 
 def get_shape(expr):
     """Returns the shape of a given variable."""
@@ -2428,3 +2431,77 @@ MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')
 MPI_COMM_WORLD  = MPI_comm_world()
 MPI_STATUS_SIZE = MPI_status_size()
 MPI_PROC_NULL   = MPI_proc_null()
+
+# ...
+def mpi_definitions(namespace, declarations):
+    """Adds MPI functions and constants to the namespace
+
+    namespace: dict
+        dictorionary containing all declared variables/functions/classes.
+
+    declarations: dict
+        dictorionary containing all declarations.
+    """
+    # ...
+    namespace['mpi_comm_world']  = MPI_COMM_WORLD
+    namespace['mpi_status_size'] = MPI_STATUS_SIZE
+    namespace['mpi_proc_null']   = MPI_PROC_NULL
+    # ...
+
+    # ...
+    for i in [MPI_ERROR, MPI_STATUS]:
+        namespace[i.name] = i
+
+        dec = MPI_Declare(i.dtype, i)
+        declarations[i.name] = dec
+    # ...
+
+    # ...
+    body        = []
+    local_vars  = []
+    global_vars = []
+    hide        = True
+    kind        = 'procedure'
+    # ...
+
+    # ...
+    args        = []
+    datatype    = 'int'
+    allocatable = False
+    shape       = None
+    rank        = 0
+
+    var_name = 'result_%d' % abs(hash(datatype))
+
+    for f_name in ['mpi_init', 'mpi_finalize']:
+        var = Variable(datatype, var_name)
+        results = [var]
+
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide, kind=kind)
+
+        namespace[f_name] = stmt
+    # ...
+
+    # ...
+    i = np.random.randint(10)
+    var_name = 'result_%d' % abs(hash(i))
+    err_name = 'error_%d' % abs(hash(i))
+
+    for f_name in ['mpi_comm_size', 'mpi_comm_rank', 'mpi_abort']:
+        var = Variable(datatype, var_name)
+        err = Variable(datatype, err_name)
+        results = [var, err]
+
+        args = [namespace['mpi_comm_world']]
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide, kind=kind)
+
+        namespace[f_name] = stmt
+    # ...
+
+    return namespace, declarations
+# ...
+

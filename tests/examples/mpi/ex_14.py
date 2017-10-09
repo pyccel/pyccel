@@ -2,6 +2,8 @@
 
 #must be run with mpirun -n 4
 
+from pyccel.mpi import *
+
 ierr = mpi_init()
 
 comm = mpi_comm_world

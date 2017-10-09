@@ -10,7 +10,6 @@
 //       - OpFactorSigned: add '~'
 //       - Atom: add dictorsetmaker 
 //       - Atom: add  '...'
-//       - Atom: add STRING+ 
 //       - Atom: add yield expr 
 //       - AtomExpr: allow multiple trailers 
 //       - DecoratedStmt: add async_funcdef 
@@ -22,6 +21,7 @@
 //       -  
 
 import openmp.grammar
+import imports.grammar
 
 Pyccel:
   (statements*=Statement)
@@ -144,30 +144,6 @@ FunctionKind: 'function' | 'procedure';
 ClassOptions: 'abstract' | 'private' | 'public';
 DeclareAtom: dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
-
-ImportStmt: ImportNameStmt | ImportFromStmt ;
-ImportNameStmt: IMPORT DottedAsNames;
-
-// note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
-ImportFromStmt: 
-  (FROM  (('.' | '...')* dotted_name=DottedName | ('.' | '...')+) 
-   IMPORT ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames))
-;
-
-ImportAsName: ID (AS ID)?;
-DottedAsName: DottedName (AS ID)?;
-
-ImportAsNames: 
-//  ImportAsName (',' ImportAsName)* (',')?
-  names+=ImportAsName[','] 
-;
-
-DottedAsNames: DottedAsName (',' DottedAsName)*;
-DottedName: names+=ID['.'];
-
-//global_stmt: 'global' ID (',' ID)*;
-//nonlocal_stmt: 'nonlocal' ID (',' ID)*;
-//assert_stmt: 'assert' test (',' test)?;
 
 DeclarationStmt: datatype=DataType variables+=ID[','];
 

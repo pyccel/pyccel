@@ -38,6 +38,8 @@ from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeRange, NativeTensor
+from pyccel.types.ast import Import
+from pyccel.types.ast import DottedName
 from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -52,9 +54,8 @@ from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
                               Dot, Sign, IndexedElement,\
                               Min, Max, Mod)
 
-from pyccel.core.syntax     import BasicStmt
-from pyccel.imports.syntax import ImportFromStmt
-from pyccel.openmp.syntax   import OpenmpStmt
+from pyccel.core.syntax    import BasicStmt
+from pyccel.openmp.syntax  import OpenmpStmt
 
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
@@ -85,7 +86,7 @@ from pyccel.parallel.mpi import MPI_comm_cart_coords
 from pyccel.parallel.mpi import MPI_comm_cart_shift
 from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
-from pyccel.parallel.mpi import MPI_Tensor
+from pyccel.parallel.mpi import mpi_definitions
 
 DEBUG = False
 #DEBUG = True
@@ -154,79 +155,6 @@ def datatype_from_string(txt):
         return MPI_DOUBLE()
 # ...
 
-# ...
-def append_mpi(namespace, declarations):
-    """Adds MPI functions and constants to the namespace
-
-    namespace: dict
-        dictorionary containing all declared variables/functions/classes.
-
-    declarations: dict
-        dictorionary containing all declarations.
-    """
-    # ...
-    namespace['mpi_comm_world']  = MPI_COMM_WORLD
-    namespace['mpi_status_size'] = MPI_STATUS_SIZE
-    namespace['mpi_proc_null']   = MPI_PROC_NULL
-    # ...
-
-    # ...
-    for i in [MPI_ERROR, MPI_STATUS]:
-        namespace[i.name] = i
-
-        dec = MPI_Declare(i.dtype, i)
-        declarations[i.name] = dec
-    # ...
-
-    # ...
-    body        = []
-    local_vars  = []
-    global_vars = []
-    hide        = True
-    kind        = 'procedure'
-    # ...
-
-    # ...
-    args        = []
-    datatype    = 'int'
-    allocatable = False
-    shape       = None
-    rank        = 0
-
-    var_name = 'result_%d' % abs(hash(datatype))
-
-    for f_name in ['mpi_init', 'mpi_finalize']:
-        var = Variable(datatype, var_name)
-        results = [var]
-
-        stmt = FunctionDef(f_name, args, results, \
-                           body, local_vars, global_vars, \
-                           hide=hide, kind=kind)
-
-        namespace[f_name] = stmt
-    # ...
-
-    # ...
-    i = np.random.randint(10)
-    var_name = 'result_%d' % abs(hash(i))
-    err_name = 'error_%d' % abs(hash(i))
-
-    for f_name in ['mpi_comm_size', 'mpi_comm_rank', 'mpi_abort']:
-        var = Variable(datatype, var_name)
-        err = Variable(datatype, err_name)
-        results = [var, err]
-
-        args = [namespace['mpi_comm_world']]
-        stmt = FunctionDef(f_name, args, results, \
-                           body, local_vars, global_vars, \
-                           hide=hide, kind=kind)
-
-        namespace[f_name] = stmt
-    # ...
-
-    return namespace, declarations
-# ...
-
 # Global variable namespace
 namespace    = {}
 headers      = {}
@@ -235,7 +163,6 @@ declarations = {}
 namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
-namespace, declarations = append_mpi(namespace, declarations)
 
 # ... builtin types
 builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
@@ -708,9 +635,6 @@ def builtin_function(name, args, lhs=None):
         namespace[lhs] = Tensor(*args)
         lhs = namespace[lhs]
         rhs = Tensor(*args)
-        # TODO allow for user defined comm
-        if MPI_ENABLED:
-            rhs = MPI_Tensor(rhs)
         return Assign(lhs, rhs, strict=False)
     elif name == "mpi_waitall":
         if not lhs:
@@ -994,7 +918,6 @@ class Pyccel(object):
         namespace["False"] = false
         namespace["pi"]    = pi
 
-        #namespace = append_mpi(namespace)
         # ...
 
     @property
@@ -2954,3 +2877,50 @@ class MethodHeaderStmt(BasicStmt):
         headers[h.name] = h
         return h
 
+class ImportFromStmt(BasicStmt):
+    """Class representing an Import statement in the grammar."""
+    def __init__(self, **kwargs):
+        """
+        Constructor for an Import statement.
+
+        Parameters
+        ==========
+        dotted_name: list
+            modules path
+        import_as_names: textX object
+            everything that can be imported
+        """
+        self.dotted_name     = kwargs.pop('dotted_name')
+        self.import_as_names = kwargs.pop('import_as_names')
+
+        super(ImportFromStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Import statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
+        self.update()
+
+        # TODO how to handle dotted packages?
+        names = self.dotted_name.names
+        if isinstance(names, (list, tuple)):
+            if len(names) == 1:
+                fil = str(names[0])
+            else:
+                names = [str(n) for n in names]
+                fil = DottedName(*names)
+        elif isinstance(names, str):
+            fil = str(names)
+
+        ns = self.import_as_names
+        funcs = str(ns)
+
+        if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
+            ns, ds = mpi_definitions(namespace, declarations)
+            for k,v in ns.items():
+                namespace[k] = v
+            for k,v in ds.items():
+                declarations[k] = v
+        return Import(fil, funcs)

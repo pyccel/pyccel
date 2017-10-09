@@ -212,6 +212,32 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError("Unexpected type")
 
+class DottedName(Basic):
+    """
+    Represents a dotted variable.
+
+    Examples
+
+    >>> from pyccel.types.ast import DottedName
+    >>> DottedName('matrix', 'n_rows')
+    matrix.n_rows
+    >>> DottedName('pyccel', 'mpi', 'mpi_init')
+    pyccel.mpi.mpi_init
+    """
+    def __new__(cls, *args):
+        return Basic.__new__(cls, *args)
+
+    @property
+    def name(self):
+        return self._args
+
+    def __str__(self):
+        return '.'.join(str(n) for n in self.name)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '.'.join(sstr(n) for n in self.name)
+
 class DottedVariable(Basic):
     """
     Represents a dotted variable.
@@ -1144,18 +1170,25 @@ class Import(Basic):
     >>> from pyccel.types.ast import Import
     >>> Import('numpy', 'linspace')
     Import(numpy, (linspace,))
+
+    >>> from pyccel.types.ast import DottedName
+    >>> from pyccel.types.ast import Import
+    >>> mpi = DottedName('pyccel', 'mpi')
+    >>> Import(mpi, 'mpi_init')
+    Import(pyccel.mpi, (mpi_init,))
+    >>> Import(mpi, '*')
+    Import(pyccel.mpi, (*,))
     """
 
     def __new__(cls, fil, funcs=None):
-        fil = Symbol(fil)
-        if not funcs:
-            funcs = Tuple()
-        elif iterable(funcs):
+        if not isinstance(fil, (str, DottedName)):
+            raise TypeError('Expecting a string or DottedName')
+
+        if iterable(funcs):
             funcs = Tuple(*[Symbol(f) for f in funcs])
-        elif isinstance(funcs, str):
-            funcs = Tuple(Symbol(funcs))
-        else:
+        elif not isinstance(funcs, (str, DottedName)):
             raise TypeError("Unrecognized funcs type: ", funcs)
+
         return Basic.__new__(cls, fil, funcs)
 
     @property

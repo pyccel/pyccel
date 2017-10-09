@@ -2,9 +2,7 @@
 
 import os
 
-from pyccel.imports.syntax import ImportFromStmt
-
-from pyccel.syntax import (Pyccel, \
+from pyccel.syntax import (Pyccel, ImportFromStmt, \
                            ArithmeticExpression, Term, Atom, \
                            FactorSigned, AtomExpr, AtomExpr, Power, \
                            FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
@@ -109,10 +107,6 @@ class Parser(object):
         debug: bool
             True if in debug mode.
 
-        Parameters
-        ==========
-        model: textX.model
-            the model as created by textX
         """
 
         # ... read the grammar from a file
