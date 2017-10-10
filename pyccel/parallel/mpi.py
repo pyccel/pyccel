@@ -1488,8 +1488,12 @@ class MPI_comm_reduce(MPI):
     def __new__(cls, *args, **options):
         args = list(args)
         op = args[2]
-        if not isinstance(op, (str, MPI_Operation)):
+        if not isinstance(op, (str, MPI_Operation, UndefinedFunction)):
             raise TypeError('Expecting a string or MPI_Operation for args[2]')
+
+        # needed for 'max' and 'min' cases
+        if isinstance(op, UndefinedFunction):
+            op = op.__name__
 
         if isinstance(op, str):
             args[2] = mpi_operation(op)
