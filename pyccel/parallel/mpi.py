@@ -308,16 +308,22 @@ class MPI_comm_recv(MPI):
 
     data:
         initial address of receive buffer (choice) [OUT]
+
     count:
         number of elements in receive buffer (non-negative integer) [IN]
+
     datatype:
         datatype of each receive buffer element (handle) [IN]
+
     source:
         rank of source or MPI_ANY_SOURCE (integer) [IN]
+
     tag:
         message tag or MPI_ANY_TAG (integer) [IN]
+
     comm:
         communicator (handle) [IN]
+
     status:
         status object (Status) [OUT]
 
@@ -2061,6 +2067,87 @@ class MPI_dims_create(MPI):
 ##########################################################
 
 ##########################################################
+#                  Derived types
+##########################################################
+class MPI_type_vector(MPI):
+    """
+    Represents the vector type in mpi.
+    MPI_type_vector syntax is
+    `MPI_TYPE_VECTOR(count, blocklength, stride, oldtype, newtype)`
+
+    count:
+        number of blocks (non-negative integer) [IN]
+
+    blocklength:
+        number of elements in each block (non-negative integer) [IN]
+
+    stride:
+        number of elements between start of each block (integer) [IN]
+
+    oldtype:
+        old datatype (handle) [IN]
+
+    newtype:
+        new datatype (handle)  [OUT]
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_type_vector, MPI_DOUBLE
+    >>> count       = 4
+    >>> blocklength = 1
+    >>> stride      = 16
+    >>> oldtype     = MPI_DOUBLE()
+    >>> MPI_type_vector('line', count, blocklength, stride, oldtype)
+    MPI_type_vector (4, 1, 16, MPI_DOUBLE, line, i_mpi_error)
+    MPI_type_commit (line, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_type_vector, cls).__new__(cls, *args, **options)
+
+    @property
+    def newtype(self):
+        return self.args[0]
+
+    @property
+    def count(self):
+        return self.args[1]
+
+    @property
+    def blocklength(self) :
+        return self.args[2]
+
+    @property
+    def stride(self):
+        return self.args[3]
+
+    @property
+    def oldtype(self):
+        return self.args[4]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        count       = self.count
+        blocklength = self.blocklength
+        stride      = self.stride
+        oldtype     = self.oldtype
+        newtype     = self.newtype
+        ierr        = MPI_ERROR
+
+        args = (count, blocklength, stride, oldtype, newtype, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_type_vector ({0})'.format(args)
+
+        commit = 'MPI_type_commit ({0}, {1})'.format(newtype, ierr)
+
+        code = '{0}\n{1}'.format(code, commit)
+
+        return code
+##########################################################
+
+##########################################################
 # The following classes are to
 # provide user friendly support of MPI
 ##########################################################
@@ -2090,11 +2177,21 @@ class MPI_Tensor(MPI, Block, Tensor):
     def __new__(cls, tensor, \
                 comm_parent=None, \
                 dims=None, periods=None, reorder=False, \
-                disp=1):
+                disp=1, label=None):
         # ...
         if not isinstance(tensor, Tensor):
             raise TypeError('Expecting a Tensor')
         cls._tensor = tensor
+        # ...
+
+        # ...
+        def _make_name(n):
+            if not label:
+                return n
+            if len(label) > 0:
+                return '{0}_{1}'.format(label, n)
+            else:
+                return n
         # ...
 
         # ...
@@ -2109,7 +2206,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ...
-        ndim = Variable('int', 'ndim')
+        ndim = Variable('int', _make_name('ndim'))
         stmt = Assign(ndim, tensor.dim)
         variables.append(ndim)
         body.append(stmt)
@@ -2134,7 +2231,7 @@ class MPI_Tensor(MPI, Block, Tensor):
             else:
                raise TypeError('Expecting an integer')
 
-        dims = Variable('int', 'dims', \
+        dims = Variable('int', _make_name('dims'), \
                         rank=1, shape=ndim, allocatable=True)
         stmt = Zeros(dims, ndim)
         variables.append(dims)
@@ -2168,7 +2265,8 @@ class MPI_Tensor(MPI, Block, Tensor):
             else:
                raise TypeError('Expecting a Boolean')
 
-        periods = Variable('bool', 'periods', rank=1, shape=ndim, allocatable=True)
+        periods = Variable('bool', _make_name('periods'), \
+                           rank=1, shape=ndim, allocatable=True)
         stmt = Zeros(periods, ndim)
         variables.append(periods)
         body.append(stmt)
@@ -2187,7 +2285,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         else:
             reorder_val = BooleanFalse()
 
-        reorder = Variable('bool', 'reorder')
+        reorder = Variable('bool', _make_name('reorder'))
         stmt = Assign(reorder, reorder_val)
         variables.append(reorder)
         body.append(stmt)
@@ -2205,7 +2303,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... create the cart comm
-        comm_name = 'comm_cart'
+        comm_name = _make_name('comm_cart')
         comm = Variable('int', comm_name, rank=0, cls_base=MPI_comm())
         variables.append(comm)
 
@@ -2218,7 +2316,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ...
-        rank_in_cart = Variable('int', 'rank_in_cart')
+        rank_in_cart = Variable('int', _make_name('rank_in_cart'))
         stmt = MPI_Assign(rank_in_cart, MPI_comm_rank(comm))
         variables.append(rank_in_cart)
         body.append(stmt)
@@ -2227,7 +2325,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... compute the coordinates of the process
-        coords = Variable('int', 'coords', \
+        coords = Variable('int', _make_name('coords'), \
                           rank=1, shape=ndim, allocatable=True)
         stmt = Zeros(coords, ndim)
         variables.append(coords)
@@ -2244,7 +2342,8 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... TODO treat disp properly
-        neighbor = Variable('int', 'neighbor', rank=1, shape=2*ndim, allocatable=True)
+        neighbor = Variable('int', _make_name('neighbor'), \
+                            rank=1, shape=2*ndim, allocatable=True)
         stmt = Zeros(neighbor, 2*ndim)
         variables.append(neighbor)
         body.append(stmt)
@@ -2284,18 +2383,18 @@ class MPI_Tensor(MPI, Block, Tensor):
 
         d = {}
         labels = ['x','y','z'][:tensor.dim]
-        for i,label in enumerate(labels):
+        for i,l in enumerate(labels):
             nn = (ends[i] - starts[i])/steps[i]
 
-            d['s'+label] = (coords[i] * nn) / dims[i]
-            d['e'+label] = ((coords[i]+1) * nn) / dims[i]
+            d['s'+l] = (coords[i] * nn) / dims[i]
+            d['e'+l] = ((coords[i]+1) * nn) / dims[i]
 
         ranges = []
-        for label in labels:
+        for l in labels:
             dd = {}
             for _n in ['s', 'e']:
-                n = _n+label
-                v    = Variable('int', n)
+                n = _n+l
+                v    = Variable('int', _make_name(n))
                 rhs  = d[n]
                 stmt = Assign(v, rhs)
                 variables.append(v)
@@ -2309,6 +2408,21 @@ class MPI_Tensor(MPI, Block, Tensor):
 
         cls._ranges = ranges
         # ...
+
+        # ... derived types for communication over boundaries
+        count       = 4
+        blocklength = 1
+        stride      = 16
+        oldtype     = MPI_DOUBLE()
+
+        line = Variable('int', _make_name('line'))
+        variables.append(line)
+
+        rhs = MPI_type_vector(line, count, blocklength, stride, oldtype)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+        # ...
+#        print variables
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
@@ -2400,7 +2514,10 @@ def mpify(stmt, **options):
     stmt: stmt, list
         statement or a list of statements
     """
+    if isinstance(stmt, MPI):
+        return stmt
     if isinstance(stmt, Tensor):
+        options['label'] = stmt.name
         return MPI_Tensor(stmt, **options)
     if isinstance(stmt, For):
         iterable = mpify(stmt.iterable, **options)
@@ -2440,8 +2557,11 @@ def mpify(stmt, **options):
 
         return ClassDef(name, attributs, methods, options)
     if isinstance(stmt, Assign):
+        if isinstance(stmt.rhs, MPI_Tensor):
+            return stmt
         if isinstance(stmt.rhs, Tensor):
             lhs = stmt.lhs
+            options['label'] = lhs.name
             rhs = mpify(stmt.rhs, **options)
 
             return Assign(lhs, rhs, \

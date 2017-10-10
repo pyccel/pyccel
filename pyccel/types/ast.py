@@ -575,19 +575,30 @@ class Tensor(Basic):
     >>> r1 = Range(s1, e1, 1)
     >>> r2 = Range(s2, e2, 1)
     >>> Tensor(r1, r2)
-    Tensor(Range(s1, e1, 1), Range(s2, e2, 1))
+    Tensor(Range(s1, e1, 1), Range(s2, e2, 1), name=tensor)
     """
 
-    def __new__(cls, *args):
+    def __new__(cls, *args, **kwargs):
         for r in args:
             if not isinstance(r, (Range, Tensor)):
                 raise TypeError("Expecting a Range or Tensor")
 
+        try:
+            name = kwargs['name']
+        except:
+            name = 'tensor'
+
+        args = list(args) + [name]
+
         return Basic.__new__(cls, *args)
 
     @property
+    def name(self):
+        return self._args[-1]
+
+    @property
     def ranges(self):
-        return self._args
+        return self._args[:-1]
 
     @property
     def dim(self):
@@ -595,8 +606,8 @@ class Tensor(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        txt  = ', '.join(sstr(n) for n in self._args)
-        txt  = 'Tensor({0})'.format(txt)
+        txt  = ', '.join(sstr(n) for n in self.ranges)
+        txt  = 'Tensor({0}, name={1})'.format(txt, sstr(self.name))
         return txt
 
 # TODO add a name to a block?

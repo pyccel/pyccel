@@ -698,6 +698,24 @@ class FCodePrinter(CodePrinter):
         code = 'call mpi_cart_sub ({0})'.format(args)
         return code
 
+    def _print_MPI_type_vector(self, expr):
+        ierr     = self._print(MPI_ERROR)
+
+        count       = expr.count
+        blocklength = expr.blocklength
+        stride      = expr.stride
+        oldtype     = expr.oldtype
+        newtype     = expr.newtype
+
+        args = (count, blocklength, stride, oldtype, newtype, ierr)
+        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        code = 'call MPI_type_vector ({0})'.format(args)
+
+        commit = 'call MPI_type_commit ({0}, {1})'.format(newtype, ierr)
+
+        code = '{0}\n{1}'.format(code, commit)
+        return code
+
     def _print_MPI_dims_create(self, expr):
         ierr      = self._print(MPI_ERROR)
 

@@ -641,9 +641,9 @@ def builtin_function(name, args, lhs=None):
         d_var['rank']        = 0
 
         insert_variable(lhs, **d_var)
-        namespace[lhs] = Tensor(*args)
+        rhs = Tensor(*args, name=lhs)
+        namespace[lhs] = rhs
         lhs = namespace[lhs]
-        rhs = Tensor(*args)
         return Assign(lhs, rhs, strict=False)
     elif name == "mpi_waitall":
         if not lhs:
