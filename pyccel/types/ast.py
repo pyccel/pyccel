@@ -1425,11 +1425,15 @@ class Zeros(Basic):
 
     Examples
 
-    >>> from sympy import symbols
-    >>> from pyccel.types.ast import Zeros
-    >>> n,m,x = symbols('n,m,x')
+    >>> from pyccel.types.ast import Variable, Zeros
+    >>> n = Variable('int', 'n')
+    >>> m = Variable('int', 'm')
+    >>> x = Variable('int', 'x')
     >>> Zeros(x, (n,m))
     x := 0
+    >>> y = Variable('bool', 'y')
+    >>> Zeros(y, (n,m))
+    y := False
     """
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, shape=None, grid=None):
@@ -1515,11 +1519,15 @@ class Ones(Zeros):
 
     Examples
 
-    >>> from sympy import symbols
-    >>> from pyccel.types.ast import Ones
-    >>> n,m,x = symbols('n,m,x')
+    >>> from pyccel.types.ast import Variable, Ones
+    >>> n = Variable('int', 'n')
+    >>> m = Variable('int', 'm')
+    >>> x = Variable('int', 'x')
     >>> Ones(x, (n,m))
     x := 1
+    >>> y = Variable('bool', 'y')
+    >>> Ones(y, (n,m))
+    y := True
     """
     @property
     def init_value(self):
