@@ -53,6 +53,7 @@ from pyccel.parallel.mpi import MPI_comm_cart_shift
 from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import MPI_SUM, MPI_PROD
+from pyccel.parallel.mpi import MPI_MIN, MPI_MAX
 from pyccel.parallel.mpi import MPI_Tensor
 from pyccel.parallel.mpi import MPI_TensorCommunication
 
@@ -776,6 +777,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_MPI_PROD(self, expr):
         return 'MPI_PROD'
+
+    def _print_MPI_MAX(self, expr):
+        return 'MPI_MAX'
+
+    def _print_MPI_MIN(self, expr):
+        return 'MPI_MIN'
 
     def _print_MPI_status_size(self, expr):
         return 'MPI_status_size'

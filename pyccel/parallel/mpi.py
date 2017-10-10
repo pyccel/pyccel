@@ -12,6 +12,8 @@ from sympy.core.singleton import Singleton
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core import Tuple
 from sympy.utilities.iterables import iterable
+from sympy.core.function import Function
+from sympy.core.function import UndefinedFunction
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
@@ -243,7 +245,24 @@ class MPI_PROD(MPI_Operation):
     def _sympystr(self, printer):
         return 'MPI_PROD'
 
-_op_registry = {'+': MPI_SUM(), '*': MPI_PROD()}
+class MPI_MAX(MPI_Operation):
+    _name   = 'MPI_MAX'
+    _symbol = 'max'
+
+    def _sympystr(self, printer):
+        return 'MPI_MAX'
+
+class MPI_MIN(MPI_Operation):
+    _name   = 'MPI_MIN'
+    _symbol = 'min'
+
+    def _sympystr(self, printer):
+        return 'MPI_MIN'
+
+_op_registry = {'+': MPI_SUM(), \
+                '*': MPI_PROD(), \
+                'max': MPI_MAX(), \
+                'min': MPI_MIN()}
 
 
 def mpi_operation(op):
@@ -1565,8 +1584,12 @@ class MPI_comm_allreduce(MPI):
     def __new__(cls, *args, **options):
         args = list(args)
         op = args[2]
-        if not isinstance(op, (str, MPI_Operation)):
+        if not isinstance(op, (str, MPI_Operation, UndefinedFunction)):
             raise TypeError('Expecting a string or MPI_Operation for args[2]')
+
+        # needed for 'max' and 'min' cases
+        if isinstance(op, UndefinedFunction):
+            op = op.__name__
 
         if isinstance(op, str):
             args[2] = mpi_operation(op)

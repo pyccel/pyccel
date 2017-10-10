@@ -29,6 +29,7 @@ u       = zeros(mesh, double)
 u_new   = zeros(mesh, double)
 u_exact = zeros(mesh, double)
 f       = zeros(mesh, double)
+u_error = zeros(mesh, double)
 
 #Initialization
 for i,j in mesh:
@@ -39,7 +40,7 @@ for i,j in mesh:
     u_exact[i, j] = x*y*(x-1)*(y-1)
 
 
-n_iterations = 1
+n_iterations = 4
 for it in range(0, n_iterations):
     u = u_new
 
@@ -49,6 +50,14 @@ for it in range(0, n_iterations):
     #Computation of u at the n+1 iteration
     for i,j in mesh:
         u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+
+    #Computation of the global error
+    u_error = abs(u-u_new)
+    local_error = max(u_error)
+
+    global_error = 0.0
+    ierr = comm.allreduce (local_error, global_error, 'max')
+
 
 del mesh
 ierr = mpi_finalize()
