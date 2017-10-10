@@ -42,7 +42,8 @@ from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeRange, NativeTensor
 from pyccel.types.ast import Import
 from pyccel.types.ast import DottedName
-from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
+from pyccel.types.ast import (Range, Tensor, For, Assign, \
+                              Declare, Variable, Result, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
