@@ -2069,6 +2069,65 @@ class MPI_dims_create(MPI):
 ##########################################################
 #                  Derived types
 ##########################################################
+class MPI_type_contiguous(MPI):
+    """
+    Represents the contiguous type in mpi.
+    MPI_type_contiguous syntax is
+    `MPI_TYPE_CONTIGUOUS(count, oldtype, newtype)`
+
+    count:
+        number of blocks (non-negative integer) [IN]
+
+    oldtype:
+        old datatype (handle) [IN]
+
+    newtype:
+        new datatype (handle)  [OUT]
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_type_vector, MPI_DOUBLE
+    >>> count       = 4
+    >>> oldtype     = MPI_DOUBLE()
+    >>> MPI_type_contiguous('column', count, oldtype)
+    MPI_type_contiguous (4, MPI_DOUBLE, column, i_mpi_error)
+    MPI_type_commit (column, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_type_contiguous, cls).__new__(cls, *args, **options)
+
+    @property
+    def newtype(self):
+        return self.args[0]
+
+    @property
+    def count(self):
+        return self.args[1]
+
+    @property
+    def oldtype(self):
+        return self.args[2]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        count       = self.count
+        oldtype     = self.oldtype
+        newtype     = self.newtype
+        ierr        = MPI_ERROR
+
+        args = (count, oldtype, newtype, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_type_contiguous ({0})'.format(args)
+
+        commit = 'MPI_type_commit ({0}, {1})'.format(newtype, ierr)
+
+        code = '{0}\n{1}'.format(code, commit)
+
+        return code
+
 class MPI_type_vector(MPI):
     """
     Represents the vector type in mpi.
@@ -2417,6 +2476,9 @@ class MPI_Tensor(MPI, Block, Tensor):
         ey = d_var['ey']
         sy = d_var['sy']
 
+
+        # Creation of the type_line derived datatype to exchange points
+        # with northern to southern neighbours
         count       = ey-sy+1
         blocklength = 1
         stride      = ex-sx+3
@@ -2428,6 +2490,20 @@ class MPI_Tensor(MPI, Block, Tensor):
         rhs = MPI_type_vector(line, count, blocklength, stride, oldtype)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
+        # 
+
+        # Creation of the type_column derived datatype to exchange points
+        # with western to eastern neighbours
+        count   = ex-sx+1
+        oldtype = MPI_DOUBLE()
+
+        column = Variable('int', _make_name('column'))
+        variables.append(column)
+
+        rhs = MPI_type_contiguous(column, count, oldtype)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+        #
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
