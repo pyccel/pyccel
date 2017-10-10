@@ -16,6 +16,7 @@ from sympy import preorder_traversal
 from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
                    csc,  cos,  sec,  tan,  cot,  asin, \
                    acsc, acos, asec, atan, acot, atan2)
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 
 from sympy.core.basic import Basic
@@ -36,8 +37,13 @@ from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import (For, Assign, Declare, Variable, Result,\
-                              FunctionHeader, ClassHeader, MethodHeader,\
+from pyccel.types.ast import NativeBool, NativeFloat
+from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
+from pyccel.types.ast import NativeRange, NativeTensor
+from pyccel.types.ast import Import
+from pyccel.types.ast import DottedName
+from pyccel.types.ast import (Range, Tensor, For, Assign, Declare, Variable, \
+                              FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
@@ -48,17 +54,17 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, Result,\
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement,\
-                              Min, Max)
+                              Min, Max, Mod)
 
-from pyccel.core.syntax     import BasicStmt
-from pyccel.imports.syntax import ImportFromStmt
-from pyccel.openmp.syntax   import OpenmpStmt
+from pyccel.core.syntax    import BasicStmt
+from pyccel.openmp.syntax  import OpenmpStmt
 
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.parallel.mpi import MPI_Assign, MPI_Declare
 from pyccel.parallel.mpi import MPI_waitall
 from pyccel.parallel.mpi import MPI_INTEGER, MPI_REAL, MPI_DOUBLE
+from pyccel.parallel.mpi import MPI_comm
 from pyccel.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
 from pyccel.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
 from pyccel.parallel.mpi import MPI_proc_null, MPI_PROC_NULL
@@ -75,12 +81,23 @@ from pyccel.parallel.mpi import MPI_comm_allgather
 from pyccel.parallel.mpi import MPI_comm_alltoall
 from pyccel.parallel.mpi import MPI_comm_reduce
 from pyccel.parallel.mpi import MPI_comm_allreduce
+from pyccel.parallel.mpi import MPI_comm_split
+from pyccel.parallel.mpi import MPI_comm_free
+from pyccel.parallel.mpi import MPI_comm_cart_create
+from pyccel.parallel.mpi import MPI_comm_cart_coords
+from pyccel.parallel.mpi import MPI_comm_cart_shift
+from pyccel.parallel.mpi import MPI_comm_cart_sub
+from pyccel.parallel.mpi import MPI_dims_create
+from pyccel.parallel.mpi import mpi_definitions
 
 DEBUG = False
 #DEBUG = True
 
 # TODO set to None
 DEFAULT_TYPE = 'double'
+
+# TODO pass to the Parser
+MPI_ENABLED = True
 
 known_functions = {
     "abs": "Abs",
@@ -103,6 +120,7 @@ known_functions = {
     "min": "Min",
     "max": "Max",
     "pow": "pow",
+    "mod": "Mod",
     "sec": "sec",
     "sign": "Sign",
     "sin": "sin",
@@ -129,6 +147,8 @@ def datatype_from_string(txt):
         return NativeDouble()
     elif txt == 'complex':
         return NativeComplex()
+    elif txt == 'bool':
+        return NativeBool()
     elif txt == 'mpi_int':
         return MPI_INTEGER()
     elif txt == 'mpi_float':
@@ -136,79 +156,6 @@ def datatype_from_string(txt):
     elif txt == 'mpi_double':
         return MPI_DOUBLE()
 # ...
-
-# ...
-def append_mpi(namespace, declarations):
-    """Adds MPI functions and constants to the namespace
-
-    namespace: dict
-        dictorionary containing all declared variables/functions/classes.
-
-    declarations: dict
-        dictorionary containing all declarations.
-    """
-    # ...
-    namespace['mpi_comm_world']  = MPI_COMM_WORLD
-    namespace['mpi_status_size'] = MPI_STATUS_SIZE
-    namespace['mpi_proc_null']   = MPI_PROC_NULL
-    # ...
-
-    # ...
-    for i in [MPI_ERROR, MPI_STATUS]:
-        namespace[i.name] = i
-
-        dec = MPI_Declare(i.dtype, i)
-        declarations[i.name] = dec
-    # ...
-
-    # ...
-    body        = []
-    local_vars  = []
-    global_vars = []
-    hide        = True
-    kind        = 'procedure'
-    # ...
-
-    # ...
-    args        = []
-    datatype    = 'int'
-    allocatable = False
-    shape       = None
-    rank        = 0
-
-    var_name = 'result_%d' % abs(hash(datatype))
-
-    for f_name in ['mpi_init', 'mpi_finalize']:
-        var = Variable(datatype, var_name)
-        results = [var]
-
-        stmt = FunctionDef(f_name, args, results, \
-                           body, local_vars, global_vars, \
-                           hide=hide, kind=kind)
-
-        namespace[f_name] = stmt
-    # ...
-
-    # ...
-    i = np.random.randint(10)
-    var_name = 'result_%d' % abs(hash(i))
-    err_name = 'error_%d' % abs(hash(i))
-
-    for f_name in ['mpi_comm_size', 'mpi_comm_rank', 'mpi_abort']:
-        var = Variable(datatype, var_name)
-        err = Variable(datatype, err_name)
-        results = [var, err]
-
-        args = [namespace['mpi_comm_world']]
-        stmt = FunctionDef(f_name, args, results, \
-                           body, local_vars, global_vars, \
-                           hide=hide, kind=kind)
-
-        namespace[f_name] = stmt
-    # ...
-
-    return namespace, declarations
-# ...
 
 # Global variable namespace
 namespace    = {}
@@ -218,10 +165,9 @@ declarations = {}
 namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
-namespace, declarations = append_mpi(namespace, declarations)
 
 # ... builtin types
-builtin_types  = ['int', 'float', 'double', 'complex']
+builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
 # ...
 
 # ... will contain user defined types
@@ -240,12 +186,15 @@ builtin_funcs_math_un = ['abs', \
                          'exp', 'log', 'max', 'min', \
                          'sec', 'sign', 'sin', 'sinh', \
                          'sqrt', 'tan', 'tanh']
-builtin_funcs_math_bin = ['dot', 'pow']
+builtin_funcs_math_bin = ['dot', 'pow', 'mod']
 builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
+
+builtin_funcs_iter = ['range', 'tensor']
+builtin_funcs += builtin_funcs_iter
 
 builtin_funcs_mpi = ['mpi_waitall']
 builtin_funcs += builtin_funcs_mpi
@@ -314,6 +263,11 @@ def get_attributs(expr):
     elif isinstance(expr, Float):
         # TODO choose precision
         d_var['datatype']    = DEFAULT_TYPE
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+        return d_var
+    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+        d_var['datatype']    = NativeBool()
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
@@ -604,9 +558,21 @@ def builtin_function(name, args, lhs=None):
             lhs = namespace[lhs]
             expr = func(*args)
             return Assign(lhs, expr)
+    elif name in ['mod']:
+        func = eval(known_functions[name])
+        if lhs is None:
+            return func(*args)
+        else:
+            d_var = {}
+            d_var['datatype'] = args[0].dtype
+            d_var['rank']     = 0
+            insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
+            expr = func(*args)
+            return Assign(lhs, expr)
     elif name in builtin_funcs_math_un + ['len']:
         if not(len(args) == 1):
-            raise ValueError("pow takes exactly one argument")
+            raise ValueError("function takes exactly one argument")
 
         func = eval(known_functions[name])
         if lhs is None:
@@ -625,7 +591,7 @@ def builtin_function(name, args, lhs=None):
             return Assign(lhs, expr)
     elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):
-            raise ValueError("pow takes exactly two arguments")
+            raise ValueError("function takes exactly two arguments")
 
         func = eval(known_functions[name])
         if lhs is None:
@@ -638,6 +604,40 @@ def builtin_function(name, args, lhs=None):
             lhs = namespace[lhs]
             expr = func(*args)
             return Assign(lhs, expr)
+    elif name == "range":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        d_var = {}
+        d_var['datatype']    = NativeRange()
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+
+        insert_variable(lhs, **d_var)
+        namespace[lhs] = Range(*args)
+        lhs = namespace[lhs]
+        rhs = Range(*args)
+        return Assign(lhs, rhs, strict=False)
+    elif name == "tensor":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        d_var = {}
+        d_var['datatype']    = NativeTensor()
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+
+        insert_variable(lhs, **d_var)
+        namespace[lhs] = Tensor(*args)
+        lhs = namespace[lhs]
+        rhs = Tensor(*args)
+        return Assign(lhs, rhs, strict=False)
     elif name == "mpi_waitall":
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -751,8 +751,24 @@ def expr_with_trailer(expr, trailer=None):
                 comm = expr
                 func = trailer[0].expr
                 args = trailer[1].expr
+                if func in ['split', 'cart_create', 'cart_sub']:
+                    newcomm = args[-1]
+                    if not newcomm in namespace:
+                        d_var = {}
+                        d_var['datatype']    = 'int'
+                        d_var['allocatable'] = False
+                        d_var['shape']       = None
+                        d_var['rank']        = 0
+                        d_var['cls_base']    = MPI_comm()
+
+                        insert_variable(newcomm, **d_var)
+
+#                        COMM = MPI_comm(newcomm)
+#
+#                        namespace[newcomm]    = COMM
+#                        declarations[newcomm] = MPI_Declare('int', COMM)
+
                 args += [comm]
-#                print [type(a) for a in args]
                 expr = eval('MPI_comm_{0}'.format(func))(*args)
         else:
             raise ValueError('Unable to construct expr from trailers.')
@@ -903,8 +919,6 @@ class Pyccel(object):
         namespace["True"]  = true
         namespace["False"] = false
         namespace["pi"]    = pi
-
-        #namespace = append_mpi(namespace)
         # ...
 
     @property
@@ -1023,13 +1037,18 @@ class DelStmt(BasicStmt):
         variables = [v.expr for v in self.variables]
         ls = []
         for var in variables:
-            name = var.name
-            if isinstance(name, (list, tuple)):
-                name = '{0}.{1}'.format(name[0], name[1])
-            if name in namespace:
-                ls.append(namespace[name])
+            if isinstance(var, Variable):
+                name = var.name
+                if isinstance(name, (list, tuple)):
+                    name = '{0}.{1}'.format(name[0], name[1])
+                if name in namespace:
+                    ls.append(namespace[name])
+                else:
+                    raise Exception('Unknown variable {}'.format(name))
+            elif isinstance(var, Tensor):
+                ls.append(var)
             else:
-                raise Exception('Unknown variable {}'.format(name))
+                raise NotImplementedError('Only Variable is trated')
 
         self.update()
 
@@ -1276,64 +1295,31 @@ class MultiAssignStmt(BasicStmt):
 #        else:
 #            return MultiAssign(lhs, rhs, args)
 
-class ForStmt(BasicStmt):
-    """Class representing a For statement."""
+class RangeStmt(BasicStmt):
+    """Class representing a Range statement."""
 
     def __init__(self, **kwargs):
         """
-        Constructor for the For statement.
+        Constructor for the Range statement.
 
-        iterable: str
-            the iterable variable
         start: str
             start index
         end: str
             end index
         step: str
             step for the iterable. if not given, 1 will be used.
-        body: list
-            a list of statements for the body of the For statement.
         """
-        self.iterable = kwargs.pop('iterable')
         self.start    = kwargs.pop('start')
         self.end      = kwargs.pop('end')
         self.step     = kwargs.pop('step', None)
-        self.body     = kwargs.pop('body')
 
-        super(ForStmt, self).__init__(**kwargs)
-
-    @property
-    def local_vars(self):
-        """Local variables of the For statement."""
-        return [self.iterable]
-
-    @property
-    def stmt_vars(self):
-        """Statement variables."""
-        ls = []
-        for stmt in self.body.stmts:
-            ls += stmt.local_vars
-            ls += stmt.stmt_vars
-        return ls
-
-    def update(self):
-        """
-        Update before processing the statement
-        """
-        # check that start and end were declared, if they are symbols
-        d_var = {}
-        d_var['datatype']    = 'int'
-        d_var['allocatable'] = False
-        d_var['rank']        = 0
-        insert_variable(self.iterable, **d_var)
+        super(RangeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
         """
-        Process the For statement by returning a pyccel.types.ast object
+        Process the Range statement by returning a pyccel.types.ast object
         """
-        i = Symbol(self.iterable, integer=True)
-
         if self.start in namespace:
             b = namespace[self.start]
         else:
@@ -1352,11 +1338,85 @@ class ForStmt(BasicStmt):
             else:
                 s = do_arg(self.step)
 
+        return Range(b,e,s)
+
+class ForStmt(BasicStmt):
+    """Class representing a For statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the For statement.
+
+        iterable: str
+            the iterable variable
+        range: Range
+            range for indices
+        body: list
+            a list of statements for the body of the For statement.
+        """
+        self.iterable = kwargs.pop('iterable')
+        self.range    = kwargs.pop('range')
+        self.body     = kwargs.pop('body')
+
+        super(ForStmt, self).__init__(**kwargs)
+
+    @property
+    def local_vars(self):
+        """Local variables of the For statement."""
+        if isinstance(self.iterable, list):
+            return self.iterable
+        else:
+            return [self.iterable]
+
+    @property
+    def stmt_vars(self):
+        """Statement variables."""
+        ls = []
+        for stmt in self.body.stmts:
+            ls += stmt.local_vars
+            ls += stmt.stmt_vars
+        return ls
+
+    def update(self):
+        """
+        Update before processing the statement
+        """
+        # check that start and end were declared, if they are symbols
+        for i in self.local_vars:
+            d_var = {}
+            d_var['datatype']    = 'int'
+            d_var['allocatable'] = False
+            d_var['rank']        = 0
+            insert_variable(str(i), **d_var)
+
+    @property
+    def expr(self):
+        """
+        Process the For statement by returning a pyccel.types.ast object
+        """
+        if isinstance(self.iterable, list):
+            i = [Symbol(a, integer=True) for a in self.iterable]
+        else:
+            i = Symbol(self.iterable, integer=True)
+
+        if isinstance(self.range, RangeStmt):
+            r = self.range.expr
+        elif isinstance(self.range, str):
+            if not self.range in namespace:
+                raise ValueError('Undefined range.')
+            r = namespace[self.range]
+            if not isinstance(namespace[self.range], (Range, Tensor)):
+                raise TypeError('Expecting an Iterable')
+            r = namespace[self.range]
+        else:
+            print ">>>> ", type(self.range)
+            raise TypeError('Expecting an Iterable')
+
         self.update()
 
         body = self.body.expr
 
-        return For(i, (b,e,s), body)
+        return For(i, r, body)
 
 class WhileStmt(BasicStmt):
     """Class representing a While statement."""
@@ -1589,6 +1649,8 @@ class Atom(ExpressionElement):
             return true
         elif op == 'False':
             return false
+        elif isinstance(op, str):
+            return op
         else:
             txt = 'Undefined variable "{0}" of type {1}'.format(op, type(op))
             raise Exception(txt)
@@ -2725,7 +2787,7 @@ class FunctionHeaderStmt(BasicStmt):
             list of output types
         """
         self.name    = kwargs.pop('name')
-        self.kind    = kwargs.pop('kind', 'function')
+        self.kind    = kwargs.pop('kind', None)
         self.decs    = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 
@@ -2755,9 +2817,13 @@ class FunctionHeaderStmt(BasicStmt):
                 attributs.append(attr)
             self.results = zip(r_dtypes, attributs)
 
-        kind = str(self.kind)
+        if self.kind is None:
+            kind = 'function'
+        else:
+            kind = str(self.kind)
 
-        h = FunctionHeader(self.name, self.dtypes, self.results, kind=kind)
+        h = FunctionHeader(self.name, self.dtypes, \
+                           results=self.results, kind=kind)
         headers[self.name] = h
         return h
 
@@ -2837,3 +2903,48 @@ class MethodHeaderStmt(BasicStmt):
         headers[h.name] = h
         return h
 
+class ImportFromStmt(BasicStmt):
+    """Class representing an Import statement in the grammar."""
+    def __init__(self, **kwargs):
+        """
+        Constructor for an Import statement.
+
+        dotted_name: list
+            modules path
+        import_as_names: textX object
+            everything that can be imported
+        """
+        self.dotted_name     = kwargs.pop('dotted_name')
+        self.import_as_names = kwargs.pop('import_as_names')
+
+        super(ImportFromStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Import statement,
+        by returning the appropriate object from pyccel.types.ast
+        """
+        self.update()
+
+        # TODO how to handle dotted packages?
+        names = self.dotted_name.names
+        if isinstance(names, (list, tuple)):
+            if len(names) == 1:
+                fil = str(names[0])
+            else:
+                names = [str(n) for n in names]
+                fil = DottedName(*names)
+        elif isinstance(names, str):
+            fil = str(names)
+
+        ns = self.import_as_names
+        funcs = str(ns)
+
+        if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
+            ns, ds = mpi_definitions(namespace, declarations)
+            for k,v in ns.items():
+                namespace[k] = v
+            for k,v in ds.items():
+                declarations[k] = v
+        return Import(fil, funcs)

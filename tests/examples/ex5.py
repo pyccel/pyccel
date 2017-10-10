@@ -1,7 +1,7 @@
 # coding: utf-8
 
 
-#$ header f(double, double)
+#$ header function f(double, double) results(double)
 def f(u,v):
     t = u - v
     return t
@@ -17,6 +17,7 @@ x1 = 1.0
 y1 = 2.0
 
 w    = 2 * f(x1,y1) + 1.0
+
 z, t = g(x1,w)
 
 print(z)

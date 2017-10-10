@@ -2,30 +2,46 @@
 
 # TODO - MPI_comm_gatherv: needs a new data structure for the variable
 
+from itertools import groupby
+import numpy as np
+
 from sympy.core.symbol  import Symbol
 from sympy.core.numbers import Integer
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton import Singleton
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy.core import Tuple
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
-from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
+from pyccel.types.ast import NativeBool, NativeFloat
+from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
 from pyccel.types.ast import DataTypeFactory
+from pyccel.types.ast import Block
+from pyccel.types.ast import Range, Tensor
+from pyccel.types.ast import Zeros
+
+from pyccel.types.ast import For, While, FunctionDef, ClassDef, If, Del
+
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
 
+
+
 def get_shape(expr):
     """Returns the shape of a given variable."""
     if not isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
-        raise TypeError('shape is only defined for Variable, IndexedVariable, IndexedElement')
+        txt  = 'shape is only defined for Variable, IndexedVariable, IndexedElement.'
+        txt += 'given {0}'.format(type(expr))
+        raise TypeError(txt)
 
     if isinstance(expr, (Variable, IndexedVariable)):
         shape = expr.shape
         if shape is None:
             return 1
-        if isinstance(shape, (list, tuple)):
+        elif isinstance(shape, (list, tuple, Tuple)):
             n = 1
             for i in shape:
                 n *= i
@@ -35,9 +51,13 @@ def get_shape(expr):
     elif isinstance(expr, IndexedElement):
         return get_shape(expr.base)
 
+##########################################################
+#               Base class for MPI
+##########################################################
 class MPI(Basic):
     """Base class for MPI."""
     pass
+##########################################################
 
 ##########################################################
 #                 Basic Statements
@@ -86,7 +106,35 @@ class MPI_proc_null(MPI):
         sstr = printer.doprint
         return 'mpi_proc_null'
 
-class MPI_comm_world(UniversalCommunicator, MPI):
+class MPI_comm(MPI):
+    """
+    Represents a communicator in mpi.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_comm
+    >>> MPI_comm('comm')
+    comm
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        if len(args) == 1:
+            name = args[0]
+            if not isinstance(name, str):
+                raise TypeError('Expecting a string')
+
+        return super(MPI_comm, cls).__new__(cls, *args, **options)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return sstr(self.name)
+
+class MPI_comm_world(UniversalCommunicator, MPI_comm):
     """
     Represents the world comm in mpi.
 
@@ -187,6 +235,16 @@ class MPI_PROD(MPI_Operation):
 
     def _sympystr(self, printer):
         return 'MPI_PROD'
+
+_op_registry = {'+': MPI_SUM(), '*': MPI_PROD()}
+
+
+def mpi_operation(op):
+    """Returns the operator singleton for the given operator"""
+
+    if op.lower() not in _op_registry:
+        raise ValueError("Unrecognized MPI operation " + op)
+    return _op_registry[op]
 ##########################################################
 
 ##########################################################
@@ -966,6 +1024,8 @@ class MPI_comm_scatter(MPI):
     `MPI_SCATTER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype,
     root, comm, ierr)`
 
+    Note that we use sendcount = recvcount for the moment.
+
     senddata:
         initial address of send buffer (choice) [IN]
 
@@ -1026,7 +1086,8 @@ class MPI_comm_scatter(MPI):
 
     @property
     def sendcount(self):
-        return get_shape(self.senddata)
+        # sendcount = recvcount
+        return get_shape(self.recvdata)
 
     @property
     def recvcount(self):
@@ -1064,6 +1125,8 @@ class MPI_comm_gather(MPI):
     Represents the MPI_gather statement.
     MPI_gather syntax is
     `MPI_GATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, root, comm)`
+
+    Note that we use recvcount = sendcount for the moment.
 
     senddata:
         initial address of send buffer (choice) [IN]
@@ -1129,7 +1192,7 @@ class MPI_comm_gather(MPI):
 
     @property
     def recvcount(self):
-        return get_shape(self.recvdata)
+        return get_shape(self.senddata)
 
     @property
     def senddatatype(self):
@@ -1163,6 +1226,8 @@ class MPI_comm_allgather(MPI):
     Represents the MPI_allgather statement.
     MPI_allgather syntax is
     `MPI_ALLGATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+
+    Note that we use recvcount = sendcount for the moment.
 
     senddata:
         initial address of send buffer (choice) [IN]
@@ -1220,7 +1285,7 @@ class MPI_comm_allgather(MPI):
 
     @property
     def recvcount(self):
-        return get_shape(self.recvdata)
+        return get_shape(self.senddata)
 
     @property
     def senddatatype(self):
@@ -1252,7 +1317,9 @@ class MPI_comm_alltoall(MPI):
     """
     Represents the MPI_alltoall statement.
     MPI_alltoall syntax is
-    `MPI_ALLGATHER(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+    `MPI_ALLTOALL(senddata, sendcount, sendtype, recvdata, recvcount, recvtype, comm)`
+
+    Note that we use sendcount = recvcount = count for the moment.
 
     senddata:
         initial address of send buffer (choice) [IN]
@@ -1283,9 +1350,10 @@ class MPI_comm_alltoall(MPI):
     >>> n = Variable('int', 'n')
     >>> x = Variable('double', 'x', rank=2, shape=(n,2), allocatable=True)
     >>> y = Variable('double', 'y', rank=2, shape=(n,2), allocatable=True)
+    >>> count = Variable('int', 'count')
     >>> comm = MPI_comm_world()
-    >>> MPI_comm_alltoall(x, y, comm)
-    MPI_alltoall (x, 2*n, MPI_DOUBLE, y, 2*n, MPI_DOUBLE, mpi_comm_world, i_mpi_error)
+    >>> MPI_comm_alltoall(x, y, count, comm)
+    MPI_alltoall (x, count, MPI_DOUBLE, y, count, MPI_DOUBLE, mpi_comm_world, i_mpi_error)
     """
     is_integer = True
 
@@ -1301,16 +1369,20 @@ class MPI_comm_alltoall(MPI):
         return self.args[1]
 
     @property
-    def comm(self):
+    def count(self):
         return self.args[2]
 
     @property
+    def comm(self):
+        return self.args[3]
+
+    @property
     def sendcount(self):
-        return get_shape(self.senddata)
+        return self.count
 
     @property
     def recvcount(self):
-        return get_shape(self.recvdata)
+        return self.count
 
     @property
     def senddatatype(self):
@@ -1382,6 +1454,14 @@ class MPI_comm_reduce(MPI):
     is_integer = True
 
     def __new__(cls, *args, **options):
+        args = list(args)
+        op = args[2]
+        if not isinstance(op, (str, MPI_Operation)):
+            raise TypeError('Expecting a string or MPI_Operation for args[2]')
+
+        if isinstance(op, str):
+            args[2] = mpi_operation(op)
+
         return super(MPI_comm_reduce, cls).__new__(cls, *args, **options)
 
     @property
@@ -1470,6 +1550,14 @@ class MPI_comm_allreduce(MPI):
     is_integer = True
 
     def __new__(cls, *args, **options):
+        args = list(args)
+        op = args[2]
+        if not isinstance(op, (str, MPI_Operation)):
+            raise TypeError('Expecting a string or MPI_Operation for args[2]')
+
+        if isinstance(op, str):
+            args[2] = mpi_operation(op)
+
         return super(MPI_comm_allreduce, cls).__new__(cls, *args, **options)
 
     @property
@@ -1514,6 +1602,857 @@ class MPI_comm_allreduce(MPI):
         return code
 ##########################################################
 
+##########################################################
+#                   Communicators
+##########################################################
+class MPI_comm_split(MPI):
+    """
+    Represents the MPI_split statement.
+    MPI_comm_split syntax is
+    `MPI_COMM_SPLIT(comm, color, key, newcomm)`
+
+    color:
+        control of subset assignment (integer) [IN]
+
+    key:
+        control of rank assigment (integer) [IN]
+
+    comm:
+        communicator (handle) [IN]
+
+    newcomm:
+        newcomm new communicator (handle) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_split
+    >>> color = Variable('int', 'color')
+    >>> key   = Variable('int', 'key')
+    >>> comm  = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_split(color, key, newcomm, comm)
+    MPI_comm_split (mpi_comm_world, color, key, newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_split, cls).__new__(cls, *args, **options)
+
+    @property
+    def color(self):
+        return self.args[0]
+
+    @property
+    def key(self):
+        return self.args[1]
+
+    @property
+    def newcomm(self):
+        return self.args[2]
+
+    @property
+    def comm(self):
+        return self.args[3]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        color   = self.color
+        key     = self.key
+        comm    = self.comm
+        newcomm = self.newcomm
+        ierr    = MPI_ERROR
+
+        args = (comm, color, key, newcomm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_comm_split ({0})'.format(args)
+        return code
+
+class MPI_comm_free(MPI):
+    """
+    Represents the MPI_comm_free statement.
+    MPI_comm_free syntax is
+    `MPI_COMM_FREE(comm)`
+
+    comm:
+        communicator (handle) [IN]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_split
+    >>> color = Variable('int', 'color')
+    >>> key = Variable('int', 'key')
+    >>> comm = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_split(comm, color, key, newcomm)
+    >>> MPI_free(newcomm)
+    MPI_comm_free (newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_free, cls).__new__(cls, *args, **options)
+
+    @property
+    def comm(self):
+        return self.args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        comm    = self.comm
+        ierr    = MPI_ERROR
+
+        args = (comm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_comm_free ({0})'.format(args)
+        return code
+
+##########################################################
+
+##########################################################
+#                  Topologies
+##########################################################
+class MPI_comm_cart_create(MPI):
+    """
+    Represents the MPI_cart_create statement.
+    MPI_cart_create syntax is
+    `MPI_CART_CREATE(comm, ndims, dims, periods, reorder, newcomm)`
+
+    comm:
+        input communicator (handle) [IN]
+
+    ndims:
+        number of dimensions of Cartesian grid (integer) [IN]
+
+    dims:
+        integer array of size ndims specifying the number of processes in each dimension [IN]
+
+    periods:
+        logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each dimension [IN]
+
+    reorder:
+        ranking may be reordered (true) or not (false) (logical) [IN]
+
+    newcomm:
+        communicator with new Cartesian topology (handle) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_create
+    >>> n = Variable('int', 'n')
+    >>> dims    = Variable('int',     'dims', rank=1, shape=n, allocatable=True)
+    >>> periods = Variable('bool', 'periods', rank=1, shape=n, allocatable=True)
+    >>> reorder = Variable('bool', 'reorder')
+    >>> comm  = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_cart_create(dims, periods, reorder, newcomm, comm)
+    MPI_cart_create (mpi_comm_world, n, dims, periods, reorder, newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_create, cls).__new__(cls, *args, **options)
+
+    @property
+    def dims(self):
+        return self.args[0]
+
+    @property
+    def periods(self):
+        return self.args[1]
+
+    @property
+    def reorder(self):
+        return self.args[2]
+
+    @property
+    def newcomm(self):
+        return self.args[3]
+
+    @property
+    def comm(self):
+        return self.args[4]
+
+    @property
+    def ndims(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        ndims   = self.ndims
+        dims    = self.dims
+        periods = self.periods
+        reorder = self.reorder
+        comm    = self.comm
+        newcomm = self.newcomm
+        ierr    = MPI_ERROR
+
+        args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_create ({0})'.format(args)
+        return code
+
+class MPI_comm_cart_coords(MPI):
+    """
+    Represents the MPI_cart_coords statement.
+    MPI_cart_coords syntax is
+    `MPI_CART_COORDS(comm, rank, maxdims, coords)`
+
+    comm:
+        communicator with Cartesian structure (handle) [IN]
+
+    rank:
+        rank of a process within group of comm (integer) [IN]
+
+    maxdims:
+        length of vector coords in the calling program (integer) [IN]
+
+    coords: integer array (of size ndims) containing the Cartesian coordinates of specified process (array of integers) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_coords
+    >>> n = Variable('int', 'n')
+    >>> coords = Variable('int', 'coords', rank=1, shape=n, allocatable=True)
+    >>> rank = Variable('int', 'rank')
+    >>> comm  = MPI_comm_world()
+    >>> MPI_comm_cart_coords(rank, coords, comm)
+    MPI_cart_coords (mpi_comm_world, rank, n, coords, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_coords, cls).__new__(cls, *args, **options)
+
+    @property
+    def rank(self):
+        return self.args[0]
+
+    @property
+    def coords(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def ndims(self):
+        return get_shape(self.coords)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        rank    = self.rank
+        ndims   = self.ndims
+        coords  = self.coords
+        comm    = self.comm
+        ierr    = MPI_ERROR
+
+        args = (comm, rank, ndims, coords, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_coords ({0})'.format(args)
+        return code
+
+class MPI_comm_cart_shift(MPI):
+    """
+    Represents the MPI_cart_shift statement.
+    MPI_cart_shift syntax is
+    `MPI_CART_SHIFT(comm, direction, disp, rank_source, rank_dest)`
+
+    comm:
+        communicator with Cartesian structure (handle) [IN]
+
+    direction:
+        coordinate dimension of shift (integer) [IN]
+
+    disp:
+        displacement (> 0: upwards shift, < 0: downwards shift) (integer)[IN]
+
+    rank_source:
+        rank of source process (integer) [OUT]
+
+    rank_dest:
+        rank of destination process (integer) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_shift
+    >>> direction = Variable('int', 'direction')
+    >>> disp = Variable('int', 'disp')
+    >>> source = Variable('int', 'source')
+    >>> dest = Variable('int', 'dest')
+    >>> comm  = MPI_comm_world()
+    >>> MPI_comm_cart_shift(direction, disp, source, dest, comm)
+    MPI_cart_shift (mpi_comm_world, direction, disp, source, dest, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_shift, cls).__new__(cls, *args, **options)
+
+    @property
+    def direction(self):
+        return self.args[0]
+
+    @property
+    def disp(self):
+        return self.args[1]
+
+    @property
+    def source(self):
+        return self.args[2]
+
+    @property
+    def dest(self):
+        return self.args[3]
+
+    @property
+    def comm(self):
+        return self.args[4]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        direction = self.direction
+        disp      = self.disp
+        source    = self.source
+        dest      = self.dest
+        comm      = self.comm
+        ierr      = MPI_ERROR
+
+        args = (comm, direction, disp, source, dest, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_shift ({0})'.format(args)
+        return code
+
+class MPI_comm_cart_sub(MPI):
+    """
+    Represents the MPI_cart_sub statement.
+    MPI_cart_create syntax is
+    `MPI_CART_SUB(comm, remain_dims, newcomm)`
+
+    comm:
+        input communicator (handle) [IN]
+
+    dims:
+        the i-th entry of remain_dims specifies whether the i-th dimension
+        is kept in the subgrid (true) or is dropped (false) (logical vector) [IN]
+
+    newcomm:
+        communicator containing the subgrid that includes the calling process (handle) [OUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
+    >>> from pyccel.parallel.mpi import MPI_comm_cart_sub
+    >>> n = Variable('int', 'n')
+    >>> dims = Variable('int', 'dims', rank=1, shape=n, allocatable=True)
+    >>> comm  = MPI_comm_world()
+    >>> newcomm = MPI_comm('newcomm')
+    >>> MPI_comm_cart_sub(dims, newcomm, comm)
+    MPI_cart_sub (mpi_comm_world, dims, newcomm, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_comm_cart_sub, cls).__new__(cls, *args, **options)
+
+    @property
+    def dims(self):
+        return self.args[0]
+
+    @property
+    def newcomm(self):
+        return self.args[1]
+
+    @property
+    def comm(self):
+        return self.args[2]
+
+    @property
+    def ndims(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        dims    = self.dims
+        comm    = self.comm
+        newcomm = self.newcomm
+        ierr    = MPI_ERROR
+
+        args = (comm, dims, newcomm, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_cart_sub ({0})'.format(args)
+        return code
+
+
+# TODO not working yet in pyccel
+class MPI_dims_create(MPI):
+    """
+    Represents the MPI_dims_create statement.
+    MPI_comm_free syntax is
+    `MPI_DIMS_CREATE(nnodes, ndims, dims)`
+
+    nnodes:
+        number of nodes in a grid (integer) [IN]
+
+    ndims:
+        number of Cartesian dimensions (integer) [IN]
+
+    dims:
+        integer array of size ndims specifying the number
+        of nodes in each dimension [INOUT]
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.parallel.mpi import MPI_dims_create
+    >>> nnodes = Variable('int', 'nnodes')
+    >>> n = Variable('int', 'n')
+    >>> dims = Variable('int', 'dims', rank=1, shape=n, allocatable=True)
+    >>> MPI_dims_create(nnodes, dims)
+    MPI_dims_create (nnodes, n, dims, i_mpi_error)
+    """
+    is_integer = True
+
+    def __new__(cls, *args, **options):
+        return super(MPI_dims_create, cls).__new__(cls, *args, **options)
+
+    @property
+    def nnodes(self):
+        return self.args[0]
+
+    @property
+    def dims(self):
+        return self.args[1]
+
+    @property
+    def ndims(self):
+        return get_shape(self.dims)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        nnodes  = self.nnodes
+        ndims   = self.ndims
+        dims    = self.dims
+        ierr    = MPI_ERROR
+
+        args = (nnodes, ndims, dims, ierr)
+        args  = ', '.join('{0}'.format(sstr(a)) for a in args)
+        code = 'MPI_dims_create ({0})'.format(args)
+        return code
+
+##########################################################
+
+##########################################################
+# The following classes are to
+# provide user friendly support of MPI
+##########################################################
+class MPI_Tensor(MPI, Block):
+    """
+    Represents a Tensor object using MPI.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import Range, Tensor
+    >>> from pyccel.parallel.mpi import MPI_Tensor
+    >>> from sympy import Symbol
+    >>> s1 = Variable('int', 's1')
+    >>> s2 = Variable('int', 's2')
+    >>> e1 = Variable('int', 'e1')
+    >>> e2 = Variable('int', 'e2')
+    >>> r1 = Range(s1, e1, 1)
+    >>> r2 = Range(s2, e2, 1)
+    >>> tensor = Tensor(r1, r2)
+    >>> from pyccel.parallel.mpi import MPI_comm_world
+    >>> comm = MPI_comm_world()
+    >>> MPI_Tensor(tensor, comm)
+    """
+    is_integer = True
+
+    def __new__(cls, tensor, \
+                comm_parent=None, \
+                dims=None, periods=None, reorder=False, \
+                disp=1):
+        # ...
+        if not isinstance(tensor, Tensor):
+            raise TypeError('Expecting a Tensor')
+        cls._tensor = tensor
+        # ...
+
+        # ...
+        variables = []
+        body      = []
+        # ...
+
+        # ... we don't need to append ierr to variables, since it will be
+        #     defined in the program
+        ierr = MPI_ERROR
+        #variables.append(ierr)
+        # ...
+
+        # ...
+        ndim = Variable('int', 'ndim')
+        stmt = Assign(ndim, tensor.dim)
+        variables.append(ndim)
+        body.append(stmt)
+
+        cls._ndim = ndim
+        # ...
+
+        # ... TODO use MPI_dims_create
+        if dims is None:
+            dims = (2,2)
+
+        if not isinstance(dims, (list, tuple)):
+           raise TypeError('Expecting a tuple or list')
+
+        dims  = list(dims)
+        _dims = []
+        for a in dims:
+            if isinstance(a, int):
+                _dims.append(a)
+            elif isinstance(a, Variable) and isinstance(a.dtype, NativeInteger):
+                _dims.append(a)
+            else:
+               raise TypeError('Expecting an integer')
+
+        dims = Variable('int', 'dims', \
+                        rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(dims, ndim)
+        variables.append(dims)
+        body.append(stmt)
+
+        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
+        for i in range(0, tensor.dim):
+            stmt = Assign(dims[i], _dims[i])
+            body.append(stmt)
+
+        cls._dims = dims
+        # ...
+
+        # ...
+        if periods is None:
+            periods = (False,False)
+
+        if not isinstance(periods, (list, tuple)):
+           raise TypeError('Expecting a tuple or list')
+
+        periods  = list(periods)
+        _periods = []
+        for a in periods:
+            if isinstance(a, bool):
+                if a:
+                    _periods.append(BooleanTrue())
+                else:
+                    _periods.append(BooleanFalse())
+            elif isinstance(a, Variable) and isinstance(a.dtype, NativeBool):
+                _periods.append(a)
+            else:
+               raise TypeError('Expecting a Boolean')
+
+        periods = Variable('bool', 'periods', rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(periods, ndim)
+        variables.append(periods)
+        body.append(stmt)
+
+        periods = IndexedVariable(periods.name, dtype=periods.dtype)
+        for i in range(0, tensor.dim):
+            stmt = Assign(periods[i], _periods[i])
+            body.append(stmt)
+
+        cls._periods = periods
+        # ...
+
+        # ...
+        if reorder:
+            reorder_val = BooleanTrue()
+        else:
+            reorder_val = BooleanFalse()
+
+        reorder = Variable('bool', 'reorder')
+        stmt = Assign(reorder, reorder_val)
+        variables.append(reorder)
+        body.append(stmt)
+
+        cls._reorder = reorder
+        # ...
+
+        # ... set the parent comm
+        if comm_parent is None:
+            comm_parent = MPI_comm_world()
+        else:
+            if not isinstance(comm_parent, MPI_comm):
+                raise TypeError('Expecting a valid MPI communicator')
+        cls._comm_parent = comm_parent
+        # ...
+
+        # ... create the cart comm
+        comm_name = 'comm_cart'
+        comm = Variable('int', comm_name, rank=0, cls_base=MPI_comm())
+        variables.append(comm)
+
+        comm = MPI_comm(comm_name)
+        rhs  = MPI_comm_cart_create(dims, periods, reorder, comm, comm_parent)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+
+        cls._comm = comm
+        # ...
+
+        # ...
+        rank_in_cart = Variable('int', 'rank_in_cart')
+        stmt = MPI_Assign(rank_in_cart, MPI_comm_rank(comm))
+        variables.append(rank_in_cart)
+        body.append(stmt)
+
+        cls._rank_in_cart = rank_in_cart
+        # ...
+
+        # ... compute the coordinates of the process
+        coords = Variable('int', 'coords', \
+                          rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(coords, ndim)
+        variables.append(coords)
+        body.append(stmt)
+
+        rhs  = MPI_comm_cart_coords(rank_in_cart, coords, comm)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+
+        coords = IndexedVariable(coords.name, \
+                                 dtype=coords.dtype, \
+                                 shape=coords.shape)
+        cls._coords = coords
+        # ...
+
+        # ... TODO treat disp properly
+        neighbor = Variable('int', 'neighbor', rank=1, shape=2*ndim, allocatable=True)
+        stmt = Zeros(neighbor, 2*ndim)
+        variables.append(neighbor)
+        body.append(stmt)
+
+        neighbor = IndexedVariable(neighbor.name, dtype=neighbor.dtype)
+        cls._neighbor = neighbor
+
+        _map_neighbor = {}
+        if tensor.dim == 2:
+            north = 0 ; east = 1 ; south = 2 ; west = 3
+
+            # ...
+            axis = 0
+            rhs  = MPI_comm_cart_shift(axis, disp, \
+                                       neighbor[west], neighbor[east], \
+                                       comm)
+            stmt = MPI_Assign(ierr, rhs, strict=False)
+            body.append(stmt)
+            # ...
+
+            # ...
+            axis = 1
+            rhs  = MPI_comm_cart_shift(axis, disp, \
+                                       neighbor[south], neighbor[north], \
+                                       comm)
+            stmt = MPI_Assign(ierr, rhs, strict=False)
+            body.append(stmt)
+            # ...
+        else:
+            raise NotImplementedError('Only 2d is available')
+        # ...
+
+        # ... compute local ranges
+        starts = [r.start for r in tensor.ranges]
+        ends   = [r.stop  for r in tensor.ranges]
+        steps  = [r.step  for r in tensor.ranges]
+
+        d = {}
+        labels = ['x','y','z'][:tensor.dim]
+        for i,label in enumerate(labels):
+            nn = (ends[0] - starts[0])/steps[0]
+
+            d['s'+label] = (coords[0] * nn) / dims[0]
+            d['e'+label] = ((coords[0]+1) * nn) / dims[0]
+
+        ranges = []
+        for label in labels:
+            dd = {}
+            for _n in ['s', 'e']:
+                n = _n+label
+                v    = Variable('int', n)
+                rhs  = d[n]
+                stmt = Assign(v, rhs)
+                variables.append(v)
+                body.append(stmt)
+
+                dd[n] = v
+
+            args = [i[1] for i in dd.items()]
+            r = Range(*args)
+            ranges.append(r)
+
+        cls._ranges = ranges
+        # ...
+
+        return super(MPI_Tensor, cls).__new__(cls, variables, body)
+
+    @property
+    def tensor(self):
+        return self._tensor
+
+    @property
+    def comm_parent(self):
+        return self._comm_parent
+
+    @property
+    def comm(self):
+        return self._comm
+
+    @property
+    def reorder(self):
+        return self._reorder
+
+    @property
+    def neighbor(self):
+        return self._neighbor
+
+    @property
+    def coords(self):
+        return self._coords
+
+    @property
+    def dim(self):
+        return self.tensor.dim
+
+    @property
+    def ndim(self):
+        return self._ndim
+
+    @property
+    def dims(self):
+        return self._dims
+
+    @property
+    def periods(self):
+        return self._periods
+
+    @property
+    def reorder(self):
+        return self._reorder
+
+    @property
+    def rank_in_cart(self):
+        return self._rank_in_cart
+
+    @property
+    def ranges(self):
+        return self._ranges
+
+    def free_statements(self):
+        """Returns a list of Free ast objects."""
+        ls = []
+
+        stmt = MPI_comm_free(self.comm)
+        ls.append(stmt)
+
+        for v in self.variables:
+            if isinstance(v, Variable):
+                if v.allocatable: ls.append(Del(v))
+
+        return ls
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        variables = self.variables
+        body      = self.body
+        ierr      = MPI_ERROR
+
+        variables  = ', '.join('{0}'.format(sstr(a)) for a in variables)
+        body       = ', '.join('{0}'.format(sstr(a)) for a in body)
+        code = 'MPI_Tensor ([{0}], [{1}])'.format(variables, body)
+        return code
+##########################################################
+
+##########################################################
+#             useful functions
+##########################################################
+def mpify(stmt, **options):
+    """
+    Converts some statements to MPI statments.
+
+    stmt: stmt, list
+        statement or a list of statements
+    """
+    if isinstance(stmt, Tensor):
+        return MPI_Tensor(stmt, **options)
+    if isinstance(stmt, For):
+        iterable = mpify(stmt.iterable, **options)
+        target   = stmt.target
+        body     = mpify(stmt.body, **options)
+        return For(target, iterable, body, strict=False)
+    if isinstance(stmt, list):
+        return [mpify(a, **options) for a in stmt]
+    if isinstance(stmt, While):
+        test = mpify(stmt.test, **options)
+        body = mpify(stmt.body, **options)
+        return While(test, body)
+    if isinstance(stmt, If):
+        args = []
+        for block in stmt.args:
+            test  = block[0]
+            stmts = block[1]
+            t = mpify(test,  **options)
+            s = mpify(stmts, **options)
+            args.append((t,s))
+        return If(*args)
+    if isinstance(stmt, FunctionDef):
+        name        = mpify(stmt.name,        **options)
+        arguments   = mpify(stmt.arguments,   **options)
+        results     = mpify(stmt.results,     **options)
+        body        = mpify(stmt.body,        **options)
+        local_vars  = mpify(stmt.local_vars,  **options)
+        global_vars = mpify(stmt.global_vars, **options)
+
+        return FunctionDef(name, arguments, results, \
+                           body, local_vars, global_vars)
+    if isinstance(stmt, ClassDef):
+        name        = mpify(stmt.name,        **options)
+        attributs   = mpify(stmt.attributs,   **options)
+        methods     = mpify(stmt.methods,     **options)
+        options     = mpify(stmt.options,     **options)
+
+        return ClassDef(name, attributs, methods, options)
+    if isinstance(stmt, Assign):
+        if isinstance(stmt.rhs, Tensor):
+            lhs = stmt.lhs
+            rhs = mpify(stmt.rhs, **options)
+
+            return Assign(lhs, rhs, \
+                          strict=stmt.strict, \
+                          status=stmt.status, \
+                          like=stmt.like)
+    if isinstance(stmt, Del):
+        variables = [mpify(a, **options) for a in stmt.variables]
+        return Del(variables)
+    return stmt
+##########################################################
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
 MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')
@@ -1521,3 +2460,77 @@ MPI_STATUS  = Variable(MPI_status_type(), 'i_mpi_status')
 MPI_COMM_WORLD  = MPI_comm_world()
 MPI_STATUS_SIZE = MPI_status_size()
 MPI_PROC_NULL   = MPI_proc_null()
+
+# ...
+def mpi_definitions(namespace, declarations):
+    """Adds MPI functions and constants to the namespace
+
+    namespace: dict
+        dictorionary containing all declared variables/functions/classes.
+
+    declarations: dict
+        dictorionary containing all declarations.
+    """
+    # ...
+    namespace['mpi_comm_world']  = MPI_COMM_WORLD
+    namespace['mpi_status_size'] = MPI_STATUS_SIZE
+    namespace['mpi_proc_null']   = MPI_PROC_NULL
+    # ...
+
+    # ...
+    for i in [MPI_ERROR, MPI_STATUS]:
+        namespace[i.name] = i
+
+        dec = MPI_Declare(i.dtype, i)
+        declarations[i.name] = dec
+    # ...
+
+    # ...
+    body        = []
+    local_vars  = []
+    global_vars = []
+    hide        = True
+    kind        = 'procedure'
+    # ...
+
+    # ...
+    args        = []
+    datatype    = 'int'
+    allocatable = False
+    shape       = None
+    rank        = 0
+
+    var_name = 'result_%d' % abs(hash(datatype))
+
+    for f_name in ['mpi_init', 'mpi_finalize']:
+        var = Variable(datatype, var_name)
+        results = [var]
+
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide, kind=kind)
+
+        namespace[f_name] = stmt
+    # ...
+
+    # ...
+    i = np.random.randint(10)
+    var_name = 'result_%d' % abs(hash(i))
+    err_name = 'error_%d' % abs(hash(i))
+
+    for f_name in ['mpi_comm_size', 'mpi_comm_rank', 'mpi_abort']:
+        var = Variable(datatype, var_name)
+        err = Variable(datatype, err_name)
+        results = [var, err]
+
+        args = [namespace['mpi_comm_world']]
+        stmt = FunctionDef(f_name, args, results, \
+                           body, local_vars, global_vars, \
+                           hide=hide, kind=kind)
+
+        namespace[f_name] = stmt
+    # ...
+
+    return namespace, declarations
+# ...
+

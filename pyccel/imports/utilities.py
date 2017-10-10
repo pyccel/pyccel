@@ -4,7 +4,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
-from pyccel.imports.syntax import ImportFromStmt
+from pyccel.syntax import ImportFromStmt
 
 __all__ = ['find_imports']
 
@@ -29,8 +29,9 @@ def find_imports(filename, debug=False):
     d = {}
     for stmt in model.statements:
         if isinstance(stmt, ImportFromStmt):
-            module = str(stmt.dotted_name.names[0])
-            names  = [str(n) for n in stmt.import_as_names.names]
+            expr = stmt.expr
+            module = str(expr.fil)
+            names  = str(expr.funcs)
             d[module] = names
 
     return d

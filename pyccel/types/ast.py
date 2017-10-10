@@ -16,7 +16,7 @@ from sympy import Symbol, Integer, Add, Mul,Pow
 from sympy import Float as Sympy_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
-from sympy.sets.fancysets import Range
+from sympy.sets.fancysets import Range as sm_Range
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
@@ -214,6 +214,32 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError("Unexpected type")
 
+class DottedName(Basic):
+    """
+    Represents a dotted variable.
+
+    Examples
+
+    >>> from pyccel.types.ast import DottedName
+    >>> DottedName('matrix', 'n_rows')
+    matrix.n_rows
+    >>> DottedName('pyccel', 'mpi', 'mpi_init')
+    pyccel.mpi.mpi_init
+    """
+    def __new__(cls, *args):
+        return Basic.__new__(cls, *args)
+
+    @property
+    def name(self):
+        return self._args
+
+    def __str__(self):
+        return '.'.join(str(n) for n in self.name)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '.'.join(sstr(n) for n in self.name)
+
 class DottedVariable(Basic):
     """
     Represents a dotted variable.
@@ -288,6 +314,7 @@ class Assign(Basic):
     """
 
     def __new__(cls, lhs, rhs, strict=False, status=None, like=None):
+        cls._strict = strict
         if strict:
             lhs = sympify(lhs)
             rhs = sympify(rhs)
@@ -334,6 +361,10 @@ class Assign(Basic):
     @property
     def like(self):
         return self._args[3]
+
+    @property
+    def strict(self):
+        return self._strict
 
 
 # The following are defined to be sympy approved nodes. If there is something
@@ -480,6 +511,133 @@ class While(Basic):
     def body(self):
         return self._args[1]
 
+class Range(sm_Range):
+    """
+    Representes a range.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import Range
+    >>> from sympy import Symbol
+    >>> s = Variable('int', 's')
+    >>> e = Symbol('e')
+    >>> Range(s, e, 1)
+    Range(0, n, 1)
+    """
+
+    def __new__(cls, *args):
+        _args = []
+        for a in args[:-1]:
+            if isinstance(a, Symbol):
+                _args.append(1) # we set to 1, to avoid problems with step
+            else:
+                _args.append(a)
+        r = sm_Range.__new__(cls, *_args)
+        r._args = args
+
+        return r
+
+    @property
+    def start(self):
+        return self._args[0]
+
+    @property
+    def stop(self):
+        return self._args[1]
+
+    @property
+    def step(self):
+        if len(self._args) == 2:
+            return 1
+        else:
+            return self._args[2]
+
+# TODO: implement it as an extension of sympy Tensor?
+class Tensor(Basic):
+    """
+    Base class for tensor.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import Range, Tensor
+    >>> from sympy import Symbol
+    >>> s1 = Variable('int', 's1')
+    >>> s2 = Variable('int', 's2')
+    >>> e1 = Variable('int', 'e1')
+    >>> e2 = Variable('int', 'e2')
+    >>> r1 = Range(s1, e1, 1)
+    >>> r2 = Range(s2, e2, 1)
+    >>> Tensor(r1, r2)
+    Tensor(Range(s1, e1, 1), Range(s2, e2, 1))
+    """
+
+    def __new__(cls, *args):
+        for r in args:
+            if not isinstance(r, (Range, Tensor)):
+                raise TypeError("Expecting a Range or Tensor")
+
+        return Basic.__new__(cls, *args)
+
+    @property
+    def ranges(self):
+        return self._args
+
+    @property
+    def dim(self):
+        return len(self.ranges)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        txt  = ', '.join(sstr(n) for n in self._args)
+        txt  = 'Tensor({0})'.format(txt)
+        return txt
+
+# TODO add a name to a block?
+class Block(Basic):
+    """Represents a block in the code. A block consists of the following inputs
+
+    variables: list
+        list of the variables that appear in the block.
+
+    declarations: list
+        list of declarations of the variables that appear in the block.
+
+    body: list
+        a list of statements
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('int', 'x')
+    >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
+    Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
+    """
+
+    def __new__(cls, variables, body):
+        if not iterable(variables):
+            raise TypeError("variables must be an iterable")
+        for var in variables:
+            if not isinstance(var, Variable):
+                raise TypeError("Only a Variable instance is allowed.")
+        if not iterable(body):
+            raise TypeError("body must be an iterable")
+        return Basic.__new__(cls, variables, body)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    @property
+    def body(self):
+        return self._args[1]
+
+    @property
+    def declarations(self):
+        return [Declare(i.dtype, i) for i in self.variables]
+
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -504,22 +662,16 @@ class For(Basic):
     For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
     """
 
-    def __new__(cls, target, iter, body):
-        target = sympify(target)
-        if not iterable(iter):
-            raise TypeError("iter must be an iterable")
-        if type(iter) == tuple:
-            # this is a hack, since Range does not accept non valued Integers.
-#            r = Range(iter[0], 10000000, iter[2])
-            r = Range(0, 10000000, 1)
-            r._args = iter
-            iter = r
-        else:
-            iter = sympify(iter)
-
-        if not iterable(body):
-            raise TypeError("body must be an iterable")
-        body = Tuple(*(sympify(i) for i in body))
+    def __new__(cls, target, iter, body, strict=True):
+        if strict:
+            target = sympify(target)
+            if not iterable(iter) and not isinstance(iter, (Range, Tensor)):
+                raise TypeError("iter must be an iterable")
+            if not isinstance(iter, (Range, Tensor)):
+                raise TypeError("Expecting a Range or Tensor")
+            if not iterable(body):
+                raise TypeError("body must be an iterable")
+            body = Tuple(*(sympify(i) for i in body))
         return Basic.__new__(cls, target, iter, body)
 
     @property
@@ -567,6 +719,14 @@ class NativeComplex(DataType):
 
 class NativeVoid(DataType):
     _name = 'Void'
+    pass
+
+class NativeRange(DataType):
+    _name = 'Range'
+    pass
+
+class NativeTensor(DataType):
+    _name = 'Tensor'
     pass
 
 
@@ -1020,18 +1180,25 @@ class Import(Basic):
     >>> from pyccel.types.ast import Import
     >>> Import('numpy', 'linspace')
     Import(numpy, (linspace,))
+
+    >>> from pyccel.types.ast import DottedName
+    >>> from pyccel.types.ast import Import
+    >>> mpi = DottedName('pyccel', 'mpi')
+    >>> Import(mpi, 'mpi_init')
+    Import(pyccel.mpi, (mpi_init,))
+    >>> Import(mpi, '*')
+    Import(pyccel.mpi, (*,))
     """
 
     def __new__(cls, fil, funcs=None):
-        fil = Symbol(fil)
-        if not funcs:
-            funcs = Tuple()
-        elif iterable(funcs):
+        if not isinstance(fil, (str, DottedName)):
+            raise TypeError('Expecting a string or DottedName')
+
+        if iterable(funcs):
             funcs = Tuple(*[Symbol(f) for f in funcs])
-        elif isinstance(funcs, str):
-            funcs = Tuple(Symbol(funcs))
-        else:
+        elif not isinstance(funcs, (str, DottedName)):
             raise TypeError("Unrecognized funcs type: ", funcs)
+
         return Basic.__new__(cls, fil, funcs)
 
     @property
@@ -1102,8 +1269,12 @@ class Declare(Basic):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
+        # the following is not working for other concept than Variable
+        # needed for example for MPI atoms
         if isinstance(variables, Variable):
             variables = [variables]
+#        if not isinstance(variables, (list, tuple)):
+#            variables = [variables]
         for var in variables:
             if not isinstance(var, Variable):
                 raise TypeError("var must be of type Variable")
@@ -1191,6 +1362,12 @@ class Min(Function):
 # TODO: add example
 class Max(Function):
     """Represents a 'max' expression in the code."""
+    def __new__(cls, *args):
+        return Basic.__new__(cls, *args)
+
+# TODO: add example
+class Mod(Function):
+    """Represents a 'mod' expression in the code."""
     def __new__(cls, *args):
         return Basic.__new__(cls, *args)
 
@@ -1463,6 +1640,8 @@ class Del(Basic):
 
     def __new__(cls, expr):
         # TODO: check that the variable is allocatable
+        if not iterable(expr):
+            expr = Tuple(expr)
         return Basic.__new__(cls, expr)
 
     @property
@@ -1893,6 +2072,8 @@ class FunctionHeader(Basic):
     >>> from pyccel.types.ast import FunctionHeader
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
+    >>> FunctionHeader('mpi_dims_create', ['int', 'int', ('int', [Slice(None,None)])], results=['int'])
+    FunctionHeader(mpi_dims_create, [(NativeInteger(), []), (NativeInteger(), []), (int, [ : ])], [(NativeInteger(), [])], function)
     """
 
     def __new__(cls, func, dtypes, results=None, kind='function'):
@@ -1934,6 +2115,7 @@ class FunctionHeader(Basic):
             raise TypeError("Expecting a string for kind.")
 
         if not (kind in ['function', 'procedure']):
+            print( kind)
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         return Basic.__new__(cls, func, types, r_types, kind)

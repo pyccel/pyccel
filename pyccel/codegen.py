@@ -5,7 +5,9 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
+from pyccel.types.ast import (Range, Tensor, Block, \
+                              For, Assign, Declare, Variable, \
+                              NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -19,7 +21,9 @@ from pyccel.types.ast import (For, Assign, Declare, Variable, \
                               Dot, Sign, IndexedElement)
 
 from pyccel.openmp.syntax import OpenmpStmt
-from pyccel.imports.syntax import ImportFromStmt
+
+from pyccel.parallel.mpi import MPI_Tensor
+from pyccel.parallel.mpi import mpify
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)
@@ -291,7 +295,10 @@ class Codegen(object):
         """Generate code as a program. Every extension must implement this method."""
         pass
 
-    def doprint(self, language, accelerator=None, ignored_modules=[], with_mpi=False):
+    def doprint(self, language, accelerator=None, \
+                ignored_modules=[], \
+                with_mpi=False, \
+                pyccel_modules=[]):
         """Generate code for a given language.
 
         language: str
@@ -304,6 +311,8 @@ class Codegen(object):
             These modules do not have a correspondence in Fortran.
         with_mpi: bool
             True if using MPI
+        pyccel_modules: list
+            list of modules supplied by the user.
         """
         # ...
         filename = self.filename
@@ -313,6 +322,9 @@ class Codegen(object):
         routines = ""
         classes  = ""
         modules  = []
+
+        namespace    = {}
+        declarations = {}
         # ...
 
         # ...
@@ -342,7 +354,12 @@ class Codegen(object):
 
         # ...
         stmts = ast.expr
-        for stmt in stmts:
+        for _stmt in stmts:
+            if with_mpi:
+                stmt = mpify(_stmt)
+            else:
+                stmt = _stmt
+
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):
@@ -350,12 +367,20 @@ class Codegen(object):
                 if not(name in ignored_modules):
                     imports += printer(stmt) + "\n"
                     modules += [name]
+#                elif name == 'pyccel':
+#                    pass
             elif isinstance(stmt, Declare):
                 decs = stmt
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
-                body += printer(stmt) + "\n"
+                if not isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
+                    body += printer(stmt) + "\n"
+                elif isinstance(stmt.rhs, MPI_Tensor):
+                    for dec in stmt.rhs.declarations:
+                        preludes += printer(dec) + "\n"
+                    for s in stmt.rhs.body:
+                        body += printer(s) + "\n"
             elif isinstance(stmt, MultiAssign):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, (Zeros, Ones, ZerosLike, Array)):
@@ -391,6 +416,9 @@ class Codegen(object):
             elif isinstance(stmt, list):
                 for s in stmt:
                     body += printer(s) + "\n"
+            elif isinstance(stmt, Block):
+                for s in stmt.body:
+                    body += printer(s) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)
@@ -400,7 +428,13 @@ class Codegen(object):
 
         # ...
         for key, dec in ast.declarations.items():
-            preludes += printer(dec) + "\n"
+            if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
+                preludes += printer(dec) + "\n"
+
+        for stmt in stmts:
+            if isinstance(stmt, Block):
+                for dec in stmt.declarations:
+                    preludes += printer(dec) + "\n"
         # ...
 
         # ...
@@ -729,7 +763,8 @@ def build_file(filename, language, compiler, \
                execute=False, accelerator=None, \
                debug=False, verbose=False, show=False, \
                inline=False, name=None, \
-               ignored_modules=['numpy', 'scipy', 'sympy']):
+               ignored_modules=['numpy', 'scipy', 'sympy'], \
+               pyccel_modules=[]):
     """
     User friendly interface for code generation.
 
@@ -759,6 +794,8 @@ def build_file(filename, language, compiler, \
     ignored_modules: list
         list of modules to ignore (like 'numpy', 'sympy').
         These modules do not have a correspondence in Fortran.
+    pyccel_modules: list
+        list of modules supplied by the user.
 
     Example
 
@@ -802,30 +839,44 @@ def build_file(filename, language, compiler, \
     # ...
 
     # ...
+    if with_mpi:
+        pyccel_modules.append('mpi')
+    # ...
+
+    # ...
     from pyccel.imports.utilities import find_imports
 
     d = find_imports(filename=filename)
+
     imports = {}
+
+    ignored_modules.append('pyccel')
+    for n in pyccel_modules:
+        ignored_modules.append('pyccel.{0}'.format(n))
+
     for key, value in d.items():
         if not(key in ignored_modules):
             imports[key] = value
+
     ms = []
     for module, names in imports.items():
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
         codegen_m.doprint(language=language, accelerator=accelerator, \
-                         ignored_modules=ignored_modules, with_mpi=with_mpi)
+                          ignored_modules=ignored_modules, \
+                          with_mpi=with_mpi)
         ms.append(codegen_m)
 
     codegen = FCodegen(filename=filename, name=name)
     s=codegen.doprint(language=language, accelerator=accelerator, \
-                     ignored_modules=ignored_modules, with_mpi=with_mpi)
+                     ignored_modules=ignored_modules, with_mpi=with_mpi, \
+                     pyccel_modules=pyccel_modules)
     if show:
         print('========Fortran_Code========')
         print(s)
         print('============================')
         print ">>> Codegen :", name, " done."
 
-    modules   = codegen.modules
+    modules = codegen.modules
     # ...
 
     # ...

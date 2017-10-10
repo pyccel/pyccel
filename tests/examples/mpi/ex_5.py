@@ -1,5 +1,7 @@
 # coding: utf-8
 
+from pyccel.mpi import *
+
 ierr = mpi_init()
 
 comm = mpi_comm_world
@@ -21,10 +23,3 @@ print('I, process ', rank, ', I received', msg, ' from process ', partner)
 ierr = mpi_finalize()
 
 # TODO: - example barrier
-#       - example bcast
-#       - example scatter
-#       - example gather
-#       - example allgather
-#       - example alltoall
-#       - example reduce
-#       - example allreduce

@@ -1,44 +1,30 @@
 ImportModel:
-  statements*=ImportStmt
+  statements*=Root
 ;
 
-ImportStmt: 
-  ImportNameStmt | ImportFromStmt | NotaStmt 
-;
+Root: ImportStmt | NotaStmt; 
 
-NotaStmt:
-  /.*$/
-;
+ImportStmt: ImportNameStmt | ImportFromStmt;
 
-ImportNameStmt: 
-  'import' DottedAsNames
-;
+ImportNameStmt: 'import' DottedAsNames;
 
 // note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
-ImportFromStmt: ('from' (('.' | '...')* dotted_name=DottedName | ('.' | '...')+)
-              'import' ('*' | '(' import_as_names=ImportAsNames ')' | import_as_names=ImportAsNames));
-
-ImportAsName: 
-  ID ('as' ID)?
+ImportFromStmt: 
+  ('from'  (('.' | '...')* dotted_name=DottedName | ('.' | '...')+) 
+   'import' ( import_as_names='*' 
+          | '(' import_as_names=ImportAsNames ')' 
+          | import_as_names=ImportAsNames))
 ;
 
-DottedAsName: 
-  DottedName ('as' ID)?
-;
+ImportAsName: ID ('as' ID)?;
+DottedAsName: DottedName ('as' ID)?;
 
 ImportAsNames: 
 //  ImportAsName (',' ImportAsName)* (',')?
   names+=ImportAsName[','] 
 ;
 
-DottedAsNames: 
-  DottedAsName (',' DottedAsName)*
-;
+DottedAsNames: DottedAsName (',' DottedAsName)*;
+DottedName: names+=ID['.'];
 
-DottedName: 
-  names+=ID['.'] 
-;
-
-Comment:
-    /#.*$/
-;
+NotaStmt: /.*$/ | /#.*$/;
