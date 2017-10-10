@@ -32,12 +32,15 @@ f       = zeros(mesh, double)
 u_error = zeros(mesh, double)
 
 #Initialization
+x = 0.0
+y = 0.0
 for i,j in mesh:
     x = i*hx
     y = j*hy
 
-    f[i, j] = 2*(x*x-x+y*y-y)
-    u_exact[i, j] = x*y*(x-1)*(y-1)
+    f[i, j] = 2.0*(x*x-x+y*y-y)
+    print (f[i,j])
+    u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 
 
 n_iterations = 4
@@ -57,6 +60,9 @@ for it in range(0, n_iterations):
 
     global_error = 0.0
     ierr = comm.allreduce (local_error, global_error, 'max')
+
+    print (max(f))
+#    print (global_error)
 
 
 del mesh
