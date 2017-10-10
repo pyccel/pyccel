@@ -243,9 +243,12 @@ class FCodePrinter(CodePrinter):
             starts = [r.start for r in tensor.ranges]
             ends   = [r.stop  for r in tensor.ranges]
             steps  = [r.step  for r in tensor.ranges]
-            shape_code = ', '.join('{0}:{1}'.format(self._print(s),  \
-                                                    self._print(e)) \
-                                   for (s,e) in zip(starts, ends))
+
+            pads  = tensor.pads
+
+            shape_code = ', '.join('{0}:{1}'.format(self._print(s-p),  \
+                                                    self._print(e+p)) \
+                                   for (s,e, p) in zip(starts, ends, pads))
 
         init_value = None
         dtype = expr.lhs.dtype

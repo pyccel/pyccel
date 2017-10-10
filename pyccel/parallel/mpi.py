@@ -2243,7 +2243,7 @@ class MPI_Tensor(MPI, Block, Tensor):
     def __new__(cls, tensor, \
                 comm_parent=None, \
                 dims=None, periods=None, reorder=False, \
-                disp=1, label=None):
+                disp=1, label=None, pads=None):
         # ...
         if not isinstance(tensor, Tensor):
             raise TypeError('Expecting a Tensor')
@@ -2526,6 +2526,37 @@ class MPI_Tensor(MPI, Block, Tensor):
         #
         # ...
 
+        # ...
+        if pads is None:
+            pads = (1,1)
+
+        if not isinstance(pads, (list, tuple)):
+           raise TypeError('Expecting a tuple or list')
+
+        pads  = list(pads)
+        _pads = []
+        for a in pads:
+            if isinstance(a, int):
+                _pads.append(a)
+            elif isinstance(a, Variable) and isinstance(a.dtype, NativeInteger):
+                _pads.append(a)
+            else:
+               raise TypeError('Expecting an integer')
+
+        pads = Variable('int', _make_name('pads'), \
+                        rank=1, shape=ndim, allocatable=True)
+        stmt = Zeros(pads, ndim)
+        variables.append(pads)
+        body.append(stmt)
+
+        pads = IndexedVariable(pads.name, dtype=pads.dtype, shape=pads.shape)
+        for i in range(0, tensor.dim):
+            stmt = Assign(pads[i], _pads[i])
+            body.append(stmt)
+
+        cls._pads = pads
+        # ...
+
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
     @property
@@ -2587,6 +2618,10 @@ class MPI_Tensor(MPI, Block, Tensor):
     @property
     def label(self):
         return self._label
+
+    @property
+    def pads(self):
+        return self._pads
 
     def free_statements(self):
         """Returns a list of Free ast objects."""
