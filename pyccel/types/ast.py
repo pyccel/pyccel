@@ -21,6 +21,7 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr, AtomicExpr
@@ -552,6 +553,10 @@ class Range(sm_Range):
             return 1
         else:
             return self._args[2]
+
+    @property
+    def size(self):
+        return (self.stop - self.start)/self.step
 
 # TODO: implement it as an extension of sympy Tensor?
 class Tensor(Basic):
@@ -1412,7 +1417,11 @@ class Zeros(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    shape : int or list of integers
+    shape : int, list, tuple
+        int or list of integers
+
+    grid : Range, Tensor
+        ensures a one-to-one representation of the array.
 
     Examples
 
@@ -1423,32 +1432,40 @@ class Zeros(Basic):
     x := 0
     """
     # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape):
+    def __new__(cls, lhs, shape=None, grid=None):
         lhs   = sympify(lhs)
-        if isinstance(shape, list):
-            # this is a correction. otherwise it is not working on LRZ
-            if isinstance(shape[0], list):
-                shape = Tuple(*(sympify(i) for i in shape[0]))
+
+        if shape:
+            if isinstance(shape, list):
+                # this is a correction. otherwise it is not working on LRZ
+                if isinstance(shape[0], list):
+                    shape = Tuple(*(sympify(i) for i in shape[0]))
+                else:
+                    shape = Tuple(*(sympify(i) for i in shape))
+            elif isinstance(shape, int):
+                shape = Tuple(sympify(shape))
+            elif isinstance(shape,Len):
+                shape = shape.str
+            elif isinstance(shape, Basic):
+                # TODO do we keep this?
+                shape = str(shape)
             else:
-                shape = Tuple(*(sympify(i) for i in shape))
-        elif isinstance(shape, int):
-            shape = Tuple(sympify(shape))
-        elif isinstance(shape, Basic) and not isinstance(shape,Len):
-            shape = str(shape)
-        elif isinstance(shape,Len):
-            shape=shape.str
-        else:
-            shape = shape
+                shape = shape
+
+        if grid:
+            if not isinstance(grid, (Range, Tensor)):
+                raise TypeError('Expecting a Range or Tensor object.')
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs, shape)
+
+        return Basic.__new__(cls, lhs, shape, grid)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
+        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.init_value))
 
     @property
     def lhs(self):
@@ -1456,9 +1473,35 @@ class Zeros(Basic):
 
     @property
     def shape(self):
-        return self._args[1]
+        if self._args[1]:
+            return self._args[1]
+        else:
+            ranges = self.grid.ranges
+            sh = [r.size for r in ranges]
+            return Tuple(*(i for i in sh))
 
-class Ones(Basic):
+    @property
+    def grid(self):
+        return self._args[2]
+
+    @property
+    def init_value(self):
+        dtype = self.lhs.dtype
+        if isinstance(dtype, NativeInteger):
+            value = 0
+        elif isinstance(dtype, NativeFloat):
+            value = 0.0
+        elif isinstance(dtype, NativeDouble):
+            value = 0.0
+        elif isinstance(dtype, NativeComplex):
+            value = 0.0
+        elif isinstance(dtype, NativeBool):
+            value = BooleanFalse()
+        else:
+            raise TypeError('Unknown type')
+        return value
+
+class Ones(Zeros):
     """
     Represents variable assignment using numpy.ones for code generation.
 
@@ -1478,32 +1521,22 @@ class Ones(Basic):
     >>> Ones(x, (n,m))
     x := 1
     """
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs,shape):
-        lhs   = sympify(lhs)
-        if isinstance(shape, list):
-            shape = Tuple(*(sympify(i) for i in shape))
+    @property
+    def init_value(self):
+        dtype = self.lhs.dtype
+        if isinstance(dtype, NativeInteger):
+            value = 1
+        elif isinstance(dtype, NativeFloat):
+            value = 1.0
+        elif isinstance(dtype, NativeDouble):
+            value = 1.0
+        elif isinstance(dtype, NativeComplex):
+            value = 1.0
+        elif isinstance(dtype, NativeBool):
+            value = BooleanTrue()
         else:
-            shape = shape
-
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-
-        return Basic.__new__(cls, lhs, shape)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 1'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def shape(self):
-        return self._args[1]
+            raise TypeError('Unknown type')
+        return value
 
 # TODO: add example
 class Array(Basic):

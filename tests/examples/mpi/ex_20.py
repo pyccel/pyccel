@@ -12,11 +12,10 @@ u = range(0, 8)
 v = range(0, 8)
 
 uv = tensor(u, v)
+x  = zeros(uv, double)
+y  = ones(uv, double)
 
-x = 0
 for i,j in uv:
-    x = x + 1
-
     print ('(i,j) = (', i, j,')')
 
 del uv

@@ -444,22 +444,33 @@ def builtin_function(name, args, lhs=None):
         name of the variable to assign to
     """
     # ...
-    def get_arguments():
+    def get_arguments_zeros():
         # TODO appropriate default type
         dtype = DEFAULT_TYPE
         allocatable = True
         shape = []
+        grid = None
+        rank = None
         for i in args:
             if isinstance(i, DataType):
                 dtype = i
             elif isinstance(i, Tuple):
                 shape = [j for j in i]
+            elif isinstance(i, Tensor):
+                grid = i
+                rank = len(grid.ranges)
             else:
                 # TODO further check
+                #      i can be a Tensor here
                 shape.append(i)
-        rank = len(shape)
+        if rank is None:
+            rank = len(shape)
+
         if rank == 1:
             shape = shape[0]
+
+        if len(shape) == 0:
+            shape = None
 
         d_var = {}
         d_var['datatype'] = dtype
@@ -467,7 +478,7 @@ def builtin_function(name, args, lhs=None):
         d_var['shape'] = shape
         d_var['rank'] = rank
 
-        return d_var
+        return d_var, grid
     # ...
 
     # ...
@@ -496,20 +507,15 @@ def builtin_function(name, args, lhs=None):
     # ...
 
     # ...
-    if name == "zeros":
+    if name in ["zeros", "ones"]:
         if not lhs:
             raise ValueError("Expecting a lhs.")
-        d_var = get_arguments()
+        d_var, grid = get_arguments_zeros()
         insert_variable(lhs, **d_var)
         lhs = namespace[lhs]
-        return Zeros(lhs, d_var['shape'])
-    elif name == "ones":
-        if not lhs:
-            raise ValueError("Expecting a lhs.")
-        d_var = get_arguments()
-        insert_variable(lhs, **d_var)
-        lhs = namespace[lhs]
-        return Ones(lhs, d_var['shape'])
+        f_name = name.capitalize()
+        f_name = eval(f_name)
+        return f_name(lhs, shape=d_var['shape'], grid=grid)
     elif name == "array":
         if not lhs:
             raise ValueError("Expecting a lhs.")

@@ -15,7 +15,6 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
-from sympy.logic.boolalg import BooleanTrue,BooleanFalse
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -227,8 +226,9 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.shape, Tuple):
             # this is a correction. problem on LRZ
+#                if isinstance(i, Tensor):
             shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        elif isinstance(expr.shape,str):
+        elif isinstance(expr.shape, str):
             shape_code = '0:' + self._print(expr.shape) + '-1'
         else:
             raise TypeError('Unknown type of shape'+str(type(expr.shape)))
@@ -238,35 +238,12 @@ class FCodePrinter(CodePrinter):
 
         init_value = None
         dtype = expr.lhs.dtype
-        if isinstance(dtype, NativeInteger):
-            init_value = 0
-        elif isinstance(dtype, NativeFloat):
-            init_value = 0.0
-        elif isinstance(dtype, NativeDouble):
-            init_value = 0.0
-        elif isinstance(dtype, NativeComplex):
-            init_value = 0.0
-        elif isinstance(dtype, NativeBool):
-            init_value = BooleanFalse()
-        else:
-            raise TypeError('Unknown type')
+        init_value = expr.init_value
 
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
         code_init = "{0} = {1}".format(lhs_code, self._print(init_value))
         code = "{0}; {1}".format(code_alloc, code_init)
         return self._get_statement(code)
-
-    def _print_Ones(self, expr):
-        lhs_code   = self._print(expr.lhs)
-
-        if isinstance(expr.shape, Tuple):
-#            shape_code = ', '.join(self._print(i) for i in expr.shape)
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        else:
-            shape_code = '0:' + self._print(expr.shape) + '-1'
-
-#        return self._get_statement("%s = zeros(%s)" % (lhs_code, shape_code))
-        return self._get_statement("allocate(%s(%s)) ; %s = 1" % (lhs_code, shape_code, lhs_code))
 
     def _print_Array(self,expr):
         lhs_code   = self._print(expr.lhs)

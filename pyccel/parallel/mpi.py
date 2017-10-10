@@ -21,13 +21,13 @@ from pyccel.types.ast import DataTypeFactory
 from pyccel.types.ast import Block
 from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import Zeros
+from pyccel.types.ast import Ones
 
-from pyccel.types.ast import For, While, FunctionDef, ClassDef, If, Del
-
+from pyccel.types.ast import For, While, If, Del
+from pyccel.types.ast import FunctionDef, ClassDef
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
-
 
 
 def get_shape(expr):
@@ -2064,7 +2064,7 @@ class MPI_dims_create(MPI):
 # The following classes are to
 # provide user friendly support of MPI
 ##########################################################
-class MPI_Tensor(MPI, Block):
+class MPI_Tensor(MPI, Block, Tensor):
     """
     Represents a Tensor object using MPI.
 
@@ -2285,10 +2285,10 @@ class MPI_Tensor(MPI, Block):
         d = {}
         labels = ['x','y','z'][:tensor.dim]
         for i,label in enumerate(labels):
-            nn = (ends[0] - starts[0])/steps[0]
+            nn = (ends[i] - starts[i])/steps[i]
 
-            d['s'+label] = (coords[0] * nn) / dims[0]
-            d['e'+label] = ((coords[0]+1) * nn) / dims[0]
+            d['s'+label] = (coords[i] * nn) / dims[i]
+            d['e'+label] = ((coords[i]+1) * nn) / dims[i]
 
         ranges = []
         for label in labels:
@@ -2451,6 +2451,19 @@ def mpify(stmt, **options):
     if isinstance(stmt, Del):
         variables = [mpify(a, **options) for a in stmt.variables]
         return Del(variables)
+    if isinstance(stmt, Ones):
+        if stmt.grid:
+            lhs   = stmt.lhs
+            shape = stmt.shape
+            grid  = mpify(stmt.grid, **options)
+            return Ones(lhs, grid=grid)
+    if isinstance(stmt, Zeros):
+        if stmt.grid:
+            lhs   = stmt.lhs
+            shape = stmt.shape
+            grid  = mpify(stmt.grid, **options)
+            return Zeros(lhs, grid=grid)
+
     return stmt
 ##########################################################
 
