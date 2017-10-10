@@ -1132,7 +1132,7 @@ class FCodePrinter(CodePrinter):
             else:
                 body = '{0}\n{1}'.format(body, self._print(i))
 
-        return ('{prolog}\n'
+        return ('{prolog}'
                 '{body}\n'
                 '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
