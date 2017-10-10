@@ -244,7 +244,10 @@ class FCodePrinter(CodePrinter):
             ends   = [r.stop  for r in tensor.ranges]
             steps  = [r.step  for r in tensor.ranges]
 
-            pads  = tensor.pads
+            if isinstance(tensor, MPI_Tensor):
+                pads = tensor.pads
+            else:
+                pads = np.zeros(2, dtype=int)
 
             shape_code = ', '.join('{0}:{1}'.format(self._print(s-p),  \
                                                     self._print(e+p)) \
