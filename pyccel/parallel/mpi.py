@@ -2390,6 +2390,7 @@ class MPI_Tensor(MPI, Block, Tensor):
             d['e'+l] = ((coords[i]+1) * nn) / dims[i]
 
         ranges = []
+        d_var = {}
         for l in labels:
             dd = {}
             for _n in ['s', 'e']:
@@ -2401,6 +2402,7 @@ class MPI_Tensor(MPI, Block, Tensor):
                 body.append(stmt)
 
                 dd[n] = v
+                d_var[n] = v
 
             args = [i[1] for i in dd.items()]
             r = Range(*args)
@@ -2410,9 +2412,14 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... derived types for communication over boundaries
-        count       = 4
+        ex = d_var['ex']
+        sx = d_var['sx']
+        ey = d_var['ey']
+        sy = d_var['sy']
+
+        count       = ey-sy+1
         blocklength = 1
-        stride      = 16
+        stride      = ex-sx+3
         oldtype     = MPI_DOUBLE()
 
         line = Variable('int', _make_name('line'))
@@ -2422,7 +2429,6 @@ class MPI_Tensor(MPI, Block, Tensor):
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
         # ...
-#        print variables
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
