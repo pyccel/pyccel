@@ -55,6 +55,7 @@ FlowStmt:
   | ReturnStmt 
   | RaiseStmt 
   | YieldStmt
+  | SyncStmt
 ;
 
 CompoundStmt:
@@ -112,13 +113,9 @@ ContinueStmt: label=CONTINUE;
 RaiseStmt: label=RAISE;
 YieldStmt: label=YIELD;
 
-ReturnStmt:
-  label=RETURN (variables*=Expression[','])
-;
-
-DelStmt:
-  DEL variables*=AtomExpr[',']
-;
+ReturnStmt: label=RETURN (variables*=Expression[',']);
+DelStmt: DEL variables*=AtomExpr[','];
+SyncStmt: SYNC (trailer=TrailerArgList)? (variables*=Expression[',']);
 
 CommentStmt:
 //  '#' text=/[^x].*$/  
@@ -321,6 +318,7 @@ NOT : 'not';
 OR : 'or';
 PASS : 'pass';
 RETURN : 'return';
+SYNC : 'sync';
 RAISE : 'raise';
 TRUE : 'True';
 TRY : 'try';

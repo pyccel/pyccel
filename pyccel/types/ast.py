@@ -1700,6 +1700,40 @@ class Del(Basic):
     def variables(self):
         return self._args[0]
 
+class Sync(Basic):
+    """Represents a memory sync in the code.
+
+    variables : list, tuple
+        a list of pyccel variables
+
+    master: Basic
+        a master object running sync
+
+    Examples
+
+    >>> from pyccel.types.ast import Sync, Variable
+    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> Sync([x])
+    Sync([x])
+    >>> master = Variable('int', 'master')
+    >>> Sync([x], master=master)
+    Sync([x], master)
+    """
+
+    def __new__(cls, expr, master=None):
+        if not iterable(expr):
+            expr = Tuple(expr)
+        return Basic.__new__(cls, expr, master)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    @property
+    def master(self):
+        return self._args[1]
+
+
 class Comment(Basic):
     """Represents a Comment in the code.
 

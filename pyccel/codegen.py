@@ -12,7 +12,7 @@ from pyccel.types.ast import (Range, Tensor, Block, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, \
-                              FunctionDef, ClassDef, Del, Print, Import, \
+                              FunctionDef, ClassDef, Sync, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -411,6 +411,8 @@ class Codegen(object):
             elif isinstance(stmt, Del):
                 # TODO is it ok to put it in the body?
                 body += printer(stmt) + "\n"
+            elif isinstance(stmt, Sync):
+                body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, list):
@@ -419,6 +421,8 @@ class Codegen(object):
             elif isinstance(stmt, Block):
                 for s in stmt.body:
                     body += printer(s) + "\n"
+                for dec in stmt.declarations:
+                    preludes += printer(dec) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)

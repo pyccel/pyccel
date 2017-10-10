@@ -836,6 +836,9 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
 
+    def _print_Sync(self, expr):
+        return 'Sync'
+
     def _print_NativeBool(self, expr):
         return 'logical'
 

@@ -11,6 +11,7 @@ from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton import Singleton
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core import Tuple
+from sympy.utilities.iterables import iterable
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare
@@ -23,7 +24,7 @@ from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import Zeros
 from pyccel.types.ast import Ones
 
-from pyccel.types.ast import For, While, If, Del
+from pyccel.types.ast import For, While, If, Del, Sync
 from pyccel.types.ast import FunctionDef, ClassDef
 
 from pyccel.parallel.basic        import Basic
@@ -2241,6 +2242,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         if not isinstance(tensor, Tensor):
             raise TypeError('Expecting a Tensor')
         cls._tensor = tensor
+        cls._label  = label
         # ...
 
         # ...
@@ -2504,6 +2506,10 @@ class MPI_Tensor(MPI, Block, Tensor):
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
         #
+
+        cls._types_bnd = {}
+        cls._types_bnd['line'] = line
+        cls._types_bnd['column'] = column
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
@@ -2560,6 +2566,14 @@ class MPI_Tensor(MPI, Block, Tensor):
     def ranges(self):
         return self._ranges
 
+    @property
+    def types_bnd(self):
+        return self._types_bnd
+
+    @property
+    def label(self):
+        return self._label
+
     def free_statements(self):
         """Returns a list of Free ast objects."""
         ls = []
@@ -2584,6 +2598,113 @@ class MPI_Tensor(MPI, Block, Tensor):
         body       = ', '.join('{0}'.format(sstr(a)) for a in body)
         code = 'MPI_Tensor ([{0}], [{1}])'.format(variables, body)
         return code
+##########################################################
+
+##########################################################
+#             Communication over topologies
+##########################################################
+class MPI_Communication(MPI):
+    """MPI communication action."""
+    pass
+
+class MPI_TensorCommunication(MPI_Communication, Block):
+    """MPI communication over a MPI_Tensor object."""
+    is_integer = True
+
+    def __new__(cls, tensor, variables):
+        if not isinstance(tensor, MPI_Tensor):
+            raise TypeError('Expecting MPI_Tensor')
+
+        if not iterable(variables):
+            raise TypeError('Expecting an iterable of variables')
+
+        # ...
+        def _make_name(n):
+            label = tensor.label
+            if not label:
+                return n
+            if len(label) > 0:
+                return '{0}_{1}'.format(label, n)
+            else:
+                return n
+        # ...
+
+        # ...
+        body = []
+        local_vars = []
+        # ...
+
+        # ... we don't need to append ierr to variables, since it will be
+        #     defined in the program
+        ierr = MPI_ERROR
+        #variables.append(ierr)
+        # ...
+
+        # ...
+        cls._tensor = tensor
+        # ...
+
+        # ...
+        starts = [r.start for r in tensor.ranges]
+        ends   = [r.stop  for r in tensor.ranges]
+        steps  = [r.step  for r in tensor.ranges]
+
+        sx = starts[0] ; sy = starts[1]
+        ex = ends[0]  ; ey = ends[1]
+
+        type_line   = tensor.types_bnd['line']
+        type_column = tensor.types_bnd['column']
+
+        north = 0 ; east = 1 ; south = 2 ; west = 3
+        neighbor = tensor.neighbor
+
+        comm = tensor.comm
+
+        tag = _make_name('tag')
+        tag_value = int(str(abs(hash(tag)))[-6:])
+        tag_name = '{0}_{1}'.format(tag, str(tag_value))
+        tag = Variable('int', tag_name)
+        local_vars.append(tag)
+
+        stmt = Assign(tag, tag_value)
+        body.append(stmt)
+        # ...
+
+        # ... # TODO loop over variables
+        u = variables[0]
+        rhs = MPI_comm_sendrecv(u, neighbor[north], tag, \
+                                u, neighbor[south], tag, comm)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+        # ...
+
+
+#    !Send to neighbour N and receive from neighbour S
+#    CALL MPI_SENDRECV(u(sx, sy), 1,   type_line,           neighbour(N), &
+#         tag,  u(ex+1, sy), 1,        type_line,           neighbour(S), &
+#         tag, comm2d, status, code)
+#
+#    !Send to neighbour S and receive from neighbour N
+#    CALL MPI_SENDRECV(u(ex, sy), 1,   type_line,           neighbour(S), &
+#         tag,  u(sx-1, sy), 1,        type_line,           neighbour(N), &
+#         tag, comm2d, status, code)
+#
+#    !Send to neighbour W  and receive from neighbour E
+#    CALL MPI_SENDRECV(u(sx, sy), 1, type_column,           neighbour(W), &
+#         tag,  u(sx, ey+1), 1, type_column,                neighbour(E), &
+#         tag, comm2d, status, code)
+#
+#    !Send to neighbour E  and receive from neighbour W
+#    CALL MPI_SENDRECV(u(sx, ey), 1, type_column,           neighbour(E), &
+#         tag,  u(sx, sy-1), 1, type_column,                neighbour(W), &
+#         tag, comm2d, status, code)
+
+        return super(MPI_TensorCommunication, cls).__new__(cls, local_vars, body)
+
+    @property
+    def tensor(self):
+        return self._tensor
+
 ##########################################################
 
 ##########################################################
@@ -2665,6 +2786,12 @@ def mpify(stmt, **options):
             shape = stmt.shape
             grid  = mpify(stmt.grid, **options)
             return Zeros(lhs, grid=grid)
+    if isinstance(stmt, Sync):
+        if stmt.master:
+            variables = [mpify(a, **options) for a in stmt.variables]
+            master  = mpify(stmt.master, **options)
+            if isinstance(master, MPI_Tensor):
+                return MPI_TensorCommunication(master, variables)
 
     return stmt
 ##########################################################

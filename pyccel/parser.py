@@ -8,7 +8,7 @@ from pyccel.syntax import (Pyccel, ImportFromStmt, \
                            FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                            # statements
                            DeclarationStmt, ConstructorStmt, \
-                           DelStmt, \
+                           DelStmt, SyncStmt, \
                            PassStmt, \
                            AssignStmt, MultiAssignStmt, \
                            FlowStmt, BreakStmt, ContinueStmt, \
@@ -198,7 +198,7 @@ class PyccelParser(Parser):
                    # statements
                    DeclarationStmt, ConstructorStmt, \
                    AssignStmt, MultiAssignStmt, \
-                   DelStmt, \
+                   DelStmt, SyncStmt, \
                    PassStmt, \
                    FlowStmt, BreakStmt, ContinueStmt, \
                    RaiseStmt, YieldStmt, ReturnStmt, \

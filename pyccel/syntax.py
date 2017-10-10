@@ -42,7 +42,7 @@ from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeRange, NativeTensor
 from pyccel.types.ast import Import
 from pyccel.types.ast import DottedName
-from pyccel.types.ast import (Range, Tensor, For, Assign, \
+from pyccel.types.ast import (Sync, Range, Tensor, For, Assign, \
                               Declare, Variable, Result, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -1060,6 +1060,54 @@ class DelStmt(BasicStmt):
         self.update()
 
         return Del(ls)
+
+class SyncStmt(BasicStmt):
+    """Class representing a sync statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the Sync statement class.
+
+        variables: list of str
+            variables to delete
+        """
+        self.variables = kwargs.pop('variables')
+        self.trailer   = kwargs.pop('trailer', None)
+
+        super(SyncStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Sync statement by returning a pyccel.types.ast object
+        """
+        trailer = self.trailer.expr
+        if len(trailer) > 1:
+            raise ValueError('Expecting at most 1 argument.')
+
+        master = None
+        if len(trailer) == 1:
+            master = trailer[0]
+
+        variables = [v.expr for v in self.variables]
+        ls = []
+        for var in variables:
+            if isinstance(var, Variable):
+                name = var.name
+                if isinstance(name, (list, tuple)):
+                    name = '{0}.{1}'.format(name[0], name[1])
+                if name in namespace:
+                    ls.append(namespace[name])
+                else:
+                    raise Exception('Unknown variable {}'.format(name))
+            elif isinstance(var, Tensor):
+                ls.append(var)
+            else:
+                raise NotImplementedError('Only Variable is trated')
+
+        self.update()
+
+        return Sync(ls, master=master)
 
 # TODO: improve by creating the corresponding object in pyccel.types.ast
 class PassStmt(BasicStmt):

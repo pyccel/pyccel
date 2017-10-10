@@ -18,6 +18,8 @@ y  = ones(uv, double)
 for i,j in uv:
     print ('(i,j) = (', i, j,')')
 
+sync(uv) x
+
 del uv
 
 ierr = mpi_finalize()
