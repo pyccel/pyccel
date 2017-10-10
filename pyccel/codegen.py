@@ -1,6 +1,9 @@
 # coding: utf-8
 
 import os
+
+from sympy.core import Tuple
+
 from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
@@ -354,12 +357,10 @@ class Codegen(object):
 
         # ...
         stmts = ast.expr
-        for _stmt in stmts:
-            if with_mpi:
-                stmt = mpify(_stmt)
-            else:
-                stmt = _stmt
+        if with_mpi:
+            stmts = [mpify(s) for s in stmts]
 
+        for stmt in stmts:
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):
@@ -367,8 +368,6 @@ class Codegen(object):
                 if not(name in ignored_modules):
                     imports += printer(stmt) + "\n"
                     modules += [name]
-#                elif name == 'pyccel':
-#                    pass
             elif isinstance(stmt, Declare):
                 decs = stmt
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
@@ -435,10 +434,19 @@ class Codegen(object):
             if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 preludes += printer(dec) + "\n"
 
-        for stmt in stmts:
+        def _construct_prelude(stmt):
+            preludes = ''
+            if isinstance(stmt, (list, tuple, Tuple)):
+                for dec in stmt:
+                    preludes += _construct_prelude(dec)
+            if isinstance(stmt, (For, While)):
+                preludes += _construct_prelude(stmt.body)
             if isinstance(stmt, Block):
                 for dec in stmt.declarations:
                     preludes += printer(dec) + "\n"
+            return preludes
+
+        preludes += _construct_prelude(stmts)
         # ...
 
         # ...

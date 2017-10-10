@@ -2771,6 +2771,8 @@ def mpify(stmt, **options):
     stmt: stmt, list
         statement or a list of statements
     """
+    if isinstance(stmt, (list, tuple, Tuple)):
+        return [mpify(i, **options) for i in stmt]
     if isinstance(stmt, MPI):
         return stmt
     if isinstance(stmt, Tensor):

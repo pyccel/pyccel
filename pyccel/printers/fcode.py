@@ -21,7 +21,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import Range, Tensor
+from pyccel.types.ast import Range, Tensor, Block
 from pyccel.types.ast import (Assign, MultiAssign,Result, \
                               Variable, Declare, \
                               Len, Dot, Sign, subs, \
@@ -54,6 +54,7 @@ from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import MPI_SUM, MPI_PROD
 from pyccel.parallel.mpi import MPI_Tensor
+from pyccel.parallel.mpi import MPI_TensorCommunication
 
 
 # TODO: add examples
@@ -1123,10 +1124,22 @@ class FCodePrinter(CodePrinter):
             for i,a in zip(expr.target, expr.iterable.ranges):
                 prolog, epilog = _do_range(i, a, prolog, epilog)
 
-        body = '\n'.join(self._print(i) for i in expr.body)
+        body = ''
+        for i in expr.body:
+            if isinstance(i, Block):
+                _prelude, _body = self._print_Block(i)
+                body = '{0}\n{1}'.format(body, _body)
+            else:
+                body = '{0}\n{1}'.format(body, self._print(i))
+
         return ('{prolog}\n'
                 '{body}\n'
                 '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
+
+    def _print_Block(self, expr):
+        body    = '\n'.join(self._print(i) for i in expr.body)
+        prelude = '\n'.join(self._print(i) for i in expr.declarations)
+        return prelude, body
 
     def _print_While(self,expr):
         body = '\n'.join(self._print(i) for i in expr.body)
