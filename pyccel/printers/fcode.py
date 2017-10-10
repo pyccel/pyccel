@@ -224,17 +224,28 @@ class FCodePrinter(CodePrinter):
     def _print_Zeros(self, expr):
         lhs_code   = self._print(expr.lhs)
 
-        if isinstance(expr.shape, Tuple):
-            # this is a correction. problem on LRZ
-#                if isinstance(i, Tensor):
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        elif isinstance(expr.shape, str):
-            shape_code = '0:' + self._print(expr.shape) + '-1'
-        else:
-            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
+        if expr.grid is None:
+            if isinstance(expr.shape, Tuple):
+                # this is a correction. problem on LRZ
+    #                if isinstance(i, Tensor):
+                shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
+            elif isinstance(expr.shape, str):
+                shape_code = '0:' + self._print(expr.shape) + '-1'
+            else:
+                raise TypeError('Unknown type of shape'+str(type(expr.shape)))
 
-        if not isinstance(expr.lhs, Variable):
-            raise TypeError('Expecting lhs to be a Variable')
+            if not isinstance(expr.lhs, Variable):
+                raise TypeError('Expecting lhs to be a Variable')
+        else:
+            # TODO check tensor type
+            #      this only works with steps = 1
+            tensor = expr.grid
+            starts = [r.start for r in tensor.ranges]
+            ends   = [r.stop  for r in tensor.ranges]
+            steps  = [r.step  for r in tensor.ranges]
+            shape_code = ', '.join('{0}:{1}'.format(self._print(s),  \
+                                                    self._print(e)) \
+                                   for (s,e) in zip(starts, ends))
 
         init_value = None
         dtype = expr.lhs.dtype

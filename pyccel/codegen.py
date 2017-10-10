@@ -420,9 +420,9 @@ class Codegen(object):
                     body += printer(s) + "\n"
             elif isinstance(stmt, Block):
                 for s in stmt.body:
-                    body += printer(s) + "\n"
+                    body += "\n" + printer(s) + "\n"
                 for dec in stmt.declarations:
-                    preludes += printer(dec) + "\n"
+                    preludes += "\n" + printer(dec) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)
