@@ -11,7 +11,6 @@ rank = comm.rank
 r_x = range(0, 8)
 r_y = range(0, 8)
 
-
 #Grid spacing
 ntx = 8
 nty = 8
@@ -39,11 +38,12 @@ for i,j in mesh:
     y = j*hy
 
     f[i, j] = 2.0*(x*x-x+y*y-y)
-    print (f[i,j])
     u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 
+#Linear solver tolerance
+tol = 1.0e-5
 
-n_iterations = 4
+n_iterations = 1000
 for it in range(0, n_iterations):
     u = u_new
 
@@ -55,15 +55,18 @@ for it in range(0, n_iterations):
         u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
 
     #Computation of the global error
-    u_error = abs(u-u_new)
+    for i,j in mesh:
+        u_error[i,j] = abs(u[i,j]-u_new[i,j])
     local_error = max(u_error)
 
     global_error = 0.0
     ierr = comm.allreduce (local_error, global_error, 'max')
 
-    print (max(f))
-#    print (global_error)
-
+    if global_error < tol:
+        print ("convergence after ", it, " iterations")
+        print ("local  error = ", local_error)
+        print ("global error = ", global_error)
+        break
 
 del mesh
 ierr = mpi_finalize()

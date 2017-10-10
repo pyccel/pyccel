@@ -1091,7 +1091,10 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Break(self,expr):
-        return 'Exit'
+        return 'exit'
+
+    def _print_Continue(self,expr):
+        return 'continue'
 
     def _print_AugAssign(self, expr):
         raise NotImplementedError('Fortran does not support AugAssign')

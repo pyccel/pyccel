@@ -1315,15 +1315,12 @@ class Declare(Basic):
         return self._args[2]
 
 class Break(Basic):
-    """Represents a function return in the code.
+    """Represents a break in the code."""
+    pass
 
-    expr : sympy expr
-        The expression to return.
-
-    """
-
-    def __new__(cls):
-        return Basic.__new__(cls)
+class Continue(Basic):
+    """Represents a continue in the code."""
+    pass
 
 # TODO: improve with __new__ from Function and add example
 class Len(Function):

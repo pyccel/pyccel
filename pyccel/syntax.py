@@ -52,7 +52,7 @@ from pyccel.types.ast import (Sync, Range, Tensor, For, Assign, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
-                              Stencil, Ceil, Break, \
+                              Stencil, Ceil, Break, Continue, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement,\
                               Min, Max, Mod)
@@ -473,8 +473,9 @@ def builtin_function(name, args, lhs=None):
             if not grid:
                 shape = shape[0]
 
-        if len(shape) == 0:
-            shape = None
+        if isinstance(shape, (list, tuple, Tuple)):
+            if len(shape) == 0:
+                shape = None
 
         d_var = {}
         d_var['datatype'] = dtype
@@ -1827,12 +1828,19 @@ class BreakStmt(FlowStmt):
     """Base class representing a Break statement in the grammar."""
     def __init__(self, **kwargs):
         super(BreakStmt, self).__init__(**kwargs)
+
     @property
     def expr(self):
         return Break()
 
 class ContinueStmt(FlowStmt):
     """Base class representing a Continue statement in the grammar."""
+    def __init__(self, **kwargs):
+        super(ContinueStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        return Continue()
 
 # TODO improve
 class ReturnStmt(FlowStmt):
