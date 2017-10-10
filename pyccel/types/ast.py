@@ -2076,6 +2076,7 @@ class FunctionHeader(Basic):
             raise TypeError("Expecting a string for kind.")
 
         if not (kind in ['function', 'procedure']):
+            print( kind)
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         return Basic.__new__(cls, func, types, r_types, kind)

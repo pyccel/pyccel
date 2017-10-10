@@ -27,5 +27,4 @@ ImportAsNames:
 DottedAsNames: DottedAsName (',' DottedAsName)*;
 DottedName: names+=ID['.'];
 
-Comment:  /#.*$/;
-NotaStmt: /.*$/;
+NotaStmt: /.*$/ | /#.*$/;

@@ -917,7 +917,6 @@ class Pyccel(object):
         namespace["True"]  = true
         namespace["False"] = false
         namespace["pi"]    = pi
-
         # ...
 
     @property
@@ -2770,7 +2769,7 @@ class FunctionHeaderStmt(BasicStmt):
             list of output types
         """
         self.name    = kwargs.pop('name')
-        self.kind    = kwargs.pop('kind', 'function')
+        self.kind    = kwargs.pop('kind', None)
         self.decs    = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 
@@ -2800,9 +2799,13 @@ class FunctionHeaderStmt(BasicStmt):
                 attributs.append(attr)
             self.results = zip(r_dtypes, attributs)
 
-        kind = str(self.kind)
+        if self.kind is None:
+            kind = 'function'
+        else:
+            kind = str(self.kind)
 
-        h = FunctionHeader(self.name, self.dtypes, self.results, kind=kind)
+        h = FunctionHeader(self.name, self.dtypes, \
+                           results=self.results, kind=kind)
         headers[self.name] = h
         return h
 
