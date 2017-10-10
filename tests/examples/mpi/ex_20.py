@@ -1,5 +1,7 @@
 # coding: utf-8
 
+#must use mesh.comm and mesh.rank_in_cart
+
 from pyccel.mpi import *
 
 ierr = mpi_init()
@@ -8,12 +10,12 @@ comm = mpi_comm_world
 size = comm.size
 rank = comm.rank
 
-r_x = range(0, 8)
-r_y = range(0, 8)
+ntx = 64
+nty = 64
+r_x = range(0, ntx)
+r_y = range(0, nty)
 
 #Grid spacing
-ntx = 8
-nty = 8
 hx = 1.0/(ntx+1)
 hy = 1.0/(nty+1)
 
@@ -41,9 +43,9 @@ for i,j in mesh:
     u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 
 #Linear solver tolerance
-tol = 1.0e-5
+tol = 1.0e-10
 
-n_iterations = 1000
+n_iterations = 10000
 for it in range(0, n_iterations):
     u = u_new
 
@@ -63,10 +65,17 @@ for it in range(0, n_iterations):
     ierr = comm.allreduce (local_error, global_error, 'max')
 
     if global_error < tol:
-        print ("convergence after ", it, " iterations")
-        print ("local  error = ", local_error)
-        print ("global error = ", global_error)
+        if rank == 0:
+            print ("convergence after ", it, " iterations")
+            print ("local  error = ", local_error)
+            print ("global error = ", global_error)
         break
+
+if rank == 0:
+    for i,j in mesh:
+        u_error[i,j] = abs(u[i,j]-u_exact[i,j])
+    local_error = max(u_error)
+    print ("error of u_h - u_exact = ", local_error)
 
 del mesh
 ierr = mpi_finalize()
