@@ -209,7 +209,13 @@ def mpi_datatype(dtype):
     elif isinstance(dtype, NativeComplex):
         return 'MPI_COMPLEX'
     else:
-        raise TypeError("Uncovered datatype : ", type(dtype))
+        # Pyccel user class
+        cls_name = dtype.__class__.__name__
+        try:
+            type_name = cls_name.split('PyccelDatatype_')[-1]
+            return type_name
+        except:
+            raise TypeError("Uncovered datatype : ", type(dtype))
 ##########################################################
 
 ##########################################################
@@ -2507,9 +2513,17 @@ class MPI_Tensor(MPI, Block, Tensor):
         body.append(stmt)
         #
 
+        #
+        type_name = "Datatype_"+_make_name('line')
+        type_line = DataTypeFactory(type_name, ("_name"))
+
+        type_name = "Datatype_"+_make_name('column')
+        type_column = DataTypeFactory(type_name, ("_name"))
+
         cls._types_bnd = {}
-        cls._types_bnd['line'] = line
-        cls._types_bnd['column'] = column
+        cls._types_bnd['line']   = type_line()
+        cls._types_bnd['column'] = type_column()
+        #
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
@@ -2672,33 +2686,37 @@ class MPI_TensorCommunication(MPI_Communication, Block):
 
         # ... # TODO loop over variables
         var = variables[0]
-        var = IndexedVariable(var.name, dtype=var.dtype, shape=var.shape)
-        rhs = MPI_comm_sendrecv(var[sx, sy], neighbor[north], tag, \
+        var = IndexedVariable(var.name, dtype=type_line, shape=var.shape)
+
+        # Send to neighbour N and receive from neighbour S
+        rhs = MPI_comm_sendrecv(var[sx, sy],   neighbor[north], tag, \
                                 var[ex+1, sy], neighbor[south], tag, comm)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+
+        # Send to neighbour S and receive from neighbour N
+        rhs = MPI_comm_sendrecv(var[ex, sy],   neighbor[south], tag, \
+                                var[sx-1, sy], neighbor[north], tag, comm)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
         # ...
 
+        # ... # TODO loop over variables
+        var = variables[0]
+        var = IndexedVariable(var.name, dtype=type_column, shape=var.shape)
 
-#    !Send to neighbour N and receive from neighbour S
-#    CALL MPI_SENDRECV(u(sx, sy), 1,   type_line,           neighbour(N), &
-#         tag,  u(ex+1, sy), 1,        type_line,           neighbour(S), &
-#         tag, comm2d, status, code)
-#
-#    !Send to neighbour S and receive from neighbour N
-#    CALL MPI_SENDRECV(u(ex, sy), 1,   type_line,           neighbour(S), &
-#         tag,  u(sx-1, sy), 1,        type_line,           neighbour(N), &
-#         tag, comm2d, status, code)
-#
-#    !Send to neighbour W  and receive from neighbour E
-#    CALL MPI_SENDRECV(u(sx, sy), 1, type_column,           neighbour(W), &
-#         tag,  u(sx, ey+1), 1, type_column,                neighbour(E), &
-#         tag, comm2d, status, code)
-#
-#    !Send to neighbour E  and receive from neighbour W
-#    CALL MPI_SENDRECV(u(sx, ey), 1, type_column,           neighbour(E), &
-#         tag,  u(sx, sy-1), 1, type_column,                neighbour(W), &
-#         tag, comm2d, status, code)
+        # Send to neighbour W  and receive from neighbour E
+        rhs = MPI_comm_sendrecv(var[sx, sy],   neighbor[west], tag, \
+                                var[sx, ey+1], neighbor[east], tag, comm)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+
+        # Send to neighbour E  and receive from neighbour W
+        rhs = MPI_comm_sendrecv(var[sx, ey],   neighbor[east], tag, \
+                                var[sx, sy-1], neighbor[west], tag, comm)
+        stmt = MPI_Assign(ierr, rhs, strict=False)
+        body.append(stmt)
+        # ...
 
         return super(MPI_TensorCommunication, cls).__new__(cls, local_vars, body)
 
