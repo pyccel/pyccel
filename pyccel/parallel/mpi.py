@@ -2671,9 +2671,10 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         # ...
 
         # ... # TODO loop over variables
-        u = variables[0]
-        rhs = MPI_comm_sendrecv(u, neighbor[north], tag, \
-                                u, neighbor[south], tag, comm)
+        var = variables[0]
+        var = IndexedVariable(var.name, dtype=var.dtype, shape=var.shape)
+        rhs = MPI_comm_sendrecv(var[sx, sy], neighbor[north], tag, \
+                                var[ex+1, sy], neighbor[south], tag, comm)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
         # ...
