@@ -459,6 +459,9 @@ def builtin_function(name, args, lhs=None):
             elif isinstance(i, Tensor):
                 grid = i
                 rank = len(grid.ranges)
+            elif isinstance(i, Range):
+                grid = i
+                rank = 1
             else:
                 # TODO further check
                 #      i can be a Tensor here
@@ -467,7 +470,8 @@ def builtin_function(name, args, lhs=None):
             rank = len(shape)
 
         if rank == 1:
-            shape = shape[0]
+            if not grid:
+                shape = shape[0]
 
         if len(shape) == 0:
             shape = None

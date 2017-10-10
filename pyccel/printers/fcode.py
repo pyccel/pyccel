@@ -6,6 +6,7 @@ www.fortran90.org as much as possible."""
 from __future__ import print_function, division
 import string
 from itertools import groupby
+import numpy as np
 
 from sympy.core import Symbol
 from sympy.core import Float
@@ -229,7 +230,6 @@ class FCodePrinter(CodePrinter):
         if expr.grid is None:
             if isinstance(expr.shape, Tuple):
                 # this is a correction. problem on LRZ
-    #                if isinstance(i, Tensor):
                 shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
             elif isinstance(expr.shape, str):
                 shape_code = '0:' + self._print(expr.shape) + '-1'
@@ -242,9 +242,14 @@ class FCodePrinter(CodePrinter):
             # TODO check tensor type
             #      this only works with steps = 1
             tensor = expr.grid
-            starts = [r.start for r in tensor.ranges]
-            ends   = [r.stop  for r in tensor.ranges]
-            steps  = [r.step  for r in tensor.ranges]
+            if isinstance(tensor, Tensor):
+                starts = [r.start for r in tensor.ranges]
+                ends   = [r.stop  for r in tensor.ranges]
+                steps  = [r.step  for r in tensor.ranges]
+            elif isinstance(tensor, Range):
+                starts = [tensor.start]
+                ends   = [tensor.stop ]
+                steps  = [tensor.step ]
 
             if isinstance(tensor, MPI_Tensor):
                 pads = tensor.pads
