@@ -1,7 +1,5 @@
 # coding: utf-8
 
-#must use mesh.comm and mesh.rank_in_cart
-
 from pyccel.mpi import *
 
 ierr = mpi_init()
