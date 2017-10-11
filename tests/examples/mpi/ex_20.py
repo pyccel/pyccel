@@ -8,8 +8,8 @@ comm = mpi_comm_world
 size = comm.size
 rank = comm.rank
 
-ntx = 8
-nty = 8
+ntx = 32
+nty = 32
 r_x = range(0, ntx)
 r_y = range(0, nty)
 

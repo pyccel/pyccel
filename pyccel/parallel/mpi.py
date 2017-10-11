@@ -25,6 +25,8 @@ from pyccel.types.ast import Block
 from pyccel.types.ast import Range, Tensor
 from pyccel.types.ast import Zeros
 from pyccel.types.ast import Ones
+from pyccel.types.ast import Comment
+from pyccel.types.ast import EmptyLine
 
 from pyccel.types.ast import For, While, If, Del, Sync
 from pyccel.types.ast import FunctionDef, ClassDef
@@ -2301,6 +2303,11 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ...
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: grid setting'))
+        # ...
+
+        # ...
         ndim = Variable('int', _make_name('ndim'))
         stmt = Assign(ndim, tensor.dim)
         variables.append(ndim)
@@ -2388,6 +2395,12 @@ class MPI_Tensor(MPI, Block, Tensor):
         cls._reorder = reorder
         # ...
 
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: cart definition'))
+        # ...
+
         # ... set the parent comm
         if comm_parent is None:
             comm_parent = MPI_comm_world()
@@ -2417,6 +2430,12 @@ class MPI_Tensor(MPI, Block, Tensor):
         body.append(stmt)
 
         cls._rank_in_cart = rank_in_cart
+        # ...
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: Neighbors'))
         # ...
 
         # ... compute the coordinates of the process
@@ -2471,6 +2490,12 @@ class MPI_Tensor(MPI, Block, Tensor):
             raise NotImplementedError('Only 2d is available')
         # ...
 
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: local ranges'))
+        # ...
+
         # ... compute local ranges
         starts = [r.start for r in tensor.ranges]
         ends   = [r.stop  for r in tensor.ranges]
@@ -2492,6 +2517,8 @@ class MPI_Tensor(MPI, Block, Tensor):
                 n = _n+l
                 v    = Variable('int', _make_name(n))
                 rhs  = d[n]
+                if _n == 'e':
+                    rhs += 1  # +1 because of Range in Python
                 stmt = Assign(v, rhs)
                 variables.append(v)
                 body.append(stmt)
@@ -2504,6 +2531,12 @@ class MPI_Tensor(MPI, Block, Tensor):
             ranges.append(r)
 
         cls._ranges = ranges
+        # ...
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: vector types for communication'))
         # ...
 
         # ... derived types for communication over boundaries
@@ -2555,6 +2588,12 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: ghost cells size'))
+        # ...
+
+        # ...
         if pads is None:
             pads = (1,1)
 
@@ -2585,6 +2624,12 @@ class MPI_Tensor(MPI, Block, Tensor):
         cls._pads = pads
         # ...
 
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: communication tag'))
+        # ...
+
         # ... create a tag for the tensor
 #        i = np.random.randint(100000)
 #        tag_value = int(str(abs(i))[-6:])
@@ -2599,6 +2644,11 @@ class MPI_Tensor(MPI, Block, Tensor):
         body.append(stmt)
 
         cls._tag = tag
+        # ...
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
         # ...
 
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
@@ -2763,11 +2813,20 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         var = variables[0]
         var = IndexedVariable(var.name, dtype=type_line, shape=var.shape)
 
+        # ...
+        body.append(Comment('... MPI_Tensor: Send to neighbour N and receive from neighbour S'))
+        # ...
+
         # Send to neighbour N and receive from neighbour S
         rhs = MPI_comm_sendrecv(var[sx, sy],   neighbor[north], tag, \
                                 var[ex+1, sy], neighbor[south], tag, comm)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
+
+        # ...
+        body.append(Comment('...'))
+        body.append(Comment('... MPI_Tensor: Send to neighbour S and receive from neighbour N'))
+        # ...
 
         # Send to neighbour S and receive from neighbour N
         rhs = MPI_comm_sendrecv(var[ex, sy],   neighbor[south], tag, \
@@ -2780,17 +2839,32 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         var = variables[0]
         var = IndexedVariable(var.name, dtype=type_column, shape=var.shape)
 
+        # ...
+        body.append(Comment('...'))
+        body.append(Comment('... MPI_Tensor: Send to neighbour W  and receive from neighbour E'))
+        # ...
+
         # Send to neighbour W  and receive from neighbour E
         rhs = MPI_comm_sendrecv(var[sx, sy],   neighbor[west], tag, \
                                 var[sx, ey+1], neighbor[east], tag, comm)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
 
+        # ...
+        body.append(Comment('...'))
+        body.append(Comment('... MPI_Tensor: Send to neighbour E  and receive from neighbour W'))
+        # ...
+
         # Send to neighbour E  and receive from neighbour W
         rhs = MPI_comm_sendrecv(var[sx, ey],   neighbor[east], tag, \
                                 var[sx, sy-1], neighbor[west], tag, comm)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
+        # ...
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
         # ...
 
         return super(MPI_TensorCommunication, cls).__new__(cls, local_vars, body)

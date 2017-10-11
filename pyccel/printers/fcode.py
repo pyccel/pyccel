@@ -167,6 +167,9 @@ class FCodePrinter(CodePrinter):
         txt = self._print(expr.text)
         return '! {0} '.format(txt)
 
+    def _print_EmptyLine(self, expr):
+        return '\n'
+
     def _print_AnnotatedComment(self, expr):
         accel = self._print(expr.accel)
         txt   = str(expr.txt)
@@ -1139,17 +1142,20 @@ class FCodePrinter(CodePrinter):
             for i,a in zip(expr.target, expr.iterable.ranges):
                 prolog, epilog = _do_range(i, a, prolog, epilog)
 
-        body = ''
-        for i in expr.body:
+        # ...
+        def _iprint(i):
             if isinstance(i, Block):
                 _prelude, _body = self._print_Block(i)
-                body = '{0}\n{1}'.format(body, _body)
+                return '{0}'.format(_body)
             else:
-                body = '{0}\n{1}'.format(body, self._print(i))
+                return '{0}'.format(self._print(i))
+        # ...
+
+        body = '\n'.join(_iprint(i) for i in expr.body)
 
         return ('{prolog}'
                 '{body}\n'
-                '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     def _print_Block(self, expr):
         body    = '\n'.join(self._print(i) for i in expr.body)

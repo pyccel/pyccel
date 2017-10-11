@@ -1752,6 +1752,25 @@ class Sync(Basic):
         return self._args[3]
 
 
+class EmptyLine(Basic):
+    """Represents a EmptyLine in the code.
+
+    text : str
+       the comment line
+
+    Examples
+
+    >>> from pyccel.types.ast import EmptyLine
+    >>> EmptyLine()
+
+    """
+
+    def __new__(cls):
+        return Basic.__new__(cls)
+
+    def _sympystr(self, printer):
+        return '\n'
+
 class Comment(Basic):
     """Represents a Comment in the code.
 
