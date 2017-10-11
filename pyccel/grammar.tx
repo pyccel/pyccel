@@ -78,6 +78,7 @@ ExprStmt:
   | ExecStmt 
   | EvalStmt 
   | AssignStmt 
+  | AugAssignStmt 
   | MultiAssignStmt
 ;
 
@@ -173,6 +174,7 @@ ParameterValue: (value=IdentifierOrNumber |value=ArgList);
 ParameterSingle: label=ParameterTest '=' value=ParameterValue;
 
 AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=Expression;
+AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
 MultiAssignStmt: lhs+=ID[','] '=' rhs=Expression;
 
 StencilStmt: lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' ;
@@ -239,6 +241,7 @@ Atom:
 OpPlusOrMinus: '+' | '-';
 OpFactor: '*' | '@' | '/' | '%' ;
 OpFactorSigned: '+' | '-';
+OpAug: '+=' | '*=' | '-=' | '/=';
 // <> isn't actually a valid comparison operator in Python. It's here for the
 // sake of a __future__ import described in PEP 401 (which really works :-)
 OpComp: 

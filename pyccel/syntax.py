@@ -47,7 +47,7 @@ from pyccel.types.ast import (Sync, Range, Tensor, For, Assign, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              MultiAssign, \
+                              MultiAssign, AugAssign, \
                               FunctionDef, ClassDef, Del, Print, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
@@ -1282,6 +1282,93 @@ class AssignStmt(BasicStmt):
             return Assign(l, rhs, strict=False, status=status, like=like)
         else:
             return MPI_Assign(l, rhs, strict=False, status=status, like=like)
+
+class AugAssignStmt(BasicStmt):
+    """Class representing an assign statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the AugAssign statement.
+
+        lhs: str
+            variable to assign to
+        rhs: ArithmeticExpression
+            expression to assign to the lhs
+        trailer: Trailer
+            a trailer is used for a function call or Array indexing.
+        """
+        self.lhs     = kwargs.pop('lhs')
+        self.rhs     = kwargs.pop('rhs')
+        self.op      = kwargs.pop('op')
+        self.trailer = kwargs.pop('trailer', None)
+
+        super(AugAssignStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """Statement variables."""
+        return [self.lhs]
+
+    @property
+    def expr(self):
+        """
+        Process the AugAssign statement by returning a pyccel.types.ast object
+        """
+        if not isinstance(self.rhs, ArithmeticExpression):
+            raise TypeError("Expecting an expression")
+
+        rhs      = self.rhs.expr
+        op       = str(self.op[0])
+        status   = None
+        like     = None
+
+        var_name = self.lhs
+        trailer  = None
+        args     = None
+        if self.trailer:
+            trailer = self.trailer.args
+            args    = self.trailer.expr
+            if isinstance(trailer, TrailerDots):
+                var_name = '{0}.{1}'.format(self.lhs, args)
+
+        if isinstance(rhs, Function):
+            name = str(type(rhs).__name__)
+            if name.lower() in builtin_funcs:
+                args = rhs.args
+                return builtin_function(name.lower(), args, lhs=var_name)
+
+        found_var = (var_name in namespace)
+        if not(found_var):
+            d_var = get_attributs(rhs)
+
+#            print ">>>> AugAssignStmt : ", var_name, d_var
+
+            d_var['allocatable'] = not(d_var['shape'] is None)
+            if d_var['shape']:
+                if DEBUG:
+                    print "> Found an unallocated variable: ", var_name
+                status = 'unallocated'
+                like = allocatable_like(rhs)
+            insert_variable(var_name, **d_var)
+
+        if self.trailer is None:
+            l = namespace[self.lhs]
+        else:
+            if isinstance(trailer, TrailerSubscriptList):
+                v = namespace[str(self.lhs)]
+                l = IndexedVariable(v.name, dtype=v.dtype)[args]
+            elif isinstance(trailer, TrailerDots):
+                # class attribut
+                l = namespace[var_name]
+            else:
+                raise TypeError("Expecting SubscriptList or Dot")
+
+        if not isinstance(rhs, MPI):
+            return AugAssign(l, op, rhs, strict=False, status=status, like=like)
+        else:
+            raise NotImplementedError('MPI case missing for AugAssignStmt')
+#            return MPI_AugAssign(l, rhs, strict=False, status=status, like=like)
+
 
 class MultiAssignStmt(BasicStmt):
     """

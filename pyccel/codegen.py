@@ -14,7 +14,7 @@ from pyccel.types.ast import (Range, Tensor, Block, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              MultiAssign, \
+                              MultiAssign, AugAssign, \
                               FunctionDef, ClassDef, Sync, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
@@ -380,6 +380,8 @@ class Codegen(object):
                         preludes += printer(dec) + "\n"
                     for s in stmt.rhs.body:
                         body += printer(s) + "\n"
+            elif isinstance(stmt, AugAssign):
+                body += printer(stmt) + "\n"
             elif isinstance(stmt, MultiAssign):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, (Zeros, Ones, ZerosLike, Array)):

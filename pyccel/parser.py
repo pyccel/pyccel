@@ -10,7 +10,7 @@ from pyccel.syntax import (Pyccel, ImportFromStmt, \
                            DeclarationStmt, ConstructorStmt, \
                            DelStmt, SyncStmt, \
                            PassStmt, \
-                           AssignStmt, MultiAssignStmt, \
+                           AssignStmt, MultiAssignStmt, AugAssignStmt, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
                            RangeStmt, \
@@ -197,7 +197,7 @@ class PyccelParser(Parser):
                    FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                    # statements
                    DeclarationStmt, ConstructorStmt, \
-                   AssignStmt, MultiAssignStmt, \
+                   AssignStmt, MultiAssignStmt, AugAssignStmt, \
                    DelStmt, SyncStmt, \
                    PassStmt, \
                    FlowStmt, BreakStmt, ContinueStmt, \

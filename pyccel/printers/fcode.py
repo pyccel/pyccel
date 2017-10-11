@@ -20,10 +20,15 @@ from sympy import Eq,Ne,true,false
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
+from pyccel.types.ast import AddOp, MulOp, SubOp, DivOp
+from pyccel.types.ast import FunctionDef
+from pyccel.types.ast import FunctionCall
+from pyccel.types.ast import ZerosLike
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import Range, Tensor, Block
-from pyccel.types.ast import (Assign, MultiAssign,Result, \
+from pyccel.types.ast import (Assign, MultiAssign, AugAssign, \
+                              Result, \
                               Variable, Declare, \
                               Len, Dot, Sign, subs, \
                               IndexedElement, Slice)
@@ -845,6 +850,36 @@ class FCodePrinter(CodePrinter):
 
         return '\n'.join(decs)
 
+    def _print_Assign(self, expr):
+        lhs_code = self._print(expr.lhs)
+        is_procedure = False
+        if isinstance(expr.rhs, FunctionDef):
+            rhs_code = self._print(expr.rhs.name)
+            is_procedure = (expr.rhs.kind == 'procedure')
+        elif isinstance(expr.rhs, FunctionCall):
+            func = expr.rhs.func
+            rhs_code = self._print(func.name)
+            is_procedure = (func.kind == 'procedure')
+        else:
+            rhs_code = self._print(expr.rhs)
+
+        code = ''
+        if (expr.status == 'unallocated') and not (expr.like is None):
+            stmt = ZerosLike(lhs_code, expr.like)
+            code += self._print(stmt)
+            code += '\n'
+        if not is_procedure:
+            code += '{0} = {1}'.format(lhs_code, rhs_code)
+        else:
+            code_args = ''
+            if (not func.arguments is None) and (len(func.arguments) > 0):
+                code_args = ', '.join(self._print(i) for i in func.arguments)
+                code_args = '{0},{1}'.format(code_args, lhs_code)
+            else:
+                code_args = lhs_code
+            code = 'call {0}({1})'.format(rhs_code, code_args)
+        return self._get_statement(code)
+
     def _print_MPI_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -1100,7 +1135,27 @@ class FCodePrinter(CodePrinter):
         return 'continue'
 
     def _print_AugAssign(self, expr):
-        raise NotImplementedError('Fortran does not support AugAssign')
+        lhs    = expr.lhs
+        op     = expr.op
+        rhs    = expr.rhs
+        strict = expr.strict
+        status = expr.status
+        like   = expr.like
+
+        if isinstance(op, AddOp):
+            rhs = lhs + rhs
+        elif isinstance(op, MulOp):
+            rhs = lhs * rhs
+        elif isinstance(op, SubOp):
+            rhs = lhs - rhs
+        # TODO fix bug with division of integers
+        elif isinstance(op, DivOp):
+            rhs = lhs / rhs
+        else:
+            raise ValueError('Unrecongnized operation', op)
+
+        stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
+        return self._print(stmt)
 
     def _print_MultiAssign(self, expr):
         if not isinstance(expr.rhs, Function):

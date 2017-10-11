@@ -422,41 +422,66 @@ class AugAssign(Basic):
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
+
     op : NativeOp
         Operator (+, -, /, \*, %).
+
     rhs : Expr
         Sympy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
+    strict: bool
+        if True, we do some verifications. In general, this can be more
+        complicated and is treated in pyccel.syntax.
+
+    status: None, str
+        if lhs is not allocatable, then status is None.
+        otherwise, status is {'allocated', 'unallocated'}
+
+    like: None, Variable
+        contains the name of the variable from which the lhs will be cloned.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.types.ast import AugAssign
+    >>> s = Variable('int', 's')
+    >>> t = Variable('int', 't')
+    >>> AugAssign(s, '+', 2 * t + 1)
+    s += 1 + 2*t
     """
 
-    def __new__(cls, lhs, op, rhs):
-        lhs = sympify(lhs)
-        rhs = sympify(rhs)
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        # Indexed types implement shape, but don't define it until later. This
-        # causes issues in assignment validation. For now, matrices are defined
-        # as anything with a shape that is not an Indexed
-        lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
-        rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
-        # If lhs and rhs have same structure, then this assignment is ok
-        if lhs_is_mat:
-            if not rhs_is_mat:
-                raise ValueError("Cannot assign a scalar to a matrix.")
-            elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
-        elif rhs_is_mat and not lhs_is_mat:
-            raise ValueError("Cannot assign a matrix to a scalar.")
+    def __new__(cls, lhs, op, rhs, strict=False, status=None, like=None):
+        cls._strict = strict
+        if strict:
+            lhs = sympify(lhs)
+            rhs = sympify(rhs)
+            # Tuple of things that can be on the lhs of an assignment
+            assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
+            if not isinstance(lhs, assignable):
+                raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+            # Indexed types implement shape, but don't define it until later. This
+            # causes issues in assignment validation. For now, matrices are defined
+            # as anything with a shape that is not an Indexed
+            lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs, Indexed)
+            rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs, Indexed)
+            # If lhs and rhs have same structure, then this assignment is ok
+            if lhs_is_mat:
+                if not rhs_is_mat:
+                    raise ValueError("Cannot assign a scalar to a matrix.")
+                elif lhs.shape != rhs.shape:
+                    raise ValueError("Dimensions of lhs and rhs don't align.")
+            elif rhs_is_mat and not lhs_is_mat:
+                raise ValueError("Cannot assign a matrix to a scalar.")
+
         if isinstance(op, str):
             op = operator(op)
         elif op not in op_registry.values():
             raise TypeError("Unrecognized Operator")
-        return Basic.__new__(cls, lhs, op, rhs)
+
+        return Basic.__new__(cls, lhs, op, rhs, status, like)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -474,6 +499,18 @@ class AugAssign(Basic):
     @property
     def rhs(self):
         return self._args[2]
+
+    @property
+    def status(self):
+        return self._args[3]
+
+    @property
+    def like(self):
+        return self._args[4]
+
+    @property
+    def strict(self):
+        return self._strict
 
 class While(Basic):
     """Represents a 'while' statement in the code.
