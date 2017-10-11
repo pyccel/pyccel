@@ -2585,6 +2585,22 @@ class MPI_Tensor(MPI, Block, Tensor):
         cls._pads = pads
         # ...
 
+        # ... create a tag for the tensor
+#        i = np.random.randint(100000)
+#        tag_value = int(str(abs(i))[-6:])
+
+        tag = _make_name('tag')
+        tag_value = int(str(abs(hash(tag)))[-6:])
+        tag_name = '{0}_{1}'.format(tag, str(tag_value))
+        tag = Variable('int', tag_name)
+        variables.append(tag)
+
+        stmt = Assign(tag, tag_value)
+        body.append(stmt)
+
+        cls._tag = tag
+        # ...
+
         return super(MPI_Tensor, cls).__new__(cls, variables, body)
 
     @property
@@ -2650,6 +2666,10 @@ class MPI_Tensor(MPI, Block, Tensor):
     @property
     def pads(self):
         return self._pads
+
+    @property
+    def tag(self):
+        return self._tag
 
     def free_statements(self):
         """Returns a list of Free ast objects."""
@@ -2736,15 +2756,7 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         neighbor = tensor.neighbor
 
         comm = tensor.comm
-
-        tag = _make_name('tag')
-        tag_value = int(str(abs(hash(tag)))[-6:])
-        tag_name = '{0}_{1}'.format(tag, str(tag_value))
-        tag = Variable('int', tag_name)
-        local_vars.append(tag)
-
-        stmt = Assign(tag, tag_value)
-        body.append(stmt)
+        tag  = tensor.tag
         # ...
 
         # ... # TODO loop over variables
