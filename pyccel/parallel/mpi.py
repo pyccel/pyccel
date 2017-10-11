@@ -2317,21 +2317,21 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... TODO use MPI_dims_create
-        if dims is None:
-            dims = (2,2)
+        is_dims_none = (dims is None)
 
-        if not isinstance(dims, (list, tuple)):
-           raise TypeError('Expecting a tuple or list')
+        if not is_dims_none:
+            if not isinstance(dims, (list, tuple)):
+               raise TypeError('Expecting a tuple or list')
 
-        dims  = list(dims)
-        _dims = []
-        for a in dims:
-            if isinstance(a, int):
-                _dims.append(a)
-            elif isinstance(a, Variable) and isinstance(a.dtype, NativeInteger):
-                _dims.append(a)
-            else:
-               raise TypeError('Expecting an integer')
+            dims  = list(dims)
+            _dims = []
+            for a in dims:
+                if isinstance(a, int):
+                    _dims.append(a)
+                elif isinstance(a, Variable) and isinstance(a.dtype, NativeInteger):
+                    _dims.append(a)
+                else:
+                   raise TypeError('Expecting an integer')
 
         dims = Variable('int', _make_name('dims'), \
                         rank=1, shape=ndim, allocatable=True)
@@ -2340,8 +2340,21 @@ class MPI_Tensor(MPI, Block, Tensor):
         body.append(stmt)
 
         dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
-        for i in range(0, tensor.dim):
-            stmt = Assign(dims[i], _dims[i])
+
+        if not is_dims_none:
+            for i in range(0, tensor.dim):
+                stmt = Assign(dims[i], _dims[i])
+                body.append(stmt)
+        else:
+            nnodes = Variable('int', _make_name('nnodes'))
+            variables.append(nnodes)
+
+            rhs  = MPI_comm_size(MPI_comm_world())
+            stmt = MPI_Assign(nnodes, rhs)
+            body.append(stmt)
+
+            rhs = MPI_dims_create(nnodes, dims)
+            stmt = MPI_Assign(ierr, rhs, strict=False)
             body.append(stmt)
 
         cls._dims = dims
