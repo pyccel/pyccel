@@ -1546,6 +1546,7 @@ class MPI_comm_reduce(MPI):
         code = 'MPI_reduce ({0})'.format(args)
         return code
 
+# TODO check that op is a valid operation
 class MPI_comm_allreduce(MPI):
     """
     Represents the MPI_allreduce statement.
@@ -2786,6 +2787,65 @@ class MPI_TensorCommunication(MPI_Communication, Block):
     def tensor(self):
         return self._tensor
 
+class MPI_CommunicationAction(MPI_Communication, Block):
+    """MPI communication action over a MPI_Tensor object."""
+    is_integer = True
+
+    def __new__(cls, tensor, variables, action, options):
+        if not isinstance(tensor, MPI_Tensor):
+            raise TypeError('Expecting MPI_Tensor')
+
+        if not iterable(variables):
+            raise TypeError('Expecting an iterable of variables')
+
+        if not isinstance(action, str):
+            raise TypeError('Expecting a string')
+
+        if not isinstance(options, list):
+            raise TypeError('Expecting a list')
+
+        # ...
+        def _make_name(n):
+            label = tensor.label
+            if not label:
+                return n
+            if len(label) > 0:
+                return '{0}_{1}'.format(label, n)
+            else:
+                return n
+        # ...
+
+        # ...
+        body = []
+        local_vars = []
+        # ...
+
+        # ... we don't need to append ierr to variables, since it will be
+        #     defined in the program
+        ierr = MPI_ERROR
+        #variables.append(ierr)
+        # ...
+
+        # ...
+        cls._tensor = tensor
+        # ...
+
+        comm = tensor.comm
+        if action == 'allreduce':
+            op = options[0]
+            if op is None:
+                raise ValueError('Expecting an operation')
+
+            for var in variables:
+                rhs = MPI_comm_allreduce(var, var, op, comm)
+                stmt = MPI_Assign(ierr, rhs, strict=False)
+                body.append(stmt)
+
+        return super(MPI_CommunicationAction, cls).__new__(cls, local_vars, body)
+
+    @property
+    def tensor(self):
+        return self._tensor
 ##########################################################
 
 ##########################################################
@@ -2872,9 +2932,15 @@ def mpify(stmt, **options):
     if isinstance(stmt, Sync):
         if stmt.master:
             variables = [mpify(a, **options) for a in stmt.variables]
-            master  = mpify(stmt.master, **options)
+            master    = mpify(stmt.master, **options)
+            action    = stmt.action
             if isinstance(master, MPI_Tensor):
-                return MPI_TensorCommunication(master, variables)
+                if action is None:
+                    return MPI_TensorCommunication(master, variables)
+                else:
+                    settings = stmt.options
+                    return MPI_CommunicationAction(master, variables, \
+                                                   action, settings)
 
     return stmt
 ##########################################################

@@ -1087,12 +1087,16 @@ class SyncStmt(BasicStmt):
         Process the Sync statement by returning a pyccel.types.ast object
         """
         trailer = self.trailer.expr
-        if len(trailer) > 1:
-            raise ValueError('Expecting at most 1 argument.')
 
-        master = None
-        if len(trailer) == 1:
+        master  = None
+        action  = None
+        options = []
+        if len(trailer) >= 1:
             master = trailer[0]
+        if len(trailer) >= 2:
+            action = trailer[1]
+        if len(trailer) >= 3:
+            options = trailer[2:]
 
         variables = [v.expr for v in self.variables]
         ls = []
@@ -1112,7 +1116,7 @@ class SyncStmt(BasicStmt):
 
         self.update()
 
-        return Sync(ls, master=master)
+        return Sync(ls, master=master, action=action, options=options)
 
 # TODO: improve by creating the corresponding object in pyccel.types.ast
 class PassStmt(BasicStmt):

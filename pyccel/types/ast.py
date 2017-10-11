@@ -1697,6 +1697,7 @@ class Del(Basic):
     def variables(self):
         return self._args[0]
 
+# TODO: use dict instead of list for options
 class Sync(Basic):
     """Represents a memory sync in the code.
 
@@ -1705,6 +1706,12 @@ class Sync(Basic):
 
     master: Basic
         a master object running sync
+
+    action: str
+        the action to apply in parallel (ex: 'reduce')
+
+    options: list
+        a list of additional options (ex: '+' in case of reduce)
 
     Examples
 
@@ -1717,10 +1724,16 @@ class Sync(Basic):
     Sync([x], master)
     """
 
-    def __new__(cls, expr, master=None):
+    def __new__(cls, expr, master=None, action=None, options=[]):
         if not iterable(expr):
             expr = Tuple(expr)
-        return Basic.__new__(cls, expr, master)
+        if action:
+            if not isinstance(action, str):
+                raise TypeError('Expecting a string')
+        if not isinstance(options, list):
+            raise TypeError('Expecting a list')
+
+        return Basic.__new__(cls, expr, master, action, options)
 
     @property
     def variables(self):
@@ -1729,6 +1742,14 @@ class Sync(Basic):
     @property
     def master(self):
         return self._args[1]
+
+    @property
+    def action(self):
+        return self._args[2]
+
+    @property
+    def options(self):
+        return self._args[3]
 
 
 class Comment(Basic):

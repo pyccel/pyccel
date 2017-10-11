@@ -10,8 +10,8 @@ comm = mpi_comm_world
 size = comm.size
 rank = comm.rank
 
-ntx = 64
-nty = 64
+ntx = 8
+nty = 8
 r_x = range(0, ntx)
 r_y = range(0, nty)
 
@@ -61,8 +61,9 @@ for it in range(0, n_iterations):
         u_error[i,j] = abs(u[i,j]-u_new[i,j])
     local_error = max(u_error)
 
-    global_error = 0.0
-    ierr = comm.allreduce (local_error, global_error, 'max')
+    #Reduction
+    global_error = local_error
+    sync(mesh, 'allreduce', 'max') global_error
 
     if global_error < tol:
         if rank == 0:
