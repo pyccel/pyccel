@@ -8,8 +8,8 @@ comm = mpi_comm_world
 size = comm.size
 rank = comm.rank
 
-ntx = 32
-nty = 32
+ntx = 128
+nty = 128
 r_x = range(0, ntx)
 r_y = range(0, nty)
 
@@ -42,7 +42,7 @@ for i,j in mesh:
 #Linear solver tolerance
 tol = 1.0e-10
 
-n_iterations = 10000
+n_iterations = 100000
 for it in range(0, n_iterations):
     u = u_new
 
