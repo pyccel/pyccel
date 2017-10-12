@@ -91,6 +91,8 @@ from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import mpi_definitions
 
+from pyccel.clapp.spl import spl_definitions
+
 DEBUG = False
 #DEBUG = True
 
@@ -1487,24 +1489,6 @@ class RangeStmt(BasicStmt):
         """
         Process the Range statement by returning a pyccel.types.ast object
         """
-#        if self.start in namespace:
-#            b = namespace[self.start]
-#        else:
-#            b = do_arg(self.start)
-#
-#        if self.end in namespace:
-#            e = namespace[self.end]
-#        else:
-#            e = do_arg(self.end)
-#
-#        if self.step is None:
-#            s = 1
-#        else:
-#            if self.step in namespace:
-#                s = namespace[self.step]
-#            else:
-#                s = do_arg(self.step)
-
         b = self.start.expr
         e = self.end.expr
         if self.step:
@@ -3119,8 +3103,9 @@ class ImportFromStmt(BasicStmt):
         elif isinstance(names, str):
             fil = str(names)
 
-        ns = self.import_as_names
-        funcs = str(ns)
+        funcs = self.import_as_names
+        if isinstance(funcs, ImportAsNames):
+            funcs = funcs.names
 
         if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
             ns, ds = mpi_definitions(namespace, declarations)
@@ -3128,4 +3113,25 @@ class ImportFromStmt(BasicStmt):
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
+        if str(fil) == 'spl.bspline':
+            fil = 'spl_m_bspline'
+            ns, ds = spl_definitions(namespace, declarations)
+            for k,v in ns.items():
+                namespace[k] = v
+            for k,v in ds.items():
+                declarations[k] = v
         return Import(fil, funcs)
+
+class ImportAsNames(BasicStmt):
+    """class representing import as names in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor
+
+        names: str
+            list of names
+        """
+        self.names = kwargs.pop('names')
+
+        super(ImportAsNames, self).__init__(**kwargs)

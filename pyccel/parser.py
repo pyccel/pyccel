@@ -2,7 +2,7 @@
 
 import os
 
-from pyccel.syntax import (Pyccel, ImportFromStmt, \
+from pyccel.syntax import (Pyccel, ImportFromStmt, ImportAsNames, \
                            ArithmeticExpression, Term, Atom, \
                            FactorSigned, AtomExpr, AtomExpr, Power, \
                            FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
@@ -205,7 +205,7 @@ class PyccelParser(Parser):
                    RangeStmt, \
                    IfStmt, ForStmt, WhileStmt, \
                    FunctionDefStmt, ClassDefStmt, \
-                   ImportFromStmt, \
+                   ImportFromStmt, ImportAsNames, \
                    CommentStmt, SuiteStmt, \
                    EvalStmt, \
                    # Multi-threading

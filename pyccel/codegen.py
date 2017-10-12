@@ -857,6 +857,10 @@ def build_file(filename, language, compiler, \
         pyccel_modules.append('mpi')
     # ...
 
+    # ... clapp environment
+    pyccel_modules += ['plaf', 'spl', 'disco', 'fema']
+    # ...
+
     # ...
     from pyccel.imports.utilities import find_imports
 
@@ -868,8 +872,23 @@ def build_file(filename, language, compiler, \
     for n in pyccel_modules:
         ignored_modules.append('pyccel.{0}'.format(n))
 
+    # TODO remove. for the moment we use 'from spl.bspline import *'
+    ignored_modules.append('spl')
+
+    # ...
+    def _ignore_module(key):
+        for i in ignored_modules:
+            if i == key:
+                return True
+            else:
+                n = len(i)
+                if i == key[:n]:
+                    return True
+        return False
+    # ...
+
     for key, value in d.items():
-        if not(key in ignored_modules):
+        if not _ignore_module(key):
             imports[key] = value
 
     ms = []
