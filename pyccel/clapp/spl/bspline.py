@@ -34,7 +34,7 @@ class SPL_EvalBasisFunsDers(FunctionCall):
     """
     def __new__(cls, p, m, U, uu, d, span, dN):
         args = (p, m, U, uu, d, span, dN)
-        return super(SPL_EvalBasisFunsDers, cls).__new__(cls, cls._name, args)
+        return super(SPL_EvalBasisFunsDers, cls).__new__(cls, cls._name, args, kind='procedure')
 
     @property
     def name(self):
