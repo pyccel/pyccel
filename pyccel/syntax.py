@@ -432,7 +432,7 @@ def get_attributs(expr):
     return d_var
 
 # TODO add kwargs
-def builtin_function(name, args, lhs=None):
+def builtin_function(name, args, lhs=None, op=None):
     """
     User friendly interface for builtin function calls.
 
@@ -442,6 +442,8 @@ def builtin_function(name, args, lhs=None):
         list of arguments
     lhs: str
         name of the variable to assign to
+    op: str
+        operation for AugAssign statement
     """
     # ...
     def get_arguments_zeros():
@@ -512,6 +514,20 @@ def builtin_function(name, args, lhs=None):
     # ...
 
     # ...
+    def assign(l, expr, op, strict=False, status=None, like=None):
+        if op is None:
+            return Assign(l, expr, \
+                          strict=strict, \
+                          status=status, \
+                          like=like)
+        else:
+            return AugAssign(l, op, expr, \
+                          strict=strict, \
+                          status=status, \
+                          like=like)
+    # ...
+
+    # ...
     if name in ["zeros", "ones"]:
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -557,7 +573,7 @@ def builtin_function(name, args, lhs=None):
             d_var['rank']     = 0
             insert_variable(lhs, **d_var)
             expr = Dot(*args)
-            return Assign(Symbol(lhs), expr)
+            return assign(lhs, expr, op)
     elif name in ['max', 'min']:
         func = eval(known_functions[name])
         if lhs is None:
@@ -569,7 +585,7 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(lhs, expr)
+            return assign(lhs, expr, op)
     elif name in ['mod']:
         func = eval(known_functions[name])
         if lhs is None:
@@ -581,7 +597,7 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(lhs, expr)
+            return assign(lhs, expr, op)
     elif name in builtin_funcs_math_un + ['len']:
         if not(len(args) == 1):
             raise ValueError("function takes exactly one argument")
@@ -600,7 +616,7 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(lhs, expr)
+            return assign(lhs, expr, op)
     elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):
             raise ValueError("function takes exactly two arguments")
@@ -615,7 +631,7 @@ def builtin_function(name, args, lhs=None):
             insert_variable(lhs, **d_var)
             lhs = namespace[lhs]
             expr = func(*args)
-            return Assign(lhs, expr)
+            return assign(lhs, expr, op)
     elif name == "range":
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -631,8 +647,8 @@ def builtin_function(name, args, lhs=None):
         insert_variable(lhs, **d_var)
         namespace[lhs] = Range(*args)
         lhs = namespace[lhs]
-        rhs = Range(*args)
-        return Assign(lhs, rhs, strict=False)
+        expr = Range(*args)
+        return assign(lhs, expr, op, strict=False)
     elif name == "tensor":
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -646,10 +662,10 @@ def builtin_function(name, args, lhs=None):
         d_var['rank']        = 0
 
         insert_variable(lhs, **d_var)
-        rhs = Tensor(*args, name=lhs)
-        namespace[lhs] = rhs
+        expr = Tensor(*args, name=lhs)
+        namespace[lhs] = expr
         lhs = namespace[lhs]
-        return Assign(lhs, rhs, strict=False)
+        return assign(lhs, expr, op, strict=False)
     elif name == "mpi_waitall":
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -1335,7 +1351,7 @@ class AugAssignStmt(BasicStmt):
             name = str(type(rhs).__name__)
             if name.lower() in builtin_funcs:
                 args = rhs.args
-                return builtin_function(name.lower(), args, lhs=var_name)
+                return builtin_function(name.lower(), args, lhs=var_name, op=op)
 
         found_var = (var_name in namespace)
         if not(found_var):

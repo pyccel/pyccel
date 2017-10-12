@@ -56,7 +56,7 @@ for it in range(0, n_iterations):
     #Computation of the global error
     u_error = 0.0
     for i,j in mesh:
-        u_error = u_error + abs(u[i,j]-u_new[i,j])
+        u_error += abs(u[i,j]-u_new[i,j])
     local_error = u_error/(ntx*nty)
 
     #Reduction
@@ -73,7 +73,7 @@ for it in range(0, n_iterations):
 #Computation of the global error
 u_error = 0.0
 for i,j in mesh:
-    u_error = u_error + abs(u[i,j]-u_exact[i,j])
+    u_error += abs(u[i,j]-u_exact[i,j])
 u_error = u_error/(ntx*nty)
 
 #Reduction
