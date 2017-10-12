@@ -565,12 +565,7 @@ class Range(sm_Range):
     """
 
     def __new__(cls, *args):
-        _args = []
-        for a in args[:-1]:
-            if isinstance(a, Symbol):
-                _args.append(1) # we set to 1, to avoid problems with step
-            else:
-                _args.append(a)
+        _args = [1, 1, 1]
         r = sm_Range.__new__(cls, *_args)
         r._args = args
 
@@ -586,10 +581,7 @@ class Range(sm_Range):
 
     @property
     def step(self):
-        if len(self._args) == 2:
-            return 1
-        else:
-            return self._args[2]
+        return self._args[2]
 
     @property
     def size(self):

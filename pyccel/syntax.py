@@ -1487,23 +1487,30 @@ class RangeStmt(BasicStmt):
         """
         Process the Range statement by returning a pyccel.types.ast object
         """
-        if self.start in namespace:
-            b = namespace[self.start]
-        else:
-            b = do_arg(self.start)
+#        if self.start in namespace:
+#            b = namespace[self.start]
+#        else:
+#            b = do_arg(self.start)
+#
+#        if self.end in namespace:
+#            e = namespace[self.end]
+#        else:
+#            e = do_arg(self.end)
+#
+#        if self.step is None:
+#            s = 1
+#        else:
+#            if self.step in namespace:
+#                s = namespace[self.step]
+#            else:
+#                s = do_arg(self.step)
 
-        if self.end in namespace:
-            e = namespace[self.end]
+        b = self.start.expr
+        e = self.end.expr
+        if self.step:
+            s = self.step.expr
         else:
-            e = do_arg(self.end)
-
-        if self.step is None:
             s = 1
-        else:
-            if self.step in namespace:
-                s = namespace[self.step]
-            else:
-                s = do_arg(self.step)
 
         return Range(b,e,s)
 

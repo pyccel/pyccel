@@ -1168,9 +1168,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Range(self, expr):
         start = self._print(expr.start)
-        stop  = self._print(expr.stop)
+        stop  = self._print(expr.stop-1)
         step  = self._print(expr.step)
-        return '{0}, {1}-1, {2}'.format(start, stop, step)
+        return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_Tile(self, expr):
         start = self._print(expr.start)
