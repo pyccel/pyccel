@@ -16,7 +16,7 @@ from sympy.core.function import Function
 from sympy.core.function import UndefinedFunction
 
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
-from pyccel.types.ast import Assign, Declare
+from pyccel.types.ast import Assign, Declare, AugAssign
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
@@ -27,6 +27,7 @@ from pyccel.types.ast import Zeros
 from pyccel.types.ast import Ones
 from pyccel.types.ast import Comment
 from pyccel.types.ast import EmptyLine
+from pyccel.types.ast import Print
 
 from pyccel.types.ast import For, While, If, Del, Sync
 from pyccel.types.ast import FunctionDef, ClassDef
@@ -2485,7 +2486,7 @@ class MPI_Tensor(MPI, Block, Tensor):
             # ...
             axis = 0
             rhs  = MPI_comm_cart_shift(axis, disp, \
-                                       neighbor[west], neighbor[east], \
+                                       neighbor[south], neighbor[north], \
                                        comm)
             stmt = MPI_Assign(ierr, rhs, strict=False)
             body.append(stmt)
@@ -2494,7 +2495,7 @@ class MPI_Tensor(MPI, Block, Tensor):
             # ...
             axis = 1
             rhs  = MPI_comm_cart_shift(axis, disp, \
-                                       neighbor[south], neighbor[north], \
+                                       neighbor[west], neighbor[east], \
                                        comm)
             stmt = MPI_Assign(ierr, rhs, strict=False)
             body.append(stmt)
@@ -2510,9 +2511,9 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... compute local ranges
-        starts = [r.start for r in tensor.ranges]
-        ends   = [r.stop  for r in tensor.ranges]
-        steps  = [r.step  for r in tensor.ranges]
+        starts = [r.start   for r in tensor.ranges]
+        ends   = [r.stop-1  for r in tensor.ranges]
+        steps  = [r.step    for r in tensor.ranges]
 
         d = {}
         labels = ['x','y','z'][:tensor.dim]
@@ -2530,14 +2531,13 @@ class MPI_Tensor(MPI, Block, Tensor):
                 n = _n+l
                 v    = Variable('int', _make_name(n))
                 rhs  = d[n]
-                if _n == 'e':
-                    rhs += 1  # +1 because of Range in Python
                 stmt = Assign(v, rhs)
                 variables.append(v)
                 body.append(stmt)
 
                 dd[n] = v
                 d_var[n] = v
+                if _n == 'e': dd[n] += 1
 
             args = [i[1] for i in dd.items()]
             r = Range(*args)
@@ -2553,11 +2553,16 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
 
         # ... derived types for communication over boundaries
-        ex = d_var['ex']
         sx = d_var['sx']
-        ey = d_var['ey']
+        ex = d_var['ex']
         sy = d_var['sy']
+        ey = d_var['ey']
 
+        body.append(If(((sx > 0), [AugAssign(sx,'+',1)])))
+        body.append(If(((sy > 0), [AugAssign(sy,'+',1)])))
+
+        args = (sx,ex,sy,ey)
+        body.append(Print(args))
 
         # Creation of the type_line derived datatype to exchange points
         # with northern to southern neighbours
@@ -2810,7 +2815,7 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         steps  = [r.step  for r in tensor.ranges]
 
         sx = starts[0] ; sy = starts[1]
-        ex = ends[0]  ; ey = ends[1]
+        ex = ends[0] - 1  ; ey = ends[1] - 1
 
         type_line   = tensor.types_bnd['line']
         type_column = tensor.types_bnd['column']
