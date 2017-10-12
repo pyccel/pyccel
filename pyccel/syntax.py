@@ -3113,8 +3113,8 @@ class ImportFromStmt(BasicStmt):
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
-        if str(fil) == 'spl.bspline':
-            fil = 'spl_m_bspline'
+        if str(fil) == 'spl.bsp':
+            fil = 'spl_m_bsp'
             ns, ds = spl_definitions(namespace, declarations)
             for k,v in ns.items():
                 namespace[k] = v

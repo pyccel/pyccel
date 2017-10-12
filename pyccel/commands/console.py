@@ -44,9 +44,15 @@ def pyccel():
                         help='enables verbose mode.')
     parser.add_argument('--analysis', action='store_true', \
                         help='enables code analysis mode.')
+    # TODO: remove local_vars later, by using Annotated Comments
     parser.add_argument('--local_vars', type=str, \
                         help='local variables on fast memory.')
-    # TODO: remove local_vars later, by using Annotated Comments
+    parser.add_argument('--include', type=str, \
+                        help='path to include directory.')
+    parser.add_argument('--libdir', type=str, \
+                        help='path to lib directory.')
+    parser.add_argument('--libs', type=str, \
+                        help='list of libraries to link with.')
     # ...
 
     # ...
@@ -79,14 +85,18 @@ def pyccel():
     verbose    = args.verbose
     show       = args.show
     analysis   = args.analysis
+    include    = args.include
+    libdir     = args.libdir
+    libs       = args.libs
     # ...
 
     # ...
     if not analysis:
         build_file(filename, language, compiler, \
-                execute=execute, accelerator=accelerator, \
-                debug=debug, verbose=verbose, show=show, \
-                name=None)
+                   execute=execute, accelerator=accelerator, \
+                   debug=debug, verbose=verbose, show=show, \
+                   name=None, include=include, \
+                   libdir=libdir, libs=libs)
     else:
         from pyccel.complexity.memory import MemComplexity
 
