@@ -2486,7 +2486,7 @@ class MPI_Tensor(MPI, Block, Tensor):
             # ...
             axis = 0
             rhs  = MPI_comm_cart_shift(axis, disp, \
-                                       neighbor[south], neighbor[north], \
+                                       neighbor[north], neighbor[south], \
                                        comm)
             stmt = MPI_Assign(ierr, rhs, strict=False)
             body.append(stmt)
@@ -2548,9 +2548,6 @@ class MPI_Tensor(MPI, Block, Tensor):
         # ...
         body.append(If(((d_var['sx'] > 0), [AugAssign(d_var['sx'],'+',1)])))
         body.append(If(((d_var['sy'] > 0), [AugAssign(d_var['sy'],'+',1)])))
-
-#        args = (sx,ex,sy,ey)
-#        body.append(Print(args))
         # ...
 
         # ...
@@ -2564,6 +2561,9 @@ class MPI_Tensor(MPI, Block, Tensor):
         ex = d_var['ex']
         sy = d_var['sy']
         ey = d_var['ey']
+
+#        args = (sx,ex,sy,ey)
+#        body.append(Print(args))
 
         # Creation of the type_line derived datatype to exchange points
         # with northern to southern neighbours
