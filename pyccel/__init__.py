@@ -11,3 +11,4 @@ from .complexity import *
 from .syntax     import *
 from .parser     import *
 from .codegen    import *
+from .clapp      import *

@@ -857,9 +857,8 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs.name)
             is_procedure = (expr.rhs.kind == 'procedure')
         elif isinstance(expr.rhs, FunctionCall):
-            func = expr.rhs.func
-            rhs_code = self._print(func.name)
-            is_procedure = (func.kind == 'procedure')
+            rhs_code = self._print(expr.rhs.name)
+            is_procedure = (expr.rhs.kind == 'procedure')
         else:
             rhs_code = self._print(expr.rhs)
 

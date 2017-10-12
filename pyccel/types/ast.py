@@ -905,25 +905,37 @@ class FunctionCall(Basic):
 
     It also serves as a constructor for undefined function classes.
 
-    func: FunctionDef
-        an instance of FunctionDef
+    func: FunctionDef, str
+        an instance of FunctionDef or function name
 
     arguments: list, tuple, None
         a list of arguments.
+
+    kind: str
+        'function' or 'procedure'. default value: 'function'
 
     Examples
 
     """
 
-    def __new__(cls, func, arguments):
-        if not isinstance(func, FunctionDef):
-            raise TypeError("Expecting func to be a FunctionDef")
+    def __new__(cls, func, arguments, kind='function'):
+        if not isinstance(func, (FunctionDef, str)):
+            raise TypeError("Expecting func to be a FunctionDef or str")
 
-        return Basic.__new__(cls, func, arguments)
+        if isinstance(func, FunctionDef):
+            kind = func.kind
+
+        if not isinstance(kind, str):
+            raise TypeError("Expecting a string for kind.")
+
+        if not (kind in ['function', 'procedure']):
+            raise ValueError("kind must be one among {'function', 'procedure'}")
+
+        return Basic.__new__(cls, func, arguments, kind)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        name = sstr(self.func.name)
+        name = sstr(self.name)
         args = ''
         if not(self.arguments) is None:
             args = ', '.join(sstr(i) for i in self.arguments)
@@ -936,6 +948,17 @@ class FunctionCall(Basic):
     @property
     def arguments(self):
         return self._args[1]
+
+    @property
+    def kind(self):
+        return self._args[2]
+
+    @property
+    def name(self):
+        if isinstance(self.func, FunctionDef):
+            return self.func.name
+        else:
+            return self.func
 
 class Variable(Symbol):
     """Represents a typed variable.
