@@ -698,7 +698,7 @@ class Compiler(object):
         Constructs compiling flags
         """
         # TODO use constructor and a dict to map flags w.r.t the compiler
-        _avail_compilers = ['gfortran', 'mpif90']
+        _avail_compilers = ['gfortran', 'mpif90', 'pgfortran']
 
         compiler    = self.compiler
         debug       = self.debug
