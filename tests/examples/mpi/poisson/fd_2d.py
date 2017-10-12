@@ -28,7 +28,6 @@ u       = zeros(mesh, double)
 u_new   = zeros(mesh, double)
 u_exact = zeros(mesh, double)
 f       = zeros(mesh, double)
-u_error = zeros(mesh, double)
 
 #Initialization
 x = 0.0
@@ -55,13 +54,14 @@ for it in range(0, n_iterations):
         u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
 
     #Computation of the global error
+    u_error = 0.0
     for i,j in mesh:
-        u_error[i,j] = abs(u[i,j]-u_new[i,j])
-    local_error = max(u_error)
+        u_error = u_error + abs(u[i,j]-u_new[i,j])
+    local_error = u_error/(ntx*nty)
 
     #Reduction
     global_error = local_error
-    sync(mesh, 'allreduce', 'max') global_error
+    sync(mesh, 'allreduce', '+') global_error
 
     if global_error < tol:
         if rank == 0:
@@ -70,11 +70,17 @@ for it in range(0, n_iterations):
             print ("global error = ", global_error)
         break
 
+#Computation of the global error
+u_error = 0.0
+for i,j in mesh:
+    u_error = u_error + abs(u[i,j]-u_exact[i,j])
+u_error = u_error/(ntx*nty)
+
+#Reduction
+sync(mesh, 'allreduce', '+') u_error
+
 if rank == 0:
-    for i,j in mesh:
-        u_error[i,j] = abs(u[i,j]-u_exact[i,j])
-    local_error = max(u_error)
-    print ("error of u_h - u_exact = ", local_error)
+    print ("error(u_h - u_exact) = ", u_error)
 
 del mesh
 ierr = mpi_finalize()

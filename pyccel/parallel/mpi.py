@@ -2816,7 +2816,7 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         steps  = [r.step  for r in tensor.ranges]
 
         sx = starts[0] ; sy = starts[1]
-        ex = ends[0] - 1  ; ey = ends[1] - 1
+        ex = ends[0]   ; ey = ends[1]
 
         type_line   = tensor.types_bnd['line']
         type_column = tensor.types_bnd['column']

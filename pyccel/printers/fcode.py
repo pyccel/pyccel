@@ -1238,19 +1238,28 @@ class FCodePrinter(CodePrinter):
                 'end do').format(test=self._print(expr.test),body=body)
 
     def _print_If(self, expr):
+        # ...
+        def _iprint(i):
+            if isinstance(i, Block):
+                _prelude, _body = self._print_Block(i)
+                return '{0}'.format(_body)
+            else:
+                return '{0}'.format(self._print(i))
+        # ...
+
         lines = []
         for i, (c, e) in enumerate(expr.args):
             if i == 0:
-                lines.append("if (%s) then" % self._print(c))
+                lines.append("if (%s) then" % _iprint(c))
             elif i == len(expr.args) - 1 and c == True:
                 lines.append("else")
             else:
-                lines.append("else if (%s) then" % self._print(c))
+                lines.append("else if (%s) then" % _iprint(c))
             if isinstance(e, list):
                 for ee in e:
-                    lines.append(self._print(ee))
+                    lines.append(_iprint(ee))
             else:
-                lines.append(self._print(e))
+                lines.append(_iprint(e))
         lines.append("end if")
         return "\n".join(lines)
 
