@@ -22,7 +22,7 @@ from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import DataType
 from pyccel.types.ast import DataTypeFactory
 from pyccel.types.ast import Block
-from pyccel.types.ast import Range, Tensor
+from pyccel.types.ast import Range, Tile, Tensor
 from pyccel.types.ast import Zeros
 from pyccel.types.ast import Ones
 from pyccel.types.ast import Comment
@@ -2537,13 +2537,20 @@ class MPI_Tensor(MPI, Block, Tensor):
 
                 dd[n] = v
                 d_var[n] = v
-                if _n == 'e': dd[n] += 1
 
             args = [i[1] for i in dd.items()]
-            r = Range(*args)
+            r = Tile(*args)
             ranges.append(r)
 
         cls._ranges = ranges
+        # ...
+
+        # ...
+        body.append(If(((d_var['sx'] > 0), [AugAssign(d_var['sx'],'+',1)])))
+        body.append(If(((d_var['sy'] > 0), [AugAssign(d_var['sy'],'+',1)])))
+
+#        args = (sx,ex,sy,ey)
+#        body.append(Print(args))
         # ...
 
         # ...
@@ -2557,12 +2564,6 @@ class MPI_Tensor(MPI, Block, Tensor):
         ex = d_var['ex']
         sy = d_var['sy']
         ey = d_var['ey']
-
-        body.append(If(((sx > 0), [AugAssign(sx,'+',1)])))
-        body.append(If(((sy > 0), [AugAssign(sy,'+',1)])))
-
-        args = (sx,ex,sy,ey)
-        body.append(Print(args))
 
         # Creation of the type_line derived datatype to exchange points
         # with northern to southern neighbours

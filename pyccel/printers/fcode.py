@@ -1167,35 +1167,36 @@ class FCodePrinter(CodePrinter):
         outputs = ', '.join(self._print(i) for i in expr.lhs)
         return 'call {0} ({1}, {2})'.format(func, args, outputs)
 
+    def _print_Range(self, expr):
+        start = self._print(expr.start)
+        stop  = self._print(expr.stop)
+        step  = self._print(expr.step)
+        return '{0}, {1}-1, {2}'.format(start, stop, step)
+
+    def _print_Tile(self, expr):
+        start = self._print(expr.start)
+        stop  = self._print(expr.stop)
+        return '{0}, {1}'.format(start, stop)
+
     # TODO iterators
     def _print_For(self, expr):
         prolog = ''
         epilog = ''
 
+        # ...
         def _do_range(target, iter, prolog, epilog):
             if not isinstance(iter, Range):
-                raise NotImplementedError("Only iterable currently supported is Range")
+                msg = "Only iterable currently supported is Range"
+                raise NotImplementedError(msg)
 
-            tar   = self._print(target)
-            start = self._print(iter.start)
-            # decrement stop by 1 because of the python convention
-            stop  = self._print(iter.stop-1)
-            step  = self._print(iter.step)
+            tar        = self._print(target)
+            range_code = self._print(iter)
 
-            prolog += 'do {0} = {1}, {2}, {3}\n'.format(tar, start, stop, step)
+            prolog += 'do {0} = {1}\n'.format(tar, range_code)
             epilog += 'end do\n'
 
             return prolog, epilog
-
-        if not isinstance(expr.iterable, (Range, Tensor, MPI_Tensor)):
-            txt = "Only iterable currently supported are Range, Tensor and MPI_Tensor"
-            raise NotImplementedError(txt)
-
-        if isinstance(expr.iterable, Range):
-            prolog, epilog = _do_range(expr.target[0], expr.iterable, prolog, epilog)
-        elif isinstance(expr.iterable, (Tensor, MPI_Tensor)):
-            for i,a in zip(expr.target, expr.iterable.ranges):
-                prolog, epilog = _do_range(i, a, prolog, epilog)
+        # ...
 
         # ...
         def _iprint(i):
@@ -1205,6 +1206,19 @@ class FCodePrinter(CodePrinter):
             else:
                 return '{0}'.format(self._print(i))
         # ...
+
+        if not isinstance(expr.iterable, (Range, Tensor, MPI_Tensor)):
+            msg  = "Only iterable currently supported are Range, "
+            msg += "Tensor and MPI_Tensor"
+            raise NotImplementedError(msg)
+
+        if isinstance(expr.iterable, Range):
+            prolog, epilog = _do_range(expr.target[0], expr.iterable, \
+                                       prolog, epilog)
+        elif isinstance(expr.iterable, (Tensor, MPI_Tensor)):
+            for i,a in zip(expr.target, expr.iterable.ranges):
+                prolog, epilog = _do_range(i, a, \
+                                           prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
 
