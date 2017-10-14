@@ -88,6 +88,13 @@ def pyccel():
     include    = args.include
     libdir     = args.libdir
     libs       = args.libs
+
+    if not include:
+        include = []
+    if not libdir:
+        libdir = []
+    if not libs:
+        libs = []
     # ...
 
     # ...
