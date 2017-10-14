@@ -835,6 +835,12 @@ def DataTypeFactory(name, argnames, BaseClass=DataType):
     newclass = type('Pyccel'+name, (BaseClass,),{"__init__": __init__})
     return newclass
 
+def is_pyccel_datatype(expr):
+    if not isinstance(expr, DataType):
+        raise TypeError('Expecting a DataType instance')
+    name = expr.__class__.__name__
+    return name.startswith('Pyccel')
+
 # TODO check the use of floats
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.

@@ -21,6 +21,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 from pyccel.types.ast import AddOp, MulOp, SubOp, DivOp
+from pyccel.types.ast import DataType, is_pyccel_datatype
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
@@ -1096,7 +1097,11 @@ class FCodePrinter(CodePrinter):
         code = ''
         for var in expr.variables:
             if isinstance(var, Variable):
-                code = 'deallocate({0}){1}'.format(self._print(var), code)
+                dtype = var.dtype
+                if is_pyccel_datatype(dtype):
+                    code = 'call {0} % free()'.format(self._print(var))
+                else:
+                    code = 'deallocate({0}){1}'.format(self._print(var), code)
             elif isinstance(var, MPI_Tensor):
                 stmts = var.free_statements()
                 for stmt in stmts:
