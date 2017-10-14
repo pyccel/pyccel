@@ -241,35 +241,6 @@ class DottedName(Basic):
         sstr = printer.doprint
         return '.'.join(sstr(n) for n in self.name)
 
-class DottedVariable(Basic):
-    """
-    Represents a dotted variable.
-
-    Examples
-
-    >>> from pyccel.types.ast import DottedVariable
-    >>> DottedVariable('matrix', 'n_rows')
-    matrix.n_rows
-    >>> from pyccel.types.ast import DataTypeFactory
-    >>> Matrix = DataTypeFactory('matrix', ("_name"))
-    >>> matrix = Matrix()
-    >>> DottedVariable(matrix, 'n_rows')
-    Pyccelmatrix().n_rows
-    """
-    def __new__(cls, *args):
-        return Basic.__new__(cls, *args)
-
-    @property
-    def name(self):
-        return self._args
-
-    def __str__(self):
-        return '.'.join(print(n) for n in self.name)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '.'.join(sstr(n) for n in self.name)
-
 class Assign(Basic):
     """Represents variable assignment for code generation.
 
@@ -1046,14 +1017,14 @@ class Variable(Symbol):
         return self._args[5]
 
     def __str__(self):
-        if isinstance(self.name, str):
-            return self.name
+        if isinstance(self.name, (str, DottedName)):
+            return str(self.name)
         else:
             return '.'.join(print(n) for n in self.name)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        if isinstance(self.name, str):
+        if isinstance(self.name, (str, DottedName)):
             return '{}'.format(sstr(self.name))
         else:
             return '.'.join(sstr(n) for n in self.name)

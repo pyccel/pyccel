@@ -820,9 +820,9 @@ def insert_variable(var_name, \
 
     if var_name in namespace:
         namespace.pop(var_name)
-        declarations.pop(var_name)
+        declarations.pop(var_name, None)
 
-    namespace[var_name]    = var
+    namespace[var_name] = var
     if to_declare:
         declarations[var_name] = dec
 
@@ -909,10 +909,15 @@ def expr_with_trailer(expr, trailer=None):
             expr = DottedName(expr, args)
 
             obj  = expr.name[0]
-            attr = expr.name[-1]
             base = obj.cls_base
             if isinstance(base, MPI):
+                attr = expr.name[-1]
                 expr = eval('MPI_comm_{0}'.format(attr))(obj)
+            else:
+                attr = get_class_attribut(expr)
+                d_var = get_attributs(expr)
+                insert_variable(expr, **d_var)
+                expr = namespace[expr]
     return expr
 # ...
 
@@ -1511,12 +1516,6 @@ class MultiAssignStmt(BasicStmt):
 #                print "                     : ", d_var
 
                 d_var['allocatable'] = not(d_var['shape'] is None)
-#                if d_var['shape']:
-#                    if DEBUG:
-#                        print "> Found an unallocated variable: ", var_name
-#                    status = 'unallocated'
-#                    like   = allocatable_like(rhs)
-#                    print ">>>> Found variable : ", like
                 insert_variable(var_name, **d_var)
         return MultiAssign(lhs, rhs)
 
@@ -1630,7 +1629,6 @@ class ForStmt(BasicStmt):
                 raise TypeError('Expecting an Iterable')
             r = namespace[self.range]
         else:
-            print ">>>> ", type(self.range)
             raise TypeError('Expecting an Iterable')
 
         self.update()
@@ -1826,9 +1824,7 @@ class Atom(ExpressionElement):
         Process the atom, by returning a sympy atom
         """
         if DEBUG:
-#        if True:
             print "> Atom "
-            print self.op, type(self.op)
 
         op = self.op
         if op in ['shape']:
@@ -2038,7 +2034,6 @@ class ReturnStmt(FlowStmt):
 
             if var_name in namespace:
                 var = namespace[var_name]
-#                print var_name, var
                 if isinstance(var, (Variable,IndexedElement,IndexedVariable)): # TODO intent must be out => result
                     res = (Variable(var.dtype, var_name, \
                                    rank=var.rank, \
@@ -2988,7 +2983,6 @@ class ExecStmt(BasicStmt):
                             shape=shape)
 
             var = namespace[l]
-#            print type(r)
             if isinstance(r, ndarray):
                 stmt = Array(var, r, shape)
             else:

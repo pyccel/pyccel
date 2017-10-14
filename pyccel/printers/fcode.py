@@ -202,16 +202,10 @@ class FCodePrinter(CodePrinter):
         return '(/ {0} /)'.format(fs)
 
     def _print_Variable(self, expr):
-        name = expr.name
-        return self._print(name)
-
-    def _print_DottedVariable(self, expr):
-        name = expr.name
-        return ' % '.join(self._print(n) for n in name)
+        return self._print(expr.name)
 
     def _print_DottedName(self, expr):
-        name = expr.name
-        return ' % '.join(self._print(n) for n in name)
+        return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Stencil(self, expr):
         lhs_code = self._print(expr.lhs)
