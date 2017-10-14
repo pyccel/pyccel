@@ -151,7 +151,14 @@ class FCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_Module(self, expr):
-        return '\n\n'.join(self._print(i) for i in expr.body)
+        name    = self._print(expr.name)
+        decs    = '\n'.join(self._print(i) for i in expr.declarations)
+        body    = '\n'.join(self._print(i) for i in expr.body)
+
+        prelude = 'module {0}\n'.format(name)
+        epilog  = 'end module {0}\n'.format(name)
+
+        return '{0}\n{1}contains\n{2}\n{3}'.format(prelude, decs, body, epilog)
 
     def _print_Import(self, expr):
         fil = self._print(expr.fil)

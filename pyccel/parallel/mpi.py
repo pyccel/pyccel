@@ -2766,7 +2766,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         code = 'MPI_Tensor ([{0}], [{1}])'.format(variables, body)
         return code
 
-class MPI_Tensor_NEW(MPI, Tensor, ClassDef):
+class MPI_Tensor_NEW(Tensor, ClassDef):
     """
     Represents a Tensor object using MPI.
 
@@ -3494,7 +3494,7 @@ MPI_STATUS_SIZE = MPI_status_size()
 MPI_PROC_NULL   = MPI_proc_null()
 
 # ...
-def mpi_definitions(namespace, declarations):
+def mpi_definitions(namespace, declarations, cls_constructs):
     """Adds MPI functions and constants to the namespace
 
     namespace: dict
@@ -3502,7 +3502,11 @@ def mpi_definitions(namespace, declarations):
 
     declarations: dict
         dictorionary containing all declarations.
+
+    cls_constructs: dict
+        dictionary of datatypes of classes using DatatypeFactory
     """
+    # TODO implement MPI_Init and Finalize classes like in clapp/plaf/matrix.py
     # ...
     namespace['mpi_comm_world']  = MPI_COMM_WORLD
     namespace['mpi_status_size'] = MPI_STATUS_SIZE
@@ -3563,6 +3567,15 @@ def mpi_definitions(namespace, declarations):
         namespace[f_name] = stmt
     # ...
 
-    return namespace, declarations
+    # ...
+    classes = ['MPI_Tensor_NEW']
+    for i in classes:
+        name = 'pcl_t_{0}'.format(i.lower())
+        cls_constructs[name] = DataTypeFactory(i, ("_name"))
+
+        namespace[name] = eval(i)()
+    # ...
+
+    return namespace, declarations, cls_constructs
 # ...
 

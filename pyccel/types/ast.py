@@ -685,6 +685,86 @@ class Block(Basic):
     def declarations(self):
         return [Declare(i.dtype, i) for i in self.variables]
 
+class Module(Basic):
+    """Represents a block in the code. A block consists of the following inputs
+
+    variables: list
+        list of the variables that appear in the block.
+
+    declarations: list
+        list of declarations of the variables that appear in the block.
+
+    funcs: list
+        a list of FunctionDef instances
+
+    classes: list
+        a list of ClassDef instances
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable, Assign
+    >>> from pyccel.types.ast import ClassDef, FunctionDef, Module
+    >>> x = Variable('double', 'x')
+    >>> y = Variable('double', 'y')
+    >>> a = Variable('double', 'a')
+    >>> translate = FunctionDef('translate', [x,a], [y], [Assign(y,x+a)])
+    >>> attributs   = [x]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributs, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> Module('my_module', [], [incr, decr], [Point])
+    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x,), (FunctionDef(translate, (x, a), (y,), [y := a + x], [], [], None, False, function),), [public])])
+    """
+
+    def __new__(cls, name, variables, funcs, classes):
+        if not isinstance(name, str):
+            raise TypeError('name must be a string')
+
+        if not iterable(variables):
+            raise TypeError("variables must be an iterable")
+        for i in variables:
+            if not isinstance(i, Variable):
+                raise TypeError("Only a Variable instance is allowed.")
+
+        if not iterable(funcs):
+            raise TypeError("funcs must be an iterable")
+        for i in funcs:
+            if not isinstance(i, FunctionDef):
+                raise TypeError("Only a FunctionDef instance is allowed.")
+
+        if not iterable(classes):
+            raise TypeError("classes must be an iterable")
+        for i in classes:
+            if not isinstance(i, ClassDef):
+                raise TypeError("Only a ClassDef instance is allowed.")
+
+        return Basic.__new__(cls, name, variables, funcs, classes)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def variables(self):
+        return self._args[1]
+
+    @property
+    def funcs(self):
+        return self._args[2]
+
+    @property
+    def classes(self):
+        return self._args[3]
+
+    @property
+    def declarations(self):
+        return [Declare(i.dtype, i) for i in self.variables]
+
+    @property
+    def body(self):
+        return self.funcs + self.classes
+
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -1066,20 +1146,18 @@ class FunctionDef(Basic):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
-    >>> from sympy import symbols
     >>> from pyccel.types.ast import Assign, Variable, FunctionDef
-    >>> n,x,y = symbols('n,x,y')
-    >>> args        = [Variable('float', x), Variable('int', n)]
-    >>> results     = [Variable('float', y)]
-    >>> body        = [Assign(y,x+n)]
-    >>> local_vars  = []
-    >>> global_vars = []
-    >>> FunctionDef('f', args, results, body, local_vars, global_vars)
-    FunctionDef(f, (x, n), (y,), [y := n + x], [], [])
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> args        = [x]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+1)]
+    >>> FunctionDef('incr', args, results, body)
+    FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
     """
 
     def __new__(cls, name, arguments, results, \
-                body, local_vars, global_vars, \
+                body, local_vars=[], global_vars=[], \
                 cls_name=None, hide=False, kind='function'):
         # name
         if isinstance(name, str):
@@ -1175,20 +1253,16 @@ class ClassDef(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Assign, Variable, FunctionDef, ClassDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> n = Variable('int', 'n')
-    >>> args        = [x, n]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+n)]
-    >>> f = FunctionDef('f', args, results, body, [], [])
-    >>> n_rows = Variable('int', 'n_rows')
-    >>> n_cols = Variable('int', 'n_cols')
-    >>> attributs   = [n_rows, n_cols]
-    >>> methods     = [f]
-    >>> ClassDef('Matrix', attributs, methods)
-    ClassDef(Matrix, (n_rows, n_cols), (FunctionDef(f, (x, n), (y,), [y := n + x], [], []),))
+    >>> from pyccel.types.ast import Variable, Assign
+    >>> from pyccel.types.ast import ClassDef, FunctionDef
+    >>> x = Variable('double', 'x')
+    >>> y = Variable('double', 'y')
+    >>> a = Variable('double', 'a')
+    >>> translate = FunctionDef('translate', [x,a], [y], [Assign(y,x+a)])
+    >>> attributs   = [x]
+    >>> methods     = [translate]
+    >>> ClassDef('Point', attributs, methods)
+    ClassDef(Point, (x,), (FunctionDef(translate, (x, a), (y,), [y := a + x], [], [], None, False, function),), [public])
     """
 
     def __new__(cls, name, attributs, methods, options=['public']):

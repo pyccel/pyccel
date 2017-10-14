@@ -104,9 +104,6 @@ DEBUG = False
 # TODO set to None
 DEFAULT_TYPE = 'double'
 
-# TODO pass to the Parser
-MPI_ENABLED = True
-
 known_functions = {
     "abs": "Abs",
 #    "asin": "asin",
@@ -3166,14 +3163,19 @@ class ImportFromStmt(BasicStmt):
         if isinstance(funcs, ImportAsNames):
             funcs = funcs.names
 
+        # TODO improve
         if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
-            ns, ds = mpi_definitions(namespace, declarations)
+            funcs = ['*']
+            ns, ds, cs = mpi_definitions(namespace, declarations, cls_constructs)
             for k,v in ns.items():
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
-        if str(fil) == 'spl.bsp':
-            fil = 'spl_m_bsp'
+            for k,v in cs.items():
+                cls_constructs[k] = v
+        if str(fil).startswith('spl.'):
+            module = str(fil).split('plaf.')[-1]
+            fil = 'spl_m_{}'.format(module.lower())
             ns, ds = spl_definitions(namespace, declarations)
             for k,v in ns.items():
                 namespace[k] = v
@@ -3189,6 +3191,7 @@ class ImportFromStmt(BasicStmt):
                 declarations[k] = v
             for k,v in cs.items():
                 cls_constructs[k] = v
+        print_namespace()
         return Import(fil, funcs)
 
 class ImportAsNames(BasicStmt):
