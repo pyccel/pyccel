@@ -91,7 +91,10 @@ from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import mpi_definitions
 
-from pyccel.clapp.spl import spl_definitions
+from pyccel.clapp.spl  import spl_definitions
+from pyccel.clapp.plaf import plaf_definitions
+from pyccel.clapp.plaf import Matrix_dns
+from pyccel.clapp.plaf import Matrix_dns_create
 
 DEBUG = False
 #DEBUG = True
@@ -174,11 +177,7 @@ builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
 # ...
 
 # ... will contain user defined types
-custom_types   = {}
-
-# TODO MPI
-#custom_types['Communicator'] = Communicator
-# ...
+cls_constructs   = {}
 
 # ... builtin functions
 builtin_funcs_math_un = ['abs', \
@@ -800,6 +799,8 @@ def expr_with_trailer(expr, trailer=None):
 
                 args += [comm]
                 expr = eval('MPI_comm_{0}'.format(func))(*args)
+            else:
+                raise TypeError("Expecting MPI class based")
         else:
             raise ValueError('Unable to construct expr from trailers.')
         return expr
@@ -819,6 +820,12 @@ def expr_with_trailer(expr, trailer=None):
         name = str(expr)
         if name in builtin_funcs_math + ['len']:
             expr = builtin_function(name, args)
+        elif name in cls_constructs:
+            cls = cls_constructs[name]()
+            ctype = cls_constructs[name]().__class__.__name__
+            cls = str(ctype).split('Pyccel')[-1]
+            cls = eval('{0}_create'.format(cls))
+            expr = FunctionCall(cls(), args)
         else:
             if len(args) > 0:
                 expr = Function(str(expr))(*args)
@@ -1272,6 +1279,7 @@ class AssignStmt(BasicStmt):
 
         found_var = (var_name in namespace)
         if not(found_var):
+            print "PAR ICI"
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
@@ -2066,7 +2074,7 @@ class FunctionDefStmt(BasicStmt):
 
             # insert self to namespace
             d_var = {}
-            dtype = custom_types[cls_instance]()
+            dtype = cls_constructs[cls_instance]()
             d_var['datatype']    = dtype
             d_var['allocatable'] = False
             d_var['shape']       = None
@@ -3012,7 +3020,7 @@ class ClassHeaderStmt(BasicStmt):
     @property
     def expr(self):
         # create a new Datatype for the current class
-        custom_types[self.name] = DataTypeFactory(self.name, ("_name"))
+        cls_constructs[self.name] = DataTypeFactory(self.name, ("_name"))
 
         h = ClassHeader(self.name, self.options)
         headers[self.name] = h
@@ -3120,6 +3128,15 @@ class ImportFromStmt(BasicStmt):
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
+        if str(fil) == 'plaf.matrix_dns':
+            fil = 'plf_m_matrix_dns'
+            ns, ds, cs = plaf_definitions(namespace, declarations, cls_constructs)
+            for k,v in ns.items():
+                namespace[k] = v
+            for k,v in ds.items():
+                declarations[k] = v
+            for k,v in cs.items():
+                cls_constructs[k] = v
         return Import(fil, funcs)
 
 class ImportAsNames(BasicStmt):

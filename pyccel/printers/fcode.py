@@ -63,6 +63,9 @@ from pyccel.parallel.mpi import MPI_MIN, MPI_MAX
 from pyccel.parallel.mpi import MPI_Tensor
 from pyccel.parallel.mpi import MPI_TensorCommunication
 
+from pyccel.clapp.plaf import Matrix_dns
+from pyccel.clapp.plaf import Matrix_dns_create
+
 
 # TODO: add examples
 # TODO: use _get_statement when returning a string
@@ -875,6 +878,7 @@ class FCodePrinter(CodePrinter):
             code += '{0} = {1}'.format(lhs_code, rhs_code)
         else:
             code_args = ''
+            func = expr.rhs
             if (not func.arguments is None) and (len(func.arguments) > 0):
                 code_args = ', '.join(self._print(i) for i in func.arguments)
                 code_args = '{0},{1}'.format(code_args, lhs_code)
@@ -933,9 +937,16 @@ class FCodePrinter(CodePrinter):
         return '.false.'
 
     def _print_DataType(self, expr):
-        name = expr.__class__.__name__
-        name = name.split('Pyccel')[-1]
-        return 'class({0})'.format(name)
+        c_name = expr.__class__.__name__
+
+        name = c_name.split('Pyccel')[-1]
+        if len(name) > 0:
+            cls = eval('{0}'.format(name))()
+            name = str(cls.dtype)
+        else:
+            raise NotImplementedError('Only Pyccel DataType is available')
+
+        return 'type({0})'.format(name)
 
     def _print_Equality(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))

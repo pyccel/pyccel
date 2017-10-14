@@ -777,7 +777,8 @@ class Compiler(object):
         is_module = self.codegen.is_module
         modules   = self.codegen.modules
 
-        ignored_modules = ['plaf', 'spl', 'disco', 'fema']
+        ignored_modules  = ['plaf', 'spl', 'disco', 'fema']
+        ignored_modules += ['plf', 'dsc', 'jrk']
         # ...
         def _ignore_module(key):
             for i in ignored_modules:
@@ -939,7 +940,13 @@ def build_file(filename, language, compiler, \
         ignored_modules.append('pyccel.{0}'.format(n))
 
     # TODO remove. for the moment we use 'from spl.bspline import *'
+    ignored_modules.append('plaf')
+    ignored_modules.append('plf')
     ignored_modules.append('spl')
+    ignored_modules.append('disco')
+    ignored_modules.append('dsc')
+    ignored_modules.append('fema')
+    ignored_modules.append('jrk')
 
     # ...
     def _ignore_module(key):
