@@ -17,6 +17,7 @@ Welcome to Pyccel's documentation!
    openacc
    mpi
    tbp
+   clapp
    analysis
 
 Indices and tables
