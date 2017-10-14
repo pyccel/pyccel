@@ -35,6 +35,7 @@ from sympy.logic.boolalg import BooleanFunction
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import DottedVariable
+from pyccel.types.ast import is_pyccel_datatype
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeBool, NativeFloat
@@ -696,7 +697,8 @@ def insert_variable(var_name, \
                     shape=None, \
                     intent=None, \
                     var=None, \
-                    cls_base=None):
+                    cls_base=None, \
+                    to_declare=True):
     """
     Inserts a variable as a symbol into the namespace. Appends also its
     declaration and the corresponding variable.
@@ -724,6 +726,9 @@ def insert_variable(var_name, \
 
     cls_base: class
         class base if variable is an object or an object member
+
+    to_declare:
+        declare the variable if True.
     """
     if type(var_name) in [int, float]:
         return
@@ -735,11 +740,42 @@ def insert_variable(var_name, \
                 .format(datatype, rank, allocatable, shape, intent)
         print txt
 
-    if not isinstance(var_name, str):
+    if not isinstance(var_name, (str, DottedName)):
         raise TypeError("Expecting a string for var_name.")
 
-    if var_name in namespace:
-        var = namespace[var_name]
+    if isinstance(var_name, str):
+        if var_name in namespace:
+            var = namespace[var_name]
+    elif isinstance(var_name, DottedName):
+        parent = var_name.name[0]
+        if not(parent in namespace):
+            raise ValueError('Undefined object {0}'.format(parent))
+        if len(var_name.name) > 2:
+            raise ValueError('Only one level access is available.')
+
+        attr_name = str(var_name.name[1])
+        cls = namespace[parent]
+        if not isinstance(cls, Variable):
+            raise TypeError("Expecting a Variable")
+        if not is_pyccel_datatype(cls.dtype):
+            raise TypeError("Expecting a Pyccel DataType instance")
+
+        cls = str(cls.dtype).split('Pyccel')[-1]
+        cls = eval('{0}'.format(cls))
+        if not isinstance(cls, ClassDef):
+            raise TypeError("Expecting a ClassDef")
+
+        attr_names = [str(i.name) for i in cls.attributs]
+        attributs  = {}
+        for i in cls.attributs:
+            attributs[str(i.name)] = i
+        if not (attr_name in attr_names):
+            raise ValueError("Undefined attribut {}".format(attr_name))
+
+        var = attributs[attr_name]
+        to_declare = False
+
+    if var:
         if datatype is None:
             datatype = var.dtype
         if rank is None:
@@ -764,7 +800,8 @@ def insert_variable(var_name, \
         declarations.pop(var_name)
 
     namespace[var_name]    = var
-    declarations[var_name] = dec
+    if to_declare:
+        declarations[var_name] = dec
 
 # ...
 def expr_with_trailer(expr, trailer=None):
@@ -815,7 +852,6 @@ def expr_with_trailer(expr, trailer=None):
         if name in builtin_funcs_math + ['len']:
             expr = builtin_function(name, args)
         elif name in cls_constructs:
-            cls = cls_constructs[name]()
             ctype = cls_constructs[name]().__class__.__name__
             cls = str(ctype).split('Pyccel')[-1]
             cls = eval('{0}_create'.format(cls))
@@ -1257,13 +1293,16 @@ class AssignStmt(BasicStmt):
         like     = None
 
         var_name = self.lhs
+
         trailer  = None
         args     = None
         if self.trailer:
             trailer = self.trailer.args
             args    = self.trailer.expr
             if isinstance(trailer, TrailerDots):
-                var_name = '{0}.{1}'.format(self.lhs, args)
+                if not iterable(args):
+                    args = Tuple(args)
+                var_name = DottedName(self.lhs, *args)
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)

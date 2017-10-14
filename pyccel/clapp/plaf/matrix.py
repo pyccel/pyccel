@@ -93,14 +93,14 @@ class Matrix_dns(ClassDef):
         n_block_cols = Variable('int', 'n_block_cols')
 
         # TODO defined as arr_a or arr_c if using complex numbers
-        _data = 'arr_a'
-        data = Variable('double', _data, \
+        arr_a = 'arr_a'
+        arr_a = Variable('double', arr_a, \
                         rank=1, shape=(n_rows, n_cols), \
                         allocatable=True)
         # ...
 
         # ...
-        attributs = [n_rows, n_cols, n_block_rows, n_block_cols, data]
+        attributs = [n_rows, n_cols, n_block_rows, n_block_cols, arr_a]
         methods   = [Matrix_dns_create]
 
         options     = ['public']

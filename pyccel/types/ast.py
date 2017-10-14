@@ -1007,8 +1007,11 @@ class Variable(Symbol):
             name = name.split('.')
             if len(name) == 1:
                 name = name[0]
-        if not isinstance(name, (str, list, tuple)):
-            raise TypeError("Expecting a string or list/tuple of strings.")
+            else:
+                name = DottedName(*name)
+
+        if not isinstance(name, (str, DottedName)):
+            raise TypeError("Expecting a string or DottedName.")
 
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
