@@ -815,11 +815,12 @@ class Compiler(object):
 
         m_code = ' '.join('{}.o '.format(m) for m in modules)
 
-        # TODO remove .a from here
         if isinstance(libs, str):
             libs = [libs]
         if len(libs) > 0:
             libs = ' '.join(' -l{0}'.format(i) for i in libs)
+        else:
+            libs = ''
 
         cmd = '{0} {1} {2} {3} {4} {5} {6}'.format( \
             compiler, flags, m_code, filename, o_code, binary, libs)
