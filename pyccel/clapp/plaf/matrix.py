@@ -42,8 +42,7 @@ class Matrix_dns_create(FunctionDef):
 
         # ...
         dtype = DataTypeFactory('Matrix_dns', ("_name"))()
-        var_name = 'var_%d' % abs(hash(name))
-        var      = Variable(dtype, var_name)
+        var      = Variable(dtype, 'self')
 
         results     = [var]
         # ...
@@ -156,8 +155,7 @@ class Matrix_csr_create(FunctionDef):
 
         # ...
         dtype = DataTypeFactory('Matrix_csr', ("_name"))()
-        var_name = 'var_%d' % abs(hash(name))
-        var      = Variable(dtype, var_name)
+        var = Variable(dtype, 'self')
 
         results     = [var]
         # ...
@@ -280,8 +278,7 @@ class Matrix_csc_create(FunctionDef):
 
         # ...
         dtype = DataTypeFactory('Matrix_csc', ("_name"))()
-        var_name = 'var_%d' % abs(hash(name))
-        var      = Variable(dtype, var_name)
+        var      = Variable(dtype, 'self')
 
         results     = [var]
         # ...
@@ -409,8 +406,7 @@ class Matrix_bnd_create(FunctionDef):
 
         # ...
         dtype = DataTypeFactory('Matrix_bnd', ("_name"))()
-        var_name = 'var_%d' % abs(hash(name))
-        var      = Variable(dtype, var_name)
+        var = Variable(dtype, 'self')
 
         results     = [var]
         # ...
@@ -527,8 +523,7 @@ class Matrix_coo_create(FunctionDef):
 
         # ...
         dtype = DataTypeFactory('Matrix_coo', ("_name"))()
-        var_name = 'var_%d' % abs(hash(name))
-        var      = Variable(dtype, var_name)
+        var = Variable(dtype, 'self')
 
         results     = [var]
         # ...

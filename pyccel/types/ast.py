@@ -1157,6 +1157,10 @@ class FunctionDef(Basic):
     def kind(self):
         return self._args[8]
 
+    def print_body(self):
+        for s in self.body:
+            print (s)
+
 class ClassDef(Basic):
     """Represents a class definition.
 
@@ -1854,6 +1858,10 @@ class Comment(Basic):
     @property
     def text(self):
         return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '# {0}'.format(sstr(self.text))
 
 class AnnotatedComment(Basic):
     """Represents a Annotated Comment in the code.
