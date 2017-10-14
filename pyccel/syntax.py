@@ -95,6 +95,8 @@ from pyccel.clapp.spl  import spl_definitions
 from pyccel.clapp.plaf import plaf_definitions
 from pyccel.clapp.plaf import Matrix_dns
 from pyccel.clapp.plaf import Matrix_dns_create
+from pyccel.clapp.plaf import Matrix_csr
+from pyccel.clapp.plaf import Matrix_csr_create
 
 DEBUG = False
 #DEBUG = True
@@ -3177,8 +3179,9 @@ class ImportFromStmt(BasicStmt):
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
-        if str(fil) == 'plaf.matrix_dns':
-            fil = 'plf_m_matrix_dns'
+        if str(fil).startswith('plaf.'):
+            module = str(fil).split('plaf.')[-1]
+            fil = 'plf_m_{}'.format(module.lower())
             ns, ds, cs = plaf_definitions(namespace, declarations, cls_constructs)
             for k,v in ns.items():
                 namespace[k] = v

@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from pyccel.clapp.plaf import Matrix_dns
+from pyccel.clapp.plaf import (Matrix_dns, Matrix_csr, Matrix_csc, \
+                               Matrix_bnd, Matrix_coo)
 
 from pyccel.types.ast import DataTypeFactory
 
@@ -25,7 +26,8 @@ def plaf_definitions(namespace, declarations, cls_constructs):
 #        atom = eval('{0}'.format(i))
 #        namespace[f] = atom()
 
-    classes = ['Matrix_dns']
+    classes = ['Matrix_dns', 'Matrix_csr', 'Matrix_csc', \
+               'Matrix_bnd', 'Matrix_coo']
     for i in classes:
         name = 'plf_t_{0}'.format(i.lower())
         cls_constructs[name] = DataTypeFactory(i, ("_name"))

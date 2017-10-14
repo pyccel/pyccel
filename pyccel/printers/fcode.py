@@ -66,6 +66,8 @@ from pyccel.parallel.mpi import MPI_TensorCommunication
 
 from pyccel.clapp.plaf import Matrix_dns
 from pyccel.clapp.plaf import Matrix_dns_create
+from pyccel.clapp.plaf import Matrix_csr
+from pyccel.clapp.plaf import Matrix_csr_create
 
 
 # TODO: add examples
@@ -876,14 +878,18 @@ class FCodePrinter(CodePrinter):
             func = expr.rhs
             # func here is of instance FunctionCall
             cls_name = func.func.cls_name
+            keys = func.func.arguments
             if (not cls_name) and \
                (not func.arguments is None) and \
                (len(func.arguments) > 0):
                 code_args = ', '.join(self._print(i) for i in func.arguments)
                 code_args = '{0}, {1}'.format(code_args, lhs_code)
             else:
-                code_args = ', '.join(self._print(i) for i in func.arguments)
-#                code_args = lhs_code
+                _ij_print = lambda i,j: '{0}={1}'.format(self._print(i), \
+                                                         self._print(j))
+
+                code_args = ', '.join(_ij_print(i,j) \
+                                      for i,j in zip(keys, func.arguments))
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
