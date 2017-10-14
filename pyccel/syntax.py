@@ -34,7 +34,6 @@ from sympy.logic.boolalg import BooleanFunction
 
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
-from pyccel.types.ast import DottedVariable
 from pyccel.types.ast import is_pyccel_datatype
 from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
@@ -274,21 +273,21 @@ def get_attributs(expr):
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
-    elif isinstance(expr, DottedVariable):
-        comm = expr.name[0]
-        attr = expr.name[-1]
-        base = comm.cls_base
-        if not isinstance(base, MPI):
-            raise TypeError("Expecting MPI instance")
-
-        dtype = base.dtype(attr)
-
-        d_var['datatype']    = dtype
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-        d_var['cls_base']    = None
-        return d_var
+#    elif isinstance(expr, DottedVariable):
+#        comm = expr.name[0]
+#        attr = expr.name[-1]
+#        base = comm.cls_base
+#        if not isinstance(base, MPI):
+#            raise TypeError("Expecting MPI instance, given ", base)
+#
+#        dtype = base.dtype(attr)
+#
+#        d_var['datatype']    = dtype
+#        d_var['allocatable'] = False
+#        d_var['shape']       = None
+#        d_var['rank']        = 0
+#        d_var['cls_base']    = None
+#        return d_var
     elif isinstance(expr, MPI):
         if expr.is_integer:
             d_var['datatype']    = 'int'
@@ -298,6 +297,17 @@ def get_attributs(expr):
         d_var['shape']       = None
         d_var['rank']        = 0
         d_var['cls_base']    = MPI_COMM_WORLD
+        return d_var
+    elif isinstance(expr, DottedName):
+        var    = get_class_attribut(expr)
+        parent = str(expr.name[0])
+
+        d_var['datatype']    = var.dtype
+        d_var['allocatable'] = var.allocatable
+        d_var['shape']       = var.shape
+        d_var['rank']        = var.rank
+
+        d_var['cls_base']    = namespace[parent]
         return d_var
     elif isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
@@ -689,7 +699,45 @@ def builtin_function(name, args, lhs=None, op=None):
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
+# ...
 
+# ...
+def get_class_attribut(name):
+    """
+    Returns the attribut (if exists) of a class providing a DottedName.
+
+    name: DottedName
+        a class attribut
+    """
+    parent = str(name.name[0])
+    if not(parent in namespace):
+        raise ValueError('Undefined object {0}'.format(parent))
+    if len(name.name) > 2:
+        raise ValueError('Only one level access is available.')
+
+    attr_name = str(name.name[1])
+    cls = namespace[parent]
+    if not isinstance(cls, Variable):
+        raise TypeError("Expecting a Variable")
+    if not is_pyccel_datatype(cls.dtype):
+        raise TypeError("Expecting a Pyccel DataType instance")
+
+    cls = str(cls.dtype).split('Pyccel')[-1]
+    cls = eval('{0}'.format(cls))
+    if not isinstance(cls, ClassDef):
+        raise TypeError("Expecting a ClassDef")
+
+    attr_names = [str(i.name) for i in cls.attributs]
+    attributs  = {}
+    for i in cls.attributs:
+        attributs[str(i.name)] = i
+    if not (attr_name in attr_names):
+        raise ValueError("Undefined attribut {}".format(attr_name))
+
+    return attributs[attr_name]
+# ...
+
+# ...
 def insert_variable(var_name, \
                     datatype=None, \
                     rank=None, \
@@ -747,32 +795,7 @@ def insert_variable(var_name, \
         if var_name in namespace:
             var = namespace[var_name]
     elif isinstance(var_name, DottedName):
-        parent = var_name.name[0]
-        if not(parent in namespace):
-            raise ValueError('Undefined object {0}'.format(parent))
-        if len(var_name.name) > 2:
-            raise ValueError('Only one level access is available.')
-
-        attr_name = str(var_name.name[1])
-        cls = namespace[parent]
-        if not isinstance(cls, Variable):
-            raise TypeError("Expecting a Variable")
-        if not is_pyccel_datatype(cls.dtype):
-            raise TypeError("Expecting a Pyccel DataType instance")
-
-        cls = str(cls.dtype).split('Pyccel')[-1]
-        cls = eval('{0}'.format(cls))
-        if not isinstance(cls, ClassDef):
-            raise TypeError("Expecting a ClassDef")
-
-        attr_names = [str(i.name) for i in cls.attributs]
-        attributs  = {}
-        for i in cls.attributs:
-            attributs[str(i.name)] = i
-        if not (attr_name in attr_names):
-            raise ValueError("Undefined attribut {}".format(attr_name))
-
-        var = attributs[attr_name]
+        var = get_class_attribut(var_name)
         to_declare = False
 
     if var:
@@ -883,15 +906,13 @@ def expr_with_trailer(expr, trailer=None):
         else:
             if not(expr.name in namespace):
                 raise ValueError("Undefined variable {}".format(expr.name))
-            expr = DottedVariable(expr, args)
+            expr = DottedName(expr, args)
 
             obj  = expr.name[0]
             attr = expr.name[-1]
             base = obj.cls_base
             if isinstance(base, MPI):
                 expr = eval('MPI_comm_{0}'.format(attr))(obj)
-            else:
-                expr = DottedVariable(expr, args)
     return expr
 # ...
 
