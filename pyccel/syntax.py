@@ -1331,8 +1331,7 @@ class AssignStmt(BasicStmt):
                 args = rhs.args
                 return builtin_function(name.lower(), args, lhs=var_name)
 
-        found_var = (var_name in namespace)
-        if not(found_var):
+        if isinstance(var_name, str) and not(var_name in namespace):
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
@@ -1352,8 +1351,11 @@ class AssignStmt(BasicStmt):
                 v = namespace[str(self.lhs)]
                 l = IndexedVariable(v.name, dtype=v.dtype)[args]
             elif isinstance(trailer, TrailerDots):
-                # class attribut
-                l = namespace[var_name]
+                # check that class attribut exists
+                attr = get_class_attribut(var_name)
+                if attr is None:
+                    raise ValueError('Undefined attribut')
+                l = var_name
             else:
                 raise TypeError("Expecting SubscriptList or Dot")
 

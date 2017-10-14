@@ -1719,10 +1719,11 @@ class ZerosLike(Basic):
     """
     # TODO improve in the spirit of assign
     def __new__(cls, lhs, rhs):
-        lhs   = sympify(lhs)
-
+        if isinstance(lhs, str):
+            lhs = Symbol(lhs)
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, \
+                      Indexed, Idx, Variable)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
 
