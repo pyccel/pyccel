@@ -791,12 +791,6 @@ def expr_with_trailer(expr, trailer=None):
                         d_var['cls_base']    = MPI_comm()
 
                         insert_variable(newcomm, **d_var)
-
-#                        COMM = MPI_comm(newcomm)
-#
-#                        namespace[newcomm]    = COMM
-#                        declarations[newcomm] = MPI_Declare('int', COMM)
-
                 args += [comm]
                 expr = eval('MPI_comm_{0}'.format(func))(*args)
             else:
@@ -1279,7 +1273,6 @@ class AssignStmt(BasicStmt):
 
         found_var = (var_name in namespace)
         if not(found_var):
-            print "PAR ICI"
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var

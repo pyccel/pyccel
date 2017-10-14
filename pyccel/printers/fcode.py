@@ -865,6 +865,9 @@ class FCodePrinter(CodePrinter):
             is_procedure = (expr.rhs.kind == 'procedure')
         elif isinstance(expr.rhs, FunctionCall):
             rhs_code = self._print(expr.rhs.name)
+            cls_name = expr.rhs.func.cls_name
+            if cls_name:
+                rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
             is_procedure = (expr.rhs.kind == 'procedure')
         else:
             rhs_code = self._print(expr.rhs)
@@ -879,11 +882,16 @@ class FCodePrinter(CodePrinter):
         else:
             code_args = ''
             func = expr.rhs
-            if (not func.arguments is None) and (len(func.arguments) > 0):
+            # func here is of instance FunctionCall
+            cls_name = func.func.cls_name
+            if (not cls_name) and \
+               (not func.arguments is None) and \
+               (len(func.arguments) > 0):
                 code_args = ', '.join(self._print(i) for i in func.arguments)
-                code_args = '{0},{1}'.format(code_args, lhs_code)
+                code_args = '{0}, {1}'.format(code_args, lhs_code)
             else:
-                code_args = lhs_code
+                code_args = ', '.join(self._print(i) for i in func.arguments)
+#                code_args = lhs_code
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 

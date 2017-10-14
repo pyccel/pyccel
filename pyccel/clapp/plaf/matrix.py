@@ -52,12 +52,13 @@ class Matrix_dns_create(FunctionDef):
         local_vars  = []
         global_vars = []
         hide        = False
-        kind = 'procedure'
+        kind        = 'procedure'
+        cls_name    = '__UNDEFINED__'
         # ...
 
         return FunctionDef.__new__(cls, name, args, results, \
                                    body, local_vars, global_vars, \
-                                   hide=hide, kind=kind)
+                                   hide=hide, kind=kind, cls_name=cls_name)
 
     @property
     def name(self):
