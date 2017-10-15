@@ -428,7 +428,7 @@ def get_attributs(expr):
             if not(len(results) == 1):
                 raise ValueError("Expecting a function with one return.")
 
-            var = results[0][0]
+            var = results[0]
             d_var['datatype']    = var.dtype
             d_var['allocatable'] = var.allocatable
             d_var['rank']        = var.rank
@@ -2053,7 +2053,6 @@ class ReturnStmt(FlowStmt):
             list of variables to return, as pyccel.types.ast objects
         """
         self.variables = kwargs.pop('variables')
-        self.results   = None
 
         super(ReturnStmt, self).__init__(**kwargs)
 
@@ -2062,42 +2061,44 @@ class ReturnStmt(FlowStmt):
         """
         Process the return flow statement
         """
-        self.update()
+        return [e.expr for e in self.variables]
 
-        decs = []
-        # TODO depending on additional options from the grammar
-        # TODO check that var is in namespace
-        k=1
-        for var_var in self.variables:
-            var_expr=var_var.expr
-            var_name=str(var_expr)
-
-            if var_name in namespace:
-                var = namespace[var_name]
-                if isinstance(var, (Variable,IndexedElement,IndexedVariable)): # TODO intent must be out => result
-                    res = (Variable(var.dtype, var_name, \
-                                   rank=var.rank, \
-                                   allocatable=var.allocatable, \
-                                   shape=var.shape),None)
-                else:
-                    # TODO is it correct? raise?
-                    datatype = var.datatype
-                    res = Variable(datatype, var_name)
-            elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
-                var_d=get_attributs(var_expr)
-                res = (Variable(var_d['datatype'],\
-                               'result_%s'%abs(hash(str(var_d['datatype'])+str(k))), \
-                                   rank=var_d['rank'], \
-                                   allocatable=var_d['allocatable'], \
-                                   shape=var_d['shape']),var_expr)
-                k=k+1
-            else:
-                raise()
-
-            decs.append(res)
-
-        self.results = decs
-        return Result(decs)
+#        self.update()
+#
+#        decs = []
+#        # TODO depending on additional options from the grammar
+#        # TODO check that var is in namespace
+#        k=1
+#        for var_var in self.variables:
+#            var_expr=var_var.expr
+#            var_name=str(var_expr)
+#
+#            if var_name in namespace:
+#                var = namespace[var_name]
+#                if isinstance(var, (Variable,IndexedElement,IndexedVariable)): # TODO intent must be out => result
+#                    res = (Variable(var.dtype, var_name, \
+#                                   rank=var.rank, \
+#                                   allocatable=var.allocatable, \
+#                                   shape=var.shape),None)
+#                else:
+#                    # TODO is it correct? raise?
+#                    datatype = var.datatype
+#                    res = Variable(datatype, var_name)
+#            elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
+#                var_d=get_attributs(var_expr)
+#                res = (Variable(var_d['datatype'],\
+#                               'result_%s'%abs(hash(str(var_d['datatype'])+str(k))), \
+#                                   rank=var_d['rank'], \
+#                                   allocatable=var_d['allocatable'], \
+#                                   shape=var_d['shape']),var_expr)
+#                k=k+1
+#            else:
+#                raise()
+#
+#            decs.append(res)
+#
+#        self.results = decs
+#        return Result(decs)
 
 class RaiseStmt(FlowStmt):
     """Base class representing a Raise statement in the grammar."""
@@ -2213,8 +2214,7 @@ class FunctionDefStmt(BasicStmt):
         results = []
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
-                results += stmt.results
-
+                results += stmt.expr
         # ...
 
         # ... cleaning the namespace

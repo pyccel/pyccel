@@ -1035,7 +1035,8 @@ class FCodePrinter(CodePrinter):
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
                     # TODO improve
-                    if not(str(stmt.variables[0].name) == str(result.name)):
+                    var = stmt.variables[0]
+                    if not(str(var.name) == str(result.name)):
                         decs.append(stmt)
                 elif isinstance(stmt,Result):
                     for i,j in stmt.result_variables:
@@ -1044,6 +1045,7 @@ class FCodePrinter(CodePrinter):
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 
+#            print (type(result), result)
             ret_type = self._print(result.dtype)
 
             func_type = 'function'
