@@ -3494,8 +3494,10 @@ MPI_STATUS_SIZE = MPI_status_size()
 MPI_PROC_NULL   = MPI_proc_null()
 
 # ...
-def mpi_definitions(namespace, declarations, cls_constructs):
+def mpi_definitions():
     """Adds MPI functions and constants to the namespace
+
+    Returns
 
     namespace: dict
         dictorionary containing all declared variables/functions/classes.
@@ -3506,6 +3508,10 @@ def mpi_definitions(namespace, declarations, cls_constructs):
     cls_constructs: dict
         dictionary of datatypes of classes using DatatypeFactory
     """
+    namespace      = {}
+    declarations   = {}
+    cls_constructs = {}
+
     # TODO implement MPI_Init and Finalize classes like in clapp/plaf/matrix.py
     # ...
     namespace['mpi_comm_world']  = MPI_COMM_WORLD

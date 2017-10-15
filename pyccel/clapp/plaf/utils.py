@@ -8,8 +8,10 @@ from pyccel.clapp.plaf import (Matrix_dns, Matrix_csr, Matrix_csc, \
 from pyccel.types.ast import DataTypeFactory
 
 # ...
-def plaf_definitions(namespace, declarations, cls_constructs):
+def plaf_definitions():
     """Adds PLAF functions, classes and constants to the namespace
+
+    Returns
 
     namespace: dict
         dictionary containing all declared variables/functions/classes.
@@ -21,6 +23,10 @@ def plaf_definitions(namespace, declarations, cls_constructs):
         dictionary of datatypes of classes using DatatypeFactory
 
     """
+    namespace      = {}
+    declarations   = {}
+    cls_constructs = {}
+
 #    func_defs = []
 #    for i in func_defs:
 #        atom = eval('{0}'.format(i))

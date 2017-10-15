@@ -981,41 +981,6 @@ def build_file(filename, language, compiler, \
     modules = codegen.modules
     # ...
 
-    # ...
-    def _create_pyccel_module():
-        c_name = 'Point'
-#        alias  = 'pcl_t_'+c_name.lower()
-        alias  = None
-        c_dtype = DataTypeFactory(c_name, ("_name"), \
-                                  prefix='Custom', \
-                                  alias=alias)()
-        this = Variable(c_dtype, 'self')
-        x = Variable('double', DottedName('self', 'x'))
-        y = Variable('double', DottedName('self', 'y'))
-        a = Variable('double', 'a')
-        b = Variable('double', 'b')
-        body = [Assign(x,x+a), Assign(y,y+b)]
-        translate = FunctionDef('translate', [this, a,b], [], body)
-
-        x = Variable('double', 'x')
-        y = Variable('double', 'y')
-        attributs   = [x,y]
-        methods     = [translate]
-        Point = ClassDef(c_name, attributs, methods)
-
-        x = Variable('double', 'x')
-        y = Variable('double', 'y')
-        incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-        decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-
-        variables = []
-#            funcs     = [incr, decr]
-        funcs     = []
-        classes   = [Point]
-
-        return Module('m_pyccel', variables, funcs, classes)
-    # ...
-
     # ...
     if single_file:
         # ... TODO improve

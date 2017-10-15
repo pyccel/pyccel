@@ -91,6 +91,7 @@ from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
 from pyccel.parallel.mpi import mpi_definitions
 
+from pyccel.stdlib     import stdlib_definitions
 from pyccel.clapp.spl  import spl_definitions
 from pyccel.clapp.plaf import plaf_definitions
 from pyccel.clapp.plaf import Matrix_dns
@@ -171,6 +172,7 @@ namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
 
+
 # ... builtin types
 builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
 # ...
@@ -206,10 +208,11 @@ def print_namespace():
     print "-------- namespace --------"
     for key, value in namespace.items():
         if not(key in ['True', 'False', 'pi']):
-            if isinstance(value, Variable):
-                print key, type(value), value.rank #, id(value)
-            else:
-                print key, type(value)
+            print key, type(value)
+#            if isinstance(value, Variable):
+#                print key, type(value), value.rank #, id(value)
+#            else:
+#                print key, type(value)
     print "---------------------------"
 # ...
 
@@ -1003,14 +1006,16 @@ class Pyccel(object):
         """
         self.statements = kwargs.pop('statements', [])
 
-        # ... reset global variables
-        namespace    = {}
-        headers      = {}
-        declarations = {}
-
-        namespace["True"]  = true
-        namespace["False"] = false
-        namespace["pi"]    = pi
+        # ...
+        ns, ds, cs, stmts = stdlib_definitions()
+        for k,v in ns.items():
+            namespace[k] = v
+        for k,v in ds.items():
+            declarations[k] = v
+        for k,v in cs.items():
+            cls_constructs[k] = v
+        self.extra_stmts = stmts
+        print_namespace()
         # ...
 
     @property
@@ -3166,7 +3171,7 @@ class ImportFromStmt(BasicStmt):
         # TODO improve
         if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
             funcs = ['*']
-            ns, ds, cs = mpi_definitions(namespace, declarations, cls_constructs)
+            ns, ds, cs = mpi_definitions()
             for k,v in ns.items():
                 namespace[k] = v
             for k,v in ds.items():
@@ -3176,7 +3181,7 @@ class ImportFromStmt(BasicStmt):
         if str(fil).startswith('spl.'):
             module = str(fil).split('plaf.')[-1]
             fil = 'spl_m_{}'.format(module.lower())
-            ns, ds = spl_definitions(namespace, declarations)
+            ns, ds = spl_definitions()
             for k,v in ns.items():
                 namespace[k] = v
             for k,v in ds.items():
@@ -3184,7 +3189,7 @@ class ImportFromStmt(BasicStmt):
         if str(fil).startswith('plaf.'):
             module = str(fil).split('plaf.')[-1]
             fil = 'plf_m_{}'.format(module.lower())
-            ns, ds, cs = plaf_definitions(namespace, declarations, cls_constructs)
+            ns, ds, cs = plaf_definitions()
             for k,v in ns.items():
                 namespace[k] = v
             for k,v in ds.items():
