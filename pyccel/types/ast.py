@@ -1968,7 +1968,7 @@ class Comment(Basic):
 
     >>> from pyccel.types.ast import Comment
     >>> Comment('this is a comment')
-    Comment(this is a comment)
+    # this is a comment
     """
 
     def __new__(cls, text):
@@ -1981,6 +1981,24 @@ class Comment(Basic):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return '# {0}'.format(sstr(self.text))
+
+class SeparatorComment(Comment):
+    """Represents a Separator Comment in the code.
+
+    mark : str
+        marker
+
+    Examples
+
+    >>> from pyccel.types.ast import SeparatorComment
+    >>> SeparatorComment(n=40)
+    # ........................................
+    """
+
+    def __new__(cls, n):
+        text = "."*n
+        return Comment.__new__(cls, text)
+
 
 class AnnotatedComment(Basic):
     """Represents a Annotated Comment in the code.

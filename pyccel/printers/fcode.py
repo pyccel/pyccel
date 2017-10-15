@@ -23,6 +23,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from pyccel.types.ast import AddOp, MulOp, SubOp, DivOp
 from pyccel.types.ast import DataType, is_pyccel_datatype
 from pyccel.types.ast import ClassDef
+from pyccel.types.ast import SeparatorComment
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
@@ -156,8 +157,12 @@ class FCodePrinter(CodePrinter):
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
 
         prelude = ('module {0}\n'
-                   'implicit none\n').format(name)
-        epilog  = 'end module {0}\n'.format(name)
+                   'implicit none').format(name)
+        epilog  = 'end module {0}'.format(name)
+
+        sep = self._print(SeparatorComment(40))
+        prelude = '{0}\n{1}'.format(sep, prelude)
+        epilog  = '{0}\n{1}\n'.format(epilog, sep)
 
         body = ''
         for i in expr.body:
