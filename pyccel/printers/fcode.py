@@ -24,6 +24,7 @@ from pyccel.types.ast import AddOp, MulOp, SubOp, DivOp
 from pyccel.types.ast import DataType, is_pyccel_datatype
 from pyccel.types.ast import ClassDef
 from pyccel.types.ast import SeparatorComment
+from pyccel.types.ast import ConstructorCall
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
@@ -884,6 +885,17 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
             is_procedure = (expr.rhs.kind == 'procedure')
+        elif isinstance(expr.rhs, ConstructorCall):
+            func = expr.rhs.func
+            name = str(func.name)
+            if name == "__init__":
+                name = "create"
+            rhs_code = self._print(name)
+            rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
+            is_procedure = (expr.rhs.kind == 'procedure')
+
+            code_args = ', '.join(self._print(i) for i in expr.rhs.arguments[1:])
+            return 'call {0}({1})'.format(rhs_code, code_args)
         elif isinstance(expr.rhs, FunctionCall):
             rhs_code = self._print(expr.rhs.name)
             cls_name = expr.rhs.func.cls_name

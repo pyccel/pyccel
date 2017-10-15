@@ -14,14 +14,15 @@ def Point_definitions():
 
     # ... classes
     this = Variable(c_dtype(), 'self')
-    print 'codegen = ', this.dtype
 
     #     methods
     #     - __init__
     x = Variable('double', DottedName('self', 'x'))
     y = Variable('double', DottedName('self', 'y'))
-    body = [Assign(x,0), Assign(y,0)]
-    create = FunctionDef('__init__', [this], [], body)
+    a = Variable('double', 'a')
+    b = Variable('double', 'b')
+    body = [Assign(x,a), Assign(y,b)]
+    create = FunctionDef('__init__', [this, a, b], [], body)
 
     #     - translate
     x = Variable('double', DottedName('self', 'x'))

@@ -379,11 +379,11 @@ def get_attributs(expr):
         this = expr.this
         # this datatype is polymorphic
         dtype = this.dtype
-        # remove Pyccel from name
-        name = dtype.name
-        name = name.replace('Pyccel', '')
-        dtype = DataTypeFactory(name, ("_name"), \
-                                prefix=dtype.prefix, \
+        # remove Pyccel from prefix
+        prefix = dtype.prefix
+        prefix = prefix.replace('Pyccel', '')
+        dtype = DataTypeFactory(dtype.name, ("_name"), \
+                                prefix=prefix, \
                                 alias=dtype.alias, \
                                 is_polymorphic=False)()
 
