@@ -3,7 +3,8 @@ n=100
 
 #$ header f(double)
 def f(x):
-    return 1.0/(1.0 + x*x)
+    y = 1.0/(1.0 + x*x)
+    return y
 
 #TODO fix h is processed as int
 h = 1.0/n
