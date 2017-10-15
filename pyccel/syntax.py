@@ -3191,7 +3191,6 @@ class ImportFromStmt(BasicStmt):
                 declarations[k] = v
             for k,v in cs.items():
                 cls_constructs[k] = v
-        print_namespace()
         return Import(fil, funcs)
 
 class ImportAsNames(BasicStmt):

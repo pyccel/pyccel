@@ -7,7 +7,7 @@ from sympy.core import Tuple
 from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
-from pyccel.types.ast import DataType
+from pyccel.types.ast import DataType, DataTypeFactory
 from pyccel.types.ast import (Range, Tensor, Block, \
                               For, Assign, Declare, Variable, \
                               NativeRange, NativeTensor, \
@@ -983,16 +983,23 @@ def build_file(filename, language, compiler, \
 
     # ...
     def _create_pyccel_module():
+        c_name = 'Point'
+#        alias  = 'pcl_t_'+c_name.lower()
+        alias  = None
+        c_dtype = DataTypeFactory(c_name, ("_name"), \
+                                  prefix='Custom', \
+                                  alias=alias)()
+        this = Variable(c_dtype, 'self')
         x = Variable('double', DottedName('self', 'x'))
         y = Variable('double', DottedName('self', 'y'))
         a = Variable('double', 'a')
         b = Variable('double', 'b')
-        this = Variable('double', 'self')
         body = [Assign(x,x+a), Assign(y,y+b)]
         translate = FunctionDef('translate', [this, a,b], [], body)
+
         attributs   = [x,y]
         methods     = [translate]
-        Point = ClassDef('Point', attributs, methods)
+        Point = ClassDef(c_name, attributs, methods)
 
         x = Variable('double', 'x')
         y = Variable('double', 'y')

@@ -825,8 +825,11 @@ class For(Basic):
 
 class DataType(with_metaclass(Singleton, Basic)):
     """Base class representing native datatypes"""
-    pass
+    _name = '__UNDEFINED__'
 
+    @property
+    def name(self):
+        return self._name
 
 class NativeBool(DataType):
     _name = 'Bool'
@@ -860,6 +863,10 @@ class NativeTensor(DataType):
     _name = 'Tensor'
     pass
 
+class CustomDataType(DataType):
+    _name = '__UNDEFINED__'
+    pass
+
 
 Bool = NativeBool()
 Int = NativeInteger()
@@ -877,7 +884,10 @@ dtype_registry = {'bool': Bool,
                   'void': Void}
 
 
-def DataTypeFactory(name, argnames, BaseClass=DataType):
+def DataTypeFactory(name, argnames=["_name"], \
+                    BaseClass=CustomDataType, \
+                    prefix='Pyccel', \
+                    alias=None):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             # here, the argnames variable is the one passed to the
@@ -887,14 +897,19 @@ def DataTypeFactory(name, argnames, BaseClass=DataType):
                     % (key, self.__class__.__name__))
             setattr(self, key, value)
         BaseClass.__init__(self, name[:-len("Class")])
-    newclass = type('Pyccel'+name, (BaseClass,),{"__init__": __init__})
+
+    newclass = type(prefix + name, (BaseClass,), \
+                    {"__init__": __init__, \
+                     "prefix":   prefix, \
+                     "alias":    alias})
     return newclass
 
 def is_pyccel_datatype(expr):
-    if not isinstance(expr, DataType):
-        raise TypeError('Expecting a DataType instance')
-    name = expr.__class__.__name__
-    return name.startswith('Pyccel')
+    return isinstance(expr, CustomDataType)
+#    if not isinstance(expr, DataType):
+#        raise TypeError('Expecting a DataType instance')
+#    name = expr.__class__.__name__
+#    return name.startswith('Pyccel')
 
 # TODO check the use of floats
 def datatype(arg):
@@ -1242,6 +1257,11 @@ class FunctionDef(Basic):
     def print_body(self):
         for s in self.body:
             print (s)
+
+#    @property
+#    def declarations(self):
+#        ls = self.arguments + self.results + self.local_vars
+#        return [Declare(i.dtype, i) for i in ls]
 
     def rename(self, newname):
         """

@@ -965,16 +965,19 @@ class FCodePrinter(CodePrinter):
         return '.false.'
 
     def _print_DataType(self, expr):
-        c_name = expr.__class__.__name__
+        return self._print(expr.name)
 
-        name = c_name.split('Pyccel')[-1]
-        if len(name) > 0:
-            cls = eval('{0}'.format(name))()
-            name = str(cls.dtype)
+    def _print_CustomDataType(self, expr):
+        name   = expr.__class__.__name__
+        prefix = expr.prefix
+        alias  = expr.alias
+
+        if alias is None:
+            name = name.replace('Pyccel', '')
+            name = name.replace(prefix, '')
         else:
-            raise NotImplementedError('Only Pyccel DataType is available')
-
-        return 'type({0})'.format(name)
+            name = alias
+        return 'type({0})'.format(str(name))
 
     def _print_Equality(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
@@ -1072,6 +1075,9 @@ class FCodePrinter(CodePrinter):
             func_type = 'subroutine'
 
             names = [str(res.name) for res,i in expr.results]
+            decs += [Declare(i.dtype, i) for i in expr.arguments]
+#            decs += [Declare(i.dtype, i) for i in expr.arguments + expr.local_vars]
+
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
