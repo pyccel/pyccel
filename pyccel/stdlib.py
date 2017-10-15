@@ -7,23 +7,23 @@ from pyccel.types.ast import Variable, FunctionDef, ClassDef, Module
 # ...
 def Point_definitions():
     c_name = 'Point'
-#    alias  = 'pcl_t_'+c_name.lower()
     alias  = None
     c_dtype = DataTypeFactory(c_name, ("_name"), \
                               prefix='Custom', \
                               alias=alias)
 
     # ... classes
+    this = Variable(c_dtype(), 'self')
+    print 'codegen = ', this.dtype
+
     #     methods
     #     - __init__
-    this = Variable(c_dtype(), 'self')
     x = Variable('double', DottedName('self', 'x'))
     y = Variable('double', DottedName('self', 'y'))
     body = [Assign(x,0), Assign(y,0)]
     create = FunctionDef('__init__', [this], [], body)
 
     #     - translate
-    this = Variable(c_dtype(), 'self')
     x = Variable('double', DottedName('self', 'x'))
     y = Variable('double', DottedName('self', 'y'))
     a = Variable('double', 'a')

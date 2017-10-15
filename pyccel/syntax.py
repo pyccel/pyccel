@@ -377,7 +377,17 @@ def get_attributs(expr):
         return d_var
     elif isinstance(expr, ConstructorCall):
         this = expr.this
-        d_var['datatype']    = this.dtype
+        # this datatype is polymorphic
+        dtype = this.dtype
+        # remove Pyccel from name
+        name = dtype.name
+        name = name.replace('Pyccel', '')
+        dtype = DataTypeFactory(name, ("_name"), \
+                                prefix=dtype.prefix, \
+                                alias=dtype.alias, \
+                                is_polymorphic=False)()
+
+        d_var['datatype']    = dtype
         d_var['allocatable'] = this.allocatable
         d_var['shape']       = this.shape
         d_var['rank']        = this.rank
@@ -901,6 +911,8 @@ def expr_with_trailer(expr, trailer=None):
             for i in cls.methods:
                 methods[str(i.name)] = i
             method = methods['__init__']
+            this = cls.this
+            args = [this] + list(args)
             expr = ConstructorCall(method, args)
         else:
             if len(args) > 0:

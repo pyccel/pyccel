@@ -1364,11 +1364,12 @@ class ClassDef(Basic):
     @property
     def this(self):
         alias  = None
-        dtype = DataTypeFactory(self.name, ("_name"), \
+        name   = str(self.name)
+        dtype = DataTypeFactory(name, ("_name"), \
                                 prefix='Custom', \
                                 alias=alias)
 
-        return Variable(dtype, 'self')
+        return Variable(dtype(), 'self')
 
 class Ceil(Function):
     """
