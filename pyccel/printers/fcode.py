@@ -983,7 +983,6 @@ class FCodePrinter(CodePrinter):
             sig = 'type'
 
         if alias is None:
-            name = name.replace('Pyccel', '')
             name = name.replace(prefix, '')
         else:
             name = alias
@@ -1008,6 +1007,11 @@ class FCodePrinter(CodePrinter):
             if name in _default_methods:
                 name = _default_methods[name]
             name = '{0}_{1}'.format(expr.cls_name, name)
+        else:
+            for i in _default_methods:
+                # because we may have a class Point with init: Point___init__
+                if i in name:
+                    name = name.replace(i, _default_methods[i])
         out_args = []
         decs = []
         body = expr.body
@@ -1374,10 +1378,24 @@ class FCodePrinter(CodePrinter):
         else:
             return CodePrinter._print_Function(self, expr.func(*args))
 
+    def _print_ConstructorCall(self, expr):
+        func = expr.func
+        name = func.name
+        if name == "__init__":
+            name = "create"
+        name = self._print(name)
+
+        code_args = ''
+        if not(func.arguments) is None:
+            code_args = ', '.join(sstr(i) for i in func.arguments)
+        return '{0}({1})'.format(name, code_args)
+
     def _print_FunctionCall(self, expr):
         # for the moment, this is only used if the function has not arguments
         func = expr.func
-        name = self._print(func.name)
+        name = func.name
+        name = self._print(name)
+
         code_args = ''
         if not(func.arguments) is None:
             code_args = ', '.join(sstr(i) for i in func.arguments)

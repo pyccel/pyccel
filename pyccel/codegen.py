@@ -247,6 +247,11 @@ class Codegen(object):
         return self._code
 
     @property
+    def ast(self):
+        """Returns the generated ast"""
+        return self._ast
+
+    @property
     def language(self):
         """Returns the used language"""
         return self._language
@@ -983,10 +988,7 @@ def build_file(filename, language, compiler, \
 
     # ...
     if single_file:
-        # ... TODO improve
-        pyccel_stmts  = []
-        pyccel_stmts += [_create_pyccel_module()]
-
+        pyccel_stmts  = codegen.ast.extra_stmts
         pyccel_code = ''
         for stmt in pyccel_stmts:
             pyccel_code += codegen.printer(stmt) + "\n"

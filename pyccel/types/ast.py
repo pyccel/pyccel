@@ -886,7 +886,7 @@ dtype_registry = {'bool': Bool,
 
 def DataTypeFactory(name, argnames=["_name"], \
                     BaseClass=CustomDataType, \
-                    prefix='Pyccel', \
+                    prefix=None, \
                     alias=None, \
                     is_polymorphic=True):
     def __init__(self, **kwargs):
@@ -899,8 +899,14 @@ def DataTypeFactory(name, argnames=["_name"], \
             setattr(self, key, value)
         BaseClass.__init__(self, name[:-len("Class")])
 
+    if prefix is None:
+        prefix = 'Pyccel'
+    else:
+        prefix = 'Pyccel{0}'.format(prefix)
+
     newclass = type(prefix + name, (BaseClass,), \
                     {"__init__":       __init__, \
+                     "_name":          name, \
                      "prefix":         prefix, \
                      "alias":          alias, \
                      "is_polymorphic": is_polymorphic})
@@ -1029,6 +1035,14 @@ class FunctionCall(Basic):
             return self.func.name
         else:
             return self.func
+
+class ConstructorCall(FunctionCall):
+    """
+    class for a call to class constructor in the code.
+    """
+    @property
+    def this(self):
+        return self.arguments[0]
 
 class Variable(Symbol):
     """Represents a typed variable.
@@ -1345,6 +1359,16 @@ class ClassDef(Basic):
     @property
     def options(self):
         return self._args[3]
+
+    # TODO add other attributs?
+    @property
+    def this(self):
+        alias  = None
+        dtype = DataTypeFactory(self.name, ("_name"), \
+                                prefix='Custom', \
+                                alias=alias)
+
+        return Variable(dtype, 'self')
 
 class Ceil(Function):
     """

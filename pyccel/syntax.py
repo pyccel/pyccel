@@ -34,8 +34,9 @@ from sympy.logic.boolalg import BooleanFunction
 
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
+from pyccel.types.ast import ConstructorCall
 from pyccel.types.ast import is_pyccel_datatype
-from pyccel.types.ast import DataType, DataTypeFactory
+from pyccel.types.ast import DataType, CustomDataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
@@ -179,6 +180,7 @@ builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
 
 # ... will contain user defined types
 cls_constructs   = {}
+class_defs       = {}
 
 # ... builtin functions
 builtin_funcs_math_un = ['abs', \
@@ -300,6 +302,14 @@ def get_attributs(expr):
         d_var['rank']        = 0
         d_var['cls_base']    = MPI_COMM_WORLD
         return d_var
+    elif isinstance(expr, CustomDataType):
+        raise NotImplementedError('')
+        d_var['datatype']    = expr
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+        d_var['cls_base']    = None
+        return d_var
     elif isinstance(expr, DottedName):
         var    = get_class_attribut(expr)
         parent = str(expr.name[0])
@@ -365,11 +375,18 @@ def get_attributs(expr):
         d_var['shape']       = expr.shape
         d_var['rank']        = expr.rank
         return d_var
+    elif isinstance(expr, ConstructorCall):
+        this = expr.this
+        d_var['datatype']    = this.dtype
+        d_var['allocatable'] = this.allocatable
+        d_var['shape']       = this.shape
+        d_var['rank']        = this.rank
+        return d_var
     elif isinstance(expr, FunctionCall):
         func = expr.func
         results = func.results
         if not(len(results) == 1):
-            raise ValueError("Expecting one result.")
+            raise ValueError("Expecting one result, given : {}".format(results))
         result = results[0]
         d_var['datatype']    = result.dtype
         d_var['allocatable'] = result.allocatable
@@ -876,11 +893,15 @@ def expr_with_trailer(expr, trailer=None):
         name = str(expr)
         if name in builtin_funcs_math + ['len']:
             expr = builtin_function(name, args)
-        elif name in cls_constructs:
-            ctype = cls_constructs[name]().__class__.__name__
-            cls = str(ctype).split('Pyccel')[-1]
-            cls = eval('{0}_create'.format(cls))
-            expr = FunctionCall(cls(), args)
+        elif name in class_defs:
+            # get the ClassDef
+            # TODO use isinstance
+            cls = class_defs[name]
+            methods = {}
+            for i in cls.methods:
+                methods[str(i.name)] = i
+            method = methods['__init__']
+            expr = ConstructorCall(method, args)
         else:
             if len(args) > 0:
                 expr = Function(str(expr))(*args)
@@ -1007,15 +1028,18 @@ class Pyccel(object):
         self.statements = kwargs.pop('statements', [])
 
         # ...
-        ns, ds, cs, stmts = stdlib_definitions()
+        ns, ds, cs, classes, stmts = stdlib_definitions()
         for k,v in ns.items():
             namespace[k] = v
         for k,v in ds.items():
             declarations[k] = v
         for k,v in cs.items():
             cls_constructs[k] = v
-        self.extra_stmts = stmts
-        print_namespace()
+        for k,v in classes.items():
+            class_defs[k] = v
+
+        self.extra_stmts  = []
+        self.extra_stmts += stmts
         # ...
 
     @property
@@ -3179,7 +3203,7 @@ class ImportFromStmt(BasicStmt):
             for k,v in cs.items():
                 cls_constructs[k] = v
         if str(fil).startswith('spl.'):
-            module = str(fil).split('plaf.')[-1]
+            module = str(fil).split('spl.')[-1]
             fil = 'spl_m_{}'.format(module.lower())
             ns, ds = spl_definitions()
             for k,v in ns.items():

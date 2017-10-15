@@ -15,6 +15,14 @@ def Point_definitions():
 
     # ... classes
     #     methods
+    #     - __init__
+    this = Variable(c_dtype(), 'self')
+    x = Variable('double', DottedName('self', 'x'))
+    y = Variable('double', DottedName('self', 'y'))
+    body = [Assign(x,0), Assign(y,0)]
+    create = FunctionDef('__init__', [this], [], body)
+
+    #     - translate
     this = Variable(c_dtype(), 'self')
     x = Variable('double', DottedName('self', 'x'))
     y = Variable('double', DottedName('self', 'y'))
@@ -29,7 +37,7 @@ def Point_definitions():
 
     # class definition
     attributs   = [x,y]
-    methods     = [translate]
+    methods     = [create, translate]
     Point = ClassDef(c_name, attributs, methods)
     # ...
 
@@ -47,9 +55,9 @@ def Point_definitions():
 
     d = {}
     d['modules'] = [Module('m_pyccel', variables, funcs, classes)]
-    d['cls_constructs'] = [c_dtype]
-    d['namespace'] = [Point]
-#    d['namespace'] = [Point, incr, decr]
+    d['cls_constructs'] = [c_dtype()]
+    d['classes'] = [Point]
+#    d['funcs'] = [Point, incr, decr]
 
     return d
 # ...
@@ -72,6 +80,7 @@ def stdlib_definitions():
     namespace      = {}
     declarations   = {}
     cls_constructs = {}
+    classes        = {}
 
     d = Point_definitions()
 
@@ -79,11 +88,10 @@ def stdlib_definitions():
     stmts += d['modules']
 
     for i in d['cls_constructs']:
-        cls_constructs[i.name] = i
+        cls_constructs[str(i.name)] = i
 
-    for i in d['namespace']:
-        namespace[i.name] = i
-        print i
+    for i in d['classes']:
+        classes[str(i.name)] = i
 
-    return namespace, declarations, cls_constructs, stmts
+    return namespace, declarations, cls_constructs, classes, stmts
 # ...
