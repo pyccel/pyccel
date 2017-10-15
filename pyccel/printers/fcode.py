@@ -1131,7 +1131,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_ClassDef(self, expr):
-        name = expr.name
+        name = self._print(expr.name)
         base = None # TODO: add base in ClassDef
 
         decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributs)
@@ -1145,8 +1145,7 @@ class FCodePrinter(CodePrinter):
                 j = _default_methods[i]
             aliases.append(j)
             names.append('{0}_{1}'.format(name, self._print(j)))
-        methods = '\n'.join('procedure :: {0} => {1}'.format(i,j) for i,j in
-                            zip(aliases, names))
+        methods = '\n'.join('procedure :: {0} => {1}'.format(i,j) for i,j in zip(aliases, names))
 
         options = ', '.join(i for i in expr.options)
 
@@ -1165,7 +1164,9 @@ class FCodePrinter(CodePrinter):
         decs = ('{0}\n'
                 'end type {1}').format(code, name)
 
-        methods = '\n'.join(self._print(i) for i in expr.methods)
+        # we rename all methods because of the aliasing
+        cls_methods = [i.rename('{0}_{1}'.format(name, i.name)) for i in expr.methods]
+        methods = '\n'.join(self._print(i) for i in cls_methods)
 
         return decs, methods
 

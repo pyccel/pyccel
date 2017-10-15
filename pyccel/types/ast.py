@@ -1243,6 +1243,21 @@ class FunctionDef(Basic):
         for s in self.body:
             print (s)
 
+    def rename(self, newname):
+        """
+        Rename the FunctionDef name by creating a new FunctionDef with
+        newname.
+
+        newname: str
+            new name for the FunctionDef
+        """
+        return FunctionDef(newname, self.arguments, self.results, self.body, \
+                           local_vars=self.local_vars, \
+                           global_vars=self.global_vars, \
+                           cls_name=self.cls_name, \
+                           hide=self.hide, \
+                           kind=self.kind)
+
 class ClassDef(Basic):
     """Represents a class definition.
 

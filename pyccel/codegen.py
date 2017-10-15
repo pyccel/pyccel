@@ -989,7 +989,7 @@ def build_file(filename, language, compiler, \
         b = Variable('double', 'b')
         this = Variable('double', 'self')
         body = [Assign(x,x+a), Assign(y,y+b)]
-        translate = FunctionDef('Point_translate', [this, a,b], [], body)
+        translate = FunctionDef('translate', [this, a,b], [], body)
         attributs   = [x,y]
         methods     = [translate]
         Point = ClassDef('Point', attributs, methods)
