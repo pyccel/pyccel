@@ -1546,10 +1546,10 @@ class MultiAssignStmt(BasicStmt):
         for (var_name, result) in zip(self.lhs, F.results):
             if not(var_name in namespace):
                 d_var = {}
-                d_var['datatype']    = result[0].dtype
-                d_var['allocatable'] = result[0].allocatable
-                d_var['shape']       = result[0].shape
-                d_var['rank']        = result[0].rank
+                d_var['datatype']    = result.dtype
+                d_var['allocatable'] = result.allocatable
+                d_var['shape']       = result.shape
+                d_var['rank']        = result.rank
                 d_var['intent']      = None
 
 #                print ">>>> MultiAssignStmt : ", var_name
