@@ -997,6 +997,8 @@ def build_file(filename, language, compiler, \
         body = [Assign(x,x+a), Assign(y,y+b)]
         translate = FunctionDef('translate', [this, a,b], [], body)
 
+        x = Variable('double', 'x')
+        y = Variable('double', 'y')
         attributs   = [x,y]
         methods     = [translate]
         Point = ClassDef(c_name, attributs, methods)

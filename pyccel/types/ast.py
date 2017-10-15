@@ -887,7 +887,8 @@ dtype_registry = {'bool': Bool,
 def DataTypeFactory(name, argnames=["_name"], \
                     BaseClass=CustomDataType, \
                     prefix='Pyccel', \
-                    alias=None):
+                    alias=None, \
+                    is_polymorphic=True):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             # here, the argnames variable is the one passed to the
@@ -899,9 +900,10 @@ def DataTypeFactory(name, argnames=["_name"], \
         BaseClass.__init__(self, name[:-len("Class")])
 
     newclass = type(prefix + name, (BaseClass,), \
-                    {"__init__": __init__, \
-                     "prefix":   prefix, \
-                     "alias":    alias})
+                    {"__init__":       __init__, \
+                     "prefix":         prefix, \
+                     "alias":          alias, \
+                     "is_polymorphic": is_polymorphic})
     return newclass
 
 def is_pyccel_datatype(expr):

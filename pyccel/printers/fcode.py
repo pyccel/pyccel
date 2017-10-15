@@ -972,12 +972,18 @@ class FCodePrinter(CodePrinter):
         prefix = expr.prefix
         alias  = expr.alias
 
+        if expr.is_polymorphic:
+            sig = 'class'
+        else:
+            sig = 'type'
+
         if alias is None:
             name = name.replace('Pyccel', '')
             name = name.replace(prefix, '')
         else:
             name = alias
-        return 'type({0})'.format(str(name))
+        code = '{0}({1})'.format(sig, name)
+        return self._get_statement(code)
 
     def _print_Equality(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
