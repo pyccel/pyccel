@@ -706,15 +706,19 @@ class Module(Basic):
     >>> from pyccel.types.ast import ClassDef, FunctionDef, Module
     >>> x = Variable('double', 'x')
     >>> y = Variable('double', 'y')
+    >>> z = Variable('double', 'z')
+    >>> t = Variable('double', 't')
     >>> a = Variable('double', 'a')
-    >>> translate = FunctionDef('translate', [x,a], [y], [Assign(y,x+a)])
-    >>> attributs   = [x]
+    >>> b = Variable('double', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributs   = [x,y]
     >>> methods     = [translate]
     >>> Point = ClassDef('Point', attributs, methods)
     >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
     >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
     >>> Module('my_module', [], [incr, decr], [Point])
-    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x,), (FunctionDef(translate, (x, a), (y,), [y := a + x], [], [], None, False, function),), [public])])
+    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
     def __new__(cls, name, variables, funcs, classes):
@@ -1257,12 +1261,16 @@ class ClassDef(Basic):
     >>> from pyccel.types.ast import ClassDef, FunctionDef
     >>> x = Variable('double', 'x')
     >>> y = Variable('double', 'y')
+    >>> z = Variable('double', 'z')
+    >>> t = Variable('double', 't')
     >>> a = Variable('double', 'a')
-    >>> translate = FunctionDef('translate', [x,a], [y], [Assign(y,x+a)])
-    >>> attributs   = [x]
+    >>> b = Variable('double', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributs   = [x,y]
     >>> methods     = [translate]
     >>> ClassDef('Point', attributs, methods)
-    ClassDef(Point, (x,), (FunctionDef(translate, (x, a), (y,), [y := a + x], [], [], None, False, function),), [public])
+    ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
     def __new__(cls, name, attributs, methods, options=['public']):

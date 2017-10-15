@@ -21,7 +21,7 @@ from pyccel.types.ast import (Range, Tensor, Block, \
                               ThreadID, ThreadsNumber, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
-                              Dot, Sign, IndexedElement)
+                              Dot, Sign, IndexedElement, Module, DottedName)
 
 from pyccel.openmp.syntax import OpenmpStmt
 
@@ -229,6 +229,7 @@ class Codegen(object):
         self._routines     = routines
         self._classes      = classes
         self._modules      = modules
+        self._printer      = None
 
     @property
     def filename(self):
@@ -290,6 +291,11 @@ class Codegen(object):
         """Returns True if we are treating a module."""
         return self._is_module
 
+    @property
+    def printer(self):
+        """Returns the used printer"""
+        return self._printer
+
     def as_module(self):
         """Generate code as a module. Every extension must implement this method."""
         pass
@@ -337,6 +343,10 @@ class Codegen(object):
             raise ValueError("Only fortran is available")
         # ...
 
+        # ...
+        self._printer = printer
+        # ...
+
         # ... TODO improve. mv somewhere else
         if not (accelerator is None):
             if accelerator == "openmp":
@@ -357,8 +367,12 @@ class Codegen(object):
 
         # ...
         stmts = ast.expr
+        # ...
+
+        # ...
         if with_mpi:
             stmts = [mpify(s) for s in stmts]
+        # ...
 
         for stmt in stmts:
             if isinstance(stmt, (Comment, AnnotatedComment)):
@@ -424,6 +438,8 @@ class Codegen(object):
                     body += "\n" + printer(s) + "\n"
                 for dec in stmt.declarations:
                     preludes += "\n" + printer(dec) + "\n"
+            elif isinstance(stmt, Module):
+                body += "\n" + printer(stmt) + "\n"
             else:
                 if True:
                     print "> uncovered statement of type : ", type(stmt)
@@ -490,8 +506,12 @@ class Codegen(object):
         # ...
 
         # ...
-        self._code         = code
-        self._filename_out = write_to_file(code, filename, language)
+        self._code = code
+        # ...
+
+        # ...
+        ext = get_extension(language)
+        self._filename_out = filename.split(".py")[0] + "." + ext
         # ...
 
         return code
@@ -594,32 +614,6 @@ def separator(n=40):
     txt = "."*n
     comment = '!'
     return '{0} {1}\n'.format(comment, txt)
-# ...
-
-# ...
-def write_to_file(code, filename, language):
-    """
-    Writes a given code lines into a file, given a target language.
-
-    code: str
-        code lines to write in file.
-    filename: str
-        name of the file to write in.
-    language: str
-        low-level target language used in the conversion
-    """
-    if not(language == "fortran"):
-        raise ValueError("Only fortran is available")
-
-    ext = get_extension(language)
-    f90_file = filename.split(".py")[0] + "." + ext
-    f = open(f90_file, "w")
-    for line in code:
-        f.write(line)
-    f.close()
-
-
-    return f90_file
 # ...
 
 class Compiler(object):
@@ -840,7 +834,8 @@ def build_file(filename, language, compiler, \
                inline=False, name=None, \
                ignored_modules=['numpy', 'scipy', 'sympy'], \
                pyccel_modules=[], \
-               include=[], libdir=[], libs=[]):
+               include=[], libdir=[], libs=[], \
+               single_file=True):
     """
     User friendly interface for code generation.
 
@@ -984,6 +979,61 @@ def build_file(filename, language, compiler, \
         print ">>> Codegen :", name, " done."
 
     modules = codegen.modules
+    # ...
+
+    # ...
+    def _create_pyccel_module():
+        x = Variable('double', DottedName('self', 'x'))
+        y = Variable('double', DottedName('self', 'y'))
+        a = Variable('double', 'a')
+        b = Variable('double', 'b')
+        this = Variable('double', 'self')
+        body = [Assign(x,x+a), Assign(y,y+b)]
+        translate = FunctionDef('Point_translate', [this, a,b], [], body)
+        attributs   = [x,y]
+        methods     = [translate]
+        Point = ClassDef('Point', attributs, methods)
+
+        x = Variable('double', 'x')
+        y = Variable('double', 'y')
+        incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+        decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+
+        variables = []
+#            funcs     = [incr, decr]
+        funcs     = []
+        classes   = [Point]
+
+        return Module('m_pyccel', variables, funcs, classes)
+    # ...
+
+    # ...
+    if single_file:
+        # ... TODO improve
+        pyccel_stmts  = []
+        pyccel_stmts += [_create_pyccel_module()]
+
+        pyccel_code = ''
+        for stmt in pyccel_stmts:
+            pyccel_code += codegen.printer(stmt) + "\n"
+        # ...
+
+        # ...
+        f = open(codegen.filename_out, "w")
+
+        for line in pyccel_code:
+            f.write(line)
+
+        ls = ms + [codegen]
+        codes = [m.code for m in ls]
+        for code in codes:
+            for line in code:
+                f.write(line)
+
+        f.close()
+        # ...
+    else:
+        raise NotImplementedError('single_file must be True')
     # ...
 
     # ...

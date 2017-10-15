@@ -22,6 +22,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 from pyccel.types.ast import AddOp, MulOp, SubOp, DivOp
 from pyccel.types.ast import DataType, is_pyccel_datatype
+from pyccel.types.ast import ClassDef
 from pyccel.types.ast import FunctionDef
 from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
@@ -153,12 +154,26 @@ class FCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         name    = self._print(expr.name)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
-        body    = '\n'.join(self._print(i) for i in expr.body)
 
-        prelude = 'module {0}\n'.format(name)
+        prelude = ('module {0}\n'
+                   'implicit none\n').format(name)
         epilog  = 'end module {0}\n'.format(name)
 
-        return '{0}\n{1}contains\n{2}\n{3}'.format(prelude, decs, body, epilog)
+        body = ''
+        for i in expr.body:
+            # update decs with declarations from ClassDef
+            if isinstance(i, ClassDef):
+                c_decs, c_body = self._print(i)
+                decs = '{0}\n{1}'.format(decs, c_decs)
+                body = '{0}\n{1}'.format(body, c_body)
+            else:
+                body = '{0}\n{1}'.format(body, self._print(i))
+
+        return ('{0}\n'
+                '{1}\n'
+                'contains\n'
+                '{2}\n'
+                '{3}\n').format(prelude, decs, body, epilog)
 
     def _print_Import(self, expr):
         fil = self._print(expr.fil)
@@ -984,8 +999,7 @@ class FCodePrinter(CodePrinter):
         body = expr.body
         func_end  = ''
         if len(expr.results) == 1:
-            result,val_result = expr.results[0]
-
+            result = expr.results[0]
 
             body = []
             for stmt in expr.body:
@@ -1018,8 +1032,8 @@ class FCodePrinter(CodePrinter):
                 func_end  = ' result({0})'.format(result.name)
         elif len(expr.results) > 1:
             # TODO compute intent
-            out_args = [result for result,val_result in expr.results]
-            for result,val_result in expr.results:
+            out_args = [result for result in expr.results]
+            for result in expr.results:
                 if result in expr.arguments:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
@@ -1028,7 +1042,7 @@ class FCodePrinter(CodePrinter):
             sig = 'subroutine ' + name
             func_type = 'subroutine'
 
-            names = [str(res.name) for res,i in expr.results]
+            names = [str(res.name) for res in expr.results]
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
@@ -1044,7 +1058,7 @@ class FCodePrinter(CodePrinter):
                     body.append(stmt)
         else:
             # TODO remove this part
-            for result,val_result in expr.results:
+            for result in expr.results:
                 arg = Variable(result.dtype, result.name, \
                                   rank=result.rank, \
                                   allocatable=result.allocatable, \
@@ -1148,16 +1162,12 @@ class FCodePrinter(CodePrinter):
             code = ('{0}\n'
                     'contains\n'
                     '{1}').format(code, methods)
-        code = ('{0}\n'
+        decs = ('{0}\n'
                 'end type {1}').format(code, name)
 
-        methods = '\n\n'.join(self._print(i) for i in expr.methods)
-        if len(methods) > 0:
-            code = ('{0}\n\n'
-                    'contains\n\n'
-                    '{1}').format(code, methods)
+        methods = '\n'.join(self._print(i) for i in expr.methods)
 
-        return code
+        return decs, methods
 
     def _print_Break(self,expr):
         return 'exit'
