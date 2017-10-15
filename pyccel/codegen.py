@@ -355,14 +355,14 @@ class Codegen(object):
         # ... TODO improve. mv somewhere else
         if not (accelerator is None):
             if accelerator == "openmp":
-                imports += "use omp_lib "
+                imports += "use omp_lib\n"
             else:
                 raise ValueError("Only openmp is available")
         # ...
 
         # ...
         if with_mpi:
-            imports += "use MPI"
+            imports += "use MPIi\n"
         # ...
 
         # ...
@@ -372,7 +372,7 @@ class Codegen(object):
 
         # ... TODO improve
         if len(ast.extra_stmts) > 0:
-            imports += "use m_pyccel"
+            imports += "use m_pyccel\n"
         # ...
 
         # ...
