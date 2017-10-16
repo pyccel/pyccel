@@ -750,17 +750,15 @@ def get_class_attribut(name):
         raise TypeError("Expecting a Variable")
     if not is_pyccel_datatype(cls.dtype):
         raise TypeError("Expecting a Pyccel DataType instance")
+    dtype = cls.dtype
+    cls_name = dtype.name
+    cls = class_defs[cls_name]
 
-    cls = str(cls.dtype).split('Pyccel')[-1]
-    cls = eval('{0}'.format(cls))
-    if not isinstance(cls, ClassDef):
-        raise TypeError("Expecting a ClassDef")
-
-    attr_names = [str(i.name) for i in cls.attributs]
-    attributs  = {}
+    attributs = {}
     for i in cls.attributs:
         attributs[str(i.name)] = i
-    if not (attr_name in attr_names):
+
+    if not (attr_name in attributs):
         raise ValueError("Undefined attribut {}".format(attr_name))
 
     return attributs[attr_name]
