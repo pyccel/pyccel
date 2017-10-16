@@ -979,6 +979,7 @@ def build_file(filename, language, compiler, \
     s=codegen.doprint(language=language, accelerator=accelerator, \
                      ignored_modules=ignored_modules, with_mpi=with_mpi, \
                      pyccel_modules=pyccel_modules)
+
     if show:
         print('========Fortran_Code========')
         print(s)
@@ -996,13 +997,15 @@ def build_file(filename, language, compiler, \
         pyccel_classes = []
 
         stmts = codegen.ast.extra_stmts
-        print stmts
         pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
         pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
 
         pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
         if pyccel_vars or pyccel_funcs or pyccel_classes:
-            pyccel_stmts += [Module('m_pyccel', pyccel_vars, pyccel_funcs, pyccel_classes)]
+            pyccel_stmts += [Module('m_pyccel', \
+                                    pyccel_vars, \
+                                    pyccel_funcs, \
+                                    pyccel_classes)]
 
         pyccel_code = ''
         for stmt in pyccel_stmts:

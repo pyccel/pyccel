@@ -5,6 +5,7 @@ from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.syntax import ImportFromStmt, ImportAsNames
+from pyccel.syntax import clean_namespace
 
 __all__ = ['find_imports']
 
@@ -34,5 +35,7 @@ def find_imports(filename, debug=False):
             module = str(expr.fil)
             names  = str(expr.funcs)
             d[module] = names
+
+    clean_namespace()
 
     return d

@@ -138,8 +138,22 @@ known_functions = {
 }
 
 # TODO: treat the inout case
-# TODO: 1. check that every stmt is well implementing
-#          the local_vars and stmt_vars properties.
+
+# ...
+def clean_namespace():
+    """Cleans the global variables."""
+    global namespace
+    global declarations
+    global cls_constructs
+    global class_defs
+    global _extra_stmts
+
+    namespace      = {}
+    declarations   = {}
+    cls_constructs = {}
+    class_defs     = {}
+    _extra_stmts   = []
+# ...
 
 # ...
 def datatype_from_string(txt):
