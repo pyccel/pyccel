@@ -2822,7 +2822,7 @@ class MPI_Tensor_NEW(ClassDef, MPI, Tensor):
         methods = [MPI_Tensor_create()]
         # ...
 
-        return ClassDef.__new__(cls, 'tensor', \
+        return ClassDef.__new__(cls, 'MPI_Tensor_NEW', \
                                 attributs, methods, \
                                 options=options)
 

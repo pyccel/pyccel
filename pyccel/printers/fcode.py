@@ -1018,7 +1018,10 @@ class FCodePrinter(CodePrinter):
         if expr.cls_name:
             if name in _default_methods:
                 name = _default_methods[name]
-            name = '{0}_{1}'.format(expr.cls_name, name)
+
+            cls_name = expr.cls_name
+            if not (cls_name == '__UNDEFINED__'):
+                name = '{0}_{1}'.format(cls_name, name)
         else:
             for i in _default_methods:
                 # because we may have a class Point with init: Point___init__
@@ -1045,7 +1048,6 @@ class FCodePrinter(CodePrinter):
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 
-#            print (type(result), result)
             ret_type = self._print(result.dtype)
 
             func_type = 'function'
