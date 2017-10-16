@@ -1038,19 +1038,19 @@ class Pyccel(object):
         """
         self.statements = kwargs.pop('statements', [])
 
-        # ...
-        ns, ds, cs, classes, stmts = stdlib_definitions()
-        for k,v in ns.items():
-            namespace[k] = v
-        for k,v in ds.items():
-            declarations[k] = v
-        for k,v in cs.items():
-            cls_constructs[k] = v
-        for k,v in classes.items():
-            class_defs[k] = v
-        for i in stmts:
-            _extra_stmts.append(i)
-        # ...
+#        # ... TODO uncomment
+#        ns, ds, cs, classes, stmts = stdlib_definitions()
+#        for k,v in ns.items():
+#            namespace[k] = v
+#        for k,v in ds.items():
+#            declarations[k] = v
+#        for k,v in cs.items():
+#            cls_constructs[k] = v
+#        for k,v in classes.items():
+#            class_defs[k] = v
+#        for i in stmts:
+#            _extra_stmts.append(i)
+#        # ...
 
     @property
     def declarations(self):
@@ -3213,13 +3213,15 @@ class ImportFromStmt(BasicStmt):
         if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
             fil   = 'mpi'
             funcs = None
-            ns, ds, cs, stmts = mpi_definitions()
+            ns, ds, cs, classes, stmts = mpi_definitions()
             for k,v in ns.items():
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
             for k,v in cs.items():
                 cls_constructs[k] = v
+            for k,v in classes.items():
+                class_defs[k] = v
             for i in stmts:
                 _extra_stmts.append(i)
 

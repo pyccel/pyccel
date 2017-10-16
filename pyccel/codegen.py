@@ -921,8 +921,9 @@ def build_file(filename, language, compiler, \
     """
     # ...
     with_mpi = False
-    if 'mpi' in compiler:
-        with_mpi = True
+    if compiler:
+        if 'mpi' in compiler:
+            with_mpi = True
     # ...
 
     # ...
@@ -989,7 +990,20 @@ def build_file(filename, language, compiler, \
 
     # ...
     if single_file:
-        pyccel_stmts  = codegen.ast.extra_stmts
+        # ... create a Module for pyccel extra definitions
+        pyccel_vars    = []
+        pyccel_funcs   = []
+        pyccel_classes = []
+
+        stmts = codegen.ast.extra_stmts
+        print stmts
+        pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
+        pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
+
+        pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
+        if pyccel_vars or pyccel_funcs or pyccel_classes:
+            pyccel_stmts += [Module('m_pyccel', pyccel_vars, pyccel_funcs, pyccel_classes)]
+
         pyccel_code = ''
         for stmt in pyccel_stmts:
             pyccel_code += codegen.printer(stmt) + "\n"

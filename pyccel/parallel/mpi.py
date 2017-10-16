@@ -15,6 +15,7 @@ from sympy.utilities.iterables import iterable
 from sympy.core.function import Function
 from sympy.core.function import UndefinedFunction
 
+from pyccel.types.ast import DottedName
 from pyccel.types.ast import Variable, IndexedVariable, IndexedElement
 from pyccel.types.ast import Assign, Declare, AugAssign
 from pyccel.types.ast import NativeBool, NativeFloat
@@ -2766,7 +2767,7 @@ class MPI_Tensor(MPI, Block, Tensor):
         code = 'MPI_Tensor ([{0}], [{1}])'.format(variables, body)
         return code
 
-class MPI_Tensor_NEW(Tensor, ClassDef):
+class MPI_Tensor_NEW(ClassDef, MPI, Tensor):
     """
     Represents a Tensor object using MPI.
 
@@ -2918,6 +2919,12 @@ class MPI_Tensor_create(FunctionDef):
         # TODO add comm_parent as (optional) argument
 
         # ... args
+        c_name = 'MPI_Tensor_NEW'
+        alias  = None
+        c_dtype = DataTypeFactory(c_name, ("_name"))
+
+        this = Variable(c_dtype(), 'self')
+
         ndim         = Variable('int', 'ndim')
 
         arg_npts     = Variable('int', 'npts', \
@@ -2928,260 +2935,257 @@ class MPI_Tensor_create(FunctionDef):
         arg_pads     = Variable('int', 'pads', \
                                 rank=1, shape=ndim, allocatable=True)
 
-        args = [arg_npts, arg_periods, arg_reorder, arg_pads]
+        args = [this, arg_npts, arg_periods, arg_reorder, arg_pads]
         # ...
 
         # ... attributs
-        ndim     = Variable('int', 'self % ndim')
-        nnodes   = Variable('int', 'self % nnodes')
-        rank     = Variable('int', 'self % rank')
-        line     = Variable('int', 'self % line')
-        column   = Variable('int', 'self % column')
+        ndim     = Variable('int', DottedName('self', 'ndim'))
+        nnodes   = Variable('int', DottedName('self', 'nnodes'))
+        rank     = Variable('int', DottedName('self', 'rank'))
+        line     = Variable('int', DottedName('self', 'line'))
+        column   = Variable('int', DottedName('self', 'column'))
 
-        comm     = Variable('int', 'self % comm', cls_base=MPI_comm())
+        comm     = Variable('int', DottedName('self', 'comm'), cls_base=MPI_comm())
 
-        dims     = Variable('int', 'self % dims', \
+        dims     = Variable('int', DottedName('self', 'dims'), \
                             rank=1, shape=ndim, allocatable=True)
-        periods  = Variable('bool', 'self % periods', \
+        periods  = Variable('bool', DottedName('self', 'periods'), \
                             rank=1, shape=ndim, allocatable=True)
-        coords   = Variable('int', 'self % coords', \
+        coords   = Variable('int', DottedName('self', 'coords'), \
                             rank=1, shape=ndim, allocatable=True)
-        neighbor = Variable('int', 'self % neighbor', \
+        neighbor = Variable('int', DottedName('self', 'neighbor'), \
                             rank=1, shape=2*ndim, allocatable=True)
         # starts & ends to replace sx,ex, ...
-        starts   = Variable('int', 'self % starts', \
+        starts   = Variable('int', DottedName('self', 'starts'), \
                             rank=1, shape=ndim, allocatable=True)
-        ends     = Variable('int', 'self % ends', \
+        ends     = Variable('int', DottedName('self', 'ends'), \
                             rank=1, shape=ndim, allocatable=True)
-        pads     = Variable('int', 'self % pads', \
+        pads     = Variable('int', DottedName('self', 'pads'), \
                             rank=1, shape=ndim, allocatable=True)
         # ...
 
+#        # ...
+#        ierr = MPI_ERROR
+#
+#        local_vars = [ierr]
+#        # ...
+#
+#        # ...
+#        reorder = arg_reorder
+#        # ...
+#
+#        # ...
+#        body.append(Comment('... MPI_Tensor: grid setting'))
+#        # ...
+#
+#        # ... TODO sets the right value. now it is equal to 1
+#        ndim_value = 2 # arg_npts.rank
+#        body += [Assign(ndim, Len(arg_npts))]
+#        # ...
+#
+#        # ...
+#        body += [Zeros(dims, ndim)]
+#
+#        # we change the definition to IndexedVariable to use dims as an array
+#        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
+#
+#        rhs  = MPI_comm_size(MPI_comm_world())
+#        body += [MPI_Assign(nnodes, rhs)]
+#
+#        rhs = MPI_dims_create(nnodes, dims)
+#        body += [MPI_Assign(ierr, rhs, strict=False)]
+#        # ...
+#
+#        # ...
+#        body += [Zeros(periods, ndim)]
+#
+#        # we change the definition to IndexedVariable to use periods as an array
+#        body += [Assign(periods, arg_periods)]
+#
+#        periods     = IndexedVariable(periods.name, dtype=periods.dtype)
+#        arg_periods = IndexedVariable(arg_periods.name, dtype=arg_periods.dtype)
+#        # ...
+#
+#        # ...
+#        body.append(Comment('...'))
+#        body.append(EmptyLine())
+#        body.append(Comment('... MPI_Tensor: cart definition'))
+#        # ...
+#
+#        # ... set the parent comm
+#        comm_parent = MPI_comm_world()
+#        # ...
+#
+#        # ... create the cart comm
+#        comm = MPI_comm('self % comm')
+#        rhs  = MPI_comm_cart_create(dims, periods, reorder, comm, comm_parent)
+#
+#        body += [MPI_Assign(ierr, rhs, strict=False)]
+#        # ...
+#
+#        # ...
+#        body += [MPI_Assign(rank, MPI_comm_rank(comm))]
+#        # ...
+#
+#        # ...
+#        body.append(Comment('...'))
+#        body.append(EmptyLine())
+#        body.append(Comment('... MPI_Tensor: Neighbors'))
+#        # ...
+#
+#        # ... compute the coordinates of the process
+#        body += [Zeros(coords, ndim)]
+#
+#        rhs  = MPI_comm_cart_coords(rank, coords, comm)
+#        body += [MPI_Assign(ierr, rhs, strict=False)]
+#
+#        coords = IndexedVariable(coords.name, \
+#                                 dtype=coords.dtype, \
+#                                 shape=coords.shape)
+#        # ...
+#
+#        # ... TODO treat disp properly
+#        body += [Zeros(neighbor, 2*ndim)]
+#
+#        neighbor = IndexedVariable(neighbor.name, dtype=neighbor.dtype)
+#
+#        _map_neighbor = {}
+#        if ndim_value == 2:
+#            north = 0 ; east = 1 ; south = 2 ; west = 3
+#
+#            # TODO sets disp from pads?
+#            disp = 1
+#
+#            # ...
+#            axis = 0
+#            rhs  = MPI_comm_cart_shift(axis, disp, \
+#                                       neighbor[north], neighbor[south], \
+#                                       comm)
+#
+#            body += [MPI_Assign(ierr, rhs, strict=False)]
+#            # ...
+#
+#            # ...
+#            axis = 1
+#            rhs  = MPI_comm_cart_shift(axis, disp, \
+#                                       neighbor[west], neighbor[east], \
+#                                       comm)
+#
+#            body += [MPI_Assign(ierr, rhs, strict=False)]
+#            # ...
+#        else:
+#            raise NotImplementedError('Only 2d is available')
+#        # ...
+#
+#        # ...
+#        body.append(Comment('...'))
+#        body.append(EmptyLine())
+#        body.append(Comment('... MPI_Tensor: local ranges'))
+#        # ...
+#
+#        # ... compute local ranges
+#        _starts = np.zeros(ndim_value, dtype=int)
+#        _steps  = np.ones(ndim_value,  dtype=int)
+#        _ends   = IndexedVariable(arg_npts.name, dtype=arg_npts.dtype)
+#
+#        d = {}
+#        labels = ['x','y','z'][:ndim_value]
+#        for i,l in enumerate(labels):
+#            nn = (_ends[i] - _starts[i])/_steps[i]
+#
+#            d['s'+l] = (coords[i] * nn) / dims[i]
+#            d['e'+l] = ((coords[i]+1) * nn) / dims[i]
+#
+#        ranges = []
+#        d_var = {}
+#        for l in labels:
+#            dd = {}
+#            for _n in ['s', 'e']:
+#                n = _n+l
+#                v    = Variable('int', n)
+#                rhs  = d[n]
+#                stmt = Assign(v, rhs)
+#                body.append(stmt)
+#
+#                dd[n] = v
+#                d_var[n] = v
+#
+#            _args = [i[1] for i in dd.items()]
+#            r = Tile(*_args)
+#            ranges.append(r)
+#        # ...
+#
+#        # ...
+#        body.append(If(((d_var['sx'] > 0), [AugAssign(d_var['sx'],'+',1)])))
+#        body.append(If(((d_var['sy'] > 0), [AugAssign(d_var['sy'],'+',1)])))
+#        # ...
+#
+#        # ...
+#        body.append(Comment('...'))
+#        body.append(EmptyLine())
+#        body.append(Comment('... MPI_Tensor: vector types for communication'))
+#        # ...
+#
+#        # ... derived types for communication over boundaries
+#        sx = d_var['sx']
+#        ex = d_var['ex']
+#        sy = d_var['sy']
+#        ey = d_var['ey']
+#
+#        starts = IndexedVariable(starts.name, dtype=starts.dtype)
+#        ends   = IndexedVariable(ends.name,   dtype=ends.dtype)
+#
+#        body += [Assign(starts[0], sx)]
+#        body += [Assign(ends[0],   ex)]
+#        body += [Assign(starts[1], sy)]
+#        body += [Assign(ends[1],   ey)]
+#        # ...
+#
+#        # Creation of the type_line derived datatype to exchange points
+#        # with northern to southern neighbours
+#        count       = ey-sy+1
+#        blocklength = 1
+#        stride      = ex-sx+3
+#        oldtype     = MPI_DOUBLE()
+#
+#        rhs = MPI_type_vector(line, count, blocklength, stride, oldtype)
+#        body += [MPI_Assign(ierr, rhs, strict=False)]
+#        # 
+#
+#        # Creation of the type_column derived datatype to exchange points
+#        # with western to eastern neighbours
+#        count   = ex-sx+1
+#        oldtype = MPI_DOUBLE()
+#
+#        rhs = MPI_type_contiguous(column, count, oldtype)
+#        body += [MPI_Assign(ierr, rhs, strict=False)]
+#        #
+#        # ...
+#
+#        # ...
+#        body.append(Comment('...'))
+#        body.append(EmptyLine())
+#        body.append(Comment('... MPI_Tensor: ghost cells size'))
+#        # ...
+#
+#        # ...
+#        body += [Zeros(pads, ndim)]
+#
+#        pads     = IndexedVariable(pads.name, dtype=pads.dtype, shape=pads.shape)
+#        arg_pads = IndexedVariable(arg_pads.name, \
+#                                   dtype=arg_pads.dtype, \
+#                                   shape=arg_pads.shape)
+#        for i in range(0, ndim_value):
+#            body += [Assign(pads[i], arg_pads[i])]
+#        # ...
+#
+#        # ...
+#        body.append(Comment('...'))
+#        body.append(EmptyLine())
+#        # ...
+
         # ...
-        ierr = MPI_ERROR
-
-        local_vars = [ierr]
-        # ...
-
-        # ...
-        reorder = arg_reorder
-        # ...
-
-        # ...
-        body.append(Comment('... MPI_Tensor: grid setting'))
-        # ...
-
-        # ... TODO sets the right value. now it is equal to 1
-        ndim_value = 2 # arg_npts.rank
-        body += [Assign(ndim, Len(arg_npts))]
-        # ...
-
-        # ...
-        body += [Zeros(dims, ndim)]
-
-        # we change the definition to IndexedVariable to use dims as an array
-        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
-
-        rhs  = MPI_comm_size(MPI_comm_world())
-        body += [MPI_Assign(nnodes, rhs)]
-
-        rhs = MPI_dims_create(nnodes, dims)
-        body += [MPI_Assign(ierr, rhs, strict=False)]
-        # ...
-
-        # ...
-        body += [Zeros(periods, ndim)]
-
-        # we change the definition to IndexedVariable to use periods as an array
-        body += [Assign(periods, arg_periods)]
-
-        periods     = IndexedVariable(periods.name, dtype=periods.dtype)
-        arg_periods = IndexedVariable(arg_periods.name, dtype=arg_periods.dtype)
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        body.append(Comment('... MPI_Tensor: cart definition'))
-        # ...
-
-        # ... set the parent comm
-        comm_parent = MPI_comm_world()
-        # ...
-
-        # ... create the cart comm
-        comm = MPI_comm('self % comm')
-        rhs  = MPI_comm_cart_create(dims, periods, reorder, comm, comm_parent)
-
-        body += [MPI_Assign(ierr, rhs, strict=False)]
-        # ...
-
-        # ...
-        body += [MPI_Assign(rank, MPI_comm_rank(comm))]
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        body.append(Comment('... MPI_Tensor: Neighbors'))
-        # ...
-
-        # ... compute the coordinates of the process
-        body += [Zeros(coords, ndim)]
-
-        rhs  = MPI_comm_cart_coords(rank, coords, comm)
-        body += [MPI_Assign(ierr, rhs, strict=False)]
-
-        coords = IndexedVariable(coords.name, \
-                                 dtype=coords.dtype, \
-                                 shape=coords.shape)
-        # ...
-
-        # ... TODO treat disp properly
-        body += [Zeros(neighbor, 2*ndim)]
-
-        neighbor = IndexedVariable(neighbor.name, dtype=neighbor.dtype)
-
-        _map_neighbor = {}
-        if ndim_value == 2:
-            north = 0 ; east = 1 ; south = 2 ; west = 3
-
-            # TODO sets disp from pads?
-            disp = 1
-
-            # ...
-            axis = 0
-            rhs  = MPI_comm_cart_shift(axis, disp, \
-                                       neighbor[north], neighbor[south], \
-                                       comm)
-
-            body += [MPI_Assign(ierr, rhs, strict=False)]
-            # ...
-
-            # ...
-            axis = 1
-            rhs  = MPI_comm_cart_shift(axis, disp, \
-                                       neighbor[west], neighbor[east], \
-                                       comm)
-
-            body += [MPI_Assign(ierr, rhs, strict=False)]
-            # ...
-        else:
-            raise NotImplementedError('Only 2d is available')
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        body.append(Comment('... MPI_Tensor: local ranges'))
-        # ...
-
-        # ... compute local ranges
-        _starts = np.zeros(ndim_value, dtype=int)
-        _steps  = np.ones(ndim_value,  dtype=int)
-        _ends   = IndexedVariable(arg_npts.name, dtype=arg_npts.dtype)
-
-        d = {}
-        labels = ['x','y','z'][:ndim_value]
-        for i,l in enumerate(labels):
-            nn = (_ends[i] - _starts[i])/_steps[i]
-
-            d['s'+l] = (coords[i] * nn) / dims[i]
-            d['e'+l] = ((coords[i]+1) * nn) / dims[i]
-
-        ranges = []
-        d_var = {}
-        for l in labels:
-            dd = {}
-            for _n in ['s', 'e']:
-                n = _n+l
-                v    = Variable('int', n)
-                rhs  = d[n]
-                stmt = Assign(v, rhs)
-                body.append(stmt)
-
-                dd[n] = v
-                d_var[n] = v
-
-            _args = [i[1] for i in dd.items()]
-            r = Tile(*_args)
-            ranges.append(r)
-        # ...
-
-        # ...
-        body.append(If(((d_var['sx'] > 0), [AugAssign(d_var['sx'],'+',1)])))
-        body.append(If(((d_var['sy'] > 0), [AugAssign(d_var['sy'],'+',1)])))
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        body.append(Comment('... MPI_Tensor: vector types for communication'))
-        # ...
-
-        # ... derived types for communication over boundaries
-        sx = d_var['sx']
-        ex = d_var['ex']
-        sy = d_var['sy']
-        ey = d_var['ey']
-
-        starts = IndexedVariable(starts.name, dtype=starts.dtype)
-        ends   = IndexedVariable(ends.name,   dtype=ends.dtype)
-
-        body += [Assign(starts[0], sx)]
-        body += [Assign(ends[0],   ex)]
-        body += [Assign(starts[1], sy)]
-        body += [Assign(ends[1],   ey)]
-        # ...
-
-        # Creation of the type_line derived datatype to exchange points
-        # with northern to southern neighbours
-        count       = ey-sy+1
-        blocklength = 1
-        stride      = ex-sx+3
-        oldtype     = MPI_DOUBLE()
-
-        rhs = MPI_type_vector(line, count, blocklength, stride, oldtype)
-        body += [MPI_Assign(ierr, rhs, strict=False)]
-        # 
-
-        # Creation of the type_column derived datatype to exchange points
-        # with western to eastern neighbours
-        count   = ex-sx+1
-        oldtype = MPI_DOUBLE()
-
-        rhs = MPI_type_contiguous(column, count, oldtype)
-        body += [MPI_Assign(ierr, rhs, strict=False)]
-        #
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        body.append(Comment('... MPI_Tensor: ghost cells size'))
-        # ...
-
-        # ...
-        body += [Zeros(pads, ndim)]
-
-        pads     = IndexedVariable(pads.name, dtype=pads.dtype, shape=pads.shape)
-        arg_pads = IndexedVariable(arg_pads.name, \
-                                   dtype=arg_pads.dtype, \
-                                   shape=arg_pads.shape)
-        for i in range(0, ndim_value):
-            body += [Assign(pads[i], arg_pads[i])]
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        # ...
-
-        # ...
-        dtype = DataTypeFactory('MPI_Tensor', ("_name"))()
-        var = Variable(dtype, 'self')
-
-        results = [var]
+        results = []
         # ...
 
         return FunctionDef.__new__(cls, name, args, results, \
@@ -3625,19 +3629,14 @@ def mpi_definitions():
         declarations[i.name] = dec
     # ...
 
-#    # ...
-#    classes = ['MPI_Tensor_NEW']
-#    for i in classes:
-#        name = 'pcl_t_{0}'.format(i.lower())
-#        cls_constructs[name] = DataTypeFactory(i, ("_name"))
-#
-#        namespace[name] = eval(i)()
-#    # ...
-
     # ...
-    stmts  = []
-    stmts += [Comment('Hello world')]
+    c_name = 'MPI_Tensor_NEW'
+    c_dtype = DataTypeFactory(c_name, ("_name"))
+    cls_constructs[str(c_dtype.name)] = c_dtype()
+    classes['MPI_Tensor_NEW'] = MPI_Tensor_NEW()
+
+    stmts += [MPI_Tensor_NEW()]
     # ...
 
-    return namespace, declarations, cls_constructs, stmts
+    return namespace, declarations, cls_constructs, classes, stmts
 # ...
