@@ -168,6 +168,7 @@ def datatype_from_string(txt):
 namespace    = {}
 headers      = {}
 declarations = {}
+_extra_stmts  = []
 
 namespace["True"]  = true
 namespace["False"] = false
@@ -1047,9 +1048,8 @@ class Pyccel(object):
             cls_constructs[k] = v
         for k,v in classes.items():
             class_defs[k] = v
-
-        self.extra_stmts  = []
-        self.extra_stmts += stmts
+        for i in stmts:
+            _extra_stmts.append(i)
         # ...
 
     @property
@@ -1062,6 +1062,13 @@ class Pyccel(object):
             if dec.intent is None:
                 d[key] = dec
         return d
+
+    @property
+    def extra_stmts(self):
+        """
+        Returns the list of all extra_stmts
+        """
+        return _extra_stmts
 
     # TODO add example
     @property
@@ -3204,14 +3211,18 @@ class ImportFromStmt(BasicStmt):
 
         # TODO improve
         if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
-            funcs = ['*']
-            ns, ds, cs = mpi_definitions()
+            fil   = 'mpi'
+            funcs = None
+            ns, ds, cs, stmts = mpi_definitions()
             for k,v in ns.items():
                 namespace[k] = v
             for k,v in ds.items():
                 declarations[k] = v
             for k,v in cs.items():
                 cls_constructs[k] = v
+            for i in stmts:
+                _extra_stmts.append(i)
+
         if str(fil).startswith('spl.'):
             module = str(fil).split('spl.')[-1]
             fil = 'spl_m_{}'.format(module.lower())

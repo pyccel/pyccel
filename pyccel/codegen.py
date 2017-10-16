@@ -944,14 +944,11 @@ def build_file(filename, language, compiler, \
     ignored_modules.append('pyccel')
     for n in pyccel_modules:
         ignored_modules.append('pyccel.{0}'.format(n))
+        ignored_modules.append(n)
 
     # TODO remove. for the moment we use 'from spl.bspline import *'
-    ignored_modules.append('plaf')
     ignored_modules.append('plf')
-    ignored_modules.append('spl')
-    ignored_modules.append('disco')
     ignored_modules.append('dsc')
-    ignored_modules.append('fema')
     ignored_modules.append('jrk')
 
     # ...
@@ -969,7 +966,6 @@ def build_file(filename, language, compiler, \
     for key, value in d.items():
         if not _ignore_module(key):
             imports[key] = value
-
     ms = []
     for module, names in imports.items():
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)

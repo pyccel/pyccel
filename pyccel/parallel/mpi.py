@@ -3494,7 +3494,7 @@ MPI_STATUS_SIZE = MPI_status_size()
 MPI_PROC_NULL   = MPI_proc_null()
 
 # ...
-def mpi_definitions():
+def mpi_definitions_OLD():
     """Adds MPI functions and constants to the namespace
 
     Returns
@@ -3582,6 +3582,62 @@ def mpi_definitions():
         namespace[name] = eval(i)()
     # ...
 
-    return namespace, declarations, cls_constructs
+    # ...
+    stmts = []
+    # ...
+
+    return namespace, declarations, cls_constructs, stmts
 # ...
 
+# ...
+def mpi_definitions():
+    """Adds MPI functions and constants to the namespace
+
+    Returns
+
+    namespace: dict
+        dictorionary containing all declared variables/functions/classes.
+
+    declarations: dict
+        dictorionary containing all declarations.
+
+    cls_constructs: dict
+        dictionary of datatypes of classes using DatatypeFactory
+    """
+    namespace      = {}
+    declarations   = {}
+    cls_constructs = {}
+    classes        = {}
+    stmts          = []
+
+    # TODO implement MPI_Init and Finalize classes like in clapp/plaf/matrix.py
+    # ...
+    namespace['mpi_comm_world']  = MPI_COMM_WORLD
+    namespace['mpi_status_size'] = MPI_STATUS_SIZE
+    namespace['mpi_proc_null']   = MPI_PROC_NULL
+    # ...
+
+    # ...
+    for i in [MPI_ERROR, MPI_STATUS]:
+        namespace[i.name] = i
+
+        dec = MPI_Declare(i.dtype, i)
+        declarations[i.name] = dec
+    # ...
+
+#    # ...
+#    classes = ['MPI_Tensor_NEW']
+#    for i in classes:
+#        name = 'pcl_t_{0}'.format(i.lower())
+#        cls_constructs[name] = DataTypeFactory(i, ("_name"))
+#
+#        namespace[name] = eval(i)()
+#    # ...
+
+    # ...
+    stmts  = []
+    stmts += [Comment('Hello world')]
+    # ...
+
+    return namespace, declarations, cls_constructs, stmts
+# ...

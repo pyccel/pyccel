@@ -1421,10 +1421,11 @@ class Import(Basic):
         if not isinstance(fil, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName')
 
-        if iterable(funcs):
-            funcs = Tuple(*[Symbol(f) for f in funcs])
-        elif not isinstance(funcs, (str, DottedName)):
-            raise TypeError("Unrecognized funcs type: ", funcs)
+        if funcs:
+            if iterable(funcs):
+                funcs = Tuple(*[Symbol(f) for f in funcs])
+            elif not isinstance(funcs, (str, DottedName)):
+                raise TypeError("Unrecognized funcs type: ", funcs)
 
         return Basic.__new__(cls, fil, funcs)
 
