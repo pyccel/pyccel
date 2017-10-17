@@ -2935,12 +2935,12 @@ class MPI_Tensor_create(FunctionDef):
         ndim         = Variable('int', 'ndim')
 
         arg_npts     = Variable('int', 'npts', \
-                                rank=1, shape=ndim, allocatable=True)
+                                rank=1, shape=ndim, allocatable=False)
         arg_periods  = Variable('bool', 'periods', \
-                                rank=1, shape=ndim, allocatable=True)
+                                rank=1, shape=ndim, allocatable=False)
         arg_reorder  = Variable('bool', 'reorder')
         arg_pads     = Variable('int', 'pads', \
-                                rank=1, shape=ndim, allocatable=True)
+                                rank=1, shape=ndim, allocatable=False)
 
         args = [this, arg_npts, arg_periods, arg_reorder, arg_pads]
         # ...
@@ -3139,6 +3139,9 @@ class MPI_Tensor_create(FunctionDef):
         ex = d_var['ex']
         sy = d_var['sy']
         ey = d_var['ey']
+
+        body += [Zeros(starts, ndim)]
+        body += [Zeros(ends, ndim)]
 
         starts = IndexedVariable(starts.name, dtype=starts.dtype)
         ends   = IndexedVariable(ends.name,   dtype=ends.dtype)
