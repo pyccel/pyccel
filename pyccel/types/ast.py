@@ -2154,6 +2154,9 @@ class IndexedVariable(IndexedBase):
     def dtype(self):
         return self._dtype
 
+    @property
+    def name(self):
+        return self._args[0]
 
 class IndexedElement(Indexed):
     """

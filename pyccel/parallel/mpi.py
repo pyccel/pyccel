@@ -2994,8 +2994,7 @@ class MPI_Tensor_create(FunctionDef):
         body += [Zeros(dims, ndim)]
 
         # we change the definition to IndexedVariable to use dims as an array
-        print "type = ", type(dims.name)
-#        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
+        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
 
         rhs  = MPI_comm_size(MPI_comm_world())
         body += [MPI_Assign(nnodes, rhs)]
@@ -3010,9 +3009,9 @@ class MPI_Tensor_create(FunctionDef):
         # we change the definition to IndexedVariable to use periods as an array
         body += [Assign(periods, arg_periods)]
 
-#        periods     = IndexedVariable(periods.name, dtype=periods.dtype)
-#        arg_periods = IndexedVariable(arg_periods.name, dtype=arg_periods.dtype)
-#        # ...
+        periods     = IndexedVariable(periods.name, dtype=periods.dtype)
+        arg_periods = IndexedVariable(arg_periods.name, dtype=arg_periods.dtype)
+        # ...
 
         # ...
         body.append(Comment('...'))
@@ -3046,11 +3045,11 @@ class MPI_Tensor_create(FunctionDef):
 
         rhs  = MPI_comm_cart_coords(rank, coords, comm)
         body += [MPI_Assign(ierr, rhs, strict=False)]
-#
-#        coords = IndexedVariable(coords.name, \
-#                                 dtype=coords.dtype, \
-#                                 shape=coords.shape)
-#        # ...
+
+        coords = IndexedVariable(coords.name, \
+                                 dtype=coords.dtype, \
+                                 shape=coords.shape)
+        # ...
 
         # ... TODO treat disp properly
         body += [Zeros(neighbor, 2*ndim)]

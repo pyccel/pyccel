@@ -1475,7 +1475,7 @@ class FCodePrinter(CodePrinter):
         return "%sd0" % printed
 
     def _print_IndexedVariable(self, expr):
-        return "{0}".format(str(expr))
+        return self._print(expr.name)
 
     def _print_IndexedElement(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
