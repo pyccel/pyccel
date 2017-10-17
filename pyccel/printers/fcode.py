@@ -762,12 +762,12 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_type_contiguous(self, expr):
         ierr     = self._print(MPI_ERROR)
 
-        count       = expr.count
-        oldtype     = expr.oldtype
-        newtype     = expr.newtype
+        count       = self._print(expr.count)
+        oldtype     = self._print(expr.oldtype)
+        newtype     = self._print(expr.newtype)
 
         args = (count, oldtype, newtype, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        args  = ', '.join('{0}'.format(a) for a in args)
         code = 'call MPI_type_contiguous ({0})'.format(args)
 
         commit = 'call MPI_type_commit ({0}, {1})'.format(newtype, ierr)
@@ -778,14 +778,14 @@ class FCodePrinter(CodePrinter):
     def _print_MPI_type_vector(self, expr):
         ierr     = self._print(MPI_ERROR)
 
-        count       = expr.count
-        blocklength = expr.blocklength
-        stride      = expr.stride
-        oldtype     = expr.oldtype
-        newtype     = expr.newtype
+        count       = self._print(expr.count)
+        blocklength = self._print(expr.blocklength)
+        stride      = self._print(expr.stride)
+        oldtype     = self._print(expr.oldtype)
+        newtype     = self._print(expr.newtype)
 
         args = (count, blocklength, stride, oldtype, newtype, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
+        args  = ', '.join('{0}'.format(a) for a in args)
         code = 'call MPI_type_vector ({0})'.format(args)
 
         commit = 'call MPI_type_commit ({0}, {1})'.format(newtype, ierr)
