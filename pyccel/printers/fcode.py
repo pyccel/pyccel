@@ -1024,12 +1024,13 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
         if expr.cls_name:
-            if name in _default_methods:
-                name = _default_methods[name]
+            for k,m in _default_methods.items():
+                name = name.replace(k,m)
 
             cls_name = expr.cls_name
             if not (cls_name == '__UNDEFINED__'):
                 name = '{0}_{1}'.format(cls_name, name)
+            print(">>>> ", name)
         else:
             for i in _default_methods:
                 # because we may have a class Point with init: Point___init__

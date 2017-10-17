@@ -925,7 +925,14 @@ def expr_with_trailer(expr, trailer=None):
                 methods[str(i.name)] = i
             method = methods['__init__']
             this = cls.this
-            args = [this] + list(args)
+            if name == 'MPI_Tensor_NEW':
+                npts    = Tuple(4,4)
+                periods = Tuple(False,False)
+                reorder = BooleanFalse()
+                pads    = Tuple(1,1)
+                args = [this, npts, periods, reorder, pads]
+            else:
+                args = [this] + list(args)
             expr = ConstructorCall(method, args)
         else:
             if len(args) > 0:

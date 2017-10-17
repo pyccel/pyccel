@@ -539,6 +539,8 @@ class Range(sm_Range):
     def __new__(cls, *args):
         _args = [1, 1, 1]
         r = sm_Range.__new__(cls, *_args)
+        n = len(args)
+        args += r._args[n:]
         r._args = args
 
         return r

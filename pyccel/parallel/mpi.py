@@ -2908,9 +2908,9 @@ class MPI_Tensor_create(FunctionDef):
         create using the DataTypeFactory.
         """
         # ...
-        name = 'create'
+        f_name = '__init__'
 
-        cls._name = name
+        cls._name = f_name
         # ...
 
         # ...
@@ -3196,7 +3196,7 @@ class MPI_Tensor_create(FunctionDef):
         results = []
         # ...
 
-        return FunctionDef.__new__(cls, '__init__', args, results, \
+        return FunctionDef.__new__(cls, f_name, args, results, \
                                    body, local_vars, global_vars, \
                                    hide=hide, \
                                    kind=kind, \

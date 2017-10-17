@@ -312,7 +312,8 @@ class Codegen(object):
     def doprint(self, language, accelerator=None, \
                 ignored_modules=[], \
                 with_mpi=False, \
-                pyccel_modules=[]):
+                pyccel_modules=[], \
+                user_modules=[]):
         """Generate code for a given language.
 
         language: str
@@ -326,6 +327,8 @@ class Codegen(object):
         with_mpi: bool
             True if using MPI
         pyccel_modules: list
+            list of modules supplied by the user.
+        user_modules: list
             list of modules supplied by the user.
         """
         # ...
@@ -371,8 +374,8 @@ class Codegen(object):
         # ...
 
         # ... TODO improve
-        if len(ast.extra_stmts) > 0:
-            imports += "use m_pyccel\n"
+        for i in user_modules:
+            imports += "use {0}\n".format(i)
         # ...
 
         # ...
@@ -937,6 +940,10 @@ def build_file(filename, language, compiler, \
     # ...
 
     # ...
+    user_modules = ['m_pyccel']
+    # ...
+
+    # ...
     from pyccel.imports.utilities import find_imports
 
     d = find_imports(filename=filename)
@@ -978,8 +985,9 @@ def build_file(filename, language, compiler, \
 
     codegen = FCodegen(filename=filename, name=name)
     s=codegen.doprint(language=language, accelerator=accelerator, \
-                     ignored_modules=ignored_modules, with_mpi=with_mpi, \
-                     pyccel_modules=pyccel_modules)
+                      ignored_modules=ignored_modules, with_mpi=with_mpi, \
+                      pyccel_modules=pyccel_modules, \
+                      user_modules=user_modules)
 
     if show:
         print('========Fortran_Code========')
