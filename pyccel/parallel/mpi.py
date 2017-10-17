@@ -3488,6 +3488,81 @@ def mpify(stmt, **options):
                                                    action, settings)
 
     return stmt
+
+class MPI_Init(FunctionDef, MPI):
+    """
+    Call to MPI_init.
+
+    Example
+    >>> from pyccel.parallel.mpi import MPI_Init
+    >>> MPI_Init()
+    ierr := mpi_init()
+    """
+    def __new__(cls):
+        body        = []
+        local_vars  = []
+        global_vars = []
+        hide        = True
+        kind        = 'procedure'
+
+        args        = []
+        datatype    = 'int'
+        allocatable = False
+        shape       = None
+        rank        = 0
+
+        var_name = 'result_%d' % abs(hash(datatype))
+
+        f_name = 'mpi_init'
+
+        var = Variable(datatype, var_name)
+        results = [var]
+
+        return FunctionDef.__new__(cls, f_name, args, results, \
+                                   body, local_vars, global_vars, \
+                                   hide=hide, kind=kind)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'ierr := {}()'.format(sstr(self.name))
+
+class MPI_Finalize(FunctionDef, MPI):
+    """
+    Call to MPI_finalize.
+
+    Example
+    >>> from pyccel.parallel.mpi import MPI_Finalize
+    >>> MPI_Finalize()
+    ierr := mpi_finalize()
+    """
+    def __new__(cls):
+        body        = []
+        local_vars  = []
+        global_vars = []
+        hide        = True
+        kind        = 'procedure'
+
+        args        = []
+        datatype    = 'int'
+        allocatable = False
+        shape       = None
+        rank        = 0
+
+        var_name = 'result_%d' % abs(hash(datatype))
+
+        f_name = 'mpi_finalize'
+
+        var = Variable(datatype, var_name)
+        results = [var]
+
+        return FunctionDef.__new__(cls, f_name, args, results, \
+                                   body, local_vars, global_vars, \
+                                   hide=hide, kind=kind)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'ierr := {}()'.format(sstr(self.name))
+
 ##########################################################
 
 MPI_ERROR   = Variable('int', 'i_mpi_error')
@@ -3521,6 +3596,10 @@ def mpi_definitions_OLD():
     namespace['mpi_comm_world']  = MPI_COMM_WORLD
     namespace['mpi_status_size'] = MPI_STATUS_SIZE
     namespace['mpi_proc_null']   = MPI_PROC_NULL
+
+#    # TODO functions
+#    namespace['mpi_init'] = MPI_Init()
+#    namespace['mpi_finalize'] = MPI_Finalize()
     # ...
 
     # ...
@@ -3630,6 +3709,11 @@ def mpi_definitions():
     # ...
 
     # ...
+    for i in [MPI_Init(), MPI_Finalize()]:
+        namespace[str(i.name)] = i
+    # ...
+
+    # ...
     c_name = 'MPI_Tensor_NEW'
     c_dtype = DataTypeFactory(c_name, ("_name"))
     cls_constructs[str(c_dtype.name)] = c_dtype()
@@ -3637,6 +3721,37 @@ def mpi_definitions():
 
     stmts += [MPI_Tensor_NEW()]
     # ...
+
+
+
+#    # ...
+#    body        = []
+#    local_vars  = []
+#    global_vars = []
+#    hide        = True
+#    kind        = 'procedure'
+#    # ...
+#
+#    # ...
+#    args        = []
+#    datatype    = 'int'
+#    allocatable = False
+#    shape       = None
+#    rank        = 0
+#
+#    var_name = 'result_%d' % abs(hash(datatype))
+#
+#    for f_name in ['mpi_init', 'mpi_finalize']:
+#        var = Variable(datatype, var_name)
+#        results = [var]
+#
+#        stmt = FunctionDef(f_name, args, results, \
+#                           body, local_vars, global_vars, \
+#                           hide=hide, kind=kind)
+#
+#        namespace[f_name] = stmt
+#    # ...
+
 
     return namespace, declarations, cls_constructs, classes, stmts
 # ...

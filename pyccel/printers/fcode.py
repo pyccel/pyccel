@@ -918,17 +918,25 @@ class FCodePrinter(CodePrinter):
             # func here is of instance FunctionCall
             cls_name = func.func.cls_name
             keys = func.func.arguments
-            if (not cls_name) and \
-               (not func.arguments is None) and \
-               (len(func.arguments) > 0):
-                code_args = ', '.join(self._print(i) for i in func.arguments)
-                code_args = '{0}, {1}'.format(code_args, lhs_code)
+
+            # for MPI statements, we need to add the lhs as the last argument
+            if isinstance(func.func, MPI):
+                if not func.arguments:
+                    code_args = lhs_code
+                else:
+                    code_args = ', '.join(self._print(i) for i in func.arguments)
+                    code_args = '{0}, {1}'.format(code_args, lhs_code)
             else:
                 _ij_print = lambda i,j: '{0}={1}'.format(self._print(i), \
                                                          self._print(j))
 
                 code_args = ', '.join(_ij_print(i,j) \
                                       for i,j in zip(keys, func.arguments))
+#            if (not func.arguments is None) and (len(func.arguments) > 0):
+#                if (not cls_name):
+#                    code_args = ', '.join(self._print(i) for i in func.arguments)
+#                    code_args = '{0}, {1}'.format(code_args, lhs_code)
+#                else:
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
