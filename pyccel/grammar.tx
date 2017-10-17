@@ -173,7 +173,9 @@ PrintStmt: STRING | Expression;
 ParameterValue: (value=IdentifierOrNumber |value=ArgList);
 ParameterSingle: label=ParameterTest '=' value=ParameterValue;
 
-AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=Expression;
+AssignRHS: Expression | ExpressionList;
+
+AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
 MultiAssignStmt: lhs+=ID[','] '=' rhs=Expression;
 
@@ -237,6 +239,8 @@ Atom:
   | (op=FALSE)
   | '(' op=Test ')'
 ;
+
+ExpressionList: '(' args+=Expression[',']   ')';
 
 OpPlusOrMinus: '+' | '-';
 OpFactor: '*' | '@' | '/' | '%' ;

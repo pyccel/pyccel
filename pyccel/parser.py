@@ -3,7 +3,7 @@
 import os
 
 from pyccel.syntax import (Pyccel, ImportFromStmt, ImportAsNames, \
-                           ArithmeticExpression, Term, Atom, \
+                           ArithmeticExpression, Term, Atom, ExpressionList, \
                            FactorSigned, AtomExpr, AtomExpr, Power, \
                            FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                            # statements
@@ -192,7 +192,7 @@ class PyccelParser(Parser):
         It takes the same arguments as the Parser class.
         """
         classes = [Pyccel, \
-                   ArithmeticExpression, Term, Atom, \
+                   ArithmeticExpression, Term, Atom, ExpressionList, \
                    FactorSigned, AtomExpr, AtomExpr, Power, \
                    FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                    # statements

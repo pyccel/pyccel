@@ -399,6 +399,7 @@ class FCodePrinter(CodePrinter):
         arg_types        = [type(v) for v in expr.variables]
         arg_ranks        = [v.rank for v in expr.variables]
         arg_allocatables = [v.allocatable for v in expr.variables]
+        arg_shapes       = [v.shape for v in expr.variables]
 
         decs = []
         intent = expr.intent
@@ -407,15 +408,19 @@ class FCodePrinter(CodePrinter):
         # TODO ARA improve
         rank        = arg_ranks[0]
         allocatable = arg_allocatables[0]
+        shape       = arg_shapes[0]
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
-        base = '0'
+        s = '0'
+        e = ''
         if allocatable:
-            base = ''
+            s = ''
         if rank == 0:
             rankstr =  ''
+        elif (rank == 1) and (isinstance(shape, int)):   # TODO improve
+            rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
         else:
-            rankstr = ', '.join(base+':' for f in range(0, rank))
+            rankstr = ', '.join(s+':'+e for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
         if allocatable:

@@ -276,6 +276,14 @@ def get_attributs(expr):
             if a['rank'] > 0:
                 d_var['rank'] = a['rank']
         return d_var
+    elif isinstance(expr, Tuple):
+        a = get_attributs(expr[0])
+
+        d_var['datatype']    = a['datatype']
+        d_var['allocatable'] = False
+        d_var['shape']       = len(expr)
+        d_var['rank']        = 1
+        return d_var
     elif isinstance(expr, Integer):
         d_var['datatype']    = 'int'
         d_var['allocatable'] = False
@@ -1377,7 +1385,7 @@ class AssignStmt(BasicStmt):
         """
         Process the Assign statement by returning a pyccel.types.ast object
         """
-        if not isinstance(self.rhs, ArithmeticExpression):
+        if not isinstance(self.rhs, (ArithmeticExpression, ExpressionList)):
             raise TypeError("Expecting an expression")
 
         rhs      = self.rhs.expr
@@ -1407,12 +1415,13 @@ class AssignStmt(BasicStmt):
 
 #            print ">>>> AssignStmt : ", var_name, d_var
 
-            d_var['allocatable'] = not(d_var['shape'] is None)
-            if d_var['shape']:
-                if DEBUG:
-                    print "> Found an unallocated variable: ", var_name
-                status = 'unallocated'
-                like = allocatable_like(rhs)
+            if not isinstance(rhs, Tuple):
+                d_var['allocatable'] = not(d_var['shape'] is None)
+                if d_var['shape']:
+                    if DEBUG:
+                        print "> Found an unallocated variable: ", var_name
+                    status = 'unallocated'
+                    like = allocatable_like(rhs)
             insert_variable(var_name, **d_var)
 
         if self.trailer is None:
@@ -1877,7 +1886,7 @@ class ArithmeticExpression(ExpressionElement):
                 ret = Add(ret, operand.expr)
             else:
                 a   = Mul(-1, operand.expr)
-                ret = Add(ret, a)
+                retd = Add(ret, a)
 
         return ret
 
@@ -1916,6 +1925,7 @@ class Atom(ExpressionElement):
                     raise Exception('Unknown variable "{}" at position {}'
                                     .format(O, self._tx_position))
         elif isinstance(op, ExpressionElement):
+            print ">>>> op = ", op
             return op.expr
         elif op in namespace:
             if isinstance(namespace[op], FunctionDef):
@@ -2033,6 +2043,26 @@ class Comparison(ExpressionElement):
                 raise Exception('operation not yet available at position {}'
                                 .format(self._tx_position))
         return ret
+
+class ExpressionList(BasicStmt):
+    """Base class representing a list of elements statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Expression list statement
+
+        args: list, tuple
+            list of elements
+        """
+        self.args = kwargs.pop('args')
+
+        super(ExpressionList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = [a.expr for a in self.args]
+        return Tuple(*args)
+
 
 class FlowStmt(BasicStmt):
     """Base class representing a Flow statement in the grammar."""
