@@ -155,10 +155,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         name    = self._print(expr.name)
+        imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
 
         prelude = ('module {0}\n'
-                   'implicit none').format(name)
+                   '{1}\n'
+                   'implicit none').format(name, imports)
         epilog  = 'end module {0}'.format(name)
 
         sep = self._print(SeparatorComment(40))

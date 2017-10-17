@@ -30,6 +30,7 @@ from pyccel.types.ast import Comment
 from pyccel.types.ast import EmptyLine
 from pyccel.types.ast import Print
 from pyccel.types.ast import Len
+from pyccel.types.ast import Import
 
 from pyccel.types.ast import For, While, If, Del, Sync
 from pyccel.types.ast import FunctionDef, ClassDef
@@ -2786,6 +2787,10 @@ class MPI_Tensor_NEW(ClassDef, MPI, Tensor):
         options = ['public']
         # ...
 
+        # ...
+        imports = [Import('mpi')]
+        # ...
+
         # ... attributs
         ndim     = Variable('int', 'ndim')
         nnodes   = Variable('int', 'nnodes')
@@ -2824,7 +2829,8 @@ class MPI_Tensor_NEW(ClassDef, MPI, Tensor):
 
         return ClassDef.__new__(cls, 'MPI_Tensor_NEW', \
                                 attributs, methods, \
-                                options=options)
+                                options=options, \
+                                imports=imports)
 
     @property
     def module(self):
@@ -2911,6 +2917,7 @@ class MPI_Tensor_create(FunctionDef):
         body        = []
         local_vars  = []
         global_vars = []
+        imports     = [Import('mpi')]
         hide        = False
         kind        = 'procedure'
         cls_name    = '__UNDEFINED__'
@@ -2964,25 +2971,25 @@ class MPI_Tensor_create(FunctionDef):
                             rank=1, shape=ndim, allocatable=True)
         # ...
 
-#        # ...
-#        ierr = MPI_ERROR
-#
-#        local_vars = [ierr]
-#        # ...
-#
-#        # ...
-#        reorder = arg_reorder
-#        # ...
-#
-#        # ...
-#        body.append(Comment('... MPI_Tensor: grid setting'))
-#        # ...
-#
-#        # ... TODO sets the right value. now it is equal to 1
-#        ndim_value = 2 # arg_npts.rank
-#        body += [Assign(ndim, Len(arg_npts))]
-#        # ...
-#
+        # ...
+        ierr = MPI_ERROR
+
+        local_vars = [ierr]
+        # ...
+
+        # ...
+        reorder = arg_reorder
+        # ...
+
+        # ...
+        body.append(Comment('... MPI_Tensor: grid setting'))
+        # ...
+
+        # ... TODO sets the right value. now it is equal to 1
+        ndim_value = 2 # arg_npts.rank
+        body += [Assign(ndim, Len(arg_npts))]
+        # ...
+
 #        # ...
 #        body += [Zeros(dims, ndim)]
 #
@@ -2995,7 +3002,7 @@ class MPI_Tensor_create(FunctionDef):
 #        rhs = MPI_dims_create(nnodes, dims)
 #        body += [MPI_Assign(ierr, rhs, strict=False)]
 #        # ...
-#
+
 #        # ...
 #        body += [Zeros(periods, ndim)]
 #
@@ -3190,7 +3197,10 @@ class MPI_Tensor_create(FunctionDef):
 
         return FunctionDef.__new__(cls, name, args, results, \
                                    body, local_vars, global_vars, \
-                                   hide=hide, kind=kind, cls_name=cls_name)
+                                   hide=hide, \
+                                   kind=kind, \
+                                   cls_name=cls_name, \
+                                   imports=imports)
 
     @property
     def name(self):

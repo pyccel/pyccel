@@ -41,18 +41,19 @@ from sympy.core.compatibility import is_sequence
 # TODO: add examples: Break, Len, Shape,
 #                     Min, Max, Dot, Sign, Array,
 #                     Thread, ThreadID, ThreadNumber
-# TODO: add EmptyStmt => empty lines
-# TODO: clean Thread objects
-# TODO: update code examples
+# TODO - add EmptyStmt => empty lines
+#      - clean Thread objects
+#      - update code examples
+#      - add examples
+#      - Function case
+#      - Zeros, Ones, Array cases
+#      - AnnotatedComment case
+#      - Slice case
+#      - Thread cases
+#      - Stencil case
+#      - FunctionHeader case
+#      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 
-# TODO add examples
-# TODO treat Function case
-# TODO treat Zeros, Ones, Array cases
-# TODO treat AnnotatedComment case
-# TODO treat Slice case
-# TODO treat Thread cases
-# TODO treat Stencil case
-# TODO treat FunctionHeader case
 def subs(expr, a_old, a_new):
     """
     Substitutes old for new in an expression after sympifying args.
@@ -700,6 +701,9 @@ class Module(Basic):
     classes: list
         a list of ClassDef instances
 
+    imports: list, tuple
+        list of needed imports
+
     Examples
 
     >>> from pyccel.types.ast import Variable, Assign
@@ -721,7 +725,7 @@ class Module(Basic):
     Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
-    def __new__(cls, name, variables, funcs, classes):
+    def __new__(cls, name, variables, funcs, classes, imports=[]):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
 
@@ -743,7 +747,17 @@ class Module(Basic):
             if not isinstance(i, ClassDef):
                 raise TypeError("Only a ClassDef instance is allowed.")
 
-        return Basic.__new__(cls, name, variables, funcs, classes)
+        if not iterable(imports):
+            raise TypeError("imports must be an iterable")
+
+        for i in funcs:
+            imports += i.imports
+        for i in classes:
+            imports += i.imports
+        imports = set(imports) # for unicity
+        imports = Tuple(*imports)
+
+        return Basic.__new__(cls, name, variables, funcs, classes, imports)
 
     @property
     def name(self):
@@ -760,6 +774,10 @@ class Module(Basic):
     @property
     def classes(self):
         return self._args[3]
+
+    @property
+    def imports(self):
+        return self._args[4]
 
     @property
     def declarations(self):
@@ -1181,6 +1199,9 @@ class FunctionDef(Basic):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    imports: list, tuple
+        a list of needed imports
+
     >>> from pyccel.types.ast import Assign, Variable, FunctionDef
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
@@ -1193,7 +1214,7 @@ class FunctionDef(Basic):
 
     def __new__(cls, name, arguments, results, \
                 body, local_vars=[], global_vars=[], \
-                cls_name=None, hide=False, kind='function'):
+                cls_name=None, hide=False, kind='function', imports=[]):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -1228,11 +1249,14 @@ class FunctionDef(Basic):
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
+        if not iterable(imports):
+            raise TypeError("imports must be an iterable")
+
         return Basic.__new__(cls, name, \
                              arguments, results, \
                              body, \
                              local_vars, global_vars, \
-                             cls_name, hide, kind)
+                             cls_name, hide, kind, imports)
 
     @property
     def name(self):
@@ -1270,6 +1294,10 @@ class FunctionDef(Basic):
     def kind(self):
         return self._args[8]
 
+    @property
+    def imports(self):
+        return self._args[9]
+
     def print_body(self):
         for s in self.body:
             print (s)
@@ -1299,12 +1327,18 @@ class ClassDef(Basic):
 
     name : str
         The name of the class.
+
     attributs: iterable
         The attributs to the class.
+
     methods: iterable
         Class methods
+
     options: list, tuple
         list of options ('public', 'private', 'abstract')
+
+    imports: list, tuple
+        list of needed imports
 
     Examples
 
@@ -1324,7 +1358,8 @@ class ClassDef(Basic):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
-    def __new__(cls, name, attributs, methods, options=['public']):
+    def __new__(cls, name, attributs, methods, \
+                options=['public'], imports=[]):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -1341,8 +1376,16 @@ class ClassDef(Basic):
         # options
         if not iterable(options):
             raise TypeError("options must be an iterable")
+        # imports
+        if not iterable(imports):
+            raise TypeError("imports must be an iterable")
 
-        return Basic.__new__(cls, name, attributs, methods, options)
+        for i in methods:
+            imports += i.imports
+        imports = set(imports) # for unicity
+        imports = Tuple(*imports)
+
+        return Basic.__new__(cls, name, attributs, methods, options, imports)
 
     @property
     def name(self):
@@ -1359,6 +1402,10 @@ class ClassDef(Basic):
     @property
     def options(self):
         return self._args[3]
+
+    @property
+    def imports(self):
+        return self._args[4]
 
     # TODO add other attributs?
     @property
