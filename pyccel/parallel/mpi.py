@@ -3196,7 +3196,7 @@ class MPI_Tensor_create(FunctionDef):
         results = []
         # ...
 
-        return FunctionDef.__new__(cls, name, args, results, \
+        return FunctionDef.__new__(cls, '__init__', args, results, \
                                    body, local_vars, global_vars, \
                                    hide=hide, \
                                    kind=kind, \
