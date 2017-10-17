@@ -1717,9 +1717,6 @@ class Zeros(Basic):
                 shape = Tuple(sympify(shape))
             elif isinstance(shape,Len):
                 shape = shape.str
-            elif isinstance(shape, Basic):
-                # TODO do we keep this?
-                shape = str(shape)
             else:
                 shape = shape
 

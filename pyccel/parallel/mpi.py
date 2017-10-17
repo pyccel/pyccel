@@ -2990,12 +2990,12 @@ class MPI_Tensor_create(FunctionDef):
         body += [Assign(ndim, Len(arg_npts))]
         # ...
 
-#        # ...
-#        body += [Zeros(dims, ndim)]
-#
-#        # we change the definition to IndexedVariable to use dims as an array
-#        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
-#
+        # ...
+        body += [Zeros(dims, ndim)]
+
+        # we change the definition to IndexedVariable to use dims as an array
+        dims = IndexedVariable(dims.name, dtype=dims.dtype, shape=dims.shape)
+
 #        rhs  = MPI_comm_size(MPI_comm_world())
 #        body += [MPI_Assign(nnodes, rhs)]
 #

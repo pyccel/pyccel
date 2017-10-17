@@ -270,10 +270,8 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr.shape, Tuple):
                 # this is a correction. problem on LRZ
                 shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-            elif isinstance(expr.shape, str):
-                shape_code = '0:' + self._print(expr.shape) + '-1'
             else:
-                raise TypeError('Unknown type of shape'+str(type(expr.shape)))
+                shape_code = '0:' + self._print(expr.shape) + '-1'
 
             if not isinstance(expr.lhs, Variable):
                 raise TypeError('Expecting lhs to be a Variable')
