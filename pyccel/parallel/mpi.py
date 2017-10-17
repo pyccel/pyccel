@@ -3004,59 +3004,59 @@ class MPI_Tensor_create(FunctionDef):
         body += [MPI_Assign(ierr, rhs, strict=False)]
         # ...
 
-#        # ...
-#        body += [Zeros(periods, ndim)]
-#
-#        # we change the definition to IndexedVariable to use periods as an array
-#        body += [Assign(periods, arg_periods)]
-#
+        # ...
+        body += [Zeros(periods, ndim)]
+
+        # we change the definition to IndexedVariable to use periods as an array
+        body += [Assign(periods, arg_periods)]
+
 #        periods     = IndexedVariable(periods.name, dtype=periods.dtype)
 #        arg_periods = IndexedVariable(arg_periods.name, dtype=arg_periods.dtype)
 #        # ...
-#
-#        # ...
-#        body.append(Comment('...'))
-#        body.append(EmptyLine())
-#        body.append(Comment('... MPI_Tensor: cart definition'))
-#        # ...
-#
-#        # ... set the parent comm
-#        comm_parent = MPI_comm_world()
-#        # ...
-#
-#        # ... create the cart comm
-#        comm = MPI_comm('self % comm')
-#        rhs  = MPI_comm_cart_create(dims, periods, reorder, comm, comm_parent)
-#
-#        body += [MPI_Assign(ierr, rhs, strict=False)]
-#        # ...
-#
-#        # ...
-#        body += [MPI_Assign(rank, MPI_comm_rank(comm))]
-#        # ...
-#
-#        # ...
-#        body.append(Comment('...'))
-#        body.append(EmptyLine())
-#        body.append(Comment('... MPI_Tensor: Neighbors'))
-#        # ...
-#
-#        # ... compute the coordinates of the process
-#        body += [Zeros(coords, ndim)]
-#
-#        rhs  = MPI_comm_cart_coords(rank, coords, comm)
-#        body += [MPI_Assign(ierr, rhs, strict=False)]
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: cart definition'))
+        # ...
+
+        # ... set the parent comm
+        comm_parent = MPI_comm_world()
+        # ...
+
+        # ... create the cart comm
+        comm = MPI_comm('self % comm')
+        rhs  = MPI_comm_cart_create(dims, periods, reorder, comm, comm_parent)
+
+        body += [MPI_Assign(ierr, rhs, strict=False)]
+        # ...
+
+        # ...
+        body += [MPI_Assign(rank, MPI_comm_rank(comm))]
+        # ...
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: Neighbors'))
+        # ...
+
+        # ... compute the coordinates of the process
+        body += [Zeros(coords, ndim)]
+
+        rhs  = MPI_comm_cart_coords(rank, coords, comm)
+        body += [MPI_Assign(ierr, rhs, strict=False)]
 #
 #        coords = IndexedVariable(coords.name, \
 #                                 dtype=coords.dtype, \
 #                                 shape=coords.shape)
 #        # ...
-#
-#        # ... TODO treat disp properly
-#        body += [Zeros(neighbor, 2*ndim)]
-#
+
+        # ... TODO treat disp properly
+        body += [Zeros(neighbor, 2*ndim)]
+
 #        neighbor = IndexedVariable(neighbor.name, dtype=neighbor.dtype)
-#
+
 #        _map_neighbor = {}
 #        if ndim_value == 2:
 #            north = 0 ; east = 1 ; south = 2 ; west = 3
@@ -3084,13 +3084,13 @@ class MPI_Tensor_create(FunctionDef):
 #        else:
 #            raise NotImplementedError('Only 2d is available')
 #        # ...
-#
-#        # ...
-#        body.append(Comment('...'))
-#        body.append(EmptyLine())
-#        body.append(Comment('... MPI_Tensor: local ranges'))
-#        # ...
-#
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        body.append(Comment('... MPI_Tensor: local ranges'))
+        # ...
+
 #        # ... compute local ranges
 #        _starts = np.zeros(ndim_value, dtype=int)
 #        _steps  = np.ones(ndim_value,  dtype=int)
