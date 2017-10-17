@@ -1069,7 +1069,7 @@ class Variable(Symbol):
         The type of the variable. Can be either a DataType,
         or a str (bool, int, float, double).
 
-    name : str, list
+    name : str, list, DottedName
         The sympy object the variable represents. This can be either a string
         or a dotted name, when using a Class attribut.
 

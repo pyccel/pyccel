@@ -1037,6 +1037,13 @@ class FCodePrinter(CodePrinter):
                     name = name.replace(i, _default_methods[i])
         out_args = []
         decs = []
+
+        # ... local variables declarations
+        for i in expr.local_vars:
+            dec = Declare(i.dtype, i)
+            decs.append(dec)
+        # ...
+
         body = expr.body
         func_end  = ''
         if len(expr.results) == 1:
