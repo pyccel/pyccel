@@ -1452,6 +1452,31 @@ class ClassDef(Basic):
 
         return Variable(dtype(), 'self')
 
+    def get_attribute(self, O, attr):
+        """Returns the attribute attr of the class O of instance self."""
+        if not isinstance(attr, str):
+            raise TypeError('Expecting attribute to be a string')
+
+        if isinstance(O, Variable):
+            cls_name = str(O.name)
+        else:
+            cls_name = str(O)
+
+        attributs = {}
+        for i in self.attributs:
+            attributs[str(i.name)] = i
+
+        if not attr in attributs:
+            raise ValueError('{0} is not an attribut of {1}'.format(attr, str(self)))
+
+        var = attributs[attr]
+        name = DottedName(cls_name, str(var.name))
+        return Variable(var.dtype, name, \
+                        rank=var.rank, \
+                        allocatable=var.allocatable, \
+                        shape=var.shape, \
+                        cls_base=var.cls_base)
+
 
 class Ceil(Function):
     """
@@ -1756,8 +1781,8 @@ class Zeros(Basic):
                 shape = shape
 
         if grid:
-            if not isinstance(grid, (Range, Tensor)):
-                raise TypeError('Expecting a Range or Tensor object.')
+            if not isinstance(grid, (Range, Tensor, Variable)):
+                raise TypeError('Expecting a Range, Tensor or a Variable object.')
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)

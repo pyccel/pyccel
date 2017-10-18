@@ -413,7 +413,8 @@ class FCodePrinter(CodePrinter):
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
         e = ''
-        if allocatable:
+        var = expr.variables[0]
+        if allocatable or (var.shape is None):
             s = ''
         if rank == 0:
             rankstr =  ''

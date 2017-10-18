@@ -90,6 +90,7 @@ from pyccel.parallel.mpi import MPI_comm_cart_coords
 from pyccel.parallel.mpi import MPI_comm_cart_shift
 from pyccel.parallel.mpi import MPI_comm_cart_sub
 from pyccel.parallel.mpi import MPI_dims_create
+from pyccel.parallel.mpi import MPI_Tensor
 from pyccel.parallel.mpi import mpi_definitions
 
 from pyccel.stdlib     import stdlib_definitions
@@ -528,6 +529,14 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, Range):
                 grid = i
                 rank = 1
+            elif isinstance(i, Variable): # iterator
+                ctype = i.dtype
+                cls_name = ctype.name
+                obj = eval(cls_name)()
+                grid = obj.get_ranges(i)
+                # grid is now a Tensor
+
+                rank = grid.dim
             else:
                 # TODO further check
                 #      i can be a Tensor here

@@ -218,7 +218,8 @@ def mpi_datatype(dtype):
     elif isinstance(dtype, NativeComplex):
         return 'MPI_COMPLEX'
     elif isinstance(dtype, Variable):
-        return mpi_datatype(dtype.dtype)
+        # TODO add some checks
+        return dtype
     else:
         # Pyccel user class
         cls_name = dtype.__class__.__name__
@@ -2332,6 +2333,23 @@ class MPI_Tensor(ClassDef, MPI, Tensor):
         sstr = printer.doprint
         return '{}'.format(sstr(self.name))
 
+    def get_ranges(self, O):
+        starts = self.get_attribute(O, 'starts')
+        ends   = self.get_attribute(O, 'ends')
+        pads   = self.get_attribute(O, 'pads')
+
+        starts = IndexedVariable(starts.name, dtype=starts.dtype)
+        ends   = IndexedVariable(ends.name, dtype=ends.dtype)
+        pads   = IndexedVariable(pads.name, dtype=pads.dtype)
+
+        ndim = 2 # TODO get it from O
+        ranges = []
+        for i in range(0, ndim):
+            r = Tile(starts[i]-pads[i], ends[i]+pads[i])
+            ranges.append(r)
+        return Tensor(*ranges)
+
+
 class MPI_Tensor_create(FunctionDef):
     """
     Represents a Tensor create procedure.
@@ -2542,7 +2560,7 @@ class MPI_Tensor_create(FunctionDef):
             nn = (_ends[i] - _starts[i])/_steps[i]
 
             d['s'+l] = (coords[i] * nn) / dims[i]
-            d['e'+l] = ((coords[i]+1) * nn) / dims[i]
+            d['e'+l] = ((coords[i]+1) * nn) / dims[i] - 1
 
         ranges = []
         d_var = {}
