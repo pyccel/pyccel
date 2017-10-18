@@ -43,7 +43,7 @@ for i,j in mesh:
 #Linear solver tolerance
 tol = 1.0e-10
 
-n_iterations = 1
+n_iterations = 10
 for it in range(0, n_iterations):
     u = u_new
 
@@ -59,6 +59,34 @@ for it in range(0, n_iterations):
     for i,j in mesh:
         u_error += abs(u[i,j]-u_new[i,j])
     local_error = u_error/(npts[0]*npts[1])
+
+    #Reduction
+    global_error = local_error
+    sync(mesh, 'allreduce', '+') global_error
+
+#    if global_error < tol:
+#        if rank == 0:
+#            print ("convergence after ", it, " iterations")
+#            print ("local  error = ", local_error)
+#            print ("global error = ", global_error)
+#        break
+
+    if global_error < tol:
+        break
+
+#Computation of the global error
+u_error = 0.0
+for i,j in mesh:
+    u_error += abs(u[i,j]-u_exact[i,j])
+u_error = u_error/(npts[0]*npts[1])
+
+#Reduction
+sync(mesh, 'allreduce', '+') u_error
+
+#if rank == 0:
+#    print ("error(u_h - u_exact) = ", u_error)
+print ("error(u_h - u_exact) = ", u_error)
+
 
 del mesh
 ierr = mpi_finalize()

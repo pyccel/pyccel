@@ -2312,8 +2312,7 @@ class MPI_Tensor(ClassDef, MPI, Tensor):
 
         # ...
         methods = [MPI_Tensor_create(), \
-                   MPI_Tensor_free(attributs), \
-                   MPI_Tensor_communicate()]
+                   MPI_Tensor_free(attributs)]
         # ...
 
         return ClassDef.__new__(cls, 'MPI_Tensor', \
@@ -2677,167 +2676,6 @@ class MPI_Tensor_create(FunctionDef):
         results = ', '.join(sstr(i) for i in self.results)
         return '{0} := {1}({2})'.format(results, name, args)
 
-class MPI_Tensor_communicate(FunctionDef):
-    """
-    Represents a Tensor communicate procedure.
-
-    Examples
-
-    >>> from pyccel.parallel.mpi import MPI_Tensor_communicate
-    >>> T = MPI_Tensor_communicate()
-    >>> T
-    self := MPI_Tensor_communicate(npts, periods, reorder, pads)
-    >>> T.print_body()
-    """
-    def __new__(cls):
-        """
-        Represents a call to communicate for MPI tensor.
-        """
-        # ...
-        f_name = 'communicate'
-
-        cls._name = f_name
-        # ...
-
-        # ...
-        body        = []
-        local_vars  = []
-        global_vars = []
-        imports     = [Import('mpi')]
-        hide        = False
-        kind        = 'procedure'
-        cls_name    = '__UNDEFINED__'
-        # ...
-
-        # TODO add comm_parent as (optional) argument
-
-        # ... args
-        c_name = 'MPI_Tensor'
-        alias  = None
-        c_dtype = DataTypeFactory(c_name, ("_name"))
-
-        this = Variable(c_dtype(), 'self')
-
-        arg_x = Variable('double', 'arg_x', rank=2)
-        args = [this, arg_x]
-        # ...
-
-        # ...
-        ierr    = MPI_ERROR
-        istatus = MPI_STATUS
-        local_vars  += [ierr, istatus]
-        # ...
-
-        # ...
-        results = []
-        # ...
-
-        # ... needed attributs
-        comm          = Variable('int', DottedName('self', 'comm'), \
-                                 cls_base=MPI_comm())
-
-        type_line     = Variable('int', DottedName('self', 'line'))
-        type_column   = Variable('int', DottedName('self', 'column'))
-
-        starts        = IndexedVariable(DottedName('self', 'starts'), \
-                                        dtype=NativeInteger())
-        ends          = IndexedVariable(DottedName('self', 'ends'), \
-                                        dtype=NativeInteger())
-        neighbor      = IndexedVariable(DottedName('self', 'neighbor'), \
-                                        dtype=NativeInteger())
-
-        sx = starts[0] ; sy = starts[1]
-        ex = ends[0]   ; ey = ends[1]
-
-        north = 0 ; east = 1 ; south = 2 ; west = 3
-        # ...
-
-        # ... local variable
-        tag_value = int(str(abs(hash(this)))[-6:])
-        tag_name = 'tag_{0}'.format(str(tag_value))
-        tag = Variable('int', tag_name)
-
-        local_vars += [tag]
-        body       += [Assign(tag, tag_value)]
-        # ...
-
-        # ... # TODO loop over variables
-#        var = variables[0]
-        var = arg_x
-        var = IndexedVariable(var.name, dtype=type_line, shape=var.shape)
-
-        # ...
-        body.append(Comment('... MPI_Tensor: Send to neighbour N and receive from neighbour S'))
-        # ...
-
-        # Send to neighbour N and receive from neighbour S
-        rhs = MPI_comm_sendrecv(var[sx, sy],   neighbor[north], tag, \
-                                var[ex+1, sy], neighbor[south], tag, comm)
-        stmt = MPI_Assign(ierr, rhs, strict=False)
-        body.append(stmt)
-
-        # ...
-        body.append(Comment('...'))
-        body.append(Comment('... MPI_Tensor: Send to neighbour S and receive from neighbour N'))
-        # ...
-
-        # Send to neighbour S and receive from neighbour N
-        rhs = MPI_comm_sendrecv(var[ex, sy],   neighbor[south], tag, \
-                                var[sx-1, sy], neighbor[north], tag, comm)
-        stmt = MPI_Assign(ierr, rhs, strict=False)
-        body.append(stmt)
-        # ...
-
-        # ...
-        var = IndexedVariable(var.name, dtype=type_column, shape=var.shape)
-
-        # ...
-        body.append(Comment('...'))
-        body.append(Comment('... MPI_Tensor: Send to neighbour W  and receive from neighbour E'))
-        # ...
-
-        # Send to neighbour W  and receive from neighbour E
-        rhs = MPI_comm_sendrecv(var[sx, sy],   neighbor[west], tag, \
-                                var[sx, ey+1], neighbor[east], tag, comm)
-        stmt = MPI_Assign(ierr, rhs, strict=False)
-        body.append(stmt)
-
-        # ...
-        body.append(Comment('...'))
-        body.append(Comment('... MPI_Tensor: Send to neighbour E  and receive from neighbour W'))
-        # ...
-
-        # Send to neighbour E  and receive from neighbour W
-        rhs = MPI_comm_sendrecv(var[sx, ey],   neighbor[east], tag, \
-                                var[sx, sy-1], neighbor[west], tag, comm)
-        stmt = MPI_Assign(ierr, rhs, strict=False)
-        body.append(stmt)
-        # ...
-
-        # ...
-        body.append(Comment('...'))
-        body.append(EmptyLine())
-        # ...
-
-        return FunctionDef.__new__(cls, f_name, args, results, \
-                                   body, local_vars, global_vars, \
-                                   hide=hide, \
-                                   kind=kind, \
-                                   cls_name=cls_name, \
-                                   imports=imports)
-
-    @property
-    def name(self):
-        return self._name
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        name    = 'MPI_Tensor_{0}'.format(sstr(self.name))
-        args    = ', '.join(sstr(i) for i in self.arguments)
-        results = ', '.join(sstr(i) for i in self.results)
-        return '{0} := {1}({2})'.format(results, name, args)
-
 
 class MPI_Tensor_free(FunctionDef):
     """
@@ -2981,11 +2819,11 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         #variables.append(ierr)
         # ...
 
-        # ...
+        O = 'mesh' # TODO from args
+        # ... TODO improve
         tensor = MPI_Tensor()
         cls._tensor = tensor
 
-        O = 'mesh' # TODO from args
         starts = tensor.get_attribute(O, 'starts')
         ends   = tensor.get_attribute(O, 'ends')
 
@@ -3086,8 +2924,14 @@ class MPI_CommunicationAction(MPI_Communication, Block):
     is_integer = True
 
     def __new__(cls, tensor, variables, action, options):
-        if not isinstance(tensor, MPI_Tensor):
-            raise TypeError('Expecting MPI_Tensor')
+        if not isinstance(tensor, Variable):
+            raise TypeError('Expecting a Variable')
+
+        dtype    = tensor.dtype
+        cls_name = dtype.name
+
+        if not (cls_name == 'MPI_Tensor'):
+            raise ValueError('Expecting a MPI_Tensor variable')
 
         if not iterable(variables):
             raise TypeError('Expecting an iterable of variables')
@@ -3100,7 +2944,7 @@ class MPI_CommunicationAction(MPI_Communication, Block):
 
         # ...
         def _make_name(n):
-            label = tensor.label
+            label = tensor.name
             if not label:
                 return n
             if len(label) > 0:
@@ -3120,11 +2964,13 @@ class MPI_CommunicationAction(MPI_Communication, Block):
         #variables.append(ierr)
         # ...
 
-        # ...
+        O = 'mesh' # TODO from args
+        # ... TODO improve
+        tensor = MPI_Tensor()
         cls._tensor = tensor
         # ...
 
-        comm = tensor.comm
+        comm = tensor.get_attribute(O, 'comm')
         if action == 'allreduce':
             op = options[0]
             if op is None:
