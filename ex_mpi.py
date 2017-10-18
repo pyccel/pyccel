@@ -14,7 +14,7 @@ hx = 1.0/(ntx+1)
 hy = 1.0/(nty+1)
 
 
-npts    = (8,8)
+npts    = (32,32)
 periods = (False,False)
 reorder = False
 pads    = (1,1)
@@ -23,7 +23,6 @@ mesh = MPI_Tensor(npts, periods, reorder, pads)
 
 starts = mesh.starts
 ends   = mesh.ends
-print(mesh.pads)
 
 print ("(", starts[0], ", ", ends[0], ")   (", starts[1], ", ", ends[1], ')')
 

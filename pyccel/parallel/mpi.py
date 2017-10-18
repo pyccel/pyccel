@@ -2560,7 +2560,7 @@ class MPI_Tensor_create(FunctionDef):
             nn = (_ends[i] - _starts[i])/_steps[i]
 
             d['s'+l] = (coords[i] * nn) / dims[i]
-            d['e'+l] = ((coords[i]+1) * nn) / dims[i] - 1
+            d['e'+l] = ((coords[i]+1) * nn) / dims[i]
 
         ranges = []
         d_var = {}
@@ -2947,15 +2947,21 @@ class MPI_TensorCommunication(MPI_Communication, Block):
     is_integer = True
 
     def __new__(cls, tensor, variables):
-        if not isinstance(tensor, MPI_Tensor):
-            raise TypeError('Expecting MPI_Tensor')
+        if not isinstance(tensor, Variable):
+            raise TypeError('Expecting a Variable')
+
+        dtype    = tensor.dtype
+        cls_name = dtype.name
+
+        if not (cls_name == 'MPI_Tensor'):
+            raise ValueError('Expecting a MPI_Tensor variable')
 
         if not iterable(variables):
             raise TypeError('Expecting an iterable of variables')
 
         # ...
         def _make_name(n):
-            label = tensor.label
+            label = tensor.name
             if not label:
                 return n
             if len(label) > 0:
@@ -2976,25 +2982,38 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         # ...
 
         # ...
+        tensor = MPI_Tensor()
         cls._tensor = tensor
+
+        O = 'mesh' # TODO from args
+        starts = tensor.get_attribute(O, 'starts')
+        ends   = tensor.get_attribute(O, 'ends')
+
+        starts = IndexedVariable(starts.name, dtype=starts.dtype)
+        ends   = IndexedVariable(ends.name, dtype=ends.dtype)
         # ...
 
         # ...
-        starts = [r.start for r in tensor.ranges]
-        ends   = [r.stop  for r in tensor.ranges]
-        steps  = [r.step  for r in tensor.ranges]
 
         sx = starts[0] ; sy = starts[1]
         ex = ends[0]   ; ey = ends[1]
 
-        type_line   = tensor.types_bnd['line']
-        type_column = tensor.types_bnd['column']
+        type_line   = tensor.get_attribute(O, 'line')
+        type_column = tensor.get_attribute(O, 'column')
 
         north = 0 ; east = 1 ; south = 2 ; west = 3
-        neighbor = tensor.neighbor
 
-        comm = tensor.comm
-        tag  = tensor.tag
+        neighbor = tensor.get_attribute(O, 'neighbor')
+        neighbor = IndexedVariable(neighbor.name, dtype=neighbor.dtype)
+
+        comm   = tensor.get_attribute(O, 'comm')
+
+        tag_value = int(str(abs(hash(comm)))[-6:])
+        tag_name = 'tag_{0}'.format(str(tag_value))
+        tag = Variable('int', tag_name)
+
+        local_vars += [tag]
+        body += [Assign(tag, tag_value)]
         # ...
 
         # ... # TODO loop over variables
@@ -3010,6 +3029,7 @@ class MPI_TensorCommunication(MPI_Communication, Block):
                                 var[ex+1, sy], neighbor[south], tag, comm)
         stmt = MPI_Assign(ierr, rhs, strict=False)
         body.append(stmt)
+
 
         # ...
         body.append(Comment('...'))
@@ -3207,21 +3227,34 @@ def mpify(stmt, **options):
     if isinstance(stmt, Sync):
         if stmt.master:
             variables = [mpify(a, **options) for a in stmt.variables]
-            master    = mpify(stmt.master, **options)
+#            master    = mpify(stmt.master, **options)
+            master    = stmt.master
             action    = stmt.action
 
-            # master can be a variable
             if isinstance(master, Variable):
                 dtype = master.dtype
-                cls   = eval(dtype.name)()
-                methods = {}
-                for i in cls.methods:
-                    methods[str(i.name)] = i
-                method = methods['communicate']
-                args = [master] + list(variables)
-                return MethodCall(method, args)
-            else:
-                raise NotImplementedError('Only available for Variable instance')
+                cls_name   = dtype.name
+                if not (cls_name == 'MPI_Tensor'):
+                    raise NotImplementedError('Only MPI_Tensor is done')
+
+                if action is None:
+                    return MPI_TensorCommunication(master, variables)
+                else:
+                    settings = stmt.options
+                    return MPI_CommunicationAction(master, variables, \
+                                                   action, settings)
+#            # master can be a variable
+#            if isinstance(master, Variable):
+#                dtype = master.dtype
+#                cls   = eval(dtype.name)()
+#                methods = {}
+#                for i in cls.methods:
+#                    methods[str(i.name)] = i
+#                method = methods['communicate']
+#                args = [master] + list(variables)
+#                return MethodCall(method, args)
+#            else:
+#                raise NotImplementedError('Only available for Variable instance')
 
     return stmt
 
