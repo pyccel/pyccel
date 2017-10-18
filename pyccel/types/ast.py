@@ -1397,9 +1397,7 @@ class ClassDef(Basic):
         d_methods = {}
         for i in methods:
             d_methods[str(i.name)] = i
-        if '__del__' in d_methods:
-            free = d_methods['__del__']
-        else:
+        if not ('__del__' in d_methods):
             dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
             this  = Variable(dtype(), 'self')
 
@@ -1417,7 +1415,7 @@ class ClassDef(Basic):
                                body, local_vars=[], global_vars=[], \
                                cls_name='__UNDEFINED__', kind='procedure', imports=[])
 
-        methods = list(methods) + [free]
+            methods = list(methods) + [free]
         methods = Tuple(*methods)
         # ...
 

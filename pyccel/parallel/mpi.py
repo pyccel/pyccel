@@ -2310,7 +2310,9 @@ class MPI_Tensor(ClassDef, MPI, Tensor):
         # ...
 
         # ...
-        methods = [MPI_Tensor_create(), MPI_Tensor_communicate()]
+        methods = [MPI_Tensor_create(), \
+                   MPI_Tensor_free(attributs), \
+                   MPI_Tensor_communicate()]
         # ...
 
         return ClassDef.__new__(cls, 'MPI_Tensor', \
@@ -2797,6 +2799,101 @@ class MPI_Tensor_communicate(FunctionDef):
         # ...
         body.append(Comment('...'))
         body.append(EmptyLine())
+        # ...
+
+        return FunctionDef.__new__(cls, f_name, args, results, \
+                                   body, local_vars, global_vars, \
+                                   hide=hide, \
+                                   kind=kind, \
+                                   cls_name=cls_name, \
+                                   imports=imports)
+
+    @property
+    def name(self):
+        return self._name
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        name    = 'MPI_Tensor_{0}'.format(sstr(self.name))
+        args    = ', '.join(sstr(i) for i in self.arguments)
+        results = ', '.join(sstr(i) for i in self.results)
+        return '{0} := {1}({2})'.format(results, name, args)
+
+
+class MPI_Tensor_free(FunctionDef):
+    """
+    Represents a Tensor free procedure.
+
+    Examples
+
+    >>> from pyccel.parallel.mpi import MPI_Tensor_free
+    >>> MPI_Tensor_free()
+    """
+    def __new__(cls, attributs):
+        """
+        Represents a call to free for MPI tensor.
+        """
+        # ...
+        f_name = '__del__'
+
+        cls._name = f_name
+        # ...
+
+        # ...
+        body        = []
+        local_vars  = []
+        global_vars = []
+        imports     = [Import('mpi')]
+        hide        = False
+        kind        = 'procedure'
+        cls_name    = '__UNDEFINED__'
+        # ...
+
+        # TODO add comm_parent as (optional) argument
+
+        # ... args
+        c_name = 'MPI_Tensor'
+        alias  = None
+        c_dtype = DataTypeFactory(c_name, ("_name"))
+
+        this = Variable(c_dtype(), 'self')
+
+        args = [this]
+        # ...
+
+        # ...
+        ierr    = MPI_ERROR
+        istatus = MPI_STATUS
+        local_vars  += [ierr, istatus]
+        # ...
+
+        # ...
+        results = []
+        # ...
+
+        # ... constructs the __del__ method if not provided
+        _args = []
+        for a in attributs:
+            if isinstance(a, Variable):
+                if a.allocatable:
+                    _args.append(a)
+
+        name_me = lambda a: DottedName(str(this), str(a.name))
+        _args = [Variable(a.dtype, name_me(a)) for a in _args]
+        body += [Del(a) for a in _args]
+        # ...
+
+        # ...
+        body.append(Comment('...'))
+        body.append(EmptyLine())
+        # ...
+
+        # ...
+        comm = Variable('int', DottedName(this.name, 'comm'), \
+                        cls_base=MPI_comm())
+
+        body += [MPI_comm_free(comm)]
         # ...
 
         return FunctionDef.__new__(cls, f_name, args, results, \

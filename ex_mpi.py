@@ -54,7 +54,7 @@ for it in range(0, n_iterations):
     u = u_new
 
     #Communication
-    sync(mesh) u
+#    sync(mesh) u
 
 del mesh
 ierr = mpi_finalize()
