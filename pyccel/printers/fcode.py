@@ -1423,7 +1423,7 @@ class FCodePrinter(CodePrinter):
 
         code_args = ''
         if not(func.arguments) is None:
-            code_args = ', '.join(sstr(i) for i in func.arguments)
+            code_args = ', '.join(self._print(i) for i in func.arguments)
         return '{0}({1})'.format(name, code_args)
 
     def _print_FunctionCall(self, expr):
@@ -1434,8 +1434,20 @@ class FCodePrinter(CodePrinter):
 
         code_args = ''
         if not(func.arguments) is None:
-            code_args = ', '.join(sstr(i) for i in func.arguments)
+            code_args = ', '.join(self._print(i) for i in func.arguments)
         return '{0}({1})'.format(name, code_args)
+
+    def _print_MethodCall(self, expr):
+        func = expr.func
+        name = func.name
+        name = self._print(name)
+
+        code_args = ''
+        if not(expr.arguments) is None:
+            code_args = ', '.join(self._print(i) for i in expr.arguments[1:])
+
+        this = self._print(expr.arguments[0])
+        return 'CALL {0} % {1}({2})'.format(this, name, code_args)
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.

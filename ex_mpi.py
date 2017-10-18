@@ -45,6 +45,16 @@ for i,j in mesh:
 
     f[i, j] = 2.0*(x*x-x+y*y-y)
     u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
-del mesh
 
+#Linear solver tolerance
+tol = 1.0e-10
+
+n_iterations = 100000
+for it in range(0, n_iterations):
+    u = u_new
+
+    #Communication
+    sync(mesh) u
+
+del mesh
 ierr = mpi_finalize()

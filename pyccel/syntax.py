@@ -933,16 +933,9 @@ def expr_with_trailer(expr, trailer=None):
                 methods[str(i.name)] = i
             method = methods['__init__']
             this = cls.this
-            if name == 'MPI_Tensor':
-                npts    = Tuple(8,8)
-                periods = Tuple(False,False)
-                reorder = BooleanFalse()
-                pads    = Tuple(1,1)
+#            if name == 'MPI_Tensor':
 #                args = [this, npts, periods, reorder, pads]
-
-                args = [this] + list(args)
-            else:
-                args = [this] + list(args)
+            args = [this] + list(args)
             expr = ConstructorCall(method, args)
         else:
             if len(args) > 0:

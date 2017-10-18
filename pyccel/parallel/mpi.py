@@ -34,6 +34,7 @@ from pyccel.types.ast import Import
 
 from pyccel.types.ast import For, While, If, Del, Sync
 from pyccel.types.ast import FunctionDef, ClassDef
+from pyccel.types.ast import MethodCall, FunctionCall
 
 from pyccel.parallel.basic        import Basic
 from pyccel.parallel.communicator import UniversalCommunicator
@@ -3093,13 +3094,19 @@ def mpify(stmt, **options):
             variables = [mpify(a, **options) for a in stmt.variables]
             master    = mpify(stmt.master, **options)
             action    = stmt.action
-            if isinstance(master, MPI_Tensor):
-                if action is None:
-                    return MPI_TensorCommunication(master, variables)
-                else:
-                    settings = stmt.options
-                    return MPI_CommunicationAction(master, variables, \
-                                                   action, settings)
+
+            # master can be a variable
+            if isinstance(master, Variable):
+                dtype = master.dtype
+                cls   = eval(dtype.name)()
+                methods = {}
+                for i in cls.methods:
+                    methods[str(i.name)] = i
+                method = methods['communicate']
+                args = [master] + list(variables)
+                return MethodCall(method, args)
+            else:
+                raise NotImplementedError('Only available for Variable instance')
 
     return stmt
 

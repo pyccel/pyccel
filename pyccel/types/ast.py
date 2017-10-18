@@ -1064,6 +1064,12 @@ class ConstructorCall(FunctionCall):
     def this(self):
         return self.arguments[0]
 
+class MethodCall(FunctionCall):
+    """
+    class for a call to class method in the code.
+    """
+    pass
+
 class Variable(Symbol):
     """Represents a typed variable.
 
