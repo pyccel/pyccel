@@ -13,6 +13,14 @@ r_y = range(0, nty)
 hx = 1.0/(ntx+1)
 hy = 1.0/(nty+1)
 
-mesh = MPI_Tensor_NEW(r_x, r_y)
+
+npts    = (4,32)
+periods = (False,False)
+reorder = False
+pads    = (1,1)
+
+mesh = MPI_Tensor_NEW(npts, periods, reorder, pads)
+
+del mesh
 
 ierr = mpi_finalize()

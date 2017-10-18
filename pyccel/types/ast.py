@@ -1374,7 +1374,6 @@ class ClassDef(Basic):
         # methods
         if not iterable(methods):
             raise TypeError("methods must be an iterable")
-        methods = Tuple(*methods)
         # options
         if not iterable(options):
             raise TypeError("options must be an iterable")
@@ -1386,6 +1385,35 @@ class ClassDef(Basic):
             imports += i.imports
         imports = set(imports) # for unicity
         imports = Tuple(*imports)
+
+        # ...
+        # look if the class has the method __del__
+        d_methods = {}
+        for i in methods:
+            d_methods[str(i.name)] = i
+        if '__del__' in d_methods:
+            free = d_methods['__del__']
+        else:
+            dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
+            this  = Variable(dtype(), 'self')
+
+            # constructs the __del__ method if not provided
+            args = []
+            for a in attributs:
+                if isinstance(a, Variable):
+                    if a.allocatable:
+                        args.append(a)
+
+            args = [Variable(a.dtype, DottedName(str(this), str(a.name))) for a in args]
+            body = [Del(a) for a in args]
+
+            free = FunctionDef('__del__', [this], [], \
+                               body, local_vars=[], global_vars=[], \
+                               cls_name='__UNDEFINED__', kind='procedure', imports=[])
+
+        methods = list(methods) + [free]
+        methods = Tuple(*methods)
+        # ...
 
         return Basic.__new__(cls, name, attributs, methods, options, imports)
 
@@ -1419,6 +1447,7 @@ class ClassDef(Basic):
                                 alias=alias)
 
         return Variable(dtype(), 'self')
+
 
 class Ceil(Function):
     """
