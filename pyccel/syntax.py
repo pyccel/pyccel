@@ -43,7 +43,7 @@ from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeRange, NativeTensor
 from pyccel.types.ast import Import
 from pyccel.types.ast import DottedName
-from pyccel.types.ast import (Sync, Range, Tensor, For, Assign, \
+from pyccel.types.ast import (Sync, Tile, Range, Tensor, For, Assign, \
                               Declare, Variable, Result, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -933,7 +933,7 @@ def expr_with_trailer(expr, trailer=None):
                 methods[str(i.name)] = i
             method = methods['__init__']
             this = cls.this
-            if name == 'MPI_Tensor_NEW':
+            if name == 'MPI_Tensor':
                 npts    = Tuple(8,8)
                 periods = Tuple(False,False)
                 reorder = BooleanFalse()
@@ -1702,11 +1702,30 @@ class ForStmt(BasicStmt):
             if not self.range in namespace:
                 raise ValueError('Undefined range.')
             r = namespace[self.range]
-            if not isinstance(namespace[self.range], (Range, Tensor)):
-                raise TypeError('Expecting an Iterable')
-            r = namespace[self.range]
         else:
             raise TypeError('Expecting an Iterable')
+
+        if not isinstance(r, (Range, Tensor, Variable)):
+            raise TypeError('Expecting an Iterable or an object')
+
+        if isinstance(r, Variable):
+            if r.dtype.name == 'MPI_Tensor':
+                ranges = []
+
+                cls = class_defs[r.dtype.name]
+                attributs = {}
+                for a in cls.attributs:
+                    attributs[str(a.name)] = a
+                starts = DottedName(str(r.name), 'starts')
+                ends   = DottedName(str(r.name), 'ends')
+
+                starts = IndexedVariable(starts, dtype=NativeInteger())
+                ends   = IndexedVariable(ends,   dtype=NativeInteger())
+
+                rs = []
+                for ijk in range(0, len(i)):
+                    rs += [Tile(starts[ijk], ends[ijk])]
+                r = Tensor(*rs)
 
         self.update()
 
@@ -1927,7 +1946,6 @@ class Atom(ExpressionElement):
                     raise Exception('Unknown variable "{}" at position {}'
                                     .format(O, self._tx_position))
         elif isinstance(op, ExpressionElement):
-            print ">>>> op = ", op
             return op.expr
         elif op in namespace:
             if isinstance(namespace[op], FunctionDef):

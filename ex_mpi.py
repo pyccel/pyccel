@@ -19,7 +19,13 @@ periods = (False,False)
 reorder = False
 pads    = (1,1)
 
-mesh = MPI_Tensor_NEW(npts, periods, reorder, pads)
+mesh = MPI_Tensor(npts, periods, reorder, pads)
+
+x = 0.0
+y = 0.0
+for i,j in mesh:
+    x = i*hx
+    y = j*hy
 
 del mesh
 

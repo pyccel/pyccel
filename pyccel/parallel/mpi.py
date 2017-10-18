@@ -2251,7 +2251,7 @@ class MPI_type_vector(MPI):
 # The following classes are to
 # provide user friendly support of MPI
 ##########################################################
-class MPI_Tensor(MPI, Block, Tensor):
+class MPI_Tensor_OLD(MPI, Block, Tensor):
     """
     Represents a Tensor object using MPI.
 
@@ -2544,7 +2544,6 @@ class MPI_Tensor(MPI, Block, Tensor):
             args = [i[1] for i in dd.items()]
             r = Tile(*args)
             ranges.append(r)
-
         cls._ranges = ranges
         # ...
 
@@ -2768,14 +2767,14 @@ class MPI_Tensor(MPI, Block, Tensor):
         code = 'MPI_Tensor ([{0}], [{1}])'.format(variables, body)
         return code
 
-class MPI_Tensor_NEW(ClassDef, MPI, Tensor):
+class MPI_Tensor(ClassDef, MPI, Tensor):
     """
     Represents a Tensor object using MPI.
 
     Examples
 
-    >>> from pyccel.parallel.mpi import MPI_Tensor_NEW
-    >>> T = MPI_Tensor_NEW()
+    >>> from pyccel.parallel.mpi import MPI_Tensor
+    >>> T = MPI_Tensor()
     >>> T.attributs
     (ndim, nnodes, rank, line, column, comm, dims, periods, coords, neighbor, starts, ends, pads)
     """
@@ -2827,7 +2826,7 @@ class MPI_Tensor_NEW(ClassDef, MPI, Tensor):
         methods = [MPI_Tensor_create()]
         # ...
 
-        return ClassDef.__new__(cls, 'MPI_Tensor_NEW', \
+        return ClassDef.__new__(cls, 'MPI_Tensor', \
                                 attributs, methods, \
                                 options=options, \
                                 imports=imports)
@@ -2926,7 +2925,7 @@ class MPI_Tensor_create(FunctionDef):
         # TODO add comm_parent as (optional) argument
 
         # ... args
-        c_name = 'MPI_Tensor_NEW'
+        c_name = 'MPI_Tensor'
         alias  = None
         c_dtype = DataTypeFactory(c_name, ("_name"))
 
@@ -3423,7 +3422,8 @@ def mpify(stmt, **options):
         return stmt
     if isinstance(stmt, Tensor):
         options['label'] = stmt.name
-        return MPI_Tensor(stmt, **options)
+        return stmt
+#        return MPI_Tensor(stmt, **options)
     if isinstance(stmt, For):
         iterable = mpify(stmt.iterable, **options)
         target   = stmt.target
@@ -3671,7 +3671,7 @@ def mpi_definitions_OLD():
     # ...
 
     # ...
-    classes = ['MPI_Tensor_NEW']
+    classes = ['MPI_Tensor']
     for i in classes:
         name = 'pcl_t_{0}'.format(i.lower())
         cls_constructs[name] = DataTypeFactory(i, ("_name"))
@@ -3728,12 +3728,12 @@ def mpi_definitions():
     # ...
 
     # ...
-    c_name = 'MPI_Tensor_NEW'
+    c_name = 'MPI_Tensor'
     c_dtype = DataTypeFactory(c_name, ("_name"))
     cls_constructs[str(c_dtype.name)] = c_dtype()
-    classes['MPI_Tensor_NEW'] = MPI_Tensor_NEW()
+    classes['MPI_Tensor'] = MPI_Tensor()
 
-    stmts += [MPI_Tensor_NEW()]
+    stmts += [MPI_Tensor()]
     # ...
 
 

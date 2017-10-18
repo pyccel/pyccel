@@ -1035,7 +1035,6 @@ class FCodePrinter(CodePrinter):
             cls_name = expr.cls_name
             if not (cls_name == '__UNDEFINED__'):
                 name = '{0}_{1}'.format(cls_name, name)
-            print(">>>> ", name)
         else:
             for i in _default_methods:
                 # because we may have a class Point with init: Point___init__
