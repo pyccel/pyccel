@@ -1829,7 +1829,7 @@ class WhileStmt(BasicStmt):
 
         return While(test, body)
 
-class WithStmt(BasicStmt):
+class ParallelBlockStmt(BasicStmt):
     """Class representing a With statement."""
 
     def __init__(self, **kwargs):
@@ -1841,10 +1841,10 @@ class WithStmt(BasicStmt):
         body: list
             a list of statements for the body of the With statement.
         """
-        self.item = kwargs.pop('item')
+        self.num_threads = kwargs.pop('num_threads', None)
         self.body = kwargs.pop('body')
 
-        super(WithStmt, self).__init__(**kwargs)
+        super(ParallelBlockStmt, self).__init__(**kwargs)
 
     @property
     def stmt_vars(self):
@@ -1862,16 +1862,14 @@ class WithStmt(BasicStmt):
         """
         self.update()
 
-        item = self.item.expr
+        num_threads = self.num_threads
         body = self.body.expr
 
         settings = None
 
-        if item == 'parallel':
-            variables = []
-            return ParallelBlock(variables, body)
+        variables = []
+        return ParallelBlock(variables, body)
 
-        return With(item, body, settings)
 
 
 class ExpressionElement(object):

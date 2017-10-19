@@ -63,7 +63,7 @@ CompoundStmt:
   | ForStmt 
   | DecoratedStmt
   | WhileStmt
-  | WithStmt
+  | ParallelBlockStmt
 ;
 
 AnnotatedStmt:
@@ -220,8 +220,8 @@ ElifStmt:
   (ELIF test=Test ':' body=SuiteStmt) 
 ;
 
-WithStmt:
-  WITH item=Expression ':'
+ParallelBlockStmt:
+  WITH PARALLEL '(' (num_threads=Number)? ')' ':'
   body=SuiteStmt
 ;
 
@@ -335,6 +335,7 @@ NONLOCAL : 'nonlocal';
 NOT : 'not';
 OR : 'or';
 PASS : 'pass';
+PARALLEL : 'parallel';
 RETURN : 'return';
 SYNC : 'sync';
 RAISE : 'raise';
