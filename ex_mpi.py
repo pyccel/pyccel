@@ -1,10 +1,13 @@
 # coding: utf-8
 
+# TODO fix a bug when substructing f[i,j] in u_new and also when computing the
+#      error
+
 from pyccel.mpi import *
 
 ierr = mpi_init()
 
-npts    = (32,32)
+npts    = (63,63)
 periods = (False,False)
 reorder = False
 pads    = (1,1)
@@ -20,10 +23,12 @@ c2 = 1.0/(hy*hy)
 
 mesh = MPI_Tensor(npts, periods, reorder, pads)
 
+rank = mesh.rank
+
 starts = mesh.starts
 ends   = mesh.ends
 
-print ("(", starts[0], ", ", ends[0], ")   (", starts[1], ", ", ends[1], ')')
+#print ("(", starts[0], ", ", ends[0], ")   (", starts[1], ", ", ends[1], ')')
 
 u       = zeros(mesh, double)
 u_new   = zeros(mesh, double)
@@ -43,7 +48,7 @@ for i,j in mesh:
 #Linear solver tolerance
 tol = 1.0e-10
 
-n_iterations = 10
+n_iterations = 50000
 for it in range(0, n_iterations):
     u = u_new
 
@@ -52,27 +57,28 @@ for it in range(0, n_iterations):
 
     #Computation of u at the n+1 iteration
     for i,j in mesh:
-        u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+        u_new[i, j]  = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]))
+        u_new[i, j] -= c0 * f[i, j]
 
     #Computation of the global error
     u_error = 0.0
     for i,j in mesh:
-        u_error += abs(u[i,j]-u_new[i,j])
+        err  = u[i,j]
+        err -= u_new[i,j]
+        u_error += abs(err)
     local_error = u_error/(npts[0]*npts[1])
 
     #Reduction
     global_error = local_error
     sync(mesh, 'allreduce', '+') global_error
 
-#    if global_error < tol:
-#        if rank == 0:
-#            print ("convergence after ", it, " iterations")
-#            print ("local  error = ", local_error)
-#            print ("global error = ", global_error)
-#        break
-
     if global_error < tol:
+        if rank == 0:
+            print ("convergence after ", it, " iterations")
+            print ("local  error = ", local_error)
+            print ("global error = ", global_error)
         break
+
 
 #Computation of the global error
 u_error = 0.0
@@ -83,9 +89,8 @@ u_error = u_error/(npts[0]*npts[1])
 #Reduction
 sync(mesh, 'allreduce', '+') u_error
 
-#if rank == 0:
-#    print ("error(u_h - u_exact) = ", u_error)
-print ("error(u_h - u_exact) = ", u_error)
+if rank == 0:
+    print ("error(u_h - u_exact) = ", u_error)
 
 
 del mesh

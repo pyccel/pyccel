@@ -2344,6 +2344,7 @@ class MPI_Tensor(ClassDef, MPI, Tensor):
         ndim = 2 # TODO get it from O
         ranges = []
         for i in range(0, ndim):
+            # TODO check end.
             r = Tile(starts[i]-pads[i], ends[i]+pads[i])
             ranges.append(r)
         return Tensor(*ranges)
@@ -2577,7 +2578,8 @@ class MPI_Tensor_create(FunctionDef):
                 d_var[n] = v
 
             _args = [i[1] for i in dd.items()]
-            r = Tile(*_args)
+            begin = _args[0] ; end = _args[1] - 1
+            r = Tile(begin, end)
             ranges.append(r)
         # ...
 
@@ -2819,7 +2821,10 @@ class MPI_TensorCommunication(MPI_Communication, Block):
         #variables.append(ierr)
         # ...
 
-        O = 'mesh' # TODO from args
+        # ...
+        O = tensor.name
+        # ...
+
         # ... TODO improve
         tensor = MPI_Tensor()
         cls._tensor = tensor
@@ -2964,7 +2969,10 @@ class MPI_CommunicationAction(MPI_Communication, Block):
         #variables.append(ierr)
         # ...
 
-        O = 'mesh' # TODO from args
+        # ...
+        O = tensor.name
+        # ...
+
         # ... TODO improve
         tensor = MPI_Tensor()
         cls._tensor = tensor

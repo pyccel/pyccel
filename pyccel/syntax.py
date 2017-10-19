@@ -1712,6 +1712,7 @@ class ForStmt(BasicStmt):
 
         if isinstance(r, Variable):
             if r.dtype.name == 'MPI_Tensor':
+                print "PAR ICI"
                 ranges = []
 
                 cls = class_defs[r.dtype.name]
