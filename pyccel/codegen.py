@@ -27,6 +27,7 @@ from pyccel.openmp.syntax import OpenmpStmt
 
 from pyccel.parallel.mpi import MPI_Tensor
 from pyccel.parallel.mpi import mpify
+from pyccel.parallel.openmp import openmpfy
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)
@@ -355,17 +356,23 @@ class Codegen(object):
         self._printer = printer
         # ...
 
-        # ... TODO improve. mv somewhere else
-        if not (accelerator is None):
+        # ...
+        with_openmp = False
+        if accelerator:
             if accelerator == "openmp":
-                imports += "use omp_lib\n"
+                with_openmp = True
             else:
                 raise ValueError("Only openmp is available")
         # ...
 
-        # ...
+        # ... TODO use Import class
         if with_mpi:
             imports += "use MPI\n"
+        # ...
+
+        # ... TODO use Import class
+        if with_openmp:
+            imports += "use omp_lib\n"
         # ...
 
         # ...
@@ -385,6 +392,11 @@ class Codegen(object):
         # ...
         if with_mpi:
             stmts = [mpify(s) for s in stmts]
+        # ...
+
+        # ...
+        if with_openmp:
+            stmts = [openmpfy(s) for s in stmts]
         # ...
 
         for stmt in stmts:

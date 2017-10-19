@@ -521,6 +521,42 @@ class While(Basic):
     def body(self):
         return self._args[1]
 
+class With(Basic):
+    """Represents a 'with' statement in the code.
+
+    Expressions are of the form:
+        "while test:
+            body..."
+
+    test : expression
+        test condition given as a sympy expression
+    body : sympy expr
+        list of statements representing the body of the With statement.
+
+    Examples
+
+    """
+    # TODO check prelude and epilog
+    def __new__(cls, test, body, settings):
+        test = sympify(test)
+
+        if not iterable(body):
+            raise TypeError("body must be an iterable")
+        body = Tuple(*(sympify(i) for i in body))
+        return Basic.__new__(cls, test, body, settings)
+
+    @property
+    def test(self):
+        return self._args[0]
+
+    @property
+    def body(self):
+        return self._args[1]
+
+    @property
+    def settings(self):
+        return self._args[2]
+
 class Range(sm_Range):
     """
     Representes a range.
@@ -698,6 +734,23 @@ class Block(Basic):
     @property
     def declarations(self):
         return [Declare(i.dtype, i) for i in self.variables]
+
+class ParallelBlock(Block):
+    """Represents a parallel block in the code. A block consists of the following inputs
+
+    variables: list
+        list of the variables that appear in the block.
+
+    declarations: list
+        list of declarations of the variables that appear in the block.
+
+    body: list
+        a list of statements
+
+    Examples
+
+    """
+    pass
 
 class Module(Basic):
     """Represents a block in the code. A block consists of the following inputs

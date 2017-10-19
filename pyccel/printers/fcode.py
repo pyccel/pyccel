@@ -1341,6 +1341,12 @@ class FCodePrinter(CodePrinter):
         prelude = '\n'.join(self._print(i) for i in expr.declarations)
         return prelude, body
 
+    def _print_ParallelBlock(self, expr):
+        print("PAR ICI")
+        body    = '\n'.join(self._print(i) for i in expr.body)
+        prelude = '\n'.join(self._print(i) for i in expr.declarations)
+        return prelude, body
+
     def _print_While(self,expr):
         body = '\n'.join(self._print(i) for i in expr.body)
         return ('do while ({test}) \n'

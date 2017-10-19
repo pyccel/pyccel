@@ -63,6 +63,7 @@ CompoundStmt:
   | ForStmt 
   | DecoratedStmt
   | WhileStmt
+  | WithStmt
 ;
 
 AnnotatedStmt:
@@ -218,6 +219,12 @@ IfStmt:
 ElifStmt:
   (ELIF test=Test ':' body=SuiteStmt) 
 ;
+
+WithStmt:
+  WITH item=Expression ':'
+  body=SuiteStmt
+;
+
 
 Test: op=OrTest (IF OrTest ELSE Test)?;
 OrTest: op=AndTest (OR op=AndTest)*;

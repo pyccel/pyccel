@@ -44,10 +44,10 @@ from pyccel.types.ast import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.types.ast import Import
 from pyccel.types.ast import DottedName
 from pyccel.types.ast import (Sync, Tile, Range, Tensor, ParallelRange, \
-                              For, Assign, \
+                              For, Assign, ParallelBlock, \
                               Declare, Variable, Result, \
                               FunctionHeader, ClassHeader, MethodHeader, \
-                              datatype, While, NativeFloat, \
+                              datatype, While, With, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, AugAssign, \
                               FunctionDef, ClassDef, Del, Print, \
@@ -1828,6 +1828,51 @@ class WhileStmt(BasicStmt):
         body = self.body.expr
 
         return While(test, body)
+
+class WithStmt(BasicStmt):
+    """Class representing a With statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the With statement.
+
+        test: Test
+            a test expression
+        body: list
+            a list of statements for the body of the With statement.
+        """
+        self.item = kwargs.pop('item')
+        self.body = kwargs.pop('body')
+
+        super(WithStmt, self).__init__(**kwargs)
+
+    @property
+    def stmt_vars(self):
+        """Statement variables."""
+        ls = []
+        for stmt in self.body.stmts:
+            ls += stmt.local_vars
+            ls += stmt.stmt_vars
+        return ls
+
+    @property
+    def expr(self):
+        """
+        Process the With statement by returning a pyccel.types.ast object
+        """
+        self.update()
+
+        item = self.item.expr
+        body = self.body.expr
+
+        settings = None
+
+        if item == 'parallel':
+            variables = []
+            return ParallelBlock(variables, body)
+
+        return With(item, body, settings)
+
 
 class ExpressionElement(object):
     """Class representing an element of an expression."""
