@@ -7,7 +7,7 @@ from pyccel.mpi import *
 
 ierr = mpi_init()
 
-npts    = (63,63)
+npts    = (31,31)
 periods = (False,False)
 reorder = False
 pads    = (1,1)
