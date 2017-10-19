@@ -26,8 +26,9 @@ def pyccel():
     # ...
 #    parser.add_argument('--filename', \
 #                        help='config filename. default: config.ini')
-    parser.add_argument('--filename', type=str, \
-                        help='python file to convert')
+
+    parser.add_argument('files', metavar='N', type=str, nargs='+',
+                        help='a Pyccel file')
     parser.add_argument('--language', type=str, \
                         help='Target language')
     parser.add_argument('--compiler', type=str, \
@@ -59,16 +60,18 @@ def pyccel():
     args = parser.parse_args()
     # ...
 
-    if args.filename:
-        filename = args.filename
-    else:
+    if not args.files:
         raise ValueError("a python filename must be provided.")
+
+    if len(args.files) > 1:
+        raise ValueError('Expecting one single file for the moment.')
+
+    filename = args.files[0]
 
     if args.language:
         language = args.language
     else:
-        if not args.analysis:
-            raise ValueError("a target language must be provided.")
+        language = 'fortran'
 
     if args.compiler:
         compiler = args.compiler

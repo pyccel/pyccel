@@ -19,7 +19,6 @@ for i in range(1, 21 + 1):
 
 for example in examples:
     print "===== running example {0} =====".format(example)
-    filename = "--filename=tests/examples/{0}".format(example)
-    cmd = "python tests/pyccel_cmd.py {0} {1} {2} {3} {4}".format(filename, language,
-                                                            compiler, execute, show)
+    filename = "tests/examples/{0}".format(example)
+    cmd = "pyccel {0} {1} {2} {3} {4}".format(filename, language, compiler, execute, show)
     os.system(cmd)

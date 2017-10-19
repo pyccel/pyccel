@@ -17,7 +17,7 @@ for i in range(1, 7 + 1):
 
 for example in examples:
     print "===== running example {0} =====".format(example)
-    filename = "--filename=tests/examples/openmp/{0}".format(example)
+    filename = "tests/examples/openmp/{0}".format(example)
     cmd = "pyccel {0} {1} {2} {3} {4} {5}".format(filename, language, \
                                                   compiler, openmp, \
                                                   execute, show)

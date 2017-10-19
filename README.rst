@@ -57,7 +57,7 @@ Let us consider the following *Python* file (*helloworld.py*)
 
 Now, run the command::
 
-  pyccel --language="fortran" --compiler="gfortran" --filename=tests/helloworld.py
+  pyccel tests/helloworld.py --compiler=gfortran
 
 The generated *Fortran* code is
 
@@ -111,7 +111,7 @@ Let's take a look at the file *tests/examples/ex5.py*, listed below
 
 Now, run the command::
 
-  pyccel --language="fortran" --compiler="gfortran" --filename=tests/examples/ex5.py --execute
+  pyccel tests/examples/ex5.py --compiler="gfortran" --execute
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
@@ -204,7 +204,7 @@ Let's take a look at the file *tests/matrix_product.py*, listed below
 
 Now, run the command::
 
-  pyccel --language="fortran" --compiler="gfortran" --filename=tests/matrix_product.py --execute
+  pyccel tests/matrix_product.py --compiler="gfortran" --execute
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
@@ -298,7 +298,7 @@ Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed 
 
 Now, run the command::
 
-  pyccel --language="fortran" --compiler="gfortran" --openmp --filename=tests/examples/openmp/matrix_product.py
+  pyccel tests/examples/openmp/matrix_product.py --compiler="gfortran" --openmp
 
 This will parse the *Python* file, generate the corresponding *Fortran* file and compile it. 
 
