@@ -315,7 +315,7 @@ class ReductionClause(BasicStmt):
         # TODO check if variable exist in namespace
         op   = self.op
         args = ', '.join(str(arg) for arg in self.args)
-        return 'copyin({0}: {1})'.format(op, args)
+        return 'reduction({0}: {1})'.format(op, args)
 
 class CollapseClause(BasicStmt):
     """Class representing a ."""

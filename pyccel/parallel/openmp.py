@@ -74,6 +74,221 @@ class OMP_EndConstruct(AnnotatedComment, OMP):
                                        nowait)
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
+class OMP_ParallelNumThreadClause(OMP):
+    """
+    OMP ParallelNumThreadClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_ParallelNumThreadClause
+    >>> OMP_ParallelNumThreadClause(4)
+    num_threads(4)
+    """
+    def __new__(cls, *args, **options):
+        num_threads = args[0]
+        return Basic.__new__(cls, num_threads)
+
+    @property
+    def num_threads(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'num_threads({})'.format(sstr(self.num_threads))
+
+class OMP_ParallelDefaultClause(OMP):
+    """
+    OMP ParallelDefaultClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_ParallelDefaultClause
+    >>> OMP_ParallelDefaultClause('shared')
+    default(shared)
+    """
+    def __new__(cls, *args, **options):
+        status = args[0]
+        return Basic.__new__(cls, status)
+
+    @property
+    def status(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        status = self.status
+        if status:
+            status = sstr(self.status)
+        else:
+            status = ''
+        return 'default({})'.format(status)
+
+class OMP_ParallelProcBindClause(OMP):
+    """
+    OMP ParallelProcBindClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_ParallelProcBindClause
+    >>> OMP_ParallelProcBindClause('master')
+    proc_bind(master)
+    """
+    def __new__(cls, *args, **options):
+        status = args[0]
+        return Basic.__new__(cls, status)
+
+    @property
+    def status(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        status = self.status
+        if status:
+            status = sstr(self.status)
+        else:
+            status = ''
+        return 'proc_bind({})'.format(status)
+
+class OMP_PrivateClause(OMP):
+    """
+    OMP PrivateClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_PrivateClause
+    >>> OMP_PrivateClause('x', 'y')
+    private(x, y)
+    """
+    def __new__(cls, *args, **options):
+        return Basic.__new__(cls, args)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        return 'private({})'.format(args)
+
+class OMP_SharedClause(OMP):
+    """
+    OMP SharedClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_SharedClause
+    >>> OMP_SharedClause('x', 'y')
+    shared(x, y)
+    """
+    def __new__(cls, *args, **options):
+        return Basic.__new__(cls, args)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        return 'shared({})'.format(args)
+
+class OMP_FirstPrivateClause(OMP):
+    """
+    OMP FirstPrivateClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_FirstPrivateClause
+    >>> OMP_FirstPrivateClause('x', 'y')
+    firstprivate(x, y)
+    """
+    def __new__(cls, *args, **options):
+        return Basic.__new__(cls, args)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        return 'firstprivate({})'.format(args)
+
+class OMP_LastPrivateClause(OMP):
+    """
+    OMP LastPrivateClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_LastPrivateClause
+    >>> OMP_LastPrivateClause('x', 'y')
+    lastprivate(x, y)
+    """
+    def __new__(cls, *args, **options):
+        return Basic.__new__(cls, args)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        return 'lastprivate({})'.format(args)
+
+class OMP_CopyinClause(OMP):
+    """
+    OMP CopyinClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_CopyinClause
+    >>> OMP_CopyinClause('x', 'y')
+    copyin(x, y)
+    """
+    def __new__(cls, *args, **options):
+        return Basic.__new__(cls, args)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        return 'copyin({})'.format(args)
+
+class OMP_ReductionClause(OMP):
+    """
+    OMP ReductionClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_ReductionClause
+    >>> OMP_ReductionClause('+', 'x', 'y')
+    reduction('+': (x, y))
+    """
+    def __new__(cls, *args, **options):
+        op = args[0]
+        arguments = args[1:]
+        return Basic.__new__(cls, op, arguments)
+
+    @property
+    def operation(self):
+        return self._args[0]
+
+    @property
+    def variables(self):
+        return self._args[1:]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        op   = sstr(self.operation)
+        return "reduction('{0}': {1})".format(op, args)
+
 ##########################################################
 
 
