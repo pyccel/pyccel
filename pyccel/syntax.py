@@ -40,10 +40,11 @@ from pyccel.types.ast import DataType, CustomDataType, DataTypeFactory
 from pyccel.types.ast import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import NativeRange, NativeTensor
+from pyccel.types.ast import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.types.ast import Import
 from pyccel.types.ast import DottedName
-from pyccel.types.ast import (Sync, Tile, Range, Tensor, For, Assign, \
+from pyccel.types.ast import (Sync, Tile, Range, Tensor, ParallelRange, \
+                              For, Assign, \
                               Declare, Variable, Result, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
@@ -214,7 +215,7 @@ builtin_funcs_math = builtin_funcs_math_un + \
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 
-builtin_funcs_iter = ['range', 'tensor']
+builtin_funcs_iter = ['range', 'tensor', 'prange']
 builtin_funcs += builtin_funcs_iter
 
 builtin_funcs_mpi = ['mpi_waitall']
@@ -529,6 +530,9 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, Range):
                 grid = i
                 rank = 1
+            elif isinstance(i, ParallelRange):
+                grid = i
+                rank = 1
             elif isinstance(i, Variable): # iterator
                 ctype = i.dtype
                 cls_name = ctype.name
@@ -721,6 +725,23 @@ def builtin_function(name, args, lhs=None, op=None):
         namespace[lhs] = Range(*args)
         lhs = namespace[lhs]
         expr = Range(*args)
+        return assign(lhs, expr, op, strict=False)
+    elif name == "prange":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        d_var = {}
+        d_var['datatype']    = NativeParallelRange()
+        d_var['allocatable'] = False
+        d_var['shape']       = None
+        d_var['rank']        = 0
+
+        insert_variable(lhs, **d_var)
+        namespace[lhs] = ParallelRange(*args)
+        lhs = namespace[lhs]
+        expr = ParallelRange(*args)
         return assign(lhs, expr, op, strict=False)
     elif name == "tensor":
         if not lhs:
@@ -1639,6 +1660,40 @@ class RangeStmt(BasicStmt):
 
         return Range(b,e,s)
 
+class ParallelRangeStmt(BasicStmt):
+    """Class representing a parallel Range statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the Range statement.
+
+        start: str
+            start index
+        end: str
+            end index
+        step: str
+            step for the iterable. if not given, 1 will be used.
+        """
+        self.start    = kwargs.pop('start')
+        self.end      = kwargs.pop('end')
+        self.step     = kwargs.pop('step', None)
+
+        super(ParallelRangeStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the Range statement by returning a pyccel.types.ast object
+        """
+        b = self.start.expr
+        e = self.end.expr
+        if self.step:
+            s = self.step.expr
+        else:
+            s = 1
+
+        return ParallelRange(b,e,s)
+
 class ForStmt(BasicStmt):
     """Class representing a For statement."""
 
@@ -1698,7 +1753,7 @@ class ForStmt(BasicStmt):
         else:
             i = Symbol(self.iterable, integer=True)
 
-        if isinstance(self.range, RangeStmt):
+        if isinstance(self.range, (RangeStmt, ParallelRangeStmt)):
             r = self.range.expr
         elif isinstance(self.range, str):
             if not self.range in namespace:

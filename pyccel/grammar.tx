@@ -194,7 +194,11 @@ RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
 ;
 
-IterableRange: RangeStmt | ID;
+ParallelRangeStmt:
+  'prange' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
+;
+
+IterableRange: RangeStmt | ParallelRangeStmt | ID;
 
 ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':' 
                body=SuiteStmt

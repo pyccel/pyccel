@@ -30,7 +30,7 @@ from pyccel.types.ast import FunctionCall
 from pyccel.types.ast import ZerosLike
 from pyccel.types.ast import NativeBool, NativeFloat
 from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
-from pyccel.types.ast import Range, Tensor, Block
+from pyccel.types.ast import Range, Tensor, ParallelRange, Block
 from pyccel.types.ast import (Assign, MultiAssign, AugAssign, \
                               Result, \
                               Variable, Declare, \
@@ -1278,6 +1278,12 @@ class FCodePrinter(CodePrinter):
         stop  = self._print(expr.stop)
         return '{0}, {1}'.format(start, stop)
 
+    def _print_ParallelRange(self, expr):
+        start = self._print(expr.start)
+        stop  = self._print(expr.stop-1)
+        step  = self._print(expr.step)
+        return '{0}, {1}, {2}'.format(start, stop, step)
+
     # TODO iterators
     def _print_For(self, expr):
         prolog = ''
@@ -1293,7 +1299,7 @@ class FCodePrinter(CodePrinter):
             range_code = self._print(iter)
 
             prolog += 'do {0} = {1}\n'.format(tar, range_code)
-            epilog += 'end do\n'
+            epilog = 'end do\n' + epilog
 
             return prolog, epilog
         # ...
@@ -1311,6 +1317,10 @@ class FCodePrinter(CodePrinter):
             msg  = "Only iterable currently supported are Range, "
             msg += "Tensor and MPI_Tensor"
             raise NotImplementedError(msg)
+
+        if isinstance(expr.iterable, ParallelRange):
+            prolog = '!$omp do schedule(runtime)\n'
+            epilog = '!$omp end do nowait\n'
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target[0], expr.iterable, \

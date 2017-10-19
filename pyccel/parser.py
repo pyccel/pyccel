@@ -13,7 +13,7 @@ from pyccel.syntax import (Pyccel, ImportFromStmt, ImportAsNames, \
                            AssignStmt, MultiAssignStmt, AugAssignStmt, \
                            FlowStmt, BreakStmt, ContinueStmt, \
                            RaiseStmt, YieldStmt, ReturnStmt, \
-                           RangeStmt, \
+                           RangeStmt, ParallelRangeStmt, \
                            IfStmt, ForStmt, WhileStmt, \
                            FunctionDefStmt, ClassDefStmt, \
                            CommentStmt, SuiteStmt, \
@@ -202,7 +202,7 @@ class PyccelParser(Parser):
                    PassStmt, \
                    FlowStmt, BreakStmt, ContinueStmt, \
                    RaiseStmt, YieldStmt, ReturnStmt, \
-                   RangeStmt, \
+                   RangeStmt, ParallelRangeStmt, \
                    IfStmt, ForStmt, WhileStmt, \
                    FunctionDefStmt, ClassDefStmt, \
                    ImportFromStmt, ImportAsNames, \

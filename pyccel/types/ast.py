@@ -592,6 +592,17 @@ class Tile(Range):
     def size(self):
         return self.stop - self.start
 
+class ParallelRange(Range):
+    """
+    Representes a parallel range using OpenMP/OpenACC.
+
+    Examples
+
+    >>> from pyccel.types.ast import Variable
+    """
+    pass
+
+
 # TODO: implement it as an extension of sympy Tensor?
 class Tensor(Basic):
     """
@@ -881,6 +892,10 @@ class NativeRange(DataType):
 
 class NativeTensor(DataType):
     _name = 'Tensor'
+    pass
+
+class NativeParallelRange(NativeRange):
+    _name = 'ParallelRange'
     pass
 
 class CustomDataType(DataType):
