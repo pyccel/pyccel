@@ -94,10 +94,10 @@ def pyccel():
     if args.compiler:
         compiler = args.compiler
     else:
-        comp_exe = _which('gfortran')
-        if comp_exe is None:
-            raise ValueError('Could not find gfortran')
         compiler = 'gfortran'
+
+    if _which(compiler) is None:
+        raise ValueError('Could not find {0}'.format(compiler))
 
     execute = args.execute
 
