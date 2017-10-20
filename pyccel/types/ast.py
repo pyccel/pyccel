@@ -736,21 +736,53 @@ class Block(Basic):
         return [Declare(i.dtype, i) for i in self.variables]
 
 class ParallelBlock(Block):
-    """Represents a parallel block in the code. A block consists of the following inputs
+    """
+    Represents a parallel block in the code.
+    In addition to block inputs, there is
 
-    variables: list
-        list of the variables that appear in the block.
-
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
-    body: list
-        a list of statements
+    clauses: list
+        a list of clauses
 
     Examples
 
+    >>> from pyccel.types.ast import ParallelBlock
+    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('int', 'x')
+    >>> body = [Assign(x,2.*n + 1.), Assign(n, n + 1)]
+    >>> variables = [x,n]
+    >>> clauses = []
+    >>> ParallelBlock(clauses, variables, body)
+    # parallel
+    x := 1.0 + 2.0*n
+    n := 1 + n
     """
-    pass
+    _prefix = '#'
+    def __new__(cls, clauses, variables, body):
+        if not iterable(clauses):
+            raise TypeError('Expecting an iterable for clauses')
+
+        cls._clauses = clauses
+
+        return Block.__new__(cls, variables, body)
+
+    @property
+    def clauses(self):
+        return self._clauses
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        prefix  = sstr(self.prefix)
+        clauses = ' '.join('{0}'.format(sstr(i)) for i in self.clauses)
+        body    = '\n'.join('{0}'.format(sstr(i)) for i in self.body)
+
+        code = '{0} parallel {1}\n{2}'.format(prefix, clauses, body)
+        return code
 
 class Module(Basic):
     """Represents a block in the code. A block consists of the following inputs

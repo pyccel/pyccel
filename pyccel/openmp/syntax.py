@@ -61,7 +61,7 @@ class ParallelStmt(BasicStmt):
         if DEBUG:
             print("> ParallelStmt: expr")
 
-        valid_clauses = (ParallelNumThreadClause, \
+        _valid_clauses = (ParallelNumThreadClause, \
                          ParallelDefaultClause, \
                          PrivateClause, \
                          SharedClause, \
@@ -72,7 +72,7 @@ class ParallelStmt(BasicStmt):
 
         txt = 'parallel'
         for clause in self.clauses:
-            if isinstance(clause, valid_clauses):
+            if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for ParallelStmt')
@@ -93,7 +93,7 @@ class LoopStmt(BasicStmt):
         if DEBUG:
             print("> LoopStmt: expr")
 
-        valid_clauses = (PrivateClause, \
+        _valid_clauses = (PrivateClause, \
                          FirstPrivateClause, \
                          LastPrivateClause, \
                          ReductionClause, \
@@ -104,7 +104,7 @@ class LoopStmt(BasicStmt):
 
         txt = 'do'
         for clause in self.clauses:
-            if isinstance(clause, valid_clauses):
+            if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for LoopStmt. Given : ', \
@@ -126,12 +126,12 @@ class SingleStmt(BasicStmt):
         if DEBUG:
             print("> SingleStmt: expr")
 
-        valid_clauses = (PrivateClause, \
+        _valid_clauses = (PrivateClause, \
                          FirstPrivateClause)
 
         txt = 'single'
         for clause in self.clauses:
-            if isinstance(clause, valid_clauses):
+            if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for SingleStmt')

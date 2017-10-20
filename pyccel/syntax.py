@@ -1865,11 +1865,11 @@ class ParallelBlockStmt(BasicStmt):
         num_threads = self.num_threads
         body = self.body.expr
 
-        settings = None
-
+        # TODO - set variables and clauses
+        #      - add status for variables (shared, private)
         variables = []
-        return ParallelBlock(variables, body)
-
+        clauses   = []
+        return ParallelBlock(clauses, variables, body)
 
 
 class ExpressionElement(object):

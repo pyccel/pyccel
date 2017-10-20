@@ -34,45 +34,51 @@ from pyccel.parallel.basic import Basic
 class OMP(Basic):
     """Base class for OpenMP."""
     pass
+
 ##########################################################
 
 ##########################################################
 #                 Basic Statements
 ##########################################################
-class OMP_Parallel(AnnotatedComment, OMP):
-    """OMP Parallel statement."""
-    def __new__(cls, *args, **options):
-        clauses = args[0]
+class OMP_Parallel(ParallelBlock, OMP):
+    """
+    OMP Parallel construct statement.
 
-#        valid_clauses = (ParallelNumThreadClause, \
-#                         ParallelDefaultClause, \
-#                         PrivateClause, \
-#                         SharedClause, \
-#                         FirstPrivateClause, \
-#                         CopyinClause, \
-#                         ReductionClause, \
-#                         ParallelProcBindClause)
-#
-#        txt = 'parallel'
-#        for clause in self.clauses:
-#            if isinstance(clause, valid_clauses):
-#                txt = '{0} {1}'.format(txt, clause.expr)
-#            else:
-#                raise TypeError('Wrong clause for ParallelStmt')
+    Examples
 
-        txt = 'parallel'
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    >>> from pyccel.parallel.openmp import OMP_Parallel
+    >>> from pyccel.parallel.openmp import OMP_ParallelNumThreadClause
+    >>> from pyccel.parallel.openmp import OMP_ParallelDefaultClause
+    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('int', 'x')
+    >>> body = [Assign(x,2.*n + 1.), Assign(n, n + 1)]
+    >>> variables = [x,n]
+    >>> clauses = [OMP_ParallelNumThreadClause(4), OMP_ParallelDefaultClause('shared')]
+    >>> OMP_Parallel(clauses, variables, body)
+    #pragma parallel num_threads(4) default(shared)
+    x := 1.0 + 2.0*n
+    n := 1 + n
+    """
+    _prefix = '#pragma'
+    def __new__(cls, clauses, variables, body):
+        if not iterable(clauses):
+            raise TypeError('Expecting an iterable for clauses')
 
-class OMP_EndConstruct(AnnotatedComment, OMP):
-    """OMP EndConstruct statement."""
-    def __new__(cls, *args, **options):
-        construct = 'parallel'
-        simd      = ''
-        nowait    = ''
-        txt = 'end {0} {1} {2}'.format(construct, \
-                                       simd, \
-                                       nowait)
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+        _valid_clauses = (OMP_ParallelNumThreadClause, \
+                          OMP_ParallelDefaultClause, \
+                          OMP_PrivateClause, \
+                          OMP_SharedClause, \
+                          OMP_FirstPrivateClause, \
+                          OMP_CopyinClause, \
+                          OMP_ReductionClause, \
+                          OMP_ParallelProcBindClause)
+
+        for clause in clauses:
+            if not isinstance(clause, _valid_clauses):
+                raise TypeError('Wrong clause for OMP_Parallel')
+
+        return ParallelBlock.__new__(cls, clauses, variables, body)
 
 class OMP_ParallelNumThreadClause(OMP):
     """
@@ -354,11 +360,7 @@ def openmpfy(stmt, **options):
         body      = stmt.body
         clauses   = []
 
-        prelude  = [OMP_Parallel(clauses)]
-        epilog   = [OMP_EndConstruct()]
-        body     = prelude + body + epilog
-
-        return Block(variables, body)
+        return OMP_Parallel(clauses, variables, body)
 
     return stmt
 ##########################################################
