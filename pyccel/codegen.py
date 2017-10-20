@@ -8,7 +8,7 @@ from pyccel.printers import fcode
 from pyccel.parser  import PyccelParser
 from pyccel.types.ast import subs
 from pyccel.types.ast import DataType, DataTypeFactory
-from pyccel.types.ast import (Range, Tensor, Block, \
+from pyccel.types.ast import (Range, Tensor, Block, ParallelBlock, \
                               For, Assign, Declare, Variable, \
                               NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
@@ -400,7 +400,7 @@ class Codegen(object):
         # ...
 
         for stmt in stmts:
-#            print stmt
+            print stmt
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):
@@ -459,7 +459,16 @@ class Codegen(object):
             elif isinstance(stmt, list):
                 for s in stmt:
                     body += printer(s) + "\n"
+            elif isinstance(stmt, ParallelBlock):
+                body += printer(stmt) + "\n"
+                # TODO use local vars to a parallel block (offloading?)
+#                for dec in stmt.declarations:
+#                    preludes += "\n" + printer(dec) + "\n"
             elif isinstance(stmt, Block):
+                # TODO - now we can apply printer to Block directly. must be
+                #      updated here => remove the body loop
+                #      - printer(stmt) must return only body code, then preludes
+                #      are treated somewhere?
                 for s in stmt.body:
                     body += "\n" + printer(s) + "\n"
                 for dec in stmt.declarations:

@@ -970,6 +970,22 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
 
+    def _print_OMP_Parallel(self, expr):
+        # prelude will not be printed
+        prefix  = '!$omp'
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        body    = '\n'.join(self._print(i) for i in expr.body)
+        prelude = '\n'.join(self._print(i) for i in expr.declarations)
+
+        body  = ('{0} parallel {1}\n'
+                 '{2}\n'
+                 '{0} end parallel').format(prefix, clauses, body)
+
+        return body
+
+    def _print_OMP_ParallelNumThreadClause(self, expr):
+        return 'num_threads({})'.format(self._print(expr.num_threads))
+
     def _print_Sync(self, expr):
         return 'Sync'
 
@@ -1337,12 +1353,6 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     def _print_Block(self, expr):
-        body    = '\n'.join(self._print(i) for i in expr.body)
-        prelude = '\n'.join(self._print(i) for i in expr.declarations)
-        return prelude, body
-
-    def _print_ParallelBlock(self, expr):
-        print("PAR ICI")
         body    = '\n'.join(self._print(i) for i in expr.body)
         prelude = '\n'.join(self._print(i) for i in expr.declarations)
         return prelude, body

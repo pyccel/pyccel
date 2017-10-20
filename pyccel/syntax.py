@@ -1869,6 +1869,12 @@ class ParallelBlockStmt(BasicStmt):
         #      - add status for variables (shared, private)
         variables = []
         clauses   = []
+
+        # TODO remove from here
+        from pyccel.parallel.openmp import OMP_ParallelNumThreadClause
+        if num_threads:
+            clauses += [OMP_ParallelNumThreadClause(num_threads)]
+
         return ParallelBlock(clauses, variables, body)
 
 

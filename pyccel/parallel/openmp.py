@@ -358,7 +358,7 @@ def openmpfy(stmt, **options):
     if isinstance(stmt, ParallelBlock):
         variables = stmt.variables
         body      = stmt.body
-        clauses   = []
+        clauses   = stmt.clauses
 
         return OMP_Parallel(clauses, variables, body)
 
