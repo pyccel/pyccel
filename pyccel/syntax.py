@@ -45,7 +45,7 @@ from pyccel.types.ast import Import
 from pyccel.types.ast import DottedName
 from pyccel.types.ast import (Sync, Tile, Range, Tensor, ParallelRange, \
                               For, Assign, ParallelBlock, \
-                              Declare, Variable, Result, \
+                              Declare, Variable, Result, ValuedVariable, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, With, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
@@ -2221,7 +2221,7 @@ class ExpressionDict(BasicStmt):
         print(args)
         return Dict(**args)
 
-class ArgWithKey(BasicStmt):
+class ArgValued(BasicStmt):
     """Base class representing a list element with key in the grammar."""
 
     def __init__(self, **kwargs):
@@ -2236,14 +2236,13 @@ class ArgWithKey(BasicStmt):
         self.key   = kwargs.pop('key', None)
         self.value = kwargs.pop('value')
 
-        super(ArgWithKey, self).__init__(**kwargs)
+        super(ArgValued, self).__init__(**kwargs)
 
     @property
     def expr(self):
         key   = self.key
         value = self.value.expr
         if key:
-            key = key.expr
             return {'key': key, 'value': value}
         else:
             return value
@@ -2388,10 +2387,9 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-#        print "*********** FunctionDefStmt.expr: Begin"
+        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.trailer.expr
-        args_ini = args
         local_vars  = []
         global_vars = []
 
@@ -2426,7 +2424,15 @@ class FunctionDefStmt(BasicStmt):
         scope_vars = {}
         scope_decs = {}
         h = headers[name]
-        for arg_name, d in zip(args, h.dtypes):
+        arg_names = []
+        for a, d in zip(args, h.dtypes):
+            # case of arg with key
+            if isinstance(a, dict):
+                arg_name = a['key']
+            else:
+                arg_name = a
+            arg_names.append(arg_name)
+
             if arg_name in namespace:
                 var = namespace.pop(arg_name)
                 dec = declarations.pop(arg_name)
@@ -2449,7 +2455,7 @@ class FunctionDefStmt(BasicStmt):
 
         body = self.body.expr
 
-        prelude = [declarations[a] for a in args_ini]
+        prelude = [declarations[a] for a in arg_names]
 
         results = []
         for stmt in self.body.stmts:
@@ -2457,8 +2463,21 @@ class FunctionDefStmt(BasicStmt):
                 results += stmt.expr
         # ...
 
+        # ... replace dict by ValuedVariable
+        _args = []
+        print_namespace()
+        for a in args:
+            if isinstance(a, dict):
+                var = namespace[a['key']]
+                # TODO trea a['value'] correctly
+                _args.append(ValuedVariable(var, a['value']))
+            else:
+                _args.append(a)
+        args = _args
+        # ...
+
         # ... cleaning the namespace
-        for a in args_ini:
+        for a in arg_names:
             del declarations[a]
             del namespace[a]
 
@@ -2481,7 +2500,9 @@ class FunctionDefStmt(BasicStmt):
             declarations[arg_name] = dec
         # ...
 
+        # ...
         body = prelude + body
+        # ...
 
         # rename the method in the class case
         # TODO do we keep this?
@@ -2494,7 +2515,7 @@ class FunctionDefStmt(BasicStmt):
                            local_vars, global_vars, \
                            cls_name=cls_name)
         namespace[name] = stmt
-#        print "*********** FunctionDefStmt.expr: End"
+        print "*********** FunctionDefStmt.expr: End"
         return stmt
 
 class ClassDefStmt(BasicStmt):
@@ -2724,9 +2745,9 @@ class TrailerArgList(BasicTrailer):
             if isinstance(arg, TrailerArgList):
                 args = [_do_arg(i) for i in arg.args]
                 return Tuple(*args)
-            elif isinstance(arg, ArgWithKey):
+            elif isinstance(arg, ArgValued):
                 return arg.expr
-            raise TypeError('Expecting ArgWithKey or TrailerArgList')
+            raise TypeError('Expecting ArgValued or TrailerArgList')
         # ...
 
         args = [_do_arg(i) for i in self.args]

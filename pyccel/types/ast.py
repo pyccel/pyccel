@@ -1277,6 +1277,54 @@ class Variable(Symbol):
                    allocatable=self.allocatable, \
                    shape=self.shape)
 
+class ValuedVariable(Basic):
+    """Represents a valued variable in the code.
+
+    variable: Variable
+        A single variable
+    value: Variable, or instance of Native types
+        value associated to the variable
+
+    Examples
+
+    >>> from pyccel.types.ast import ValuedVariable, Variable
+    >>> n  = Variable('int', 'n')
+    >>> ValuedVariable(n, 3)
+    n := 3
+    >>> x  = Variable('double', 'x')
+    >>> y  = Variable('double', 'y')
+    >>> ValuedVariable(x, y)
+    x := y
+    """
+
+    def __new__(cls, variable, value):
+        if not isinstance(variable, Variable):
+            raise TypeError("variable must be of type Variable")
+
+        _valid_instances = (Variable, IndexedVariable, IndexedElement, \
+                           int, float, complex, \
+                            Integer, Double, Float, Complex, Bool)
+
+        if not isinstance(value, _valid_instances):
+            raise TypeError("non-valid instance for value")
+
+        return Basic.__new__(cls, variable, value)
+
+    @property
+    def variable(self):
+        return self._args[0]
+
+    @property
+    def value(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        variable = sstr(self.variable)
+        value    = sstr(self.value)
+        return '{0} := {1}'.format(variable, value)
+
 class FunctionDef(Basic):
     """Represents a function definition.
 
