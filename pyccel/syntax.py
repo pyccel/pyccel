@@ -192,7 +192,8 @@ namespace["pi"]    = pi
 
 
 # ... builtin types
-builtin_types  = ['int', 'float', 'double', 'complex', 'bool']
+builtin_types      = ['int', 'float', 'double', 'complex', 'bool']
+builtin_datatypes  = [datatype(i) for i in builtin_types]
 # ...
 
 # ... will contain user defined types
@@ -533,18 +534,22 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, ParallelRange):
                 grid = i
                 rank = 1
-            elif isinstance(i, Variable): # iterator
+            elif isinstance(i, Variable):
                 ctype = i.dtype
-                cls_name = ctype.name
-                obj = eval(cls_name)()
-                grid = obj.get_ranges(i)
-                # grid is now a Tensor
+                if ctype in builtin_datatypes:
+                    shape.append(i)
+                else: # iterator
+                    cls_name = ctype.name
+                    obj = eval(cls_name)()
+                    grid = obj.get_ranges(i)
+                    # grid is now a Tensor
 
-                rank = grid.dim
-            else:
-                # TODO further check
-                #      i can be a Tensor here
+                    rank = grid.dim
+            elif isinstance(i, Integer):
                 shape.append(i)
+            else:
+                raise TypeError('Unexpected type')
+
         if rank is None:
             rank = len(shape)
 
@@ -2196,7 +2201,7 @@ class ExpressionDict(BasicStmt):
 
     def __init__(self, **kwargs):
         """
-        Constructor for a Expression list statement
+        Constructor for a Expression dictionary statement
 
         args: list, tuple
             list of elements
@@ -2207,14 +2212,41 @@ class ExpressionDict(BasicStmt):
 
     @property
     def expr(self):
+        raise NotImplementedError('No fortran backend yet for dictionaries.')
         args = {}
         for a in self.args:
             key   = a.key # to treat
             value = a.value
             args[key] = value
         print(args)
-        import sys; sys.exit(0)
         return Dict(**args)
+
+class ArgWithKey(BasicStmt):
+    """Base class representing a list element with key in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a list element with key
+
+        key: str, None
+            entry key
+        value: Expression
+            entry value
+        """
+        self.key   = kwargs.pop('key', None)
+        self.value = kwargs.pop('value')
+
+        super(ArgWithKey, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        key   = self.key
+        value = self.value.expr
+        if key:
+            key = key.expr
+            return {'key': key, 'value': value}
+        else:
+            return value
 
 
 class FlowStmt(BasicStmt):
@@ -2331,10 +2363,10 @@ class FunctionDefStmt(BasicStmt):
         parent: stmt
             parent statement.
         """
-        self.name = kwargs.pop('name')
-        self.args = kwargs.pop('args')
-        self.body = kwargs.pop('body')
-        self.parent = kwargs.get('parent', None)
+        self.name    = kwargs.pop('name')
+        self.trailer = kwargs.pop('trailer')
+        self.body    = kwargs.pop('body')
+        self.parent  = kwargs.get('parent', None)
 
         super(FunctionDefStmt, self).__init__(**kwargs)
 
@@ -2358,7 +2390,8 @@ class FunctionDefStmt(BasicStmt):
         """
 #        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
-        args = self.args
+        args = self.trailer.expr
+        args_ini = args
         local_vars  = []
         global_vars = []
 
@@ -2416,9 +2449,7 @@ class FunctionDefStmt(BasicStmt):
 
         body = self.body.expr
 
-        args    = [namespace[arg_name] for arg_name in self.args]
-        prelude = [declarations[arg_name] for arg_name in self.args]
-
+        prelude = [declarations[a] for a in args_ini]
 
         results = []
         for stmt in self.body.stmts:
@@ -2427,9 +2458,9 @@ class FunctionDefStmt(BasicStmt):
         # ...
 
         # ... cleaning the namespace
-        for arg_name in self.args:
-            del declarations[arg_name]
-            del namespace[arg_name]
+        for a in args_ini:
+            del declarations[a]
+            del namespace[a]
 
         ls = self.local_vars + self.stmt_vars
         for var_name in ls:
@@ -2452,9 +2483,8 @@ class FunctionDefStmt(BasicStmt):
 
         body = prelude + body
 
-
-
         # rename the method in the class case
+        # TODO do we keep this?
         f_name = name
         cls_name = None
         if cls_instance:
@@ -2689,8 +2719,18 @@ class TrailerArgList(BasicTrailer):
         Process a Trailer by returning the approriate objects from
         pyccel.types.ast
         """
-        self.update()
-        return [arg.expr for arg in  self.args]
+        # ...
+        def _do_arg(arg):
+            if isinstance(arg, TrailerArgList):
+                args = [_do_arg(i) for i in arg.args]
+                return Tuple(*args)
+            elif isinstance(arg, ArgWithKey):
+                return arg.expr
+            raise TypeError('Expecting ArgWithKey or TrailerArgList')
+        # ...
+
+        args = [_do_arg(i) for i in self.args]
+        return args
 
 class TrailerSubscriptList(BasicTrailer):
     """Class representing a Trailer with list of subscripts in the grammar."""

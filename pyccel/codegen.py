@@ -400,7 +400,7 @@ class Codegen(object):
         # ...
 
         for stmt in stmts:
-            print stmt
+#            print stmt
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):

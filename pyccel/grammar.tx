@@ -100,7 +100,7 @@ DecoratedStmt:
 ;
 
 FunctionDefStmt: 
-  DEF name=ID '(' args*=ID[','] ')' ':'
+  DEF name=ID trailer=TrailerArgList ':'
   body=SuiteStmt
 ;
 
@@ -255,6 +255,7 @@ ExpressionList: '(' args+=Expression[',']   ')';
 ExpressionDict: '{' args+=DictElement[',']   '}';
 
 IDorSTRING: ID | STRING; 
+ArgWithKey: (key=IDorSTRING '=')? value=Expression ;
 DictElement: key=IDorSTRING ':' value=Atom;
 
 OpPlusOrMinus: '+' | '-';
@@ -287,7 +288,7 @@ TrailerArgList: '(' args*=TrailerArg[','] ')';
 TrailerSubscriptList: '[' args*=TrailerSubscript[','] ']';
 TrailerDots: '.' args=ID;
 
-TrailerArg: TrailerArgList | Expression;
+TrailerArg: TrailerArgList | ArgWithKey;
 TrailerSubscript: 
     TrailerSlice 
   | TrailerSliceLeft 
