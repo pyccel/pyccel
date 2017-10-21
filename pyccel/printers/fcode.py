@@ -910,10 +910,12 @@ class FCodePrinter(CodePrinter):
             return 'call {0}({1})'.format(rhs_code, code_args)
         elif isinstance(expr.rhs, FunctionCall):
             rhs_code = self._print(expr.rhs.name)
-            cls_name = expr.rhs.func.cls_name
-            if cls_name:
+            func = expr.rhs.func
+            if func.cls_name:
                 rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
             is_procedure = (expr.rhs.kind == 'procedure')
+            code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
+            rhs_code = '{0}({1})'.format(rhs_code, code_args)
         else:
             rhs_code = self._print(expr.rhs)
 
@@ -1461,6 +1463,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         # for the moment, this is only used if the function has not arguments
+        print("LALALA")
+        import sys; sys.exit(0)
         func = expr.func
         name = func.name
         name = self._print(name)

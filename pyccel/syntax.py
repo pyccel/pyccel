@@ -974,7 +974,13 @@ def expr_with_trailer(expr, trailer=None):
             expr = ConstructorCall(method, args)
         else:
             if len(args) > 0:
-                expr = Function(str(expr))(*args)
+                f_name = str(expr)
+                # TODO may be we should test only on math funcs
+                if f_name in builtin_funcs:
+                    expr = Function(f_name)(*args)
+                else:
+                    func = namespace[f_name]
+                    expr = FunctionCall(func, args)
             else:
                 func = namespace[str(expr)]
                 expr = FunctionCall(func, None)
@@ -2387,7 +2393,7 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.types.ast
         """
-        print "*********** FunctionDefStmt.expr: Begin"
+#        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.trailer.expr
         local_vars  = []
@@ -2465,7 +2471,6 @@ class FunctionDefStmt(BasicStmt):
 
         # ... replace dict by ValuedVariable
         _args = []
-        print_namespace()
         for a in args:
             if isinstance(a, dict):
                 var = namespace[a['key']]
@@ -2515,7 +2520,7 @@ class FunctionDefStmt(BasicStmt):
                            local_vars, global_vars, \
                            cls_name=cls_name)
         namespace[name] = stmt
-        print "*********** FunctionDefStmt.expr: End"
+#        print "*********** FunctionDefStmt.expr: End"
         return stmt
 
 class ClassDefStmt(BasicStmt):
