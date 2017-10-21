@@ -973,17 +973,21 @@ def expr_with_trailer(expr, trailer=None):
             args = [this] + list(args)
             expr = ConstructorCall(method, args)
         else:
-            if len(args) > 0:
-                f_name = str(expr)
+            f_name = str(expr)
+            if isinstance(expr, FunctionDef):
+                expr = expr(*args)
+            elif f_name in builtin_funcs:
                 # TODO may be we should test only on math funcs
-                if f_name in builtin_funcs:
-                    expr = Function(f_name)(*args)
-                else:
-                    func = namespace[f_name]
-                    expr = FunctionCall(func, args)
+                expr = Function(f_name)(*args)
             else:
-                func = namespace[str(expr)]
-                expr = FunctionCall(func, None)
+                raise NotImplementedError('Only FunctionDef is treated')
+#            if len(args) > 0:
+#                else:
+#                    func = namespace[f_name]
+#                    expr = FunctionCall(func, args)
+#            else:
+#                func = namespace[str(expr)]
+#                expr = FunctionCall(func, None)
     elif isinstance(trailer, TrailerSubscriptList):
         args = trailer.expr
 
@@ -1478,7 +1482,9 @@ class AssignStmt(BasicStmt):
                 raise TypeError("Expecting SubscriptList or Dot")
 
         if not isinstance(rhs, MPI):
-            return Assign(l, rhs, strict=False, status=status, like=like)
+            stmt = Assign(l, rhs, strict=False, status=status, like=like)
+            return stmt
+#            return Assign(l, rhs, strict=False, status=status, like=like)
         else:
             return MPI_Assign(l, rhs, strict=False, status=status, like=like)
 
@@ -1601,17 +1607,21 @@ class MultiAssignStmt(BasicStmt):
         lhs = self.lhs
         rhs = self.rhs.expr
 
-        if not(isinstance(rhs, Function)):
-            raise TypeError("Expecting a Function")
+        if not(isinstance(rhs, (Function, FunctionCall))):
+            raise TypeError("Expecting a Function or FunctionCall")
 
-        f_name = str(type(rhs).__name__)
         # TODO additional functions like : shape
-        if not(f_name in namespace):
-            raise ValueError("Undefined function call {}.".format(f_name))
+        if isinstance(rhs, FunctionCall):
+            F = rhs.func
+        elif isinstance(rhs, Function):
+            f_name = str(type(rhs).__name__)
 
-        F = namespace[f_name]
-        if not(isinstance(F, FunctionDef)):
-            raise TypeError("Expecting a FunctionDef")
+            if not(f_name in namespace):
+                raise ValueError("Undefined function call {}.".format(f_name))
+
+            F = namespace[f_name]
+            if not(isinstance(F, FunctionDef)):
+                raise TypeError("Expecting a FunctionDef")
 
         if not(len(F.results) == len(self.lhs)):
             raise ValueError("Wrong number of outputs.")
@@ -1980,7 +1990,7 @@ class Power(ExpressionElement, BasicStmt):
         Process the atomic expression, by returning a sympy expression
         """
         if DEBUG:
-            print "> AtomExpr "
+            print "> Power "
         expr = self.op.expr
         if self.exponent is None:
             return expr
@@ -2068,7 +2078,10 @@ class Atom(ExpressionElement):
             return op.expr
         elif op in namespace:
             if isinstance(namespace[op], FunctionDef):
-                return Function(op)
+                F = namespace[op]
+                # function arguments are not known yet.
+                # they will be handled in expr_with_trailer
+                return F
             else:
                 return namespace[op]
         elif op in builtin_funcs:
@@ -2619,6 +2632,10 @@ class PythonPrintStmt(BasicStmt):
         func_name   = self.name
         args        = self.args
         expressions=[]
+
+#        print_namespace()
+#        print namespace['f']
+#        print namespace['g']
 
         for arg in args:
             if not isinstance(arg,str):

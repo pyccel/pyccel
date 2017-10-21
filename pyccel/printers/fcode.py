@@ -928,6 +928,7 @@ class FCodePrinter(CodePrinter):
             rhs_code = '{0}({1})'.format(rhs_code, code_args)
         else:
             rhs_code = self._print(expr.rhs)
+#            print("ASSIGN = ", rhs_code)
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
@@ -1292,14 +1293,27 @@ class FCodePrinter(CodePrinter):
         return self._print(stmt)
 
     def _print_MultiAssign(self, expr):
-        if not isinstance(expr.rhs, Function):
+        if isinstance(expr.rhs, FunctionCall):
+            # TODO check number of arguments and ValuedVariables
+            prec =  self._settings['precision']
+
+            args = expr.rhs.arguments
+            args = [N(a, prec) for a in args]
+            func = expr.rhs.func
+            f_name = self._print(func.name)
+            args    = ', '.join(self._print(i) for i in args)
+            outputs = ', '.join(self._print(i) for i in expr.lhs)
+            code = 'call {0} ({1}, {2})'.format(f_name, args, outputs)
+        elif isinstance(expr.rhs, Function):
+            prec =  self._settings['precision']
+            args = [N(a, prec) for a in expr.rhs.args]
+            func = expr.rhs.func
+            args    = ', '.join(self._print(i) for i in args)
+            outputs = ', '.join(self._print(i) for i in expr.lhs)
+            code = 'call {0} ({1}, {2})'.format(func, args, outputs)
+        else:
             raise TypeError('Expecting a Function call.')
-        prec =  self._settings['precision']
-        args = [N(a, prec) for a in expr.rhs.args]
-        func = expr.rhs.func
-        args    = ', '.join(self._print(i) for i in args)
-        outputs = ', '.join(self._print(i) for i in expr.lhs)
-        return 'call {0} ({1}, {2})'.format(func, args, outputs)
+        return self._get_statement(code)
 
     def _print_Range(self, expr):
         start = self._print(expr.start)
@@ -1455,9 +1469,10 @@ class FCodePrinter(CodePrinter):
         args = [N(a, prec) for a in expr.args]
         eval_expr = expr.func(*args)
         if not isinstance(eval_expr, Function):
-            return self._print(eval_expr)
+            code = self._print(eval_expr)
         else:
-            return CodePrinter._print_Function(self, expr.func(*args))
+            code = CodePrinter._print_Function(self, expr.func(*args))
+        return self._get_statement(code)
 
     def _print_ConstructorCall(self, expr):
         func = expr.func
@@ -1467,22 +1482,24 @@ class FCodePrinter(CodePrinter):
         name = self._print(name)
 
         code_args = ''
-        if not(func.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in func.arguments)
-        return '{0}({1})'.format(name, code_args)
+        if not(expr.arguments) is None:
+            code_args = ', '.join(self._print(i) for i in expr.arguments)
+        code = '{0}({1})'.format(name, code_args)
+        return self._get_statement(code)
 
     def _print_FunctionCall(self, expr):
         # for the moment, this is only used if the function has not arguments
-        print("LALALA")
-        import sys; sys.exit(0)
         func = expr.func
         name = func.name
         name = self._print(name)
 
         code_args = ''
-        if not(func.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in func.arguments)
-        return '{0}({1})'.format(name, code_args)
+        if not(expr.arguments) is None:
+            code_args = ', '.join(self._print(i) for i in expr.arguments)
+        code = '{0}({1})'.format(name, code_args)
+#        print (code)
+#        import sys; sys.exit(0)
+        return self._get_statement(code)
 
     def _print_MethodCall(self, expr):
         func = expr.func
@@ -1494,7 +1511,8 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in expr.arguments[1:])
 
         this = self._print(expr.arguments[0])
-        return 'CALL {0} % {1}({2})'.format(this, name, code_args)
+        code = 'call {0} % {1}({2})'.format(this, name, code_args)
+        return self._get_statement(code)
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.

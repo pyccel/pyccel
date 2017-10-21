@@ -482,6 +482,8 @@ class Codegen(object):
                     raise Exception('Statement not yet handled.')
         # ...
 
+#        import sys; sys.exit(0)
+
         # ...
         for key, dec in ast.declarations.items():
             if not isinstance(dec.dtype, (NativeRange, NativeTensor)):

@@ -1095,7 +1095,8 @@ class NotequalStmt(Relational):
         rhs = sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
-class FunctionCall(Basic):
+# TODO remove kind from here and put it in FunctionDef
+class FunctionCall(AtomicExpr):
     """
     Base class for applied mathematical functions.
 
@@ -1112,7 +1113,29 @@ class FunctionCall(Basic):
 
     Examples
 
+    Examples
+
+    >>> from pyccel.types.ast import Assign, Variable
+    >>> from pyccel.types.ast import FunctionDef
+    >>> x = Variable('int', 'x')
+    >>> y = Variable('int', 'y')
+    >>> args        = [x]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+1)]
+    >>> incr = FunctionDef('incr', args, results, body)
+    >>> n = Variable('int', 'n')
+    >>> incr(n)
+    incr(n)
+    >>> type(incr(n))
+    pyccel.types.ast.FunctionCall
+    >>> incr(n)*2+1
+    1 + 2*incr(n)
+    >>> incr(n)+1
+    incr(n) + 1
+    >>> incr(n)*2
+    2*incr(n)
     """
+    is_commutative = True
 
     def __new__(cls, func, arguments, kind='function'):
         if not isinstance(func, (FunctionDef, str)):
@@ -1127,7 +1150,16 @@ class FunctionCall(Basic):
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
-        return Basic.__new__(cls, func, arguments, kind)
+
+        f_name = func.name
+
+        obj = Basic.__new__(cls, f_name)
+
+        obj._kind      = kind
+        obj._func      = func
+        obj._arguments = arguments
+
+        return obj
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -1139,15 +1171,15 @@ class FunctionCall(Basic):
 
     @property
     def func(self):
-        return self._args[0]
-
-    @property
-    def arguments(self):
-        return self._args[1]
+        return self._func
 
     @property
     def kind(self):
-        return self._args[2]
+        return self._kind
+
+    @property
+    def arguments(self):
+        return self._arguments
 
     @property
     def name(self):
@@ -1358,6 +1390,8 @@ class FunctionDef(Basic):
     imports: list, tuple
         a list of needed imports
 
+    Examples
+
     >>> from pyccel.types.ast import Assign, Variable, FunctionDef
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
@@ -1477,6 +1511,22 @@ class FunctionDef(Basic):
                            cls_name=self.cls_name, \
                            hide=self.hide, \
                            kind=self.kind)
+
+    def __call__(self, *args, **kwargs):
+        """Represents a call to the function."""
+        # TODO add kwargs too
+        f_args = self.arguments
+        if len(args) > len(f_args):
+            raise ValueError('Wrong number of arguments for ', self.name)
+        elif len(args) < len(f_args):
+            n = len(args)
+            args = list(args)
+            for i in f_args[n:]:
+                if not isinstance(i, ValuedVariable):
+                    raise TypeError('Expecting a valued variable')
+
+                args.append(i.value)
+        return FunctionCall(self, args)
 
 class ClassDef(Basic):
     """Represents a class definition.
