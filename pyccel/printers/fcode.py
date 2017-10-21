@@ -33,7 +33,7 @@ from pyccel.types.ast import NativeComplex, NativeDouble, NativeInteger
 from pyccel.types.ast import Range, Tensor, ParallelRange, Block
 from pyccel.types.ast import (Assign, MultiAssign, AugAssign, \
                               Result, \
-                              Variable, Declare, \
+                              Variable, Declare, ValuedVariable, \
                               Len, Dot, Sign, subs, \
                               IndexedElement, Slice)
 from pyccel.printers.codeprinter import CodePrinter
@@ -914,7 +914,17 @@ class FCodePrinter(CodePrinter):
             if func.cls_name:
                 rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
             is_procedure = (expr.rhs.kind == 'procedure')
-            code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
+            args = expr.rhs.arguments
+            f_args = func.arguments
+            if not(len(args) == len(f_args)):
+                n = len(args)
+                for i in f_args[n:]:
+                    if not isinstance(i, ValuedVariable):
+                        raise TypeError('Expecting a valued variable')
+
+                    args.append(i.value)
+
+            code_args = ', '.join(self._print(i) for i in args)
             rhs_code = '{0}({1})'.format(rhs_code, code_args)
         else:
             rhs_code = self._print(expr.rhs)
