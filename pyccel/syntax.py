@@ -30,7 +30,7 @@ from sympy.utilities.iterables import iterable
 from sympy import Integral, Symbol
 from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
-
+from sympy.core.containers import Dict
 
 from pyccel.types.ast import allocatable_like
 from pyccel.types.ast import FunctionCall
@@ -1410,7 +1410,9 @@ class AssignStmt(BasicStmt):
         """
         Process the Assign statement by returning a pyccel.types.ast object
         """
-        if not isinstance(self.rhs, (ArithmeticExpression, ExpressionList)):
+        if not isinstance(self.rhs, (ArithmeticExpression, \
+                                     ExpressionList, \
+                                     ExpressionDict)):
             raise TypeError("Expecting an expression")
 
         rhs      = self.rhs.expr
@@ -2188,6 +2190,31 @@ class ExpressionList(BasicStmt):
     def expr(self):
         args = [a.expr for a in self.args]
         return Tuple(*args)
+
+class ExpressionDict(BasicStmt):
+    """Base class representing a dictionary of elements statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Expression list statement
+
+        args: list, tuple
+            list of elements
+        """
+        self.args = kwargs.pop('args')
+
+        super(ExpressionDict, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = {}
+        for a in self.args:
+            key   = a.key # to treat
+            value = a.value
+            args[key] = value
+        print(args)
+        import sys; sys.exit(0)
+        return Dict(**args)
 
 
 class FlowStmt(BasicStmt):

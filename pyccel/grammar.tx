@@ -162,7 +162,7 @@ Constructor: DataType ;
 IdentifierOrNumber: Number | ID;
 
 ArgList: '(' args+=Args[','] ')';
-Args: ArgList | IdentifierOrNumber;
+Args: ArgList | DictElement | IdentifierOrNumber;
 
 // TODO: remove
 PythonStdLibStmt: PythonPrintStmt;
@@ -174,7 +174,7 @@ PrintStmt: STRING | Expression;
 ParameterValue: (value=IdentifierOrNumber |value=ArgList);
 ParameterSingle: label=ParameterTest '=' value=ParameterValue;
 
-AssignRHS: Expression | ExpressionList;
+AssignRHS: Expression | ExpressionDict | ExpressionList;
 
 AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
@@ -252,6 +252,10 @@ Atom:
 ;
 
 ExpressionList: '(' args+=Expression[',']   ')';
+ExpressionDict: '{' args+=DictElement[',']   '}';
+
+IDorSTRING: ID | STRING; 
+DictElement: key=IDorSTRING ':' value=Atom;
 
 OpPlusOrMinus: '+' | '-';
 OpFactor: '*' | '@' | '/' | '%' ;
