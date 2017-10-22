@@ -40,6 +40,8 @@ from pyccel.printers.codeprinter import CodePrinter
 
 from pyccel.parallel.mpi import MPI
 from pyccel.parallel.mpi import MPI_ERROR, MPI_STATUS
+from pyccel.parallel.mpi import MPI_Init
+from pyccel.parallel.mpi import MPI_Finalize
 from pyccel.parallel.mpi import MPI_comm_world, MPI_status_size, MPI_proc_null
 from pyccel.parallel.mpi import MPI_comm_size, MPI_comm_rank
 from pyccel.parallel.mpi import MPI_comm_recv, MPI_comm_send
@@ -925,7 +927,8 @@ class FCodePrinter(CodePrinter):
                     args.append(i.value)
 
             code_args = ', '.join(self._print(i) for i in args)
-            rhs_code = '{0}({1})'.format(rhs_code, code_args)
+            if not isinstance(expr.rhs.func, (MPI_Init, MPI_Finalize)):
+                rhs_code = '{0}({1})'.format(rhs_code, code_args)
         else:
             rhs_code = self._print(expr.rhs)
 #            print("ASSIGN = ", rhs_code)
