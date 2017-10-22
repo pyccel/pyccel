@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from pyccel.parser  import PyccelParser
+from pyccel.parser.parser  import PyccelParser
 import os
 
 __all__ = ["Complexity"]
@@ -16,7 +16,7 @@ class Complexity(object):
             parse as a string.
         """
         # ... TODO improve once TextX will handle indentation
-        from pyccel.codegen import clean, preprocess, preprocess_as_str, make_tmp_file
+        from pyccel.codegen.codegen import clean, preprocess, preprocess_as_str, make_tmp_file
 
         # ...
         if os.path.isfile(filename_or_text):

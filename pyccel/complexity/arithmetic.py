@@ -13,22 +13,19 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy.utilities.iterables import iterable
 
-from pyccel.syntax import ( \
-                           # statements
-                           AssignStmt, MultiAssignStmt, \
-                           IfStmt, ForStmt,WhileStmt \
-                           )
+from pyccel.parser.syntax.core import (AssignStmt, MultiAssignStmt, \
+                                       IfStmt, ForStmt,WhileStmt)
 
-from pyccel.types.ast import (For, Assign, Declare, Variable, \
-                              datatype, While, NativeFloat, \
-                              EqualityStmt, NotequalStmt, \
-                              MultiAssign, \
-                              FunctionDef, Import, Print, \
-                              Comment, AnnotatedComment, \
-                              IndexedVariable, Slice, If, \
-                              ThreadID, ThreadsNumber, \
-                              Stencil, \
-                              Zeros, Ones, Array, Len, Dot, IndexedElement)
+from pyccel.ast.core import (For, Assign, Declare, Variable, \
+                             datatype, While, NativeFloat, \
+                             EqualityStmt, NotequalStmt, \
+                             MultiAssign, \
+                             FunctionDef, Import, Print, \
+                             Comment, AnnotatedComment, \
+                             IndexedVariable, Slice, If, \
+                             ThreadID, ThreadsNumber, \
+                             Stencil, \
+                             Zeros, Ones, Array, Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic import Complexity
 

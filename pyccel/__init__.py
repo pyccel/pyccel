@@ -1,14 +1,8 @@
 # -*- coding: UTF-8 -*-
 __version__ = "0.1"
 
-from .types      import *
-from .parallel   import *
-from .printers   import *
-from .core       import *
-from .imports    import *
 from .calculus   import *
-from .complexity import *
-from .syntax     import *
-from .parser     import *
 from .codegen    import *
-from .clapp      import *
+from .complexity import *
+from .parser     import *
+from .stdlib     import *
