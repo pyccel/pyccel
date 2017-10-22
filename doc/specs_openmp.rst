@@ -1,8 +1,5 @@
 OpenMP
-======
-
-Specifications
-**************
+******
 
 We follow `OpenMP 4.5`_ specifications.
 

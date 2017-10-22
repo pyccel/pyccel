@@ -1,5 +1,5 @@
 MPI
-===
+***
 
 Enabling **MPI** is done in two steps:
 
@@ -173,7 +173,7 @@ the result is::
 other examples can be found in **tests/examples/mpi**.
 
 Tensor
-******
+^^^^^^
 
 When using the following import
 

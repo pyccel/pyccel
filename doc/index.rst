@@ -13,12 +13,11 @@ Welcome to Pyccel's documentation!
    :caption: Contents:
 
    pyccel
-   openmp
-   openacc
-   mpi
-   tbp
-   clapp
+   oop
+   parallel
+   stdlib
    analysis
+   specs
 
 Indices and tables
 ==================

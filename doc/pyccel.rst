@@ -3,11 +3,13 @@ Dive into Pyccel
 
 Typical processing using **Pyccel** can be splitted into 3 main stages:
 
-1. First, we parse the *Python* file or text, and we create an *intermediate representation* (**IR**) that consists of objects described in **pyccel.syntax**
-2. Most of all these objects, when it makes sens, implement the property **expr**. This allows to convert the object to one or more objects from **pyccel.types.ast**. All these objects are extension of the **sympy.core.Basic** class. At the end of this stage, the **IR** will be converted into the *Abstract Syntax Tree* (AST). 
+1. First, we parse the *Python* file or text, and we create an *intermediate representation* (**IR**) that consists of objects described in **pyccel.parser.syntax**
+2. Most of all these objects, when it makes sens, implement the property **expr**. This allows to convert the object to one or more objects from **pyccel.ast.core**. All these objects are extension of the **sympy.core.Basic** class. At the end of this stage, the **IR** will be converted into the *Abstract Syntax Tree* (AST). 
 3. Using the **Codegen** classes or the user-friendly functions like **fcode**, the **AST** is converted into the target language (for example, *Fortran*)
 
 .. note:: Always remember that **Pyccel** core is based on **sympy**. This can open a very wide range of applications and opportunities, like automatically evaluate the *computational complexity* of your code. 
+
+.. note:: There is an intermediate step between 2 and 3, where one can walk through the AST and modify the code by applying some recursive functions (ex: mpify, openmpfy, ...)
 
 .. tikz:: Overview of a code generation process using Fortran as a backend/target language. 
 
@@ -89,9 +91,9 @@ ______________
 
 The following are the built-in types in **Pyccel**::
 
-  int, float, double, complex, array, stencil
+  int, float, double, complex, array
 
-.. todo:: boolean expressions not tested yet
+.. todo:: boolean and string expressions not tested yet
 
 Built-in Functions
 ^^^^^^^^^^^^^^^^^^
@@ -160,18 +162,6 @@ Iterators
 
 .. todo:: iterators are not yet available 
 
-Parallel computing
-^^^^^^^^^^^^^^^^^^
-
-OpenMP
-______
-
-OpenACC
-_______
-
-MPI
-___
-
 
 Documentation
 *************
@@ -207,9 +197,9 @@ Types used to represent a full function/module as an Abstract Syntax Tree.
 Most types are small, and are merely used as tokens in the AST. A tree diagram
 has been included below to illustrate the relationships between the AST types.
 
-.. inheritance-diagram:: pyccel.types.ast
+.. inheritance-diagram:: pyccel.ast.core
 
-.. automodule:: pyccel.types.ast
+.. automodule:: pyccel.ast.core
    :members:
 
 Printers
