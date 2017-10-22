@@ -1,4 +1,4 @@
 stdlib
 ======
 
-.. include:: clapp.rst
+.. include:: stdlib_clapp.rst

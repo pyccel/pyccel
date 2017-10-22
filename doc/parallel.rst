@@ -1,10 +1,10 @@
 Parallel Computing
 ==================
 
-.. include:: mpi.rst
+.. include:: parallel_mpi.rst
 
-.. include:: openmp.rst
+.. include:: parallel_openmp.rst
 
-.. include:: openacc.rst
+.. include:: parallel_openacc.rst
 
-.. include:: tbp.rst
+.. include:: parallel_tbp.rst
