@@ -160,7 +160,15 @@ Importing modules is not allowed. However, you can import objects that are defin
 Iterators
 ^^^^^^^^^
 
-.. todo:: iterators are not yet available 
+There are 3 kind of iterators:
+
+1. One that performs on groups (MPI)
+   - for the moment, only **MPI_Tensor** is available
+
+2. One that performs on teams (OpenMP, OpenACC)
+   - this can be done using **prange** inside a **parallel** block
+
+3. One that performs on atoms (sequential)
 
 
 Documentation
@@ -169,24 +177,47 @@ Documentation
 Parser
 ^^^^^^
 
-.. automodule:: pyccel.parser
+.. automodule:: pyccel.parser.parser
    :members:
 
 Syntax (IR)
 ^^^^^^^^^^^
 
-.. inheritance-diagram:: pyccel.syntax
+.. inheritance-diagram:: pyccel.parser.syntax.core
 
-.. automodule:: pyccel.core.syntax
+.. automodule:: pyccel.parser.syntax.basic
    :members:
 
-.. automodule:: pyccel.syntax
+.. automodule:: pyccel.parser.syntax.core
+   :members:
+
+OpenMP
+______
+
+.. inheritance-diagram:: pyccel.parser.syntax.openmp
+
+.. automodule:: pyccel.parser.syntax.openmp
    :members:
 
 Codegen
 ^^^^^^^
 
-.. automodule:: pyccel.codegen
+.. automodule:: pyccel.codegen.codegen
+   :members:
+
+Printing
+________
+
+.. automodule:: pyccel.codegen.printing.codeprinter
+   :members:
+
+.. automodule:: pyccel.codegen.printing.fcode
+   :members:
+
+.. automodule:: pyccel.codegen.printing.ccode
+   :members:
+
+.. automodule:: pyccel.codegen.printing.luacode
    :members:
 
 Abstract Syntax Tree (AST)
@@ -202,77 +233,49 @@ has been included below to illustrate the relationships between the AST types.
 .. automodule:: pyccel.ast.core
    :members:
 
-Printers
-^^^^^^^^
-
-.. automodule:: pyccel.printers.codeprinter
-   :members:
-
-.. automodule:: pyccel.printers.fcode
-   :members:
-
-.. automodule:: pyccel.printers.ccode
-   :members:
-
-.. automodule:: pyccel.printers.luacode
-   :members:
-
-Imports
-^^^^^^^
-
-.. automodule:: pyccel.imports.syntax
-   :members:
-
-.. automodule:: pyccel.imports.utilities
-   :members:
-
-Calculus
-^^^^^^^^
-
-.. automodule:: pyccel.calculus.finite_differences
-   :members:
-
 Parallel Computation
-^^^^^^^^^^^^^^^^^^^^
+____________________
 
-.. inheritance-diagram:: pyccel.parallel.communicator
+.. inheritance-diagram:: pyccel.ast.parallel.communicator
 
-.. inheritance-diagram:: pyccel.parallel.group
+.. inheritance-diagram:: pyccel.ast.parallel.group
 
-.. automodule:: pyccel.parallel.basic
+.. automodule:: pyccel.ast.parallel.basic
    :members:
 
-.. automodule:: pyccel.parallel.communicator
+.. automodule:: pyccel.ast.parallel.communicator
    :members:
 
-.. automodule:: pyccel.parallel.group
+.. automodule:: pyccel.ast.parallel.group
    :members:
 
+**MPI**
 
-MPI
-___
+.. inheritance-diagram:: pyccel.ast.parallel.mpi
 
-.. inheritance-diagram:: pyccel.parallel.mpi
-
-.. automodule:: pyccel.parallel.mpi
+.. automodule:: pyccel.ast.parallel.mpi
    :members:
 
-OpenMP
-______
+**OpenMP**
 
-.. inheritance-diagram:: pyccel.openmp.syntax
+.. inheritance-diagram:: pyccel.ast.parallel.openmp
 
-.. automodule:: pyccel.openmp.syntax
+.. automodule:: pyccel.ast.parallel.openmp
    :members:
 
-OpenACC
-_______
+**OpenACC**
 
 .. .. inheritance-diagram:: pyccel.openmp.syntax
 .. 
 .. .. automodule:: pyccel.openmp.syntax
 ..    :members:
 
+
+Calculus
+^^^^^^^^
+
+.. automodule:: pyccel.calculus.finite_differences
+   :members:
 
 Complexity
 ^^^^^^^^^^

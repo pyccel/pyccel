@@ -1748,9 +1748,11 @@ class Result(Basic):
 
     """Represents a list of return variables and there return value in a fcuntion in the code.
 
-    result_variables: a list of tuples each tuple have the variable return
-                    and it's return value if it's an expression
+    result_variables: a list of tuples each tuple have the variable returna
+    nd it's return value if it's an expression
+
     Example:
+
     >>> from pyccel.ast.core import  Variable
     >>> Result([(Variable('int', 'n'),n*2]),(Variable('int', 'x'),None]))
 

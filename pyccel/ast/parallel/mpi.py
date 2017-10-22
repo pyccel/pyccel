@@ -3116,6 +3116,7 @@ class MPI_Init(FunctionDef, MPI):
     Call to MPI_init.
 
     Example
+
     >>> from pyccel.parallel.mpi import MPI_Init
     >>> MPI_Init()
     ierr := mpi_init()
@@ -3153,6 +3154,7 @@ class MPI_Finalize(FunctionDef, MPI):
     Call to MPI_finalize.
 
     Example
+
     >>> from pyccel.parallel.mpi import MPI_Finalize
     >>> MPI_Finalize()
     ierr := mpi_finalize()
