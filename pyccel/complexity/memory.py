@@ -32,7 +32,7 @@ def count_access(expr, visual=True, local_vars=[]):
     returns the number of access to memory in terms of WRITE and READ.
 
     expr: sympy.Expr
-        any sympy expression or pyccel.types.ast object
+        any sympy expression or pyccel.ast.core object
     visual: bool
         If ``visual`` is ``True`` then the number of each type of operation is shown
         with the core class types (or their virtual equivalent) multiplied by the
@@ -101,7 +101,7 @@ def free_parameters(expr):
     corresponds to length of a For loop.
 
     expr: sympy.Expr
-        any sympy expression or pyccel.types.ast object
+        any sympy expression or pyccel.ast.core object
     """
     args = []
     if isinstance(expr, For):

@@ -857,7 +857,7 @@ def insert_variable(var_name, \
     intent: None, str
         used to specify if the variable is in, out or inout argument.
 
-    var: pyccel.types.ast.Variable
+    var: pyccel.ast.core.Variable
         if attributs are not given, then var must be provided.
 
     cls_base: class
@@ -1127,7 +1127,7 @@ class Pyccel(object):
     @property
     def declarations(self):
         """
-        Returns the list of all declarations using objects from pyccel.types.ast
+        Returns the list of all declarations using objects from pyccel.ast.core
         """
         d = {}
         for key,dec in declarations.items():
@@ -1224,7 +1224,7 @@ class DeclarationStmt(BasicStmt):
 
         return decs
 
-# TODO: improve by creating the corresponding object in pyccel.types.ast
+# TODO: improve by creating the corresponding object in pyccel.ast.core
 class DelStmt(BasicStmt):
     """Class representing a delete statement."""
 
@@ -1242,7 +1242,7 @@ class DelStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Delete statement by returning a pyccel.types.ast object
+        Process the Delete statement by returning a pyccel.ast.core object
         """
         variables = [v.expr for v in self.variables]
         ls = []
@@ -1282,7 +1282,7 @@ class SyncStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Sync statement by returning a pyccel.types.ast object
+        Process the Sync statement by returning a pyccel.ast.core object
         """
         trailer = self.trailer.expr
 
@@ -1316,7 +1316,7 @@ class SyncStmt(BasicStmt):
 
         return Sync(ls, master=master, action=action, options=options)
 
-# TODO: improve by creating the corresponding object in pyccel.types.ast
+# TODO: improve by creating the corresponding object in pyccel.ast.core
 class PassStmt(BasicStmt):
     """Class representing a Pass statement."""
 
@@ -1334,7 +1334,7 @@ class PassStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Delete statement by returning a pyccel.types.ast object
+        Process the Delete statement by returning a pyccel.ast.core object
         """
         self.update()
 
@@ -1384,7 +1384,7 @@ class IfStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the If statement by returning a pyccel.types.ast object
+        Process the If statement by returning a pyccel.ast.core object
         """
         self.update()
         args = [(self.test.expr, self.body_true.expr)]
@@ -1426,7 +1426,7 @@ class AssignStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Assign statement by returning a pyccel.types.ast object
+        Process the Assign statement by returning a pyccel.ast.core object
         """
         if not isinstance(self.rhs, (ArithmeticExpression, \
                                      ExpressionList, \
@@ -1520,7 +1520,7 @@ class AugAssignStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the AugAssign statement by returning a pyccel.types.ast object
+        Process the AugAssign statement by returning a pyccel.ast.core object
         """
         if not isinstance(self.rhs, ArithmeticExpression):
             raise TypeError("Expecting an expression")
@@ -1605,7 +1605,7 @@ class MultiAssignStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the MultiAssign statement by returning a pyccel.types.ast object
+        Process the MultiAssign statement by returning a pyccel.ast.core object
         """
         lhs = self.lhs
         rhs = self.rhs.expr
@@ -1675,7 +1675,7 @@ class RangeStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Range statement by returning a pyccel.types.ast object
+        Process the Range statement by returning a pyccel.ast.core object
         """
         b = self.start.expr
         e = self.end.expr
@@ -1709,7 +1709,7 @@ class ParallelRangeStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the Range statement by returning a pyccel.types.ast object
+        Process the Range statement by returning a pyccel.ast.core object
         """
         b = self.start.expr
         e = self.end.expr
@@ -1772,7 +1772,7 @@ class ForStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the For statement by returning a pyccel.types.ast object
+        Process the For statement by returning a pyccel.ast.core object
         """
         if isinstance(self.iterable, list):
             i = [Symbol(a, integer=True) for a in self.iterable]
@@ -1845,7 +1845,7 @@ class WhileStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the While statement by returning a pyccel.types.ast object
+        Process the While statement by returning a pyccel.ast.core object
         """
         test = self.test.expr
 
@@ -1884,7 +1884,7 @@ class ParallelBlockStmt(BasicStmt):
     @property
     def expr(self):
         """
-        Process the With statement by returning a pyccel.types.ast object
+        Process the With statement by returning a pyccel.ast.core object
         """
         self.update()
 
@@ -2310,7 +2310,7 @@ class ReturnStmt(FlowStmt):
         variables: list
             list of variables to return, as Expression
         results: list
-            list of variables to return, as pyccel.types.ast objects
+            list of variables to return, as pyccel.ast.core objects
         """
         self.variables = kwargs.pop('variables')
 
@@ -2405,7 +2405,7 @@ class FunctionDefStmt(BasicStmt):
 
         """
         Process the Function Definition by returning the appropriate object from
-        pyccel.types.ast
+        pyccel.ast.core
         """
 #        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
@@ -2562,7 +2562,7 @@ class ClassDefStmt(BasicStmt):
     def expr(self):
         """
         Process the Class Definition by returning the appropriate object from
-        pyccel.types.ast
+        pyccel.ast.core
         """
 #        print "*********** ClassDefStmt.expr: Begin"
         name = str(self.name)
@@ -2626,7 +2626,7 @@ class PythonPrintStmt(BasicStmt):
     def expr(self):
         """
         Process the Print statement,
-        by returning the appropriate object from pyccel.types.ast
+        by returning the appropriate object from pyccel.ast.core
         """
         self.update()
 
@@ -2668,7 +2668,7 @@ class CommentStmt(BasicStmt):
     def expr(self):
         """
         Process the Comment statement,
-        by returning the appropriate object from pyccel.types.ast
+        by returning the appropriate object from pyccel.ast.core
         """
         self.update()
         return Comment(self.text)
@@ -2711,7 +2711,7 @@ class SuiteStmt(BasicStmt):
     def expr(self):
         """
         Process the Suite statement,
-        by returning a list of appropriate objects from pyccel.types.ast
+        by returning a list of appropriate objects from pyccel.ast.core
         """
 #        print "local_vars = ", self.local_vars
 #        print "stmt_vars  = ", self.stmt_vars
@@ -2744,7 +2744,7 @@ class Trailer(BasicTrailer):
     def expr(self):
         """
         Process a Trailer by returning the approriate objects from
-        pyccel.types.ast
+        pyccel.ast.core
         """
         self.update()
         return self.args.expr
@@ -2761,7 +2761,7 @@ class TrailerArgList(BasicTrailer):
     def expr(self):
         """
         Process a Trailer by returning the approriate objects from
-        pyccel.types.ast
+        pyccel.ast.core
         """
         # ...
         def _do_arg(arg):
@@ -2788,7 +2788,7 @@ class TrailerSubscriptList(BasicTrailer):
     def expr(self):
         """
         Process a Trailer by returning the approriate objects from
-        pyccel.types.ast
+        pyccel.ast.core
         """
         self.update()
         args = []
@@ -2819,7 +2819,7 @@ class TrailerDots(BasicTrailer):
     def expr(self):
         """
         Process a Trailer by returning the approriate objects from
-        pyccel.types.ast
+        pyccel.ast.core
         """
         self.update()
         # args is not a list
@@ -2872,7 +2872,7 @@ class BasicSlice(BasicStmt):
     def expr(self):
         """
         Process the Slice statement, by giving its appropriate object from
-        pyccel.types.ast
+        pyccel.ast.core
         """
         start = self.extract_arg(self.start)
         end   = self.extract_arg(self.end)
@@ -2942,7 +2942,7 @@ class ThreadStmt(BasicStmt):
     def expr(self):
         """
         Process the Thread function call,
-        by returning the appropriate object from pyccel.types.ast
+        by returning the appropriate object from pyccel.ast.core
         """
         self.update()
 
@@ -2974,7 +2974,7 @@ class ArgList(BasicStmt):
     def expr(self):
         """
         Process the ArgList statement,
-        by returning a list of appropriate objects from pyccel.types.ast
+        by returning a list of appropriate objects from pyccel.ast.core
         """
         ls = []
         for arg in self.args:
@@ -3121,7 +3121,7 @@ class StencilStmt(AssignStmt):
     def expr(self):
         """
         Process the Stencil statement,
-        by returning the appropriate object from pyccel.types.ast
+        by returning the appropriate object from pyccel.ast.core
         """
         self.update()
 
@@ -3155,7 +3155,7 @@ class EvalStmt(BasicStmt):
     def expr(self):
         """
         Process the Eval statement,
-        by returning a list of appropriate objects from pyccel.types.ast
+        by returning a list of appropriate objects from pyccel.ast.core
         """
         f_name = str(self.lhs)
 
@@ -3253,7 +3253,7 @@ class ExecStmt(BasicStmt):
     def expr(self):
         """
         Process the Exec statement,
-        by returning a list of appropriate objects from pyccel.types.ast
+        by returning a list of appropriate objects from pyccel.ast.core
         """
         # TODO must check compatibility
 #        self.update()
@@ -3478,7 +3478,7 @@ class ImportFromStmt(BasicStmt):
     def expr(self):
         """
         Process the Import statement,
-        by returning the appropriate object from pyccel.types.ast
+        by returning the appropriate object from pyccel.ast.core
         """
         self.update()
 

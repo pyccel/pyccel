@@ -364,7 +364,7 @@ class MPI_comm_recv(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_recv
     >>> n = Variable('int', 'n')
@@ -443,7 +443,7 @@ class MPI_comm_send(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_send
     >>> n = Variable('int', 'n')
@@ -529,7 +529,7 @@ class MPI_comm_irecv(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_irecv
     >>> n = Variable('int', 'n')
@@ -615,7 +615,7 @@ class MPI_comm_isend(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_isend
     >>> n = Variable('int', 'n')
@@ -721,7 +721,7 @@ class MPI_comm_sendrecv(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_sendrecv
     >>> n = Variable('int', 'n')
@@ -843,7 +843,7 @@ class MPI_comm_sendrecv_replace(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_sendrecv_replace
     >>> n = Variable('int', 'n')
@@ -921,7 +921,7 @@ class MPI_waitall(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_waitall
     >>> from pyccel.parallel.mpi import MPI_status_type
@@ -1008,7 +1008,7 @@ class MPI_comm_bcast(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_bcast
     >>> n = Variable('int', 'n')
@@ -1093,7 +1093,7 @@ class MPI_comm_scatter(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_scatter
     >>> n = Variable('int', 'n')
@@ -1195,7 +1195,7 @@ class MPI_comm_gather(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_gather
     >>> n = Variable('int', 'n')
@@ -1293,7 +1293,7 @@ class MPI_comm_allgather(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_allgather
     >>> n = Variable('int', 'n')
@@ -1385,7 +1385,7 @@ class MPI_comm_alltoall(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_alltoall
     >>> n = Variable('int', 'n')
@@ -1480,7 +1480,7 @@ class MPI_comm_reduce(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_reduce
     >>> from pyccel.parallel.mpi import MPI_SUM
@@ -1582,7 +1582,7 @@ class MPI_comm_allreduce(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_allreduce
     >>> from pyccel.parallel.mpi import MPI_SUM
@@ -1675,7 +1675,7 @@ class MPI_comm_split(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_split
     >>> color = Variable('int', 'color')
@@ -1731,7 +1731,7 @@ class MPI_comm_free(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_split
     >>> color = Variable('int', 'color')
@@ -1793,7 +1793,7 @@ class MPI_comm_cart_create(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_cart_create
     >>> n = Variable('int', 'n')
@@ -1869,7 +1869,7 @@ class MPI_comm_cart_coords(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_cart_coords
     >>> n = Variable('int', 'n')
@@ -1937,7 +1937,7 @@ class MPI_comm_cart_shift(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_cart_shift
     >>> direction = Variable('int', 'direction')
@@ -2006,7 +2006,7 @@ class MPI_comm_cart_sub(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_comm, MPI_comm_world
     >>> from pyccel.parallel.mpi import MPI_comm_cart_sub
     >>> n = Variable('int', 'n')
@@ -2070,7 +2070,7 @@ class MPI_dims_create(MPI):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> from pyccel.parallel.mpi import MPI_dims_create
     >>> nnodes = Variable('int', 'nnodes')
     >>> n = Variable('int', 'n')

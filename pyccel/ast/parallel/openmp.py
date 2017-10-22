@@ -48,7 +48,7 @@ class OMP_Parallel(ParallelBlock, OMP):
     >>> from pyccel.parallel.openmp import OMP_Parallel
     >>> from pyccel.parallel.openmp import OMP_ParallelNumThreadClause
     >>> from pyccel.parallel.openmp import OMP_ParallelDefaultClause
-    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> from pyccel.ast.core import Variable, Assign, Block
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x')
     >>> body = [Assign(x,2.*n + 1.), Assign(n, n + 1)]

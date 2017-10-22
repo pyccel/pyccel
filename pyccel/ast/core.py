@@ -222,7 +222,7 @@ class DottedName(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import DottedName
+    >>> from pyccel.ast.core import DottedName
     >>> DottedName('matrix', 'n_rows')
     matrix.n_rows
     >>> DottedName('pyccel', 'mpi', 'mpi_init')
@@ -271,7 +271,7 @@ class Assign(Basic):
     Examples
 
     >>> from sympy import symbols, MatrixSymbol, Matrix
-    >>> from pyccel.types.ast import Assign
+    >>> from pyccel.ast.core import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
     x := y
@@ -417,8 +417,8 @@ class AugAssign(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
-    >>> from pyccel.types.ast import AugAssign
+    >>> from pyccel.ast.core import Variable
+    >>> from pyccel.ast.core import AugAssign
     >>> s = Variable('int', 's')
     >>> t = Variable('int', 't')
     >>> AugAssign(s, '+', 2 * t + 1)
@@ -499,7 +499,7 @@ class While(Basic):
     Examples
 
     >>> from sympy import Symbol
-    >>> from pyccel.types.ast import Assign, While
+    >>> from pyccel.ast.core import Assign, While
     >>> n = Symbol('n')
     >>> While((n>1), [Assign(n,n-1)])
     While(n > 1, (n := n - 1,))
@@ -563,8 +563,8 @@ class Range(sm_Range):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
-    >>> from pyccel.types.ast import Range
+    >>> from pyccel.ast.core import Variable
+    >>> from pyccel.ast.core import Range
     >>> from sympy import Symbol
     >>> s = Variable('int', 's')
     >>> e = Symbol('e')
@@ -603,8 +603,8 @@ class Tile(Range):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
-    >>> from pyccel.types.ast import Tile
+    >>> from pyccel.ast.core import Variable
+    >>> from pyccel.ast.core import Tile
     >>> from sympy import Symbol
     >>> s = Variable('int', 's')
     >>> e = Symbol('e')
@@ -634,7 +634,7 @@ class ParallelRange(Range):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     """
     pass
 
@@ -646,8 +646,8 @@ class Tensor(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable
-    >>> from pyccel.types.ast import Range, Tensor
+    >>> from pyccel.ast.core import Variable
+    >>> from pyccel.ast.core import Range, Tensor
     >>> from sympy import Symbol
     >>> s1 = Variable('int', 's1')
     >>> s2 = Variable('int', 's2')
@@ -706,7 +706,7 @@ class Block(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> from pyccel.ast.core import Variable, Assign, Block
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x')
     >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
@@ -745,8 +745,8 @@ class ParallelBlock(Block):
 
     Examples
 
-    >>> from pyccel.types.ast import ParallelBlock
-    >>> from pyccel.types.ast import Variable, Assign, Block
+    >>> from pyccel.ast.core import ParallelBlock
+    >>> from pyccel.ast.core import Variable, Assign, Block
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x')
     >>> body = [Assign(x,2.*n + 1.), Assign(n, n + 1)]
@@ -804,8 +804,8 @@ class Module(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable, Assign
-    >>> from pyccel.types.ast import ClassDef, FunctionDef, Module
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> x = Variable('double', 'x')
     >>> y = Variable('double', 'y')
     >>> z = Variable('double', 'z')
@@ -902,7 +902,7 @@ class For(Basic):
     Examples
 
     >>> from sympy import symbols, MatrixSymbol
-    >>> from pyccel.types.ast import Assign, For
+    >>> from pyccel.ast.core import Assign, For
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
     >>> A = MatrixSymbol('A', 1, 3)
     >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
@@ -1115,8 +1115,8 @@ class FunctionCall(AtomicExpr):
 
     Examples
 
-    >>> from pyccel.types.ast import Assign, Variable
-    >>> from pyccel.types.ast import FunctionDef
+    >>> from pyccel.ast.core import Assign, Variable
+    >>> from pyccel.ast.core import FunctionDef
     >>> x = Variable('int', 'x')
     >>> y = Variable('int', 'y')
     >>> args        = [x]
@@ -1127,7 +1127,7 @@ class FunctionCall(AtomicExpr):
     >>> incr(n)
     incr(n)
     >>> type(incr(n))
-    pyccel.types.ast.FunctionCall
+    pyccel.ast.core.FunctionCall
     >>> incr(n)*2+1
     1 + 2*incr(n)
     >>> incr(n)+1
@@ -1228,7 +1228,7 @@ class Variable(Symbol):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Variable
+    >>> from pyccel.ast.core import Variable
     >>> x, n = symbols('x, n')
     >>> Variable('int', 'n')
     n
@@ -1319,7 +1319,7 @@ class ValuedVariable(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import ValuedVariable, Variable
+    >>> from pyccel.ast.core import ValuedVariable, Variable
     >>> n  = Variable('int', 'n')
     >>> ValuedVariable(n, 3)
     n := 3
@@ -1392,7 +1392,7 @@ class FunctionDef(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Assign, Variable, FunctionDef
+    >>> from pyccel.ast.core import Assign, Variable, FunctionDef
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
     >>> args        = [x]
@@ -1548,8 +1548,8 @@ class ClassDef(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable, Assign
-    >>> from pyccel.types.ast import ClassDef, FunctionDef
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef
     >>> x = Variable('double', 'x')
     >>> y = Variable('double', 'y')
     >>> z = Variable('double', 'z')
@@ -1684,7 +1684,7 @@ class Ceil(Function):
         input for the ceil function
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Ceil, Variable
+    >>> from pyccel.ast.core import Ceil, Variable
     >>> n,x,y = symbols('n,x,y')
     >>> var = Variable('float', x)
     >>> Ceil(x)
@@ -1709,12 +1709,12 @@ class Import(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Import
+    >>> from pyccel.ast.core import Import
     >>> Import('numpy', 'linspace')
     Import(numpy, (linspace,))
 
-    >>> from pyccel.types.ast import DottedName
-    >>> from pyccel.types.ast import Import
+    >>> from pyccel.ast.core import DottedName
+    >>> from pyccel.ast.core import Import
     >>> mpi = DottedName('pyccel', 'mpi')
     >>> Import(mpi, 'mpi_init')
     Import(pyccel.mpi, (mpi_init,))
@@ -1751,7 +1751,7 @@ class Result(Basic):
     result_variables: a list of tuples each tuple have the variable return
                     and it's return value if it's an expression
     Example:
-    >>> from pyccel.types.ast import  Variable
+    >>> from pyccel.ast.core import  Variable
     >>> Result([(Variable('int', 'n'),n*2]),(Variable('int', 'x'),None]))
 
     """
@@ -1790,7 +1790,7 @@ class Declare(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Declare, Variable
+    >>> from pyccel.ast.core import Declare, Variable
     >>> Declare('int', Variable('int', 'n'))
     Declare(NativeInteger(), (n,), None)
     >>> Declare('double', Variable('double', 'x'), intent='out')
@@ -1865,7 +1865,7 @@ class Shape(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Shape
+    >>> from pyccel.ast.core import Shape
     """
     def __new__(cls, lhs, rhs):
         return Basic.__new__(cls, lhs, rhs)
@@ -1950,7 +1950,7 @@ class Zeros(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable, Zeros
+    >>> from pyccel.ast.core import Variable, Zeros
     >>> n = Variable('int', 'n')
     >>> m = Variable('int', 'm')
     >>> x = Variable('int', 'x')
@@ -2041,7 +2041,7 @@ class Ones(Zeros):
 
     Examples
 
-    >>> from pyccel.types.ast import Variable, Ones
+    >>> from pyccel.ast.core import Variable, Ones
     >>> n = Variable('int', 'n')
     >>> m = Variable('int', 'm')
     >>> x = Variable('int', 'x')
@@ -2134,7 +2134,7 @@ class ZerosLike(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Zeros, ZerosLike
+    >>> from pyccel.ast.core import Zeros, ZerosLike
     >>> n,m,x = symbols('n,m,x')
     >>> y = Zeros(x, (n,m))
     >>> z = ZerosLike(y)
@@ -2173,7 +2173,7 @@ class Print(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Print
+    >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
     >>> Print(('results', n,m))
     Print((results, n, m))
@@ -2196,7 +2196,7 @@ class Del(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Del, Variable
+    >>> from pyccel.ast.core import Del, Variable
     >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Del([x])
     Del([x])
@@ -2230,7 +2230,7 @@ class Sync(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Sync, Variable
+    >>> from pyccel.ast.core import Sync, Variable
     >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Sync([x])
     Sync([x])
@@ -2275,7 +2275,7 @@ class EmptyLine(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import EmptyLine
+    >>> from pyccel.ast.core import EmptyLine
     >>> EmptyLine()
 
     """
@@ -2294,7 +2294,7 @@ class Comment(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import Comment
+    >>> from pyccel.ast.core import Comment
     >>> Comment('this is a comment')
     # this is a comment
     """
@@ -2318,7 +2318,7 @@ class SeparatorComment(Comment):
 
     Examples
 
-    >>> from pyccel.types.ast import SeparatorComment
+    >>> from pyccel.ast.core import SeparatorComment
     >>> SeparatorComment(n=40)
     # ........................................
     """
@@ -2339,7 +2339,7 @@ class AnnotatedComment(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import AnnotatedComment
+    >>> from pyccel.ast.core import AnnotatedComment
     >>> AnnotatedComment('omp', 'parallel')
     AnnotatedComment(omp, parallel)
     """
@@ -2361,11 +2361,11 @@ class IndexedVariable(IndexedBase):
     Examples
 
     >>> from sympy import symbols, Idx
-    >>> from pyccel.types.ast import IndexedVariable
+    >>> from pyccel.ast.core import IndexedVariable
     >>> A = IndexedVariable('A'); A
     A
     >>> type(A)
-    <class 'pyccel.types.ast.IndexedVariable'>
+    <class 'pyccel.ast.core.IndexedVariable'>
 
     When an IndexedVariable object receives indices, it returns an array with named
     axes, represented by an IndexedElement object:
@@ -2374,7 +2374,7 @@ class IndexedVariable(IndexedBase):
     >>> A[i, j, 2]
     A[i, j, 2]
     >>> type(A[i, j, 2])
-    <class 'pyccel.types.ast.IndexedElement'>
+    <class 'pyccel.ast.core.IndexedElement'>
 
     The IndexedVariable constructor takes an optional shape argument.  If given,
     it overrides any shape information in the indices. (But not the index
@@ -2423,14 +2423,14 @@ class IndexedElement(Indexed):
     Examples
 
     >>> from sympy import symbols, Idx
-    >>> from pyccel.types.ast import IndexedVariable
+    >>> from pyccel.ast.core import IndexedVariable
     >>> i, j = symbols('i j', cls=Idx)
     >>> IndexedElement('A', i, j)
     A[i, j]
 
     It is recommended that ``IndexedElement`` objects be created via ``IndexedVariable``:
 
-    >>> from pyccel.types.ast import IndexedElement
+    >>> from pyccel.ast.core import IndexedElement
     >>> A = IndexedVariable('A')
     >>> IndexedElement('A', i, j) == A[i, j]
     False
@@ -2499,7 +2499,7 @@ class Slice(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Slice
+    >>> from pyccel.ast.core import Slice
     >>> m, n = symbols('m, n', integer=True)
     >>> Slice(m,n)
     m : n
@@ -2544,7 +2544,7 @@ class If(Basic):
     Examples
 
     >>> from sympy import Symbol
-    >>> from pyccel.types.ast import Assign, If
+    >>> from pyccel.ast.core import Assign, If
     >>> n = Symbol('n')
     >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
     If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
@@ -2575,8 +2575,8 @@ class MultiAssign(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import MultiAssign
-    >>> from pyccel.types.ast import Assign, Variable, FunctionDef
+    >>> from pyccel.ast.core import MultiAssign
+    >>> from pyccel.ast.core import Assign, Variable, FunctionDef
     >>> x, y, z, t = symbols('x, y, z, t')
     >>> args        = [Variable('float', x), Variable('float', y)]
     >>> results     = [Variable('float', z), Variable('float', t)]
@@ -2659,7 +2659,7 @@ class Stencil(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.types.ast import Stencil
+    >>> from pyccel.ast.core import Stencil
     >>> x, y, z = symbols('x, y, z')
     >>> m, n, p, q = symbols('m n p q', integer=True)
     >>> Stencil(x, n, p)
@@ -2732,7 +2732,7 @@ class FunctionHeader(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import FunctionHeader
+    >>> from pyccel.ast.core import FunctionHeader
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
     >>> FunctionHeader('mpi_dims_create', ['int', 'int', ('int', [Slice(None,None)])], results=['int'])
@@ -2815,7 +2815,7 @@ class MethodHeader(FunctionHeader):
 
     Examples
 
-    >>> from pyccel.types.ast import MethodHeader
+    >>> from pyccel.ast.core import MethodHeader
     >>> m = MethodHeader(('point', 'rotate'), ['double'])
     >>> m
     MethodHeader((point, rotate), [(NativeDouble(), [])], [])
@@ -2890,7 +2890,7 @@ class ClassHeader(Basic):
 
     Examples
 
-    >>> from pyccel.types.ast import ClassHeader
+    >>> from pyccel.ast.core import ClassHeader
     >>> ClassHeader('Matrix', ('abstract', 'public'))
     ClassHeader(Matrix, (abstract, public))
     """
