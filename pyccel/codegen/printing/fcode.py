@@ -3,7 +3,7 @@
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 
-from __future__ import print_function, division
+
 import string
 from itertools import groupby
 import numpy as np
@@ -1069,7 +1069,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         name = str(expr.name)
         if expr.cls_name:
-            for k,m in _default_methods.items():
+            for k,m in list(_default_methods.items()):
                 name = name.replace(k,m)
 
             cls_name = expr.cls_name

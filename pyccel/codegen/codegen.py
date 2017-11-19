@@ -481,7 +481,7 @@ class Codegen(object):
                 body += "\n" + printer(stmt) + "\n"
             else:
                 if True:
-                    print "> uncovered statement of type : ", type(stmt)
+                    print("> uncovered statement of type : ", type(stmt))
                 else:
                     raise Exception('Statement not yet handled.')
         # ...
@@ -489,7 +489,7 @@ class Codegen(object):
 #        import sys; sys.exit(0)
 
         # ...
-        for key, dec in ast.declarations.items():
+        for key, dec in list(ast.declarations.items()):
             if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 preludes += printer(dec) + "\n"
 
@@ -861,7 +861,7 @@ class Compiler(object):
             compiler, flags, m_code, filename, o_code, binary, libs)
 
         if verbose:
-            print cmd
+            print(cmd)
 
         os.system(cmd)
 
@@ -997,11 +997,11 @@ def build_file(filename, language, compiler, \
         return False
     # ...
 
-    for key, value in d.items():
+    for key, value in list(d.items()):
         if not _ignore_module(key):
             imports[key] = value
     ms = []
-    for module, names in imports.items():
+    for module, names in list(imports.items()):
         codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
         codegen_m.doprint(language=language, accelerator=accelerator, \
                           ignored_modules=ignored_modules, \
@@ -1018,7 +1018,7 @@ def build_file(filename, language, compiler, \
         print('========Fortran_Code========')
         print(s)
         print('============================')
-        print ">>> Codegen :", name, " done."
+        print(">>> Codegen :", name, " done.")
 
     modules = codegen.modules
     # ...

@@ -2576,7 +2576,7 @@ class MPI_Tensor_create(FunctionDef):
                 dd[n] = v
                 d_var[n] = v
 
-            _args = [i[1] for i in dd.items()]
+            _args = [i[1] for i in list(dd.items())]
             begin = _args[0] ; end = _args[1] # - 1 # TODO check ends
             r = Tile(begin, end)
             ranges.append(r)

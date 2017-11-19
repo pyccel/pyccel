@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from __future__ import print_function, division
+
 
 from sympy.core import S
 from sympy.core.compatibility import string_types
@@ -155,7 +155,7 @@ class CCodePrinter(CodePrinter):
         dims = expr.shape
         elem = S.Zero
         offset = S.One
-        for i in reversed(range(expr.rank)):
+        for i in reversed(list(range(expr.rank))):
             elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))

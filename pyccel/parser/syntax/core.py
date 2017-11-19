@@ -228,15 +228,15 @@ builtin_funcs += builtin_funcs_mpi
 
 # ...
 def print_namespace():
-    print "-------- namespace --------"
-    for key, value in namespace.items():
+    print("-------- namespace --------")
+    for key, value in list(namespace.items()):
         if not(key in ['True', 'False', 'pi']):
-            print key, type(value)
+            print(key, type(value))
 #            if isinstance(value, Variable):
 #                print key, type(value), value.rank #, id(value)
 #            else:
 #                print key, type(value)
-    print "---------------------------"
+    print("---------------------------")
 # ...
 
 def get_attributs(expr):
@@ -436,14 +436,14 @@ def get_attributs(expr):
         name = str(type(expr).__name__)
         avail_funcs = builtin_funcs
         avail_funcs = []
-        for n, F in namespace.items():
+        for n, F in list(namespace.items()):
             if isinstance(F, FunctionDef):
                 avail_funcs.append(str(n))
         avail_funcs += builtin_funcs
 
         # this is to treat the upper/lower cases
         _known_functions = []
-        for k, n in known_functions.items():
+        for k, n in list(known_functions.items()):
             _known_functions += [k, n]
         avail_funcs += _known_functions
 
@@ -871,10 +871,10 @@ def insert_variable(var_name, \
 
     if DEBUG:
 #    if True:
-        print ">>>> trying to insert : ", var_name
+        print(">>>> trying to insert : ", var_name)
         txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
                 .format(datatype, rank, allocatable, shape, intent)
-        print txt
+        print(txt)
 
     if not isinstance(var_name, (str, DottedName)):
         raise TypeError("Expecting a string for var_name.")
@@ -1130,7 +1130,7 @@ class Pyccel(object):
         Returns the list of all declarations using objects from pyccel.ast.core
         """
         d = {}
-        for key,dec in declarations.items():
+        for key,dec in list(declarations.items()):
             if dec.intent is None:
                 d[key] = dec
         return d
@@ -1464,7 +1464,7 @@ class AssignStmt(BasicStmt):
                 d_var['allocatable'] = not(d_var['shape'] is None)
                 if d_var['shape']:
                     if DEBUG:
-                        print "> Found an unallocated variable: ", var_name
+                        print("> Found an unallocated variable: ", var_name)
                     status = 'unallocated'
                     like = allocatable_like(rhs)
             insert_variable(var_name, **d_var)
@@ -1554,7 +1554,7 @@ class AugAssignStmt(BasicStmt):
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:
                 if DEBUG:
-                    print "> Found an unallocated variable: ", var_name
+                    print("> Found an unallocated variable: ", var_name)
                 status = 'unallocated'
                 like = allocatable_like(rhs)
             insert_variable(var_name, **d_var)
@@ -1942,7 +1942,7 @@ class FactorSigned(ExpressionElement, BasicStmt):
         Process the signed factor, by returning a sympy expression
         """
         if DEBUG:
-            print "> FactorSigned "
+            print("> FactorSigned ")
         expr = self.op.expr
         return -expr if self.sign == '-' else expr
 
@@ -1966,7 +1966,7 @@ class AtomExpr(ExpressionElement, BasicStmt):
         Process the atomic expression, by returning a sympy expression
         """
         if DEBUG:
-            print "> AtomExpr "
+            print("> AtomExpr ")
         expr = self.op.expr
 
         return expr_with_trailer(expr, self.trailers)
@@ -1991,7 +1991,7 @@ class Power(ExpressionElement, BasicStmt):
         Process the atomic expression, by returning a sympy expression
         """
         if DEBUG:
-            print "> Power "
+            print("> Power ")
         expr = self.op.expr
         if self.exponent is None:
             return expr
@@ -2008,7 +2008,7 @@ class Term(ExpressionElement):
         Process the term, by returning a sympy expression
         """
         if DEBUG:
-            print "> Term "
+            print("> Term ")
 
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
@@ -2028,7 +2028,7 @@ class ArithmeticExpression(ExpressionElement):
         Process the expression, by returning a sympy expression
         """
         if DEBUG:
-            print "> ArithmeticExpression "
+            print("> ArithmeticExpression ")
 
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
@@ -2050,7 +2050,7 @@ class Atom(ExpressionElement):
         Process the atom, by returning a sympy atom
         """
         if DEBUG:
-            print "> Atom "
+            print("> Atom ")
 
         op = self.op
         if op in ['shape']:
@@ -2110,7 +2110,7 @@ class Test(ExpressionElement):
         Process the test expression, by returning a sympy expression
         """
         if DEBUG:
-            print "> DEBUG "
+            print("> DEBUG ")
         ret = self.op.expr
         return ret
 
@@ -2124,7 +2124,7 @@ class OrTest(ExpressionElement):
         Process the Or term, by returning a sympy expression
         """
         if DEBUG:
-            print "> DEBUG "
+            print("> DEBUG ")
 
         ret = self.op[0].expr
         for operand in self.op[1:]:
@@ -2142,7 +2142,7 @@ class AndTest(ExpressionElement):
         Process the And term, by returning a sympy expression
         """
         if DEBUG:
-            print "> DEBUG "
+            print("> DEBUG ")
 
         ret = self.op[0].expr
 
@@ -2161,7 +2161,7 @@ class NotTest(ExpressionElement):
         Process the Not term, by returning a sympy expression
         """
         if DEBUG:
-            print "> DEBUG "
+            print("> DEBUG ")
 
         ret = self.op.expr
         ret = (not ret)
@@ -2176,7 +2176,7 @@ class Comparison(ExpressionElement):
         Process the comparison, by returning a sympy expression
         """
         if DEBUG:
-            print "> Comparison "
+            print("> Comparison ")
 
         ret = self.op[0].expr
         for operation, operand in zip(self.op[1::2], self.op[2::2]):
@@ -2510,11 +2510,11 @@ class FunctionDefStmt(BasicStmt):
         # ...
 
         # ...
-        for arg_name, var in scope_vars.items():
+        for arg_name, var in list(scope_vars.items()):
             var = scope_vars.pop(arg_name)
             namespace[arg_name] = var
 
-        for arg_name, dec in scope_decs.items():
+        for arg_name, dec in list(scope_decs.items()):
             dec = scope_decs.pop(arg_name)
             declarations[arg_name] = dec
         # ...
@@ -2579,7 +2579,7 @@ class ClassDefStmt(BasicStmt):
         # ...
         attributs = []
         d = {}
-        for key,v in namespace.items():
+        for key,v in list(namespace.items()):
             if key.startswith('self.'):
                 d[key] = v
                 n = key.split('self.')[-1]
@@ -2596,7 +2596,7 @@ class ClassDefStmt(BasicStmt):
         namespace[name] = stmt
 
         # ... cleaning
-        for k,v in d.items():
+        for k,v in list(d.items()):
             namespace.pop(k)
             declarations.pop(k)
         # ...
@@ -3060,7 +3060,7 @@ class StencilStmt(AssignStmt):
         var_name = self.lhs
         if not(var_name in namespace):
             if DEBUG:
-                print("> Found new variable " + var_name)
+                print(("> Found new variable " + var_name))
 
             datatype = self.datatype
 
@@ -3085,7 +3085,7 @@ class StencilStmt(AssignStmt):
     #                    elif isinstance(s,ArgList):
     #                        s_out.append(s.expr)
                         else:
-                            print ("> given type: ", type(s))
+                            print(("> given type: ", type(s)))
                             raise TypeError('Expecting a int, float or string')
                     rank = len(s_out)
                 else:
@@ -3359,7 +3359,7 @@ class FunctionHeaderStmt(BasicStmt):
                 attr = dec.trailer.expr
             attributs.append(attr)
 
-        self.dtypes = zip(dtypes, attributs)
+        self.dtypes = list(zip(dtypes, attributs))
 
         if not (self.results is None):
             r_dtypes    = [dec.dtype for dec in self.results.decs]
@@ -3370,7 +3370,7 @@ class FunctionHeaderStmt(BasicStmt):
                 else:
                     attr = dec.trailer.expr
                 attributs.append(attr)
-            self.results = zip(r_dtypes, attributs)
+            self.results = list(zip(r_dtypes, attributs))
 
         if self.kind is None:
             kind = 'function'
@@ -3438,7 +3438,7 @@ class MethodHeaderStmt(BasicStmt):
             else:
                 attr = dec.trailer.expr
             attributs.append(attr)
-        self.dtypes = zip(dtypes, attributs)
+        self.dtypes = list(zip(dtypes, attributs))
 
         if not (self.results is None):
             r_dtypes    = [dec.dtype for dec in self.results.decs]
@@ -3449,7 +3449,7 @@ class MethodHeaderStmt(BasicStmt):
                 else:
                     attr = dec.trailer.expr
                 attributs.append(attr)
-            self.results = zip(r_dtypes, attributs)
+            self.results = list(zip(r_dtypes, attributs))
 
         cls_instance = self.dtypes[0]
         cls_instance = cls_instance[0] # remove the attribut
@@ -3502,13 +3502,13 @@ class ImportFromStmt(BasicStmt):
             fil   = 'mpi'
             funcs = None
             ns, ds, cs, classes, stmts = mpi_definitions()
-            for k,v in ns.items():
+            for k,v in list(ns.items()):
                 namespace[k] = v
-            for k,v in ds.items():
+            for k,v in list(ds.items()):
                 declarations[k] = v
-            for k,v in cs.items():
+            for k,v in list(cs.items()):
                 cls_constructs[k] = v
-            for k,v in classes.items():
+            for k,v in list(classes.items()):
                 class_defs[k] = v
             for i in stmts:
                 _extra_stmts.append(i)
@@ -3517,19 +3517,19 @@ class ImportFromStmt(BasicStmt):
             module = str(fil).split('spl.')[-1]
             fil = 'spl_m_{}'.format(module.lower())
             ns, ds = spl_definitions()
-            for k,v in ns.items():
+            for k,v in list(ns.items()):
                 namespace[k] = v
-            for k,v in ds.items():
+            for k,v in list(ds.items()):
                 declarations[k] = v
         if str(fil).startswith('plaf.'):
             module = str(fil).split('plaf.')[-1]
             fil = 'plf_m_{}'.format(module.lower())
             ns, ds, cs = plaf_definitions()
-            for k,v in ns.items():
+            for k,v in list(ns.items()):
                 namespace[k] = v
-            for k,v in ds.items():
+            for k,v in list(ds.items()):
                 declarations[k] = v
-            for k,v in cs.items():
+            for k,v in list(cs.items()):
                 cls_constructs[k] = v
         return Import(fil, funcs)
 

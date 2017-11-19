@@ -290,9 +290,9 @@ class MemComplexity(Complexity):
 
         # ...
         if verbose:
-            print (" arithmetic cost         ~ " + str(f))
-            print (" memory cost             ~ " + str(m))
-            print (" computational intensity ~ " + str(q))
+            print((" arithmetic cost         ~ " + str(f)))
+            print((" memory cost             ~ " + str(m)))
+            print((" computational intensity ~ " + str(q)))
         # ...
 
         return q

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from __future__ import print_function, division
+
 
 from numpy import ndarray
 
@@ -450,7 +450,7 @@ class AugAssign(Basic):
 
         if isinstance(op, str):
             op = operator(op)
-        elif op not in op_registry.values():
+        elif op not in list(op_registry.values()):
             raise TypeError("Unrecognized Operator")
 
         return Basic.__new__(cls, lhs, op, rhs, status, like)
@@ -1010,7 +1010,7 @@ def DataTypeFactory(name, argnames=["_name"], \
                     alias=None, \
                     is_polymorphic=True):
     def __init__(self, **kwargs):
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the
             # DataTypeFactory call
             if key not in argnames:

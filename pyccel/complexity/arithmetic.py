@@ -132,7 +132,7 @@ def count_ops(expr, visual=True):
 
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +
-               count_ops(v, visual=visual) for k, v in expr.items()]
+               count_ops(v, visual=visual) for k, v in list(expr.items())]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif isinstance(expr, BooleanFunction):
@@ -205,7 +205,7 @@ class OpComplexity(Complexity):
 
         # ...
         if verbose:
-            print (" arithmetic cost         ~ " + str(f))
+            print((" arithmetic cost         ~ " + str(f)))
         # ...
 
         return f
@@ -223,4 +223,4 @@ for i in range(0,n):
     '''
 
     complexity = OpComplexity(code)
-    print complexity.cost()
+    print(complexity.cost())

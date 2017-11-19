@@ -21,7 +21,7 @@ complete source code files.
 #
 #
 
-from __future__ import print_function, division
+
 
 from sympy.core import S, numbers, Rational, Float, Lambda
 from sympy.core.function import Function
@@ -309,7 +309,7 @@ class LuaCodePrinter(CodePrinter):
         dims = expr.shape
         elem = S.Zero
         offset = S.One
-        for i in reversed(range(expr.rank)):
+        for i in reversed(list(range(expr.rank))):
             elem += expr.indices[i]*offset
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))

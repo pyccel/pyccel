@@ -61,7 +61,7 @@ def compute_stencil(order, n, x_value, h_value, x0=0.):
 if __name__ == "__main__":
 #    xs, cs = compute_stencil(1, 4, 0.5, 0.25)
     cs = compute_stencil_uniform(2, 4, 0., 0.25)
-    print cs
+    print(cs)
     cs = compute_stencil_uniform(2, 3, 0., 0.25)
-    print cs
+    print(cs)
 
