@@ -231,7 +231,7 @@ def print_namespace():
     print("-------- namespace --------")
     for key, value in list(namespace.items()):
         if not(key in ['True', 'False', 'pi']):
-            print(key, type(value))
+            print((key, type(value)))
 #            if isinstance(value, Variable):
 #                print key, type(value), value.rank #, id(value)
 #            else:
@@ -871,7 +871,7 @@ def insert_variable(var_name, \
 
     if DEBUG:
 #    if True:
-        print(">>>> trying to insert : ", var_name)
+        print((">>>> trying to insert : ", var_name))
         txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
                 .format(datatype, rank, allocatable, shape, intent)
         print(txt)
@@ -1464,7 +1464,7 @@ class AssignStmt(BasicStmt):
                 d_var['allocatable'] = not(d_var['shape'] is None)
                 if d_var['shape']:
                     if DEBUG:
-                        print("> Found an unallocated variable: ", var_name)
+                        print(("> Found an unallocated variable: ", var_name))
                     status = 'unallocated'
                     like = allocatable_like(rhs)
             insert_variable(var_name, **d_var)
@@ -1554,7 +1554,7 @@ class AugAssignStmt(BasicStmt):
             d_var['allocatable'] = not(d_var['shape'] is None)
             if d_var['shape']:
                 if DEBUG:
-                    print("> Found an unallocated variable: ", var_name)
+                    print(("> Found an unallocated variable: ", var_name))
                 status = 'unallocated'
                 like = allocatable_like(rhs)
             insert_variable(var_name, **d_var)

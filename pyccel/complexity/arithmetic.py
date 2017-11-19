@@ -223,4 +223,4 @@ for i in range(0,n):
     '''
 
     complexity = OpComplexity(code)
-    print(complexity.cost())
+    print((complexity.cost()))

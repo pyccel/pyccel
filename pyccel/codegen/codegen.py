@@ -481,7 +481,7 @@ class Codegen(object):
                 body += "\n" + printer(stmt) + "\n"
             else:
                 if True:
-                    print("> uncovered statement of type : ", type(stmt))
+                    print(("> uncovered statement of type : ", type(stmt)))
                 else:
                     raise Exception('Statement not yet handled.')
         # ...
@@ -1018,7 +1018,7 @@ def build_file(filename, language, compiler, \
         print('========Fortran_Code========')
         print(s)
         print('============================')
-        print(">>> Codegen :", name, " done.")
+        print((">>> Codegen :", name, " done."))
 
     modules = codegen.modules
     # ...

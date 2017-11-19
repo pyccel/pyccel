@@ -622,4 +622,4 @@ def lua_code(expr, assign_to=None, **settings):
 
 def print_lua_code(expr, **settings):
     """Prints Lua representation of the given expression."""
-    print(lua_code(expr, **settings))
+    print((lua_code(expr, **settings)))
