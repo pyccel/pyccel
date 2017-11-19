@@ -34,7 +34,7 @@ m = symbols('m', imaginary=True)
 
 
 def test_lua_code_Pow():
-    print lua_code(x**3)
+    print(lua_code(x**3))
 #    assert lua_code(x**3) == "pow(x,3)"
 #    assert lua_code(x**(y**3)) == "pow(x, pow(y,3))"
 #    g = implemented_function('g2', Lambda(x, sin(x)))

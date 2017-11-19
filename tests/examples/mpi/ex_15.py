@@ -49,7 +49,7 @@ ierr = comm_2d.cart_sub(remain_dims, comm_1d)
 w = 0.0
 ierr = comm_1d.scatter(v, w, 1)
 
-print ("Rank : ", rank, " ; Coordinates : (", coords, ") ; W = ", w)
+print(("Rank : ", rank, " ; Coordinates : (", coords, ") ; W = ", w))
 
 #Destruction of the communicators
 ierr = comm_1d.free()

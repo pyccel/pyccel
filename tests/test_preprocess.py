@@ -56,4 +56,4 @@ if x > 1:
 
 from pyccel.codegen import preprocess_as_str
 txt = preprocess_as_str(code)
-print txt
+print(txt)

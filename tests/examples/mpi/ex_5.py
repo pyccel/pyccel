@@ -18,7 +18,7 @@ msg = rank + 1000
 tag = 1234
 ierr = comm.sendrecv_replace (msg, partner, tag, partner, tag)
 
-print('I, process ', rank, ', I received', msg, ' from process ', partner)
+print(('I, process ', rank, ', I received', msg, ' from process ', partner))
 
 ierr = mpi_finalize()
 

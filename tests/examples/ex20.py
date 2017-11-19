@@ -23,4 +23,4 @@ while sign(f1) == sign(f2):
     f1 = f2
     x2 = x1 + dx
     f2 = f(x2)
-print( x1,x2)
+print(( x1,x2))

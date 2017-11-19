@@ -62,5 +62,5 @@ y = 3.0 * fd(2.0 * fd(x) + 1.0) + 1.0
 yd = gd(xd)
 y  = gd(x)
 
-r_x = range(4,8)
+r_x = list(range(4,8))
 xr = zeros(r_x, double)

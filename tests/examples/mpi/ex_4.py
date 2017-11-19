@@ -19,6 +19,6 @@ val = -1
 tag = 1234
 ierr = comm.sendrecv (msg, partner, tag, val, partner, tag)
 
-print('I, process ', rank, ', I received', val, ' from process ', partner)
+print(('I, process ', rank, ', I received', val, ' from process ', partner))
 
 ierr = mpi_finalize()

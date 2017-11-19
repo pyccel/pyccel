@@ -34,7 +34,7 @@ ierr = comm_2d.cart_shift(0, 1, neighbor(west), neighbor(east))
 #Search of my South and North neighbors
 ierr = comm_2d.cart_shift(1, 1, neighbor(south), neighbor(north))
 
-print ("I, ", rank_in_topo, " process, has neighbor :", neighbor)
+print(("I, ", rank_in_topo, " process, has neighbor :", neighbor))
 
 #Destruction of the communicators
 ierr = comm_2d.free()

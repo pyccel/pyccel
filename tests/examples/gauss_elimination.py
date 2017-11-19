@@ -19,7 +19,7 @@ m = n - 1
 for k in range(0,m):
     p = k + 1
     for i in range(p,n):
-        if a[i,k] <> 0.0:
+        if a[i,k] != 0.0:
             lam = a [i,k]/a[k,k]
 #            a[i,k+1:n] = a[i,k+1:n] - lam*a[k,k+1:n]
 #            b[i] = b[i] - lam*b[k]

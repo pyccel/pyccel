@@ -20,6 +20,6 @@ sum_value = 0
 ierr = comm.reduce (value, sum_value, '+', root)
 
 if rank == 0:
-    print ('I, process 0, have the global sum value ', sum_value)
+    print(('I, process 0, have the global sum value ', sum_value))
 
 ierr = mpi_finalize()

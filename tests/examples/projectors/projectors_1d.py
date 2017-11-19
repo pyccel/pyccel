@@ -104,10 +104,10 @@ n = p+n_elements
 
 knots    = make_knots(n, p)
 greville = make_greville(knots, n, p)
-print("knots    = ", knots)
-print("greville = ", greville)
+print(("knots    = ", knots))
+print(("greville = ", greville))
 
 r_0 = interpolate_V_0(greville, n, p)
 r_1 = interpolate_V_1(greville, n, p)
-print("r_0 = ", r_0)
-print("r_1 = ", r_1)
+print(("r_0 = ", r_0))
+print(("r_1 = ", r_1))

@@ -19,9 +19,9 @@ if rank == root:
     values = zeros(nb_values, double)
     for i in range(0, nb_values):
         values[i] = 1000 + i
-    print ('I, process ', rank ,' send my values array', values)
+    print(('I, process ', rank ,' send my values array', values))
 
 ierr = comm.scatter(values, data, root)
-print ('I, process ', rank, ', received ', data, ' of process ', root)
+print(('I, process ', rank, ', received ', data, ' of process ', root))
 
 ierr = mpi_finalize()

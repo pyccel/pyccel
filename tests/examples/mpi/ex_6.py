@@ -14,6 +14,6 @@ if rank == root:
 
 ierr = comm.bcast (value, root)
 
-print('I, process ', rank, ', received ', value, ' from process ', root)
+print(('I, process ', rank, ', received ', value, ' from process ', root))
 
 ierr = mpi_finalize()

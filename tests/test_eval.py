@@ -8,17 +8,17 @@ mpi_finalize = eval('mpi_finalize')
 ierr = mpi_init()
 
 comm = mpi_comm_world
-print("mpi_comm = ", comm)
+print(("mpi_comm = ", comm))
 
 #$ header procedure mpi_comm_size(int) results(int, int)
 mpi_comm_size = eval('mpi_comm_size')
 size, ierr = mpi_comm_size(comm)
-print("mpi_size = ", size)
+print(("mpi_size = ", size))
 
 #$ header procedure mpi_comm_rank(int) results(int, int)
 mpi_comm_rank = eval('mpi_comm_rank')
 rank, ierr = mpi_comm_rank(comm)
-print("mpi_rank = ", rank)
+print(("mpi_rank = ", rank))
 
 tag         = 1234
 source      = 0
@@ -32,7 +32,7 @@ mpi_recv = eval('mpi_recv')
 #if rank == source:
 buffer = 5678
 ierr = mpi_send(buffer, count, mpi_integer, destination, tag, mpi_comm_world)
-print("processor ", rank, " sent ", buffer)
+print(("processor ", rank, " sent ", buffer))
 #if rank == destination:
 #ierr = mpi_recv(buffer, count, mpi_integer, source, tag, mpi_comm_world, status)
 #print("processor ", rank, " got ", buffer)

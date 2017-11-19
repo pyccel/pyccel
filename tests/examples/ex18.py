@@ -65,8 +65,8 @@ for k in range(1,500):
                 # Use shrinkage
                 s=len(x)
                 for i in range(1,s):
-                    if i <> iLo:
+                    if i != iLo:
                         x[i] = x[i]*0.5 - x[iLo]*0.5
                         f[i] = func(x[i])
 print("Too many iterations in downhill")
-print(x[iLo])
+print((x[iLo]))

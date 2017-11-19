@@ -21,6 +21,6 @@ tagt = 5678
 if rank == source:
     x[1] = 2.0
     ierr = comm.send(x[1], dest, tagt)
-    print("processor ", rank, " sent x(1) = ", x[1])
+    print(("processor ", rank, " sent x(1) = ", x[1]))
 
 ierr = mpi_finalize()

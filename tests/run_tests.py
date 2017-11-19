@@ -18,7 +18,7 @@ for i in range(1, 21 + 1):
         examples.append(example)
 
 for example in examples:
-    print "===== running example {0} =====".format(example)
+    print("===== running example {0} =====".format(example))
     filename = "tests/examples/{0}".format(example)
     cmd = "pyccel {0} {1} {2} {3} {4}".format(filename, language, compiler, execute, show)
     os.system(cmd)

@@ -26,5 +26,5 @@ for i in range(0, n, 2):
 
 one = int()
 one = 1
-print(j, b(one), b(j))
+print((j, b(one), b(j)))
 # print out: 50 2.0 198.0

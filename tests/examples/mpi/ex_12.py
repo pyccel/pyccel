@@ -17,6 +17,6 @@ sum_value = 0
 
 ierr = comm.allreduce (value, sum_value, '+')
 
-print ('I, process ', rank, ', have the global sum value ', sum_value)
+print(('I, process ', rank, ', have the global sum value ', sum_value))
 
 ierr = mpi_finalize()
