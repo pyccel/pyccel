@@ -8,4 +8,4 @@ for i in range(1,n):
     ddp = ddp*x + 2.0*dp
     dp = dp*x + p
     p = p*x + a[n-i-1]
-print((p,dp,ddp))
+print(p,dp,ddp)
