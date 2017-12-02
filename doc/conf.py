@@ -35,7 +35,7 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.inheritance_diagram',
-    'sphinxcontrib.tikz',
+    #'sphinxcontrib.tikz',
     'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
