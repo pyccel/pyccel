@@ -1,4 +1,7 @@
+sudo: required
 language: python
+
+# which python versions to test
 python:
 #  - "2.6"
   - "2.7"
@@ -11,9 +14,15 @@ python:
 #  - "3.6-dev" # 3.6 development branch
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
+
+# command before installation
+before_install:
+  - sudo apt-get install gfortran
+
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+
 # command to run tests
 script:
-  - pytest # or py.test for Python versions 3.5 and below
+#  - pytest # or py.test for Python versions 3.5 and below
