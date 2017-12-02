@@ -11,6 +11,6 @@ for k in range(1, 3):
 #$ omp end do
 
 #$ omp single
-print((klast, jlast))
+print(klast, jlast)
 #$ omp end single
 #$ omp end parallel

@@ -11,7 +11,7 @@ for k in range(0,3):
     for j in range(0,2):
         #$ omp ordered
         t_id = thread_id()
-        print((t_id, k, j))
+        print(t_id, k, j)
         #$ omp end ordered
         # call work(a,j,k)
 #$ omp end do

@@ -4,8 +4,6 @@
 
 n = 100
 m = 100
-n = int()
-m = int()
 
 a = zeros(n, double)
 b = zeros(n, double)

@@ -395,11 +395,11 @@ Validation
 **********
 
 OK tests
-********
+^^^^^^^^
 
 ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex12, ex13, ex14, ex16, ex17, ex19 
 
 KO tests
-********
+^^^^^^^^
 
-ex15, ex18, ex20, ex21
+ex15, ex18, ex20, ex21, projectors

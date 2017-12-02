@@ -5,10 +5,9 @@
 # TODO: the original example from OpenMP is not working
 
 n = 100
-n = int()
 
-n2 = n / 2
 n2 = int()
+n2 = n / 2
 
 a = zeros(n,  double)
 b = zeros(n2, double)
@@ -24,7 +23,6 @@ for i in range(0, n, 2):
     b[j] = a[i] * 2.0
 #$ omp end parallel
 
-one = int()
 one = 1
-print((j, b(one), b(j)))
+print(j, b(one), b(j))
 # print out: 50 2.0 198.0
