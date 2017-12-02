@@ -4,7 +4,7 @@ Validation
 OK tests
 ^^^^^^^^
 
-ex2, ex3, ex5,   
+ex_openmp, ex2, ex3, ex5,   
 
 KO tests
 ^^^^^^^^
