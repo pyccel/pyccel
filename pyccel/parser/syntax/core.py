@@ -2190,11 +2190,10 @@ class Comparison(ExpressionElement):
                 ret = Lt(ret, operand.expr)
             elif operation == "<=":
                 ret = Le(ret, operand.expr)
-            elif operation == "<>":
+            elif (operation == "<>") or (operation == "!="):
                 ret = Ne(ret, operand.expr)
             else:
-                raise Exception('operation not yet available at position {}'
-                                .format(self._tx_position))
+                raise NotImplementedError('operation {0} not yet available'.format(operation))
         return ret
 
 class ExpressionList(BasicStmt):
