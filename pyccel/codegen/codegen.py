@@ -386,6 +386,7 @@ class Codegen(object):
 
         # ... TODO improve
         for i in user_modules:
+            print ('>>>>>>>>>>>>>> ', i)
             imports += "use {0}\n".format(i)
         # ...
 
@@ -966,8 +967,9 @@ def build_file(filename, language, compiler, \
     pyccel_modules += ['plaf', 'spl', 'disco', 'fema']
     # ...
 
-    # ...
-    user_modules = ['m_pyccel']
+    # ... TODO add only if used
+#    user_modules = ['m_pyccel']
+    user_modules = []
     # ...
 
     # ...
