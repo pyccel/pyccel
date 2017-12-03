@@ -25,7 +25,7 @@ def _which(program):
 
     return None
 
-def pyccel():
+def pyccel(files=None):
     """
     pyccel console command.
     """
@@ -41,12 +41,8 @@ def pyccel():
             sys.exit(2)
 
     parser = MyParser(description='Pyccel command line')
-    # ...
-#    parser.add_argument('--filename', \
-#                        help='config filename. default: config.ini')
 
-    parser.add_argument('files', metavar='N', type=str, nargs='+',
-                        help='a Pyccel file')
+    # ...
     parser.add_argument('--language', type=str, \
                         help='Target language')
     parser.add_argument('--compiler', type=str, \
@@ -72,19 +68,26 @@ def pyccel():
                         help='path to lib directory.')
     parser.add_argument('--libs', type=str, \
                         help='list of libraries to link with.')
+
+    if not files:
+        parser.add_argument('files', metavar='N', type=str, nargs='+',
+                            help='a Pyccel file')
     # ...
 
     # ...
     args = parser.parse_args()
     # ...
 
-    if not args.files:
+    if not files:
+        files = args.files
+
+    if not files:
         raise ValueError("a python filename must be provided.")
 
-    if len(args.files) > 1:
+    if len(files) > 1:
         raise ValueError('Expecting one single file for the moment.')
 
-    filename = args.files[0]
+    filename = files[0]
 
     if args.language:
         language = args.language
