@@ -13,25 +13,25 @@ Typical processing using **Pyccel** can be splitted into 3 main stages:
 
 .. tikz:: Overview of a code generation process using Fortran as a backend/target language. 
 
-    \node[draw=black, rectangle, fill=red!40] (py)  
-    at (0,0)  {Python};
-    \node at (0.9,0) [color=gray,above=3mm,right=0mm] {Parser};
+  \node[draw=black, rectangle, fill=red!40] (py)  
+  at (0,0)  {Python};
+  \node at (0.9,0) [color=gray,above=3mm,right=0mm] {Parser};
 
-    \draw[black, thick, fill=blue!10] (3,0) circle [radius=0.5cm];
-    \node at (3,0) [color=black] {\textsc{IR}};
-    \node at (3.8,0) [color=gray,above=3mm,right=0mm,font=\fontsize{10}{10.2}] {\texttt{expr}};
-    \node at (3.6,0) [color=gray,below=3mm,right=0mm,font=\fontsize{10}{10.2}] {\textit{property}};
+  \draw[black, thick, fill=blue!10] (3,0) circle [radius=0.5cm];
+  \node at (3,0) [color=black] {\textsc{IR}};
+  \node at (3.8,0) [color=gray,above=3mm,right=0mm,font=\fontsize{10}{10.2}] {\texttt{expr}};
+  \node at (3.6,0) [color=gray,below=3mm,right=0mm,font=\fontsize{10}{10.2}] {\textit{property}};
 
-    \draw[black, thick, fill=blue!30] (6,0) circle [radius=0.7cm];
-    \node at (6,0) [color=black] {\textsc{AST}};
-    \node at (6.7,0) [color=gray,above=3mm,right=0mm] {Codegen};
+  \draw[black, thick, fill=blue!30] (6,0) circle [radius=0.7cm];
+  \node at (6,0) [color=black] {\textsc{AST}};
+  \node at (6.7,0) [color=gray,above=3mm,right=0mm] {Codegen};
 
-    \node[draw=black, rectangle, fill=green!20] (f90)  
-    at (9.5,0)  {Fortran};
+  \node[draw=black, rectangle, fill=green!20] (f90)  
+  at (9.5,0)  {Fortran};
 
-    \draw[->,very thick] (py) --(2.5,0) ;
-    \draw[->,very thick] (3.5,0)--(5.3,0) ;
-    \draw[->,very thick] (6.7,0)--(f90) ;
+  \draw[->,very thick] (py) --(2.5,0) ;
+  \draw[->,very thick] (3.5,0)--(5.3,0) ;
+  \draw[->,very thick] (6.7,0)--(f90) ;
 
 Specifications
 **************
@@ -170,131 +170,4 @@ There are 3 kind of iterators:
 
 3. One that performs on atoms (sequential)
 
-
-Documentation
-*************
-
-Parser
-^^^^^^
-
-.. automodule:: pyccel.parser.parser
-   :members:
-
-Syntax (IR)
-^^^^^^^^^^^
-
-.. inheritance-diagram:: pyccel.parser.syntax.core
-
-.. automodule:: pyccel.parser.syntax.basic
-   :members:
-
-.. automodule:: pyccel.parser.syntax.core
-   :members:
-
-OpenMP
-______
-
-.. inheritance-diagram:: pyccel.parser.syntax.openmp
-
-.. automodule:: pyccel.parser.syntax.openmp
-   :members:
-
-Codegen
-^^^^^^^
-
-.. automodule:: pyccel.codegen.codegen
-   :members:
-
-Printing
-________
-
-.. automodule:: pyccel.codegen.printing.codeprinter
-   :members:
-
-.. automodule:: pyccel.codegen.printing.fcode
-   :members:
-
-.. automodule:: pyccel.codegen.printing.ccode
-   :members:
-
-.. automodule:: pyccel.codegen.printing.luacode
-   :members:
-
-Abstract Syntax Tree (AST)
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Types used to represent a full function/module as an Abstract Syntax Tree.
-
-Most types are small, and are merely used as tokens in the AST. A tree diagram
-has been included below to illustrate the relationships between the AST types.
-
-.. inheritance-diagram:: pyccel.ast.core
-
-.. automodule:: pyccel.ast.core
-   :members:
-
-Parallel Computation
-____________________
-
-.. inheritance-diagram:: pyccel.ast.parallel.communicator
-
-.. inheritance-diagram:: pyccel.ast.parallel.group
-
-.. automodule:: pyccel.ast.parallel.basic
-   :members:
-
-.. automodule:: pyccel.ast.parallel.communicator
-   :members:
-
-.. automodule:: pyccel.ast.parallel.group
-   :members:
-
-**MPI**
-
-.. inheritance-diagram:: pyccel.ast.parallel.mpi
-
-.. automodule:: pyccel.ast.parallel.mpi
-   :members:
-
-**OpenMP**
-
-.. inheritance-diagram:: pyccel.ast.parallel.openmp
-
-.. automodule:: pyccel.ast.parallel.openmp
-   :members:
-
-**OpenACC**
-
-.. .. inheritance-diagram:: pyccel.openmp.syntax
-.. 
-.. .. automodule:: pyccel.openmp.syntax
-..    :members:
-
-
-Calculus
-^^^^^^^^
-
-.. automodule:: pyccel.calculus.finite_differences
-   :members:
-
-Complexity
-^^^^^^^^^^
-
-Arithmetic
-__________
-
-.. automodule:: pyccel.complexity.arithmetic
-   :members:
-
-Memory
-______
-
-.. automodule:: pyccel.complexity.memory
-   :members:
-
-Basic
-_____
-
-.. automodule:: pyccel.complexity.basic
-   :members:
 

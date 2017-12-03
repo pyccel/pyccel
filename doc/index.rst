@@ -19,6 +19,14 @@ Welcome to Pyccel's documentation!
    analysis
    specs
 
+You can the code documentation here:
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Contents:
+
+   source/modules
+
 Indices and tables
 ==================
 

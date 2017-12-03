@@ -20,6 +20,8 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# ARA:  sphinx-apidoc -o source/ ../pyccel
+
 
 # -- General configuration ------------------------------------------------
 
@@ -35,7 +37,7 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.inheritance_diagram',
-    #'sphinxcontrib.tikz',
+    'sphinxcontrib.tikz',
     'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
