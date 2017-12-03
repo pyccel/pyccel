@@ -9,6 +9,9 @@
 doc/_build
 tests/*.pyccel
 tests/*.f90
+tests/scripts/core/*.pyccel
+tests/scripts/core/*.f90
+
 tests/examples/*.pyccel
 tests/examples/*.f90
 tests/examples/openmp/*.pyccel
