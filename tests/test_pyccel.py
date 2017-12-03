@@ -7,7 +7,7 @@ from utils import clean_tests
 
 # ...
 def test_1():
-    ignored = [11, 15, 18, 20, 21]
+    ignored = [15, 18, 20, 21]
 
     for i in range(1, 21):
         filename = 'tests/scripts/core/ex{0}.py'.format(str(i))
@@ -19,7 +19,7 @@ def test_1():
 # ...
 def test_2():
     ignored = ['classes.py', 'eval.py', 'parallel.py', 'mpi.py',
-              'arrays.py', 'modules.py', 'imports.py']
+              'arrays.py', 'modules.py', 'imports.py', 'dict.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts')

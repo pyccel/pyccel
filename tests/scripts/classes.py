@@ -1,5 +1,15 @@
 # coding: utf-8
 
+
+#x = 1.0
+#y = 0.2
+#
+#P = Point(x,y)
+#
+#a = P.x
+#P.x = 2.0
+
+
 #$ header class Matrix(public)
 #$ header method __init__(Matrix, int, int)
 #$ header method __del__(Matrix)
