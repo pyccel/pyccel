@@ -1,3 +1,5 @@
+https://travis-ci.org/ratnania/pyccel.svg?branch=master
+
 pyccel
 ======
 
