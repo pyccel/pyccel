@@ -24,7 +24,8 @@ before_install:
 
 # command to install dependencies
 install:
-  - sudo pip install -r requirements.txt
+  - pip install -r requirements.txt
+  - pip install .
 
 # command to run tests
 script:
