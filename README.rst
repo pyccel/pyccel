@@ -1,4 +1,5 @@
-https://travis-ci.org/ratnania/pyccel.svg?branch=master
+.. image:: https://travis-ci.org/ratnania/pyccel.svg?branch=master
+    :target: https://travis-ci.org/ratnania/pyccel
 
 pyccel
 ======
