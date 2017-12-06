@@ -25,7 +25,7 @@ def _which(program):
 
     return None
 
-def pyccel(files=None):
+def pyccel(files=None, openmp=None):
     """
     pyccel console command.
     """
@@ -78,14 +78,21 @@ def pyccel(files=None):
     args = parser.parse_args()
     # ...
 
+    # ...
     if not files:
         files = args.files
 
+    if not openmp:
+        openmp = args.openmp
+    # ...
+
+    # ...
     if not files:
         raise ValueError("a python filename must be provided.")
 
     if len(files) > 1:
         raise ValueError('Expecting one single file for the moment.')
+    # ...
 
     filename = files[0]
 
@@ -105,7 +112,7 @@ def pyccel(files=None):
     execute = args.execute
 
     accelerator = None
-    if args.openmp:
+    if openmp:
         accelerator = "openmp"
 
     debug      = args.debug
