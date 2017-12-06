@@ -9,7 +9,6 @@ b = zeros((m,p), double)
 c = zeros((n,p), double)
 
 with parallel(4):
-    a = a + 1
-#    for i in prange(0, n):
-#        for j in range(0, m):
-#            a[i,j] = i-j
+    for i in prange(0, n):
+        for j in range(0, m):
+            a[i,j] = i-j

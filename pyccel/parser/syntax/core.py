@@ -249,13 +249,6 @@ def get_attributs(expr):
     d_var['shape']       = None
     d_var['rank']        = None
 
-#    print '>>>> expr = ', expr, type(expr)
-#    print '>>>> expr = ', type(expr)
-#    if isinstance(expr, Variable):
-#        print '>>>> expr = ', expr, " rank = ", expr.rank, " id = ", id(expr)
-#    else:
-#        print '>>>> expr = ', expr, type(expr), " id = ", id(expr)
-
     if isinstance(expr, dict):
         d_var['datatype']    = expr['datatype']
         d_var['allocatable'] = expr['allocatable']
