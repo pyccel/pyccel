@@ -5,8 +5,21 @@ import sys
 import os
 import argparse
 
+# TODO add version
+#  --version             show program's version number and exit
+
+
 from pyccel.codegen import build_file
 
+class MyParser(argparse.ArgumentParser):
+    """
+    Custom argument parser for printing help message in case of an error.
+    See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
+    """
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
 
 def _which(program):
     def is_exe(fpath):
@@ -29,18 +42,7 @@ def pyccel(files=None, openmp=None):
     """
     pyccel console command.
     """
-
-    class MyParser(argparse.ArgumentParser):
-        """
-        Custom argument parser for printing help message in case of an error.
-        See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
-        """
-        def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
-            self.print_help()
-            sys.exit(2)
-
-    parser = MyParser(description='Pyccel command line')
+    parser = MyParser(description='pyccel command line')
 
     # ...
     parser.add_argument('--language', type=str, \
