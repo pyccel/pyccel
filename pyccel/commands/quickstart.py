@@ -9,15 +9,22 @@ import argparse
 
 from os import path
 
-class MyParser(argparse.ArgumentParser):
-    """
-    Custom argument parser for printing help message in case of an error.
-    See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
-    """
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(2)
+EXTENSIONS = ('blas', 'linalg')
+
+DEFAULT_VALUE = {
+    'author': '__AUTHOR__',
+    'sep': False,
+    'dot': '_',
+    'language': 'fortran',
+    'suffix': '.f90',
+    'master': 'main',
+    'epub': False,
+    'ext_autodoc': False,
+    'ext_doctest': False,
+    'ext_todo': False,
+    'makefile': True,
+    'batchfile': True,
+}
 
 
 def mkdir_p(dir):
@@ -26,14 +33,90 @@ def mkdir_p(dir):
         return
     os.makedirs(dir)
 
+
+def get_parser():
+    # type: () -> argparse.ArgumentParser
+    parser = argparse.ArgumentParser(
+        usage='%(prog)s [OPTIONS] <PROJECT_DIR>',
+        epilog="For more information, visit <http://pyccel.readthedocs.io/>.",
+        description="""
+Generate required files for a Sphinx project.
+
+pyccel-quickstart is an interactive tool that asks some questions about your
+project and then generates a complete pyccel directory and sample
+Makefile to be used with pyccel-build.
+""")
+
+    parser.add_argument('-q', '--quiet', action='store_true', dest='quiet',
+                        default=False,
+                        help='quiet mode')
+#    parser.add_argument('--version', action='version', dest='show_version',
+#                        version='%%(prog)s %s' % __display_version__)
+
+    parser.add_argument('path', metavar='PROJECT_DIR', default='.',
+                        help='output path')
+
+    group = parser.add_argument_group('Structure options')
+    group.add_argument('--sep', action='store_true',
+                       help='if specified, separate source and build dirs')
+    group.add_argument('--dot', metavar='DOT',
+                       help='replacement for dot in _build etc.')
+
+    group = parser.add_argument_group('Project basic options')
+    group.add_argument('-a', '--author', metavar='AUTHOR', dest='author',
+                       help='author names')
+    group.add_argument('-v', metavar='VERSION', dest='version', default='',
+                       help='version of project')
+    group.add_argument('-r', '--release', metavar='RELEASE', dest='release',
+                       help='release of project')
+    group.add_argument('-l', '--language', metavar='LANGUAGE', dest='language',
+                       help='target language')
+    parser.add_argument('--compiler', type=str, \
+                        help='Used compiler')
+    group.add_argument('--master', metavar='MASTER',
+                       help='master document name')
+    parser.add_argument('--include', type=str, \
+                        help='path to include directory.')
+    parser.add_argument('--libdir', type=str, \
+                        help='path to lib directory.')
+    parser.add_argument('--libs', type=str, \
+                        help='list of libraries to link with.')
+
+    group = parser.add_argument_group('Extension options')
+    for ext in EXTENSIONS:
+        group.add_argument('--ext-' + ext, action='store_true',
+                           dest='ext_' + ext, default=False,
+                           help='enable %s extension' % ext)
+    group.add_argument('--extensions', metavar='EXTENSIONS', dest='extensions',
+                       action='append', help='enable extensions')
+
+#    # TODO(stephenfin): Consider using mutually exclusive groups here
+#    group = parser.add_argument_group('Makefile and Batchfile creation')
+#    group.add_argument('--makefile', action='store_true', default=False,
+#                       help='create makefile')
+#    group.add_argument('--no-makefile', action='store_true', default=False,
+#                       help='not create makefile')
+#    group.add_argument('--batchfile', action='store_true', default=False,
+#                       help='create batchfile')
+#    group.add_argument('--no-batchfile', action='store_true', default=False,
+#                       help='not create batchfile')
+#    group.add_argument('-M', '--no-use-make-mode', action='store_false',
+#                       dest='make_mode', default=False,
+#                       help='not use make-mode for Makefile/make.bat')
+#    group.add_argument('-m', '--use-make-mode', action='store_true',
+#                       dest='make_mode', default=True,
+#                       help='use make-mode for Makefile/make.bat')
+
+    return parser
+
+
 def generate(d, overwrite=True, silent=False):
     """Generates the project from a dictionary."""
     # escape backslashes and single quotes in strings that are put into
     # a Python string literal
-    for key in ('project', 'project_doc', 'project_doc_texescaped',
-                'author', 'author_texescaped', 'copyright',
-                'version', 'release', 'master'):
-        d[key + '_str'] = d[key].replace('\\', '\\\\').replace("'", "\\'")
+#    for key in ('project',
+#                'author', 'copyright',
+#                'version', 'release', 'master'):
 
     if not path.isdir(d['path']):
         mkdir_p(d['path'])
@@ -52,57 +135,30 @@ def generate(d, overwrite=True, silent=False):
         ])
         d['exclude_patterns'] = ', '.join(exclude_patterns)
     mkdir_p(builddir)
-    mkdir_p(path.join(srcdir, d['dot'] + 'templates'))
-    mkdir_p(path.join(srcdir, d['dot'] + 'static'))
+    mkdir_p(path.join(srcdir, 'external'))
+    mkdir_p(path.join(srcdir, 'src'))
 
-def main():
+def main(argv=sys.argv[1:]):
     """Creates a new pyccel project."""
-    parser = MyParser(description='pyccel-quickstart command line')
+    # ...
+    parser = get_parser()
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as err:
+        return err.code
+    # ...
+
+    d = vars(args)
+    # delete None or False value
+    d = dict((k, v) for k, v in d.items() if not (v is None or v is False))
 
     # ...
-    parser.add_argument('--sep', action='store_true', \
-                        help='if specified, separate source and build dirs.')
-    parser.add_argument('--quiet', action='store_true', \
-                        help='quiet mode.')
-    # ...
+    settings = DEFAULT_VALUE.copy()
 
-    # ... project basic options
-    parser.add_argument('--project', type=str, \
-                        help='project name')
-    parser.add_argument('--author', type=str, \
-                        help='author name')
-    parser.add_argument('-v', type=str, \
-                        help='version of project')
-    parser.add_argument('-r', type=str, \
-                        help='release of project')
-    # ...
-
-    # ... project advanced options
-    parser.add_argument('-l', type=str, \
-                        help='language of project')
-#    parser.add_argument('--language', type=str, \
-#                        help='Target language')
-    parser.add_argument('--compiler', type=str, \
-                        help='Used compiler')
-
-    parser.add_argument('--include', type=str, \
-                        help='path to include directory.')
-    parser.add_argument('--libdir', type=str, \
-                        help='path to lib directory.')
-    parser.add_argument('--libs', type=str, \
-                        help='list of libraries to link with.')
-    # ...
-
-    # ... Extension options
-    parser.add_argument('--ext-linalg', action='store_true', \
-                        help='enable linear algebra extension.')
-
-    parser.add_argument('--extensions', type=str, \
-                        help='enable extensions.')
-    # ...
+    for k,v in d.items():
+        settings[k] = v
+    # ...
 
     # ...
-    args = parser.parse_args()
+    generate(settings)
     # ...
-    print args
-
