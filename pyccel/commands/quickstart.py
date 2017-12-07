@@ -174,7 +174,7 @@ def generate(d, overwrite=True, silent=False):
 
 #    print d
 
-    # ... TODO get suffix as lib_prefix from d
+    # ...
     project = d['path']
     libname = project
 
