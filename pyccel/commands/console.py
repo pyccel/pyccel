@@ -38,7 +38,7 @@ def _which(program):
 
     return None
 
-def pyccel(files=None, openmp=None):
+def pyccel(files=None, openmp=None, output_dir=None):
     """
     pyccel console command.
     """
@@ -57,6 +57,9 @@ def pyccel(files=None, openmp=None):
                         help='prints the generated file.')
     parser.add_argument('--debug', action='store_true', \
                         help='compiles the code in a debug mode.')
+    parser.add_argument('--output-dir', type=str, \
+                        help='Output directory.')
+
     parser.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
     parser.add_argument('--analysis', action='store_true', \
@@ -86,6 +89,9 @@ def pyccel(files=None, openmp=None):
 
     if not openmp:
         openmp = args.openmp
+
+    if not output_dir:
+        output_dir = args.output_dir
     # ...
 
     # ...
@@ -139,6 +145,7 @@ def pyccel(files=None, openmp=None):
                    execute=execute, accelerator=accelerator, \
                    debug=debug, verbose=verbose, show=show, \
                    name=None, include=include, \
+                   output_dir=output_dir, \
                    libdir=libdir, libs=libs)
     else:
         from pyccel.complexity.memory import MemComplexity

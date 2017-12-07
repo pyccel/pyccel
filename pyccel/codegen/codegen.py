@@ -52,15 +52,22 @@ def clean(filename):
 # ...
 
 # ...
-def make_tmp_file(filename):
+def make_tmp_file(filename, output_dir=None):
     """
     returns a temporary file of extension .pyccel that will be decorated with
     indent/dedent so that textX can find the blocks easily.
 
     filename: str
         name of the file to parse.
+
+    output_dir: str
+        directory to store pyccel file
     """
-    name = filename.split('.py')[0]
+    if not output_dir:
+        name = filename.split('.py')[0]
+    else:
+        name = filename.split('.py')[0].split('/')[-1]
+        name = os.path.join(output_dir, name)
     return name + ".pyccel"
 # ...
 
@@ -175,6 +182,7 @@ class Codegen(object):
     """Abstract class for code generation."""
     def __init__(self, \
                  filename=None, \
+                 output_dir=None, \
                  name=None, \
                  imports=None, \
                  preludes=None, \
@@ -191,6 +199,8 @@ class Codegen(object):
             name of the generated module or program.
             If not given, 'main' will be used in the case of a program, and
             'pyccel_m_${filename}' in the case of a module.
+        output_dir: str
+            output directory to store pyccel files and generated files
         imports: list
             list of imports statements as strings.
         preludes: list
@@ -209,7 +219,7 @@ class Codegen(object):
         # ... TODO improve once TextX will handle indentation
         clean(filename)
 
-        filename_tmp = make_tmp_file(filename)
+        filename_tmp = make_tmp_file(filename, output_dir=output_dir)
         preprocess(filename, filename_tmp)
         filename = filename_tmp
         # ...
@@ -235,6 +245,7 @@ class Codegen(object):
         self._classes      = classes
         self._modules      = modules
         self._printer      = None
+        self._output_dir   = output_dir
 
     @property
     def filename(self):
@@ -245,6 +256,11 @@ class Codegen(object):
     def filename_out(self):
         """Returns the name of the output file."""
         return self._filename_out
+
+    @property
+    def output_dir(self):
+        """Returns the output directory."""
+        return self._output_dir
 
     @property
     def code(self):
@@ -870,6 +886,7 @@ def build_file(filename, language, compiler, \
                execute=False, accelerator=None, \
                debug=False, verbose=False, show=False, \
                inline=False, name=None, \
+               output_dir=None, \
                ignored_modules=['numpy', 'scipy', 'sympy'], \
                pyccel_modules=[], \
                include=[], libdir=[], libs=[], \
@@ -1000,13 +1017,14 @@ def build_file(filename, language, compiler, \
             imports[key] = value
     ms = []
     for module, names in list(imports.items()):
-        codegen_m = FCodegen(filename=module+".py", name=module, is_module=True)
+        codegen_m = FCodegen(filename=module+".py", name=module, is_module=True,
+                            output_dir=output_dir)
         codegen_m.doprint(language=language, accelerator=accelerator, \
                           ignored_modules=ignored_modules, \
                           with_mpi=with_mpi)
         ms.append(codegen_m)
 
-    codegen = FCodegen(filename=filename, name=name)
+    codegen = FCodegen(filename=filename, name=name, output_dir=output_dir)
     s=codegen.doprint(language=language, accelerator=accelerator, \
                       ignored_modules=ignored_modules, with_mpi=with_mpi, \
                       pyccel_modules=pyccel_modules, \
