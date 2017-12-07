@@ -1858,32 +1858,20 @@ class Len(Function):
         return self._args[0]
 
 # TODO add example
-class Shape(Basic):
-    """Represents a 'shape' call in the code.
-
-    lhs : list Expr
-        list of assignable objects
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Shape
+class Shape(Function):
     """
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    Represents a 'shape' expression in the code.
+    """
+    # TODO : remove later
+    def __str__(self):
+        return "shape"
 
-    @property
-    def lhs(self):
-        return self._args[0]
+    def __new__(cls, rhs):
+        return Basic.__new__(cls, rhs)
 
     @property
     def rhs(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        outputs = ', '.join(sstr(i) for i in self.lhs)
-        return '{1} := shape({0})'.format(self.rhs, outputs)
+        return self._args[0]
 
 # TODO: add example
 class Min(Function):
@@ -2723,11 +2711,11 @@ class FunctionHeader(Basic):
 
     dtypes: tuple/list
         a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
+        tuple (str/DataType, attr, allocatable)
 
     results: tuple/list
         a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
+        tuple (str/DataType, attr, allocatable)
 
     kind: str
         'function' or 'procedure'. default value: 'function'
@@ -2741,6 +2729,7 @@ class FunctionHeader(Basic):
     FunctionHeader(mpi_dims_create, [(NativeInteger(), []), (NativeInteger(), []), (int, [ : ])], [(NativeInteger(), [])], function)
     """
 
+    # TODO dtypes should be a dictionary (useful in syntax)
     def __new__(cls, func, dtypes, results=None, kind='function'):
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
@@ -2752,8 +2741,8 @@ class FunctionHeader(Basic):
             elif isinstance(d, DataType):
                 types.append((d, []))
             elif isinstance(d, (tuple, list)):
-                if not(len(d) == 2):
-                    raise ValueError("Expecting exactly two entries.")
+                if not(len(d) in [2, 3]):
+                    raise ValueError("Expecting exactly 2 or 3 entries.")
                 types.append(d)
             else:
                 raise TypeError("Wrong element in dtypes.")
@@ -2770,8 +2759,8 @@ class FunctionHeader(Basic):
                 elif isinstance(d, DataType):
                     r_types.append((d, []))
                 elif isinstance(d, (tuple, list)):
-                    if not(len(d) == 2):
-                        raise ValueError("Expecting exactly two entries.")
+                    if not(len(d) in [2, 3]):
+                        raise ValueError("Expecting exactly 2 or 3 entries.")
                     r_types.append(d)
                 else:
                     raise TypeError("Wrong element in r_types.")

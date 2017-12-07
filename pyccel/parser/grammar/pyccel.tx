@@ -141,7 +141,7 @@ FunctionHeaderStmt:
 FunctionKind: 'function' | 'procedure';
 
 ClassOptions: 'abstract' | 'private' | 'public';
-DeclareAtom: dtype=ID (trailer=TrailerSubscriptList)?;
+DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
 
 DeclarationStmt: datatype=DataType variables+=ID[','];

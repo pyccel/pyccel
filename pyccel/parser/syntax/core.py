@@ -134,6 +134,7 @@ known_functions = {
     "pow": "pow",
     "mod": "Mod",
     "sec": "sec",
+    "shape": "Shape",
     "sign": "Sign",
     "sin": "sin",
     "sinh": "sinh",
@@ -676,7 +677,7 @@ def builtin_function(name, args, lhs=None, op=None):
             lhs = namespace[lhs]
             expr = func(*args)
             return assign(lhs, expr, op)
-    elif name in builtin_funcs_math_un + ['len']:
+    elif name in builtin_funcs_math_un + ['len', 'shape']:
         if not(len(args) == 1):
             raise ValueError("function takes exactly one argument")
 
@@ -689,6 +690,10 @@ def builtin_function(name, args, lhs=None, op=None):
             if name in ['ceil', 'len']:
                 d_var['datatype'] = 'int'
                 d_var['rank']     = 0
+            elif name in ['shape']:
+                d_var['datatype'] = 'int'
+                d_var['rank']     = 1
+                d_var['allocatable'] = True
             else:
                 d_var['datatype'] = DEFAULT_TYPE
             insert_variable(lhs, **d_var)
@@ -2046,8 +2051,8 @@ class Atom(ExpressionElement):
             print("> Atom ")
 
         op = self.op
-        if op in ['shape']:
-            raise ValueError('shape function can not be used in an expression.')
+#        if op in ['shape']:
+#            raise ValueError('shape function can not be used in an expression.')
 
         if type(op) == int:
             return Integer(op)
@@ -2458,7 +2463,8 @@ class FunctionDefStmt(BasicStmt):
                     rank += 1
             d_var = {}
             d_var['datatype']    = d[0]
-            d_var['allocatable'] = False
+#            d_var['allocatable'] = False
+            d_var['allocatable'] = d[2]
             d_var['shape']       = None
             d_var['rank']        = rank
             d_var['intent']      = 'in'
@@ -2469,10 +2475,45 @@ class FunctionDefStmt(BasicStmt):
 
         prelude = [declarations[a] for a in arg_names]
 
+        # ...
         results = []
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
                 results += stmt.expr
+
+        if not(len(results) == len(h.results)):
+            raise ValueError('Inconsistent header function with results.')
+        # ...
+
+        # ...
+        _results = []
+        result_names = []
+        for a, d in zip(results, h.results):
+            result_name = a.name
+            result_names.append(result_name)
+
+            if result_name in namespace:
+                var = namespace.pop(result_name)
+                dec = declarations.pop(result_name)
+
+                scope_vars[result_name] = var
+                scope_decs[result_name] = dec
+
+            rank = 0
+            for i in d[1]:
+                if isinstance(i, Slice):
+                    rank += 1
+            d_var = {}
+            d_var['datatype']    = d[0]
+#            d_var['allocatable'] = False
+            d_var['allocatable'] = d[2]
+            d_var['shape']       = None
+            d_var['rank']        = rank
+            d_var['intent']      = 'out'
+            insert_variable(result_name, **d_var)
+            var = namespace[result_name]
+            _results.append(var)
+        results = _results
         # ...
 
         # ... replace dict by ValuedVariable
@@ -3343,6 +3384,7 @@ class FunctionHeaderStmt(BasicStmt):
     @property
     def expr(self):
         dtypes    = [dec.dtype for dec in self.decs]
+        stars     = [(dec.star != None) for dec in self.decs]
         attributs = []
         for dec in self.decs:
             if dec.trailer is None:
@@ -3351,10 +3393,11 @@ class FunctionHeaderStmt(BasicStmt):
                 attr = dec.trailer.expr
             attributs.append(attr)
 
-        self.dtypes = list(zip(dtypes, attributs))
+        self.dtypes = list(zip(dtypes, attributs, stars))
 
         if not (self.results is None):
             r_dtypes    = [dec.dtype for dec in self.results.decs]
+            r_stars     = [(dec.star == '*' ) for dec in self.results.decs]
             attributs = []
             for dec in self.results.decs:
                 if dec.trailer is None:
@@ -3362,7 +3405,7 @@ class FunctionHeaderStmt(BasicStmt):
                 else:
                     attr = dec.trailer.expr
                 attributs.append(attr)
-            self.results = list(zip(r_dtypes, attributs))
+            self.results = list(zip(r_dtypes, attributs, r_stars))
 
         if self.kind is None:
             kind = 'function'

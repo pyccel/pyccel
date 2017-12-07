@@ -34,7 +34,7 @@ from pyccel.ast.core import Range, Tensor, ParallelRange, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
                               Result, \
                               Variable, Declare, ValuedVariable, \
-                              Len, Dot, Sign, subs, \
+                              Len, Shape, Dot, Sign, subs, \
                               IndexedElement, Slice)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -365,14 +365,6 @@ class FCodePrinter(CodePrinter):
         else:
             return self._get_statement('size(%s,1)'%(expr.rhs))
 
-    def _print_Shape(self, expr):
-        code = ''
-        for i,a in enumerate(expr.lhs):
-            a_str = self._print(a)
-            r_str = self._print(expr.rhs)
-            code += '{0} = size({1}, {2})\n'.format(a_str, r_str, str(i+1))
-        return self._get_statement(code)
-
     def _print_Min(self, expr):
         args = expr.args
         if len(args) == 1:
@@ -433,8 +425,12 @@ class FCodePrinter(CodePrinter):
             rankstr = ', '.join(s+':'+e for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
+        # TODO: it would be great to use allocatable but then we have to pay
+        #       attention to the starting index (in the case of 0 for example).
+        #       this is the reason why we print 'pointer' instead of 'allocatable'
         if allocatable:
-            allocatablestr = ', allocatable'
+#            allocatablestr = ', allocatable'
+            allocatablestr = ', pointer'
         else:
             allocatablestr = ''
 
@@ -897,7 +893,35 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
-        if isinstance(expr.rhs, FunctionDef):
+        if isinstance(expr.rhs, Shape):
+            # expr.rhs = Shape(a) then expr.rhs.rhs is a
+            a = expr.rhs.rhs
+
+            lhs = self._print(expr.lhs)
+            rhs = self._print(a)
+            if isinstance(a, IndexedElement):
+                shape = []
+                for i in a.indices:
+                    if isinstance(i, Slice):
+                        shape.append(i)
+                rank = len(shape)
+            else:
+                rank = a.rank
+
+            code  = 'allocate({0}(0:{1}-1)) ; {0} = 0'.format(lhs, rank)
+
+            rs = []
+            for i in range(0, rank):
+                l = 'lbound({0},{1})'.format(rhs, str(i+1))
+                u = 'ubound({0},{1})'.format(rhs, str(i+1))
+                r = '{3}({2}) = {1}-{0}'.format(l,u,str(i),lhs)
+                rs.append(r)
+            sizes = '\n'.join(self._print(i) for i in rs)
+
+            code  = '{0}\n{1}'.format(code, sizes)
+
+            return self._get_statement(code)
+        elif isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
             is_procedure = (expr.rhs.kind == 'procedure')
         elif isinstance(expr.rhs, ConstructorCall):
