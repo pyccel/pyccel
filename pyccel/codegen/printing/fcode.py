@@ -1113,9 +1113,15 @@ class FCodePrinter(CodePrinter):
             decs.append(dec)
         # ...
 
+        # ...
+        is_subroutine = ((len(expr.results) == 1) and (expr.results[0].allocatable))
+        is_subroutine = is_subroutine or (len(expr.results) > 1)
+        is_subroutine = is_subroutine or (len(expr.results) == 0)
+        # ...
+
         body = expr.body
         func_end  = ''
-        if len(expr.results) == 1:
+        if not is_subroutine:
             result = expr.results[0]
 
             body = []
@@ -1148,7 +1154,7 @@ class FCodePrinter(CodePrinter):
             else:
                 sig = '{0} function {1}'.format(ret_type, name)
                 func_end  = ' result({0})'.format(result.name)
-        elif len(expr.results) > 1:
+        else:
             # TODO compute intent
             out_args = [result for result in expr.results]
             for result in expr.results:
@@ -1174,37 +1180,37 @@ class FCodePrinter(CodePrinter):
                             body.append(Assign(i,j))
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
-        else:
-            # TODO remove this part
-            for result in expr.results:
-                arg = Variable(result.dtype, result.name, \
-                                  rank=result.rank, \
-                                  allocatable=result.allocatable, \
-                                  shape=result.shape)
-
-                out_args.append(arg)
-
-                dec = Declare(result.dtype, arg)
-                decs.append(dec)
-            sig = 'subroutine ' + name
-            func_type = 'subroutine'
-
-            names = [str(res.name) for res,i in expr.results]
-            decs += [Declare(i.dtype, i) for i in expr.arguments]
-#            decs += [Declare(i.dtype, i) for i in expr.arguments + expr.local_vars]
-
-            body = []
-            for stmt in expr.body:
-                if isinstance(stmt, Declare):
-                    # TODO improve
-                    nm = str(stmt.variables[0].name)
-                    if not(nm in names):
-                        decs.append(stmt)
-                elif not isinstance(stmt, list): # for list of Results
-                    body.append(stmt)
 #        else:
+#            # TODO remove this part
+#            for result in expr.results:
+#                arg = Variable(result.dtype, result.name, \
+#                                  rank=result.rank, \
+#                                  allocatable=result.allocatable, \
+#                                  shape=result.shape)
+#
+#                out_args.append(arg)
+#
+#                dec = Declare(result.dtype, arg)
+#                decs.append(dec)
 #            sig = 'subroutine ' + name
 #            func_type = 'subroutine'
+#
+#            names = [str(res.name) for res,i in expr.results]
+#            decs += [Declare(i.dtype, i) for i in expr.arguments]
+##            decs += [Declare(i.dtype, i) for i in expr.arguments + expr.local_vars]
+#
+#            body = []
+#            for stmt in expr.body:
+#                if isinstance(stmt, Declare):
+#                    # TODO improve
+#                    nm = str(stmt.variables[0].name)
+#                    if not(nm in names):
+#                        decs.append(stmt)
+#                elif not isinstance(stmt, list): # for list of Results
+#                    body.append(stmt)
+##        else:
+##            sig = 'subroutine ' + name
+##            func_type = 'subroutine'
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
             if i in out_args:
