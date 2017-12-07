@@ -44,8 +44,11 @@ def find_imports(filename=None, stmts=None, debug=False):
 
             # ...
             txt = names
+            txt = txt.replace('\'', '')
             txt = txt.replace('(', '')
             txt = txt.replace(')', '')
+            txt = txt.replace('[', '')
+            txt = txt.replace(']', '')
             txt = txt.split(',')
 
             names = [s.strip() for s in txt if len(s) > 0]

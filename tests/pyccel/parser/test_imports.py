@@ -11,7 +11,7 @@ def test_numpy():
     d = find_imports(stmts='from numpy import zeros, dot')
     assert(d['numpy'] == ['zeros', 'dot'])
 
-#    stmts = 'from numpy import *'
-#    d = find_imports(stmts=stmts)
+    d = find_imports(stmts='from numpy import *')
+    assert(d['numpy'] == ['*'])
 
 test_numpy()
