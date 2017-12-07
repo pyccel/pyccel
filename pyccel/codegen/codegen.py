@@ -63,10 +63,9 @@ def make_tmp_file(filename, output_dir=None):
     output_dir: str
         directory to store pyccel file
     """
-    if not output_dir:
-        name = filename.split('.py')[0]
-    else:
-        name = filename.split('.py')[0].split('/')[-1]
+    name = filename.split('.py')[0]
+    if output_dir:
+        name = os.path.basename(name)
         name = os.path.join(output_dir, name)
     return name + ".pyccel"
 # ...

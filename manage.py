@@ -17,13 +17,17 @@ def load_extension(ext, module, output_dir, clean=True):
     output_dir = path.join(base_dir, ext)
     mkdir_p(output_dir)
 
-    m = importlib.import_module('pyccelext_{0}'.format(ext),
-                               package=module)
+    extension = 'pyccelext_{0}'.format(ext)
+    try:
+        m = importlib.import_module(extension, package=module)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
 
     m = getattr(m, '{0}'.format(module))
 
     # remove 'c' from *.pyc
     filename = m.__file__[:-1]
+    print os.path.basename(filename)
 
     pyccel(files=[filename], output_dir=output_dir)
 
@@ -33,4 +37,5 @@ def load_extension(ext, module, output_dir, clean=True):
 
 ####################################
 if __name__ == '__main__':
-    load_extension('linalg', 'utils', 'extensions')
+#    load_extension('math', 'utils', 'extensions')
+    load_extension('math', 'quadratures', 'extensions')
