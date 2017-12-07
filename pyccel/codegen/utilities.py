@@ -470,9 +470,13 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
 # ...
 
 # ...
-def initialize_project(base_dir, project, suffix, libname, prefix=os.environ['CLAPP_DIR']):
+def initialize_project(base_dir, project, suffix, libname, prefix=None):
     if not os.path.exists(base_dir):
         raise ValueError('Could not find :{0}'.format(base_dir))
+
+    if prefix is None:
+        prefix = os.path.join(base_dir, 'usr')
+        mkdir_p(prefix)
 
     FC     = 'gfortran'
     FLAGS  = {}
