@@ -14,7 +14,7 @@ class CMake(object):
                  prefix, \
                  flags, \
                  flags_fortran, \
-                 compiler_fortran, files=None):
+                 compiler_fortran):
         """
         Constructor for cmake.
 
@@ -33,8 +33,6 @@ class CMake(object):
         compiler_fortran: str
             a valid fortran compiler
 
-        files: list
-            list of files to compile
         """
         # ...
         self._flags            = flags
@@ -42,12 +40,6 @@ class CMake(object):
         self._compiler_fortran = compiler_fortran
         self._prefix           = prefix
         self._path             = path
-        self._files            = files
-        # ...
-
-        # ...
-        if files:
-            self.initialize(files)
         # ...
 
         # ... create build dir
@@ -110,10 +102,6 @@ class CMake(object):
     def build_path(self):
         return self._build_path
 
-    @property
-    def files(self):
-        return self._files
-
     def configure(self, verbose=True):
         # ...
         options = ' '.join(i for i in self.args)
@@ -165,6 +153,67 @@ class CMake(object):
         os.chdir(base_dir)
         # ...
 
-    def initialize(self, files):
-        pass
+    def initialize(self, src_dir, project, suffix, libname, force=True):
 
+        # ...
+        from pyccel import codegen
+        codegen_dir  = os.path.dirname(os.path.realpath(str(codegen.__file__)))
+        templates_dir = os.path.join(codegen_dir, 'templates')
+
+        cmakemodules_src = os.path.join(templates_dir, 'CMakeModules')
+        cmakelists_src   = os.path.join(templates_dir, 'CMakeLists.txt')
+        package_src      = os.path.join(templates_dir, 'package')
+
+        cmakemodules_dst = os.path.join(src_dir, 'CMakeModules')
+        cmakelists_dst   = os.path.join(src_dir, 'CMakeLists.txt')
+        package_dst      = os.path.join(src_dir, 'package')
+        # ...
+
+        # ...
+        import shutil, errno
+        def _copydata(src, dst):
+            try:
+                shutil.copytree(src, dst)
+            except OSError as exc: # python >2.5
+                if exc.errno == errno.ENOTDIR:
+                    shutil.copy(src, dst)
+                else: raise
+
+
+                if not os.path.exists(src_dir):
+                    raise ValueError('Could not find :{0}'.format(src_dir))
+        # ...
+
+        # ... update CMakeLists.txt
+        def _print_cmakelists(src, dst):
+            f = open(src, 'r')
+            code = f.readlines()
+            f.close()
+
+            code = ''.join(l for l in code)
+
+            code = code.replace('__PROJECT__', project)
+            code = code.replace('__SRC_DIR__', src_dir)
+            code = code.replace('__SUFFIX__',  suffix)
+            code = code.replace('__LIBNAME__', libname)
+
+            if force or (not os.path.isfile(dst)):
+                f = open(dst, 'w')
+                f.write(code)
+                f.close()
+        # ...
+
+        # ...
+        _print_cmakelists(cmakelists_src, cmakelists_dst)
+        # ...
+
+        # ...
+        _copydata(cmakemodules_src, cmakemodules_dst)
+        _copydata(package_src, package_dst)
+        # ...
+
+        # ...
+        src = os.path.join(package_src, 'CMakeLists.txt')
+        dst = os.path.join(package_dst, 'CMakeLists.txt')
+        _print_cmakelists(src, dst)
+        # ...
