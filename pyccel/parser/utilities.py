@@ -9,12 +9,14 @@ from pyccel.parser.syntax.core import clean_namespace
 
 __all__ = ['find_imports']
 
-def find_imports(filename, debug=False):
+def find_imports(filename=None, stmts=None, debug=False):
     """
     Finds all import statements in the file.
 
     filename: str
         name of the file to parse
+    stmts: str
+        instructions to parse
     debug: bool
         use debug mode if True
     """
@@ -26,7 +28,12 @@ def find_imports(filename, debug=False):
                                classes=[ImportFromStmt, ImportAsNames])
 
     # Instantiate model
-    model = meta.model_from_file(filename)
+    if filename:
+        model = meta.model_from_file(filename)
+    elif stmts:
+        model = meta.model_from_str(stmts)
+    else:
+        raise ValueError('Expecting a filename or a string')
 
     d = {}
     for stmt in model.statements:
@@ -34,6 +41,16 @@ def find_imports(filename, debug=False):
             expr = stmt.expr
             module = str(expr.fil)
             names  = str(expr.funcs)
+
+            # ...
+            txt = names
+            txt = txt.replace('(', '')
+            txt = txt.replace(')', '')
+            txt = txt.split(',')
+
+            names = [s.strip() for s in txt if len(s) > 0]
+            # ...
+
             d[module] = names
 
     clean_namespace()
