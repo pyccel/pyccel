@@ -2485,20 +2485,18 @@ class FunctionDefStmt(BasicStmt):
             raise ValueError('Inconsistent header function with results.')
         # ...
 
-        # ...
+        # ... TODO improve
+        for a in results:
+            if a.name in namespace:
+                var = namespace.pop(a.name)
+                dec = declarations.pop(a.name)
+
         if len(h.results) > 0:
             _results = []
             result_names = []
             for a, d in zip(results, h.results):
                 result_name = a.name
                 result_names.append(result_name)
-
-                if result_name in namespace:
-                    var = namespace.pop(result_name)
-                    dec = declarations.pop(result_name)
-
-                    scope_vars[result_name] = var
-                    scope_decs[result_name] = dec
 
                 rank = 0
                 for i in d[1]:

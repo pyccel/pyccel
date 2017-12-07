@@ -1123,6 +1123,7 @@ class FCodePrinter(CodePrinter):
         func_end  = ''
         if not is_subroutine:
             result = expr.results[0]
+#            expr = subs(expr, result, str(expr.name))
 
             body = []
             for stmt in expr.body:

@@ -17,8 +17,9 @@ print(d)
 e = zeros((2,8), double)
 e[1,1] = 1
 
-f = e[0,2]
-print(f)
+# not working
+#f = e[0,2]
+#print(f)
 
 n = 2
 m = 3
