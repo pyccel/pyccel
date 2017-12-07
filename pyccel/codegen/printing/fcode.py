@@ -32,7 +32,6 @@ from pyccel.ast.core import NativeBool, NativeFloat
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import Range, Tensor, ParallelRange, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
-                              Result, \
                               Variable, Declare, ValuedVariable, \
                               Len, Shape, Dot, Sign, subs, \
                               IndexedElement, Slice)
@@ -1132,10 +1131,6 @@ class FCodePrinter(CodePrinter):
                     var = stmt.variables[0]
                     if not(str(var.name) == str(result.name)):
                         decs.append(stmt)
-                elif isinstance(stmt,Result):
-                    for i,j in stmt.result_variables:
-                        if not j==None:
-                            body.append(Assign(i,j))
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 
@@ -1175,10 +1170,6 @@ class FCodePrinter(CodePrinter):
                     nm = str(stmt.variables[0].name)
                     if not(nm in names):
                         decs.append(stmt)
-                elif isinstance(stmt,Result):
-                    for i,j in stmt.result_variables:
-                        if not j==None:
-                            body.append(Assign(i,j))
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 #        else:

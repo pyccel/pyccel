@@ -53,6 +53,7 @@ from sympy.core.compatibility import is_sequence
 #      - Stencil case
 #      - FunctionHeader case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
+#      - add a new Idx that uses Variable instead of Symbol
 
 def subs(expr, a_old, a_new):
     """
@@ -1065,6 +1066,11 @@ def datatype(arg):
         if arg.lower() not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
+    elif isinstance(arg, (Variable, IndexedVariable, IndexedElement)):
+        if isinstance(arg.dtype, DataType):
+            return dtype_registry[arg.dtype.name.lower()]
+        else:
+            raise TypeError('Expecting a DataType')
     else:
         arg = sympify(arg)
         if isinstance(arg, ImmutableDenseMatrix):
@@ -1229,7 +1235,6 @@ class Variable(Symbol):
 
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Variable
-    >>> x, n = symbols('x, n')
     >>> Variable('int', 'n')
     n
     >>> Variable('float', x, rank=2, shape=(n,2), allocatable=True)
@@ -1424,9 +1429,6 @@ class FunctionDef(Basic):
         # results
         if not iterable(results):
             raise TypeError("results must be an iterable")
-        # TODO improve and uncomment
-#        if not all(isinstance(i, Result) for i in results):
-#            raise TypeError("All results must be of type Result")
         results = Tuple(*results)
         # if method
         if cls_name:
@@ -1741,39 +1743,6 @@ class Import(Basic):
     @property
     def funcs(self):
         return self._args[1]
-
-
-
-class Result(Basic):
-
-    """Represents a list of return variables and there return value in a fcuntion in the code.
-
-    result_variables: a list of tuples each tuple have the variable returna
-    nd it's return value if it's an expression
-
-    Example:
-
-    >>> from pyccel.ast.core import  Variable
-    >>> Result([(Variable('int', 'n'),n*2]),(Variable('int', 'x'),None]))
-
-    """
-    def __new__(cls,result_variables):
-        if isinstance(result_variables,list):
-            for i in result_variables:
-                if not isinstance(i[0],Variable):
-                    raise TypeError("{0} must be of type Variable".format(i[0]))
-                if not i[1]==None:
-                    if not isinstance(i[1],(Integer,Sympy_Float,Add,Mul,Pow)):
-                        raise TypeError("{0} must be a sympy Expression".format(i[1]))
-        else:
-            raise TypeError("result_variables must be a type list ")
-
-        return Basic.__new__(cls,result_variables)
-
-    @property
-    def result_variables(self):
-        return self._args[0]
-
 
 
 # TODO: Should Declare have an optional init value for each var?

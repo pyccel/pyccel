@@ -48,7 +48,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              For, Assign, ParallelBlock, \
-                             Declare, Variable, Result, ValuedVariable, \
+                             Declare, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
                              datatype, While, With, NativeFloat, \
                              EqualityStmt, NotequalStmt, \
@@ -2319,43 +2319,6 @@ class ReturnStmt(FlowStmt):
         Process the return flow statement
         """
         return [e.expr for e in self.variables]
-
-#        self.update()
-#
-#        decs = []
-#        # TODO depending on additional options from the grammar
-#        # TODO check that var is in namespace
-#        k=1
-#        for var_var in self.variables:
-#            var_expr=var_var.expr
-#            var_name=str(var_expr)
-#
-#            if var_name in namespace:
-#                var = namespace[var_name]
-#                if isinstance(var, (Variable,IndexedElement,IndexedVariable)): # TODO intent must be out => result
-#                    res = (Variable(var.dtype, var_name, \
-#                                   rank=var.rank, \
-#                                   allocatable=var.allocatable, \
-#                                   shape=var.shape),None)
-#                else:
-#                    # TODO is it correct? raise?
-#                    datatype = var.datatype
-#                    res = Variable(datatype, var_name)
-#            elif isinstance(var_expr,(Integer, Float, Add, Mul,Pow)):
-#                var_d=get_attributs(var_expr)
-#                res = (Variable(var_d['datatype'],\
-#                               'result_%s'%abs(hash(str(var_d['datatype'])+str(k))), \
-#                                   rank=var_d['rank'], \
-#                                   allocatable=var_d['allocatable'], \
-#                                   shape=var_d['shape']),var_expr)
-#                k=k+1
-#            else:
-#                raise()
-#
-#            decs.append(res)
-#
-#        self.results = decs
-#        return Result(decs)
 
 class RaiseStmt(FlowStmt):
     """Base class representing a Raise statement in the grammar."""
