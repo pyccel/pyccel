@@ -135,6 +135,7 @@ def generate(d, overwrite=True, silent=False):
         ])
         d['exclude_patterns'] = ', '.join(exclude_patterns)
     mkdir_p(builddir)
+    mkdir_p(path.join(srcdir, 'extensions'))
     mkdir_p(path.join(srcdir, 'external'))
     mkdir_p(path.join(srcdir, 'src'))
 

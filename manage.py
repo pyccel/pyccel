@@ -12,7 +12,7 @@ def mkdir_p(dir):
         return
     os.makedirs(dir)
 
-def load_extension(ext, output_dir, clean=True, modules=None):
+def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
 
     # ...
     base_dir = output_dir
@@ -50,7 +50,9 @@ def load_extension(ext, output_dir, clean=True, modules=None):
 
         # remove 'c' from *.pyc
         filename = m.__file__[:-1]
-        print os.path.basename(filename)
+
+        if not silent:
+            print ('> converting {0}/{1}'.format(ext, os.path.basename(filename)))
 
         pyccel(files=[filename], output_dir=output_dir, compiler=None)
 
@@ -60,6 +62,6 @@ def load_extension(ext, output_dir, clean=True, modules=None):
 
 ####################################
 if __name__ == '__main__':
-    load_extension('math', 'extensions')
+    load_extension('math', 'extensions', silent=False)
     load_extension('math', 'extensions', modules=['bsplines'])
     load_extension('math', 'extensions', modules='quadratures')

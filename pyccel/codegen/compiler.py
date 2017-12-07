@@ -668,3 +668,214 @@ def separator(n=40):
     comment = '!'
     return '{0} {1}\n'.format(comment, txt)
 # ...
+
+class Compiler(object):
+    """Base class for Code compiler for the Pyccel Grammar"""
+    def __init__(self, codegen, compiler, \
+                 flags=None, accelerator=None, \
+                 binary=None, debug=False, \
+                 inline=False, include=[], libdir=[], libs=[]):
+        """
+        Constructor of the code compiler.
+
+        codegen: pyccel.codegen.Codegen
+            a generation code object.
+        compiler: str
+            used compiler for the target language.
+        flags: str
+            compiler flags
+        accelerator: str
+            name of the selected accelerator.
+            For the moment, only 'openmp' is available
+        binary: str
+            name of the binary file to generate.
+        debug: bool
+            add some useful prints that may help for debugging.
+        inline: bool
+            set to True, if the file is being load inside a python session.
+        include: list
+            list of include directories paths
+        libdir: list
+            list of lib directories paths
+        libs: list
+            list of libraries to link with
+        """
+        self._codegen     = codegen
+        self._compiler    = compiler
+        self._binary      = binary
+        self._debug       = debug
+        self._inline      = inline
+        self._accelerator = accelerator
+        self._include     = include
+        self._libdir      = libdir
+        self._libs        = libs
+
+        if flags:
+            self._flags = flags
+        else:
+            self._flags = self.construct_flags()
+
+    @property
+    def codegen(self):
+        """Returns the used codegen"""
+        return self._codegen
+
+    @property
+    def compiler(self):
+        """Returns the used compiler"""
+        return self._compiler
+
+    @property
+    def flags(self):
+        """Returns the used flags"""
+        return self._flags
+
+    @property
+    def binary(self):
+        """Returns the used binary"""
+        return self._binary
+
+    @property
+    def debug(self):
+        """Returns True if in debug mode"""
+        return self._debug
+
+    @property
+    def inline(self):
+        """Returns True if in inline mode"""
+        return self._inline
+
+    @property
+    def accelerator(self):
+        """Returns the used accelerator"""
+        return self._accelerator
+
+    @property
+    def include(self):
+        """Returns include paths"""
+        return self._include
+
+    @property
+    def libdir(self):
+        """Returns lib paths"""
+        return self._libdir
+
+    @property
+    def libs(self):
+        """Returns libraries to link with"""
+        return self._libs
+
+    def construct_flags(self):
+        """
+        Constructs compiling flags
+        """
+        # TODO use constructor and a dict to map flags w.r.t the compiler
+        _avail_compilers = ['gfortran', 'mpif90', 'pgfortran']
+
+        compiler    = self.compiler
+        debug       = self.debug
+        inline      = self.inline
+        accelerator = self.accelerator
+        include     = self.include
+        libdir      = self.libdir
+
+        if not(compiler in _avail_compilers):
+            raise ValueError("Only {0} are available.".format(_avail_compilers))
+
+        flags = " -O2 "
+        if compiler == "gfortran":
+            if debug:
+                flags += " -fbounds-check "
+
+        if compiler == "mpif90":
+            if debug:
+                flags += " -fbounds-check "
+
+        if not (accelerator is None):
+            if accelerator == "openmp":
+                flags += " -fopenmp "
+            else:
+                raise ValueError("Only openmp is available")
+
+        if isinstance(include, str):
+            include = [include]
+        if len(include) > 0:
+            flags += ' '.join(' -I{0}'.format(i) for i in include)
+
+        if isinstance(libdir, str):
+            libdir = [libdir]
+        if len(libdir) > 0:
+            flags += ' '.join(' -L{0}'.format(i) for i in libdir)
+
+        return flags
+
+    def compile(self, verbose=False):
+        """
+        Compiles the generated file.
+
+        verbose: bool
+            talk more
+        """
+        compiler  = self.compiler
+        flags     = self.flags
+        inline    = self.inline
+        libs      = self.libs
+        filename  = self.codegen.filename_out
+        is_module = self.codegen.is_module
+        modules   = self.codegen.modules
+
+        ignored_modules  = ['plaf', 'spl', 'disco', 'fema']
+        ignored_modules += ['plf', 'dsc', 'jrk']
+        # ...
+        def _ignore_module(key):
+            for i in ignored_modules:
+                if i == key:
+                    return True
+                else:
+                    n = len(i)
+                    if i == key[:n]:
+                        return True
+            return False
+        # ...
+
+        modules = [m for m in modules if not _ignore_module(m)]
+
+        binary = ""
+        if self.binary is None:
+            if not is_module:
+                binary = filename.split('.')[0]
+        else:
+            binary = self.binary
+
+        o_code = ''
+        if not inline:
+            if not is_module:
+                o_code = "-o"
+            else:
+                flags += ' -c '
+        else:
+            o_code = '-m'
+            flags  = '--quiet -c'
+            binary = 'external'
+            # TODO improve
+            compiler = 'f2py'
+
+        m_code = ' '.join('{}.o '.format(m) for m in modules)
+
+        if isinstance(libs, str):
+            libs = [libs]
+        if len(libs) > 0:
+            libs = ' '.join(' -l{0}'.format(i) for i in libs)
+        else:
+            libs = ''
+
+        cmd = '{0} {1} {2} {3} {4} {5} {6}'.format( \
+            compiler, flags, m_code, filename, o_code, binary, libs)
+
+        if verbose:
+            print(cmd)
+
+        os.system(cmd)
+
+        self._binary = binary
+# ...
