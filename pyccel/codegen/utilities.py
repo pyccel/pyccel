@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os
+import importlib
 
 from pyccel.parser.utilities import find_imports
 from pyccel.codegen.codegen  import FCodegen
@@ -19,6 +20,14 @@ def execute_file(binary):
     if not ('/' in binary):
         cmd = "./" + binary
     os.system(cmd)
+# ...
+
+# ...
+def mkdir_p(dir):
+    # type: (unicode) -> None
+    if os.path.isdir(dir):
+        return
+    os.makedirs(dir)
 # ...
 
 # ...
@@ -305,4 +314,70 @@ def load_module(filename, language="fortran", compiler="gfortran"):
     module = getattr(external, '{0}'.format(name))
 
     return module
+# ...
+
+# ...
+def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
+    """
+    Load module(s) from a given pyccel extension.
+
+    ext: str
+        a pyccel extension is always of the form pyccelext-xxx where 'xxx' is
+        the extension name.
+    output_dir: str
+        directory where to store the generated files
+    clean: Bool
+        remove all tempororay files (of extension *.pyccel)
+    modules: list, str
+        a list of modules or a module. every module must be a string.
+    silent: bool
+        talk more
+    """
+
+    # ...
+    base_dir = output_dir
+    output_dir = os.path.join(base_dir, ext)
+    mkdir_p(output_dir)
+    # ...
+
+    # ...
+    extension = 'pyccelext_{0}'.format(ext)
+    try:
+        package = importlib.import_module(extension)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
+    ext_dir = str(package.__path__[0])
+    # ...
+
+    # ...
+    if not modules:
+        py_file     = lambda f: (f.split('.')[-1] == 'py')
+        ignore_file = lambda f: (os.path.basename(f) in ['__init__.py'])
+
+        files = [f for f in os.listdir(ext_dir) if py_file(f) and not ignore_file(f)]
+        modules = [f.split('.')[0] for f in files]
+    elif isinstance(modules, str):
+        modules = [modules]
+    # ...
+
+    for module in modules:
+        try:
+            m = importlib.import_module(extension, package=module)
+        except:
+            raise ImportError('could not import {0}.{1}'.format(extension, module))
+
+        m = getattr(m, '{0}'.format(module))
+
+        # remove 'c' from *.pyc
+        filename = m.__file__[:-1]
+
+        if not silent:
+            print ('> converting {0}/{1}'.format(ext, os.path.basename(filename)))
+
+        build_file(filename, language='fortran', compiler=None, output_dir=output_dir)
+
+
+    # remove .pyccel temporary files
+    if clean:
+        os.system('rm {0}/*.pyccel'.format(output_dir))
 # ...
