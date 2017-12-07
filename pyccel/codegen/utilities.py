@@ -468,3 +468,31 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     build_cmakelists_dir(base_dir)
     # ...
 # ...
+
+# ...
+def initialize_project(base_dir, project, suffix, libname, prefix=os.environ['CLAPP_DIR']):
+    if not os.path.exists(base_dir):
+        raise ValueError('Could not find :{0}'.format(base_dir))
+
+    FC     = 'gfortran'
+    FLAGS  = {}
+    FFLAGS = '-O2 -fbounds-check'
+
+    from pyccel.codegen.cmake import CMake
+    cmake = CMake(base_dir, \
+                  prefix=prefix, \
+                  flags=FLAGS, \
+                  flags_fortran=FFLAGS, \
+                  compiler_fortran=FC)
+
+    cmake.initialize(base_dir, project, suffix, libname, force=True)
+
+    cmake.configure()
+    cmake.make()
+    cmake.install()
+
+#        FLAGS  = self.configs['flags']
+#
+#        FC     = self.configs['fortran']['compiler']
+#        FFLAGS = self.configs['fortran']['flags']
+# ...

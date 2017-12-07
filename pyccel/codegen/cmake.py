@@ -179,7 +179,6 @@ class CMake(object):
                     shutil.copy(src, dst)
                 else: raise
 
-
                 if not os.path.exists(src_dir):
                     raise ValueError('Could not find :{0}'.format(src_dir))
         # ...
@@ -203,7 +202,7 @@ class CMake(object):
                 f.close()
         # ...
 
-        # ...
+        # ... TODO: uncomment add_subdirectory(package) from templates/CMakeLists.txt
         _print_cmakelists(cmakelists_src, cmakelists_dst)
         # ...
 
@@ -215,5 +214,6 @@ class CMake(object):
         # ...
         src = os.path.join(package_src, 'CMakeLists.txt')
         dst = os.path.join(package_dst, 'CMakeLists.txt')
+
         _print_cmakelists(src, dst)
         # ...

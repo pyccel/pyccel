@@ -9,19 +9,23 @@ import argparse
 
 from os import path
 
-EXTENSIONS = ('blas', 'linalg')
+from pyccel.codegen.utilities import load_extension
+from pyccel.codegen.utilities import initialize_project
+
+
+EXTENSIONS = {
+    'math': True,
+    'blas': False
+}
 
 DEFAULT_VALUE = {
     'author': '__AUTHOR__',
     'sep': False,
-    'dot': '_',
+    'dot': '', #'_',
     'language': 'fortran',
     'suffix': '.f90',
     'master': 'main',
     'epub': False,
-    'ext_autodoc': False,
-    'ext_doctest': False,
-    'ext_todo': False,
     'makefile': True,
     'batchfile': True,
 }
@@ -40,7 +44,7 @@ def get_parser():
         usage='%(prog)s [OPTIONS] <PROJECT_DIR>',
         epilog="For more information, visit <http://pyccel.readthedocs.io/>.",
         description="""
-Generate required files for a Sphinx project.
+Generate required files for a Pyccel project.
 
 pyccel-quickstart is an interactive tool that asks some questions about your
 project and then generates a complete pyccel directory and sample
@@ -69,6 +73,8 @@ Makefile to be used with pyccel-build.
                        help='version of project')
     group.add_argument('-r', '--release', metavar='RELEASE', dest='release',
                        help='release of project')
+    parser.add_argument('--suffix-library', type=str, \
+                        help='Suffix of 3 letters for the library')
     group.add_argument('-l', '--language', metavar='LANGUAGE', dest='language',
                        help='target language')
     parser.add_argument('--compiler', type=str, \
@@ -83,9 +89,9 @@ Makefile to be used with pyccel-build.
                         help='list of libraries to link with.')
 
     group = parser.add_argument_group('Extension options')
-    for ext in EXTENSIONS:
+    for ext, default in EXTENSIONS.items():
         group.add_argument('--ext-' + ext, action='store_true',
-                           dest='ext_' + ext, default=False,
+                           dest='ext_' + ext, default=default,
                            help='enable %s extension' % ext)
     group.add_argument('--extensions', metavar='EXTENSIONS', dest='extensions',
                        action='append', help='enable extensions')
@@ -134,10 +140,37 @@ def generate(d, overwrite=True, silent=False):
             'Thumbs.db', '.DS_Store',
         ])
         d['exclude_patterns'] = ', '.join(exclude_patterns)
+
+    if 'suffix-library' in d:
+        if len(d['suffix-library']) != 3:
+            raise ValueError('Library suffix must contain exactly 3 letters.')
+
+        suffix = d['suffix-library']
+    else:
+        suffix  = d['path'][:3]
+
     mkdir_p(builddir)
     mkdir_p(path.join(srcdir, 'extensions'))
     mkdir_p(path.join(srcdir, 'external'))
     mkdir_p(path.join(srcdir, 'src'))
+
+#    print d
+
+    # ... TODO get suffix as lib_prefix from d
+    project = d['path']
+    libname = project
+
+    base_dir = project
+    os.system('mkdir -p {0}'.format(base_dir))
+
+    extensions_dir = os.path.join(base_dir, 'extensions')
+
+    extensions = [k[4:] for k,v in d.items() if v and (k[:4] == 'ext_')]
+    for ext in extensions:
+        load_extension(ext, extensions_dir, silent=False)
+
+    initialize_project(base_dir, project, suffix, libname)
+    # ...
 
 def main(argv=sys.argv[1:]):
     """Creates a new pyccel project."""

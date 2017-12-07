@@ -236,4 +236,4 @@ MESSAGE(STATUS "############################################################")
 ##########################################################################
 
 # Create single library 
-ADD_SUBDIRECTORY( package )
+#ADD_SUBDIRECTORY( package )
