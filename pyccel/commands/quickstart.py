@@ -152,7 +152,25 @@ def generate(d, overwrite=True, silent=False):
     mkdir_p(builddir)
     mkdir_p(path.join(srcdir, 'extensions'))
     mkdir_p(path.join(srcdir, 'external'))
-    mkdir_p(path.join(srcdir, 'src'))
+    mkdir_p(path.join(srcdir, d['path']))
+
+    # ... create __init__.py file in project
+    def _print_version(version):
+        if version is None:
+            return ''
+        elif isinstance(version, str) and (len(version) == 0):
+            return ''
+
+        return '__version__ = "{0}"'.format(version)
+
+    code = '# -*- coding: UTF-8 -*-'
+    code = '{0}\n{1}'.format(code, _print_version(d['version']))
+
+    filename = path.join(path.join(srcdir, d['path']), '__init__.py')
+    f = open(filename, 'w')
+    f.write(code)
+    f.close()
+    # ...
 
 #    print d
 
