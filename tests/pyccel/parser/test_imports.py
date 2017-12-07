@@ -2,8 +2,6 @@
 
 from pyccel.parser.utilities import find_imports
 
-#stmts = 'from pyccel.stdlib import *'
-
 def test_numpy():
     d = find_imports(stmts='from numpy import zeros')
     assert(d['numpy'] == ['zeros'])
