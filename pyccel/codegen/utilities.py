@@ -139,6 +139,9 @@ def build_file(filename, language, compiler, \
 
     imports = {}
 
+    # ignoring pyccel.stdlib import
+    ignored_modules.append('pyccel.stdlib')
+
     ignored_modules.append('pyccel')
     for n in pyccel_modules:
         ignored_modules.append('pyccel.{0}'.format(n))
