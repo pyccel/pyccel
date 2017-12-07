@@ -349,6 +349,34 @@ def build_cmakelists(src_dir, libname, files, force=True, dep_libs=[]):
         # ...
 # ...
 
+# ...
+def build_cmakelists_dir(src_dir, force=True):
+    if not os.path.exists(src_dir):
+        raise ValueError('Could not find :{0}'.format(src_dir))
+
+    dirs = [f for f in os.listdir(src_dir)
+            if os.path.isdir(os.path.join(src_dir, f))]
+
+    # ...
+    def _print_dirs(dirs):
+        dirs_str = ' '.join(i for i in dirs)
+        return 'add_subdirectory({0})'.format(dirs_str)
+    # ...
+
+    # ...
+    code = ''
+    code = '{0}\n{1}'.format(code, _print_dirs(dirs))
+    # ...
+
+    setup_path = os.path.join(src_dir, 'CMakeLists.txt')
+    if force or (not os.path.isfile(setup_path)):
+        # ...
+        f = open(setup_path, 'w')
+        f.write(code)
+        f.close()
+        # ...
+# ...
+
 # ...
 def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     """
@@ -365,6 +393,12 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
         a list of modules or a module. every module must be a string.
     silent: bool
         talk more
+
+    Examples
+
+    >>> load_extension('math', 'extensions', silent=False)
+    >>> load_extension('math', 'extensions', modules=['bsplines'])
+    >>> load_extension('math', 'extensions', modules='quadratures')
     """
 
     # ...
@@ -414,8 +448,8 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     if clean:
         os.system('rm {0}/*.pyccel'.format(output_dir))
 
-    # create CMakeLists.txt for the extension
-    # TODO add here valid files extensions
+    # ... create CMakeLists.txt for the extension
+    #     TODO add here valid files extensions
     valid_file = lambda f: (f.split('.')[-1] in ['f90'])
 
     files = [f for f in os.listdir(output_dir) if valid_file(f)]
@@ -425,4 +459,9 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     dep_libs = []
     build_cmakelists(output_dir, libname=libname,
                      files=files, dep_libs=dep_libs)
+    # ...
+
+    # ...
+    build_cmakelists_dir(base_dir)
+    # ...
 # ...

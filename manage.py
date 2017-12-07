@@ -3,16 +3,13 @@
 import os
 
 from pyccel.codegen.utilities import load_extension
-from pyccel.codegen.utilities import build_cmakelists
 from pyccel.codegen.cmake import CMake
-
 
 def test_cmake(src_dir, prefix=os.environ['CLAPP_DIR']):
     if not os.path.exists(src_dir):
         raise ValueError('Could not find :{0}'.format(src_dir))
 
     try:
-        build_cmakelists(src_dir)
 
 #        FLAGS  = self.configs['flags']
 #
@@ -36,7 +33,14 @@ def test_cmake(src_dir, prefix=os.environ['CLAPP_DIR']):
 
 #####################################
 if __name__ == '__main__':
+    base_dir = 'poisson'
+    os.system('mkdir -p {0}'.format(base_dir))
+
+    pwd = os.getcwd()
+    os.chdir(base_dir)
+
 #    test_cmake('extensions')
     load_extension('math', 'extensions', silent=False)
-#    load_extension('math', 'extensions', modules=['bsplines'])
-#    load_extension('math', 'extensions', modules='quadratures')
+
+    os.chdir(pwd)
+

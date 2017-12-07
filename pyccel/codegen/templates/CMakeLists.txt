@@ -7,7 +7,7 @@ IF(OPTIONS_FILE)
 ENDIF()
 
 #Name your project here
-project(PLAF)
+project(__PROJECT__)
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 SET(CMAKE_SHARED_LIBRARY_LINK_FORTRAN_FLAGS "")
 
@@ -25,7 +25,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
   ADD_DEFINITIONS(-DDEBUG)
 ENDIF()
 
-set(PLF_BUILD_DIR $ENV{PWD} )
+set(__SUFFIX___BUILD_DIR $ENV{PWD} )
 
 IF(APPLE)
   cmake_policy(SET CMP0042 NEW)
@@ -52,7 +52,7 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 # the list of directories in which to search for CMake modules.
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-SET(BUILD_TESTING         ON  CACHE BOOL "Build PLAF library tests")
+SET(BUILD_TESTING         ON  CACHE BOOL "Build __PROJECT__ library tests")
 SET(BUILD_AGMG            OFF CACHE BOOL "Build AGMG libraries")
 SET(MUMPS_ENABLED         OFF CACHE BOOL "Enable MUMPS solver ")
 SET(SUPERLU_ENABLED       OFF CACHE BOOL "Enable SuplerLU solver")
@@ -77,23 +77,6 @@ set( CLAPP_DIR $ENV{CLAPP_DIR} )
 if( NOT CLAPP_DIR )
   set( CLAPP_DIR ${CMAKE_INSTALL_PREFIX} )
 endif()
-
-install(DIRECTORY
-  inputs/ddm
-  inputs/eigen_solver
-  inputs/estimator
-  inputs/linear_solver
-  inputs/matrix
-  inputs/multigrid
-  inputs/numbering
-  inputs/vector
-  DESTINATION inputs/plaf)
-
-file(GLOB files "python_scripts/*.py")
-foreach(file ${files})
-  get_filename_component(filename ${file} NAME)
-  configure_file(${file} ${CMAKE_INSTALL_PREFIX}/scripts/plaf/${filename})
-endforeach()
 
 find_package( CLAPPIO REQUIRED HINTS ${CLAPP_DIR}/cmake )
 
@@ -179,13 +162,13 @@ IF(PYTHON_EXECUTABLE AND PYTHON_VERSION_STRING MATCHES "2.*")
 ENDIF()
 MESSAGE(STATUS "PYTHON_FOUND:${PYTHON_FOUND}")
 
-file(MAKE_DIRECTORY ${PLF_BUILD_DIR}/bin)
+file(MAKE_DIRECTORY ${__SUFFIX___BUILD_DIR}/bin)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PLF_BUILD_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${__SUFFIX___BUILD_DIR}/bin)
 
-file(MAKE_DIRECTORY ${PLF_BUILD_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PLF_BUILD_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PLF_BUILD_DIR}/lib)
+file(MAKE_DIRECTORY ${__SUFFIX___BUILD_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${__SUFFIX___BUILD_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${__SUFFIX___BUILD_DIR}/lib)
 
 # Define folder to be deleted by make clean         
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/modules/)
@@ -216,54 +199,10 @@ ADD_CUSTOM_TARGET( clear
 ##########################################################################
 ENABLE_TESTING()
 ##########################################################################
-IF(NOT LAPACK_ENABLED)
-  add_subdirectory(external/lapack)
-  SET(LAPACK_LIBRARIES plf_lapack)
-ENDIF()
-##########################################################################
 
 ##########################################################################
-add_subdirectory(external/sparsekit)
-##########################################################################
-
-##########################################################################
-add_subdirectory(external/matrix_market)
-##########################################################################
-
-##########################################################################
-add_subdirectory(external/solvers)
-##########################################################################
-
-##########################################################################
-IF(FFTW_ENABLED)
-  add_subdirectory(external/fftw)
-ENDIF(FFTW_ENABLED)
-##########################################################################
-
-##########################################################################
-IF(SUPERLU_ENABLED)
-  add_subdirectory(external/superlu)
-ENDIF(SUPERLU_ENABLED)
-##########################################################################
-
-##########################################################################
-SET(PLF_UTILS_LIBRARIES plf_solvers plf_matrix_market plf_sparsekit ${LAPACK_LIBRARIES})
-IF(BUILD_AGMG)
-  SET(PLF_UTILS_LIBRARIES plf_dagmg_seq ${PLF_UTILS_LIBRARIES})
-ENDIF(BUILD_AGMG)
-##########################################################################
-
-##########################################################################
-IF(SUPERLU_ENABLED)
-  SET(PLF_UTILS_LIBRARIES plf_superlu ${PLF_UTILS_LIBRARIES})
-ENDIF(SUPERLU_ENABLED)
-##########################################################################
-
-##########################################################################
-SET(PLF_LIBRARIES  ${LAPACK_LIBRARIES} ${PETSC_LIBRARIES})
-
 # library and models
-ADD_SUBDIRECTORY(fortran)
+ADD_SUBDIRECTORY("extensions")
 ##########################################################################
 
 ##########################################################################
@@ -296,5 +235,5 @@ MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 ##########################################################################
 
-# Create single library 'plaflalib.a' from smaller libraries in src
+# Create single library 
 ADD_SUBDIRECTORY( package )
