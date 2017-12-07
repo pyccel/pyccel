@@ -316,6 +316,39 @@ def load_module(filename, language="fortran", compiler="gfortran"):
     return module
 # ...
 
+# ...
+def build_cmakelists(src_dir, libname, files, force=True, dep_libs=[]):
+    # ...
+    def _print_files(files):
+        files_str = ' '.join(i for i in files)
+        return 'set(files {0})'.format(files_str)
+
+    def _print_libname(libname):
+        return 'add_library({0} {1})'.format(libname, '${files}')
+
+    def _print_dependencies(dep_libs):
+        if len(dep_libs) == 0:
+            return ''
+        deps_str  = ' '.join(i for i in dep_libs)
+        return 'TARGET_LINK_LIBRARIES({0} {1})'.format(libname, deps_str)
+    # ...
+
+    # ...
+    code = ''
+    code = '{0}\n{1}'.format(code, _print_files(files))
+    code = '{0}\n{1}'.format(code, _print_libname(libname))
+    code = '{0}\n{1}'.format(code, _print_dependencies(dep_libs))
+    # ...
+
+    setup_path = os.path.join(src_dir, 'CMakeLists.txt')
+    if force or (not os.path.isfile(setup_path)):
+        # ...
+        f = open(setup_path, 'w')
+        f.write(code)
+        f.close()
+        # ...
+# ...
+
 # ...
 def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     """
@@ -380,4 +413,16 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     # remove .pyccel temporary files
     if clean:
         os.system('rm {0}/*.pyccel'.format(output_dir))
+
+    # create CMakeLists.txt for the extension
+    # TODO add here valid files extensions
+    valid_file = lambda f: (f.split('.')[-1] in ['f90'])
+
+    files = [f for f in os.listdir(output_dir) if valid_file(f)]
+
+    libname = extension
+    # TODO add dependencies
+    dep_libs = []
+    build_cmakelists(output_dir, libname=libname,
+                     files=files, dep_libs=dep_libs)
 # ...
