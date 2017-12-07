@@ -9,7 +9,7 @@ from utils import clean_tests
 def test_1():
     ignored = [15, 18, 20, 21]
 
-    for i in range(1, 21):
+    for i in range(1, 22+1):
         filename = 'tests/scripts/core/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])

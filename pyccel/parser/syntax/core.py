@@ -2481,39 +2481,40 @@ class FunctionDefStmt(BasicStmt):
             if isinstance(stmt, ReturnStmt):
                 results += stmt.expr
 
-        if not(len(results) == len(h.results)):
+        if (len(h.results) > 0) and not(len(results) == len(h.results)):
             raise ValueError('Inconsistent header function with results.')
         # ...
 
         # ...
-        _results = []
-        result_names = []
-        for a, d in zip(results, h.results):
-            result_name = a.name
-            result_names.append(result_name)
+        if len(h.results) > 0:
+            _results = []
+            result_names = []
+            for a, d in zip(results, h.results):
+                result_name = a.name
+                result_names.append(result_name)
 
-            if result_name in namespace:
-                var = namespace.pop(result_name)
-                dec = declarations.pop(result_name)
+                if result_name in namespace:
+                    var = namespace.pop(result_name)
+                    dec = declarations.pop(result_name)
 
-                scope_vars[result_name] = var
-                scope_decs[result_name] = dec
+                    scope_vars[result_name] = var
+                    scope_decs[result_name] = dec
 
-            rank = 0
-            for i in d[1]:
-                if isinstance(i, Slice):
-                    rank += 1
-            d_var = {}
-            d_var['datatype']    = d[0]
-#            d_var['allocatable'] = False
-            d_var['allocatable'] = d[2]
-            d_var['shape']       = None
-            d_var['rank']        = rank
-            d_var['intent']      = 'out'
-            insert_variable(result_name, **d_var)
-            var = namespace[result_name]
-            _results.append(var)
-        results = _results
+                rank = 0
+                for i in d[1]:
+                    if isinstance(i, Slice):
+                        rank += 1
+                d_var = {}
+                d_var['datatype']    = d[0]
+    #            d_var['allocatable'] = False
+                d_var['allocatable'] = d[2]
+                d_var['shape']       = None
+                d_var['rank']        = rank
+                d_var['intent']      = 'out'
+                insert_variable(result_name, **d_var)
+                var = namespace[result_name]
+                _results.append(var)
+            results = _results
         # ...
 
         # ... replace dict by ValuedVariable
@@ -3384,7 +3385,7 @@ class FunctionHeaderStmt(BasicStmt):
     @property
     def expr(self):
         dtypes    = [dec.dtype for dec in self.decs]
-        stars     = [(dec.star != None) for dec in self.decs]
+        stars     = [(dec.star == '*') for dec in self.decs]
         attributs = []
         for dec in self.decs:
             if dec.trailer is None:
