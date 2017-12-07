@@ -3496,39 +3496,42 @@ class ImportFromStmt(BasicStmt):
         funcs = str(funcs) # cast unicode to str
 
         # TODO improve
-        if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
-            fil   = 'mpi'
-            funcs = None
-            ns, ds, cs, classes, stmts = mpi_definitions()
-            for k,v in list(ns.items()):
-                namespace[k] = v
-            for k,v in list(ds.items()):
-                declarations[k] = v
-            for k,v in list(cs.items()):
-                cls_constructs[k] = v
-            for k,v in list(classes.items()):
-                class_defs[k] = v
-            for i in stmts:
-                _extra_stmts.append(i)
+        if str(fil) == 'pyccel.mpi':
+            raise NotImplementedError('uncomment')
 
-        if str(fil).startswith('spl.'):
-            module = str(fil).split('spl.')[-1]
-            fil = 'spl_m_{}'.format(module.lower())
-            ns, ds = spl_definitions()
-            for k,v in list(ns.items()):
-                namespace[k] = v
-            for k,v in list(ds.items()):
-                declarations[k] = v
-        if str(fil).startswith('plaf.'):
-            module = str(fil).split('plaf.')[-1]
-            fil = 'plf_m_{}'.format(module.lower())
-            ns, ds, cs = plaf_definitions()
-            for k,v in list(ns.items()):
-                namespace[k] = v
-            for k,v in list(ds.items()):
-                declarations[k] = v
-            for k,v in list(cs.items()):
-                cls_constructs[k] = v
+#        if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
+#            fil   = 'mpi'
+#            funcs = None
+#            ns, ds, cs, classes, stmts = mpi_definitions()
+#            for k,v in list(ns.items()):
+#                namespace[k] = v
+#            for k,v in list(ds.items()):
+#                declarations[k] = v
+#            for k,v in list(cs.items()):
+#                cls_constructs[k] = v
+#            for k,v in list(classes.items()):
+#                class_defs[k] = v
+#            for i in stmts:
+#                _extra_stmts.append(i)
+#
+#        if str(fil).startswith('spl.'):
+#            module = str(fil).split('spl.')[-1]
+#            fil = 'spl_m_{}'.format(module.lower())
+#            ns, ds = spl_definitions()
+#            for k,v in list(ns.items()):
+#                namespace[k] = v
+#            for k,v in list(ds.items()):
+#                declarations[k] = v
+#        if str(fil).startswith('plaf.'):
+#            module = str(fil).split('plaf.')[-1]
+#            fil = 'plf_m_{}'.format(module.lower())
+#            ns, ds, cs = plaf_definitions()
+#            for k,v in list(ns.items()):
+#                namespace[k] = v
+#            for k,v in list(ds.items()):
+#                declarations[k] = v
+#            for k,v in list(cs.items()):
+#                cls_constructs[k] = v
         return Import(fil, funcs)
 
 class ImportAsNames(BasicStmt):

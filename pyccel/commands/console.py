@@ -38,7 +38,7 @@ def _which(program):
 
     return None
 
-def pyccel(files=None, openmp=None, output_dir=None):
+def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
     """
     pyccel console command.
     """
@@ -87,6 +87,9 @@ def pyccel(files=None, openmp=None, output_dir=None):
     if not files:
         files = args.files
 
+    if not compiler:
+        compiler = args.compiler
+
     if not openmp:
         openmp = args.openmp
 
@@ -109,13 +112,9 @@ def pyccel(files=None, openmp=None, output_dir=None):
     else:
         language = 'fortran'
 
-    if args.compiler:
-        compiler = args.compiler
-    else:
-        compiler = 'gfortran'
-
-    if _which(compiler) is None:
-        raise ValueError('Could not find {0}'.format(compiler))
+    if compiler:
+        if _which(compiler) is None:
+            raise ValueError('Could not find {0}'.format(compiler))
 
     execute = args.execute
 

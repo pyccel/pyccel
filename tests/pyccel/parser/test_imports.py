@@ -21,3 +21,8 @@ def test_stdlib():
 
     d = find_imports(stmts='from pyccel.stdlib import *')
     assert(d['pyccel.stdlib'] == ['*'])
+
+######################
+if __name__ == '__main__':
+    test_numpy()
+    test_stdlib()
