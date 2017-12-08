@@ -529,10 +529,9 @@ def initialize_project(base_dir, project, suffix, libname, prefix=None):
 
     cmake.initialize(base_dir, project, suffix, libname, force=True)
 
-    # TODO uncomment
-#    cmake.configure()
-#    cmake.make()
-#    cmake.install()
+    cmake.configure()
+    cmake.make()
+    cmake.install()
 
 #        FLAGS  = self.configs['flags']
 #
