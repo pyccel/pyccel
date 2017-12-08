@@ -12,6 +12,7 @@ from os import path
 from pyccel.codegen.utilities import load_extension
 from pyccel.codegen.utilities import initialize_project
 from pyccel.codegen.utilities import build_cmakelists_dir
+from pyccel.codegen.utilities import generate_project_main
 
 
 EXTENSIONS = {
@@ -191,6 +192,7 @@ def generate(d, overwrite=True, silent=False):
     # ...
 
     initialize_project(base_dir, project, suffix, libname)
+    generate_project_main(srcdir, project, extensions)
     # ...
 
 def main(argv=sys.argv[1:]):

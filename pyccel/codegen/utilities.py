@@ -529,12 +529,43 @@ def initialize_project(base_dir, project, suffix, libname, prefix=None):
 
     cmake.initialize(base_dir, project, suffix, libname, force=True)
 
-    cmake.configure()
-    cmake.make()
-    cmake.install()
+    # TODO uncomment
+#    cmake.configure()
+#    cmake.make()
+#    cmake.install()
 
 #        FLAGS  = self.configs['flags']
 #
 #        FC     = self.configs['fortran']['compiler']
 #        FFLAGS = self.configs['fortran']['flags']
+# ...
+
+# ...
+def generate_project_main(srcdir, project, extensions, force=True):
+    # ...
+    from pyccel import codegen
+    codegen_dir  = os.path.dirname(os.path.realpath(str(codegen.__file__)))
+    templates_dir = os.path.join(codegen_dir, 'templates')
+    dst_dir       = os.path.join(srcdir, project)
+
+    src = os.path.join(templates_dir, 'main.py')
+    dst = os.path.join(dst_dir, 'main.py')
+    # ...
+
+    # ... update main.py
+    f = open(src, 'r')
+    code = f.readlines()
+    f.close()
+
+    code = ''.join(l for l in code)
+
+    for ext in extensions:
+        code_ext = 'from pyccelext.{0} import *'.format(ext)
+        code = '{0}\n{1}'.format(code, code_ext)
+
+    if force or (not os.path.isfile(dst)):
+        f = open(dst, 'w')
+        f.write(code)
+        f.close()
+    # ...
 # ...
