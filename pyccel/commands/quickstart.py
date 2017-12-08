@@ -11,6 +11,7 @@ from os import path
 
 from pyccel.codegen.utilities import load_extension
 from pyccel.codegen.utilities import initialize_project
+from pyccel.codegen.utilities import build_cmakelists_dir
 
 
 EXTENSIONS = {
@@ -20,7 +21,7 @@ EXTENSIONS = {
 
 DEFAULT_VALUE = {
     'author': '__AUTHOR__',
-    'sep': False,
+    'sep': True,
     'dot': '', #'_',
     'language': 'fortran',
     'suffix': '.f90',
@@ -127,7 +128,7 @@ def generate(d, overwrite=True, silent=False):
     if not path.isdir(d['path']):
         mkdir_p(d['path'])
 
-    srcdir = d['sep'] and path.join(d['path'], 'source') or d['path']
+    srcdir = d['sep'] and path.join(d['path'], 'src') or d['path']
 
     mkdir_p(srcdir)
     if d['sep']:
@@ -150,8 +151,7 @@ def generate(d, overwrite=True, silent=False):
         suffix  = d['path'][:3]
 
     mkdir_p(builddir)
-    mkdir_p(path.join(srcdir, 'extensions'))
-    mkdir_p(path.join(srcdir, 'external'))
+#    mkdir_p(path.join(srcdir, 'external'))
     mkdir_p(path.join(srcdir, d['path']))
 
     # ... create __init__.py file in project
@@ -177,15 +177,18 @@ def generate(d, overwrite=True, silent=False):
     # ...
     project = d['path']
     libname = project
-
     base_dir = project
-    os.system('mkdir -p {0}'.format(base_dir))
 
-    extensions_dir = os.path.join(base_dir, 'extensions')
+    extensions_dir = os.path.join(srcdir, 'extensions')
 
     extensions = [k[4:] for k,v in d.items() if v and (k[:4] == 'ext_')]
     for ext in extensions:
         load_extension(ext, extensions_dir, silent=False)
+
+    # ... when using sep directory for sources
+    if d['sep']:
+         build_cmakelists_dir(srcdir, force=True)
+    # ...
 
     initialize_project(base_dir, project, suffix, libname)
     # ...

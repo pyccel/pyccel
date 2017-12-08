@@ -160,11 +160,11 @@ class CMake(object):
         codegen_dir  = os.path.dirname(os.path.realpath(str(codegen.__file__)))
         templates_dir = os.path.join(codegen_dir, 'templates')
 
-        cmakemodules_src = os.path.join(templates_dir, 'CMakeModules')
+        cmakemodules_src = os.path.join(templates_dir, 'cmake')
         cmakelists_src   = os.path.join(templates_dir, 'CMakeLists.txt')
         package_src      = os.path.join(templates_dir, 'package')
 
-        cmakemodules_dst = os.path.join(src_dir, 'CMakeModules')
+        cmakemodules_dst = os.path.join(src_dir, 'cmake')
         cmakelists_dst   = os.path.join(src_dir, 'CMakeLists.txt')
         package_dst      = os.path.join(src_dir, 'package')
         # ...

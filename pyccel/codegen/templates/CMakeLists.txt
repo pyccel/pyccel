@@ -50,7 +50,7 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 # Add new directory to find the FIND<PACKAGE>.cmake files. CMAKE_SOURCE_DIR is
 # the directory where the project sources are located. CMAKE_MODULE_PATH is 
 # the list of directories in which to search for CMake modules.
-SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
+SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH} )
 
 SET(BUILD_TESTING         ON  CACHE BOOL "Build __PROJECT__ library tests")
 SET(BUILD_AGMG            OFF CACHE BOOL "Build AGMG libraries")
@@ -202,7 +202,7 @@ ENABLE_TESTING()
 
 ##########################################################################
 # library and models
-ADD_SUBDIRECTORY("extensions")
+ADD_SUBDIRECTORY("src")
 ##########################################################################
 
 ##########################################################################
