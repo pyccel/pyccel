@@ -379,8 +379,8 @@ def build_cmakelists_dir(src_dir, force=True):
 
     # ...
     def _print_dirs(dirs):
-        dirs_str = ' '.join(i for i in dirs)
-        return 'add_subdirectory({0})'.format(dirs_str)
+        code = '\n'.join('add_subdirectory({0})'.format(i) for i in dirs)
+        return code
     # ...
 
     # ...
@@ -478,7 +478,7 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
         filename = get_extension_path(ext, module=module)
         if not silent:
             f_name = os.path.basename(filename)
-            print ('> converting {0}/{1}'.format(ext, f_name))
+            print ('> converting extensions/{0}/{1}'.format(ext, f_name))
 
         module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
         # TODO pass language as argument
@@ -532,7 +532,9 @@ def initialize_project(base_dir, project, suffix, libname, prefix=None):
 
     cmake.configure()
     cmake.make()
-    cmake.install()
+
+    # TODO uncomment install
+    #cmake.install()
 
 #        FLAGS  = self.configs['flags']
 #
@@ -585,9 +587,12 @@ def generate_project_main(srcdir, project, extensions, force=True):
 
     code = ''.join(l for l in code)
 
-    for ext in extensions:
-        code_ext = 'from pyccelext.{0} import *'.format(ext)
-        code = '{0}\n{1}'.format(code, code_ext)
+    #TODO uncomment
+#    for ext in extensions:
+#        code_ext = 'from pyccelext.{0} import *'.format(ext)
+#        code = '{0}\n{1}'.format(code, code_ext)
+
+    code = 'x = 1'
 
     if force or (not os.path.isfile(dst)):
         f = open(dst, 'w')

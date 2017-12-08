@@ -81,6 +81,8 @@ Makefile to be used with pyccel-build.
                         help='Suffix of 3 letters for the library')
     group.add_argument('-l', '--language', metavar='LANGUAGE', dest='language',
                        help='target language')
+    group.add_argument('--convert-only', action='store_true',
+                       help='Converts pyccel files only without build')
     parser.add_argument('--compiler', type=str, \
                         help='Used compiler')
     group.add_argument('--master', metavar='MASTER',
@@ -176,6 +178,11 @@ def generate(d, silent=False):
     generate_project_init(d['path'], project, **d)
     generate_project_main(d['path'], project, extensions)
     generate_project_conf(d['path'], project, **d)
+    # ...
+
+    # ...
+    if not('convert_only' in d):
+        initialize_project(base_dir, project, suffix, libname, prefix=None)
     # ...
 
 def main(argv=sys.argv[1:]):

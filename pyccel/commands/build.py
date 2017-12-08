@@ -68,6 +68,8 @@ files can be built by specifying individual filenames.
     group = parser.add_argument_group('general options')
     group.add_argument('--output-dir', type=str, \
                         help='Output directory.')
+    group.add_argument('--convert-only', action='store_true',
+                       help='Converts pyccel files only without build')
     group.add_argument('-b', metavar='BUILDER', dest='builder',
                        default='fortran',
                        help='builder to use (default: fortran)')
@@ -104,7 +106,9 @@ files can be built by specifying individual filenames.
     return parser
 
 
-def build(d, silent=False, force=True, dep_libs=[], clean=True):
+def build(d, silent=False, force=True,
+          dep_libs=[], dep_extensions=['math'],
+          clean=True):
     """Generates the project from a dictionary."""
     conf_filename = os.path.join(os.getcwd(), 'conf.py')
     if not os.path.exists(conf_filename):
@@ -129,20 +133,29 @@ def build(d, silent=False, force=True, dep_libs=[], clean=True):
         filename = os.path.join(sourcedir, f_name)
         build_file(filename, language=language, compiler=None, output_dir=output_dir)
 
+    # remove .pyccel temporary files
+    if clean:
+        os.system('rm {0}/*.pyccel'.format(output_dir))
+
     # ...
     valid_file = lambda f: (f.split('.')[-1] in ['f90'])
 
     files = [f for f in os.listdir(output_dir) if valid_file(f)]
 
-    #TODO define libname
-    libname = 'libname'
+    libname = os.path.basename(sourcedir)
 
+    dep_libs += ['pyccelext_{0}'.format(i) for i in dep_extensions]
     build_cmakelists(output_dir, libname, files, force=force, dep_libs=dep_libs)
+
+    build_cmakelists_dir('src')
     # ...
 
-    # remove .pyccel temporary files
-    if clean:
-        os.system('rm {0}/*.pyccel'.format(output_dir))
+    # ...
+    if not('convert_only' in d):
+        from pyccel.codegen.cmake import CMake
+        cmake = CMake('.')
+        cmake.make()
+    # ...
 
 def main(argv=sys.argv[1:]):
     """Creates a new pyccel project."""

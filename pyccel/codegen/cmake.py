@@ -11,10 +11,10 @@ import os
 class CMake(object):
     """User-friendly class for cmake."""
     def __init__(self, path, \
-                 prefix, \
-                 flags, \
-                 flags_fortran, \
-                 compiler_fortran):
+                 prefix=None, \
+                 flags=None, \
+                 flags_fortran=None, \
+                 compiler_fortran=None):
         """
         Constructor for cmake.
 
@@ -54,20 +54,25 @@ class CMake(object):
         # ...
 
         # ... MPI
-        if "mpi" in compiler_fortran.lower():
-            args += ['-DMPI_ENABLED=ON']
+        if compiler_fortran:
+            if "mpi" in compiler_fortran.lower():
+                args += ['-DMPI_ENABLED=ON']
         # ...
 
         # ...
-        args += [' -DCMAKE_INSTALL_PREFIX={0}'.format(prefix)]
-        args += [' -DCMAKE_Fortran_FLAGS="{0}"'.format(self.flags_fortran)]
-#        args += [' -DCMAKE_Fortran_FLAGS_DEBUG={0}'.format(self.flags_fortran)]
-#        args += [' -DCMAKE_Fortran_FLAGS_RELEASE={0}'.format(self.flags_fortran)]
+        if prefix:
+            args += [' -DCMAKE_INSTALL_PREFIX={0}'.format(prefix)]
+
+        if flags_fortran:
+            args += [' -DCMAKE_Fortran_FLAGS="{0}"'.format(flags_fortran)]
+#            args += [' -DCMAKE_Fortran_FLAGS_DEBUG={0}'.format(flags_fortran)]
+#            args += [' -DCMAKE_Fortran_FLAGS_RELEASE={0}'.format(flags_fortran)]
         # ...
 
         # ...
-        for flag, value in list(flags.items()):
-            args += ['-D{0}={1}'.format(flag, value)]
+        if flags:
+            for flag, value in list(flags.items()):
+                args += ['-D{0}={1}'.format(flag, value)]
         # ...
 
         # ...
