@@ -1,4 +1,4 @@
 TODO
 ====
 
-*  **parser/syntax** set value on if simple assign
+*  **parser/syntax**  improve assignable for value in AssignStmt
