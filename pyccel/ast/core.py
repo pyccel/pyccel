@@ -2892,7 +2892,7 @@ def is_simple_assign(expr):
 
 def is_valid_module(expr):
     _module_stmt = (Comment, FunctionDef, ClassDef, \
-                    FunctionHeader, ClassHeader, MethodHeader)
+                    FunctionHeader, ClassHeader, MethodHeader, Import)
 
     if isinstance(expr, (tuple, list, Tuple)):
         is_module = True

@@ -3,6 +3,8 @@ import numpy as np
 from numpy import ndarray
 from numpy import asarray
 
+from sympy import Integer as sp_Integer
+from sympy import Float   as sp_Float
 from sympy.core.expr import Expr
 from sympy.core.containers import Tuple
 from sympy import Symbol, Integer, Float, Add, Mul,Pow
@@ -1470,8 +1472,10 @@ class AssignStmt(BasicStmt):
                     status = 'unallocated'
                     like = allocatable_like(rhs)
 
-            # TODO set value on if simple assign
-            d_var['value'] = rhs
+            # TODO improve assignable
+            assignable = (sp_Integer, sp_Float)
+            if isinstance(rhs, assignable):
+                d_var['value'] = rhs
             insert_variable(var_name, **d_var)
 
         if self.trailer is None:
