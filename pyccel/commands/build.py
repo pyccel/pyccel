@@ -12,6 +12,7 @@ from os import path
 from pyccel import __version__ as __display_version__
 from pyccel.codegen.utilities import build_file
 from pyccel.codegen.utilities import initialize_project
+from pyccel.codegen.utilities import build_cmakelists
 from pyccel.codegen.utilities import build_cmakelists_dir
 from pyccel.codegen.utilities import generate_project_main
 
@@ -103,14 +104,13 @@ files can be built by specifying individual filenames.
     return parser
 
 
-def build(d, silent=False):
+def build(d, silent=False, force=True, dep_libs=[], clean=True):
     """Generates the project from a dictionary."""
     conf_filename = os.path.join(os.getcwd(), 'conf.py')
     if not os.path.exists(conf_filename):
         raise ValueError('Could not find conf.py file.'
                         ' Make sure you run pyccel-build from the right directory.')
 
-    print d
     language   = d['language']
     sourcedir  = d['sourcedir']
     output_dir = d['output_dir']
@@ -130,8 +130,19 @@ def build(d, silent=False):
         build_file(filename, language=language, compiler=None, output_dir=output_dir)
 
     # ...
-#    initialize_project(base_dir, project, suffix, libname)
+    valid_file = lambda f: (f.split('.')[-1] in ['f90'])
+
+    files = [f for f in os.listdir(output_dir) if valid_file(f)]
+
+    #TODO define libname
+    libname = 'libname'
+
+    build_cmakelists(output_dir, libname, files, force=force, dep_libs=dep_libs)
     # ...
+
+    # remove .pyccel temporary files
+    if clean:
+        os.system('rm {0}/*.pyccel'.format(output_dir))
 
 def main(argv=sys.argv[1:]):
     """Creates a new pyccel project."""
