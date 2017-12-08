@@ -155,7 +155,7 @@ def build_file(filename, language, compiler, \
     imports_src = {}
     for module, names in list(imports.items()):
         f_names = []
-        for name in names:
+        for n in names:
             if module.startswith('pyccelext'):
                 ext_full  = module.split('pyccelext.')[-1]
                 ext       = ext_full.split('.')[0] # to remove submodule
@@ -163,7 +163,7 @@ def build_file(filename, language, compiler, \
                     ext_dir = get_extension_path(ext)
                     # TODO import all files within a package
 
-                    f_name = 'pyccelext_{0}.py'.format(name)
+                    f_name = 'pyccelext_{0}.py'.format(n)
                 else:
                     submodule = ext_full.split('.')[-1] # to get submodule
                     if module == 'pyccelext.{0}.{1}'.format(ext, submodule):
@@ -171,7 +171,7 @@ def build_file(filename, language, compiler, \
                     else:
                         raise ValueError('non valid import for pyccel extensions.')
             else:
-                f_name = '{0}.py'.format(name)
+                f_name = '{0}.py'.format(n)
             f_names.append(f_name)
         imports_src[module] = f_names
 
@@ -477,9 +477,12 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     for module in modules:
         filename = get_extension_path(ext, module=module)
         if not silent:
-            print ('> converting {0}/{1}'.format(ext, os.path.basename(filename)))
+            f_name = os.path.basename(filename)
+            print ('> converting {0}/{1}'.format(ext, f_name))
 
-        build_file(filename, language='fortran', compiler=None, output_dir=output_dir)
+        module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
+        build_file(filename, language='fortran', compiler=None,
+                   output_dir=output_dir, name=module_name)
     # ...
 
     # remove .pyccel temporary files
