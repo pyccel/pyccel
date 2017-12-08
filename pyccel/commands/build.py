@@ -165,6 +165,10 @@ def main(argv=sys.argv[1:]):
         settings[k] = v
     # ...
 
+    # ...
+    settings['extensions'] = [k[4:] for k,v in d.items() if v and (k[:4] == 'ext_')]
+    # ...
+
     # ... default value is ./src/SRCDIR
     if not 'output_dir' in settings:
         srcdir = settings['sourcedir']

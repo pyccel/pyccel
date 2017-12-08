@@ -602,14 +602,34 @@ def generate_project_conf(srcdir, project, **settings):
     mkdir_p(srcdir)
 
     # ...
-    code = '# -*- coding: UTF-8 -*-'
+    code = '# -*- coding: UTF-8 -*-\n'
 #    code = '{0}\n{1}'.format(code, _print_version(settings['version']))
 
+    # ... add extensions
+    if settings['extensions']:
+        code_header = '# pyccel extensions are listed below'
+        code = '{0}\n{1}'.format(code, code_header)
+
+        extensions = ', '.join(i for i in settings['extensions'])
+        code_ext = 'extensions = ["{0}"]'.format(extensions)
+        code = '{0}\n{1}\n'.format(code, code_ext)
+    # ...
+
+    # ... add applications
+    code_header = '# add your applications below'
+    code = '{0}\n{1}'.format(code, code_header)
+
+    applications = [project]
+    applications = ', '.join(i for i in applications)
+    code_ext = 'applications = ["{0}"]'.format(applications)
+    code = '{0}\n{1}\n'.format(code, code_ext)
+    # ...
+
+    # ...
     filename = os.path.join(srcdir, 'conf.py')
     f = open(filename, 'w')
     f.write(code)
     f.close()
     # ...
-
 # ...
 
