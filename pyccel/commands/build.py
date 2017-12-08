@@ -126,21 +126,27 @@ def build(d, silent=False, force=True,
 
     files = [f for f in os.listdir(sourcedir) if py_file(f) and not ignore_file(f)]
 
+    programs = []
     for f_name in files:
         if not silent:
             print ('> converting {0}/{1}'.format(sourcedir, f_name))
 
         filename = os.path.join(sourcedir, f_name)
-        build_file(filename, language=language, compiler=None, output_dir=output_dir)
+        info = build_file(filename, language=language, compiler=None, output_dir=output_dir)
+        if not info['is_module']:
+            programs.append(f_name.split('.')[0])
 
     # remove .pyccel temporary files
     if clean:
         os.system('rm {0}/*.pyccel'.format(output_dir))
 
     # ...
+    is_program = lambda f: (f.split('.')[0] in programs)
     valid_file = lambda f: (f.split('.')[-1] in ['f90'])
 
-    files = [f for f in os.listdir(output_dir) if valid_file(f)]
+    files = [f for f in os.listdir(output_dir) if valid_file(f) if not(is_program(f))]
+#    print('>>>> files    = {0}'.format(files))
+#    print('>>>> programs = {0}'.format(programs))
 
     libname = os.path.basename(sourcedir)
 
