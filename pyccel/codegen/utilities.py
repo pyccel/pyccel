@@ -2,6 +2,7 @@
 
 import os
 import importlib
+import numpy as np
 
 from pyccel.parser.utilities import find_imports
 from pyccel.codegen.codegen  import FCodegen
@@ -125,18 +126,12 @@ def build_file(filename, language, compiler, \
         pyccel_modules.append('mpi')
     # ...
 
-    # ... clapp environment
-    pyccel_modules += ['plaf', 'spl', 'disco', 'fema']
-    # ...
-
     # ... TODO add only if used
 #    user_modules = ['m_pyccel']
     user_modules = []
     # ...
 
     # ...
-    d = find_imports(filename=filename)
-
     imports = {}
 
     # ignoring pyccel.stdlib import
@@ -147,29 +142,51 @@ def build_file(filename, language, compiler, \
         ignored_modules.append('pyccel.{0}'.format(n))
         ignored_modules.append(n)
 
-    # TODO remove. for the moment we use 'from spl.bspline import *'
-    ignored_modules.append('plf')
-    ignored_modules.append('dsc')
-    ignored_modules.append('jrk')
-
     # ...
     def _ignore_module(key):
-        for i in ignored_modules:
-            if i == key:
-                return True
-            else:
-                n = len(i)
-                if i == key[:n]:
-                    return True
-        return False
+        return np.asarray([key.startswith(i) for i in ignored_modules]).any()
     # ...
 
+    d = find_imports(filename=filename)
     for key, value in list(d.items()):
         if not _ignore_module(key):
             imports[key] = value
+
+    imports_src = {}
+    for module, names in list(imports.items()):
+        f_names = []
+        for name in names:
+            if module.startswith('pyccelext'):
+                ext_full  = module.split('pyccelext.')[-1]
+                ext       = ext_full.split('.')[0] # to remove submodule
+                if module == 'pyccelext.{0}'.format(ext):
+                    ext_dir = get_extension_path(ext)
+                    # TODO import all files within a package
+
+                    f_name = 'pyccelext_{0}.py'.format(name)
+                else:
+                    submodule = ext_full.split('.')[-1] # to get submodule
+                    if module == 'pyccelext.{0}.{1}'.format(ext, submodule):
+                        f_name = get_extension_path(ext, module=submodule)
+                    else:
+                        raise ValueError('non valid import for pyccel extensions.')
+            else:
+                f_name = '{0}.py'.format(name)
+            f_names.append(f_name)
+        imports_src[module] = f_names
+
+#    print ignored_modules
+#    print d
+#    print imports
+#    if len(d) > 0:
+#        import sys; sys.exit(0)
+    #...
+
+    # ...
     ms = []
     for module, names in list(imports.items()):
-        codegen_m = FCodegen(filename=module+".py", name=module, is_module=True,
+        filename = imports_src[module][0] #TODO loop over files
+        codegen_m = FCodegen(filename=filename, name=module, is_module=True,
                             output_dir=output_dir)
         codegen_m.doprint(language=language, accelerator=accelerator, \
                           ignored_modules=ignored_modules, \
@@ -380,6 +397,36 @@ def build_cmakelists_dir(src_dir, force=True):
         # ...
 # ...
 
+# ...
+def get_extension_path(ext, module=None):
+    """Finds the path of a pyccel extension. A specific module can also be
+    given."""
+
+    extension = 'pyccelext_{0}'.format(ext)
+    try:
+        package = importlib.import_module(extension)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
+
+    ext_dir = str(package.__path__[0])
+
+    if not module:
+        return ext_dir
+
+    # if module is not None
+    try:
+        m = importlib.import_module(extension, package=module)
+    except:
+        raise ImportError('could not import {0}.{1}'.format(extension, module))
+
+    m = getattr(m, '{0}'.format(module))
+
+    # remove 'c' from *.pyc
+    filename = m.__file__[:-1]
+
+    return filename
+# ...
+
 # ...
 def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     """
@@ -412,11 +459,7 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
 
     # ...
     extension = 'pyccelext_{0}'.format(ext)
-    try:
-        package = importlib.import_module(extension)
-    except:
-        raise ImportError('could not import {0}'.format(extension))
-    ext_dir = str(package.__path__[0])
+    ext_dir   = get_extension_path(ext)
     # ...
 
     # ...
@@ -430,22 +473,14 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
         modules = [modules]
     # ...
 
+    # ... convert all modules of the seleceted extension
     for module in modules:
-        try:
-            m = importlib.import_module(extension, package=module)
-        except:
-            raise ImportError('could not import {0}.{1}'.format(extension, module))
-
-        m = getattr(m, '{0}'.format(module))
-
-        # remove 'c' from *.pyc
-        filename = m.__file__[:-1]
-
+        filename = get_extension_path(ext, module=module)
         if not silent:
             print ('> converting {0}/{1}'.format(ext, os.path.basename(filename)))
 
         build_file(filename, language='fortran', compiler=None, output_dir=output_dir)
-
+    # ...
 
     # remove .pyccel temporary files
     if clean:
