@@ -2868,3 +2868,4 @@ class ClassHeader(Basic):
     @property
     def options(self):
         return self._args[1]
+

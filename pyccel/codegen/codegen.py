@@ -33,8 +33,41 @@ from pyccel.parser.syntax.openmp import OpenmpStmt
 from pyccel.parser.utilities import find_imports
 
 
-_module_stmt = (Comment, FunctionDef, ClassDef, \
-                FunctionHeader, ClassHeader, MethodHeader)
+# ... TODO move to ast
+from sympy import Integer, Float
+numbers = [Integer, Float]
+
+def is_simple_assign(expr):
+    if not isinstance(expr, Assign):
+        return False
+
+    assignable  = [Variable, IndexedVariable, IndexedElement]
+    assignable += numbers
+    assignable = tuple(assignable)
+    if isinstance(expr.rhs, assignable):
+        return True
+    else:
+        return False
+
+def is_valid_module(expr):
+    _module_stmt = (Comment, FunctionDef, ClassDef, \
+                    FunctionHeader, ClassHeader, MethodHeader)
+
+    if isinstance(expr, (tuple, list, Tuple)):
+        is_module = True
+        for stmt in expr:
+            if not is_valid_module(stmt):
+                is_module = False
+                break
+        return is_module
+    elif isinstance(expr, _module_stmt):
+        return True
+    elif isinstance(expr, Assign):
+        return is_simple_assign(expr)
+    else:
+        print('>>>> ', type(expr))
+        raise NotImplementedError('TODO.')
+# ...
 
 # ...
 def clean(filename):
@@ -522,11 +555,7 @@ class Codegen(object):
 
         # ...
         if not self.is_module:
-            is_module = True
-            for stmt in stmts:
-                if not(isinstance(stmt, _module_stmt)):
-                    is_module = False
-                    break
+            is_module = is_valid_module(stmts)
         else:
             is_module = True
         # ...
