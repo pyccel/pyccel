@@ -34,7 +34,7 @@ from pyccel.ast.core import Range, Tensor, ParallelRange, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
                               Variable, Declare, ValuedVariable, \
                               Len, Shape, Dot, Sign, subs, \
-                              IndexedElement, Slice)
+                              IndexedElement, Slice, DottedName)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -187,6 +187,14 @@ class FCodePrinter(CodePrinter):
 
     def _print_Import(self, expr):
         fil = self._print(expr.fil)
+        if isinstance(expr.fil, DottedName):
+            # pyccel-extension case
+            if expr.fil.name[0] == 'pyccelext':
+                fil = '_'.join(self._print(i) for i in expr.fil.name)
+                fil = 'm_{0}'.format(fil)
+            else:
+                raise NotImplementedError('Can not import dotted names')
+
         if not expr.funcs:
             return 'use {0}'.format(fil)
         else:
