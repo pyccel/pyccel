@@ -344,7 +344,9 @@ def load_module(filename, language="fortran", compiler="gfortran"):
 # ...
 
 # ...
-def build_cmakelists(src_dir, libname, files, force=True, dep_libs=[]):
+def build_cmakelists(src_dir, libname, files,
+                     force=True, dep_libs=[],
+                     programs=[]):
     # ...
     def _print_files(files):
         files_str = ' '.join(i for i in files)
@@ -358,18 +360,45 @@ def build_cmakelists(src_dir, libname, files, force=True, dep_libs=[]):
             return ''
         deps_str  = ' '.join(i for i in dep_libs)
         return 'TARGET_LINK_LIBRARIES({0} {1})'.format(libname, deps_str)
+
+    def _print_programs(programs, libname, dep_libs):
+        if len(programs) == 0:
+            return ''
+
+        code_deps = ' '.join(i for i in dep_libs)
+        code = ''
+        for f in programs:
+            name = f.split('.')[0] # file name without extension
+
+            code_bin = '{0}_{1}'.format(libname, name)
+
+            code += '\n# ... {0}\n'.format(f)
+            code += 'ADD_EXECUTABLE({0} {1})\n'.format(code_bin, f)
+
+            if len(dep_libs) > 0:
+                code += 'TARGET_LINK_LIBRARIES({0} {1})\n'.format(code_bin, code_deps)
+
+            code += 'ADD_TEST( NAME {0} COMMAND {0} )\n'.format(code_bin)
+            code += '# ...\n'
+
+        return code
     # ...
 
     # ...
-    if len(files) == 0:
+    if (len(files) == 0) and (len(programs) == 0):
         return
     # ...
 
     # ...
     code = ''
-    code = '{0}\n{1}'.format(code, _print_files(files))
-    code = '{0}\n{1}'.format(code, _print_libname(libname))
-    code = '{0}\n{1}'.format(code, _print_dependencies(dep_libs))
+    if len(files) > 0:
+        code = '{0}\n{1}'.format(code, _print_files(files))
+        code = '{0}\n{1}'.format(code, _print_libname(libname))
+        code = '{0}\n{1}'.format(code, _print_dependencies(dep_libs))
+
+        dep_libs += [libname]
+
+    code = '{0}\n{1}'.format(code, _print_programs(programs, libname, dep_libs))
     # ...
 
     setup_path = os.path.join(src_dir, 'CMakeLists.txt')

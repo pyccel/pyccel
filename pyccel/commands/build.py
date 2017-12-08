@@ -144,14 +144,17 @@ def build(d, silent=False, force=True,
     is_program = lambda f: (f.split('.')[0] in programs)
     valid_file = lambda f: (f.split('.')[-1] in ['f90'])
 
-    files = [f for f in os.listdir(output_dir) if valid_file(f) if not(is_program(f))]
+    files    = [f for f in os.listdir(output_dir) if valid_file(f) if not(is_program(f))]
+    programs = [f for f in os.listdir(output_dir) if valid_file(f) if is_program(f)]
 #    print('>>>> files    = {0}'.format(files))
 #    print('>>>> programs = {0}'.format(programs))
 
     libname = os.path.basename(sourcedir)
 
     dep_libs += ['pyccelext_{0}'.format(i) for i in dep_extensions]
-    build_cmakelists(output_dir, libname, files, force=force, dep_libs=dep_libs)
+    build_cmakelists(output_dir, libname, files,
+                     force=force, dep_libs=dep_libs,
+                     programs=programs)
 
     build_cmakelists_dir('src')
     # ...
