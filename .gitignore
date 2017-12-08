@@ -2,7 +2,7 @@
 *.pyo
 .ipynb_checkpoints/
 
-*build*
+build
 *egg*
 *dist*
 

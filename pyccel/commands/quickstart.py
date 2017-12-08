@@ -13,6 +13,8 @@ from pyccel.codegen.utilities import load_extension
 from pyccel.codegen.utilities import initialize_project
 from pyccel.codegen.utilities import build_cmakelists_dir
 from pyccel.codegen.utilities import generate_project_main
+from pyccel.codegen.utilities import generate_project_init
+from pyccel.codegen.utilities import generate_project_conf
 
 
 EXTENSIONS = {
@@ -118,7 +120,7 @@ Makefile to be used with pyccel-build.
     return parser
 
 
-def generate(d, overwrite=True, silent=False):
+def generate(d, silent=False):
     """Generates the project from a dictionary."""
     # escape backslashes and single quotes in strings that are put into
     # a Python string literal
@@ -153,27 +155,6 @@ def generate(d, overwrite=True, silent=False):
 
     mkdir_p(builddir)
 #    mkdir_p(path.join(srcdir, 'external'))
-    mkdir_p(path.join(srcdir, d['path']))
-
-    # ... create __init__.py file in project
-    def _print_version(version):
-        if version is None:
-            return ''
-        elif isinstance(version, str) and (len(version) == 0):
-            return ''
-
-        return '__version__ = "{0}"'.format(version)
-
-    code = '# -*- coding: UTF-8 -*-'
-    code = '{0}\n{1}'.format(code, _print_version(d['version']))
-
-    filename = path.join(path.join(srcdir, d['path']), '__init__.py')
-    f = open(filename, 'w')
-    f.write(code)
-    f.close()
-    # ...
-
-#    print d
 
     # ...
     project = d['path']
@@ -184,15 +165,17 @@ def generate(d, overwrite=True, silent=False):
 
     extensions = [k[4:] for k,v in d.items() if v and (k[:4] == 'ext_')]
     for ext in extensions:
-        load_extension(ext, extensions_dir, silent=False)
+        load_extension(ext, extensions_dir, silent=silent)
 
     # ... when using sep directory for sources
     if d['sep']:
          build_cmakelists_dir(srcdir, force=True)
     # ...
 
-    initialize_project(base_dir, project, suffix, libname)
-    generate_project_main(srcdir, project, extensions)
+    # ...
+    generate_project_init(d['path'], project, **d)
+    generate_project_main(d['path'], project, extensions)
+    generate_project_conf(d['path'], project, **d)
     # ...
 
 def main(argv=sys.argv[1:]):

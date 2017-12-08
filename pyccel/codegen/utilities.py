@@ -481,6 +481,7 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
             print ('> converting {0}/{1}'.format(ext, f_name))
 
         module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
+        # TODO pass language as argument
         build_file(filename, language='fortran', compiler=None,
                    output_dir=output_dir, name=module_name)
     # ...
@@ -540,6 +541,32 @@ def initialize_project(base_dir, project, suffix, libname, prefix=None):
 # ...
 
 # ...
+def generate_project_init(srcdir, project, **settings):
+    """Generates a __init__.py file for the project."""
+    srcdir = os.path.join(srcdir, project)
+    mkdir_p(srcdir)
+
+    # ...
+    def _print_version(version):
+        if version is None:
+            return ''
+        elif isinstance(version, str) and (len(version) == 0):
+            return ''
+
+        return '__version__ = "{0}"'.format(version)
+
+    code = '# -*- coding: UTF-8 -*-'
+    code = '{0}\n{1}'.format(code, _print_version(settings['version']))
+
+    filename = os.path.join(srcdir, '__init__.py')
+    f = open(filename, 'w')
+    f.write(code)
+    f.close()
+    # ...
+
+# ...
+
+# ...
 def generate_project_main(srcdir, project, extensions, force=True):
     # ...
     from pyccel import codegen
@@ -568,3 +595,21 @@ def generate_project_main(srcdir, project, extensions, force=True):
         f.close()
     # ...
 # ...
+
+# ...
+def generate_project_conf(srcdir, project, **settings):
+    """Generates a conf.py file for the project."""
+    mkdir_p(srcdir)
+
+    # ...
+    code = '# -*- coding: UTF-8 -*-'
+#    code = '{0}\n{1}'.format(code, _print_version(settings['version']))
+
+    filename = os.path.join(srcdir, 'conf.py')
+    f = open(filename, 'w')
+    f.write(code)
+    f.close()
+    # ...
+
+# ...
+
