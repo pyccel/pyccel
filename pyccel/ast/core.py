@@ -2869,3 +2869,40 @@ class ClassHeader(Basic):
     def options(self):
         return self._args[1]
 
+# ... TODO move to ast
+from sympy import Integer as sp_Integer
+from sympy import Float   as sp_Float
+numbers = []
+
+def is_simple_assign(expr):
+    if not isinstance(expr, Assign):
+        return False
+
+    assignable  = [Variable, IndexedVariable, IndexedElement]
+    assignable += [sp_Integer, sp_Float]
+    assignable = tuple(assignable)
+    if isinstance(expr.rhs, assignable):
+        return True
+    else:
+        return False
+
+def is_valid_module(expr):
+    _module_stmt = (Comment, FunctionDef, ClassDef, \
+                    FunctionHeader, ClassHeader, MethodHeader)
+
+    if isinstance(expr, (tuple, list, Tuple)):
+        is_module = True
+        for stmt in expr:
+            if not is_valid_module(stmt):
+                is_module = False
+                break
+        return is_module
+    elif isinstance(expr, _module_stmt):
+        return True
+    elif isinstance(expr, Assign):
+        return is_simple_assign(expr)
+    else:
+        print('>>>> ', type(expr))
+        raise NotImplementedError('TODO.')
+# ...
+
