@@ -402,8 +402,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
-        # Group the variables by intent
 
+        code_value = ''
+        if expr.value:
+            code_value = ' = {0}'.format(expr.value)
+
+        # Group the variables by intent
         arg_types        = [type(v) for v in expr.variables]
         arg_ranks        = [v.rank for v in expr.variables]
         arg_allocatables = [v.allocatable for v in expr.variables]
@@ -445,8 +449,9 @@ class FCodePrinter(CodePrinter):
             decs.append('{0}, intent({1}) {2} :: {3} {4}'.
                         format(dtype, intent, allocatablestr, vstr, rankstr))
         else:
-            decs.append('{0}{1} :: {2} {3}'.
-                        format(dtype, allocatablestr, vstr, rankstr))
+            args = [dtype, allocatablestr, vstr, rankstr, code_value]
+            decs.append('{0}{1} :: {2} {3} {4}'.
+                        format(*args))
 
         return '\n'.join(decs)
 

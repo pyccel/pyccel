@@ -1759,6 +1759,8 @@ class Declare(Basic):
         Variables must be of the same type.
     intent: None, str
         one among {'in', 'out', 'inout'}
+    value: Expr
+        variable value
 
     Examples
 
@@ -1769,7 +1771,7 @@ class Declare(Basic):
     Declare(NativeDouble(), (x,), out)
     """
 
-    def __new__(cls, dtype, variables, intent=None):
+    def __new__(cls, dtype, variables, intent=None, value=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
@@ -1789,7 +1791,7 @@ class Declare(Basic):
         if intent:
             if not(intent in ['in', 'out', 'inout']):
                 raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-        return Basic.__new__(cls, dtype, variables, intent)
+        return Basic.__new__(cls, dtype, variables, intent, value)
 
     @property
     def dtype(self):
@@ -1802,6 +1804,10 @@ class Declare(Basic):
     @property
     def intent(self):
         return self._args[2]
+
+    @property
+    def value(self):
+        return self._args[3]
 
 class Break(Basic):
     """Represents a break in the code."""

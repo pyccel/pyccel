@@ -832,7 +832,8 @@ def insert_variable(var_name, \
                     intent=None, \
                     var=None, \
                     cls_base=None, \
-                    to_declare=True):
+                    to_declare=True, \
+                    value=None):
     """
     Inserts a variable as a symbol into the namespace. Appends also its
     declaration and the corresponding variable.
@@ -863,6 +864,9 @@ def insert_variable(var_name, \
 
     to_declare:
         declare the variable if True.
+
+    value: Expr
+        variable value
     """
     if type(var_name) in [int, float]:
         return
@@ -902,7 +906,7 @@ def insert_variable(var_name, \
                    cls_base=cls_base)
 
     # we create a declaration for code generation
-    dec = Declare(datatype, var, intent=intent)
+    dec = Declare(datatype, var, intent=intent, value=value)
 
     if var_name in namespace:
         namespace.pop(var_name)
@@ -1465,6 +1469,9 @@ class AssignStmt(BasicStmt):
                         print(("> Found an unallocated variable: ", var_name))
                     status = 'unallocated'
                     like = allocatable_like(rhs)
+
+            # TODO
+            d_var['value'] = rhs
             insert_variable(var_name, **d_var)
 
         if self.trailer is None:
