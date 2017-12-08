@@ -1470,7 +1470,7 @@ class AssignStmt(BasicStmt):
                     status = 'unallocated'
                     like = allocatable_like(rhs)
 
-            # TODO
+            # TODO set value on if simple assign
             d_var['value'] = rhs
             insert_variable(var_name, **d_var)
 
