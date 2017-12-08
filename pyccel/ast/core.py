@@ -13,7 +13,8 @@ from sympy.core.basic import Basic
 from sympy.core.function import Function
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul,Pow
-from sympy import Float as Sympy_Float
+from sympy import Integer as sp_Integer
+from sympy import Float   as sp_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.sets.fancysets import Range as sm_Range
@@ -2869,9 +2870,6 @@ class ClassHeader(Basic):
     def options(self):
         return self._args[1]
 
-# ... TODO move to ast
-from sympy import Integer as sp_Integer
-from sympy import Float   as sp_Float
 numbers = []
 
 def is_simple_assign(expr):
