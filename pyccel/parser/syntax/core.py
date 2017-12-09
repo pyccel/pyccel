@@ -3504,7 +3504,8 @@ class ImportFromStmt(BasicStmt):
         funcs = self.import_as_names
         if isinstance(funcs, ImportAsNames):
             funcs = funcs.names
-        funcs = str(funcs) # cast unicode to str
+        if not isinstance(funcs, (tuple, list)):
+            funcs = str(funcs) # cast unicode to str
 
         # TODO improve
         if str(fil) == 'pyccel.mpi':

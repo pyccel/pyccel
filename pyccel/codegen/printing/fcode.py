@@ -197,9 +197,14 @@ class FCodePrinter(CodePrinter):
 
         if not expr.funcs:
             return 'use {0}'.format(fil)
-        else:
+        elif isinstance(expr.funcs, str):
+            funcs = self._print(expr.funcs)
+            return 'use {0}, only: {1}'.format(fil, funcs)
+        elif isinstance(expr.funcs, (tuple, list, Tuple)):
             funcs = ', '.join(self._print(f) for f in expr.funcs)
             return 'use {0}, only: {1}'.format(fil, funcs)
+        else:
+            raise TypeError('Wrong type for funcs')
 
     def _print_Print(self, expr):
         Str=[]

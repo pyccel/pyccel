@@ -2906,7 +2906,6 @@ def is_valid_module(expr):
     elif isinstance(expr, Assign):
         return is_simple_assign(expr)
     else:
-        print('>>>> ', type(expr))
-        raise NotImplementedError('TODO.')
+        return False
 # ...
 

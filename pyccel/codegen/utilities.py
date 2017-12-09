@@ -633,7 +633,11 @@ def generate_project_main(srcdir, project, extensions, force=True):
 #        code_ext = 'from pyccelext.{0} import *'.format(ext)
 #        code = '{0}\n{1}'.format(code, code_ext)
 
-    code = 'x = 1'
+
+    code  = 'from pyccelext.math.constants import pi\n'
+    code += 'print(pi)\n'
+    code += 'x = 1\n'
+    code += 'print(x)\n'
 
     if force or (not os.path.isfile(dst)):
         f = open(dst, 'w')
