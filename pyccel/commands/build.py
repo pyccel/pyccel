@@ -140,10 +140,6 @@ def build(d, silent=False, force=True,
         if not info['is_module']:
             programs.append(f_name.split('.')[0])
 
-        print '++++++++++++++++++++++'
-        print info['namespaces']
-        print '++++++++++++++++++++++'
-
     # remove .pyccel temporary files
     if clean:
         os.system('rm {0}/*.pyccel'.format(output_dir))

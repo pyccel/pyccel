@@ -510,13 +510,9 @@ class Codegen(object):
         # ...
 
         # ...
-        print('> namespace_user = ', namespace_user)
         for key, dec in list(ast.declarations.items()):
             if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
-                # TODO loop over variables
-                var =  dec.variables[0]
-                if not(var.name in namespace_user):
-                    preludes += printer(dec) + "\n"
+                preludes += printer(dec) + "\n"
 
         def _construct_prelude(stmt):
             preludes = ''
@@ -532,7 +528,6 @@ class Codegen(object):
 
         preludes += _construct_prelude(stmts)
         # ...
-        print 'preludes = ', preludes
 
         # ...
         if not self.is_module:

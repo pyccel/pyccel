@@ -260,7 +260,10 @@ def build_file(filename, language, compiler, \
         for line in pyccel_code:
             f.write(line)
 
-        ls = ms + [codegen]
+        # this commented line must be removed.
+        # otherwise, we will print all used modules in the current file
+        #ls = ms + [codegen]
+        ls = [codegen]
         codes = [m.code for m in ls]
         for code in codes:
             for line in code:
