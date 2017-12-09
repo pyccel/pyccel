@@ -3,6 +3,8 @@
     Quickly setup a Pyccel source to work with pyccel.
 """
 
+# TODO: - enables testing extensions when invoking pyccel-quickstart
+
 import sys
 import os
 import argparse
