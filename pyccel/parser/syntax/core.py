@@ -1139,6 +1139,16 @@ class Pyccel(object):
                 d[key] = dec
         return d
 
+    # TODO write as a property
+    def get_namespace(self):
+        """
+        Returns the list of all namespace using objects from pyccel.ast.core
+        """
+        d = {}
+        for key,dec in list(namespace.items()):
+            d[key] = dec
+        return d
+
     @property
     def extra_stmts(self):
         """
