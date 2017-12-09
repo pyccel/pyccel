@@ -1,6 +1,7 @@
 # coding: utf-8
 
 # TODO: - parse/codegen dependencies only if a flag is True
+#       - use unique on files in print cmakelists
 
 import os
 import importlib
@@ -372,7 +373,8 @@ def load_module(filename, language="fortran", compiler="gfortran"):
 
 # ...
 def build_cmakelists(src_dir, libname, files,
-                     force=True, dep_libs=[],
+                     force=True,
+                     dep_libs=[],
                      programs=[]):
     # ...
     def _print_files(files):
@@ -438,7 +440,43 @@ def build_cmakelists(src_dir, libname, files,
 # ...
 
 # ...
-def build_cmakelists_dir(src_dir, force=True):
+def build_testing_cmakelists(src_dir, project, files,
+                             force=True,
+                             dep_libs=[]):
+    # ...
+    if (len(files) == 0):
+        return
+    # ...
+
+    # ...
+    code_deps = ' '.join(i for i in dep_libs)
+    code = ''
+    for f in files:
+        name = f.split('.')[0] # file name without extension
+
+        code_bin = 'test_{0}_{1}'.format(project, name)
+
+        code += '\n# ... {0}\n'.format(f)
+        code += 'ADD_EXECUTABLE({0} {1})\n'.format(code_bin, f)
+
+        if len(dep_libs) > 0:
+            code += 'TARGET_LINK_LIBRARIES({0} {1})\n'.format(code_bin, code_deps)
+
+        code += 'ADD_TEST( NAME {0} COMMAND {0} )\n'.format(code_bin)
+        code += '# ...\n'
+    # ...
+
+    setup_path = os.path.join(src_dir, 'CMakeLists.txt')
+    if force or (not os.path.isfile(setup_path)):
+        # ...
+        f = open(setup_path, 'w')
+        f.write(code)
+        f.close()
+        # ...
+# ...
+
+# ...
+def build_cmakelists_dir(src_dir, force=True, testing=False):
     if not os.path.exists(src_dir):
         raise ValueError('Could not find :{0}'.format(src_dir))
 
@@ -446,14 +484,22 @@ def build_cmakelists_dir(src_dir, force=True):
             if os.path.isdir(os.path.join(src_dir, f))]
 
     # ...
-    def _print_dirs(dirs):
-        code = '\n'.join('add_subdirectory({0})'.format(i) for i in dirs)
+    def _print_dirs(dirs, testing):
+        code = ''
+        for d in dirs:
+            code + '\n# ...\n'
+            code += 'add_subdirectory({0})\n'.format(d)
+            if testing:
+                code += 'IF(BUILD_TESTING)\n'
+                code += '  add_subdirectory({0}/testing)\n'.format(d)
+                code += 'ENDIF(BUILD_TESTING)\n'
+
         return code
     # ...
 
     # ...
     code = ''
-    code = '{0}\n{1}'.format(code, _print_dirs(dirs))
+    code = '{0}\n{1}'.format(code, _print_dirs(dirs, testing))
     # ...
 
     setup_path = os.path.join(src_dir, 'CMakeLists.txt')
@@ -495,8 +541,30 @@ def get_extension_path(ext, module=None):
     return filename
 # ...
 
+# ...
+def get_extension_testing_path(ext):
+    """Finds the path of a pyccel extension tests."""
+
+    extension = 'pyccelext_{0}'.format(ext)
+    try:
+        package = importlib.import_module(extension)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
+
+    ext_dir = str(package.__path__[0])
+
+    tests_dir = '{0}/testing'.format(ext_dir)
+
+    return tests_dir
+# ...
+
 # ...
-def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
+def load_extension(ext, output_dir,
+                   clean=True,
+                   modules=None,
+                   silent=True,
+                   language='fortran',
+                   testing=True):
     """
     Load module(s) from a given pyccel extension.
 
@@ -511,6 +579,10 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
         a list of modules or a module. every module must be a string.
     silent: bool
         talk more
+    language: str
+        target language
+    testing: bool
+        enable unit tests
 
     Examples
 
@@ -531,10 +603,12 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     # ...
 
     # ...
-    if not modules:
-        py_file     = lambda f: (f.split('.')[-1] == 'py')
-        ignore_file = lambda f: (os.path.basename(f) in ['__init__.py'])
+    ignore_file = lambda f: (os.path.basename(f) in ['__init__.py'])
+    py_file     = lambda f: (f.split('.')[-1] == 'py')
+    # ...
 
+    # ...
+    if not modules:
         files = [f for f in os.listdir(ext_dir) if py_file(f) and not ignore_file(f)]
         modules = [f.split('.')[0] for f in files]
     elif isinstance(modules, str):
@@ -549,9 +623,11 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
             print ('> converting extensions/{0}/{1}'.format(ext, f_name))
 
         module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
-        # TODO pass language as argument
-        build_file(filename, language='fortran', compiler=None,
-                   output_dir=output_dir, name=module_name)
+        build_file(filename,
+                   language=language,
+                   compiler=None,
+                   output_dir=output_dir,
+                   name=module_name)
     # ...
 
     # remove .pyccel temporary files
@@ -561,19 +637,53 @@ def load_extension(ext, output_dir, clean=True, modules=None, silent=True):
     # ... create CMakeLists.txt for the extension
     #     TODO add here valid files extensions
     valid_file = lambda f: (f.split('.')[-1] in ['f90'])
-
     files = [f for f in os.listdir(output_dir) if valid_file(f)]
 
     libname = extension
     # TODO add dependencies
     dep_libs = []
-    build_cmakelists(output_dir, libname=libname,
-                     files=files, dep_libs=dep_libs)
+    build_cmakelists(output_dir,
+                     libname=libname,
+                     files=files,
+                     dep_libs=dep_libs)
     # ...
 
     # ...
-    build_cmakelists_dir(base_dir)
+    if testing:
+        tests_dir = get_extension_testing_path(ext)
+
+        files = [f for f in os.listdir(tests_dir) if py_file(f) and not ignore_file(f)]
+
+        for f_name in files:
+            if not silent:
+                print ('> converting extensions/{0}/testing/{1}'.format(ext, f_name))
+
+            filename = os.path.join(tests_dir, f_name)
+            output_testing_dir = os.path.join(output_dir, 'testing')
+            mkdir_p(output_testing_dir)
+
+            build_file(filename,
+                       language=language,
+                       compiler=None,
+                       output_dir=output_testing_dir)
+
+        # remove .pyccel temporary files
+        if clean:
+            os.system('rm {0}/*.pyccel'.format(output_testing_dir))
+
+        valid_file = lambda f: (f.split('.')[-1] in ['f90'])
+        files = [f for f in os.listdir(output_testing_dir) if valid_file(f)]
+
+        dep_libs += [libname]
+        build_testing_cmakelists(output_testing_dir, ext,
+                                 files=files,
+                                 dep_libs=dep_libs)
     # ...
+
+    # ...
+    build_cmakelists_dir(base_dir, testing=testing)
+    # ...
+
 # ...
 
 # ...
