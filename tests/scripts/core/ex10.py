@@ -1,7 +1,5 @@
 # coding: utf-8
 
-from numpy import zeros
-
 w_u = zeros(4, double)
 w_v = zeros(4, double)
 

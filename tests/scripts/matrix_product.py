@@ -1,6 +1,5 @@
 # coding: utf-8
 
-from numpy import zeros
 
 n = 2
 m = 4

@@ -1,8 +1,5 @@
 # coding: utf-8
 
-from numpy import zeros
-from numpy import ones
-
 #$ header fd(double [:])
 def fd(x):
     z = zeros_like(x)

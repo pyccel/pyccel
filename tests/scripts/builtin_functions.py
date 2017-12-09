@@ -1,8 +1,5 @@
 # coding: utf-8
 
-from numpy import zeros
-from numpy import ones
-
 a1 = zeros(64, double)
 a2 = zeros(3,2)
 a3 = zeros(5, int)

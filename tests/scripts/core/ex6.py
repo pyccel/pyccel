@@ -1,6 +1,5 @@
 # coding: utf-8
 
-from numpy import zeros
 
 a = zeros(64, double)
 b = zeros(8, int)
