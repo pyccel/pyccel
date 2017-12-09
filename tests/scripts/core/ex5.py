@@ -6,14 +6,14 @@ def f(u,v):
     t = u - v
     return t
 
-#$ header g(double, double)
+#$ header g(double, double) results(double, double)
 def g(x,v):
     m = x - v
     t =  2.0 * m
     z =  2.0 * t
     return t, z
 
-#$ header fi(int, int)
+#$ header fi(int, int) results(int)
 def fi(x, n=5):
     y = x+1+n
     return y

@@ -1,7 +1,7 @@
 n=100
 #Pi_estime=acos(-1.0) # TODO not available yet
 
-#$ header f(double)
+#$ header f(double) results(double)
 def f(x):
     y = 1.0/(1.0 + x*x)
     return y

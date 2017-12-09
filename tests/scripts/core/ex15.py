@@ -3,7 +3,7 @@
 #        y[i] = x[i-1] - 2.0 * x[i] + x[i+1]
 #    y[n-1] = x[n-2] - 2.0 * x[n-1]
 
-#$ header A(double [:])
+#$ header A(double [:]) results(double [:])
 def A(x):
     y[0] = x[0] + 1.0
     return y

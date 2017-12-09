@@ -1,4 +1,7 @@
 # coding: utf-8
+
+# TODO: - for the moment we do not infer the results type
+
 import numpy as np
 from numpy import ndarray
 from numpy import asarray
@@ -2434,72 +2437,84 @@ class FunctionDefStmt(BasicStmt):
             d_var['intent']      = 'inout'
             insert_variable('self', **d_var)
 
-        if not(name in headers):
-            raise Exception('Function header could not be found for {0}.'
-                           .format(name))
-
-        if not(len(args) == len(headers[name].dtypes)):
-            raise Exception("Wrong number of arguments in the header.")
-
-        # old occurence of args will be stored in scope
-        scope_vars = {}
-        scope_decs = {}
-        h = headers[name]
-        arg_names = []
-        for a, d in zip(args, h.dtypes):
-            # case of arg with key
-            if isinstance(a, dict):
-                arg_name = a['key']
-            else:
-                arg_name = a
-            arg_names.append(arg_name)
-
-            if arg_name in namespace:
-                var = namespace.pop(arg_name)
-                dec = declarations.pop(arg_name)
-
-                scope_vars[arg_name] = var
-                scope_decs[arg_name] = dec
-
-            rank = 0
-            for i in d[1]:
-                if isinstance(i, Slice):
-                    rank += 1
-            d_var = {}
-            d_var['datatype']    = d[0]
-#            d_var['allocatable'] = False
-            d_var['allocatable'] = d[2]
-            d_var['shape']       = None
-            d_var['rank']        = rank
-            d_var['intent']      = 'in'
-            insert_variable(arg_name, **d_var)
-            var = namespace[arg_name]
-
-        body = self.body.expr
-
-        prelude = [declarations[a] for a in arg_names]
-
         # ...
         results = []
         for stmt in self.body.stmts:
             if isinstance(stmt, ReturnStmt):
                 results += stmt.expr
-
-        if (len(h.results) > 0) and not(len(results) == len(h.results)):
-            raise ValueError('Inconsistent header function with results.')
         # ...
+
+        # ...
+        h          = None
+        arg_names  = []
+
+        scope_vars = {}
+        scope_decs = {}
+        # ...
+
+        # ...
+        with_header = False
+        if (len(results) > 0) or (len(args) > 0):
+            if not(name in headers):
+                raise Exception('Function header could not be found for {0}.'
+                               .format(name))
+
+            if not(len(args) == len(headers[name].dtypes)):
+                raise Exception("Wrong number of arguments in the header.")
+
+            with_header = True
+
+        if with_header and (len(args) > 0):
+            # old occurence of args will be stored in scope
+            h = headers[name]
+            for a, d in zip(args, h.dtypes):
+                # case of arg with key
+                if isinstance(a, dict):
+                    arg_name = a['key']
+                else:
+                    arg_name = a
+                arg_names.append(arg_name)
+
+                if arg_name in namespace:
+                    var = namespace.pop(arg_name)
+                    dec = declarations.pop(arg_name)
+
+                    scope_vars[arg_name] = var
+                    scope_decs[arg_name] = dec
+
+                rank = 0
+                for i in d[1]:
+                    if isinstance(i, Slice):
+                        rank += 1
+                d_var = {}
+                d_var['datatype']    = d[0]
+    #            d_var['allocatable'] = False
+                d_var['allocatable'] = d[2]
+                d_var['shape']       = None
+                d_var['rank']        = rank
+                d_var['intent']      = 'in'
+                insert_variable(arg_name, **d_var)
+                var = namespace[arg_name]
+
+        body = self.body.expr
+
+        prelude = [declarations[a] for a in arg_names]
 
         # ... TODO improve
         for a in results:
-            if a.name in namespace:
-                var = namespace.pop(a.name)
-                dec = declarations.pop(a.name)
+            if a in namespace:
+                var = namespace.pop(a)
+                dec = declarations.pop(a)
 
-        if len(h.results) > 0:
+        # TODO: for the moment we do not infer the results type
+        if with_header and len(results) > 0:
+            if not(len(h.results) == len(results)):
+                raise ValueError('Incompatible results with header.')
+
             _results = []
             result_names = []
             for a, d in zip(results, h.results):
-                result_name = a.name
+                result_name = a
                 result_names.append(result_name)
 
                 rank = 0
@@ -2570,6 +2585,10 @@ class FunctionDefStmt(BasicStmt):
                            local_vars, global_vars, \
                            cls_name=cls_name)
         namespace[name] = stmt
+
+        # ... TODO add a call to is_compatible_header
+        #         the FunctionDef is created, and before the return
+
 #        print "*********** FunctionDefStmt.expr: End"
         return stmt
 

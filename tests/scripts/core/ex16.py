@@ -1,4 +1,4 @@
-#$ header f(double)
+#$ header f(double) results(double)
 def f(x):
     y=pow(x,3)
     return y
