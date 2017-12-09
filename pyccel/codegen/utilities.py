@@ -203,7 +203,6 @@ def build_file(filename, language, compiler, \
         print('========Fortran_Code========')
         print(s)
         print('============================')
-        print((">>> Codegen :", name, " done."))
 
     modules = codegen.modules
     # ...
