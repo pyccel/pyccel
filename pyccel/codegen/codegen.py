@@ -6,6 +6,9 @@ from sympy.core import Tuple
 
 from pyccel.codegen.printing import fcode
 
+from pyccel.parser.syntax.core import get_namespace
+from pyccel.parser.syntax.core import clean_namespace
+
 from pyccel.ast.core import subs
 from pyccel.ast.core import is_valid_module
 from pyccel.ast.core import DataType, DataTypeFactory
@@ -243,6 +246,7 @@ class Codegen(object):
         self._modules      = modules
         self._printer      = None
         self._output_dir   = output_dir
+        self._namespace    = None
 
     @property
     def filename(self):
@@ -319,6 +323,11 @@ class Codegen(object):
         """Returns the used printer"""
         return self._printer
 
+    @property
+    def namespace(self):
+        """Returns the namespace."""
+        return self._namespace
+
     def as_module(self):
         """Generate code as a module. Every extension must implement this method."""
         pass
@@ -358,7 +367,6 @@ class Codegen(object):
         classes  = ""
         modules  = []
 
-        namespace    = {}
         declarations = {}
         # ...
 
@@ -399,14 +407,17 @@ class Codegen(object):
 
         # ... TODO improve
         for i in user_modules:
-            print ('>>>>>>>>>>>>>> ', i)
             imports += "use {0}\n".format(i)
         # ...
 
         # ...
+        # old namespace
+        namespace_user = get_namespace()
+
         stmts = ast.expr
-        nm = ast.get_namespace()
-        print nm
+
+        # new namespace
+        self._namespace = ast.get_namespace() # TODO do not user ast
         # ...
 
         # ...
@@ -498,12 +509,14 @@ class Codegen(object):
                     raise Exception('Statement not yet handled.')
         # ...
 
-#        import sys; sys.exit(0)
-
         # ...
+        print('> namespace_user = ', namespace_user)
         for key, dec in list(ast.declarations.items()):
             if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
-                preludes += printer(dec) + "\n"
+                # TODO loop over variables
+                var =  dec.variables[0]
+                if not(var.name in namespace_user):
+                    preludes += printer(dec) + "\n"
 
         def _construct_prelude(stmt):
             preludes = ''
@@ -519,6 +532,7 @@ class Codegen(object):
 
         preludes += _construct_prelude(stmts)
         # ...
+        print 'preludes = ', preludes
 
         # ...
         if not self.is_module:
@@ -534,6 +548,10 @@ class Codegen(object):
 #                    is_module = False
 #                    break
 #        # ...
+
+        # ... cleaning
+        clean_namespace()
+        # ...
 
         # ...
         self._ast       = ast

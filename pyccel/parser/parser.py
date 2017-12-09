@@ -105,9 +105,7 @@ class Parser(object):
 
         debug: bool
             True if in debug mode.
-
         """
-
         # ... read the grammar from a file
         self.model = metamodel_from_file(filename, debug=debug, classes=classes)
         # ...
@@ -118,9 +116,7 @@ class Parser(object):
         instructions: list
             list of instructions to parse.
         """
-        # ... parse the DSL code
-        return  self.model.model_from_str(instructions)
-        # ...
+        return self.model.model_from_str(instructions)
 
     def parse_from_file(self, filename):
         """Parse a set of instructions with respect to the grammar.

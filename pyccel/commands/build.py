@@ -106,10 +106,14 @@ files can be built by specifying individual filenames.
     return parser
 
 
+# TODO default debug should be True for the moment
 def build(d, silent=False, force=True,
           dep_libs=[], dep_extensions=['math'],
-          clean=True):
+          clean=True, debug=True):
     """Generates the project from a dictionary."""
+    if not debug:
+        sys.tracebacklimit = 0
+
     conf_filename = os.path.join(os.getcwd(), 'conf.py')
     if not os.path.exists(conf_filename):
         raise ValueError('Could not find conf.py file.'
@@ -135,6 +139,10 @@ def build(d, silent=False, force=True,
         info = build_file(filename, language=language, compiler=None, output_dir=output_dir)
         if not info['is_module']:
             programs.append(f_name.split('.')[0])
+
+        print '++++++++++++++++++++++'
+        print info['namespaces']
+        print '++++++++++++++++++++++'
 
     # remove .pyccel temporary files
     if clean:

@@ -148,6 +148,14 @@ known_functions = {
 # TODO: treat the inout case
 
 # ...
+def get_namespace():
+    """Returns the global variable namespace."""
+    global namespace
+
+    return namespace
+# ...
+
+# ...
 def clean_namespace():
     """Cleans the global variables."""
     global namespace
@@ -161,6 +169,18 @@ def clean_namespace():
     cls_constructs = {}
     class_defs     = {}
     _extra_stmts   = []
+# ...
+
+# ...
+def update_namespace(d):
+    """Updates the global variables."""
+    global namespace
+
+    for k,v in d.items():
+        if k in namespace:
+            raise ValueError('{0} already exists in namespace.'.format(k))
+
+        namespace[k] = v
 # ...
 
 # ...

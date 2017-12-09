@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# TODO: - parse/codegen dependencies only if a flag is True
+
 import os
 import importlib
 import numpy as np
@@ -114,6 +116,7 @@ def build_file(filename, language, compiler, \
     end
     ============================
     """
+#    print('>>>> calling build_file for {0}'.format(filename))
     # ...
     with_mpi = False
     if compiler:
@@ -144,7 +147,9 @@ def build_file(filename, language, compiler, \
 
     # ...
     def _ignore_module(key):
-        return np.asarray([key.startswith(i) for i in ignored_modules]).any()
+        pattern = lambda s: '{0}.'.format(s)
+
+        return np.asarray([key.startswith(pattern(i)) for i in ignored_modules]).any()
     # ...
 
     d = find_imports(filename=filename)
@@ -177,27 +182,46 @@ def build_file(filename, language, compiler, \
 
 #    print ignored_modules
 #    print d
-#    print imports
+#    print '>>>> imports : ', imports
 #    if len(d) > 0:
 #        import sys; sys.exit(0)
     #...
 
     # ...
+    namespaces = {}
+    namespace_user = {}
     ms = []
     for module, names in list(imports.items()):
-        filename = imports_src[module][0] #TODO loop over files
-        codegen_m = FCodegen(filename=filename, name=module, is_module=True,
-                            output_dir=output_dir)
-        codegen_m.doprint(language=language, accelerator=accelerator, \
-                          ignored_modules=ignored_modules, \
+        f_name = imports_src[module][0] #TODO loop over files
+        codegen_m = FCodegen(filename=f_name,
+                             name=module,
+                             is_module=True,
+                             output_dir=output_dir)
+        codegen_m.doprint(language=language,
+                          accelerator=accelerator,
+                          ignored_modules=ignored_modules,
                           with_mpi=with_mpi)
         ms.append(codegen_m)
+        namespaces[module] = codegen_m.namespace
+        for n in names:
+            namespace_user[n] = namespaces[module][n]
 
-    codegen = FCodegen(filename=filename, name=name, output_dir=output_dir)
-    s=codegen.doprint(language=language, accelerator=accelerator, \
-                      ignored_modules=ignored_modules, with_mpi=with_mpi, \
-                      pyccel_modules=pyccel_modules, \
+        # TODO add aliases or what to import (names)
+
+    from pyccel.parser.syntax.core import update_namespace
+    update_namespace(namespace_user)
+
+    codegen = FCodegen(filename=filename,
+                       name=name,
+                       output_dir=output_dir)
+    s=codegen.doprint(language=language,
+                      accelerator=accelerator,
+                      ignored_modules=ignored_modules,
+                      with_mpi=with_mpi,
+                      pyccel_modules=pyccel_modules,
                       user_modules=user_modules)
+    # TODO shall we use another key?
+    namespaces[filename] = codegen.namespace
 
     if show:
         print('========Fortran_Code========')
@@ -276,7 +300,8 @@ def build_file(filename, language, compiler, \
 
     # ...
     info = {}
-    info['is_module'] = codegen.is_module
+    info['is_module']  = codegen.is_module
+    info['namespaces'] = namespaces
     # ...
 
     return info
@@ -633,8 +658,8 @@ def generate_project_main(srcdir, project, extensions, force=True):
 #        code = '{0}\n{1}'.format(code, code_ext)
 
 
-    code  = 'from pyccelext.math.constants import pi\n'
-    code += 'print(pi)\n'
+    code  = 'from pyccelext.math.constants import ppi\n'
+    code += 'print(ppi)\n'
     code += 'x = 1\n'
     code += 'print(x)\n'
 
