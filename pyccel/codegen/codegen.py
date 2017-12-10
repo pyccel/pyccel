@@ -334,7 +334,17 @@ class Codegen(object):
     @property
     def namespace(self):
         """Returns the namespace."""
-        return self._namespace
+        if not self._is_header:
+            return self._namespace
+
+        # in the case of a header file, we need to convert the headers to
+        # FunctionDef or ClassCef
+        namespace = self._namespace
+        for k,v in self.headers.items():
+            f = v.create_definition()
+            namespace[k] = f
+
+        return namespace
 
     @property
     def headers(self):

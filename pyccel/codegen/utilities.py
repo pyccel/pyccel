@@ -222,14 +222,8 @@ def build_file(filename, language, compiler, \
                       pyccel_modules=pyccel_modules,
                       user_modules=user_modules)
 
-    # ...
-    namespace = codegen.namespace
-    if codegen.is_header:
-        for k,v in codegen.headers.items():
-            f = v.create_definition()
-            namespace[k] = f
-    # TODO shall we use another key?
-    namespaces[filename] = namespace
+    # ... TODO shall we use another key?
+    namespaces[filename] = codegen.namespace
     # ...
 
     if show and (not codegen.is_header):
