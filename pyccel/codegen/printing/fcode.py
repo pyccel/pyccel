@@ -1280,10 +1280,10 @@ class FCodePrinter(CodePrinter):
                 'end type {1}').format(code, name)
 
         # we rename all methods because of the aliasing
-        cls_methods = [i.rename('{0}_{1}'.format(name, i.name)) for i in expr.methods]
+        cls_methods = [i.rename('{0}'.format(i.name)) for i in expr.methods]
         methods = '\n'.join(self._print(i) for i in cls_methods)
 
-        return decs, methods
+        return decs+' \n contains \n'+methods
 
     def _print_Break(self,expr):
         return 'exit'

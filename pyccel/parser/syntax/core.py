@@ -2428,14 +2428,17 @@ class FunctionDefStmt(BasicStmt):
         global_vars = []
 
         cls_instance = None
+        args_0=None
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
-
+        
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
             # remove self from args
-            args = args[1:]
+            if args[0]=='self':
+                args_0='self'
+                args = args[1:]
 
             # insert self to namespace
             d_var = {}
@@ -2498,15 +2501,30 @@ class FunctionDefStmt(BasicStmt):
                         rank += 1
                 d_var = {}
                 d_var['datatype']    = d[0]
-    #            d_var['allocatable'] = False
-                d_var['allocatable'] = d[2]
+                d_var['allocatable'] = False
+    #            d_var['allocatable'] = d[2]
                 d_var['shape']       = None
                 d_var['rank']        = rank
                 d_var['intent']      = 'in'
                 insert_variable(arg_name, **d_var)
                 var = namespace[arg_name]
-
+        if self.name=='__init__':
+            attr=[]
+            for i in self.body.stmts:
+                if isinstance(i,AssignStmt) and i.lhs=='self':
+                    
+                    c={'lhs':i.trailer.expr,'rhs':i.rhs}
+                    Var=AssignStmt(**c).expr
+                    attr+=[Var.lhs]
+            cls=ClassDef(cls_instance,attr,[],[])
+            namespace[cls_instance]=cls
+            class_defs[cls_instance]=cls
+            
+                    
         body = self.body.expr
+        if args_0:
+            arg_names+=['self']
+            
 
         prelude = [declarations[a] for a in arg_names]
 
@@ -2555,6 +2573,8 @@ class FunctionDefStmt(BasicStmt):
                 _args.append(a)
         args = _args
         # ...
+        if args_0:
+            args=[args_0]+args
 
         # ... cleaning the namespace
         for a in arg_names:
@@ -2642,15 +2662,9 @@ class ClassDefStmt(BasicStmt):
         body    = self.body.expr
 
         # ...
-        attributs = []
+        attributs =class_defs[name].attributs
         d = {}
-        for key,v in list(namespace.items()):
-            if key.startswith('self.'):
-                d[key] = v
-                n = key.split('self.')[-1]
-                var = v.clone(n)
-                attributs.append(var)
-        # ...
+        
 
         methods = []
         for stmt in body:
