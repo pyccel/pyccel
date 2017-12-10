@@ -6,6 +6,8 @@
 import os
 import importlib
 import numpy as np
+from shutil import copyfile
+
 
 from pyccel.parser.utilities import find_imports
 from pyccel.codegen.codegen  import FCodegen
@@ -560,9 +562,25 @@ def get_extension_testing_path(ext):
 
     ext_dir = str(package.__path__[0])
 
-    tests_dir = '{0}/testing'.format(ext_dir)
+    return '{0}/testing'.format(ext_dir)
+# ...
 
-    return tests_dir
+# ...
+def get_extension_external_path(ext):
+    """Finds the path of a pyccel extension external files.
+
+    an external file to pyccel, is any low level code associated to its
+    header(s)."""
+
+    extension = 'pyccelext_{0}'.format(ext)
+    try:
+        package = importlib.import_module(extension)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
+
+    ext_dir = str(package.__path__[0])
+
+    return '{0}/external'.format(ext_dir)
 # ...
 
 # ...
@@ -609,9 +627,11 @@ def load_extension(ext, output_dir,
     ext_dir   = get_extension_path(ext)
     # ...
 
-    # ...
-    ignore_file = lambda f: (os.path.basename(f) in ['__init__.py'])
-    py_file     = lambda f: (f.split('.')[-1] == 'py')
+    # ... TODO create a list for valid external files
+    ignore_file   = lambda f: (os.path.basename(f) in ['__init__.py'])
+    py_file       = lambda f: (f.split('.')[-1] == 'py')
+    pyh_file      = lambda f: (f.split('.')[-1] == 'pyh')
+    external_file = lambda f: (f.split('.')[-1] in ['f90', 'F90', 'f'])
     # ...
 
     # ...
@@ -645,7 +665,26 @@ def load_extension(ext, output_dir,
     #     TODO add here valid files extensions
     valid_file = lambda f: (f.split('.')[-1] in ['f90'])
     files = [f for f in os.listdir(output_dir) if valid_file(f)]
+    # ...
 
+    # ... update files list for external files
+    if os.path.isdir(os.path.join(ext_dir, 'external')):
+        external_dir = get_extension_external_path(ext)
+
+        external_files = [f for f in os.listdir(external_dir) if
+                          external_file(f) and not ignore_file(f)]
+
+        files = external_files + files
+
+        # copy external files to output_dir
+        for f_name in external_files:
+            f_src = os.path.join(external_dir, f_name)
+            f_dst = os.path.join(output_dir, f_name)
+
+            copyfile(f_src, f_dst)
+    # ...
+
+    # ...
     libname = extension
     # TODO add dependencies
     dep_libs = []
@@ -690,7 +729,6 @@ def load_extension(ext, output_dir,
     # ...
     build_cmakelists_dir(base_dir, testing=testing)
     # ...
-
 # ...
 
 # ...
