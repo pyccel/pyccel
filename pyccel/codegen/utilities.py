@@ -177,15 +177,19 @@ def build_file(filename, language, compiler, \
                     else:
                         raise ValueError('non valid import for pyccel extensions.')
             else:
-                f_name = '{0}.py'.format(n)
+                filename_py  = '{0}.py'.format(module)
+                filename_pyh = '{0}.pyh'.format(module)
+
+                if os.path.isfile(filename_py):
+                    f_name = filename_py
+                elif os.path.isfile(filename_pyh):
+                    f_name = filename_pyh
+                else:
+                    raise ValueError('Could not find '
+                                     '{0} or {1}'.format(filename_py, filename_pyh))
+
             f_names.append(f_name)
         imports_src[module] = f_names
-
-#    print ignored_modules
-#    print d
-#    print '>>>> imports : ', imports
-#    if len(d) > 0:
-#        import sys; sys.exit(0)
     #...
 
     # ...

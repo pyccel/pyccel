@@ -10,3 +10,5 @@ TODO
 * improve function headers (raise Exception NotImplemented when we have to type inference)
 
 * add a condition on pyccel valid input files : *.py* and *.pyh*
+
+* bug in *bsplines/make_knots*: **j=i-p** converted to **j=i**

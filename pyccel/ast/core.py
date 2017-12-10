@@ -2807,6 +2807,7 @@ class FunctionHeader(Basic):
         cls_name  = None
         hide      = False
         kind      = self.kind
+#        kind      = 'procedure'
         imports   = []
 
         args = []
