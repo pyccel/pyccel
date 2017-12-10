@@ -444,7 +444,7 @@ class FCodePrinter(CodePrinter):
         # TODO: it would be great to use allocatable but then we have to pay
         #       attention to the starting index (in the case of 0 for example).
         #       this is the reason why we print 'pointer' instead of 'allocatable'
-        if allocatable:
+        if allocatable or rank > 0:
 #            allocatablestr = ', allocatable'
             allocatablestr = ', pointer'
         else:
@@ -1131,7 +1131,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        is_subroutine = ((len(expr.results) == 1) and (expr.results[0].allocatable))
+        #is_subroutine = ((len(expr.results) == 1) and (expr.results[0].allocatable))
+        is_subroutine = ((len(expr.results) == 1) and (expr.results[0].rank > 0))
         is_subroutine = is_subroutine or (len(expr.results) > 1)
         is_subroutine = is_subroutine or (len(expr.results) == 0)
         # ...
@@ -1140,6 +1141,7 @@ class FCodePrinter(CodePrinter):
         func_end  = ''
         if not is_subroutine:
             result = expr.results[0]
+            # TODO uncomment and validate this
 #            expr = subs(expr, result, str(expr.name))
 
             body = []
@@ -1190,37 +1192,6 @@ class FCodePrinter(CodePrinter):
                         decs.append(stmt)
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
-#        else:
-#            # TODO remove this part
-#            for result in expr.results:
-#                arg = Variable(result.dtype, result.name, \
-#                                  rank=result.rank, \
-#                                  allocatable=result.allocatable, \
-#                                  shape=result.shape)
-#
-#                out_args.append(arg)
-#
-#                dec = Declare(result.dtype, arg)
-#                decs.append(dec)
-#            sig = 'subroutine ' + name
-#            func_type = 'subroutine'
-#
-#            names = [str(res.name) for res,i in expr.results]
-#            decs += [Declare(i.dtype, i) for i in expr.arguments]
-##            decs += [Declare(i.dtype, i) for i in expr.arguments + expr.local_vars]
-#
-#            body = []
-#            for stmt in expr.body:
-#                if isinstance(stmt, Declare):
-#                    # TODO improve
-#                    nm = str(stmt.variables[0].name)
-#                    if not(nm in names):
-#                        decs.append(stmt)
-#                elif not isinstance(stmt, list): # for list of Results
-#                    body.append(stmt)
-##        else:
-##            sig = 'subroutine ' + name
-##            func_type = 'subroutine'
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
             if i in out_args:
