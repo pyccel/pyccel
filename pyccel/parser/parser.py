@@ -17,13 +17,12 @@ from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        RangeStmt, ParallelRangeStmt, \
                                        IfStmt, ForStmt, WhileStmt, ParallelBlockStmt, \
                                        FunctionDefStmt, ClassDefStmt, \
+                                       CallStmt, \
                                        CommentStmt, SuiteStmt, \
                                        EvalStmt, \
                                        # Multi-threading
                                        ThreadStmt, \
                                        StencilStmt, \
-                                       # python standard library statements
-                                       PythonPrintStmt, \
                                        # test bool
                                        Test, OrTest, AndTest, NotTest, Comparison, \
                                        # Trailers
@@ -201,14 +200,13 @@ class PyccelParser(Parser):
                    RangeStmt, ParallelRangeStmt, \
                    IfStmt, ForStmt, WhileStmt, ParallelBlockStmt, \
                    FunctionDefStmt, ClassDefStmt, \
+                   CallStmt, \
                    ImportFromStmt, ImportAsNames, \
                    CommentStmt, SuiteStmt, \
                    EvalStmt, \
                    # Multi-threading
                    ThreadStmt, \
                    StencilStmt, \
-                   # python standard library statements
-                   PythonPrintStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers

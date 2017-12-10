@@ -1131,15 +1131,9 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        #is_subroutine = ((len(expr.results) == 1) and (expr.results[0].allocatable))
-        is_subroutine = ((len(expr.results) == 1) and (expr.results[0].rank > 0))
-        is_subroutine = is_subroutine or (len(expr.results) > 1)
-        is_subroutine = is_subroutine or (len(expr.results) == 0)
-        # ...
-
         body = expr.body
         func_end  = ''
-        if not is_subroutine:
+        if not expr.is_procedure:
             result = expr.results[0]
             # TODO uncomment and validate this
 #            expr = subs(expr, result, str(expr.name))
@@ -1511,9 +1505,12 @@ class FCodePrinter(CodePrinter):
         code_args = ''
         if not(expr.arguments) is None:
             code_args = ', '.join(self._print(i) for i in expr.arguments)
+
         code = '{0}({1})'.format(name, code_args)
-#        print (code)
-#        import sys; sys.exit(0)
+
+        if func.is_procedure:
+            code = 'call {0}'.format(code)
+
         return self._get_statement(code)
 
     def _print_MethodCall(self, expr):

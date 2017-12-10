@@ -18,7 +18,6 @@
 //       -  
 //       -  
 //       -  
-//       -  
 
 import openmp
 import imports
@@ -46,7 +45,6 @@ SmallStmt:
   | ConstructorStmt 
   | DeclarationStmt 
   | ExprStmt 
-  | PythonStdLibStmt
 ;
 
 FlowStmt:
@@ -81,6 +79,7 @@ ExprStmt:
   | AssignStmt 
   | AugAssignStmt 
   | MultiAssignStmt
+  | CallStmt 
 ;
 
 SuiteStmt: 
@@ -108,6 +107,11 @@ ClassDefStmt:
   CLASS name=ID '(' base=ID ')' ':'
   body=SuiteStmt
 ;
+
+CallStmt: 
+  name=ID trailer=TrailerArgList
+;
+
 
 PassStmt: label=PASS;
 BreakStmt: label=BREAK;
@@ -163,9 +167,6 @@ IdentifierOrNumber: Number | ID;
 
 ArgList: '(' args+=Args[','] ')';
 Args: ArgList | DictElement | IdentifierOrNumber;
-
-// TODO: remove
-PythonStdLibStmt: PythonPrintStmt;
 
 PythonPrintStmt: name='print' '('   (args+=PrintStmt[',']) ')';
 PrintStmt: STRING | Expression;

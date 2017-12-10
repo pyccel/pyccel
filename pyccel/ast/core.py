@@ -1531,6 +1531,16 @@ class FunctionDef(Basic):
                 args.append(i.value)
         return FunctionCall(self, args)
 
+    @property
+    def is_procedure(self):
+        """Returns True if a procedure."""
+        #flag = ((len(self.results) == 1) and (self.results[0].allocatable))
+        flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
+        flag = flag or (len(self.results) > 1)
+        flag = flag or (len(self.results) == 0)
+
+        return flag
+
     def is_compatible_header(self, header):
         """
         Returns True if the header is compatible with the given FunctionDef.

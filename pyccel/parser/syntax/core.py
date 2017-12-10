@@ -230,6 +230,8 @@ cls_constructs   = {}
 class_defs       = {}
 
 # ... builtin functions
+builtin_funcs_math_nores = ['print']
+
 builtin_funcs_math_un = ['abs', \
 #                         'asin', 'acsc', 'acot', \
 #                         'acos', 'asec', \
@@ -2660,46 +2662,6 @@ class ClassDefStmt(BasicStmt):
 
         return stmt
 
-class PythonPrintStmt(BasicStmt):
-    """Class representing a Print statement as described in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Print statement.
-
-        name: str
-            is equal to 'print'
-        args: list
-            list of atoms to print
-        """
-        self.name = kwargs.pop('name')
-        self.args = kwargs.pop('args')
-
-        super(PythonPrintStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the Print statement,
-        by returning the appropriate object from pyccel.ast.core
-        """
-        self.update()
-
-        func_name   = self.name
-        args        = self.args
-        expressions=[]
-
-#        print_namespace()
-#        print namespace['f']
-#        print namespace['g']
-
-        for arg in args:
-            if not isinstance(arg,str):
-               expressions.append(arg.expr)
-            else:
-                expressions.append(arg)
-        return Print(expressions)
-
 class CommentStmt(BasicStmt):
     """Class representing a Comment in the grammar."""
 
@@ -3608,3 +3570,69 @@ class ImportAsNames(BasicStmt):
         self.names = kwargs.pop('names')
 
         super(ImportAsNames, self).__init__(**kwargs)
+
+class CallStmt(BasicStmt):
+    """Class representing the call to a function in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the call to a function.
+
+        name: str
+            name of the function
+        args: list
+            list of the function arguments
+        """
+        self.name    = kwargs.pop('name')
+        self.trailer = kwargs.pop('trailer')
+
+        super(CallStmt, self).__init__(**kwargs)
+
+    # TODO scope
+    @property
+    def expr(self):
+
+        """
+        Process the Function Definition by returning the appropriate object from
+        pyccel.ast.core
+        """
+        f_name = str(self.name)
+        args = self.trailer.expr
+
+        # ... replace dict by ValuedVariable
+        _args = []
+        for a in args:
+            if isinstance(a, dict):
+                var = namespace[a['key']]
+                # TODO trea a['value'] correctly
+                _args.append(ValuedVariable(var, a['value']))
+            else:
+                _args.append(a)
+        args = _args
+        # ...
+
+        # ...
+        if not(f_name in namespace) and not(f_name in builtin_funcs_math_nores):
+            raise ValueError("Undefined function call {}.".format(f_name))
+        # ...
+
+        # ...
+        if f_name in namespace:
+            F = namespace[f_name]
+            if not(isinstance(F, FunctionDef)):
+                raise TypeError("Expecting a FunctionDef")
+
+            if len(F.results) > 0:
+                raise ValueError("Expecting no results")
+
+            return FunctionCall(F, args, kind=None)
+        # ...
+
+        # ... now f_name should be a builtin function without results
+        if f_name == 'print':
+            expressions=[]
+
+            for arg in args:
+               expressions.append(arg)
+            return Print(expressions)
+        # ...
