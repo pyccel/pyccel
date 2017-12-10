@@ -221,10 +221,18 @@ def build_file(filename, language, compiler, \
                       with_mpi=with_mpi,
                       pyccel_modules=pyccel_modules,
                       user_modules=user_modules)
-    # TODO shall we use another key?
-    namespaces[filename] = codegen.namespace
 
-    if show:
+    # ...
+    namespace = codegen.namespace
+    if codegen.is_header:
+        for k,v in codegen.headers.items():
+            f = v.create_definition()
+            namespace[k] = f
+    # TODO shall we use another key?
+    namespaces[filename] = namespace
+    # ...
+
+    if show and (not codegen.is_header):
         print('========Fortran_Code========')
         print(s)
         print('============================')
@@ -232,52 +240,53 @@ def build_file(filename, language, compiler, \
     modules = codegen.modules
     # ...
 
-    # ...
+    # ... TODO improve and remove single_file
     if single_file:
-        # ... create a Module for pyccel extra definitions
-        pyccel_vars    = []
-        pyccel_funcs   = []
-        pyccel_classes = []
+        if not codegen.is_header:
+            # ... create a Module for pyccel extra definitions
+            pyccel_vars    = []
+            pyccel_funcs   = []
+            pyccel_classes = []
 
-        stmts = codegen.ast.extra_stmts
-        pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
-        pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
+            stmts = codegen.ast.extra_stmts
+            pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
+            pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
 
-        pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
-        if pyccel_vars or pyccel_funcs or pyccel_classes:
-            pyccel_stmts += [Module('m_pyccel', \
-                                    pyccel_vars, \
-                                    pyccel_funcs, \
-                                    pyccel_classes)]
+            pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
+            if pyccel_vars or pyccel_funcs or pyccel_classes:
+                pyccel_stmts += [Module('m_pyccel', \
+                                        pyccel_vars, \
+                                        pyccel_funcs, \
+                                        pyccel_classes)]
 
-        pyccel_code = ''
-        for stmt in pyccel_stmts:
-            pyccel_code += codegen.printer(stmt) + "\n"
-        # ...
+            pyccel_code = ''
+            for stmt in pyccel_stmts:
+                pyccel_code += codegen.printer(stmt) + "\n"
+            # ...
 
-        # ...
-        f = open(codegen.filename_out, "w")
+            # ...
+            f = open(codegen.filename_out, "w")
 
-        for line in pyccel_code:
-            f.write(line)
-
-        # this commented line must be removed.
-        # otherwise, we will print all used modules in the current file
-        #ls = ms + [codegen]
-        ls = [codegen]
-        codes = [m.code for m in ls]
-        for code in codes:
-            for line in code:
+            for line in pyccel_code:
                 f.write(line)
 
-        f.close()
-        # ...
+            # this commented line must be removed.
+            # otherwise, we will print all used modules in the current file
+            #ls = ms + [codegen]
+            ls = [codegen]
+            codes = [m.code for m in ls]
+            for code in codes:
+                for line in code:
+                    f.write(line)
+
+            f.close()
+            # ...
     else:
         raise NotImplementedError('single_file must be True')
     # ...
 
     # ...
-    if compiler:
+    if compiler and (not codegen.is_header):
         for codegen_m in ms:
             compiler_m = Compiler(codegen_m, \
                                   compiler=compiler, \

@@ -2710,6 +2710,7 @@ class Stencil(Basic):
     def step(self):
         return self._args[2]
 
+# TODO rename dtypes to arguments
 class FunctionHeader(Basic):
     """Represents function/subroutine header in the code.
 
@@ -2796,6 +2797,39 @@ class FunctionHeader(Basic):
     @property
     def kind(self):
         return self._args[3]
+
+    def create_definition(self):
+        """Returns a FunctionDef with empy body."""
+
+        name = str(self.func)
+
+        body      = []
+        cls_name  = None
+        hide      = False
+        kind      = self.kind
+        imports   = []
+
+        args = []
+        for i,d in enumerate(self.dtypes):
+            dtype = d[0]
+            arg_name = 'arg_{0}'.format(str(i))
+            arg = Variable(dtype, arg_name)
+            args.append(arg)
+
+        results = []
+        for i,d in enumerate(self.results):
+            dtype = d[0]
+            result_name = 'result_{0}'.format(str(i))
+            result = Variable(dtype, result_name)
+            results.append(result)
+
+        return FunctionDef(name, args, results, body,
+                           local_vars=[],
+                           global_vars=[],
+                           cls_name=cls_name,
+                           hide=hide,
+                           kind=kind,
+                           imports=imports)
 
 class MethodHeader(FunctionHeader):
     """Represents method header in the code.

@@ -151,6 +151,14 @@ known_functions = {
 # TODO: treat the inout case
 
 # ...
+def get_headers():
+    """Returns the global variable headers."""
+    global headers
+
+    return headers
+# ...
+
+# ...
 def get_namespace():
     """Returns the global variable namespace."""
     global namespace

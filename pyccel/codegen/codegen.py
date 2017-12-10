@@ -6,6 +6,7 @@ from sympy.core import Tuple
 
 from pyccel.codegen.printing import fcode
 
+from pyccel.parser.syntax.core import get_headers
 from pyccel.parser.syntax.core import get_namespace
 from pyccel.parser.syntax.core import clean_namespace
 
@@ -219,8 +220,13 @@ class Codegen(object):
         # ... TODO improve once TextX will handle indentation
         clean(filename)
 
+        # check if the file is a header
+        is_header = (filename.split('.')[-1] == 'pyh')
+
         filename_tmp = make_tmp_file(filename, output_dir=output_dir)
         preprocess(filename, filename_tmp)
+
+        # file extension is changed to .pyccel
         filename = filename_tmp
         # ...
 
@@ -247,6 +253,8 @@ class Codegen(object):
         self._printer      = None
         self._output_dir   = output_dir
         self._namespace    = None
+        self._headers      = None
+        self._is_header    = is_header
 
     @property
     def filename(self):
@@ -327,6 +335,16 @@ class Codegen(object):
     def namespace(self):
         """Returns the namespace."""
         return self._namespace
+
+    @property
+    def headers(self):
+        """Returns the headers."""
+        return self._headers
+
+    @property
+    def is_header(self):
+        """Returns True if generated code is a header"""
+        return self._is_header
 
     def as_module(self):
         """Generate code as a module. Every extension must implement this method."""
@@ -417,7 +435,9 @@ class Codegen(object):
         stmts = ast.expr
 
         # new namespace
-        self._namespace = ast.get_namespace() # TODO do not user ast
+#        self._namespace = ast.get_namespace() # TODO do not user ast
+        self._namespace = get_namespace()
+        self._headers   = get_headers()
         # ...
 
         # ...
