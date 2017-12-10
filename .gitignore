@@ -7,6 +7,13 @@ build
 *dist*
 
 doc/_build
+
+
+*.pyccel
+*.f90
+*.mod
+*.o
+
 tests/*.pyccel
 tests/*.f90
 tests/*.mod
