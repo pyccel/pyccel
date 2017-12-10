@@ -9,11 +9,23 @@ build
 doc/_build
 tests/*.pyccel
 tests/*.f90
+tests/*.mod
+tests/*.o
+tests/scripts/*.pyccel
+tests/scripts/*.f90
+tests/scripts/*.mod
+tests/scripts/*.o
 tests/scripts/core/*.pyccel
 tests/scripts/core/*.f90
+tests/scripts/core/*.mod
+tests/scripts/core/*.o
 
 tests/examples/*.pyccel
 tests/examples/*.f90
+tests/examples/*.mod
+tests/examples/*.o
 tests/examples/openmp/*.pyccel
 tests/examples/openmp/*.f90
+tests/examples/openmp/*.mod
+tests/examples/openmp/*.o
 
