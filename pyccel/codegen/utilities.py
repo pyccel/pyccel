@@ -522,8 +522,8 @@ def build_cmakelists_dir(src_dir, force=True, testing=False):
 
 # ...
 def get_extension_path(ext, module=None):
-    """Finds the path of a pyccel extension. A specific module can also be
-    given."""
+    """Finds the path of a pyccel extension (.py or .pyh).
+    A specific module can also be given."""
 
     extension = 'pyccelext_{0}'.format(ext)
     try:
@@ -542,12 +542,19 @@ def get_extension_path(ext, module=None):
     except:
         raise ImportError('could not import {0}.{1}'.format(extension, module))
 
-    m = getattr(m, '{0}'.format(module))
+    filename_py  = '{0}.py'.format(module)
+    filename_pyh = '{0}.pyh'.format(module)
 
-    # remove 'c' from *.pyc
-    filename = m.__file__[:-1]
+    filename_py  = os.path.join(ext_dir, filename_py)
+    filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
 
-    return filename
+    if os.path.isfile(filename_py):
+        return filename_py
+    elif os.path.isfile(filename_pyh):
+        return filename_pyh
+    else:
+        raise ImportError('could not find {0} or {1}'.format(filename_py,
+                                                             filename_pyh))
 # ...
 
 # ...
