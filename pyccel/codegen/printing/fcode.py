@@ -940,7 +940,7 @@ class FCodePrinter(CodePrinter):
             return self._get_statement(code)
         elif isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
-            is_procedure = (expr.rhs.kind == 'procedure')
+            is_procedure = expr.rhs.is_procedure
         elif isinstance(expr.rhs, ConstructorCall):
             func = expr.rhs.func
             name = str(func.name)
@@ -948,6 +948,7 @@ class FCodePrinter(CodePrinter):
                 name = "create"
             rhs_code = self._print(name)
             rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
+            #TODO use is_procedure property
             is_procedure = (expr.rhs.kind == 'procedure')
 
             code_args = ', '.join(self._print(i) for i in expr.rhs.arguments[1:])
@@ -957,7 +958,8 @@ class FCodePrinter(CodePrinter):
             func = expr.rhs.func
             if func.cls_name:
                 rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
-            is_procedure = (expr.rhs.kind == 'procedure')
+            is_procedure = func.is_procedure
+            print(">>>>>>> ", rhs_code, is_procedure)
             args = expr.rhs.arguments
             f_args = func.arguments
             if not(len(args) == len(f_args)):

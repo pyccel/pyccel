@@ -2810,19 +2810,47 @@ class FunctionHeader(Basic):
 #        kind      = 'procedure'
         imports   = []
 
+        # ... factorize the following 2 blocks
         args = []
         for i,d in enumerate(self.dtypes):
-            dtype = d[0]
+            datatype    = d[0]
+            allocatable = d[2]
+
+            rank = 0
+            for i in d[1]:
+                if isinstance(i, Slice):
+                    rank += 1
+
+            shape  = None
+            intent = 'out'
+
             arg_name = 'arg_{0}'.format(str(i))
-            arg = Variable(dtype, arg_name)
+            arg = Variable(datatype, arg_name,
+                           allocatable=allocatable,
+                           rank=rank,
+                           shape=shape)
             args.append(arg)
 
         results = []
         for i,d in enumerate(self.results):
-            dtype = d[0]
+            datatype    = d[0]
+            allocatable = d[2]
+
+            rank = 0
+            for i in d[1]:
+                if isinstance(i, Slice):
+                    rank += 1
+
+            shape  = None
+            intent = 'out'
+
             result_name = 'result_{0}'.format(str(i))
-            result = Variable(dtype, result_name)
+            result = Variable(datatype, result_name,
+                           allocatable=allocatable,
+                           rank=rank,
+                           shape=shape)
             results.append(result)
+        # ...
 
         return FunctionDef(name, args, results, body,
                            local_vars=[],
