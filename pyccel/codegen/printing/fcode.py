@@ -959,7 +959,6 @@ class FCodePrinter(CodePrinter):
             if func.cls_name:
                 rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
             is_procedure = func.is_procedure
-            print(">>>>>>> ", rhs_code, is_procedure)
             args = expr.rhs.arguments
             f_args = func.arguments
             if not(len(args) == len(f_args)):
@@ -971,8 +970,18 @@ class FCodePrinter(CodePrinter):
                     args.append(i.value)
 
             code_args = ', '.join(self._print(i) for i in args)
-            if not isinstance(expr.rhs.func, (MPI_Init, MPI_Finalize)):
+
+            # TODO check this for MPI
+            if is_procedure:
+                code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
+            elif not isinstance(expr.rhs.func, (MPI_Init, MPI_Finalize)):
                 rhs_code = '{0}({1})'.format(rhs_code, code_args)
+                code = '{0} = {1}'.format(lhs_code, rhs_code)
+            else:
+                raise NotImplementedError('update MPI case')
+
+            return self._get_statement(code)
+
         else:
             rhs_code = self._print(expr.rhs)
 #            print("ASSIGN = ", rhs_code)
@@ -992,6 +1001,7 @@ class FCodePrinter(CodePrinter):
             keys = func.func.arguments
 
             # for MPI statements, we need to add the lhs as the last argument
+            # TODO improve
             if isinstance(func.func, MPI):
                 if not func.arguments:
                     code_args = lhs_code
@@ -1009,6 +1019,7 @@ class FCodePrinter(CodePrinter):
 #                    code_args = ', '.join(self._print(i) for i in func.arguments)
 #                    code_args = '{0}, {1}'.format(code_args, lhs_code)
 #                else:
+            print('code_args > {0}'.format(code_args))
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
