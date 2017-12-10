@@ -216,6 +216,7 @@ def build_file(filename, language, compiler, \
         # TODO add aliases or what to import (names)
 
     from pyccel.parser.syntax.core import update_namespace
+    from pyccel.parser.syntax.core import get_namespace
     update_namespace(namespace_user)
 
     codegen = FCodegen(filename=filename,

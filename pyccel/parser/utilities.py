@@ -54,7 +54,12 @@ def find_imports(filename=None, stmts=None, debug=False):
             names = [s.strip() for s in txt if len(s) > 0]
             # ...
 
-            d[module] = names
+            # ...
+            if not(module in d):
+                d[module] = []
+
+            d[module] += names
+            # ...
 
     clean_namespace()
 
