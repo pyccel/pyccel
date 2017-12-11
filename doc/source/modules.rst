@@ -1,5 +1,5 @@
-pyccel
-======
+API
+===
 
 .. toctree::
    :maxdepth: 4

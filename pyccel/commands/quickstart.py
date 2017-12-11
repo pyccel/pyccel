@@ -79,21 +79,21 @@ Makefile to be used with pyccel-build.
                        help='version of project')
     group.add_argument('-r', '--release', metavar='RELEASE', dest='release',
                        help='release of project')
-    parser.add_argument('--suffix-library', type=str, \
+    group.add_argument('--suffix-library', type=str, \
                         help='Suffix of 3 letters for the library')
     group.add_argument('-l', '--language', metavar='LANGUAGE', dest='language',
                        help='target language')
     group.add_argument('--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
-    parser.add_argument('--compiler', type=str, \
+    group.add_argument('--compiler', type=str, \
                         help='Used compiler')
     group.add_argument('--master', metavar='MASTER',
-                       help='master document name')
-    parser.add_argument('--include', type=str, \
+                       help='master file name')
+    group.add_argument('--include', type=str, \
                         help='path to include directory.')
-    parser.add_argument('--libdir', type=str, \
+    group.add_argument('--libdir', type=str, \
                         help='path to lib directory.')
-    parser.add_argument('--libs', type=str, \
+    group.add_argument('--libs', type=str, \
                         help='list of libraries to link with.')
 
     group = parser.add_argument_group('Extension options')
@@ -103,23 +103,6 @@ Makefile to be used with pyccel-build.
                            help='enable %s extension' % ext)
     group.add_argument('--extensions', metavar='EXTENSIONS', dest='extensions',
                        action='append', help='enable extensions')
-
-#    # TODO(stephenfin): Consider using mutually exclusive groups here
-#    group = parser.add_argument_group('Makefile and Batchfile creation')
-#    group.add_argument('--makefile', action='store_true', default=False,
-#                       help='create makefile')
-#    group.add_argument('--no-makefile', action='store_true', default=False,
-#                       help='not create makefile')
-#    group.add_argument('--batchfile', action='store_true', default=False,
-#                       help='create batchfile')
-#    group.add_argument('--no-batchfile', action='store_true', default=False,
-#                       help='not create batchfile')
-#    group.add_argument('-M', '--no-use-make-mode', action='store_false',
-#                       dest='make_mode', default=False,
-#                       help='not use make-mode for Makefile/make.bat')
-#    group.add_argument('-m', '--use-make-mode', action='store_true',
-#                       dest='make_mode', default=True,
-#                       help='use make-mode for Makefile/make.bat')
 
     return parser
 

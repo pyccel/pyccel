@@ -13,18 +13,17 @@ Welcome to Pyccel's documentation!
    :caption: Contents:
 
    pyccel
+   tutorial
+   man/index
    oop
    parallel
    stdlib
    analysis
    specs
+   invocation
 
-You can the code documentation here:
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
-
+   examples
+   devguide
    source/modules
 
 Indices and tables

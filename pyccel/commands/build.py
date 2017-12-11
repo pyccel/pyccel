@@ -87,8 +87,6 @@ files can be built by specifying individual filenames.
     group.add_argument('-c', metavar='PATH', dest='confdir',
                        help='path where configuration file (conf.py) is '
                        'located (default: same as SOURCEDIR)')
-    group.add_argument('-C', action='store_true', dest='noconfig',
-                       help='use no config file at all, only -D options')
     group.add_argument('-D', metavar='setting=value', action='append',
                        dest='define', default=[],
                        help='override a setting in configuration file')
