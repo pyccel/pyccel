@@ -12,6 +12,8 @@ By reading this tutorial, you'll be able to:
 
 * compile a simple *Pyccel* file
 
+* get familiar with parallel programing paradigms 
+
 * create, modify and build a *Pyccel* project.
 
 Install Pyccel
@@ -26,6 +28,8 @@ If **prefix** is not given, you will need to be in *sudo* mode. Otherwise, you w
   export PYTHONPATH=MY_INSTALL_PATH/lib/python2.7/site-packages/:$PYTHONPATH
   export PATH=MY_INSTALL_PATH/bin:$PATH
 
+.. todo:: add installation using **pip**
+
 For the moment, *Pyccel* generates only *fortran* files. Therefor, you need to have a *fortran* compiler. To install **gfortran**, run::
 
   $ sudo apt install gfortran
@@ -37,28 +41,36 @@ In order to use the commands :program:`pyccel-quickstart` and :program:`pyccel-b
 Simple Examples
 ***************
 
+In this section, we describe some features of *Pyccel* on simple examples.
+
 Hello World
 ^^^^^^^^^^^
 
-Let us consider the following *Python* file (*helloworld.py*)
+Create a file *helloworld.py* and copy paste the following lines (be careful with the indentation)
 
 .. code-block:: python
 
-  #$ header helloworld()
   def helloworld():
       print("* Hello World!!")
 
 Now, run the command::
 
-  pyccel tests/helloworld.py --compiler=gfortran
+  pyccel helloworld.py --execute
+
+the result is::
+
+  > * Hello World!!
 
 The generated *Fortran* code is
 
 .. code-block:: fortran
 
-  module m_tests_helloworld
+  program main
 
   implicit none
+
+  !  
+  call helloworld()
 
   contains
   ! ........................................
@@ -72,105 +84,14 @@ The generated *Fortran* code is
   ! ........................................
 
 
-  end module m_tests_helloworld
-
-Functions and Subroutines
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Let's take a look at the file *tests/examples/ex5.py*, listed below
-
-.. code-block:: python
-
-  #$ header f(double, double)
-  def f(u,v):
-      t = u - v
-      return t
-
-  #$ header g(double, double)
-  def g(x,v):
-      m = x - v
-      t =  2.0 * m
-      z =  2.0 * t
-      return t, z
-
-  x1 = 1.0
-  y1 = 2.0
-
-  w    = 2 * f(x1,y1) + 1.0
-  z, t = g(x1,w)
-
-  print(z)
-  print(t)
-
-Now, run the command::
-
-  pyccel tests/examples/ex5.py --compiler="gfortran" --execute
-
-This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
-
-   4.0000000000000000 
-   8.0000000000000000 
-
-Now, let us take a look at the *Fortran* file
-
-.. code-block:: fortran
-
-  program main
-
-  implicit none
-  real(kind=8) :: y1
-  real(kind=8) :: x1
-  real(kind=8) :: z
-  real(kind=8) :: t
-  real(kind=8) :: w
-
-  !  
-  x1 = 1.0d0
-  y1 = 2.0d0
-  w = 1.0d0 + 2*f(x1, y1)
-  call g (x1, w, z, t)
-  print * ,z
-  print * ,t
-
-  contains
-  ! ........................................
-  real(kind=8) function f(u, v)  result(t)
-  implicit none
-  real(kind=8), intent(in)  :: u
-  real(kind=8), intent(in)  :: v
-
-  t = u - v
-
-  end function
-  ! ........................................
-
-  ! ........................................
-  subroutine g(x, v, t, z)
-    implicit none
-    real(kind=8), intent(out)  :: t
-    real(kind=8), intent(out)  :: z
-    real(kind=8), intent(in)  :: x
-    real(kind=8), intent(in)  :: v
-    real(kind=8) :: m
-
-    m = -v + x
-    t = 2.0d0*m
-    z = 2.0d0*t
-
-  end subroutine
-  ! ........................................
-
-
   end
 
-Matrix-Matrix product
+Matrix multiplication
 ^^^^^^^^^^^^^^^^^^^^^
 
-Let's take a look at the file *tests/matrix_product.py*, listed below
+Create a file *matrix_multiplication.py* and copy paste the following lines
 
 .. code-block:: python
-
-  from numpy import zeros
 
   n = 2
   m = 4
@@ -197,11 +118,97 @@ Let's take a look at the file *tests/matrix_product.py*, listed below
 
 Now, run the command::
 
-  pyccel tests/matrix_product.py --compiler="gfortran" --execute
+  pyccel matrix_multiplication.py --execute
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
-  -1.0000000000000000        0.0000000000000000       -2.0000000000000000        1.0000000000000000
+  0.0000000000000000        1.0000000000000000        0.0000000000000000        3.0000000000000000 
+
+The generated *Fortran* code is
+
+.. code-block:: fortran
+
+  program main
+
+  implicit none
+  real(kind=8), pointer :: a (:, :)
+  real(kind=8), pointer :: c (:, :)
+  real(kind=8), pointer :: b (:, :)
+  integer :: i
+  integer :: k
+  integer :: j
+  integer :: m   = 4
+  integer :: n   = 2
+  integer :: p   = 2
+
+  !  
+  n = 2
+  m = 4
+  p = 2
+  allocate(a(0:n-1, 0:m-1)); a = 0.0
+  allocate(b(0:m-1, 0:p-1)); b = 0.0
+  allocate(c(0:n-1, 0:p-1)); c = 0.0
+  do i = 0, -1 + n, 1
+    do j = 0, -1 + m, 1
+      a(i, j) = i
+    end do
+
+  end do
+  do i = 0, -1 + m, 1
+    do j = 0, -1 + p, 1
+      b(i, j) = i + j
+    end do
+
+  end do
+  do i = 0, -1 + n, 1
+    do j = 0, -1 + p, 1
+      do k = 0, -1 + p, 1
+        c(i, j) = a(i, k)*b(k, j) + c(i, j)
+      end do
+
+    end do
+
+  end do
+  print * ,c
+
+  end
+
+Functions and Subroutines
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Create a file *functions.py* and copy paste the following lines
+
+.. code-block:: python
+
+  #$ header f(double, double) results(double)
+  def f(u,v):
+      t = u - v
+      return t
+
+  #$ header g(double, double) results(double, double)
+  def g(x,v):
+      m = x - v
+      t =  2.0 * m
+      z =  2.0 * t
+      return t, z
+
+  x1 = 1.0
+  y1 = 2.0
+
+  w    = 2 * f(x1,y1) + 1.0
+  z, t = g(x1,w)
+
+  print(z)
+  print(t)
+
+Now, run the command::
+
+  pyccel functions.py --execute
+
+This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
+
+   2.0000000000000000 
+   4.0000000000000000 
 
 Now, let us take a look at the *Fortran* file
 
@@ -210,159 +217,62 @@ Now, let us take a look at the *Fortran* file
   program main
 
   implicit none
-  real(kind=8), allocatable :: a (:, :)
-  real(kind=8), allocatable :: c (:, :)
-  real(kind=8), allocatable :: b (:, :)
-  integer :: i
-  integer :: k
-  integer :: j
-  integer :: m
-  integer :: n
-  integer :: p
+  real(kind=8) :: y1   = 2.00000000000000
+  real(kind=8) :: x1   = 1.00000000000000
+  real(kind=8) :: z
+  real(kind=8) :: t
+  real(kind=8) :: w
 
   !  
-  n = 2
-  m = 4
-  p = 2
-  allocate(a(0:n-1, 0:m-1)) ; a = 0
-  allocate(b(0:m-1, 0:p-1)) ; b = 0
-  allocate(c(0:n-1, 0:p-1)) ; c = 0
-  do i = 0, n - 1, 1
-    do j = 0, m - 1, 1
-      a(i, j) = i - j
-    end do
-  end do
-  do i = 0, m - 1, 1
-    do j = 0, p - 1, 1
-      b(i, j) = i + j
-    end do
-  end do
-  do i = 0, n - 1, 1
-    do j = 0, p - 1, 1
-      do k = 0, p - 1, 1
-        c(i, j) = a(i, k)*b(k, j) + c(i, j)
-      end do
-    end do
-  end do
-  print * ,c
+  x1 = 1.0d0
+  y1 = 2.0d0
+  w = 2*f(x1, y1) + 1.0d0
+  call g (x1, w, z, t)
+  print * ,z
+  print * ,t
+
+  contains
+  ! ........................................
+  real(kind=8) function f(u, v)  result(t)
+  implicit none
+  real(kind=8), intent(in)  :: u
+  real(kind=8), intent(in)  :: v
+
+  t = u
+
+  end function
+  ! ........................................
+
+  ! ........................................
+  subroutine g(x, v, t, z)
+    implicit none
+    real(kind=8), intent(out)  :: t
+    real(kind=8), intent(out)  :: z
+    real(kind=8), intent(in)  :: x
+    real(kind=8), intent(in)  :: v
+    real(kind=8) :: m
+
+    m = x
+    t = 2.0d0*m
+    z = 2.0d0*t
+
+  end subroutine
+  ! ........................................
+
 
   end
 
-Openmp examples
-^^^^^^^^^^^^^^^
+Matrix multiplication using OpenMP
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Matrix-Matrix product
-_____________________
-
-Let's take a look at the file *tests/examples/openmp/matrix_product.py*, listed below
-
-.. code-block:: python
-
-  from numpy import zeros
-
-  n = 500
-  m = 700
-  p = 500
-
-  a = zeros((n,m), double)
-  b = zeros((m,p), double)
-  c = zeros((n,p), double)
-
-  #$ omp parallel
-  #$ omp do schedule(runtime)
-  for i in range(0, n):
-      for j in range(0, m):
-          a[i,j] = i-j
-  #$ omp end do nowait
-
-  #$ omp do schedule(runtime)
-  for i in range(0, m):
-      for j in range(0, p):
-          b[i,j] = i+j
-  #$ omp end do nowait
-
-  #$ omp do schedule(runtime)
-  for i in range(0, n):
-      for j in range(0, p):
-          for k in range(0, p):
-              c[i,j] = c[i,j] + a[i,k]*b[k,j]
-  #$ omp end do
-  #$ omp end parallel
-
-Now, run the command::
-
-  pyccel tests/examples/openmp/matrix_product.py --compiler="gfortran" --openmp
-
-This will parse the *Python* file, generate the corresponding *Fortran* file and compile it. 
+.. todo:: a new example without pragmas
 
 .. note:: **Openmp** is activated using the flag **--openmp** in the command line.
 
-The generated *Fortran* code is
+Poisson solver using MPI
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: fortran
-
-  program main
-  use omp_lib 
-  implicit none
-  real(kind=8), allocatable :: a (:, :)
-  real(kind=8), allocatable :: c (:, :)
-  real(kind=8), allocatable :: b (:, :)
-  integer :: i
-  integer :: k
-  integer :: j
-  integer :: m
-  integer :: n
-  integer :: p
-
-  !  
-  n = 500
-  m = 700
-  p = 500
-  allocate(a(0:n-1, 0:m-1)) ; a = 0
-  allocate(b(0:m-1, 0:p-1)) ; b = 0
-  allocate(c(0:n-1, 0:p-1)) ; c = 0
-  !$omp parallel
-  !$omp do schedule(runtime)
-  do i = 0, n - 1, 1
-    do j = 0, m - 1, 1
-      a(i, j) = i - j
-    end do
-  end do
-  !$omp end do  nowait
-  !$omp do schedule(runtime)
-  do i = 0, m - 1, 1
-    do j = 0, p - 1, 1
-      b(i, j) = i + j
-    end do
-  end do
-  !$omp end do  nowait
-  !$omp do schedule(runtime)
-  do i = 0, n - 1, 1
-    do j = 0, p - 1, 1
-      do k = 0, p - 1, 1
-        c(i, j) = a(i, k)*b(k, j) + c(i, j)
-      end do
-    end do
-  end do
-  !$omp end do
-  !$omp end parallel
-
-  end
-
-The following plot shows the scalability of the generated code on **LRZ** using :math:`(n,m,p) = (5000,7000,5000)`.
-
-.. figure:: include/openmp/matrix_product_scalability.png 
-   :align: center
-   :scale: 25% 
-
-   Weak scalability on LRZ. CPU time is given in seconds.
-
-.. figure:: include/openmp/matrix_product_speedup.png 
-   :align: center
-   :scale: 25% 
-
-   Speedup on LRZ
-
+.. todo:: add an example
 
 
 Setting up a project
@@ -380,6 +290,19 @@ configuration values. Just run ::
    $ pyccel-quickstart -h
 
 for help.
+
+For example, runing::
+
+   $ pyccel-quickstart poisson
+
+will create a directory **poisson** where you will find, inside it:
+
+.. figure:: include/pyccel-quickstart_poisson.png 
+   :align: center
+   :scale: 100% 
+
+   Structure of the **poisson** project after running :program:`pyccel-quickstart`.
+
 
 Defining document structure
 ***************************
