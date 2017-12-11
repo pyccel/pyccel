@@ -15,14 +15,14 @@ Welcome to Pyccel's documentation!
    pyccel
    tutorial
    man/index
+   domains
    oop
    parallel
    stdlib
+   extensions
    analysis
    specs
-   invocation
 
-   examples
    devguide
    source/modules
 
