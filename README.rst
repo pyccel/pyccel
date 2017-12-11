@@ -33,11 +33,6 @@ If **prefix** is not given, you will need to be in *sudo* mode. Otherwise, you w
   export PYTHONPATH=MY_INSTALL_PATH/lib/python2.7/site-packages/:$PYTHONPATH
   export PATH=MY_INSTALL_PATH/bin:$PATH
 
-for tests, run::
-
-  python tests/run_tests.py
-  python tests/run_tests_openmp.py
-
 Reading the docs
 ================
 
@@ -49,6 +44,22 @@ Or, after installing::
    make html
 
 Then, direct your browser to ``_build/html/index.html``.
+
+Testing
+=======
+
+To run tests, use::
+
+   python tests/test_pyccel.py 
+
+Continuous testing runs on travis: <https://travis-ci.org/ratnania/pyccel>
+
+Contributing
+============
+
+See `CONTRIBUTING.rst`__
+
+.. __: CONTRIBUTING.rst
 
 .. |build-status| image:: https://travis-ci.org/ratnania/pyccel.svg?branch=master
     :alt: build status
