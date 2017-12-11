@@ -12,8 +12,8 @@ Welcome to Pyccel's documentation!
    :maxdepth: 1
    :caption: Contents:
 
-   pyccel
    tutorial
+   dive
    man/index
    domains
    oop

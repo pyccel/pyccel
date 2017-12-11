@@ -55,3 +55,9 @@ Glossary
    source directory
       The directory which, including its subdirectories, contains all source
       files for one Sphinx project.
+
+   application directory
+      The directory which contains Pyccel sources, as a package.
+
+   build directory
+      The build directory as you may specify it for cmake.
