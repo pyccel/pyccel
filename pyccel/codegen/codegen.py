@@ -506,6 +506,7 @@ class Codegen(object):
                           + sep + '\n'
             elif isinstance(stmt, ClassDef):
                 classes += printer(stmt) + "\n"
+                is_module_program=True
             elif isinstance(stmt, Print):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Del):
@@ -593,8 +594,12 @@ class Codegen(object):
         # ...
 
         # ...
+        
         if is_module:
             code = self.as_module()
+        elif is_module_program:
+            code = self.as_module_program()
+            
         else:
             code = self.as_program()
         # ...
@@ -678,6 +683,44 @@ class FCodegen(Codegen):
         return code
 
 # TODO improve later
+
+    def as_module_program(self):
+        """Generate code as a program."""
+        name     = self.name
+        imports  = self.imports
+        preludes = self.preludes
+        body     = self.body
+        routines = self.routines
+        classes  = self.classes
+        modules  = self.modules
+
+        if name is None:
+            name = 'main'
+        if len(classes):
+            name_module= self.filename.split(".")[0]
+            name_module = name_module.replace('/', '_')
+            name_module = 'm_{0}'.format(name_module)
+
+        code  = "program " + str(name)    + "\n"
+        code += imports  
+        code+="use "+  name_module               + "\n"
+        code += "implicit none"           + "\n"
+        code += preludes                  + "\n"
+
+        if len(body) > 0:
+            code += body                  + "\n"
+        if len(routines) > 0:
+            code += "contains"            + "\n"
+            code += routines              + "\n"
+        if len(classes) > 0:
+            code += "end program " +str(name)  + "\n"
+            code+="module "+name_module    +"\n"
+            code += classes               + "\n"
+            code+="end module "+name_module +'\n'
+        
+
+        return code
+        
 class PyccelCodegen(Codegen):
     """Code generation for the Pyccel Grammar"""
     pass

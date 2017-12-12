@@ -953,6 +953,7 @@ def insert_variable(var_name, \
 
 # ...
 def expr_with_trailer(expr, trailer=None):
+
     if trailer is None:
         return expr
     if isinstance(trailer, (tuple, list)):
@@ -983,6 +984,7 @@ def expr_with_trailer(expr, trailer=None):
         else:
             raise ValueError('Unable to construct expr from trailers.')
         return expr
+    
     if isinstance(trailer, Trailer):
         return expr_with_trailer(expr, trailer.args)
 
@@ -999,18 +1001,24 @@ def expr_with_trailer(expr, trailer=None):
         name = str(expr)
         if name in builtin_funcs_math + ['len']:
             expr = builtin_function(name, args)
-        elif name in class_defs:
-            # get the ClassDef
-            # TODO use isinstance
-            cls = class_defs[name]
-            methods = {}
-            for i in cls.methods:
-                methods[str(i.name)] = i
-            method = methods['__init__']
-            this = cls.this
+        elif isinstance(expr,ClassDef):
+            cls = namespace[str(expr.name)]
+            methods = cls.methods
+            for i in methods:
+                if str(i.name)=='__init__':
+                    method=i
+            
 #            if name == 'MPI_Tensor':
 #                args = [this, npts, periods, reorder, pads]
-            args = [this] + list(args)
+            d_var = {}
+            dtype = cls_constructs[str(expr.name)]()
+            d_var['datatype']    = dtype
+            d_var['allocatable'] = False
+            d_var['shape']       = None
+            d_var['rank']        = 0
+            d_var['intent']      = 'inout'
+            insert_variable('self', **d_var)
+            args = [namespace['self']] + list(args)
             expr = ConstructorCall(method, args)
         else:
             f_name = str(expr)
@@ -1019,6 +1027,10 @@ def expr_with_trailer(expr, trailer=None):
             elif f_name in builtin_funcs:
                 # TODO may be we should test only on math funcs
                 expr = Function(f_name)(*args)
+            #elif isinstance(expr,ClassDef):
+             #   args = trailer.expr    
+              #  args=tuple(args)      
+               # return FunctionCall(expr.methods['__init__'],args)
             else:
                 raise NotImplementedError('Only FunctionDef is treated')
 #            if len(args) > 0:
@@ -1035,6 +1047,7 @@ def expr_with_trailer(expr, trailer=None):
         expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
         args = trailer.expr
+        
 
         # TODO add IndexedVariable, IndexedElement
         dottables = (Variable)
@@ -2020,7 +2033,6 @@ class AtomExpr(ExpressionElement, BasicStmt):
         if DEBUG:
             print("> AtomExpr ")
         expr = self.op.expr
-
         return expr_with_trailer(expr, self.trailers)
 
 class Power(ExpressionElement, BasicStmt):
@@ -2533,6 +2545,7 @@ class FunctionDefStmt(BasicStmt):
             if a in namespace:
                 var = namespace.pop(a)
                 dec = declarations.pop(a)
+        
 
         # TODO: for the moment we do not infer the results type
         if with_header and len(results) > 0:
@@ -2663,7 +2676,6 @@ class ClassDefStmt(BasicStmt):
 
         # ...
         attributs =class_defs[name].attributs
-        d = {}
         
 
         methods = []
@@ -2675,9 +2687,12 @@ class ClassDefStmt(BasicStmt):
         namespace[name] = stmt
 
         # ... cleaning
-        for k,v in list(d.items()):
-            namespace.pop(k)
-            declarations.pop(k)
+       
+        for k in attributs:
+            if k.name in namespace.keys():
+                namespace.pop(k.name)
+            if k.name in declarations.keys():
+                declarations.pop(k.name)
         # ...
 
 #        print "*********** ClassDefStmt.expr: End"
