@@ -155,6 +155,10 @@ def build_file(filename, language, compiler, \
         return np.asarray([key.startswith(pattern(i)) for i in ignored_modules]).any()
     # ...
 
+    # returns True if the submodule is external
+    is_external_submodule  = lambda m,s: m == 'pyccelext.{0}.external.{1}'.format(ext, s)
+    is_extension_submodule = lambda m,s: m == 'pyccelext.{0}.{1}'.format(ext, s)
+
     d = find_imports(filename=filename)
     for key, value in list(d.items()):
         if not _ignore_module(key):
@@ -174,8 +178,14 @@ def build_file(filename, language, compiler, \
                     f_name = 'pyccelext_{0}.py'.format(n)
                 else:
                     submodule = ext_full.split('.')[-1] # to get submodule
-                    if module == 'pyccelext.{0}.{1}'.format(ext, submodule):
-                        f_name = get_extension_path(ext, module=submodule)
+
+                    if is_extension_submodule(module, submodule):
+                        f_name = get_extension_path(ext,
+                                                    module=submodule)
+                    elif is_external_submodule(module, submodule):
+                        f_name = get_extension_path(ext,
+                                                    module=submodule,
+                                                    is_external=True)
                     else:
                         raise ValueError('non valid import for pyccel extensions.')
             else:
@@ -216,6 +226,7 @@ def build_file(filename, language, compiler, \
         # TODO add aliases or what to import (names)
 
     from pyccel.parser.syntax.core import update_namespace
+    from pyccel.parser.syntax.core import get_namespace
     update_namespace(namespace_user)
 
     codegen = FCodegen(filename=filename,
@@ -521,7 +532,7 @@ def build_cmakelists_dir(src_dir, force=True, testing=False):
 # ...
 
 # ...
-def get_extension_path(ext, module=None):
+def get_extension_path(ext, module=None, is_external=False):
     """Finds the path of a pyccel extension (.py or .pyh).
     A specific module can also be given."""
 
@@ -545,8 +556,12 @@ def get_extension_path(ext, module=None):
     filename_py  = '{0}.py'.format(module)
     filename_pyh = '{0}.pyh'.format(module)
 
-    filename_py  = os.path.join(ext_dir, filename_py)
-    filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
+    if not is_external:
+        filename_py  = os.path.join(ext_dir, filename_py)
+        filename_pyh = os.path.join(ext_dir, filename_pyh)
+    else:
+        filename_py  = os.path.join(ext_dir, filename_py)
+        filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
 
     if os.path.isfile(filename_py):
         return filename_py

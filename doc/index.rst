@@ -12,19 +12,18 @@ Welcome to Pyccel's documentation!
    :maxdepth: 1
    :caption: Contents:
 
-   pyccel
+   tutorial
+   dive
+   man/index
+   domains
    oop
    parallel
    stdlib
+   extensions
    analysis
    specs
 
-You can the code documentation here:
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
-
+   devguide
    source/modules
 
 Indices and tables
