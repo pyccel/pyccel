@@ -984,7 +984,7 @@ def expr_with_trailer(expr, trailer=None):
         else:
             raise ValueError('Unable to construct expr from trailers.')
         return expr
-    
+
     if isinstance(trailer, Trailer):
         return expr_with_trailer(expr, trailer.args)
 
@@ -1007,7 +1007,7 @@ def expr_with_trailer(expr, trailer=None):
             for i in methods:
                 if str(i.name)=='__init__':
                     method=i
-            
+
 #            if name == 'MPI_Tensor':
 #                args = [this, npts, periods, reorder, pads]
             d_var = {}
@@ -1028,8 +1028,8 @@ def expr_with_trailer(expr, trailer=None):
                 # TODO may be we should test only on math funcs
                 expr = Function(f_name)(*args)
             #elif isinstance(expr,ClassDef):
-             #   args = trailer.expr    
-              #  args=tuple(args)      
+             #   args = trailer.expr
+              #  args=tuple(args)
                # return FunctionCall(expr.methods['__init__'],args)
             else:
                 raise NotImplementedError('Only FunctionDef is treated')
@@ -1047,7 +1047,7 @@ def expr_with_trailer(expr, trailer=None):
         expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
         args = trailer.expr
-        
+
 
         # TODO add IndexedVariable, IndexedElement
         dottables = (Variable)
@@ -2101,7 +2101,7 @@ class ArithmeticExpression(ExpressionElement):
                 ret = Add(ret, operand.expr)
             else:
                 a   = Mul(-1, operand.expr)
-                retd = Add(ret, a)
+                ret = Add(ret, a)
 
         return ret
 
@@ -2444,7 +2444,7 @@ class FunctionDefStmt(BasicStmt):
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
-        
+
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
             # remove self from args
@@ -2524,19 +2524,19 @@ class FunctionDefStmt(BasicStmt):
             attr=[]
             for i in self.body.stmts:
                 if isinstance(i,AssignStmt) and i.lhs=='self':
-                    
+
                     c={'lhs':i.trailer.expr,'rhs':i.rhs}
                     Var=AssignStmt(**c).expr
                     attr+=[Var.lhs]
             cls=ClassDef(cls_instance,attr,[],[])
             namespace[cls_instance]=cls
             class_defs[cls_instance]=cls
-            
-                    
+
+
         body = self.body.expr
         if args_0:
             arg_names+=['self']
-            
+
 
         prelude = [declarations[a] for a in arg_names]
 
@@ -2545,7 +2545,7 @@ class FunctionDefStmt(BasicStmt):
             if a in namespace:
                 var = namespace.pop(a)
                 dec = declarations.pop(a)
-        
+
 
         # TODO: for the moment we do not infer the results type
         if with_header and len(results) > 0:
@@ -2676,7 +2676,7 @@ class ClassDefStmt(BasicStmt):
 
         # ...
         attributs =class_defs[name].attributs
-        
+
 
         methods = []
         for stmt in body:
@@ -2687,7 +2687,7 @@ class ClassDefStmt(BasicStmt):
         namespace[name] = stmt
 
         # ... cleaning
-       
+
         for k in attributs:
             if k.name in namespace.keys():
                 namespace.pop(k.name)
