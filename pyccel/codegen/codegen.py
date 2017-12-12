@@ -506,7 +506,6 @@ class Codegen(object):
                           + sep + '\n'
             elif isinstance(stmt, ClassDef):
                 classes += printer(stmt) + "\n"
-                is_module_program=True
             elif isinstance(stmt, Print):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Del):
@@ -594,7 +593,9 @@ class Codegen(object):
         # ...
 
         # ...
-        
+        is_module_program=False
+        if len(classes)>0:
+            is_module_program=True
         if is_module:
             code = self.as_module()
         elif is_module_program:
