@@ -12,6 +12,8 @@ class Matrix(object):
     def __del__(self):
         del self.a
 
-p= Matrix(2,3)
+p = Matrix(2,3)
 d = p.n_rows
-p.n_rows=5
+p.n_rows = 5
+
+del p

@@ -593,14 +593,8 @@ class Codegen(object):
         # ...
 
         # ...
-        is_module_program=False
-        if len(classes)>0:
-            is_module_program=True
         if is_module:
             code = self.as_module()
-        elif is_module_program:
-            code = self.as_module_program()
-            
         else:
             code = self.as_program()
         # ...
@@ -664,10 +658,25 @@ class FCodegen(Codegen):
         classes  = self.classes
         modules  = self.modules
 
+        code = ''
+
+        # ...
+        if classes:
+            name_module= self.filename.split(".")[0]
+            name_module = name_module.replace('/', '_')
+            name_module = 'm_{0}'.format(name_module)
+
+            code += "module " + name_module     +"\n"
+            code += classes                     +"\n"
+            code += "end module " + name_module +'\n'
+
+            imports += 'use ' + name_module + '\n'
+
+        # ...
         if name is None:
             name = 'main'
 
-        code  = "program " + str(name)    + "\n"
+        code += "program " + str(name)    + "\n"
         code += imports                   + "\n"
         code += "implicit none"           + "\n"
         code += preludes                  + "\n"
@@ -677,51 +686,10 @@ class FCodegen(Codegen):
         if len(routines) > 0:
             code += "contains"            + "\n"
             code += routines              + "\n"
-        if len(classes) > 0:
-            code += classes               + "\n"
         code += "end"                     + "\n"
 
         return code
 
-# TODO improve later
-
-    def as_module_program(self):
-        """Generate code as a program."""
-        name     = self.name
-        imports  = self.imports
-        preludes = self.preludes
-        body     = self.body
-        routines = self.routines
-        classes  = self.classes
-        modules  = self.modules
-
-        if name is None:
-            name = 'main'
-        if len(classes):
-            name_module= self.filename.split(".")[0]
-            name_module = name_module.replace('/', '_')
-            name_module = 'm_{0}'.format(name_module)
-
-        code  = "program " + str(name)    + "\n"
-        code += imports  
-        code+="use "+  name_module               + "\n"
-        code += "implicit none"           + "\n"
-        code += preludes                  + "\n"
-
-        if len(body) > 0:
-            code += body                  + "\n"
-        if len(routines) > 0:
-            code += "contains"            + "\n"
-            code += routines              + "\n"
-        if len(classes) > 0:
-            code += "end program " +str(name)  + "\n"
-            code+="module "+name_module    +"\n"
-            code += classes               + "\n"
-            code+="end module "+name_module +'\n'
-        
-
-        return code
-        
 class PyccelCodegen(Codegen):
     """Code generation for the Pyccel Grammar"""
     pass

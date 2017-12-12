@@ -18,7 +18,7 @@ def test_1():
 
 # ...
 def test_2():
-    ignored = ['classes.py', 'eval.py', 'parallel.py', 'mpi.py',
+    ignored = ['eval.py', 'parallel.py', 'mpi.py',
               'arrays.py', 'modules.py', 'imports.py', 'dict.py']
 
     base_dir = os.getcwd()
