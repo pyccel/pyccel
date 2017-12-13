@@ -48,10 +48,10 @@ Hello World
 
 Create a file *helloworld.py* and copy paste the following lines (be careful with the indentation)
 
-.. code-block:: python
+.. literalinclude:: ../tests/scripts/helloworld.py 
+  :language: python
 
-  def helloworld():
-      print("* Hello World!!")
+See :download:`hello world script <../tests/scripts/helloworld.py>`.
 
 Now, run the command::
 
@@ -91,30 +91,10 @@ Matrix multiplication
 
 Create a file *matrix_multiplication.py* and copy paste the following lines
 
-.. code-block:: python
+.. literalinclude:: ../tests/scripts/matrix_multiplication.py 
+  :language: python
 
-  n = 2
-  m = 4
-  p = 2
-
-  a = zeros((n,m), double)
-  b = zeros((m,p), double)
-  c = zeros((n,p), double)
-
-  for i in range(0, n):
-      for j in range(0, m):
-          a[i,j] = i-j
-
-  for i in range(0, m):
-      for j in range(0, p):
-          b[i,j] = i+j
-
-  for i in range(0, n):
-      for j in range(0, p):
-          for k in range(0, p):
-              c[i,j] = c[i,j] + a[i,k]*b[k,j]
-
-  print(c)
+See :download:`matrix multiplication script <../tests/scripts/matrix_multiplication.py>`.
 
 Now, run the command::
 
@@ -122,7 +102,7 @@ Now, run the command::
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
-  0.0000000000000000        1.0000000000000000        0.0000000000000000        3.0000000000000000 
+  -1.0000000000000000        0.0000000000000000       -2.0000000000000000        1.0000000000000000
 
 The generated *Fortran* code is
 
@@ -150,7 +130,7 @@ The generated *Fortran* code is
   allocate(c(0:n-1, 0:p-1)); c = 0.0
   do i = 0, -1 + n, 1
     do j = 0, -1 + m, 1
-      a(i, j) = i
+      a(i, j) = i - j
     end do
 
   end do
@@ -178,28 +158,10 @@ Functions and Subroutines
 
 Create a file *functions.py* and copy paste the following lines
 
-.. code-block:: python
+.. literalinclude:: ../tests/scripts/functions.py 
+  :language: python
 
-  #$ header f(double, double) results(double)
-  def f(u,v):
-      t = u - v
-      return t
-
-  #$ header g(double, double) results(double, double)
-  def g(x,v):
-      m = x - v
-      t =  2.0 * m
-      z =  2.0 * t
-      return t, z
-
-  x1 = 1.0
-  y1 = 2.0
-
-  w    = 2 * f(x1,y1) + 1.0
-  z, t = g(x1,w)
-
-  print(z)
-  print(t)
+See :download:`functions script <../tests/scripts/functions.py>`.
 
 Now, run the command::
 
@@ -207,8 +169,8 @@ Now, run the command::
 
 This will parse the *Python* file, generate the corresponding *Fortran* file, compile it and execute it. The result is::
 
-   2.0000000000000000 
    4.0000000000000000 
+   8.0000000000000000 
 
 Now, let us take a look at the *Fortran* file
 
@@ -238,7 +200,7 @@ Now, let us take a look at the *Fortran* file
   real(kind=8), intent(in)  :: u
   real(kind=8), intent(in)  :: v
 
-  t = u
+  t = u - v
 
   end function
   ! ........................................
@@ -252,7 +214,7 @@ Now, let us take a look at the *Fortran* file
     real(kind=8), intent(in)  :: v
     real(kind=8) :: m
 
-    m = x
+    m = -v + x
     t = 2.0d0*m
     z = 2.0d0*t
 
