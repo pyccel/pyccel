@@ -2512,7 +2512,10 @@ class FunctionDefStmt(BasicStmt):
                     if isinstance(i, Slice):
                         rank += 1
                 d_var = {}
-                d_var['datatype']    = d[0]
+                if d[0]==cls_instance:
+                    d_var['datatype']=cls_constructs[cls_instance]()
+                else:
+                    d_var['datatype']    = d[0]
                 d_var['allocatable'] = False
     #            d_var['allocatable'] = d[2]
                 d_var['shape']       = None
