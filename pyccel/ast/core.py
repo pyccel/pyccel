@@ -2530,6 +2530,35 @@ class Slice(Basic):
             end = sstr(self.end)
         return '{0} : {1}'.format(start, end)
 
+class Assert(Basic):
+    """Represents a assert statement in the code.
+
+    test: Expr
+        boolean expression to check
+
+    Examples
+
+    """
+    def __new__(cls, test):
+        if not isinstance(test, (bool, Relational, Boolean)):
+            raise TypeError(
+                "test %s is of type %s, but must be a Relational,"
+                " Boolean, or a built-in bool." % (test, type(test)))
+
+        return Basic.__new__(cls, test)
+
+    @property
+    def test(self):
+        return self._args[0]
+
+class Exit(Basic):
+    """Basic class for exists."""
+    pass
+
+class ErrorExit(Exit):
+    """Exist with error."""
+    pass
+
 class If(Basic):
     """Represents a if statement in the code.
 

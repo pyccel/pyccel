@@ -60,7 +60,7 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              MultiAssign, AugAssign, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
-                             IndexedVariable, Slice, If, \
+                             IndexedVariable, Slice, Assert, If, \
                              ThreadID, ThreadsNumber, \
                              Stencil, Ceil, Break, Continue, \
                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
@@ -1399,6 +1399,31 @@ class PassStmt(BasicStmt):
         self.update()
 
         return self.label
+
+class AssertStmt(BasicStmt):
+    """Class representing an Assert statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the Assert statement class.
+
+        test: Test
+            represents the condition for the Assert statement.
+        """
+        self.test = kwargs.pop('test')
+
+        super(AssertStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the If statement by returning a pyccel.ast.core object
+        """
+        self.update()
+        test = self.test.expr
+
+        return Assert(test)
+
 
 class IfStmt(BasicStmt):
     """Class representing an If statement."""

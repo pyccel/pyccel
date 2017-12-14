@@ -22,7 +22,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               MultiAssign, AugAssign, FunctionCall, \
                               FunctionDef, ClassDef, Sync, Del, Print, Import, \
                               Comment, AnnotatedComment, \
-                              IndexedVariable, Slice, If, \
+                              IndexedVariable, Slice, Assert, If, \
                               ThreadID, ThreadsNumber, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
@@ -198,7 +198,7 @@ class Codegen(object):
             name of the file to parse.
         name: str
             name of the generated module or program.
-            If not given, 'main' will be used in the case of a program, and
+            if not given, 'main' will be used in the case of a program, and
             'pyccel_m_${filename}' in the case of a module.
         output_dir: str
             output directory to store pyccel files and generated files
@@ -492,6 +492,8 @@ class Codegen(object):
             elif isinstance(stmt, For):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, While):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, Assert):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, If):
                 body += printer(stmt) + "\n"

@@ -45,6 +45,7 @@ SmallStmt:
   | ConstructorStmt 
   | DeclarationStmt 
   | ExprStmt 
+  | AssertStmt
 ;
 
 FlowStmt:
@@ -88,6 +89,10 @@ SuiteStmt:
   INDENT
   stmts+=Statement
   DEDENT
+;
+
+AssertStmt:
+  ASSERT '(' test=Test ')'
 ;
 
 //DecoratorStmt: 

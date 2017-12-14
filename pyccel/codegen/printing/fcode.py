@@ -19,6 +19,8 @@ from sympy import Eq,Ne,true,false
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy.logic.boolalg import And, Not, Or, true, false
+
 
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype
@@ -28,13 +30,14 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ZerosLike
+from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import Range, Tensor, ParallelRange, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
                               Variable, Declare, ValuedVariable, \
                               Len, Shape, Dot, Sign, subs, \
-                              IndexedElement, Slice, DottedName)
+                              IndexedElement, Slice, DottedName, Print, If)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -1416,6 +1419,25 @@ class FCodePrinter(CodePrinter):
         return ('do while ({test}) \n'
                 '{body}\n'
                 'end do').format(test=self._print(expr.test),body=body)
+
+    def _print_ErrorExit(self, expr):
+        # TODO treat the case of MPI
+        return 'STOP'
+
+    def _print_Assert(self, expr):
+        # we first create an If statement
+        # TODO: depending on a debug flag we should print 'PASSED' or not.
+        DEBUG = True
+
+        err = ErrorExit()
+        args = [(Not(expr.test), [Print(['Assert Failed']), err])]
+
+        if DEBUG:
+            args.append((True, Print(['PASSED'])))
+
+        stmt = If(*args)
+        code = self._print(stmt)
+        return self._get_statement(code)
 
     def _print_If(self, expr):
         # ...

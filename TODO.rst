@@ -27,3 +27,10 @@ TODO
 
 - symbolic expressions (find a way to use directly functions that are defined in *sympy*)
 
+- in fcode: use  self._get_statement for every statement
+
+- improve debug mode and verbosity in fcode and codegen
+
+- improve debug mode and verbosity in parser and syntax
+
+- check error messages (and exceptions in syntax) and improve their treatments
