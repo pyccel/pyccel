@@ -40,6 +40,8 @@ Codegen
 
 * private variables if name is of the form *_name*, in fcode we should add a prefix *p_name*. The used prefix should be given as an argument of doprint in codegen
 
+* in *load_extension*: need to improve the use of dep_libs (ex BLAS_LIBRARIES, LAPACK_LIBRARIES)
+
 Parallel
 ********
 
