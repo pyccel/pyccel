@@ -352,6 +352,11 @@ class Codegen(object):
         return self._headers
 
     @property
+    def metavars(self):
+        """Returns meta-variables."""
+        return self._metavars
+
+    @property
     def is_header(self):
         """Returns True if generated code is a header"""
         return self._is_header
@@ -370,8 +375,12 @@ class Codegen(object):
                 with_mpi=False,
                 pyccel_modules=[],
                 user_modules=[],
-                ignore_prefix=True):
+                enable_metavars=True):
         """Generate code for a given language.
+
+        metavariables that starts with __ will be appended into a dictionary
+        with their corresponding value.
+        Their declarations will be ignored when printing the code.
 
         language: str
             target language. Possible values {"fortran"}
@@ -387,8 +396,6 @@ class Codegen(object):
             list of modules supplied by the user.
         user_modules: list
             list of modules supplied by the user.
-        ignore_prefix: bool
-            Ignore variables that starts with __ if True
         """
         # ...
         filename = self.filename
@@ -398,6 +405,7 @@ class Codegen(object):
         routines = ""
         classes  = ""
         modules  = []
+        metavars = {}
 
         declarations = {}
         # ...
@@ -486,7 +494,7 @@ class Codegen(object):
                 elif isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
                     continue
                 elif isinstance(stmt.lhs, Variable) and stmt.lhs.name.startswith('__'):
-                    continue
+                    metavars[stmt.lhs.name] = stmt.rhs
                 else:
                     body += printer(stmt) + "\n"
             elif isinstance(stmt, AugAssign):
@@ -604,6 +612,7 @@ class Codegen(object):
         self._modules   = modules
         self._is_module = is_module
         self._language  = language
+        self._metavars  = metavars
         # ...
 
         # ...

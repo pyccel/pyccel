@@ -11,7 +11,6 @@ from os import path
 
 from pyccel import __version__ as __display_version__
 from pyccel.codegen.utilities import build_file
-from pyccel.codegen.utilities import initialize_project
 from pyccel.codegen.utilities import build_cmakelists
 from pyccel.codegen.utilities import build_cmakelists_dir
 from pyccel.codegen.utilities import generate_project_main

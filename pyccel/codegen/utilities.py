@@ -218,10 +218,19 @@ def build_file(filename, language, compiler, \
                           accelerator=accelerator,
                           ignored_modules=ignored_modules,
                           with_mpi=with_mpi)
-        ms.append(codegen_m)
+        _append_module = True
+        if '__ignore_at_import__' in codegen_m.metavars:
+            if codegen_m.metavars['__ignore_at_import__']:
+                ignored_modules.append(module)
+                _append_module = False
+
+        if _append_module:
+            ms.append(codegen_m)
+
         namespaces[module] = codegen_m.namespace
         for n in names:
             namespace_user[n] = namespaces[module][n]
+
 
         # TODO add aliases or what to import (names)
 
@@ -710,6 +719,8 @@ def load_extension(ext, output_dir,
     libname = extension
     # TODO add dependencies
     dep_libs = []
+    # TODO to remove
+    dep_libs = ['${BLAS_LIBRARIES}']
     build_cmakelists(output_dir,
                      libname=libname,
                      files=files,
@@ -753,25 +764,58 @@ def load_extension(ext, output_dir,
     # ...
 # ...
 
-# ...
-def initialize_project(base_dir, project, suffix, libname, prefix=None):
+# ... # default values of FC etc must be done in settings before
+def initialize_project(base_dir, project, libname, settings):
+
+    # ...
     if not os.path.exists(base_dir):
         raise ValueError('Could not find :{0}'.format(base_dir))
+    # ...
 
+    # ...
+    try:
+        prefix = settings['prefix']
+    except:
+        prefix = None
+    # ...
+
+    # ...
+    try:
+        fflags = settings['fflags']
+    except:
+        fflags = '-O2 -fbounds-check'
+    # ...
+
+    # ...
+    flags = settings['flags']
+    # ...
+
+    # ...
+    try:
+        fc = settings['fc']
+    except:
+        fc = 'gfortran'
+    # ...
+
+    # ...
+    try:
+        suffix = settings['suffix']
+    except:
+        raise ValueError('suffix can not be found in settings')
+    # ...
+
+    # ...
     if prefix is None:
         prefix = os.path.join(base_dir, 'usr')
         mkdir_p(prefix)
-
-    FC     = 'gfortran'
-    FLAGS  = {}
-    FFLAGS = '-O2 -fbounds-check'
+    # ...
 
     from pyccel.codegen.cmake import CMake
     cmake = CMake(base_dir, \
                   prefix=prefix, \
-                  flags=FLAGS, \
-                  flags_fortran=FFLAGS, \
-                  compiler_fortran=FC)
+                  flags=flags, \
+                  flags_fortran=fflags, \
+                  compiler_fortran=fc)
 
     cmake.initialize(base_dir, project, suffix, libname, force=True)
 
@@ -867,6 +911,17 @@ def generate_project_conf(srcdir, project, **settings):
         extensions = ', '.join(i for i in settings['extensions'])
         code_ext = 'extensions = ["{0}"]'.format(extensions)
         code = '{0}\n{1}\n'.format(code, code_ext)
+    # ...
+
+    # ... add flags
+    if settings['flags']:
+        code_header = '# pyccel flags are listed below'
+        code = '{0}\n{1}'.format(code, code_header)
+
+        flags = ', '.join('\n"{0}": "{1}"'.format(k,v)
+                          for k,v in settings['flags'].items())
+        code_flags = 'flags = {%s\n}' % flags
+        code = '{0}\n{1}\n'.format(code, code_flags)
     # ...
 
     # ... add applications

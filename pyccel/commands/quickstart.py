@@ -20,9 +20,15 @@ from pyccel.codegen.utilities import generate_project_conf
 
 
 EXTENSIONS = {
-    'math': True,
-    'blas': False
+    'math': True
 }
+
+THIRD_PARTIES = {
+    'blaslapack': False,
+}
+
+FLAGS_REGISTRY = ['blaslapack_dir']
+
 
 DEFAULT_VALUE = {
     'author': '__AUTHOR__',
@@ -79,21 +85,21 @@ Makefile to be used with pyccel-build.
                        help='version of project')
     group.add_argument('-r', '--release', metavar='RELEASE', dest='release',
                        help='release of project')
-    group.add_argument('--suffix-library', type=str, \
+    group.add_argument('--suffix-library', type=str,
                         help='Suffix of 3 letters for the library')
     group.add_argument('-l', '--language', metavar='LANGUAGE', dest='language',
                        help='target language')
     group.add_argument('--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
-    group.add_argument('--compiler', type=str, \
+    group.add_argument('--compiler', type=str,
                         help='Used compiler')
     group.add_argument('--master', metavar='MASTER',
                        help='master file name')
-    group.add_argument('--include', type=str, \
+    group.add_argument('--include', type=str,
                         help='path to include directory.')
-    group.add_argument('--libdir', type=str, \
+    group.add_argument('--libdir', type=str,
                         help='path to lib directory.')
-    group.add_argument('--libs', type=str, \
+    group.add_argument('--libs', type=str,
                         help='list of libraries to link with.')
 
     group = parser.add_argument_group('Extension options')
@@ -103,6 +109,15 @@ Makefile to be used with pyccel-build.
                            help='enable %s extension' % ext)
     group.add_argument('--extensions', metavar='EXTENSIONS', dest='extensions',
                        action='append', help='enable extensions')
+
+    group = parser.add_argument_group('Third party options')
+    for ext, default in THIRD_PARTIES.items():
+        group.add_argument('--with-' + ext, action='store_true',
+                           dest='with_' + ext, default=default,
+                           help='enable %s third party' % ext)
+        group.add_argument('--with-' + ext + '-dir', type=str,
+                           dest=ext + '_dir',
+                           help='%s third party directory' % ext)
 
     return parser
 
@@ -160,6 +175,19 @@ def generate(d, silent=False):
     # ...
 
     # ...
+    flags = {}
+    for key in FLAGS_REGISTRY:
+        flag = d.pop(key, None)
+        if flag:
+            flags[key.upper()] = flag
+
+    if flags['BLASLAPACK_DIR']:
+        flags['LAPACK_ENABLED'] = 'ON'
+
+    d['flags'] = flags
+    # ...
+
+    # ...
     generate_project_init(d['path'], project, **d)
     generate_project_main(d['path'], project, extensions)
     generate_project_conf(d['path'], project, **d)
@@ -167,7 +195,7 @@ def generate(d, silent=False):
 
     # ...
     if not('convert_only' in d):
-        initialize_project(base_dir, project, suffix, libname, prefix=None)
+        initialize_project(base_dir, project, libname, d)
     # ...
 
 def main(argv=sys.argv[1:]):

@@ -113,6 +113,9 @@ class CMake(object):
         cmd = 'cmake {0} ..'.format(options)
         # ...
 
+        # TODO remove
+        print('+++++++++ ', cmd)
+
         # ...
         base_dir = os.getcwd()
 
