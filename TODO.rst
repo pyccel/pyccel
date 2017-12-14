@@ -27,6 +27,8 @@ AST
 
 * cleaning: PointerVariable, AllocatableVariable, Variable, IndexedVariable, IndexedElement
 
+* private variables if name is of the form *_name*, in fcode we should add a prefix *p_name*. The used prefix should be given as an argument of doprint in codegen
+
 Codegen
 *******
 
@@ -35,6 +37,8 @@ Codegen
 * improve debug mode and verbosity in fcode and codegen
 
 * code inlining
+
+* private variables if name is of the form *_name*, in fcode we should add a prefix *p_name*. The used prefix should be given as an argument of doprint in codegen
 
 Parallel
 ********

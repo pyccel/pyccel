@@ -364,11 +364,13 @@ class Codegen(object):
         """Generate code as a program. Every extension must implement this method."""
         pass
 
-    def doprint(self, language, accelerator=None, \
-                ignored_modules=[], \
-                with_mpi=False, \
-                pyccel_modules=[], \
-                user_modules=[]):
+    def doprint(self, language,
+                accelerator=None,
+                ignored_modules=[],
+                with_mpi=False,
+                pyccel_modules=[],
+                user_modules=[],
+                ignore_prefix=True):
         """Generate code for a given language.
 
         language: str
@@ -385,6 +387,8 @@ class Codegen(object):
             list of modules supplied by the user.
         user_modules: list
             list of modules supplied by the user.
+        ignore_prefix: bool
+            Ignore variables that starts with __ if True
         """
         # ...
         filename = self.filename
@@ -474,13 +478,17 @@ class Codegen(object):
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
             elif isinstance(stmt, Assign):
-                if not isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
-                    body += printer(stmt) + "\n"
-                elif isinstance(stmt.rhs, MPI_Tensor):
+                if isinstance(stmt.rhs, MPI_Tensor):
                     for dec in stmt.rhs.declarations:
                         preludes += printer(dec) + "\n"
                     for s in stmt.rhs.body:
                         body += printer(s) + "\n"
+                elif isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
+                    continue
+                elif isinstance(stmt.lhs, Variable) and stmt.lhs.name.startswith('__'):
+                    continue
+                else:
+                    body += printer(stmt) + "\n"
             elif isinstance(stmt, AugAssign):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, MultiAssign):
@@ -545,7 +553,11 @@ class Codegen(object):
 
         # ...
         for key, dec in list(ast.declarations.items()):
-            if not isinstance(dec.dtype, (NativeRange, NativeTensor)):
+            if isinstance(dec.dtype, (NativeRange, NativeTensor)):
+                continue
+            elif isinstance(dec.variables[0], Variable) and dec.variables[0].name.startswith('__'):
+                continue
+            else:
                 preludes += printer(dec) + "\n"
 
         def _construct_prelude(stmt):
