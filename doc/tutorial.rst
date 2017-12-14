@@ -301,6 +301,8 @@ In order to compile *manualy* your project, you just need to go to this build di
 Basic configuration
 *******************
 
+.. todo:: add basic configurations.
+
 .. Earlier we mentioned that the :file:`conf.py` file controls how Pyccel processes
 .. your documents.  In that file, which is executed as a Python source file, you
 .. assign configuration values.  For advanced users: since it is executed by
