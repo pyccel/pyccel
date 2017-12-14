@@ -1,36 +1,72 @@
 TODO
 ====
 
-*  **parser/syntax**  improve assignable for value in AssignStmt
+Parser
+******
 
-* pyccel output_dir (for temporary files) should be *.pyccel* for pyccel extensions
+* improve assignable for value in AssignStmt
 
 * improve function headers (raise Exception NotImplemented when we have to type inference)
 
-* bug in *bsplines/make_knots*: **j=i-p** converted to **j=i**
+* improve precision, add double complex
 
-- improve precision
+* **inout** arguments are not handled yet
 
-- **inout** arguments are not handled yet
+* OOP
 
-- pointers
+* improve debug mode and verbosity in parser and syntax
 
-- structures and classes
+* check error messages (and exceptions in syntax) and improve their treatments
 
-- procedure interfaces
+* symbolic expressions (find a way to use directly *sympy* expressions)
 
-- user *Fortran/c* functions provided as inputs
+* *eval* statement
 
-- BLAS
+AST
+***
 
-- LAPACK
+* cleaning: PointerVariable, AllocatableVariable, Variable, IndexedVariable, IndexedElement
 
-- symbolic expressions (find a way to use directly functions that are defined in *sympy*)
+Codegen
+*******
 
-- in fcode: use  self._get_statement for every statement
+* in fcode: use  self._get_statement for every statement
 
-- improve debug mode and verbosity in fcode and codegen
+* improve debug mode and verbosity in fcode and codegen
 
-- improve debug mode and verbosity in parser and syntax
+* code inlining
 
-- check error messages (and exceptions in syntax) and improve their treatments
+Parallel
+********
+
+MPI
+^^^
+
+* have MPI as headers
+
+* write a new *Pyccel* MPI class (instead of the current *sympy* implementation)
+
+* improve import
+
+OpenMP
+^^^^^^
+
+* improve parallel constructor arguments
+
+* improve *prange* (add new arguments, nowait, etc)
+
+* improve import
+
+Commands line
+*************
+
+* pyccel output_dir (for temporary files) should be *.pyccel* for pyccel extensions
+
+* procedure interfaces
+
+External
+********
+
+* BLAS
+
+* LAPACK
