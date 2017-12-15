@@ -2707,6 +2707,51 @@ class Stencil(Basic):
         return self._args[2]
 
 # TODO rename dtypes to arguments
+class VariableHeader(Basic):
+    """Represents a variable header in the code.
+
+    name: str
+        variable name
+
+    dtypes: tuple/list
+        a list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr, allocatable)
+
+    Examples
+
+    """
+
+    # TODO dtypes should be a dictionary (useful in syntax)
+    def __new__(cls, name, dtypes):
+        if not(iterable(dtypes)):
+            raise TypeError("Expecting dtypes to be iterable.")
+
+#        if isinstance(dtypes, str):
+#            types.append((datatype(dtypes), []))
+#        elif isinstance(dtypes, DataType):
+#            types.append((dtypes, []))
+#        elif isinstance(dtypes, (tuple, list)):
+#            if not(len(dtypes) in [2, 3]):
+#                raise ValueError("Expecting exactly 2 or 3 entries.")
+#        else:
+#            raise TypeError("Wrong element in dtypes.")
+
+        return Basic.__new__(cls, name, types)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def dtypes(self):
+        return self._args[1]
+
+    def create_definition(self):
+        """Returns a Variable."""
+        raise NotImplementedError('TODO')
+
+
+# TODO rename dtypes to arguments
 class FunctionHeader(Basic):
     """Represents function/subroutine header in the code.
 

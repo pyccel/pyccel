@@ -55,6 +55,7 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              For, Assign, ParallelBlock, \
                              Declare, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
+                             VariableHeader, \
                              datatype, While, With, NativeFloat, \
                              EqualityStmt, NotequalStmt, \
                              MultiAssign, AugAssign, \
@@ -3362,6 +3363,35 @@ class ExecStmt(BasicStmt):
             ls.append(stmt)
 
         return ls
+
+class VariableHeaderStmt(BasicStmt):
+    """Base class representing a header statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a VariableHeader statement
+
+        name: str
+            variable name
+        dec: list, tuple
+            list of argument types
+        """
+        self.name = kwargs.pop('name')
+        self.dec  = kwargs.pop('dec')
+
+        super(VariableHeaderStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        dtype = self.dec.dtype
+        star  = (self.dec.star == '*')
+        attr = ''
+        if not(self.dec.trailer is None):
+            attr = self.dec.trailer.expr
+
+        h = VariableHeader(self.name, (dtype, attr, star))
+        headers[self.name] = h
+        return h
 
 class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""

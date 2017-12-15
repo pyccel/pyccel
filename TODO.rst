@@ -6,6 +6,8 @@ Imports
 
 * metavars: modules, module_name
 
+* openmp.pyh only if openmp is used
+
 Parser
 ******
 

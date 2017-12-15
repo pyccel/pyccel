@@ -69,6 +69,7 @@ AnnotatedStmt:
     FunctionHeaderStmt 
   | ClassHeaderStmt
   | MethodHeaderStmt
+  | VariableHeaderStmt
   | OpenmpStmt
 ;
 
@@ -130,6 +131,10 @@ SyncStmt: SYNC (trailer=TrailerArgList)? (variables*=Expression[',']);
 CommentStmt:
 //  '#' text=/[^x].*$/  
   '#' text=/.*$/
+;
+
+VariableHeaderStmt: 
+  '#$' 'header' 'variable'  name=ID dec=DeclareAtom
 ;
 
 ClassHeaderStmt: 
