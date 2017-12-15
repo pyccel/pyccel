@@ -773,43 +773,18 @@ def initialize_project(base_dir, project, libname, settings):
     # ...
 
     # ...
-    try:
-        prefix = settings['prefix']
-    except:
-        prefix = None
+    prefix = settings['prefix']
+    fflags = settings['fflags']
+    flags  = settings['flags']
+    fc     = settings['fc']
+    suffix = settings['suffix']
     # ...
 
     # ...
-    try:
-        fflags = settings['fflags']
-    except:
-        fflags = '-O2 -fbounds-check'
+    mkdir_p(prefix)
     # ...
 
     # ...
-    flags = settings['flags']
-    # ...
-
-    # ...
-    try:
-        fc = settings['fc']
-    except:
-        fc = 'gfortran'
-    # ...
-
-    # ...
-    try:
-        suffix = settings['suffix']
-    except:
-        raise ValueError('suffix can not be found in settings')
-    # ...
-
-    # ...
-    if prefix is None:
-        prefix = os.path.join(base_dir, 'usr')
-        mkdir_p(prefix)
-    # ...
-
     from pyccel.codegen.cmake import CMake
     cmake = CMake(base_dir, \
                   prefix=prefix, \
@@ -824,11 +799,7 @@ def initialize_project(base_dir, project, libname, settings):
 
     # TODO uncomment install
     #cmake.install()
-
-#        FLAGS  = self.configs['flags']
-#
-#        FC     = self.configs['fortran']['compiler']
-#        FFLAGS = self.configs['fortran']['flags']
+    # ...
 # ...
 
 # ...
@@ -905,23 +876,61 @@ def generate_project_conf(srcdir, project, **settings):
 
     # ... add extensions
     if settings['extensions']:
-        code_header = '# pyccel extensions are listed below'
+        code_header = '# ... pyccel extensions are listed below'
         code = '{0}\n{1}'.format(code, code_header)
 
         extensions = ', '.join(i for i in settings['extensions'])
         code_ext = 'extensions = ["{0}"]'.format(extensions)
         code = '{0}\n{1}\n'.format(code, code_ext)
+
+        code = ('{0}'
+                '# ...\n').format(code)
     # ...
 
     # ... add flags
     if settings['flags']:
-        code_header = '# pyccel flags are listed below'
+        code_header = '# ... pyccel flags are listed below'
         code = '{0}\n{1}'.format(code, code_header)
 
         flags = ', '.join('\n"{0}": "{1}"'.format(k,v)
                           for k,v in settings['flags'].items())
         code_flags = 'flags = {%s\n}' % flags
         code = '{0}\n{1}\n'.format(code, code_flags)
+
+        code = ('{0}'
+                '# ...\n').format(code)
+    # ...
+
+    # ... add compiler flags
+    if settings['fflags']:
+        code_header = '# ... compiler flags are listed below'
+        code = '{0}\n{1}\n'.format(code, code_header)
+
+        code = ('{0}'
+                'fflags = "{1}"\n').format(code, settings['fflags'])
+
+    if settings['fc']:
+        code = ('{0}'
+                'fc = "{1}"\n').format(code, settings['fc'])
+
+    if settings['suffix']:
+        code = ('{0}'
+                'suffix = "{1}"\n').format(code, settings['suffix'])
+
+        code = ('{0}'
+                '# ...\n').format(code)
+    # ...
+
+    # ... add prefix
+    if settings['prefix']:
+        code_header = '# ... installation prefix '
+        code = '{0}\n{1}\n'.format(code, code_header)
+
+        code = ('{0}'
+                'prefix = "{1}"\n').format(code, settings['prefix'])
+
+        code = ('{0}'
+                '# ...\n').format(code)
     # ...
 
     # ... add applications
