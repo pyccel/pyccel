@@ -159,6 +159,8 @@ def allocatable_like(expr, verbose=False):
 
     if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
         return expr
+    elif isinstance(expr, str): # if the rhs is a string
+        return expr
     elif isinstance(expr, Expr):
         args = [expr]
         while args:
@@ -216,7 +218,7 @@ def allocatable_like(expr, verbose=False):
             elif a.is_Symbol:
                 raise TypeError("Found an unknown symbol {0}".format(str(a)))
     else:
-        raise TypeError("Unexpected type")
+        raise TypeError("Unexpected type {0}".format(type(expr)))
 
 class DottedName(Basic):
     """
@@ -969,6 +971,10 @@ class NativeComplex(DataType):
     _name = 'Complex'
     pass
 
+class NativeString(DataType):
+    _name = 'String'
+    pass
+
 class NativeVoid(DataType):
     _name = 'Void'
     pass
@@ -990,12 +996,13 @@ class CustomDataType(DataType):
     pass
 
 
-Bool = NativeBool()
-Int = NativeInteger()
-Float = NativeFloat()
-Double = NativeDouble()
+Bool    = NativeBool()
+Int     = NativeInteger()
+Float   = NativeFloat()
+Double  = NativeDouble()
 Complex = NativeComplex()
-Void = NativeVoid()
+Void    = NativeVoid()
+String  = NativeString()
 
 
 dtype_registry = {'bool': Bool,
@@ -1003,7 +1010,8 @@ dtype_registry = {'bool': Bool,
                   'float': Float,
                   'double': Double,
                   'complex': Complex,
-                  'void': Void}
+                  'void': Void,
+                  'string': String}
 
 
 def DataTypeFactory(name, argnames=["_name"], \

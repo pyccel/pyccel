@@ -335,6 +335,12 @@ def get_attributs(expr):
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
+    elif isinstance(expr, str):
+        d_var['datatype']    = NativeBool()
+        d_var['allocatable'] = True
+        d_var['rank']        = 1
+        d_var['shape']       = len(expr)
+        return d_var
 #    elif isinstance(expr, DottedVariable):
 #        comm = expr.name[0]
 #        attr = expr.name[-1]
