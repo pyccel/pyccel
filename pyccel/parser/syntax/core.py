@@ -61,7 +61,6 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, Assert, If, \
-                             ThreadID, ThreadsNumber, \
                              Stencil, Ceil, Break, Continue, \
                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
                              Dot, Sign, IndexedElement,\
@@ -2995,52 +2994,6 @@ class TrailerSliceEmpty(BasicSlice):
         """
         self.dots  = kwargs.pop('dots')
         super(TrailerSliceEmpty, self).__init__(**kwargs)
-
-class ThreadStmt(BasicStmt):
-    """Class representing a Thread call function in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Thread function call.
-
-        lhs: str
-            variable name to create
-        func: str
-            function to call
-        """
-        self.lhs  = kwargs.pop('lhs')
-        self.func = kwargs.pop('func')
-
-        super(ThreadStmt, self).__init__(**kwargs)
-
-    def update(self):
-        """
-        appends the variable to the namespace
-        """
-        var_name = str(self.lhs)
-        if not(var_name in namespace):
-            insert_variable(var_name, datatype='int', rank=0)
-        else:
-            raise Exception('Already declared variable for thread_id.')
-
-    @property
-    def expr(self):
-        """
-        Process the Thread function call,
-        by returning the appropriate object from pyccel.ast.core
-        """
-        self.update()
-
-        var_name = str(self.lhs)
-        var = Symbol(var_name)
-
-        func = str(self.func)
-        if func == 'thread_id':
-            return ThreadID(var)
-        elif func == 'thread_number':
-            return ThreadsNumber(var)
-        else:
-            raise Exception('Wrong value for func.')
 
 class ArgList(BasicStmt):
     """Class representing a list of arguments."""

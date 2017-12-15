@@ -23,7 +23,6 @@ from pyccel.ast.core import (For, Assign, Declare, Variable, \
                              FunctionDef, Import, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, If, \
-                             ThreadID, ThreadsNumber, \
                              Stencil, \
                              Zeros, Ones, Array, Len, Dot, IndexedElement)
 

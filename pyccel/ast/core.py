@@ -41,16 +41,13 @@ from sympy.core.compatibility import is_sequence
 
 # TODO: add examples: Break, Len, Shape,
 #                     Min, Max, Dot, Sign, Array,
-#                     Thread, ThreadID, ThreadNumber
 # TODO - add EmptyStmt => empty lines
-#      - clean Thread objects
 #      - update code examples
 #      - add examples
 #      - Function case
 #      - Zeros, Ones, Array cases
 #      - AnnotatedComment case
 #      - Slice case
-#      - Thread cases
 #      - Stencil case
 #      - FunctionHeader case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
@@ -2637,44 +2634,6 @@ class MultiAssign(Basic):
         rhs     = sstr(self.rhs)
         outputs = ', '.join(sstr(i) for i in self.lhs)
         return '{0} := {1}'.format(outputs, rhs)
-
-# TODO: to rewrite
-class Thread(Basic):
-    """Represents a thread function for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    Examples
-
-    """
-
-    def __new__(cls, lhs):
-        lhs   = sympify(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-        if not isinstance(lhs, Symbol):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-# TODO: to rewrite
-class ThreadID(Thread):
-    """Represents a get thread id for code generation.
-    """
-    pass
-
-# TODO: to rewrite
-class ThreadsNumber(Thread):
-    """Represents a get threads number for code generation.
-    """
-    pass
 
 # TODO: remove Len from here
 class Stencil(Basic):

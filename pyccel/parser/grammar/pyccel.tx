@@ -74,7 +74,6 @@ AnnotatedStmt:
 
 ExprStmt: 
     StencilStmt 
-  | ThreadStmt 
   | ExecStmt 
   | EvalStmt 
   | AssignStmt 
@@ -192,10 +191,6 @@ ExecStmt:
 ;
 
 EvalStmt: lhs=ID '=' 'eval' '(' expression=STRING ')';
-
-// TODO: improve
-ThreadStmt: lhs=ID '=' func=ThreadFunction '(' ')';
-ThreadFunction: 'thread_id' | 'thread_number';
 
 RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'

@@ -18,7 +18,6 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               FunctionDef, ClassDef, Sync, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
-                              ThreadID, ThreadsNumber, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)

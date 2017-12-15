@@ -20,8 +20,6 @@ from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        CallStmt, \
                                        CommentStmt, SuiteStmt, \
                                        EvalStmt, \
-                                       # Multi-threading
-                                       ThreadStmt, \
                                        StencilStmt, \
                                        # test bool
                                        Test, OrTest, AndTest, NotTest, Comparison, \
@@ -204,8 +202,6 @@ class PyccelParser(Parser):
                    ImportFromStmt, ImportAsNames, \
                    CommentStmt, SuiteStmt, \
                    EvalStmt, \
-                   # Multi-threading
-                   ThreadStmt, \
                    StencilStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
