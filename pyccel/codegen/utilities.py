@@ -207,6 +207,10 @@ def build_file(filename, language, compiler, \
     # ...
     namespaces = {}
     namespace_user = {}
+
+    # we store here the external library dependencies for every module
+    d_libraries = []
+
     ms = []
     for module, names in list(imports.items()):
         f_name = imports_src[module][0] #TODO loop over files
@@ -223,6 +227,10 @@ def build_file(filename, language, compiler, \
             if codegen_m.metavars['__ignore_at_import__']:
                 ignored_modules.append(module)
                 _append_module = False
+
+        if '__libraries__' in codegen_m.metavars:
+            deps = codegen_m.metavars['__libraries__'].split(',')
+            d_libraries += deps
 
         if _append_module:
             ms.append(codegen_m)
@@ -247,6 +255,11 @@ def build_file(filename, language, compiler, \
                       with_mpi=with_mpi,
                       pyccel_modules=pyccel_modules,
                       user_modules=user_modules)
+
+
+    if '__libraries__' in codegen.metavars:
+        deps = codegen.metavars['__libraries__'].split(',')
+        d_libraries += deps
 
     # ... TODO shall we use another key?
     namespaces[filename] = codegen.namespace
@@ -335,6 +348,7 @@ def build_file(filename, language, compiler, \
     info = {}
     info['is_module']  = codegen.is_module
     info['namespaces'] = namespaces
+    info['libs']   = d_libraries
     # ...
 
     return info
@@ -403,7 +417,7 @@ def load_module(filename, language="fortran", compiler="gfortran"):
 # ...
 def build_cmakelists(src_dir, libname, files,
                      force=True,
-                     dep_libs=[],
+                     libs=[],
                      programs=[]):
     # ...
     def _print_files(files):
@@ -413,17 +427,17 @@ def build_cmakelists(src_dir, libname, files,
     def _print_libname(libname):
         return 'add_library({0} {1})'.format(libname, '${files}')
 
-    def _print_dependencies(dep_libs):
-        if len(dep_libs) == 0:
+    def _print_dependencies(libs):
+        if len(libs) == 0:
             return ''
-        deps_str  = ' '.join(i for i in dep_libs)
+        deps_str  = ' '.join(i for i in libs)
         return 'TARGET_LINK_LIBRARIES({0} {1})'.format(libname, deps_str)
 
-    def _print_programs(programs, libname, dep_libs):
+    def _print_programs(programs, libname, libs):
         if len(programs) == 0:
             return ''
 
-        code_deps = ' '.join(i for i in dep_libs)
+        code_deps = ' '.join(i for i in libs)
         code = ''
         for f in programs:
             name = f.split('.')[0] # file name without extension
@@ -433,7 +447,7 @@ def build_cmakelists(src_dir, libname, files,
             code += '\n# ... {0}\n'.format(f)
             code += 'ADD_EXECUTABLE({0} {1})\n'.format(code_bin, f)
 
-            if len(dep_libs) > 0:
+            if len(libs) > 0:
                 code += 'TARGET_LINK_LIBRARIES({0} {1})\n'.format(code_bin, code_deps)
 
             code += 'ADD_TEST( NAME {0} COMMAND {0} )\n'.format(code_bin)
@@ -452,11 +466,11 @@ def build_cmakelists(src_dir, libname, files,
     if len(files) > 0:
         code = '{0}\n{1}'.format(code, _print_files(files))
         code = '{0}\n{1}'.format(code, _print_libname(libname))
-        code = '{0}\n{1}'.format(code, _print_dependencies(dep_libs))
+        code = '{0}\n{1}'.format(code, _print_dependencies(libs))
 
-        dep_libs += [libname]
+        libs += [libname]
 
-    code = '{0}\n{1}'.format(code, _print_programs(programs, libname, dep_libs))
+    code = '{0}\n{1}'.format(code, _print_programs(programs, libname, libs))
     # ...
 
     setup_path = os.path.join(src_dir, 'CMakeLists.txt')
@@ -471,14 +485,14 @@ def build_cmakelists(src_dir, libname, files,
 # ...
 def build_testing_cmakelists(src_dir, project, files,
                              force=True,
-                             dep_libs=[]):
+                             libs=[]):
     # ...
     if (len(files) == 0):
         return
     # ...
 
     # ...
-    code_deps = ' '.join(i for i in dep_libs)
+    code_deps = ' '.join(i for i in libs)
     code = ''
     for f in files:
         name = f.split('.')[0] # file name without extension
@@ -488,7 +502,7 @@ def build_testing_cmakelists(src_dir, project, files,
         code += '\n# ... {0}\n'.format(f)
         code += 'ADD_EXECUTABLE({0} {1})\n'.format(code_bin, f)
 
-        if len(dep_libs) > 0:
+        if len(libs) > 0:
             code += 'TARGET_LINK_LIBRARIES({0} {1})\n'.format(code_bin, code_deps)
 
         code += 'ADD_TEST( NAME {0} COMMAND {0} )\n'.format(code_bin)
@@ -674,6 +688,7 @@ def load_extension(ext, output_dir,
     # ...
 
     # ... convert all modules of the seleceted extension
+    infos = {}
     for module in modules:
         filename = get_extension_path(ext, module=module)
         if not silent:
@@ -681,11 +696,11 @@ def load_extension(ext, output_dir,
             print ('> converting extensions/{0}/{1}'.format(ext, f_name))
 
         module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
-        build_file(filename,
-                   language=language,
-                   compiler=None,
-                   output_dir=output_dir,
-                   name=module_name)
+        infos[module] = build_file(filename,
+                                   language=language,
+                                   compiler=None,
+                                   output_dir=output_dir,
+                                   name=module_name)
     # ...
 
     # remove .pyccel temporary files
@@ -715,16 +730,20 @@ def load_extension(ext, output_dir,
             copyfile(f_src, f_dst)
     # ...
 
+    # ... construct external library dependencies
+    libs = []
+    for module, info in infos.items():
+        deps = [i.strip() for i in info['libs']]
+        libs += deps
+    # TODO must remove duplicated libs?
+    # ...
+
     # ...
     libname = extension
-    # TODO add dependencies
-    dep_libs = []
-    # TODO to remove
-    dep_libs = ['${BLAS_LIBRARIES}']
     build_cmakelists(output_dir,
                      libname=libname,
                      files=files,
-                     dep_libs=dep_libs)
+                     libs=libs)
     # ...
 
     # ...
@@ -741,10 +760,18 @@ def load_extension(ext, output_dir,
             output_testing_dir = os.path.join(output_dir, 'testing')
             mkdir_p(output_testing_dir)
 
-            build_file(filename,
-                       language=language,
-                       compiler=None,
-                       output_dir=output_testing_dir)
+            infos[filename] = build_file(filename,
+                                       language=language,
+                                       compiler=None,
+                                       output_dir=output_testing_dir)
+
+        # ... construct external library dependencies
+        libs = []
+        for module, info in infos.items():
+            deps = [i.strip() for i in info['libs']]
+            libs += deps
+        # TODO must remove duplicated libs?
+        # ...
 
         # remove .pyccel temporary files
         if clean:
@@ -753,10 +780,10 @@ def load_extension(ext, output_dir,
         valid_file = lambda f: (f.split('.')[-1] in ['f90'])
         files = [f for f in os.listdir(output_testing_dir) if valid_file(f)]
 
-        dep_libs += [libname]
+        libs += [libname]
         build_testing_cmakelists(output_testing_dir, ext,
                                  files=files,
-                                 dep_libs=dep_libs)
+                                 libs=libs)
     # ...
 
     # ...
