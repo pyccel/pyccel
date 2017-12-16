@@ -1,6 +1,6 @@
 # coding: utf-8
 
-#$ header class OpenmpRange(public)
+#$ header class OpenmpRange(public, iterable)
 #$ header method __init__(OpenmpRange, int, int, int, int, int, int)
 #$ header method __del__(OpenmpRange)
 #$ header method __next__(OpenmpRange)

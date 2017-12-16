@@ -23,7 +23,7 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import DataType, is_pyccel_datatype
+from pyccel.ast.core import DataType, is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
@@ -410,9 +410,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         # we don't print the declaration if iterable object
-        if is_pyccel_datatype(expr.dtype):
-            if expr.dtype.is_iterable:
-                return ''
+        if is_iterable_datatype(expr.dtype):
+            return ''
 
         dtype = self._print(expr.dtype)
 

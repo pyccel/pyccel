@@ -1048,6 +1048,17 @@ def is_pyccel_datatype(expr):
 #    name = expr.__class__.__name__
 #    return name.startswith('Pyccel')
 
+# TODO improve and remove try/except
+def is_iterable_datatype(dtype):
+    """Returns True if dtype is an iterable class."""
+    try:
+        if is_pyccel_datatype(dtype):
+            return dtype.is_iterable
+        else:
+            return False
+    except:
+        return False
+
 # TODO check the use of floats
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
