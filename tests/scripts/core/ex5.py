@@ -18,6 +18,9 @@ def fi(x, n=5):
     y = x+1+n
     return y
 
+def f_pass():
+    pass
+
 x1 = 1.0
 y1 = 2.0
 
@@ -29,6 +32,8 @@ i = 1
 j = 3
 k = fi(i, j)
 k = fi(i)
+
+f_pass()
 
 print(z)
 print(t)
