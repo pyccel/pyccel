@@ -143,21 +143,23 @@ def build_file(filename, language, compiler, \
     # ignoring pyccel.stdlib import
     ignored_modules.append('pyccel.stdlib')
 
-    ignored_modules.append('pyccel')
-    for n in pyccel_modules:
-        ignored_modules.append('pyccel.{0}'.format(n))
-        ignored_modules.append(n)
+#    ignored_modules.append('pyccel')
+#    for n in pyccel_modules:
+#        ignored_modules.append('pyccel.{0}'.format(n))
+#        ignored_modules.append(n)
 
     # ...
     def _ignore_module(key):
         pattern = lambda s: '{0}.'.format(s)
 
-        return np.asarray([key.startswith(pattern(i)) for i in ignored_modules]).any()
+        return np.asarray([key == pattern(i) for i in ignored_modules]).any()
     # ...
 
     # returns True if the submodule is external
     is_external_submodule  = lambda m,s: m == 'pyccelext.{0}.external.{1}'.format(ext, s)
     is_extension_submodule = lambda m,s: m == 'pyccelext.{0}.{1}'.format(ext, s)
+
+    is_parallel_submodule  = lambda m,s: m == 'pyccel.stdlib.parallel.{0}'.format(s)
 
     d = find_imports(filename=filename)
     for key, value in list(d.items()):
@@ -188,6 +190,18 @@ def build_file(filename, language, compiler, \
                                                     is_external=True)
                     else:
                         raise ValueError('non valid import for pyccel extensions.')
+            elif module.startswith('pyccel.stdlib.parallel'):
+                ext_full  = module.split('pyccel.stdlib.parallel.')[-1]
+                ext       = ext_full.split('.')[0] # to remove submodule
+
+                submodule = ext_full.split('.')[-1] # to get submodule
+
+                if is_parallel_submodule(module, submodule):
+                    f_name = get_parallel_path(ext,
+                                                module=submodule,
+                                                is_external=True)
+                else:
+                    raise ValueError('non valid import for parallel pyccel package.')
             else:
                 filename_py  = '{0}.py'.format(module)
                 filename_pyh = '{0}.pyh'.format(module)
@@ -552,6 +566,47 @@ def build_cmakelists_dir(src_dir, force=True, testing=False):
         f.write(code)
         f.close()
         # ...
+# ...
+
+# ...
+def get_parallel_path(ext, module=None, is_external=False):
+    """Finds the path of a pyccel parallel package (.py or .pyh).
+    A specific module can also be given."""
+
+    extension = 'pyccel.stdlib.parallel'
+    try:
+        package = importlib.import_module(extension)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
+
+    ext_dir = str(package.__path__[0])
+
+    if not module:
+        return ext_dir
+
+    # if module is not None
+    try:
+        m = importlib.import_module(extension, package=module)
+    except:
+        raise ImportError('could not import {0}.{1}'.format(extension, module))
+
+    filename_py  = '{0}.py'.format(module)
+    filename_pyh = '{0}.pyh'.format(module)
+
+    if not is_external:
+        filename_py  = os.path.join(ext_dir, filename_py)
+        filename_pyh = os.path.join(ext_dir, filename_pyh)
+    else:
+        filename_py  = os.path.join(ext_dir, filename_py)
+        filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
+
+    if os.path.isfile(filename_py):
+        return filename_py
+    elif os.path.isfile(filename_pyh):
+        return filename_pyh
+    else:
+        raise ImportError('could not find {0} or {1}'.format(filename_py,
+                                                             filename_pyh))
 # ...
 
 # ...

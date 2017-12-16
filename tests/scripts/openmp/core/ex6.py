@@ -2,7 +2,7 @@
 
 # This example is the python implementation of collapse.3.f from OpenMP 4.5 examples
 
-from pyccelext.math.external.openmp import omp_get_thread_num
+from pyccel.stdlib.parallel.openmp import omp_get_thread_num
 
 #$ omp parallel num_threads(2)
 

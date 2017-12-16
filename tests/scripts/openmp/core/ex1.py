@@ -1,8 +1,8 @@
 # coding: utf-8
 
-from pyccelext.math.external.openmp import omp_get_num_threads
-from pyccelext.math.external.openmp import omp_get_max_threads
-from pyccelext.math.external.openmp import omp_get_thread_num
+from pyccel.stdlib.parallel.openmp import omp_get_num_threads
+from pyccel.stdlib.parallel.openmp import omp_get_max_threads
+from pyccel.stdlib.parallel.openmp import omp_get_thread_num
 
 #$ omp parallel
 
