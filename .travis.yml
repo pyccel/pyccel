@@ -30,6 +30,7 @@ install:
 # command to run tests
 script:
 #  - pytest # or py.test for Python versions 3.5 and below
-  - python tests/test_pyccel.py --execute
   - pytest tests/pyccel/ast/test_ast.py
   - pytest tests/pyccel/parser/test_imports.py
+  - python tests/test_pyccel.py --execute
+  - python tests/test_pyccel_openmp.py --openmp --execute

@@ -1,8 +1,8 @@
 # coding: utf-8
 
-n = 500
-m = 700
-p = 500
+n = 50
+m = 70
+p = 50
 
 a = zeros((n,m), double)
 b = zeros((m,p), double)
