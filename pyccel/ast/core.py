@@ -970,9 +970,14 @@ class ForIterator(For):
     def ranges(self):
         depth = self.depth
 
-        it = self.iterable
-        cls_base = it.cls_base
-        methods = cls_base.methods_as_dict
+        it          = self.iterable
+        cls_base    = it.cls_base
+        methods     = cls_base.methods_as_dict
+        init_method = methods['__init__']
+
+        args   = init_method.arguments[1:]
+        args   = [str(i) for i in args]
+        params = [str(i) for i in it.cls_parameters]
 
         # ...
         it_method = methods['__iter__']
@@ -985,6 +990,24 @@ class ForIterator(For):
 
         if not(len(starts) == depth):
             raise ValueError('wrong number of starts')
+
+        # TODO uncomment this later, after fixing it
+#        inits = {}
+#        # TODO not use str
+#        names = [str(i) for i in starts]
+#        for stmt in init_method.body:
+#            if isinstance(stmt, Assign):
+#                if str(stmt.lhs) in names:
+#                    for a_old, a_new in zip(args, params):
+#                        v_old = Variable('int', a_old)
+#                        v_new = Variable('int', a_new)
+#                        print('> before : ', stmt.rhs)
+#                        expr = subs(stmt.rhs, v_old, v_new)
+#                        print('> after  : ', expr)
+#                        inits[str(stmt.lhs)] = expr
+#
+#        starts = [inits[str(i)] for i in starts]
+#        print('-----------')
         # ...
 
         # ...
@@ -1025,16 +1048,22 @@ class ForIterator(For):
         elif (str(cond.rhs) in targets) and (cond.rel_op in ['>', '>=']):
             ends += [cond.lhs]
 
-        init_method = methods['__init__']
         inits = {}
         # TODO not use str
         names = [str(i) for i in ends]
         for stmt in init_method.body:
             if isinstance(stmt, Assign):
                 if str(stmt.lhs) in names:
-                    inits[str(stmt.lhs)] = stmt.rhs
+                    for a_old, a_new in zip(args, params):
+                        v_old = Variable('int', a_old)
+                        v_new = Variable('int', a_new)
+                        print('> before : ', stmt.rhs)
+                        expr = subs(stmt.rhs, v_old, v_new)
+                        print('> after  : ', expr)
+                        inits[str(stmt.lhs)] = expr
 
         ends = [inits[str(i)] for i in ends]
+
         if not(len(ends) == depth):
             raise ValueError('wrong number of ends')
         # ...
@@ -1370,7 +1399,7 @@ class Variable(Symbol):
     """
     def __new__(cls, dtype, name, \
                 rank=0, allocatable=False, \
-                shape=None, cls_base=None):
+                shape=None, cls_base=None, cls_parameters=None):
 
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -1394,7 +1423,8 @@ class Variable(Symbol):
 #            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
 #                raise TypeError("shape must be an instance of int or tuple of int")
 
-        return Basic.__new__(cls, dtype, name, rank, allocatable, shape, cls_base)
+        return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
+                             cls_base, cls_parameters)
 
     @property
     def dtype(self):
@@ -1419,6 +1449,10 @@ class Variable(Symbol):
     @property
     def cls_base(self):
         return self._args[5]
+
+    @property
+    def cls_parameters(self):
+        return self._args[6]
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):

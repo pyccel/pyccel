@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Raise StopIteration
+
 Imports
 *******
 

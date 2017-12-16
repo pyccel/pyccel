@@ -463,6 +463,7 @@ def get_attributs(expr):
         d_var['shape']       = this.shape
         d_var['rank']        = this.rank
         d_var['cls_base']    = namespace[dtype.name]
+        d_var['cls_parameters'] = expr.arguments[1:]
         return d_var
     elif isinstance(expr, FunctionCall):
         func = expr.func
@@ -882,7 +883,8 @@ def insert_variable(var_name, \
                     var=None, \
                     cls_base=None, \
                     to_declare=True, \
-                    value=None):
+                    value=None, \
+                    cls_parameters=None):
     """
     Inserts a variable as a symbol into the namespace. Appends also its
     declaration and the corresponding variable.
@@ -916,6 +918,10 @@ def insert_variable(var_name, \
 
     value: Expr
         variable value
+
+    cls_parameters: list, tuple
+        a list of parameters. These are the arguments that are passed to the
+        class constructor
     """
     if type(var_name) in [int, float]:
         return
@@ -952,7 +958,8 @@ def insert_variable(var_name, \
                    rank=rank, \
                    allocatable=allocatable, \
                    shape=shape, \
-                   cls_base=cls_base)
+                   cls_base=cls_base, \
+                   cls_parameters=cls_parameters)
 
     # we create a declaration for code generation
     dec = Declare(datatype, var, intent=intent, value=value)
