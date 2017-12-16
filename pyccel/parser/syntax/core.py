@@ -62,7 +62,7 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, Assert, If, \
-                             Stencil, Ceil, Break, Continue, \
+                             Stencil, Ceil, Break, Continue, Raise, \
                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
                              Dot, Sign, IndexedElement,\
                              Pass, \
@@ -2432,6 +2432,23 @@ class ReturnStmt(FlowStmt):
 
 class RaiseStmt(FlowStmt):
     """Base class representing a Raise statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a return statement flow.
+
+        exception:
+            exception to raise
+        """
+        self.exception = kwargs.pop('exception')
+
+        super(RaiseStmt, self).__init__(**kwargs)
+
+    # TODO finish return Raise
+    @property
+    def expr(self):
+        exception = self.exception.expr
+        return Raise()
 
 class YieldStmt(FlowStmt):
     """Base class representing a Yield statement in the grammar."""

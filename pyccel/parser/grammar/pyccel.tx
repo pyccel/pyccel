@@ -121,7 +121,7 @@ CallStmt:
 PassStmt: label=PASS;
 BreakStmt: label=BREAK;
 ContinueStmt: label=CONTINUE;
-RaiseStmt: label=RAISE;
+RaiseStmt: label=RAISE exception=Expression;
 YieldStmt: label=YIELD;
 
 ReturnStmt: label=RETURN (variables*=Expression[',']);

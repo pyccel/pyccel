@@ -974,24 +974,72 @@ class ForIterator(For):
         cls_base = it.cls_base
         methods = cls_base.methods_as_dict
 
-        it_method = methods['__iter__']
-
-#        starts = []
-#        for stmt in it_method.body:
-#            if isinstance(stmt, (Assign, AugAssign)):
-#                starts.append(stmt.rhs)
-
         # ...
+        it_method = methods['__iter__']
         starts = []
+        targets = []
         for stmt in it_method.body:
             if isinstance(stmt, Assign):
                 starts.append(stmt.rhs)
+                targets.append(stmt.lhs)
 
         if not(len(starts) == depth):
             raise ValueError('wrong number of starts')
         # ...
 
-        return [Range(s, 10, 1) for s in starts]
+        # ...
+        def _find_stopping_criterium(stmts):
+            for stmt in stmts:
+                if isinstance(stmt, If):
+                    if not(len(stmt.args) == 2):
+                        raise ValueError('Wrong __next__ pattern')
+
+                    ct, et = stmt.args[0]
+                    cf, ef = stmt.args[1]
+
+                    for i in et:
+                        if isinstance(i, Raise):
+                            return cf
+
+                    for i in ef:
+                        if isinstance(i, Raise):
+                            return ct
+
+                    raise TypeError('Wrong type for __next__ pattern')
+
+            return None
+        # ...
+
+        # ...
+        next_method = methods['__next__']
+        ends = []
+        cond = _find_stopping_criterium(next_method.body)
+#        print('> cond    :', cond)
+#        print('> targets : ', targets)
+        # TODO treate case of cond with 'and' operation
+        # TODO we should avoid using str
+        #      must change target from DottedName to Variable
+        targets = [str(i) for i in targets]
+        if (str(cond.lhs) in targets) and (cond.rel_op in ['<', '<=']):
+            ends += [cond.rhs]
+        elif (str(cond.rhs) in targets) and (cond.rel_op in ['>', '>=']):
+            ends += [cond.lhs]
+
+        init_method = methods['__init__']
+        inits = {}
+        # TODO not use str
+        names = [str(i) for i in ends]
+        for stmt in init_method.body:
+            if isinstance(stmt, Assign):
+                if str(stmt.lhs) in names:
+                    inits[str(stmt.lhs)] = stmt.rhs
+
+        ends = [inits[str(i)] for i in ends]
+        if not(len(ends) == depth):
+            raise ValueError('wrong number of ends')
+        # ...
+
+        return [Range(s, e, 1) for s,e in zip(starts, ends)]
 
 
 # The following are defined to be sympy approved nodes. If there is something
@@ -1948,6 +1996,10 @@ class Break(Basic):
 
 class Continue(Basic):
     """Represents a continue in the code."""
+    pass
+
+class Raise(Basic):
+    """Represents a raise in the code."""
     pass
 
 # TODO: improve with __new__ from Function and add example
