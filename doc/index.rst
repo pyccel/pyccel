@@ -17,7 +17,7 @@ Welcome to Pyccel's documentation!
    man/index
    domains
    oop
-   parallel
+   hpc
    stdlib
    extensions
    analysis
