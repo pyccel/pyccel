@@ -60,6 +60,8 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
     parser.add_argument('--output-dir', type=str, \
                         help='Output directory.')
 
+    parser.add_argument('--convert-only', action='store_true',
+                        help='Converts pyccel files only without build')
     parser.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
     parser.add_argument('--analysis', action='store_true', \
@@ -95,6 +97,9 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
 
     if not output_dir:
         output_dir = args.output_dir
+
+    if args.convert_only:
+        compiler = None
     # ...
 
     # ...

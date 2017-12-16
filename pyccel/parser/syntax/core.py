@@ -43,7 +43,7 @@ from pyccel.parser.syntax.openmp  import OpenmpStmt
 from pyccel.ast.core import allocatable_like
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import is_pyccel_datatype
+from pyccel.ast.core import is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeBool, NativeFloat
@@ -52,7 +52,7 @@ from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
-                             For, Assign, ParallelBlock, \
+                             For, ForIterator, Assign, ParallelBlock, \
                              Declare, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
                              VariableHeader, \
@@ -445,6 +445,9 @@ def get_attributs(expr):
         # this datatype is polymorphic
         dtype = this.dtype
 
+        if not(dtype.name in namespace):
+            raise ValueError('Undeclared class type {0}'.format(dtype.name))
+
         # remove Pyccel from prefix
         prefix = dtype.prefix
         prefix = prefix.replace('Pyccel', '')
@@ -459,6 +462,7 @@ def get_attributs(expr):
         d_var['allocatable'] = this.allocatable
         d_var['shape']       = this.shape
         d_var['rank']        = this.rank
+        d_var['cls_base']    = namespace[dtype.name]
         return d_var
     elif isinstance(expr, FunctionCall):
         func = expr.func
@@ -1909,12 +1913,17 @@ class ForStmt(BasicStmt):
                 for ijk in range(0, len(i)):
                     rs += [Tile(starts[ijk], ends[ijk])]
                 r = Tensor(*rs)
+            elif not is_iterable_datatype(r.dtype):
+                raise TypeError('Expecting an iterable variable')
 
         self.update()
 
         body = self.body.expr
 
-        return For(i, r, body)
+        if isinstance(r, Variable) and is_iterable_datatype(r.dtype):
+            return ForIterator(i, r, body)
+        else:
+            return For(i, r, body)
 
 class WhileStmt(BasicStmt):
     """Class representing a While statement."""

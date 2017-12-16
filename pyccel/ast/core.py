@@ -31,7 +31,6 @@ from sympy.core.operations import LatticeOp
 from sympy.core.function import Derivative
 from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
-from sympy.utilities.iterables import iterable
 from sympy import Integral, Symbol
 from sympy.simplify.radsimp import fraction
 from sympy.logic.boolalg import BooleanFunction
@@ -913,12 +912,17 @@ class For(Basic):
     def __new__(cls, target, iter, body, strict=True):
         if strict:
             target = sympify(target)
-            if not iterable(iter) and not isinstance(iter, (Range, Tensor)):
+
+            cond_iter = iterable(iter)
+            cond_iter = cond_iter or (isinstance(iter, (Range, Tensor)))
+            cond_iter = cond_iter or (isinstance(iter, Variable)
+                                      and is_iterable_datatype(iter.dtype))
+            if not cond_iter:
                 raise TypeError("iter must be an iterable")
-            if not isinstance(iter, (Range, Tensor)):
-                raise TypeError("Expecting a Range or Tensor")
+
             if not iterable(body):
                 raise TypeError("body must be an iterable")
+
             body = Tuple(*(sympify(i) for i in body))
         return Basic.__new__(cls, target, iter, body)
 
@@ -933,6 +937,61 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
+
+class ForIterator(For):
+    """Class that describes iterable classes defined by the user."""
+
+    @property
+    def target(self):
+        ts = super(ForIterator, self).target
+
+        if not(len(ts) == self.depth):
+            raise ValueError('wrong number of targets')
+
+        return ts
+
+    @property
+    def depth(self):
+        it = self.iterable
+        cls_base = it.cls_base
+        methods = cls_base.methods_as_dict
+
+        it_method = methods['__iter__']
+
+        it_vars = []
+        for stmt in it_method.body:
+            if isinstance(stmt, Assign):
+                it_vars.append(stmt.lhs)
+
+        n = len(set([str(var.name) for var in it_vars]))
+        return n
+
+    @property
+    def ranges(self):
+        depth = self.depth
+
+        it = self.iterable
+        cls_base = it.cls_base
+        methods = cls_base.methods_as_dict
+
+        it_method = methods['__iter__']
+
+#        starts = []
+#        for stmt in it_method.body:
+#            if isinstance(stmt, (Assign, AugAssign)):
+#                starts.append(stmt.rhs)
+
+        # ...
+        starts = []
+        for stmt in it_method.body:
+            if isinstance(stmt, Assign):
+                starts.append(stmt.rhs)
+
+        if not(len(starts) == depth):
+            raise ValueError('wrong number of starts')
+        # ...
+
+        return [Range(s, 10, 1) for s in starts]
 
 
 # The following are defined to be sympy approved nodes. If there is something
@@ -1690,6 +1749,15 @@ class ClassDef(Basic):
     @property
     def imports(self):
         return self._args[4]
+
+    @property
+    def methods_as_dict(self):
+        """Returns a dictionary that contains all methods, where the key is the
+        method's name."""
+        d_methods = {}
+        for i in self.methods:
+            d_methods[str(i.name)] = i
+        return d_methods
 
     # TODO add other attributs?
     @property

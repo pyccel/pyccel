@@ -1372,7 +1372,6 @@ class FCodePrinter(CodePrinter):
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
-    # TODO iterators
     def _print_For(self, expr):
         prolog = ''
         epilog = ''
@@ -1423,6 +1422,51 @@ class FCodePrinter(CodePrinter):
         return ('{prolog}'
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+
+    def _print_ForIterator(self, expr):
+        depth = expr.depth
+
+        prolog = ''
+        epilog = ''
+        code   = ''
+
+        # ...
+        def _do_range(target, iter, prolog, epilog):
+#            if not isinstance(iter, Range):
+#                msg = "Only iterable currently supported is Range"
+#                raise NotImplementedError(msg)
+
+            tar        = self._print(target)
+            range_code = self._print(iter)
+
+            prolog += 'do {0} = {1}\n'.format(tar, range_code)
+            epilog = 'end do\n' + epilog
+
+            return prolog, epilog
+        # ...
+
+        # ...
+        def _iprint(i):
+            if isinstance(i, Block):
+                _prelude, _body = self._print_Block(i)
+                return '{0}'.format(_body)
+            else:
+                return '{0}'.format(self._print(i))
+        # ...
+
+        targets = expr.target
+        iters   = expr.ranges
+
+        for i,a in zip(targets, iters):
+            prolog, epilog = _do_range(i, a, \
+                                       prolog, epilog)
+
+        body = '\n'.join(_iprint(i) for i in expr.body)
+
+        return ('{prolog}'
+                '{body}\n'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+
 
     def _print_Block(self, expr):
         body    = '\n'.join(self._print(i) for i in expr.body)

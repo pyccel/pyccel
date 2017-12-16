@@ -14,12 +14,14 @@ class Range(object):
         self.step  = step
 
         self.i = 0
+        self.j = 0
 
     def __del__(self):
         print('> free')
 
     def __iter__(self):
         self.i = 0
+        self.j = 0
 
     def __next__(self):
         i = self.i
@@ -27,5 +29,5 @@ class Range(object):
 
 p = Range(0,3,1)
 
-for i in p:
-    print(i)
+for i,j in p:
+    print(k)
