@@ -2556,6 +2556,10 @@ class Assert(Basic):
     def test(self):
         return self._args[0]
 
+class Pass(Basic):
+    """Basic class for pass instruction."""
+    pass
+
 class Exit(Basic):
     """Basic class for exists."""
     pass

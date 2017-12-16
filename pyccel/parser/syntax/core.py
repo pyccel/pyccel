@@ -65,6 +65,7 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              Stencil, Ceil, Break, Continue, \
                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
                              Dot, Sign, IndexedElement,\
+                             Pass, \
                              Min, Max, Mod)
 
 from pyccel.ast.parallel.mpi import MPI
@@ -1404,7 +1405,7 @@ class PassStmt(BasicStmt):
         """
         self.update()
 
-        return self.label
+        return Pass()
 
 class AssertStmt(BasicStmt):
     """Class representing an Assert statement."""

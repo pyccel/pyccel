@@ -1225,6 +1225,9 @@ class FCodePrinter(CodePrinter):
                 '{3}\n\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
+    def _print_Pass(self, expr):
+        return 'return'
+
     def _print_Return(self, expr):
         return 'return'
 
