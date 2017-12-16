@@ -1015,6 +1015,7 @@ def DataTypeFactory(name, argnames=["_name"], \
                     BaseClass=CustomDataType, \
                     prefix=None, \
                     alias=None, \
+                    is_iterable=False, \
                     is_polymorphic=True):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
@@ -1036,6 +1037,7 @@ def DataTypeFactory(name, argnames=["_name"], \
                      "_name":          name, \
                      "prefix":         prefix, \
                      "alias":          alias, \
+                     "is_iterable":    is_iterable, \
                      "is_polymorphic": is_polymorphic})
     return newclass
 
@@ -1714,6 +1716,22 @@ class ClassDef(Basic):
                         shape=var.shape, \
                         cls_base=var.cls_base)
 
+    @property
+    def is_iterable(self):
+        """Returns True if the class has an iterator."""
+        names = [str(m.name) for m in self.methods]
+        if ('__next__' in names) and ('__iter__' in names):
+            return True
+        elif ('__next__' in names):
+            raise ValueError('ClassDef does not contain __iter__ method')
+        elif ('__iter__' in names):
+            raise ValueError('ClassDef does not contain __next__ method')
+        else:
+            return False
+
+    @property
+    def hide(self):
+        return self.is_iterable
 
 class Ceil(Function):
     """

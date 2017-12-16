@@ -473,6 +473,7 @@ class Codegen(object):
 
         for stmt in stmts:
 #            print stmt
+
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):
@@ -522,6 +523,8 @@ class Codegen(object):
                 routines += sep + printer(expr) + "\n" \
                           + sep + '\n'
             elif isinstance(stmt, ClassDef):
+                if stmt.hide:
+                    continue
                 classes += printer(stmt) + "\n"
             elif isinstance(stmt, Print):
                 body += printer(stmt) + "\n"

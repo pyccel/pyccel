@@ -450,6 +450,7 @@ def get_attributs(expr):
         dtype = DataTypeFactory(dtype.name, ("_name"), \
                                 prefix=prefix, \
                                 alias=dtype.alias, \
+                                is_iterable=True, \
                                 is_polymorphic=False)()
 
         d_var['datatype']    = dtype
@@ -3527,6 +3528,22 @@ class MethodHeaderStmt(BasicStmt):
         dtypes = self.dtypes[1:]
         h = MethodHeader((cls_instance, self.name), dtypes, self.results)
         headers[h.name] = h
+
+        # update the class datatype if iterable
+        if self.name in ['__iter__', '__next__']:
+            dtype = cls_constructs[cls_instance]
+
+            prefix         = dtype.prefix
+            alias          = dtype.alias
+            is_polymorphic = dtype.is_polymorphic
+
+            dtype = DataTypeFactory(cls_instance, ("_name"), \
+                                    prefix=None, \
+                                    alias=alias, \
+                                    is_iterable=True, \
+                                    is_polymorphic=is_polymorphic)
+            cls_constructs[cls_instance] = dtype
+
         return h
 
 class ImportFromStmt(BasicStmt):

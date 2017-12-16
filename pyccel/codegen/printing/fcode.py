@@ -409,6 +409,11 @@ class FCodePrinter(CodePrinter):
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
 
     def _print_Declare(self, expr):
+        # we don't print the declaration if iterable object
+        if is_pyccel_datatype(expr.dtype):
+            if expr.dtype.is_iterable:
+                return ''
+
         dtype = self._print(expr.dtype)
 
         code_value = ''
@@ -947,6 +952,11 @@ class FCodePrinter(CodePrinter):
         elif isinstance(expr.rhs, ConstructorCall):
             func = expr.rhs.func
             name = str(func.name)
+            this = expr.rhs.this
+            # we don't print the constructor call if iterable object
+            if this.dtype.is_iterable:
+                return ''
+
             if name == "__init__":
                 name = "create"
             rhs_code = self._print(name)
@@ -1252,6 +1262,9 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_ClassDef(self, expr):
+        if expr.is_iterable:
+            return ''
+
         name = self._print(expr.name)
         base = None # TODO: add base in ClassDef
 
