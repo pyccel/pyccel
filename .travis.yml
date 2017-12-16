@@ -33,4 +33,4 @@ script:
   - pytest tests/pyccel/ast/test_ast.py
   - pytest tests/pyccel/parser/test_imports.py
   - python tests/test_pyccel.py --execute
-#  - python tests/test_pyccel_openmp.py --openmp --execute
+  - python tests/test_pyccel_openmp.py --openmp --execute
