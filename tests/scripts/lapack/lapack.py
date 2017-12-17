@@ -31,5 +31,6 @@ def test_1d():
     assert(info == 0)
 
     dgbtrs("t", n, ml, mu, 1, a, lda, ipiv, b, n, info)
+    assert(info == 0)
 
 test_1d()
