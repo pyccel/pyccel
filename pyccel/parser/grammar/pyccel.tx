@@ -114,7 +114,7 @@ ClassDefStmt:
 ;
 
 CallStmt: 
-  name=ID trailer=TrailerArgList
+  name=ID trailer+=Trailer
 ;
 
 
