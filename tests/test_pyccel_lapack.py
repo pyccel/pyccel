@@ -1,7 +1,7 @@
 # coding: utf-8
 
 # Usage:
-#   python tests/test_pyccel_lapack.py --libs=blas
+#   python tests/test_pyccel_lapack.py --libs='blas lapack'
 
 import os
 

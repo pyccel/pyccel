@@ -862,7 +862,9 @@ class Compiler(object):
         m_code = ' '.join('{}.o '.format(m) for m in modules)
 
         if isinstance(libs, str):
-            libs = [libs]
+            libs = libs.split(',')
+            if len(libs) == 1:
+                libs = libs[0].split(' ')
         if len(libs) > 0:
             libs = ' '.join(' -l{0}'.format(i) for i in libs)
         else:
