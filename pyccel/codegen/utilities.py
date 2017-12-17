@@ -160,6 +160,7 @@ def build_file(filename, language, compiler, \
     is_extension_submodule = lambda m,s: m == 'pyccelext.{0}.{1}'.format(ext, s)
 
     is_parallel_submodule  = lambda m,s: m == 'pyccel.stdlib.parallel.{0}'.format(s)
+    is_stdlib_external_submodule  = lambda m,s: m == 'pyccel.stdlib.external.{0}'.format(s)
 
     d = find_imports(filename=filename)
     for key, value in list(d.items()):
@@ -182,12 +183,9 @@ def build_file(filename, language, compiler, \
                     submodule = ext_full.split('.')[-1] # to get submodule
 
                     if is_extension_submodule(module, submodule):
-                        f_name = get_extension_path(ext,
-                                                    module=submodule)
+                        f_name = get_extension_path(ext, module=submodule)
                     elif is_external_submodule(module, submodule):
-                        f_name = get_extension_path(ext,
-                                                    module=submodule,
-                                                    is_external=True)
+                        f_name = get_extension_path(ext, module=submodule, is_external=True)
                     else:
                         raise ValueError('non valid import for pyccel extensions.')
             elif module.startswith('pyccel.stdlib.parallel'):
@@ -197,11 +195,19 @@ def build_file(filename, language, compiler, \
                 submodule = ext_full.split('.')[-1] # to get submodule
 
                 if is_parallel_submodule(module, submodule):
-                    f_name = get_parallel_path(ext,
-                                                module=submodule,
-                                                is_external=True)
+                    f_name = get_parallel_path(ext, module=submodule, is_external=True)
                 else:
                     raise ValueError('non valid import for parallel pyccel package.')
+            elif module.startswith('pyccel.stdlib.external'):
+                ext_full  = module.split('pyccel.stdlib.external.')[-1]
+                ext       = ext_full.split('.')[0] # to remove submodule
+
+                submodule = ext_full.split('.')[-1] # to get submodule
+
+                if is_stdlib_external_submodule(module, submodule):
+                    f_name = get_stdlib_external_path(ext, module=submodule)
+                else:
+                    raise ValueError('non valid import for pyccel stdlib external package.')
             else:
                 filename_py  = '{0}.py'.format(module)
                 filename_pyh = '{0}.pyh'.format(module)
@@ -584,12 +590,6 @@ def get_parallel_path(ext, module=None, is_external=False):
     if not module:
         return ext_dir
 
-    # if module is not None
-    try:
-        m = importlib.import_module(extension, package=module)
-    except:
-        raise ImportError('could not import {0}.{1}'.format(extension, module))
-
     filename_py  = '{0}.py'.format(module)
     filename_pyh = '{0}.pyh'.format(module)
 
@@ -599,6 +599,37 @@ def get_parallel_path(ext, module=None, is_external=False):
     else:
         filename_py  = os.path.join(ext_dir, filename_py)
         filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
+
+    if os.path.isfile(filename_py):
+        return filename_py
+    elif os.path.isfile(filename_pyh):
+        return filename_pyh
+    else:
+        raise ImportError('could not find {0} or {1}'.format(filename_py,
+                                                             filename_pyh))
+# ...
+
+# ...
+def get_stdlib_external_path(ext, module=None):
+    """Finds the path of a pyccel stdlib external package (.py or .pyh).
+    A specific module can also be given."""
+
+    extension = 'pyccel.stdlib.external'
+    try:
+        package = importlib.import_module(extension)
+    except:
+        raise ImportError('could not import {0}'.format(extension))
+
+    ext_dir = str(package.__path__[0])
+
+    if not module:
+        return ext_dir
+
+    filename_py  = '{0}.py'.format(module)
+    filename_pyh = '{0}.pyh'.format(module)
+
+    filename_py  = os.path.join(ext_dir, filename_py)
+    filename_pyh = os.path.join(ext_dir, filename_pyh)
 
     if os.path.isfile(filename_py):
         return filename_py

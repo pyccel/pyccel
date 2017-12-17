@@ -1,5 +1,8 @@
 # coding: utf-8
 
+# Usage:
+#   python tests/test_pyccel_openmp.py --openmp
+
 import os
 
 from pyccel.commands.console import pyccel
