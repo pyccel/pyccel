@@ -41,7 +41,7 @@ from pyccel.parser.syntax.basic   import BasicStmt
 from pyccel.parser.syntax.openmp  import OpenmpStmt
 
 from pyccel.ast.core import allocatable_like
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
@@ -406,11 +406,13 @@ def get_attributs(expr):
             d_var['rank']        = var.rank
             return d_var
     elif isinstance(expr, IndexedElement):
+        d_var['datatype']    = expr.dtype
         name = str(expr.base)
         if name in namespace:
             var = namespace[name]
-
             d_var['datatype']    = var.dtype
+
+            
 
             if iterable(var.shape):
                 shape = []
@@ -945,6 +947,8 @@ def insert_variable(var_name, \
             allocatable = var.allocatable
         if shape is None:
             shape = var.shape
+    if not rank:
+        rank=0
 
     # we create a variable (for annotation)
     var = Variable(datatype, var_name, \
@@ -967,6 +971,7 @@ def insert_variable(var_name, \
 
 # ...
 def expr_with_trailer(expr, trailer=None):
+    
 
     if trailer is None:
         return expr
@@ -975,6 +980,12 @@ def expr_with_trailer(expr, trailer=None):
             return expr
         if len(trailer) == 1:
             return expr_with_trailer(expr, trailer[0])
+        if expr.cls_base and len(trailer)>1:
+            for i in trailer:
+                    expr=expr_with_trailer(expr, i.args)
+            return expr
+                    
+                    
         if expr.cls_base:
             if isinstance(expr.cls_base, MPI):
                 comm = expr
@@ -1000,6 +1011,7 @@ def expr_with_trailer(expr, trailer=None):
         return expr
 
     if isinstance(trailer, Trailer):
+        
         return expr_with_trailer(expr, trailer.args)
 
     if isinstance(trailer, TrailerArgList):
@@ -1033,7 +1045,7 @@ def expr_with_trailer(expr, trailer=None):
             d_var['intent']      = 'inout'
             insert_variable('self', **d_var)
             args = [namespace['self']] + list(args)
-            expr = ConstructorCall(method, args)
+            expr = ConstructorCall(method, args,cls_variable=namespace['self'])
         else:
             f_name = str(expr)
             if isinstance(expr, FunctionDef):
@@ -1060,6 +1072,7 @@ def expr_with_trailer(expr, trailer=None):
         v = namespace[expr.name]
         expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
+        
         args = trailer.expr
 
 
@@ -1555,6 +1568,7 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=var_name)
 
         if isinstance(var_name, str) and not(var_name in namespace):
+            
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
@@ -1571,6 +1585,8 @@ class AssignStmt(BasicStmt):
             assignable = (sp_Integer, sp_Float)
             if isinstance(rhs, assignable):
                 d_var['value'] = rhs
+            if is_pyccel_datatype(d_var['datatype']):
+                d_var['cls_base']=class_defs[d_var['datatype'].name]
             insert_variable(var_name, **d_var)
 
         if self.trailer is None:
@@ -2497,6 +2513,7 @@ class FunctionDefStmt(BasicStmt):
 #        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.trailer.expr
+
         local_vars  = []
         global_vars = []
 
@@ -2505,7 +2522,7 @@ class FunctionDefStmt(BasicStmt):
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
-
+                
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
             # remove self from args
@@ -2521,6 +2538,7 @@ class FunctionDefStmt(BasicStmt):
             d_var['shape']       = None
             d_var['rank']        = 0
             d_var['intent']      = 'inout'
+            d_var['cls_base']    = cls_instance
             insert_variable('self', **d_var)
 
         # ...
@@ -2573,7 +2591,11 @@ class FunctionDefStmt(BasicStmt):
                     if isinstance(i, Slice):
                         rank += 1
                 d_var = {}
-                d_var['datatype']    = d[0]
+                if d[0]==cls_instance:
+                    d_var['datatype']=cls_constructs[cls_instance]()
+                    d_var['cls_base']    = cls_instance
+                else:
+                    d_var['datatype']    = d[0]
                 d_var['allocatable'] = False
     #            d_var['allocatable'] = d[2]
                 d_var['shape']       = None
@@ -3685,7 +3707,20 @@ class CallStmt(BasicStmt):
         pyccel.ast.core
         """
         f_name = str(self.name)
-        args = self.trailer.expr
+        if len(self.trailer)==1:
+            args=self.trailer[0].expr
+        else:
+            args=[]
+            for i in self.trailer:
+                a=i.expr
+                if not isinstance(a,str):
+                    args+=a
+                else:
+                    args+=[a]
+                
+            
+        
+
 
         # ... replace dict by ValuedVariable
         _args = []
@@ -3698,15 +3733,26 @@ class CallStmt(BasicStmt):
                 _args.append(a)
         args = _args
         # ...
+        
 
         # ...
         if not(f_name in namespace) and not(f_name in builtin_funcs_math_nores):
             raise ValueError("Undefined function call {}.".format(f_name))
         # ...
-
+        
         # ...
+        
         if f_name in namespace:
             F = namespace[f_name]
+            
+            if isinstance(F,Variable) and F.cls_base:
+                
+                methods=namespace[F.dtype.name].methods
+                for method in methods:
+                    if str(method.name)==args[0]:            
+                        return MethodCall(method,args[1:],cls_variable=F,kind=None)
+
+                
             if not(isinstance(F, FunctionDef)):
                 raise TypeError("Expecting a FunctionDef")
 
@@ -3723,4 +3769,4 @@ class CallStmt(BasicStmt):
             for arg in args:
                expressions.append(arg)
             return Print(expressions)
-        # ...
+        # ...        

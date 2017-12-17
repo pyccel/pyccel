@@ -28,7 +28,7 @@ from pyccel.ast.core import ClassDef
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat
@@ -908,7 +908,8 @@ class FCodePrinter(CodePrinter):
                         format(dtype, allocatablestr, vstr, rankstr))
 
         return '\n'.join(decs)
-
+    
+    
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -1601,7 +1602,8 @@ class FCodePrinter(CodePrinter):
             code = 'call {0}'.format(code)
 
         return self._get_statement(code)
-
+    
+    
     def _print_MethodCall(self, expr):
         func = expr.func
         name = func.name
@@ -1609,9 +1611,9 @@ class FCodePrinter(CodePrinter):
 
         code_args = ''
         if not(expr.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments[1:])
+            code_args = ', '.join(self._print(i) for i in expr.arguments)
 
-        this = self._print(expr.arguments[0])
+        this = self._print(expr.cls_variable)
         code = 'call {0} % {1}({2})'.format(this, name, code_args)
         return self._get_statement(code)
 

@@ -1298,7 +1298,7 @@ class FunctionCall(AtomicExpr):
     """
     is_commutative = True
 
-    def __new__(cls, func, arguments, kind='function'):
+    def __new__(cls, func, arguments,cls_variable=None, kind='function'):
         if not isinstance(func, (FunctionDef, str)):
             raise TypeError("Expecting func to be a FunctionDef or str")
 
@@ -1310,6 +1310,9 @@ class FunctionCall(AtomicExpr):
 
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
+        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
+            raise TypeError("Expecting a cls_variable.")
+            
 
 
         f_name = func.name
@@ -1357,11 +1360,114 @@ class ConstructorCall(FunctionCall):
     def this(self):
         return self.arguments[0]
 
-class MethodCall(FunctionCall):
+class MethodCall(AtomicExpr):
     """
-    class for a call to class method in the code.
+    Base class for applied mathematical functions.
+
+    It also serves as a constructor for undefined function classes.
+
+    func: FunctionDef, str
+        an instance of FunctionDef or function name
+
+    arguments: list, tuple, None
+        a list of arguments.
+
+    kind: str
+        'function' or 'procedure'. default value: 'function'
+
+    Examples
+
+    Examples
+
+    >>> from pyccel.ast.core import Assign, Variable
+    >>> from pyccel.ast.core import FunctionDef
+    >>> x = Variable('int', 'x')
+    >>> y = Variable('int', 'y')
+    >>> args        = [x]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+1)]
+    >>> incr = FunctionDef('incr', args, results, body)
+    >>> n = Variable('int', 'n')
+    >>> incr(n)
+    incr(n)
+    >>> type(incr(n))
+    pyccel.ast.core.FunctionCall
+    >>> incr(n)*2+1
+    1 + 2*incr(n)
+    >>> incr(n)+1
+    incr(n) + 1
+    >>> incr(n)*2
+    2*incr(n)
     """
-    pass
+
+    is_commutative = True
+
+    def __new__(cls, func, arguments,cls_variable=None, kind='function'):
+        if not isinstance(func, (FunctionDef, str)):
+            raise TypeError("Expecting func to be a FunctionDef or str")
+
+        if isinstance(func, FunctionDef):
+            kind = func.kind
+
+        if not isinstance(kind, str):
+            raise TypeError("Expecting a string for kind.")
+
+        if not (kind in ['function', 'procedure']):
+            raise ValueError("kind must be one among {'function', 'procedure'}")
+        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
+            raise TypeError("Expecting a cls_variable.")
+            
+
+
+        f_name = func.name
+
+        obj = Basic.__new__(cls, f_name)
+        obj._cls_variable=cls_variable
+
+        obj._kind      = kind
+        obj._func      = func
+        obj._arguments = arguments
+
+        return obj
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        name = sstr(self.name)
+        args = ''
+        if not(self.arguments) is None:
+            args = ', '.join(sstr(i) for i in self.arguments)
+        return '{0}({1})'.format(name, args)
+
+    @property
+    def func(self):
+        return self._func
+
+    @property
+    def kind(self):
+        return self._kind
+
+    @property
+    def arguments(self):
+        return self._arguments
+    @property
+    def cls_variable(self):
+        return self._cls_variable
+
+    @property
+    def name(self):
+        if isinstance(self.func, FunctionDef):
+            return self.func.name
+        else:
+            return self.func
+
+class ConstructorCall(FunctionCall):
+    """
+    class for a call to class constructor in the code.
+    """
+    @property
+    def this(self):
+        return self.arguments[0]
+
 
 class Variable(Symbol):
     """Represents a typed variable.
@@ -1592,8 +1698,11 @@ class FunctionDef(Basic):
         results = Tuple(*results)
         # if method
         if cls_name:
+            
             if not(isinstance(cls_name, str)):
                 raise TypeError("cls_name must be a string")
+            #if not cls_variable:
+             #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
@@ -1608,7 +1717,7 @@ class FunctionDef(Basic):
                              arguments, results, \
                              body, \
                              local_vars, global_vars, \
-                             cls_name, hide, kind, imports)
+                             cls_name,hide, kind, imports)
 
     @property
     def name(self):
@@ -1637,6 +1746,7 @@ class FunctionDef(Basic):
     @property
     def cls_name(self):
         return self._args[6]
+    
 
     @property
     def hide(self):
@@ -1653,6 +1763,10 @@ class FunctionDef(Basic):
     def print_body(self):
         for s in self.body:
             print (s)
+    
+    #def set_name(self,new_name):
+     #       self.__new__(new_name, self.arguments, self.results, self.body, self.local_vars,
+      #                self.global_vars, self.cls_name, self.hide, self.kind, self.imports)
 
 #    @property
 #    def declarations(self):

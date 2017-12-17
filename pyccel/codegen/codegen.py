@@ -20,7 +20,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, AugAssign, FunctionCall, \
-                              FunctionDef, ClassDef, Sync, Del, Print, Import, \
+                              FunctionDef,MethodCall, ClassDef, Sync, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, Assert, If, \
                               Stencil, Ceil, Break, \
@@ -512,6 +512,8 @@ class Codegen(object):
             elif isinstance(stmt, Assert):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, If):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt,MethodCall):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, FunctionCall):
                 body += printer(stmt) + "\n"
