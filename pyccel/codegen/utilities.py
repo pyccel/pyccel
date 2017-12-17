@@ -255,7 +255,12 @@ def build_file(filename, language, compiler, \
         if _append_module:
             ms.append(codegen_m)
 
-        namespaces[module] = codegen_m.namespace
+        if module in namespaces:
+            namespaces[module] = codegen_m.namespace
+            for k,v in codegen_m.namespace.items():
+                namespaces[module][k] = v
+        else:
+            namespaces[module] = codegen_m.namespace
         for n in names:
             namespace_user[n] = namespaces[module][n]
 
