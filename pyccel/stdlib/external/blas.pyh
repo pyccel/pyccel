@@ -4,26 +4,56 @@ __ignore_at_import__ = True
 __version__          = '3.8'
 __libraries__        = '${BLAS_LIBRARIES}'
 
+# .......................................
+#             LEVEL-1
+# .......................................
+#$ header function srotg(float, float) results(float, float)
+#$ header function drotg(double, double) results(double, double)
+
+#$ header function srotmg(float, float, float, float) results(float [:])
+#$ header function drotmg(double, double, double, double) results(double [:])
+
+#$ header function srot(int, float [:], int, float [:], int, float, float)
+#$ header function drot(int, double [:], int, double [:], int, double, double)
+
+#$ header function srotm(int, float [:], int, float [:], int, float [:])
+#$ header function drotm(int, double [:], int, double [:], int, double [:])
+
+#$ header function sswap(int, float [:], int, float [:], int)
+#$ header function dswap(int, double [:], int, double [:], int)
+
+#$ header function sscal(int, float, float [:], int)
+#$ header function dscal(int, double, double [:], int)
+
+#$ header function sasum(int, float [:], int) results(float)
+#$ header function dasum(int, double [:], int) results(double)
+
+#$ header function isamax(int, float [:], int) results(int)
+#$ header function idamax(int, double [:], int) results(int)
+
 #$ header function saxpy(int, float, float [:], int, float [:], float [:])
 #$ header function daxpy(int, double, double [:], int, double [:], double [:])
-#$ header function cscal(int, complex, complex [:], int)
 
 #$ header function scopy(int, float [:], int, float [:], int)
 #$ header function dcopy(int, double [:], int, double [:], int)
-#$ header function scopy(int, complex [:], int, complex [:], int)
-
-#$ header function saxpy(int, float, float [:], int, float [:], float [:])
-#$ header function daxpy(int, double, double [:], int, double [:], double [:])
-#$ header function caxpy(int, complex, complex [:], int, complex [:], complex [:])
 
 #$ header function sdot(int, float [:], int, float [:], int)
 #$ header function ddot(int, double [:], int, double [:], int)
-#$ header function cdotu(int, complex [:], int, complex [:], int)
 
 #$ header function sdsdot(int, float, float [:], int, float [:], int)
 #$ header function dsdot(int, double [:], int, double [:], int)
-#$ header function cdotc(int, complex [:], int, complex [:], int)
 
 #$ header function snrm2(int, float [:], int)
 #$ header function dnrm2(int, double [:], int)
-#$ header function scnrm2(int, complex [:], int)
+# .......................................
+
+# .......................................
+#             LEVEL-2
+# .......................................
+# .......................................
+
+# .......................................
+#             LEVEL-3
+# .......................................
+# .......................................
+
