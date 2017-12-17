@@ -23,7 +23,7 @@ class Range(object):
         self.stop  = stop
         self.step  = step
 
-        self.i = -1
+        self.i = start
 
     def __del__(self):
         print('> free')
@@ -38,7 +38,7 @@ class Range(object):
         else:
             raise StopIteration()
 
-p = Range(0,3,1)
+p = Range(-2,3,1)
 
 for i in p:
     print(i)

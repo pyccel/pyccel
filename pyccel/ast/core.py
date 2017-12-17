@@ -981,15 +981,44 @@ class ForIterator(For):
 
         # ...
         it_method = methods['__iter__']
-        starts = []
         targets = []
+        starts = []
         for stmt in it_method.body:
             if isinstance(stmt, Assign):
-                starts.append(stmt.rhs)
                 targets.append(stmt.lhs)
+                starts.append(stmt.lhs)
 
-        if not(len(starts) == depth):
-            raise ValueError('wrong number of starts')
+        if not(len(targets) == depth):
+            raise ValueError('wrong number of targets')
+
+        names = []
+        for i in starts:
+            if isinstance(i, IndexedElement):
+                names.append(str(i.base))
+            else:
+                names.append(str(i))
+        names = list(set(names))
+
+        inits = {}
+        for stmt in init_method.body:
+            if isinstance(stmt, Assign):
+                if str(stmt.lhs) in names:
+                    expr = stmt.rhs
+                    for a_old, a_new in zip(args, params):
+                        dtype = datatype(stmt.rhs)
+                        v_old = Variable(dtype, a_old)
+                        v_new = Variable(dtype, a_new)
+                        expr = subs(expr, v_old, v_new)
+                        inits[str(stmt.lhs)] = expr
+
+        _starts = []
+        for i in starts:
+            if isinstance(i, IndexedElement):
+                _starts.append(i.base)
+            else:
+                _starts.append(i)
+        starts = [inits[str(i)] for i in _starts]
+
 
         # TODO uncomment this later, after fixing it
 #        inits = {}
@@ -1034,34 +1063,61 @@ class ForIterator(For):
         # ...
 
         # ...
+        def doit(expr, targets):
+            if isinstance(expr, Relational):
+                if (str(expr.lhs) in targets) and (expr.rel_op in ['<', '<=']):
+                    return expr.rhs
+                elif (str(expr.rhs) in targets) and (expr.rel_op in ['>', '>=']):
+                    return expr.lhs
+                else:
+                    return None
+            elif isinstance(expr, And):
+                return [doit(a, targets) for a in expr.args]
+            else:
+                raise TypeError('Expecting And logical expression.')
+        # ...
+
+        # ...
         next_method = methods['__next__']
         ends = []
         cond = _find_stopping_criterium(next_method.body)
-#        print('> cond    :', cond)
-#        print('> targets : ', targets)
         # TODO treate case of cond with 'and' operation
         # TODO we should avoid using str
         #      must change target from DottedName to Variable
         targets = [str(i) for i in targets]
-        if (str(cond.lhs) in targets) and (cond.rel_op in ['<', '<=']):
-            ends += [cond.rhs]
-        elif (str(cond.rhs) in targets) and (cond.rel_op in ['>', '>=']):
-            ends += [cond.lhs]
+        ends    = doit(cond, targets)
+
+        # TODO not use str
+        if not isinstance(ends, (list, tuple)):
+            ends = [ends]
+
+        names = []
+        for i in ends:
+            if isinstance(i, IndexedElement):
+                names.append(str(i.base))
+            else:
+                names.append(str(i))
+        names = list(set(names))
 
         inits = {}
-        # TODO not use str
-        names = [str(i) for i in ends]
         for stmt in init_method.body:
             if isinstance(stmt, Assign):
                 if str(stmt.lhs) in names:
                     expr = stmt.rhs
                     for a_old, a_new in zip(args, params):
-                        v_old = Variable('int', a_old)
-                        v_new = Variable('int', a_new)
+                        dtype = datatype(stmt.rhs)
+                        v_old = Variable(dtype, a_old)
+                        v_new = Variable(dtype, a_new)
                         expr = subs(expr, v_old, v_new)
                         inits[str(stmt.lhs)] = expr
 
-        ends = [inits[str(i)] for i in ends]
+        _ends = []
+        for i in ends:
+            if isinstance(i, IndexedElement):
+                _ends.append(i.base)
+            else:
+                _ends.append(i)
+        ends = [inits[str(i)] for i in _ends]
 
         if not(len(ends) == depth):
             raise ValueError('wrong number of ends')
