@@ -1144,7 +1144,7 @@ dtype_registry = {'bool': Bool,
                   'double': Double,
                   'complex': Complex,
                   'void': Void,
-                  'string': String}
+                  'str': String}
 
 
 def DataTypeFactory(name, argnames=["_name"], \
@@ -1312,7 +1312,7 @@ class FunctionCall(AtomicExpr):
             raise ValueError("kind must be one among {'function', 'procedure'}")
         if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
             raise TypeError("Expecting a cls_variable.")
-            
+
 
 
         f_name = func.name
@@ -1416,7 +1416,7 @@ class MethodCall(AtomicExpr):
             raise ValueError("kind must be one among {'function', 'procedure'}")
         if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
             raise TypeError("Expecting a cls_variable.")
-            
+
 
 
         f_name = func.name
@@ -1698,7 +1698,7 @@ class FunctionDef(Basic):
         results = Tuple(*results)
         # if method
         if cls_name:
-            
+
             if not(isinstance(cls_name, str)):
                 raise TypeError("cls_name must be a string")
             #if not cls_variable:
@@ -1746,7 +1746,7 @@ class FunctionDef(Basic):
     @property
     def cls_name(self):
         return self._args[6]
-    
+
 
     @property
     def hide(self):
@@ -1763,7 +1763,7 @@ class FunctionDef(Basic):
     def print_body(self):
         for s in self.body:
             print (s)
-    
+
     #def set_name(self,new_name):
      #       self.__new__(new_name, self.arguments, self.results, self.body, self.local_vars,
       #                self.global_vars, self.cls_name, self.hide, self.kind, self.imports)

@@ -30,6 +30,6 @@ def test_1d():
     dgbtrf(n, n, ml, mu, a, lda, ipiv, info)
     assert(info == 0)
 
-#    dgbtrs('n', n, ml, mu, 1, a, lda, ipiv, b, n, info)
+    dgbtrs("t", n, ml, mu, 1, a, lda, ipiv, b, n, info)
 
 test_1d()

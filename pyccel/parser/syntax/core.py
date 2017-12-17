@@ -412,7 +412,7 @@ def get_attributs(expr):
             var = namespace[name]
             d_var['datatype']    = var.dtype
 
-            
+
 
             if iterable(var.shape):
                 shape = []
@@ -971,7 +971,7 @@ def insert_variable(var_name, \
 
 # ...
 def expr_with_trailer(expr, trailer=None):
-    
+
 
     if trailer is None:
         return expr
@@ -984,8 +984,8 @@ def expr_with_trailer(expr, trailer=None):
             for i in trailer:
                     expr=expr_with_trailer(expr, i.args)
             return expr
-                    
-                    
+
+
         if expr.cls_base:
             if isinstance(expr.cls_base, MPI):
                 comm = expr
@@ -1011,7 +1011,7 @@ def expr_with_trailer(expr, trailer=None):
         return expr
 
     if isinstance(trailer, Trailer):
-        
+
         return expr_with_trailer(expr, trailer.args)
 
     if isinstance(trailer, TrailerArgList):
@@ -1072,7 +1072,7 @@ def expr_with_trailer(expr, trailer=None):
         v = namespace[expr.name]
         expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
-        
+
         args = trailer.expr
 
 
@@ -1568,7 +1568,7 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=var_name)
 
         if isinstance(var_name, str) and not(var_name in namespace):
-            
+
             d_var = get_attributs(rhs)
 
 #            print ">>>> AssignStmt : ", var_name, d_var
@@ -2522,7 +2522,7 @@ class FunctionDefStmt(BasicStmt):
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
-                
+
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
             # remove self from args
@@ -3717,10 +3717,6 @@ class CallStmt(BasicStmt):
                     args+=a
                 else:
                     args+=[a]
-                
-            
-        
-
 
         # ... replace dict by ValuedVariable
         _args = []
@@ -3733,26 +3729,25 @@ class CallStmt(BasicStmt):
                 _args.append(a)
         args = _args
         # ...
-        
 
         # ...
         if not(f_name in namespace) and not(f_name in builtin_funcs_math_nores):
             raise ValueError("Undefined function call {}.".format(f_name))
         # ...
-        
+
         # ...
-        
+
         if f_name in namespace:
             F = namespace[f_name]
-            
+
             if isinstance(F,Variable) and F.cls_base:
-                
+
                 methods=namespace[F.dtype.name].methods
                 for method in methods:
-                    if str(method.name)==args[0]:            
+                    if str(method.name)==args[0]:
                         return MethodCall(method,args[1:],cls_variable=F,kind=None)
 
-                
+
             if not(isinstance(F, FunctionDef)):
                 raise TypeError("Expecting a FunctionDef")
 
@@ -3769,4 +3764,4 @@ class CallStmt(BasicStmt):
             for arg in args:
                expressions.append(arg)
             return Print(expressions)
-        # ...        
+        # ...

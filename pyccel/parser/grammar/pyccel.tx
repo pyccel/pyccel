@@ -164,6 +164,7 @@ DataType:
   | 'float' 
   | 'int' 
   | 'complex'
+  | 'str'
 ;
 
 ParameterTest: ID | STRING;

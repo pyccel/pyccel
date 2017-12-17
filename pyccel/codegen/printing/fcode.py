@@ -908,8 +908,8 @@ class FCodePrinter(CodePrinter):
                         format(dtype, allocatablestr, vstr, rankstr))
 
         return '\n'.join(decs)
-    
-    
+
+
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -1095,6 +1095,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_BooleanFalse(self, expr):
         return '.false.'
+
+    def _print_NativeString(self, expr):
+        return 'char'
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
@@ -1592,18 +1595,30 @@ class FCodePrinter(CodePrinter):
         name = func.name
         name = self._print(name)
 
+        # ...
+        def _print_arg(i):
+            if isinstance(i, str):
+                return '"{0}"'.format(i)
+            else:
+                return self._print(i)
+        # ...
+
+        # ...
         code_args = ''
         if not(expr.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
+            code_args = ', '.join(_print_arg(i) for i in expr.arguments)
 
         code = '{0}({1})'.format(name, code_args)
+        # ...
 
+        # ...
         if func.is_procedure:
             code = 'call {0}'.format(code)
+        # ...
 
         return self._get_statement(code)
-    
-    
+
+
     def _print_MethodCall(self, expr):
         func = expr.func
         name = func.name
