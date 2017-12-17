@@ -251,10 +251,10 @@ Atom:
    '(' op=Expression ')'
   | (op=Number) 
   | (op=ID) 
-  | (op=STRING) 
   | (op=NONE)
   | (op=TRUE)
   | (op=FALSE)
+  | (op=String) 
   | '(' op=Test ')'
 ;
 
@@ -309,9 +309,8 @@ TrailerSliceRight: (':' end=Expression);
 TrailerSlice: (start=Expression ':' end=Expression);
 TrailerSliceEmpty: (dots=':');
 
-Float:
-  /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/
-;
+Float: /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/;
+String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^"\\]|\\.)*'/;
 
 BOOLEAN: TRUE | FALSE;
 

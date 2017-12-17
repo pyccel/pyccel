@@ -1596,17 +1596,9 @@ class FCodePrinter(CodePrinter):
         name = self._print(name)
 
         # ...
-        def _print_arg(i):
-            if isinstance(i, str):
-                return '"{0}"'.format(i)
-            else:
-                return self._print(i)
-        # ...
-
-        # ...
         code_args = ''
         if not(expr.arguments) is None:
-            code_args = ', '.join(_print_arg(i) for i in expr.arguments)
+            code_args = ', '.join(self._print(i) for i in expr.arguments)
 
         code = '{0}({1})'.format(name, code_args)
         # ...
