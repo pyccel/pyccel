@@ -13,6 +13,7 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 #$ header function dgetrf(int, int, double [:,:], int, int [:], int)
 #$ header function dgetri(int, double [:,:], int, int [:], double [:], int, int)
+#$ header function dgetrs(str, int, int, double [:,:], int, int [:], double [:,:], int, int)
 #$ header function dgecon(str, int, double [:,:], int, double, double, double [:], int [:], int)
 
 #$ header function dgesv(int, int, double [:,:], int, int [:], double [:,:], int, int)
