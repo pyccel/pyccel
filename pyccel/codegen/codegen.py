@@ -473,8 +473,6 @@ class Codegen(object):
                 decs = stmt
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
-            elif isinstance(stmt,MethodCall):
-                body += printer(stmt) + "\n"
             elif isinstance(stmt, Assign):
                 if not isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
                     body += printer(stmt) + "\n"
@@ -496,6 +494,8 @@ class Codegen(object):
             elif isinstance(stmt, While):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, If):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt,MethodCall):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, FunctionCall):
                 body += printer(stmt) + "\n"
