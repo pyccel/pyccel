@@ -103,13 +103,6 @@ from pyccel.ast.parallel.mpi import mpi_definitions
 from pyccel.ast.parallel.openmp import OMP_ParallelNumThreadClause
 
 from pyccel.stdlib.stdlib     import stdlib_definitions
-from pyccel.stdlib.clapp.spl  import spl_definitions
-from pyccel.stdlib.clapp.plaf import plaf_definitions
-# TODO remove the following imports
-from pyccel.stdlib.clapp.plaf import Matrix_dns
-from pyccel.stdlib.clapp.plaf import Matrix_dns_create
-from pyccel.stdlib.clapp.plaf import Matrix_csr
-from pyccel.stdlib.clapp.plaf import Matrix_csr_create
 
 DEBUG = False
 #DEBUG = True

@@ -72,11 +72,6 @@ from pyccel.ast.parallel.mpi import MPI_MIN, MPI_MAX
 from pyccel.ast.parallel.mpi import MPI_Tensor
 from pyccel.ast.parallel.mpi import MPI_TensorCommunication
 
-from pyccel.stdlib.clapp.plaf import Matrix_dns
-from pyccel.stdlib.clapp.plaf import Matrix_dns_create
-from pyccel.stdlib.clapp.plaf import Matrix_csr
-from pyccel.stdlib.clapp.plaf import Matrix_csr_create
-
 
 # TODO: add examples
 # TODO: use _get_statement when returning a string
