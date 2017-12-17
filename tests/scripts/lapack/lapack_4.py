@@ -31,10 +31,6 @@ def test_d():
     dgetrf(n, n, a, lda, ipiv, info)
     assert(info == 0)
 
-    iwork = zeros(n, int)
-    lwork = 4 * n
-    work  = zeros(lwork, double)
-
     # Compute the inverse matrix.
     b = zeros(n, double)
     b[0] = 14.0
