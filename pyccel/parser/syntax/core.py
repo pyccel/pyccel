@@ -2487,6 +2487,7 @@ class FunctionDefStmt(BasicStmt):
 #        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.trailer.expr
+
         local_vars  = []
         global_vars = []
 
@@ -2566,6 +2567,7 @@ class FunctionDefStmt(BasicStmt):
                 d_var = {}
                 if d[0]==cls_instance:
                     d_var['datatype']=cls_constructs[cls_instance]()
+                    d_var['cls_base']    = cls_instance
                 else:
                     d_var['datatype']    = d[0]
                 d_var['allocatable'] = False

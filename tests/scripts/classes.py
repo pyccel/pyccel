@@ -26,8 +26,8 @@ class Matrix(object):
             for i in range(0,self.n_rows):
                 for j in range(0,mat.n_cols):
                     s=0
-                    #for k in range(0,self.n_cols):
-                    #    s=s+self.a[i,k]*mat.a[k,j]
+                    for k in range(0,self.n_cols):
+                        s=s+self.a[i,k]*mat.a[k,j]
                     C[i,j]=s
                   
 
