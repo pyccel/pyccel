@@ -2611,6 +2611,7 @@ class FunctionDefStmt(BasicStmt):
                     c={'lhs':i.trailer.expr,'rhs':i.rhs}
                     Var=AssignStmt(**c).expr
                     attr+=[Var.lhs]
+            # we first create and append an empty class to the namespace
             cls=ClassDef(cls_instance,attr,[],[])
             namespace[cls_instance]=cls
             class_defs[cls_instance]=cls
@@ -2768,6 +2769,7 @@ class ClassDefStmt(BasicStmt):
 
         stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
+        class_defs[name] = stmt
 
         # ... cleaning
 
