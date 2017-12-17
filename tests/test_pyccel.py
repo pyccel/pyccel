@@ -19,7 +19,7 @@ def test_1():
 # ...
 def test_2():
     ignored = ['eval.py', 'parallel.py', 'mpi.py',
-              'arrays.py', 'modules.py', 'imports.py', 'dict.py']
+               'modules.py', 'imports.py', 'dict.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts')

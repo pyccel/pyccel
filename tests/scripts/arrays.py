@@ -1,18 +1,18 @@
 # coding: utf-8
 
-#$ header fd(double [:])
+#$ header fd(double [:]) results(double [:])
 def fd(x):
     z = zeros_like(x)
     z = x+1
     y = 2 * z
     return y
 
-#$ header gd(double [:])
+#$ header gd(double [:]) results(double [:])
 def gd(x):
     y = 2 * x + 1
     return y
 
-#$ header func(double)
+#$ header func(double) results(double)
 def func(x):
     z = x+1
     y = 3 * z
@@ -46,18 +46,22 @@ r2 = 2.0 + 3.0 * dot(a, a)
 i1 = dot(b, b)
 i2 = 2 + 3 * dot(b, b)
 
-xd = ones(6, double)
-yd = zeros(6, double)
-yd = 2.0 * fd(xd) + 1.0
-yd = 3.0 * fd(2.0 * fd(xd) + 1.0) + 1.0
+#not working
+#xd = ones(6, double)
+#yd = zeros(6, double)
+#yd = 2.0 * fd(xd) + 1.0
+#yd = 3.0 * fd(2.0 * fd(xd) + 1.0) + 1.0
 
-x = ones(6, double)
-y = zeros(6, double)
-y = 2.0 * fd(x) + 1.0
-y = 3.0 * fd(2.0 * fd(x) + 1.0) + 1.0
+#not working
+#x = ones(6, double)
+#y = zeros(6, double)
+#y = 2.0 * fd(x) + 1.0
+#y = 3.0 * fd(2.0 * fd(x) + 1.0) + 1.0
 
-yd = gd(xd)
-y  = gd(x)
+#not working
+#yd = gd(xd)
+#y  = gd(x)
 
-r_x = list(range(4,8))
-xr = zeros(r_x, double)
+#not working
+#r_x = list(range(4,8))
+#xr = zeros(r_x, double)

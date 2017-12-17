@@ -1058,7 +1058,8 @@ def expr_with_trailer(expr, trailer=None):
               #  args=tuple(args)
                # return FunctionCall(expr.methods['__init__'],args)
             else:
-                raise NotImplementedError('Only FunctionDef is treated')
+                raise NotImplementedError('expr is not FunctionDef '
+                                         'and {0} is not a builtin function'.format(f_name))
 #            if len(args) > 0:
 #                else:
 #                    func = namespace[f_name]
