@@ -3586,6 +3586,9 @@ class MethodHeaderStmt(BasicStmt):
         dtypes = self.dtypes[1:]
         h = MethodHeader((cls_instance, self.name), dtypes, self.results)
         headers[h.name] = h
+#        print('\n')
+#        for k,v in headers.items():
+#            print('"{0}": {1}'.format(k, v))
 
         return h
 

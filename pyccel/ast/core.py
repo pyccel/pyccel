@@ -1014,21 +1014,19 @@ class ForIterator(For):
         def _find_stopping_criterium(stmts):
             for stmt in stmts:
                 if isinstance(stmt, If):
-#                    if not(len(stmt.args) == 2):
-                    if not(len(stmt.args) == 1):
+                    if not(len(stmt.args) == 2):
                         raise ValueError('Wrong __next__ pattern')
 
                     ct, et = stmt.args[0]
-                    return ct
-#                    cf, ef = stmt.args[1]
+                    cf, ef = stmt.args[1]
 
-#                    for i in et:
-#                        if isinstance(i, Raise):
-#                            return cf
-#
-#                    for i in ef:
-#                        if isinstance(i, Raise):
-#                            return ct
+                    for i in et:
+                        if isinstance(i, Raise):
+                            return cf
+
+                    for i in ef:
+                        if isinstance(i, Raise):
+                            return ct
 
                     raise TypeError('Wrong type for __next__ pattern')
 
@@ -2007,7 +2005,10 @@ class ClassDef(Basic):
 
     @property
     def hide(self):
-        return self.is_iterable
+        if 'hide' in self.options:
+            return True
+        else:
+            return self.is_iterable
 
 class Ceil(Function):
     """
