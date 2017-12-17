@@ -1,10 +1,10 @@
 # coding: utf-8
 
-#$ header class StopIteration(public)
-#$ header method __init__(StopIteration)
-class StopIteration(object):
-    def __init__(self):
-        print('hello')
+##$ header class StopIteration(public)
+##$ header method __init__(StopIteration)
+#class StopIteration(object):
+#    def __init__(self):
+#        print('hello')
 
 
 #$ header class Range(public, iterable)
@@ -20,7 +20,7 @@ class Range(object):
         self.stop  = stop
         self.step  = step
 
-        self.i = 0
+        self.i = -1
 
     def __del__(self):
         print('> free')
@@ -32,8 +32,13 @@ class Range(object):
         if (self.i < self.stop):
             i = self.i
             self.i = self.i + 1
-        else:
-            raise StopIteration()
+
+#    def __next__(self):
+#        if (self.i < self.stop):
+#            i = self.i
+#            self.i = self.i + 1
+#        else:
+#            raise StopIteration()
 
 p = Range(0,3,1)
 

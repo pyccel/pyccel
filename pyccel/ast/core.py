@@ -1014,19 +1014,21 @@ class ForIterator(For):
         def _find_stopping_criterium(stmts):
             for stmt in stmts:
                 if isinstance(stmt, If):
-                    if not(len(stmt.args) == 2):
+#                    if not(len(stmt.args) == 2):
+                    if not(len(stmt.args) == 1):
                         raise ValueError('Wrong __next__ pattern')
 
                     ct, et = stmt.args[0]
-                    cf, ef = stmt.args[1]
+                    return ct
+#                    cf, ef = stmt.args[1]
 
-                    for i in et:
-                        if isinstance(i, Raise):
-                            return cf
-
-                    for i in ef:
-                        if isinstance(i, Raise):
-                            return ct
+#                    for i in et:
+#                        if isinstance(i, Raise):
+#                            return cf
+#
+#                    for i in ef:
+#                        if isinstance(i, Raise):
+#                            return ct
 
                     raise TypeError('Wrong type for __next__ pattern')
 
@@ -1054,12 +1056,11 @@ class ForIterator(For):
         for stmt in init_method.body:
             if isinstance(stmt, Assign):
                 if str(stmt.lhs) in names:
+                    expr = stmt.rhs
                     for a_old, a_new in zip(args, params):
                         v_old = Variable('int', a_old)
                         v_new = Variable('int', a_new)
-                        print('> before : ', stmt.rhs)
-                        expr = subs(stmt.rhs, v_old, v_new)
-                        print('> after  : ', expr)
+                        expr = subs(expr, v_old, v_new)
                         inits[str(stmt.lhs)] = expr
 
         ends = [inits[str(i)] for i in ends]
