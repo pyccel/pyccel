@@ -20,7 +20,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, AugAssign, FunctionCall, \
-                              FunctionDef, ClassDef, Sync, Del, Print, Import, \
+                              FunctionDef,MethodCall, ClassDef, Sync, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               ThreadID, ThreadsNumber, \
@@ -473,6 +473,8 @@ class Codegen(object):
                 decs = stmt
             elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
                 continue
+            elif isinstance(stmt,MethodCall):
+                body += printer(stmt) + "\n"
             elif isinstance(stmt, Assign):
                 if not isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
                     body += printer(stmt) + "\n"

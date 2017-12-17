@@ -41,7 +41,7 @@ from pyccel.parser.syntax.basic   import BasicStmt
 from pyccel.parser.syntax.openmp  import OpenmpStmt
 
 from pyccel.ast.core import allocatable_like
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import is_pyccel_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
@@ -1031,7 +1031,7 @@ def expr_with_trailer(expr, trailer=None):
             d_var['intent']      = 'inout'
             insert_variable('self', **d_var)
             args = [namespace['self']] + list(args)
-            expr = ConstructorCall(method, args)
+            expr = ConstructorCall(method, args,cls_variable=namespace['self'])
         else:
             f_name = str(expr)
             if isinstance(expr, FunctionDef):
@@ -3654,7 +3654,20 @@ class CallStmt(BasicStmt):
         pyccel.ast.core
         """
         f_name = str(self.name)
-        args = self.trailer.expr
+        if len(self.trailer)==1:
+            args=self.trailer[0].expr
+        else:
+            args=[]
+            for i in self.trailer:
+                a=i.expr
+                if not isinstance(a,str):
+                    args+=a
+                else:
+                    args+=[a]
+                
+            
+        
+
 
         # ... replace dict by ValuedVariable
         _args = []
@@ -3667,15 +3680,26 @@ class CallStmt(BasicStmt):
                 _args.append(a)
         args = _args
         # ...
+        
 
         # ...
         if not(f_name in namespace) and not(f_name in builtin_funcs_math_nores):
             raise ValueError("Undefined function call {}.".format(f_name))
         # ...
-
+        
         # ...
+        
         if f_name in namespace:
             F = namespace[f_name]
+            
+            if isinstance(F,Variable) and F.cls_base:
+                
+                methods=namespace[F.dtype.name].methods
+                for method in methods:
+                    if str(method.name)==args[0]:            
+                        return MethodCall(method,args[1:],cls_variable=F,kind=None)
+
+                
             if not(isinstance(F, FunctionDef)):
                 raise TypeError("Expecting a FunctionDef")
 
@@ -3692,4 +3716,4 @@ class CallStmt(BasicStmt):
             for arg in args:
                expressions.append(arg)
             return Print(expressions)
-        # ...
+        # ...        

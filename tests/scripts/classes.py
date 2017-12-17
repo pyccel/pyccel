@@ -37,5 +37,5 @@ k = Matrix(2,3)
 d = p.n_rows
 p.n_rows = 5
 s=p.a[0,0]
-#k.add(p)
+k.add(p)
 del p
