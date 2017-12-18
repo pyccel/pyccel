@@ -310,7 +310,7 @@ TrailerSlice: (start=Expression ':' end=Expression);
 TrailerSliceEmpty: (dots=':');
 
 Float: /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/;
-String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^"\\]|\\.)*'/;
+String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^'\\]|\\.)*'/;
 
 BOOLEAN: TRUE | FALSE;
 
