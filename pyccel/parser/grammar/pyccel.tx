@@ -153,7 +153,7 @@ FunctionHeaderStmt:
 
 FunctionKind: 'function' | 'procedure';
 
-ClassOptions: 'abstract' | 'private' | 'public' | 'iterable' | 'hide';
+ClassOptions: 'abstract' | 'private' | 'public' | 'iterable' | 'hide' | 'openmp';
 DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
 

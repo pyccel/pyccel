@@ -13,7 +13,7 @@ class StopIteration(object):
     def __del__(self):
         pass
 
-#$ header class Range(public, iterable)
+#$ header class Range(public, iterable, openmp)
 #$ header method __init__(Range, int, int, int)
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
@@ -43,9 +43,7 @@ class Range(object):
 p = Range(-2,3,1)
 
 #$ omp parallel private(i, idx)
-#$ omp do
 for i in p:
     idx = omp_get_thread_num()
     print("> thread id : ", idx, " working on ", i)
-#$ omp end do
 #$ omp end parallel

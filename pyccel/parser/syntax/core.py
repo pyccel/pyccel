@@ -3528,7 +3528,7 @@ class ClassHeaderStmt(BasicStmt):
     def expr(self):
         options = [str(i) for i in self.options]
 
-        iterable = ('iterable' in options)
+        iterable    = ('iterable' in options)
 
         # create a new Datatype for the current class
         cls_constructs[self.name] = DataTypeFactory(self.name, ("_name"),

@@ -1429,6 +1429,9 @@ class FCodePrinter(CodePrinter):
         epilog = ''
         code   = ''
 
+        prolog_omp = ''
+        epilog_omp = ''
+
         # ...
         def _do_range(target, iter, prolog, epilog):
 #            if not isinstance(iter, Range):
@@ -1453,6 +1456,9 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
+        if not isinstance(expr.iterable, Variable):
+            raise TypeError('Expecting iterable to be a Variable.')
+
         targets = expr.target
         iters   = expr.ranges
 
@@ -1461,6 +1467,21 @@ class FCodePrinter(CodePrinter):
                                        prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
+
+        iterable = expr.iterable
+        cls_base = iterable.cls_base
+
+        # ... if using OpenMP
+        #     TODO improve this
+        if ('openmp' in cls_base.options):
+            prolog_omp = '!$omp do schedule(runtime)\n'
+            epilog_omp = '!$omp end do nowait\n'
+
+        if prolog_omp:
+            prolog = '{0}\n{1}'.format(prolog_omp, prolog)
+        if epilog_omp:
+            epilog = '{0}\n{1}'.format(epilog, epilog_omp)
+        # ...
 
         return ('{prolog}'
                 '{body}\n'
