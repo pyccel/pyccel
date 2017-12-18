@@ -31,7 +31,7 @@ from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
 from pyccel.ast.core import Len
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, While, If, Del, Sync
+from pyccel.ast.core import For, ForIterator, While, If, Del, Sync
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall
 
@@ -3013,6 +3013,11 @@ def mpify(stmt, **options):
         options['label'] = stmt.name
         return stmt
 #        return MPI_Tensor(stmt, **options)
+    if isinstance(stmt, ForIterator):
+        iterable = mpify(stmt.iterable, **options)
+        target   = stmt.target
+        body     = mpify(stmt.body, **options)
+        return ForIterator(target, iterable, body, strict=False)
     if isinstance(stmt, For):
         iterable = mpify(stmt.iterable, **options)
         target   = stmt.target

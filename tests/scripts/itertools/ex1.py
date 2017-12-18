@@ -1,5 +1,7 @@
 # coding: utf-8
 
+from pyccel.stdlib.parallel.openmp import omp_get_thread_num
+
 #$ header class StopIteration(public, hide)
 #$ header method __init__(StopIteration)
 #$ header method __del__(StopIteration)
@@ -40,5 +42,10 @@ class Range(object):
 
 p = Range(-2,3,1)
 
+#$ omp parallel private(i, idx)
+#$ omp do
 for i in p:
-    print(i)
+    idx = omp_get_thread_num()
+    print("> thread id : ", idx, " working on ", i)
+#$ omp end do
+#$ omp end parallel
