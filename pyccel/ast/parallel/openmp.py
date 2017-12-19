@@ -21,7 +21,7 @@ from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
 from pyccel.ast.core import Len
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, While, If, Del, Sync, With
+from pyccel.ast.core import For, ForIterator, While, If, Del, Sync, With
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall
 
@@ -313,6 +313,11 @@ def openmpfy(stmt, **options):
 #        return stmt
     if isinstance(stmt, Tensor):
         raise NotImplementedError('Tensor stmt not available')
+    if isinstance(stmt, ForIterator):
+        iterable = openmpfy(stmt.iterable, **options)
+        target   = stmt.target
+        body     = openmpfy(stmt.body, **options)
+        return ForIterator(target, iterable, body, strict=False)
     if isinstance(stmt, For):
         iterable = openmpfy(stmt.iterable, **options)
         target   = stmt.target

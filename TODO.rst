@@ -1,7 +1,10 @@
 TODO
 ====
 
-* Raise StopIteration
+Exceptions and Errors
+*********************
+
+* implement StopIteration as a class in stdlib
 
 Imports
 *******
@@ -31,8 +34,14 @@ Parser
 
 * *eval* statement
 
+* Expression of strings
+
+* Expression of booleans
+
 AST
 ***
+
+* upate *clone* method of Variable
 
 * cleaning: PointerVariable, AllocatableVariable, Variable, IndexedVariable, IndexedElement
 
@@ -50,6 +59,8 @@ Codegen
 * private variables if name is of the form *_name*, in fcode we should add a prefix *p_name*. The used prefix should be given as an argument of doprint in codegen
 
 * in *load_extension*: need to improve the use of dep_libs (ex BLAS_LIBRARIES, LAPACK_LIBRARIES)
+
+* improve print for strings (remove *"*)
 
 Parallel
 ********

@@ -46,11 +46,12 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeBool, NativeFloat
+from pyccel.ast.core import NativeBool, NativeFloat, NativeNil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
+from pyccel.ast.core import Nil
 from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              For, ForIterator, Assign, ParallelBlock, \
                              Declare, Variable, ValuedVariable, \
@@ -334,6 +335,9 @@ def get_attributs(expr):
         d_var['allocatable'] = True
         d_var['rank']        = 1
         d_var['shape']       = len(expr)
+        return d_var
+    elif isinstance(expr, Nil):
+        d_var['datatype']    = NativeNil()
         return d_var
 #    elif isinstance(expr, DottedVariable):
 #        comm = expr.name[0]
@@ -1058,7 +1062,8 @@ def expr_with_trailer(expr, trailer=None):
               #  args=tuple(args)
                # return FunctionCall(expr.methods['__init__'],args)
             else:
-                raise NotImplementedError('Only FunctionDef is treated')
+                raise NotImplementedError('expr is not FunctionDef '
+                                         'and {0} is not a builtin function'.format(f_name))
 #            if len(args) > 0:
 #                else:
 #                    func = namespace[f_name]
@@ -2214,7 +2219,7 @@ class Atom(ExpressionElement):
         elif op in builtin_types:
             return datatype(op)
         elif op == 'None':
-            raise ValueError("Atom None not yet available.")
+            return Nil()
         elif op == 'True':
             return true
         elif op == 'False':
@@ -2611,6 +2616,7 @@ class FunctionDefStmt(BasicStmt):
                     c={'lhs':i.trailer.expr,'rhs':i.rhs}
                     Var=AssignStmt(**c).expr
                     attr+=[Var.lhs]
+            # we first create and append an empty class to the namespace
             cls=ClassDef(cls_instance,attr,[],[])
             namespace[cls_instance]=cls
             class_defs[cls_instance]=cls
@@ -2768,6 +2774,7 @@ class ClassDefStmt(BasicStmt):
 
         stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
+        class_defs[name] = stmt
 
         # ... cleaning
 
@@ -3525,7 +3532,7 @@ class ClassHeaderStmt(BasicStmt):
     def expr(self):
         options = [str(i) for i in self.options]
 
-        iterable = ('iterable' in options)
+        iterable    = ('iterable' in options)
 
         # create a new Datatype for the current class
         cls_constructs[self.name] = DataTypeFactory(self.name, ("_name"),
@@ -3584,6 +3591,9 @@ class MethodHeaderStmt(BasicStmt):
         dtypes = self.dtypes[1:]
         h = MethodHeader((cls_instance, self.name), dtypes, self.results)
         headers[h.name] = h
+#        print('\n')
+#        for k,v in headers.items():
+#            print('"{0}": {1}'.format(k, v))
 
         return h
 

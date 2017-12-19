@@ -153,7 +153,7 @@ FunctionHeaderStmt:
 
 FunctionKind: 'function' | 'procedure';
 
-ClassOptions: 'abstract' | 'private' | 'public' | 'iterable';
+ClassOptions: 'abstract' | 'private' | 'public' | 'iterable' | 'hide' | 'openmp';
 DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
 
@@ -310,7 +310,7 @@ TrailerSlice: (start=Expression ':' end=Expression);
 TrailerSliceEmpty: (dots=':');
 
 Float: /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/;
-String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^"\\]|\\.)*'/;
+String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^'\\]|\\.)*'/;
 
 BOOLEAN: TRUE | FALSE;
 

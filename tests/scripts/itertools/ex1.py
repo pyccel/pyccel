@@ -1,18 +1,23 @@
 # coding: utf-8
 
-#$ header class StopIteration(public)
+from pyccel.stdlib.parallel.openmp import omp_get_thread_num
+
+#$ header class StopIteration(public, hide)
 #$ header method __init__(StopIteration)
+#$ header method __del__(StopIteration)
 class StopIteration(object):
+
     def __init__(self):
-        print('hello')
+        pass
 
+    def __del__(self):
+        pass
 
-#$ header class Range(public, iterable)
+#$ header class Range(public, iterable, openmp)
 #$ header method __init__(Range, int, int, int)
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
-
 class Range(object):
 
     def __init__(self, start, stop, step):
@@ -20,7 +25,17 @@ class Range(object):
         self.stop  = stop
         self.step  = step
 
-        self.i = 0
+        self._ordered      = None
+        self._private      = None
+        self._firstprivate = None
+        self._lastprivate  = None
+        self._linear       = None
+        self._reduction    = None
+        self._schedule     = None
+        self._collapse     = None
+        self._nowait       = True
+
+        self.i = start
 
     def __del__(self):
         print('> free')
@@ -35,7 +50,10 @@ class Range(object):
         else:
             raise StopIteration()
 
-p = Range(0,3,1)
+p = Range(-2,3,1)
 
+#$ omp parallel private(i, idx)
 for i in p:
-    print(i)
+    idx = omp_get_thread_num()
+    print("> thread id : ", idx, " working on ", i)
+#$ omp end parallel

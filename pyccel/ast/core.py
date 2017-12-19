@@ -981,15 +981,44 @@ class ForIterator(For):
 
         # ...
         it_method = methods['__iter__']
-        starts = []
         targets = []
+        starts = []
         for stmt in it_method.body:
             if isinstance(stmt, Assign):
-                starts.append(stmt.rhs)
                 targets.append(stmt.lhs)
+                starts.append(stmt.lhs)
 
-        if not(len(starts) == depth):
-            raise ValueError('wrong number of starts')
+        if not(len(targets) == depth):
+            raise ValueError('wrong number of targets')
+
+        names = []
+        for i in starts:
+            if isinstance(i, IndexedElement):
+                names.append(str(i.base))
+            else:
+                names.append(str(i))
+        names = list(set(names))
+
+        inits = {}
+        for stmt in init_method.body:
+            if isinstance(stmt, Assign):
+                if str(stmt.lhs) in names:
+                    expr = stmt.rhs
+                    for a_old, a_new in zip(args, params):
+                        dtype = datatype(stmt.rhs)
+                        v_old = Variable(dtype, a_old)
+                        v_new = Variable(dtype, a_new)
+                        expr = subs(expr, v_old, v_new)
+                        inits[str(stmt.lhs)] = expr
+
+        _starts = []
+        for i in starts:
+            if isinstance(i, IndexedElement):
+                _starts.append(i.base)
+            else:
+                _starts.append(i)
+        starts = [inits[str(i)] for i in _starts]
+
 
         # TODO uncomment this later, after fixing it
 #        inits = {}
@@ -1034,35 +1063,61 @@ class ForIterator(For):
         # ...
 
         # ...
+        def doit(expr, targets):
+            if isinstance(expr, Relational):
+                if (str(expr.lhs) in targets) and (expr.rel_op in ['<', '<=']):
+                    return expr.rhs
+                elif (str(expr.rhs) in targets) and (expr.rel_op in ['>', '>=']):
+                    return expr.lhs
+                else:
+                    return None
+            elif isinstance(expr, And):
+                return [doit(a, targets) for a in expr.args]
+            else:
+                raise TypeError('Expecting And logical expression.')
+        # ...
+
+        # ...
         next_method = methods['__next__']
         ends = []
         cond = _find_stopping_criterium(next_method.body)
-#        print('> cond    :', cond)
-#        print('> targets : ', targets)
         # TODO treate case of cond with 'and' operation
         # TODO we should avoid using str
         #      must change target from DottedName to Variable
         targets = [str(i) for i in targets]
-        if (str(cond.lhs) in targets) and (cond.rel_op in ['<', '<=']):
-            ends += [cond.rhs]
-        elif (str(cond.rhs) in targets) and (cond.rel_op in ['>', '>=']):
-            ends += [cond.lhs]
+        ends    = doit(cond, targets)
+
+        # TODO not use str
+        if not isinstance(ends, (list, tuple)):
+            ends = [ends]
+
+        names = []
+        for i in ends:
+            if isinstance(i, IndexedElement):
+                names.append(str(i.base))
+            else:
+                names.append(str(i))
+        names = list(set(names))
 
         inits = {}
-        # TODO not use str
-        names = [str(i) for i in ends]
         for stmt in init_method.body:
             if isinstance(stmt, Assign):
                 if str(stmt.lhs) in names:
+                    expr = stmt.rhs
                     for a_old, a_new in zip(args, params):
-                        v_old = Variable('int', a_old)
-                        v_new = Variable('int', a_new)
-                        print('> before : ', stmt.rhs)
-                        expr = subs(stmt.rhs, v_old, v_new)
-                        print('> after  : ', expr)
+                        dtype = datatype(stmt.rhs)
+                        v_old = Variable(dtype, a_old)
+                        v_new = Variable(dtype, a_new)
+                        expr = subs(expr, v_old, v_new)
                         inits[str(stmt.lhs)] = expr
 
-        ends = [inits[str(i)] for i in ends]
+        _ends = []
+        for i in ends:
+            if isinstance(i, IndexedElement):
+                _ends.append(i.base)
+            else:
+                _ends.append(i)
+        ends = [inits[str(i)] for i in _ends]
 
         if not(len(ends) == depth):
             raise ValueError('wrong number of ends')
@@ -1112,6 +1167,10 @@ class NativeVoid(DataType):
     _name = 'Void'
     pass
 
+class NativeNil(DataType):
+    _name = 'Nil'
+    pass
+
 class NativeRange(DataType):
     _name = 'Range'
     pass
@@ -1135,6 +1194,7 @@ Float   = NativeFloat()
 Double  = NativeDouble()
 Complex = NativeComplex()
 Void    = NativeVoid()
+Nil     = NativeNil()
 String  = NativeString()
 
 
@@ -1144,6 +1204,7 @@ dtype_registry = {'bool': Bool,
                   'double': Double,
                   'complex': Complex,
                   'void': Void,
+                  'nil': Nil,
                   'str': String}
 
 
@@ -1467,6 +1528,13 @@ class ConstructorCall(FunctionCall):
     @property
     def this(self):
         return self.arguments[0]
+
+
+class Nil(Basic):
+    """
+    class for None object in the code.
+    """
+    pass
 
 
 class Variable(Symbol):
@@ -1955,6 +2023,15 @@ class ClassDef(Basic):
             d_methods[str(i.name)] = i
         return d_methods
 
+    @property
+    def attributs_as_dict(self):
+        """Returns a dictionary that contains all attributs, where the key is the
+        attribut's name."""
+        d_attributs = {}
+        for i in self.attributs:
+            d_attributs[str(i.name)] = i
+        return d_attributs
+
     # TODO add other attributs?
     @property
     def this(self):
@@ -2006,7 +2083,10 @@ class ClassDef(Basic):
 
     @property
     def hide(self):
-        return self.is_iterable
+        if 'hide' in self.options:
+            return True
+        else:
+            return self.is_iterable
 
 class Ceil(Function):
     """
@@ -3345,3 +3425,46 @@ def is_valid_module(expr):
         return False
 # ...
 
+# ...
+def get_initial_value(expr, var):
+    """Returns the first assigned value to var in the Expression expr.
+
+    expr: Expression
+        any AST valid expression
+
+    var: str, Variable, DottedName, list, tuple
+        variable name
+    """
+    if isinstance(var, str):
+        return get_initial_value(expr, [var])
+    elif isinstance(var, DottedName):
+        return get_initial_value(expr, [str(var)])
+    elif isinstance(var, Variable):
+        return get_initial_value(expr, [var.name])
+    elif not isinstance(var, (list, tuple)):
+        raise TypeError('Expecting var to be str, list, tuple or Variable')
+
+    if isinstance(expr, ValuedVariable):
+        if expr.variable.name in var:
+            return expr.value
+    elif isinstance(expr, Variable):
+        # expr.cls_base if of type ClassDef
+        if expr.cls_base:
+            return get_initial_value(expr.cls_base, var)
+    elif isinstance(expr, Assign):
+        if str(expr.lhs) in var:
+            return expr.rhs
+    elif isinstance(expr, FunctionDef):
+        return get_initial_value(expr.body, var)
+    elif isinstance(expr, (list, tuple, Tuple)):
+        for i in expr:
+            value = get_initial_value(i, var)
+            if not(value is None):
+                return value
+    elif isinstance(expr, ClassDef):
+        methods     = expr.methods_as_dict
+        init_method = methods['__init__']
+        return get_initial_value(init_method, var)
+
+    return None
+# ...
