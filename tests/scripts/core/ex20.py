@@ -6,6 +6,7 @@
 #'''
 #
 #def rootsearch(f,a,b,dx):
+#$header function f(double) results(double)
 def f(x):
     y=x
     return y

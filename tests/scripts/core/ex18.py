@@ -1,4 +1,4 @@
-#$ header func(double)
+#$ header func(double) reuslts(double)
 def func(t):
     y=pow(t,2)
     return y
@@ -7,9 +7,9 @@ xStart = array((1,2,5),float)
 side   = 0.1
 tol    = 1.0e-6
 n      = len(xStart)
-
 n = n+1
-k = n-1 # Number of variables
+k = n-1 
+# Number of variables
 
 x = zeros(n, double)
 f = zeros(n, double)
@@ -32,9 +32,10 @@ for k in range(1,500):
     # Compute the move vector d
     m=n+1
     d =-m*x[iHi]
+    #
     if sqrt(dot(d,d)/n) < tol:
         n=n+1
-    # Try reflection
+    
     xNew = x[iHi] + 2.0*d
     fNew = func(xNew)
     if fNew <= f[iLo]:
