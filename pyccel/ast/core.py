@@ -3425,3 +3425,34 @@ def is_valid_module(expr):
         return False
 # ...
 
+# ...
+def get_initial_value(expr, var_name):
+    """Returns the first assigned value to var in the Expression expr."""
+#    if isinstance(expr, (list, tuple, Tuple)):
+    if isinstance(expr, ValuedVariable):
+        if expr.variable.name == var_name:
+            return expr.value
+        return None
+    elif isinstance(expr, Variable):
+        # expr.cls_base if of type ClassDef
+        if expr.cls_base:
+            return get_initial_value(expr.cls_base, var_name)
+        return None
+    elif isinstance(expr, Assign):
+        expr = stmt.rhs
+        for a_old, a_new in zip(args, params):
+            dtype = datatype(stmt.rhs)
+            v_old = Variable(dtype, a_old)
+            v_new = Variable(dtype, a_new)
+            expr = subs(expr, v_old, v_new)
+            inits[str(stmt.lhs)] = expr
+    elif isinstance(expr, ClassDef):
+        methods     = expr.methods_as_dict
+        init_method = methods['__init__']
+
+        values = [get_initial_value(i, var_name) for i in init_method.body]
+        return values
+
+    return None
+
+# ...
