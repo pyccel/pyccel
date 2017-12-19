@@ -25,16 +25,15 @@ class Range(object):
         self.stop  = stop
         self.step  = step
 
-        self._ordered = 0
-        self._private = 0
-        self._firstprivate = 0
-        self._lastprivate = 0
-        self._linear = 0
-        self._reduction = 0
-        self._schedule = 0
-        self._collapse = 0
-
-        self._nowait = True
+        self._ordered      = None
+        self._private      = None
+        self._firstprivate = None
+        self._lastprivate  = None
+        self._linear       = None
+        self._reduction    = None
+        self._schedule     = None
+        self._collapse     = None
+        self._nowait       = True
 
         self.i = start
 
