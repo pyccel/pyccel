@@ -3426,33 +3426,45 @@ def is_valid_module(expr):
 # ...
 
 # ...
-def get_initial_value(expr, var_name):
-    """Returns the first assigned value to var in the Expression expr."""
-#    if isinstance(expr, (list, tuple, Tuple)):
+def get_initial_value(expr, var):
+    """Returns the first assigned value to var in the Expression expr.
+
+    expr: Expression
+        any AST valid expression
+
+    var: str, Variable, DottedName, list, tuple
+        variable name
+    """
+    if isinstance(var, str):
+        return get_initial_value(expr, [var])
+    elif isinstance(var, DottedName):
+        return get_initial_value(expr, [str(var)])
+    elif isinstance(var, Variable):
+        return get_initial_value(expr, [var.name])
+    elif not isinstance(var, (list, tuple)):
+        raise TypeError('Expecting var to be str, list, tuple or Variable')
+
     if isinstance(expr, ValuedVariable):
-        if expr.variable.name == var_name:
+        if expr.variable.name in var:
             return expr.value
-        return None
     elif isinstance(expr, Variable):
         # expr.cls_base if of type ClassDef
         if expr.cls_base:
-            return get_initial_value(expr.cls_base, var_name)
-        return None
+            return get_initial_value(expr.cls_base, var)
     elif isinstance(expr, Assign):
-        expr = stmt.rhs
-        for a_old, a_new in zip(args, params):
-            dtype = datatype(stmt.rhs)
-            v_old = Variable(dtype, a_old)
-            v_new = Variable(dtype, a_new)
-            expr = subs(expr, v_old, v_new)
-            inits[str(stmt.lhs)] = expr
+        if str(expr.lhs) in var:
+            return expr.rhs
+    elif isinstance(expr, FunctionDef):
+        return get_initial_value(expr.body, var)
+    elif isinstance(expr, (list, tuple, Tuple)):
+        for i in expr:
+            value = get_initial_value(i, var)
+            if not(value is None):
+                return value
     elif isinstance(expr, ClassDef):
         methods     = expr.methods_as_dict
         init_method = methods['__init__']
-
-        values = [get_initial_value(i, var_name) for i in init_method.body]
-        return values
+        return get_initial_value(init_method, var)
 
     return None
-
 # ...

@@ -34,7 +34,7 @@ class Range(object):
         self._schedule = 0
         self._collapse = 0
 
-        self._nowait = False
+        self._nowait = True
 
         self.i = start
 
