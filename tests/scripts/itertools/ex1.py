@@ -25,6 +25,17 @@ class Range(object):
         self.stop  = stop
         self.step  = step
 
+        self._ordered = 0
+        self._private = 0
+        self._firstprivate = 0
+        self._lastprivate = 0
+        self._linear = 0
+        self._reduction = 0
+        self._schedule = 0
+        self._collapse = 0
+
+        self._nowait = False
+
         self.i = start
 
     def __del__(self):

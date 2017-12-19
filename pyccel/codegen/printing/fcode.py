@@ -1474,8 +1474,15 @@ class FCodePrinter(CodePrinter):
         # ... if using OpenMP
         #     TODO improve this
         if ('openmp' in cls_base.options):
+            nowait = ''
+            d_attributs = cls_base.attributs_as_dict
+            print(d_attributs)
+            if '_nowait' in d_attributs:
+                attr = d_attributs['_nowait']
+#                print('> attribut : ', attr.value)
+                nowait = 'nowait'
             prolog_omp = '!$omp do schedule(runtime)\n'
-            epilog_omp = '!$omp end do nowait\n'
+            epilog_omp = '!$omp end do {0}\n'.format(nowait)
 
         if prolog_omp:
             prolog = '{0}\n{1}'.format(prolog_omp, prolog)

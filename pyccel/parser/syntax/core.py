@@ -46,11 +46,12 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeBool, NativeFloat
+from pyccel.ast.core import NativeBool, NativeFloat, NativeNil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
+from pyccel.ast.core import Nil
 from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              For, ForIterator, Assign, ParallelBlock, \
                              Declare, Variable, ValuedVariable, \
@@ -334,6 +335,9 @@ def get_attributs(expr):
         d_var['allocatable'] = True
         d_var['rank']        = 1
         d_var['shape']       = len(expr)
+        return d_var
+    elif isinstance(expr, Nil):
+        d_var['datatype']    = NativeNil()
         return d_var
 #    elif isinstance(expr, DottedVariable):
 #        comm = expr.name[0]
@@ -2215,7 +2219,7 @@ class Atom(ExpressionElement):
         elif op in builtin_types:
             return datatype(op)
         elif op == 'None':
-            raise ValueError("Atom None not yet available.")
+            return Nil()
         elif op == 'True':
             return true
         elif op == 'False':

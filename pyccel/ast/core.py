@@ -1167,6 +1167,10 @@ class NativeVoid(DataType):
     _name = 'Void'
     pass
 
+class NativeNil(DataType):
+    _name = 'Nil'
+    pass
+
 class NativeRange(DataType):
     _name = 'Range'
     pass
@@ -1190,6 +1194,7 @@ Float   = NativeFloat()
 Double  = NativeDouble()
 Complex = NativeComplex()
 Void    = NativeVoid()
+Nil     = NativeNil()
 String  = NativeString()
 
 
@@ -1199,6 +1204,7 @@ dtype_registry = {'bool': Bool,
                   'double': Double,
                   'complex': Complex,
                   'void': Void,
+                  'nil': Nil,
                   'str': String}
 
 
@@ -1522,6 +1528,13 @@ class ConstructorCall(FunctionCall):
     @property
     def this(self):
         return self.arguments[0]
+
+
+class Nil(Basic):
+    """
+    class for None object in the code.
+    """
+    pass
 
 
 class Variable(Symbol):
@@ -2009,6 +2022,15 @@ class ClassDef(Basic):
         for i in self.methods:
             d_methods[str(i.name)] = i
         return d_methods
+
+    @property
+    def attributs_as_dict(self):
+        """Returns a dictionary that contains all attributs, where the key is the
+        attribut's name."""
+        d_attributs = {}
+        for i in self.attributs:
+            d_attributs[str(i.name)] = i
+        return d_attributs
 
     # TODO add other attributs?
     @property
