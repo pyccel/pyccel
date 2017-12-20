@@ -1672,7 +1672,8 @@ class ValuedVariable(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("variable must be of type Variable")
 
-        _valid_instances = (Variable, IndexedVariable, IndexedElement,
+        _valid_instances = (Nil, Variable,
+                            IndexedVariable, IndexedElement,
                             int, float, bool, complex,
                             Boolean, sp_Integer, sp_Float)
 
@@ -3465,13 +3466,17 @@ def get_initial_value(expr, var):
         value = get_initial_value(expr.body, var)
         if not is_None(value):
             r = get_initial_value(expr.arguments, value)
-            if not is_None(r):
-                value = r
+#            if 'self._collapse' in var:
+#                print('>>>> ', var, value, r)
+            if not (r is None):
+                return r
         return value
     elif isinstance(expr, (list, tuple, Tuple)):
         for i in expr:
             value = get_initial_value(i, var)
-            if not is_None(value):
+            # here we make a difference between None and Nil,
+            # since the output of our function can be None
+            if not (value is None):
                 return value
     elif isinstance(expr, ClassDef):
         methods     = expr.methods_as_dict

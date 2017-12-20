@@ -13,6 +13,18 @@ class StopIteration(object):
     def __del__(self):
         pass
 
+#$ header class List(public, hide)
+#$ header method __init__(List, str, str)
+#$ header method __del__(List)
+class List(object):
+
+    def __init__(self, a, b):
+        self._a = a
+        self._b = b
+
+    def __del__(self):
+        pass
+
 #$ header class Range(public, iterable, openmp)
 #$ header method __init__(Range, int, int, int, bool, int)
 #$ header method __del__(Range)
@@ -20,7 +32,7 @@ class StopIteration(object):
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True, collapse=-1):
+    def __init__(self, start, stop, step, nowait=True, collapse=None):
         self.start = start
         self.stop  = stop
         self.step  = step

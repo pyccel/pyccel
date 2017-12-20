@@ -26,6 +26,7 @@ from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import ClassDef
+from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef
@@ -1493,8 +1494,9 @@ class FCodePrinter(CodePrinter):
             # ... collapse
             #     TODO remove the Eq on -1. we must use None
             collapse = ''
-            if not(d['_collapse'] is None) and not(d['_collapse'] == -1):
-                collapse = 'collapse({0})'.format(self._print(d['_collapse']))
+            if not(d['_collapse'] is None):
+                if not isinstance(d['_collapse'], Nil):
+                    collapse = 'collapse({0})'.format(self._print(d['_collapse']))
             # ...
 
             # ...
