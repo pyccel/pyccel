@@ -26,21 +26,22 @@ class List(object):
         pass
 
 #$ header class Range(public, iterable, openmp)
-#$ header method __init__(Range, int, int, int, bool, int, str [:])
+#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:])
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True, collapse=None, private=['i', 'idx']):
+    def __init__(self, start, stop, step, nowait=True, collapse=None, private='i', firstprivate='i', lastprivate='i'):
+
         self.start = start
         self.stop  = stop
         self.step  = step
 
         self._ordered      = None
         self._private      = private
-        self._firstprivate = None
-        self._lastprivate  = None
+        self._firstprivate = firstprivate
+        self._lastprivate  = lastprivate
         self._linear       = None
         self._reduction    = None
         self._schedule     = None

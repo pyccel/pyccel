@@ -2,6 +2,8 @@
 
 import os
 
+import re
+
 from sympy.core import Tuple
 
 from pyccel.codegen.printing import fcode
@@ -69,6 +71,55 @@ def make_tmp_file(filename, output_dir=None):
         name = os.path.basename(name)
         name = os.path.join(output_dir, name)
     return name + ".pyccel"
+# ...
+
+# ...
+def updateNewLineInList(s, kind='list'):
+    """
+    removing 'new line', inside a list, tuple, dict
+    """
+    if kind == 'list':
+        rule = '\[(.*[\w\W\s\S]+.*)\]'
+#        rule = r'\[(.*\n[\w\W\s\S]+.*)\]'
+
+        leftLim = '['
+        rightLim = ']'
+    elif kind == 'tuple':
+        rule = '\((.*[\w\W\s\S]+.*)\)'
+#        rule = r'\((.*\n[\w\W\s\S]+.*)\)'
+
+        leftLim = '('
+        rightLim = ')'
+    else:
+        raise ValueError('Expecting list or tuple values for kind')
+
+    p = re.compile(rule)
+    #p = re.compile(rule, re.IGNORECASE)
+
+    # ...
+    list_data = p.split(s) # split the whole text with respect to the rule
+    list_exp  = p.findall(s) # get all expressions to replace
+
+    if len(list_exp) == 0:
+        return s
+
+    # this is because we don't treat nested parentheses
+    if (len(list_exp) == 1) and '(' in list_exp[0]:
+        return s
+
+    _format = lambda s: s.replace('\n', ' ')
+
+    list_text = ""
+    for data in list_data:
+        # TODO improve this in case of \t, etc
+        #      this will be needed only if we want
+        #      to have \n inside expressions.
+        new_data = data
+        if data in list_exp:
+            new_data = leftLim + _format(data) + rightLim
+        list_text += new_data
+
+    return list_text
 # ...
 
 # ...
@@ -151,9 +202,23 @@ def preprocess(filename, filename_out):
     filename_out: str
         name of the temporary file that will be parsed by textX.
     """
+    # ...
     f = open(filename)
     lines = f.readlines()
     f.close()
+    # ...
+
+#    # ...
+#    f = open(filename)
+#    code = f.read()
+#    f.close()
+#
+#    # remove new lines between '(' and ')'
+#    code = updateNewLineInList(code, kind='tuple')
+#    code = updateNewLineInList(code, kind='list')
+#    lines = code.split('\n')
+#    lines = [l+'\n' for l in lines]
+#    # ...
 
     lines_new = preprocess_as_str(lines)
 
