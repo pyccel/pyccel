@@ -1475,7 +1475,6 @@ class FCodePrinter(CodePrinter):
         # ... if using OpenMP
         #     TODO improve this
         if ('openmp' in cls_base.options):
-            nowait = ''
             d_attributs = cls_base.attributs_as_dict
 
             # ... get initial values for all attributs
@@ -1486,13 +1485,25 @@ class FCodePrinter(CodePrinter):
             # ...
 
             # ... nowait
-#            print('> nowait : ', d['_nowait'])
-            if d['_nowait']:
+            nowait = ''
+            if not(d['_nowait'] is None):
                 nowait = 'nowait'
             # ...
 
+            # ... collapse
+            #     TODO remove the Eq on -1. we must use None
+            collapse = ''
+            if not(d['_collapse'] is None) and not(d['_collapse'] == -1):
+                collapse = 'collapse({0})'.format(self._print(d['_collapse']))
             # ...
-            prolog_omp = '!$omp do schedule(runtime)\n'
+
+            # ...
+            schedule = 'schedule(runtime)'
+            # ...
+
+            # ...
+            prolog_omp = ('!$omp do {schedule} {collapse}'
+                          '\n'.format(schedule=schedule, collapse=collapse))
             epilog_omp = '!$omp end do {0}\n'.format(nowait)
             # ...
 

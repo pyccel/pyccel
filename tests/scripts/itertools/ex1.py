@@ -14,13 +14,13 @@ class StopIteration(object):
         pass
 
 #$ header class Range(public, iterable, openmp)
-#$ header method __init__(Range, int, int, int, bool)
+#$ header method __init__(Range, int, int, int, bool, int)
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True):
+    def __init__(self, start, stop, step, nowait=True, collapse=-1):
         self.start = start
         self.stop  = stop
         self.step  = step
@@ -32,7 +32,7 @@ class Range(object):
         self._linear       = None
         self._reduction    = None
         self._schedule     = None
-        self._collapse     = None
+        self._collapse     = collapse
         self._nowait       = nowait
 
         self.i = start
