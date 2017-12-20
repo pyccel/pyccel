@@ -79,14 +79,22 @@ def updateNewLineInList(s, kind='list'):
     removing 'new line', inside a list, tuple, dict
     """
     if kind == 'list':
-        rule = '\[(.*[\w\W\s\S]+.*)\]'
+#        rule = '\[(.*[\w\W\s\S]+.*)\]'
 #        rule = r'\[(.*\n[\w\W\s\S]+.*)\]'
+#        rule = '\[([\w,=:]*\n[\w\W\s\S]+.*)\]'
+#        rule = '\[([\w,=: \t]*\n[\w\W\s\S]+.*)\]'
+
+        rule = '\[([\w,=: \t]*\n[^)]+)\]'
 
         leftLim = '['
         rightLim = ']'
     elif kind == 'tuple':
-        rule = '\((.*[\w\W\s\S]+.*)\)'
+#        rule = '\((.*[\w\W\s\S]+.*)\)'
 #        rule = r'\((.*\n[\w\W\s\S]+.*)\)'
+#        rule = '\(([\w,=:]*\n[\w\W\s\S]+.*)\)'
+#        rule = '\(([\w,=: \t]*\n[\w\W\s\S]+.*)\)'
+
+        rule = '\(([\w,=: \t]*\n[^)]+)\)'
 
         leftLim = '('
         rightLim = ')'
@@ -101,10 +109,6 @@ def updateNewLineInList(s, kind='list'):
     list_exp  = p.findall(s) # get all expressions to replace
 
     if len(list_exp) == 0:
-        return s
-
-    # this is because we don't treat nested parentheses
-    if (len(list_exp) == 1) and '(' in list_exp[0]:
         return s
 
     _format = lambda s: s.replace('\n', ' ')
@@ -202,23 +206,23 @@ def preprocess(filename, filename_out):
     filename_out: str
         name of the temporary file that will be parsed by textX.
     """
-    # ...
-    f = open(filename)
-    lines = f.readlines()
-    f.close()
-    # ...
-
 #    # ...
 #    f = open(filename)
-#    code = f.read()
+#    lines = f.readlines()
 #    f.close()
-#
-#    # remove new lines between '(' and ')'
-#    code = updateNewLineInList(code, kind='tuple')
-#    code = updateNewLineInList(code, kind='list')
-#    lines = code.split('\n')
-#    lines = [l+'\n' for l in lines]
 #    # ...
+
+    # ...
+    f = open(filename)
+    code = f.read()
+    f.close()
+
+    # remove new lines between '(' and ')'
+    code = updateNewLineInList(code, kind='tuple')
+    code = updateNewLineInList(code, kind='list')
+    lines = code.split('\n')
+    lines = [l+'\n' for l in lines]
+    # ...
 
     lines_new = preprocess_as_str(lines)
 
@@ -506,6 +510,7 @@ class Codegen(object):
 
         # ...
         pyccel = PyccelParser()
+#        print('>>>> filename = ', filename)
         ast    = pyccel.parse_from_file(filename)
         # ...
 

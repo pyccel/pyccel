@@ -1,5 +1,6 @@
 # coding: utf-8
 
+
 from pyccel.stdlib.parallel.openmp import omp_get_thread_num
 
 #$ header class StopIteration(public, hide)
@@ -32,7 +33,8 @@ class List(object):
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True, collapse=None, private='i', firstprivate='i', lastprivate='i'):
+    def __init__(self, start, stop, step, nowait=True, collapse=None,
+                 private=['i'], firstprivate=['i'], lastprivate=['i']):
 
         self.start = start
         self.stop  = stop
