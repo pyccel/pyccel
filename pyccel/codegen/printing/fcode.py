@@ -207,17 +207,17 @@ class FCodePrinter(CodePrinter):
             raise TypeError('Wrong type for funcs')
 
     def _print_Print(self, expr):
-        Str=[]
+        args = []
         for f in expr.expr:
-             if isinstance(f,str):
-                 Str.append(repr(f))
-             else:
-                Str.append(self._print(f))
+            if isinstance(f, str):
+                args.append("{0}".format(f))
+            else:
+                args.append("{0}".format(self._print(f)))
 
+        fs = ', '.join(i for i in args)
 
-        fs = ','.join(Str)
-
-        return 'print * ,{0} '.format(fs)
+        code = 'print *, {0}'.format(fs)
+        return self._get_statement(code)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -1536,17 +1536,31 @@ class FCodePrinter(CodePrinter):
                     lastprivate = 'lastprivate({0})'.format(txt)
             # ...
 
+            # ... reduction
+            reduction = ''
+            if not(d['_reduction'] is None):
+                if not isinstance(d['_reduction'], Nil):
+                    ls = d['_reduction']
+                    # TODO remove str and use self._print after fixing print of
+                    #      a string
+                    ls = [a.strip('\'') for a in ls]
+                    operation = ls[0]
+                    variables = ', '.join(str(i) for i in ls[1:])
+                    reduction = 'reduction({0}: {1})'.format(operation, variables)
+            # ...
+
             # ...
             schedule = 'schedule(runtime)'
             # ...
 
             # ...
             prolog_omp = ('!$omp do {private} {firstprivate} {lastprivate} '
-                          '{schedule} {collapse}'
+                          '{schedule} {reduction} {collapse}'
                           '\n'.format(private=private,
                                       firstprivate=firstprivate,
                                       lastprivate=lastprivate,
                                       schedule=schedule,
+                                      reduction=reduction,
                                       collapse=collapse))
             epilog_omp = '!$omp end do {0}\n'.format(nowait)
             # ...
@@ -1583,10 +1597,10 @@ class FCodePrinter(CodePrinter):
         DEBUG = True
 
         err = ErrorExit()
-        args = [(Not(expr.test), [Print(['Assert Failed']), err])]
+        args = [(Not(expr.test), [Print(["'Assert Failed'"]), err])]
 
         if DEBUG:
-            args.append((True, Print(['PASSED'])))
+            args.append((True, Print(["'PASSED'"])))
 
         stmt = If(*args)
         code = self._print(stmt)
