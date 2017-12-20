@@ -77,15 +77,11 @@ MPI
 OpenMP
 ^^^^^^
 
-* improve parallel constructor arguments
+* implement *parallel* as a metaclass with block, using __enter__
 
-* improve *prange* (add new arguments, nowait, etc)
+* remove *prange* and *parallel* constructs
 
 * improve import
-
-
-linear(list[ : linear-step])
-
 
 Commands line
 *************

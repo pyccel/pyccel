@@ -1582,15 +1582,33 @@ class FCodePrinter(CodePrinter):
                     ordered = 'ordered{0}'.format(n_order)
             # ...
 
+            # ... linear
+            linear = ''
+            if not(d['_linear'] is None):
+                if not isinstance(d['_linear'], Nil):
+                    # we need to convert Tuple to list here
+                    ls = list(d['_linear'])
+
+                    if len(ls) < 2:
+                        raise ValueError('Expecting at least 2 entries, given {0}'.format(len(ls)))
+
+                    variables   = [a.strip('\'') for a in ls[0:-1]]
+                    variables   = ', '.join(a for a in variables)
+                    linear_step = '{0}'.format(self._print(ls[-1]))
+
+                    linear = 'linear({0}: {1})'.format(variables, linear_step)
+            # ...
+
             # ... TODO adapt get_statement to have continuation with OpenMP
             prolog_omp = ('!$omp do {private} {firstprivate} {lastprivate} '
-                          '{schedule} {reduction} {ordered} {collapse}'
+                          '{schedule} {reduction} {ordered} {linear} {collapse}'
                           '\n'.format(private=private,
                                       firstprivate=firstprivate,
                                       lastprivate=lastprivate,
                                       schedule=schedule,
                                       reduction=reduction,
                                       ordered=ordered,
+                                      linear=linear,
                                       collapse=collapse))
             epilog_omp = '!$omp end do {0}\n'.format(nowait)
             # ...

@@ -1,5 +1,9 @@
 # coding: utf-8
 
+#    def __init__(self, start, stop, step, nowait=True, collapse=None,
+#                 private=['i', 'idx'], firstprivate=None, lastprivate=None,
+#                 reduction=('+', 'x'), schedule='static', ordered=True, linear=('i', 1)):
+
 
 from pyccel.stdlib.parallel.openmp import omp_get_thread_num
 
@@ -27,7 +31,7 @@ class List(object):
         pass
 
 #$ header class Range(public, iterable, openmp)
-#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:], str [:], str [:], int)
+#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:], str [:], str [:], int, str [:])
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
@@ -35,7 +39,7 @@ class Range(object):
 
     def __init__(self, start, stop, step, nowait=True, collapse=None,
                  private=['i', 'idx'], firstprivate=None, lastprivate=None,
-                 reduction=('+', 'x'), schedule='static', ordered=True):
+                 reduction=('+', 'x'), schedule='static', ordered=True, linear=None):
 
         self.start = start
         self.stop  = stop
@@ -45,7 +49,7 @@ class Range(object):
         self._private      = private
         self._firstprivate = firstprivate
         self._lastprivate  = lastprivate
-        self._linear       = None
+        self._linear       = linear
         self._reduction    = reduction
         self._schedule     = schedule
         self._collapse     = collapse
@@ -65,6 +69,9 @@ class Range(object):
             self.i = self.i + 1
         else:
             raise StopIteration()
+
+
+#linear(list[ : linear-step])
 
 p = Range(-2,5,1)
 
