@@ -26,19 +26,19 @@ class List(object):
         pass
 
 #$ header class Range(public, iterable, openmp)
-#$ header method __init__(Range, int, int, int, bool, int)
+#$ header method __init__(Range, int, int, int, bool, int, str [:])
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True, collapse=None):
+    def __init__(self, start, stop, step, nowait=True, collapse=None, private='i'):
         self.start = start
         self.stop  = stop
         self.step  = step
 
         self._ordered      = None
-        self._private      = None
+        self._private      = private
         self._firstprivate = None
         self._lastprivate  = None
         self._linear       = None
@@ -64,7 +64,7 @@ class Range(object):
 
 p = Range(-2,3,1)
 
-#$ omp parallel private(i, idx)
+#$ omp parallel private(idx)
 for i in p:
     idx = omp_get_thread_num()
     print("> thread id : ", idx, " working on ", i)

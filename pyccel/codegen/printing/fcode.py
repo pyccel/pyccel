@@ -1492,11 +1492,24 @@ class FCodePrinter(CodePrinter):
             # ...
 
             # ... collapse
-            #     TODO remove the Eq on -1. we must use None
             collapse = ''
             if not(d['_collapse'] is None):
                 if not isinstance(d['_collapse'], Nil):
                     collapse = 'collapse({0})'.format(self._print(d['_collapse']))
+            # ...
+
+            # ... private
+            private = ''
+            print("> ", d['_private'])
+            if not(d['_private'] is None):
+                if not isinstance(d['_private'], Nil):
+                    # TODO improve this with lists
+                    ls = [d['_private']]
+                    # TODO remove str and use self._print after fixing print of
+                    #      a string
+                    ls = [a.strip('\'') for a in ls]
+                    txt = ', '.join(str(i) for i in ls)
+                    private = 'private({0})'.format(txt)
             # ...
 
             # ...
@@ -1504,8 +1517,10 @@ class FCodePrinter(CodePrinter):
             # ...
 
             # ...
-            prolog_omp = ('!$omp do {schedule} {collapse}'
-                          '\n'.format(schedule=schedule, collapse=collapse))
+            prolog_omp = ('!$omp do {private} {schedule} {collapse}'
+                          '\n'.format(private=private,
+                                      schedule=schedule,
+                                      collapse=collapse))
             epilog_omp = '!$omp end do {0}\n'.format(nowait)
             # ...
 

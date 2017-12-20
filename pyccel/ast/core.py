@@ -1674,7 +1674,7 @@ class ValuedVariable(Basic):
 
         _valid_instances = (Nil, Variable,
                             IndexedVariable, IndexedElement,
-                            int, float, bool, complex,
+                            int, float, bool, complex, str,
                             Boolean, sp_Integer, sp_Float)
 
         if not isinstance(value, _valid_instances):
