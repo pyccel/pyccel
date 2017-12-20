@@ -1549,11 +1549,26 @@ class FCodePrinter(CodePrinter):
                     reduction = 'reduction({0}: {1})'.format(operation, variables)
             # ...
 
-            # ...
-            schedule = 'schedule(runtime)'
+            # ... schedule
+            schedule = ''
+            if not(d['_schedule'] is None):
+                if not isinstance(d['_schedule'], Nil):
+                    ls = d['_schedule']
+                    if isinstance(ls, str):
+                        ls = [ls]
+
+                    if not(len(ls) in [1, 2]):
+                        raise ValueError('Expecting 1 or 2 entries, given {0}'.format(len(ls)))
+
+                    kind = ls[0].strip('\'')
+                    chunk_size = ''
+                    if len(ls) == 2:
+                        chunk_size = ', {0}'.format(ls[1])
+
+                    schedule = 'schedule({0}{1})'.format(kind, chunk_size)
             # ...
 
-            # ...
+            # ... TODO adapt get_statement to have continuation with OpenMP
             prolog_omp = ('!$omp do {private} {firstprivate} {lastprivate} '
                           '{schedule} {reduction} {collapse}'
                           '\n'.format(private=private,

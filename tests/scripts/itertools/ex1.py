@@ -27,14 +27,15 @@ class List(object):
         pass
 
 #$ header class Range(public, iterable, openmp)
-#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:])
+#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:], str [:], str [:])
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
 class Range(object):
 
     def __init__(self, start, stop, step, nowait=True, collapse=None,
-                 private=['i'], firstprivate=['i'], lastprivate=['i']):
+                 private=['i', 'idx'], firstprivate=None, lastprivate=None,
+                 reduction=('+', 'x'), schedule='static'):
 
         self.start = start
         self.stop  = stop
@@ -45,8 +46,8 @@ class Range(object):
         self._firstprivate = firstprivate
         self._lastprivate  = lastprivate
         self._linear       = None
-        self._reduction    = None
-        self._schedule     = None
+        self._reduction    = reduction
+        self._schedule     = schedule
         self._collapse     = collapse
         self._nowait       = nowait
 
@@ -65,10 +66,16 @@ class Range(object):
         else:
             raise StopIteration()
 
-p = Range(-2,3,1)
+p = Range(-2,5,1)
+
+x = 0.0
 
 #$ omp parallel
 for i in p:
     idx = omp_get_thread_num()
-    print("> thread id : ", idx, " working on ", i)
+
+    x += 2 * i
+#    print("> thread id : ", idx, " working on ", i)
 #$ omp end parallel
+
+print('x = ', x)
