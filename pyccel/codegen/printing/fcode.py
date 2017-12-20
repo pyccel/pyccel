@@ -435,12 +435,14 @@ class FCodePrinter(CodePrinter):
         s = '0'
         e = ''
         var = expr.variables[0]
+        enable_alloc = True
         if allocatable or (var.shape is None):
             s = ''
         if rank == 0:
             rankstr =  ''
         elif (rank == 1) and (isinstance(shape, int)):   # TODO improve
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
+            enable_alloc = False
         else:
             rankstr = ', '.join(s+':'+e for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
@@ -448,7 +450,7 @@ class FCodePrinter(CodePrinter):
         # TODO: it would be great to use allocatable but then we have to pay
         #       attention to the starting index (in the case of 0 for example).
         #       this is the reason why we print 'pointer' instead of 'allocatable'
-        if allocatable or rank > 0:
+        if enable_alloc and (allocatable or rank > 0):
 #            allocatablestr = ', allocatable'
             allocatablestr = ', pointer'
         else:

@@ -1547,6 +1547,7 @@ class AssignStmt(BasicStmt):
         """
         if not isinstance(self.rhs, (ArithmeticExpression, \
                                      ExpressionTuple, \
+                                     ExpressionList, \
                                      ExpressionDict)):
             raise TypeError("Expecting an expression")
 
@@ -2342,6 +2343,27 @@ class ExpressionTuple(BasicStmt):
     @property
     def expr(self):
         args = [a.expr for a in self.args]
+        return Tuple(*args)
+
+class ExpressionList(BasicStmt):
+    """Base class representing a list of elements statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Expression list statement
+
+        args: list, tuple
+            list of elements
+        """
+        self.args = kwargs.pop('args')
+
+        super(ExpressionList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = [a.expr for a in self.args]
+        # TODO use List object from AST
+        #return List(*args)
         return Tuple(*args)
 
 class ExpressionDict(BasicStmt):
