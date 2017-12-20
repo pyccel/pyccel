@@ -185,7 +185,7 @@ PrintStmt: STRING | Expression;
 ParameterValue: (value=IdentifierOrNumber |value=ArgList);
 ParameterSingle: label=ParameterTest '=' value=ParameterValue;
 
-AssignRHS: Expression | ExpressionDict | ExpressionList;
+AssignRHS: Expression | ExpressionDict | ExpressionTuple;
 
 AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
@@ -258,7 +258,7 @@ Atom:
   | '(' op=Test ')'
 ;
 
-ExpressionList: '(' args+=Expression[',']   ')';
+ExpressionTuple: '(' args+=Expression[',']   ')';
 ExpressionDict: '{' args+=DictElement[',']   '}';
 
 IDorSTRING: ID | STRING; 

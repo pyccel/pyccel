@@ -1546,7 +1546,7 @@ class AssignStmt(BasicStmt):
         Process the Assign statement by returning a pyccel.ast.core object
         """
         if not isinstance(self.rhs, (ArithmeticExpression, \
-                                     ExpressionList, \
+                                     ExpressionTuple, \
                                      ExpressionDict)):
             raise TypeError("Expecting an expression")
 
@@ -2325,7 +2325,7 @@ class Comparison(ExpressionElement):
                 raise NotImplementedError('operation {0} not yet available'.format(operation))
         return ret
 
-class ExpressionList(BasicStmt):
+class ExpressionTuple(BasicStmt):
     """Base class representing a list of elements statement in the grammar."""
 
     def __init__(self, **kwargs):
@@ -2337,7 +2337,7 @@ class ExpressionList(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(ExpressionList, self).__init__(**kwargs)
+        super(ExpressionTuple, self).__init__(**kwargs)
 
     @property
     def expr(self):
