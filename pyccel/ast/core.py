@@ -1674,11 +1674,13 @@ class ValuedVariable(Basic):
 
         _valid_instances = (Nil, Variable,
                             IndexedVariable, IndexedElement,
+                            Tuple,
                             int, float, bool, complex, str,
                             Boolean, sp_Integer, sp_Float)
 
         if not isinstance(value, _valid_instances):
-            raise TypeError("non-valid instance for value")
+            raise TypeError('non-valid instance for value, '
+                            'given {0}'.format(type(value)))
 
         return Basic.__new__(cls, variable, value)
 

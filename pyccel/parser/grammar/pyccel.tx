@@ -263,7 +263,7 @@ ExpressionList:  '[' args+=Expression[',']  ']';
 ExpressionDict:  '{' args+=DictElement[','] '}';
 
 IDorSTRING: ID | STRING; 
-ArgValued: (key=IDorSTRING '=')? value=Expression ;
+ArgValued: (key=IDorSTRING '=')? value=AssignRHS ;
 DictElement: key=IDorSTRING ':' value=Atom;
 
 OpPlusOrMinus: '+' | '-';

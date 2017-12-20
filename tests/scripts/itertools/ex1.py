@@ -32,7 +32,7 @@ class List(object):
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True, collapse=None, private='i'):
+    def __init__(self, start, stop, step, nowait=True, collapse=None, private=['i', 'idx']):
         self.start = start
         self.stop  = stop
         self.step  = step
@@ -64,7 +64,7 @@ class Range(object):
 
 p = Range(-2,3,1)
 
-#$ omp parallel private(idx)
+#$ omp parallel
 for i in p:
     idx = omp_get_thread_num()
     print("> thread id : ", idx, " working on ", i)

@@ -1502,11 +1502,10 @@ class FCodePrinter(CodePrinter):
 
             # ... private
             private = ''
-            print("> ", d['_private'])
             if not(d['_private'] is None):
                 if not isinstance(d['_private'], Nil):
                     # TODO improve this with lists
-                    ls = [d['_private']]
+                    ls = d['_private']
                     # TODO remove str and use self._print after fixing print of
                     #      a string
                     ls = [a.strip('\'') for a in ls]
