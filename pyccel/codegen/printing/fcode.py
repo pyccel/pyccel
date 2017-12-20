@@ -1504,7 +1504,6 @@ class FCodePrinter(CodePrinter):
             private = ''
             if not(d['_private'] is None):
                 if not isinstance(d['_private'], Nil):
-                    # TODO improve this with lists
                     ls = d['_private']
                     # TODO remove str and use self._print after fixing print of
                     #      a string
@@ -1513,13 +1512,40 @@ class FCodePrinter(CodePrinter):
                     private = 'private({0})'.format(txt)
             # ...
 
+            # ... firstprivate
+            firstprivate = ''
+            if not(d['_firstprivate'] is None):
+                if not isinstance(d['_firstprivate'], Nil):
+                    ls = d['_firstprivate']
+                    # TODO remove str and use self._print after fixing print of
+                    #      a string
+                    ls = [a.strip('\'') for a in ls]
+                    txt = ', '.join(str(i) for i in ls)
+                    firstprivate = 'firstprivate({0})'.format(txt)
+            # ...
+
+            # ... lastprivate
+            lastprivate = ''
+            if not(d['_lastprivate'] is None):
+                if not isinstance(d['_lastprivate'], Nil):
+                    ls = d['_lastprivate']
+                    # TODO remove str and use self._print after fixing print of
+                    #      a string
+                    ls = [a.strip('\'') for a in ls]
+                    txt = ', '.join(str(i) for i in ls)
+                    lastprivate = 'lastprivate({0})'.format(txt)
+            # ...
+
             # ...
             schedule = 'schedule(runtime)'
             # ...
 
             # ...
-            prolog_omp = ('!$omp do {private} {schedule} {collapse}'
+            prolog_omp = ('!$omp do {private} {firstprivate} {lastprivate} '
+                          '{schedule} {collapse}'
                           '\n'.format(private=private,
+                                      firstprivate=firstprivate,
+                                      lastprivate=lastprivate,
                                       schedule=schedule,
                                       collapse=collapse))
             epilog_omp = '!$omp end do {0}\n'.format(nowait)
