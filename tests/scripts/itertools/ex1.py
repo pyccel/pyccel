@@ -27,7 +27,7 @@ class List(object):
         pass
 
 #$ header class Range(public, iterable, openmp)
-#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:], str [:], str [:])
+#$ header method __init__(Range, int, int, int, bool, int, str [:], str [:], str [:], str [:], str [:], int)
 #$ header method __del__(Range)
 #$ header method __iter__(Range)
 #$ header method __next__(Range)
@@ -35,13 +35,13 @@ class Range(object):
 
     def __init__(self, start, stop, step, nowait=True, collapse=None,
                  private=['i', 'idx'], firstprivate=None, lastprivate=None,
-                 reduction=('+', 'x'), schedule='static'):
+                 reduction=('+', 'x'), schedule='static', ordered=True):
 
         self.start = start
         self.stop  = stop
         self.step  = step
 
-        self._ordered      = None
+        self._ordered      = ordered
         self._private      = private
         self._firstprivate = firstprivate
         self._lastprivate  = lastprivate

@@ -84,7 +84,6 @@ OpenMP
 * improve import
 
 
-ordered[(n)]
 linear(list[ : linear-step])
 
 

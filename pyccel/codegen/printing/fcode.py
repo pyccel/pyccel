@@ -16,6 +16,7 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
+from sympy import Integer
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -1568,14 +1569,28 @@ class FCodePrinter(CodePrinter):
                     schedule = 'schedule({0}{1})'.format(kind, chunk_size)
             # ...
 
+            # ... ordered
+            ordered = ''
+            if not(d['_ordered'] is None):
+                if not isinstance(d['_ordered'], Nil):
+                    ls = d['_ordered']
+
+                    n_order = ''
+                    if isinstance(ls, (int, Integer)):
+                        n_order = '({0})'.format(ls)
+
+                    ordered = 'ordered{0}'.format(n_order)
+            # ...
+
             # ... TODO adapt get_statement to have continuation with OpenMP
             prolog_omp = ('!$omp do {private} {firstprivate} {lastprivate} '
-                          '{schedule} {reduction} {collapse}'
+                          '{schedule} {reduction} {ordered} {collapse}'
                           '\n'.format(private=private,
                                       firstprivate=firstprivate,
                                       lastprivate=lastprivate,
                                       schedule=schedule,
                                       reduction=reduction,
+                                      ordered=ordered,
                                       collapse=collapse))
             epilog_omp = '!$omp end do {0}\n'.format(nowait)
             # ...
