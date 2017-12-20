@@ -1486,6 +1486,7 @@ class FCodePrinter(CodePrinter):
             # ...
 
             # ... nowait
+#            print('> nowait : ', d['_nowait'])
             if d['_nowait']:
                 nowait = 'nowait'
             # ...

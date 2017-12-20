@@ -1672,9 +1672,9 @@ class ValuedVariable(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("variable must be of type Variable")
 
-        _valid_instances = (Variable, IndexedVariable, IndexedElement, \
-                           int, float, complex, \
-                            Integer, Double, Float, Complex, Bool)
+        _valid_instances = (Variable, IndexedVariable, IndexedElement,
+                            int, float, bool, complex,
+                            Boolean, sp_Integer, sp_Float)
 
         if not isinstance(value, _valid_instances):
             raise TypeError("non-valid instance for value")
@@ -3435,6 +3435,12 @@ def get_initial_value(expr, var):
     var: str, Variable, DottedName, list, tuple
         variable name
     """
+    # ...
+    def is_None(expr):
+        """Returns True if expr is None or Nil()."""
+        return isinstance(expr, Nil) or (expr is None)
+    # ...
+
     if isinstance(var, str):
         return get_initial_value(expr, [var])
     elif isinstance(var, DottedName):
@@ -3442,7 +3448,8 @@ def get_initial_value(expr, var):
     elif isinstance(var, Variable):
         return get_initial_value(expr, [var.name])
     elif not isinstance(var, (list, tuple)):
-        raise TypeError('Expecting var to be str, list, tuple or Variable')
+        raise TypeError('Expecting var to be str, list, tuple or Variable, '
+                        'given {0}'.format(type(var)))
 
     if isinstance(expr, ValuedVariable):
         if expr.variable.name in var:
@@ -3455,11 +3462,16 @@ def get_initial_value(expr, var):
         if str(expr.lhs) in var:
             return expr.rhs
     elif isinstance(expr, FunctionDef):
-        return get_initial_value(expr.body, var)
+        value = get_initial_value(expr.body, var)
+        if not is_None(value):
+            r = get_initial_value(expr.arguments, value)
+            if not is_None(r):
+                value = r
+        return value
     elif isinstance(expr, (list, tuple, Tuple)):
         for i in expr:
             value = get_initial_value(i, var)
-            if not(value is None):
+            if not is_None(value):
                 return value
     elif isinstance(expr, ClassDef):
         methods     = expr.methods_as_dict
