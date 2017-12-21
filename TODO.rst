@@ -77,6 +77,8 @@ MPI
 OpenMP
 ^^^^^^
 
+* in get_with_clauses and get_for_clauses, we must be careful about args and kwargs for the __init__ call
+
 * check valid values for clause arguments
 
 * improve import
