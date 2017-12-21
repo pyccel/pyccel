@@ -1429,13 +1429,83 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
+    def _print_OMP_ParallelNumThreadClause(self, expr):
+        return 'num_threads({})'.format(self._print(expr.num_threads))
+
+    def _print_OMP_ParallelDefaultClause(self, expr):
+        status = expr.status
+        if status:
+            status = self._print(expr.status)
+        else:
+            status = ''
+        return 'default({})'.format(status)
+
+    def _print_OMP_ParallelProcBindClause(self, expr):
+        status = expr.status
+        if status:
+            status = self._print(expr.status)
+        else:
+            status = ''
+        return 'proc_bind({})'.format(status)
+
+    def _print_OMP_PrivateClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'private({})'.format(args)
+
+    def _print_OMP_SharedClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'shared({})'.format(args)
+
+    def _print_OMP_FirstPrivateClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'firstprivate({})'.format(args)
+
+    def _print_OMP_LastPrivateClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'lastprivate({})'.format(args)
+
+    def _print_OMP_CopyinClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyin({})'.format(args)
+
+    def _print_OMP_ReductionClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        op   = self._print(expr.operation)
+        return "reduction({0}: {1})".format(op, args)
+
+    def _print_OMP_ScheduleClause(self, expr):
+        kind = self._print(expr.kind)
+
+        chunk_size = ''
+        if expr.chunk_size:
+            chunk_size = ', {0}'.format(self._print(expr.chunk_size))
+
+        return 'schedule({0}{1})'.format(kind, chunk_size)
+
+    def _print_OMP_OrderedClause(self, expr):
+        n_loops = ''
+        if expr.n_loops:
+            n_loops = '({0})'.format(self._print(expr.n_loops))
+
+        return 'ordered{0}'.format(n_loops)
+
+    def _print_OMP_CollapseClause(self, expr):
+        n_loops = '{0}'.format(self._print(expr.n_loops))
+
+        return 'collapse({0})'.format(n_loops)
+
+    def _print_OMP_LinearClause(self, expr):
+        variables= ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        step = self._print(expr.step)
+        return "linear({0}: {1})".format(variables, step)
+
     def _print_OMP_For(self, expr):
         # ...
         loop = self._print(expr.loop)
 
         nowait = ''
 
-        clauses = [str(i) for i in expr.clauses]
+        clauses = [self._print(i) for i in expr.clauses]
         clauses = ' '.join(i for i in clauses)
         # ...
 
@@ -1452,103 +1522,6 @@ class FCodePrinter(CodePrinter):
         return ('{prolog}'
                 '{loop}\n'
                 '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
-
-
-#        # ... collapse
-#        if not(d['_collapse'] is None):
-#            if not isinstance(d['_collapse'], Nil):
-#                collapse = 'collapse({0})'.format(self._print(d['_collapse']))
-#        # ...
-#            # ... private
-#            if not(d['_private'] is None):
-#                if not isinstance(d['_private'], Nil):
-#                    ls = d['_private']
-#                    # TODO remove str and use self._print after fixing print of
-#                    #      a string
-#                    ls = [a.strip('\'') for a in ls]
-#                    txt = ', '.join(str(i) for i in ls)
-#                    private = 'private({0})'.format(txt)
-#            # ...
-#
-#            # ... firstprivate
-#            if not(d['_firstprivate'] is None):
-#                if not isinstance(d['_firstprivate'], Nil):
-#                    ls = d['_firstprivate']
-#                    # TODO remove str and use self._print after fixing print of
-#                    #      a string
-#                    ls = [a.strip('\'') for a in ls]
-#                    txt = ', '.join(str(i) for i in ls)
-#                    firstprivate = 'firstprivate({0})'.format(txt)
-#            # ...
-#
-#            # ... lastprivate
-#            if not(d['_lastprivate'] is None):
-#                if not isinstance(d['_lastprivate'], Nil):
-#                    ls = d['_lastprivate']
-#                    # TODO remove str and use self._print after fixing print of
-#                    #      a string
-#                    ls = [a.strip('\'') for a in ls]
-#                    txt = ', '.join(str(i) for i in ls)
-#                    lastprivate = 'lastprivate({0})'.format(txt)
-#            # ...
-#
-#            # ... reduction
-#            if not(d['_reduction'] is None):
-#                if not isinstance(d['_reduction'], Nil):
-#                    ls = d['_reduction']
-#                    # TODO remove str and use self._print after fixing print of
-#                    #      a string
-#                    ls = [a.strip('\'') for a in ls]
-#                    operation = ls[0]
-#                    variables = ', '.join(str(i) for i in ls[1:])
-#                    reduction = 'reduction({0}: {1})'.format(operation, variables)
-#            # ...
-#
-#            # ... schedule
-#            if not(d['_schedule'] is None):
-#                if not isinstance(d['_schedule'], Nil):
-#                    ls = d['_schedule']
-#                    if isinstance(ls, str):
-#                        ls = [ls]
-#
-#                    if not(len(ls) in [1, 2]):
-#                        raise ValueError('Expecting 1 or 2 entries, given {0}'.format(len(ls)))
-#
-#                    kind = ls[0].strip('\'')
-#                    chunk_size = ''
-#                    if len(ls) == 2:
-#                        chunk_size = ', {0}'.format(ls[1])
-#
-#                    schedule = 'schedule({0}{1})'.format(kind, chunk_size)
-#            # ...
-#
-#            # ... ordered
-#            if not(d['_ordered'] is None):
-#                if not isinstance(d['_ordered'], Nil):
-#                    ls = d['_ordered']
-#
-#                    n_order = ''
-#                    if isinstance(ls, (int, Integer)):
-#                        n_order = '({0})'.format(ls)
-#
-#                    ordered = 'ordered{0}'.format(n_order)
-#            # ...
-#
-#            # ... linear
-#            if not(d['_linear'] is None):
-#                if not isinstance(d['_linear'], Nil):
-#                    # we need to convert Tuple to list here
-#                    ls = list(d['_linear'])
-#
-#                    if len(ls) < 2:
-#                        raise ValueError('Expecting at least 2 entries, given {0}'.format(len(ls)))
-#
-#                    variables   = [a.strip('\'') for a in ls[0:-1]]
-#                    variables   = ', '.join(a for a in variables)
-#                    linear_step = '{0}'.format(self._print(ls[-1]))
-#
-#                    linear = 'linear({0}: {1})'.format(variables, linear_step)
-#            # ...
 
 
     def _print_ForIterator(self, expr):
