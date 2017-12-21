@@ -20,9 +20,9 @@ class StopIteration(object):
 #$ header method __next__(Range)
 class Range(object):
 
-    def __init__(self, start, stop, step, nowait=True, collapse=None,
-                 private=['i', 'idx'], firstprivate=None, lastprivate=None,
-                 reduction=['+', 'x'], schedule='static', ordered=True, linear=None):
+    def __init__(self, start, stop, step, nowait=None, collapse=None,
+                 private=None, firstprivate=None, lastprivate=None,
+                 reduction=None, schedule=None, ordered=None, linear=None):
 
         self.start = start
         self.stop  = stop
@@ -56,7 +56,7 @@ class Range(object):
 x = 0.0
 
 #$ omp parallel
-for i in Range(-2,5,1):
+for i in Range(-2, 5, 1, nowait=True, private=['i', 'idx'], reduction=['+', 'x'], schedule='static', ordered=True):
     idx = omp_get_thread_num()
 
     x += 2 * i
