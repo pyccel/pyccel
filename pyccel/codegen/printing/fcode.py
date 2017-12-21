@@ -44,6 +44,8 @@ from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+from pyccel.ast.parallel.openmp import OMP_For
+
 from pyccel.ast.parallel.mpi import MPI
 from pyccel.ast.parallel.mpi import MPI_ERROR, MPI_STATUS
 from pyccel.ast.parallel.mpi import MPI_Init
@@ -1426,6 +1428,10 @@ class FCodePrinter(CodePrinter):
         return ('{prolog}'
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+
+#    def _print_OMP_For(self, expr):
+#        print('> PAR ICI')
+#        import sys; sys.exit(0)
 
     def _print_ForIterator(self, expr):
         depth = expr.depth

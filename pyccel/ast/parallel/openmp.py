@@ -3,7 +3,10 @@
 
 from sympy.core import Tuple
 from sympy.utilities.iterables import iterable
+from sympy import Integer
 
+from pyccel.ast.core import Nil
+from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
 from pyccel.ast.core import Assign, Declare, AugAssign
@@ -78,6 +81,55 @@ class OMP_Parallel(ParallelBlock, OMP):
                 raise TypeError('Wrong clause for OMP_Parallel')
 
         return ParallelBlock.__new__(cls, clauses, variables, body)
+
+class OMP_For(ForIterator, OMP):
+    """
+    OMP Parallel For construct statement.
+
+    Examples
+
+    """
+    _prefix = '#pragma'
+    def __new__(cls, target, iterable, body, clauses, nowait):
+        if not iterable(clauses):
+            raise TypeError('Expecting an iterable for clauses')
+
+        _valid_clauses = (OMP_ScheduleClause, \
+                          OMP_PrivateClause, \
+                          OMP_FirstPrivateClause, \
+                          OMP_LastPrivateClause, \
+                          OMP_ReductionClause, \
+                          OMP_CollapseClause, \
+                          OMP_OrderedClause, \
+                          OMP_LinearClause)
+
+        for clause in clauses:
+            if not isinstance(clause, _valid_clauses):
+                raise TypeError('Wrong clause for OMP_For, '
+                               'given {0}'.format(type(clause)))
+
+        return Basic.__new__(cls, target, iterable, body, clauses, nowait)
+
+    @property
+    def target(self):
+        return self._args[0]
+
+    @property
+    def iterable(self):
+        return self._args[1]
+
+    @property
+    def body(self):
+        return self._args[2]
+
+    @property
+    def clauses(self):
+        return self._args[3]
+
+    @property
+    def nowait(self):
+        return self._args[4]
+
 
 class OMP_ParallelNumThreadClause(OMP):
     """
@@ -286,13 +338,149 @@ class OMP_ReductionClause(OMP):
 
     @property
     def variables(self):
-        return self._args[1:]
+        return self._args[1]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         op   = sstr(self.operation)
         return "reduction('{0}': {1})".format(op, args)
+
+class OMP_ScheduleClause(OMP):
+    """
+    OMP ScheduleClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_ScheduleClause
+    >>> OMP_ScheduleClause('static', 2)
+    schedule(static, 2)
+    """
+    def __new__(cls, *args, **options):
+        if not(len(args) in [1, 2]):
+            raise ValueError('Expecting 1 or 2 entries, '
+                             'given {0}'.format(len(args)))
+
+        kind = args[0]
+
+        chunk_size = None
+        if len(args) == 2:
+            chunk_size = args[1]
+
+        return Basic.__new__(cls, kind, chunk_size)
+
+    @property
+    def kind(self):
+        return self._args[0]
+
+    @property
+    def chunk_size(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        kind = sstr(self.kind)
+
+        chunk_size = ''
+        if self.chunk_size:
+            chunk_size = ', {0}'.format(sstr(self.chunk_size))
+
+        return 'schedule({0}{1})'.format(kind, chunk_size)
+
+class OMP_OrderedClause(OMP):
+    """
+    OMP OrderedClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_OrderedClause
+    >>> OMP_OrderedClause(2)
+    ordered(2)
+    >>> OMP_OrderedClause()
+    ordered
+    """
+    def __new__(cls, *args, **options):
+        if not(len(args) in [0, 1]):
+            raise ValueError('Expecting 0 or 1 entries, '
+                             'given {0}'.format(len(args)))
+
+        n = None
+        if len(args) == 1:
+            n = args[0]
+
+        return Basic.__new__(cls, n)
+
+    @property
+    def n_loops(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        n_loops = ''
+        if self.n_loops:
+            n_loops = '({0})'.format(sstr(self.n_loops))
+
+        return 'ordered{0}'.format(n_loops)
+
+class OMP_CollapseClause(OMP):
+    """
+    OMP CollapseClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_CollapseClause
+    >>> OMP_CollapseClause(2)
+    collapse(2)
+    """
+    def __new__(cls, *args, **options):
+        if not(len(args) == 1):
+            raise ValueError('Expecting 1 entry, '
+                             'given {0}'.format(len(args)))
+
+        n = args[0]
+        return Basic.__new__(cls, n)
+
+    @property
+    def n_loops(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        n_loops = '{0}'.format(sstr(self.n_loops))
+
+        return 'collapse({0})'.format(n_loops)
+
+class OMP_LinearClause(OMP):
+    """
+    OMP LinearClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_LinearClause
+    >>> OMP_LinearClause('x', 'y', 2)
+    linear((x, y): 2)
+    """
+    # TODO check type of step => must be int, Integer
+    def __new__(cls, *args, **options):
+        variables = args[0:-1]
+        step = args[-1]
+        return Basic.__new__(cls, variables, step)
+
+    @property
+    def variables(self):
+        return self._args[0]
+
+    @property
+    def step(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        variables= ', '.join('{0}'.format(sstr(i)) for i in self.variables)
+        step = sstr(self.step)
+        return "linear('{0}': {1})".format(variables, step)
 
 ##########################################################
 
@@ -317,7 +505,131 @@ def openmpfy(stmt, **options):
         iterable = openmpfy(stmt.iterable, **options)
         target   = stmt.target
         body     = openmpfy(stmt.body, **options)
-        return ForIterator(target, iterable, body, strict=False)
+
+        cls_base = iterable.cls_base
+
+        # ... if using OpenMP
+        if ('openmp' in cls_base.options):
+            # ...
+            def _format_str(a):
+                if isinstance(a, str):
+                    return a.strip('\'')
+                else:
+                    return a
+            # ...
+
+            # ... get initial values for all attributs
+            d_attributs = cls_base.attributs_as_dict
+
+            d = {}
+            for k,v in d_attributs.items():
+                i = DottedName('self', k)
+                d[k] = get_initial_value(cls_base, i)
+            # ...
+
+            # ... nowait
+            nowait = d['_nowait']
+            # ...
+
+            # ... collapse
+            collapse = None
+            if not(d['_collapse'] is None):
+                if not isinstance(d['_collapse'], Nil):
+                    ls = [d['_collapse']]
+                    collapse = OMP_CollapseClause(*ls)
+            # ...
+
+            # ... private
+            private = None
+            if not(d['_private'] is None):
+                if not isinstance(d['_private'], Nil):
+                    ls = d['_private']
+                    ls = [_format_str(a) for a in ls]
+                    private = OMP_PrivateClause(*ls)
+            # ...
+
+            # ... firstprivate
+            firstprivate = None
+            if not(d['_firstprivate'] is None):
+                if not isinstance(d['_firstprivate'], Nil):
+                    ls = d['_firstprivate']
+                    ls = [_format_str(a) for a in ls]
+                    firstprivate = OMP_FirstPrivateClause(*ls)
+            # ...
+
+            # ... lastprivate
+            lastprivate = None
+            if not(d['_lastprivate'] is None):
+                if not isinstance(d['_lastprivate'], Nil):
+                    ls = d['_lastprivate']
+                    ls = [_format_str(a) for a in ls]
+                    lastprivate = OMP_LastPrivateClause(*ls)
+            # ...
+
+            # ... reduction
+            reduction = None
+            if not(d['_reduction'] is None):
+                if not isinstance(d['_reduction'], Nil):
+                    ls = d['_reduction']
+                    ls = [_format_str(a) for a in ls]
+                    reduction = OMP_ReductionClause(*ls)
+            # ...
+
+            # ... schedule
+            schedule = None
+            if not(d['_schedule'] is None):
+                if not isinstance(d['_schedule'], Nil):
+                    ls = d['_schedule']
+                    if isinstance(ls, str):
+                        ls = [ls]
+
+                    ls[0] = _format_str(ls[0])
+                    schedule = OMP_ScheduleClause(*ls)
+            # ...
+
+            # ... ordered
+            ordered = None
+            if not(d['_ordered'] is None):
+                if not isinstance(d['_ordered'], Nil):
+                    ls = d['_ordered']
+
+                    args = []
+                    if isinstance(ls, (int, Integer)):
+                        args.append(ls)
+
+                    ordered = OMP_OrderedClause(*args)
+            # ...
+
+            # ... linear
+            linear = None
+            if not(d['_linear'] is None):
+                if not isinstance(d['_linear'], Nil):
+                    # we need to convert Tuple to list here
+                    ls = list(d['_linear'])
+
+                    if len(ls) < 2:
+                        raise ValueError('Expecting at least 2 entries, '
+                                         'given {0}'.format(len(ls)))
+
+                    variables = [a.strip('\'') for a in ls[0:-1]]
+                    ls[0:-1]  = variables
+
+                    linear = OMP_LinearClause(*ls)
+            # ...
+
+            # ...
+            clauses = (private, firstprivate, lastprivate,
+                       reduction, schedule,
+                       ordered, collapse, linear)
+            clauses = [i for i in clauses if not(i is None)]
+            clauses = Tuple(*clauses)
+            # ...
+
+            return OMP_For(target, iterable, body, clauses, nowait)
+#            return ForIterator(target, iterable, body, strict=False)
+        else:
+            return ForIterator(target, iterable, body, strict=False)
+        # ...
     if isinstance(stmt, For):
         iterable = openmpfy(stmt.iterable, **options)
         target   = stmt.target
