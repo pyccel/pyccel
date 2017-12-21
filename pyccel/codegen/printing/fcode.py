@@ -25,7 +25,8 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import DataType, is_pyccel_datatype, is_iterable_datatype
+from pyccel.ast.core import DataType, is_pyccel_datatype
+from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment
@@ -411,6 +412,9 @@ class FCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         # we don't print the declaration if iterable object
         if is_iterable_datatype(expr.dtype):
+            return ''
+
+        if is_with_construct_datatype(expr.dtype):
             return ''
 
         dtype = self._print(expr.dtype)
@@ -955,8 +959,13 @@ class FCodePrinter(CodePrinter):
             func = expr.rhs.func
             name = str(func.name)
             this = expr.rhs.this
+
             # we don't print the constructor call if iterable object
             if this.dtype.is_iterable:
+                return ''
+
+            # we don't print the constructor call if with construct object
+            if this.dtype.is_with_construct:
                 return ''
 
             if name == "__init__":
@@ -1064,16 +1073,21 @@ class FCodePrinter(CodePrinter):
 
     def _print_OMP_Parallel(self, expr):
         # prelude will not be printed
-        prefix  = '!$omp'
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
         body    = '\n'.join(self._print(i) for i in expr.body)
-        prelude = '\n'.join(self._print(i) for i in expr.declarations)
 
-        body  = ('{0} parallel {1}\n'
-                 '{2}\n'
-                 '{0} end parallel').format(prefix, clauses, body)
+        # ... TODO adapt get_statement to have continuation with OpenMP
+        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
+        epilog = '!$omp end parallel\n'
+        # ...
 
-        return body
+        # ...
+        code = ('{prolog}'
+                '{body}'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
 
     def _print_OMP_ParallelNumThreadClause(self, expr):
         return 'num_threads({})'.format(self._print(expr.num_threads))
@@ -1267,7 +1281,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_ClassDef(self, expr):
-        if expr.is_iterable:
+        if expr.hide:
             return ''
 
         name = self._print(expr.name)
@@ -1491,15 +1505,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_OMP_For(self, expr):
         # ...
-        loop = self._print(expr.loop)
+        loop    = self._print(expr.loop)
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
 
-        nowait = ''
-
-        clauses = [self._print(i) for i in expr.clauses]
-        clauses = ' '.join(i for i in clauses)
-        # ...
-
-        # ... nowait
+        nowait  = ''
         if not(expr.nowait is None):
             nowait = 'nowait'
         # ...
@@ -1509,9 +1518,13 @@ class FCodePrinter(CodePrinter):
         epilog = '!$omp end do {0}\n'.format(nowait)
         # ...
 
-        return ('{prolog}'
+        # ...
+        code = ('{prolog}'
                 '{loop}\n'
                 '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
 
 
     def _print_ForIterator(self, expr):

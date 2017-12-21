@@ -1,9 +1,5 @@
 # coding: utf-8
 
-#    def __init__(self, start, stop, step, nowait=True, collapse=None,
-#                 private=['i', 'idx'], firstprivate=None, lastprivate=None,
-#                 reduction=('+', 'x'), schedule='static', ordered=True, linear=('i', 1)):
-
 
 from pyccel.stdlib.parallel.openmp import omp_get_thread_num
 
@@ -58,16 +54,34 @@ class Range(object):
         else:
             raise StopIteration()
 
-p = Range(-2,5,1)
+#$ header class Parallel(public, with, openmp)
+#$ header method __init__(Parallel)
+#$ header method __del__(Parallel)
+#$ header method __enter__(Parallel)
+#$ header method __exit__(Parallel, str, str, str)
+class Parallel(object):
+
+    def __init__(self):
+        pass
+
+    def __del__(self):
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, type, value, tb):
+        pass
 
 x = 0.0
 
-#$ omp parallel
-for i in p:
+para    = Parallel()
+indices = Range(-2,5,1)
+
+with para:
     idx = omp_get_thread_num()
 
-    x += 2 * i
-#    print("> thread id : ", idx, " working on ", i)
-#$ omp end parallel
+    for i in indices:
+        x += 2 * i
 
 print('x = ', x)

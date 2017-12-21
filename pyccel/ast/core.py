@@ -1213,6 +1213,7 @@ def DataTypeFactory(name, argnames=["_name"], \
                     prefix=None, \
                     alias=None, \
                     is_iterable=False, \
+                    is_with_construct=False, \
                     is_polymorphic=True):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
@@ -1229,13 +1230,14 @@ def DataTypeFactory(name, argnames=["_name"], \
     else:
         prefix = 'Pyccel{0}'.format(prefix)
 
-    newclass = type(prefix + name, (BaseClass,), \
-                    {"__init__":       __init__, \
-                     "_name":          name, \
-                     "prefix":         prefix, \
-                     "alias":          alias, \
-                     "is_iterable":    is_iterable, \
-                     "is_polymorphic": is_polymorphic})
+    newclass = type(prefix + name, (BaseClass,),
+                    {"__init__":          __init__,
+                     "_name":             name,
+                     "prefix":            prefix,
+                     "alias":             alias,
+                     "is_iterable":       is_iterable,
+                     "is_with_construct": is_with_construct,
+                     "is_polymorphic":    is_polymorphic})
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -1251,6 +1253,17 @@ def is_iterable_datatype(dtype):
     try:
         if is_pyccel_datatype(dtype):
             return dtype.is_iterable
+        else:
+            return False
+    except:
+        return False
+
+# TODO improve and remove try/except
+def is_with_construct_datatype(dtype):
+    """Returns True if dtype is an with_construct class."""
+    try:
+        if is_pyccel_datatype(dtype):
+            return dtype.is_with_construct
         else:
             return False
     except:
@@ -2085,11 +2098,24 @@ class ClassDef(Basic):
             return False
 
     @property
+    def is_with_construct(self):
+        """Returns True if the class is a with construct."""
+        names = [str(m.name) for m in self.methods]
+        if ('__enter__' in names) and ('__exit__' in names):
+            return True
+        elif ('__enter__' in names):
+            raise ValueError('ClassDef does not contain __exit__ method')
+        elif ('__exit__' in names):
+            raise ValueError('ClassDef does not contain __enter__ method')
+        else:
+            return False
+
+    @property
     def hide(self):
         if 'hide' in self.options:
             return True
         else:
-            return self.is_iterable
+            return self.is_iterable or self.is_with_construct
 
 class Ceil(Function):
     """

@@ -528,7 +528,7 @@ def openmpfy(stmt, **options):
         cls_base = iterable.cls_base
 
         # ... if using OpenMP
-        if ('openmp' in cls_base.options):
+        if ('openmp' in cls_base.options) and ('iterable' in cls_base.options):
             # ...
             def _format_str(a):
                 if isinstance(a, str):
@@ -664,7 +664,44 @@ def openmpfy(stmt, **options):
         test     = openmpfy(stmt.test, **options)
         body     = openmpfy(stmt.body, **options)
         settings = openmpfy(stmt.settings, **options)
-        return With(test, body, settings)
+
+        cls_base = test.cls_base
+
+        # ... if using OpenMP
+        if ('openmp' in cls_base.options) and ('with' in cls_base.options):
+            # ...
+            def _format_str(a):
+                if isinstance(a, str):
+                    return a.strip('\'')
+                else:
+                    return a
+            # ...
+
+            # ... get initial values for all attributs
+            d_attributs = cls_base.attributs_as_dict
+
+            d = {}
+            for k,v in d_attributs.items():
+                i = DottedName('self', k)
+                d[k] = get_initial_value(cls_base, i)
+            # ...
+
+            # ...
+#            clauses = (private, firstprivate, lastprivate,
+#                       reduction, schedule,
+#                       ordered, collapse, linear)
+#            clauses = [i for i in clauses if not(i is None)]
+#            clauses = Tuple(*clauses)
+            clauses = ()
+            # ...
+
+            # TODO to be defined
+            variables = []
+
+            return OMP_Parallel(clauses, variables, body)
+        else:
+            return With(test, body, settings)
+        # ...
     if isinstance(stmt, If):
         args = []
         for block in stmt.args:

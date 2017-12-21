@@ -453,6 +453,7 @@ def get_attributs(expr):
                                 prefix=prefix, \
                                 alias=dtype.alias, \
                                 is_iterable=dtype.is_iterable, \
+                                is_with_construct=dtype.is_with_construct, \
                                 is_polymorphic=False)()
 
         d_var['datatype']    = dtype
@@ -1916,7 +1917,6 @@ class WithStmt(BasicStmt):
         self.update()
 
         domain = self.domain
-        print('> domain : ', domain, type(domain))
 
         # TODO improve this
         if not(domain in namespace):
@@ -3489,11 +3489,13 @@ class ClassHeaderStmt(BasicStmt):
     def expr(self):
         options = [str(i) for i in self.options]
 
-        iterable    = ('iterable' in options)
+        iterable       = ('iterable' in options)
+        with_construct = ('with' in options)
 
         # create a new Datatype for the current class
         cls_constructs[self.name] = DataTypeFactory(self.name, ("_name"),
-                                                    is_iterable=iterable)
+                                                    is_iterable=iterable,
+                                                    is_with_construct=with_construct)
 
         h = ClassHeader(self.name, self.options)
         headers[self.name] = h
