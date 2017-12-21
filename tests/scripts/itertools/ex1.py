@@ -1,10 +1,5 @@
 # coding: utf-8
 
-#    def __init__(self, start, stop, step, nowait=True, collapse=None,
-#                 private=['i', 'idx'], firstprivate=None, lastprivate=None,
-#                 reduction=('+', 'x'), schedule='static', ordered=True, linear=('i', 1)):
-
-
 from pyccel.stdlib.parallel.openmp import omp_get_thread_num
 
 #$ header class StopIteration(public, hide)
