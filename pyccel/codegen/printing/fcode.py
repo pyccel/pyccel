@@ -24,6 +24,7 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 
 from pyccel.ast.core import get_initial_value
+from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype
 from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
@@ -1558,14 +1559,19 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        if not isinstance(expr.iterable, Variable):
-            raise TypeError('Expecting iterable to be a Variable.')
+        if not isinstance(expr.iterable, (Variable, ConstructorCall)):
+            raise TypeError('iterable must be Variable or ConstructorCall.')
         # ...
 
         # ...
         targets = expr.target
-        iters   = expr.ranges
+        if isinstance(expr.iterable, Variable):
+            iters = expr.ranges
+        elif isinstance(expr.iterable, ConstructorCall):
+            iters = get_iterable_ranges(expr.iterable)
+        # ...
 
+        # ...
         for i,a in zip(targets, iters):
             prolog, epilog = _do_range(i, a, \
                                        prolog, epilog)

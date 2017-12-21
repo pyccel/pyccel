@@ -549,133 +549,14 @@ def openmpfy(stmt, **options):
         target   = stmt.target
         body     = openmpfy(stmt.body, **options)
 
-        cls_base = iterable.cls_base
+        info, clauses = get_for_clauses(iterable)
 
-        # ... if using OpenMP
-        if ('openmp' in cls_base.options) and ('iterable' in cls_base.options):
-            # ...
-            def _format_str(a):
-                if isinstance(a, str):
-                    return a.strip('\'')
-                else:
-                    return a
-            # ...
-
-            # ... get initial values for all attributs
-            d_attributs = cls_base.attributs_as_dict
-
-            d = {}
-            for k,v in d_attributs.items():
-                i = DottedName('self', k)
-                d[k] = get_initial_value(cls_base, i)
-            # ...
-
-            # ... nowait
-            nowait = d['_nowait']
-            # ...
-
-            # ... initial values for clauses
-            collapse     = None
-            private      = None
-            firstprivate = None
-            lastprivate  = None
-            reduction    = None
-            schedule     = None
-            ordered      = None
-            linear       = None
-            # ...
-
-            # ... collapse
-            if not(d['_collapse'] is None):
-                if not isinstance(d['_collapse'], Nil):
-                    ls = [d['_collapse']]
-                    collapse = OMP_CollapseClause(*ls)
-            # ...
-
-            # ... private
-            if not(d['_private'] is None):
-                if not isinstance(d['_private'], Nil):
-                    ls = d['_private']
-                    ls = [_format_str(a) for a in ls]
-                    private = OMP_PrivateClause(*ls)
-            # ...
-
-            # ... firstprivate
-            if not(d['_firstprivate'] is None):
-                if not isinstance(d['_firstprivate'], Nil):
-                    ls = d['_firstprivate']
-                    ls = [_format_str(a) for a in ls]
-                    firstprivate = OMP_FirstPrivateClause(*ls)
-            # ...
-
-            # ... lastprivate
-            if not(d['_lastprivate'] is None):
-                if not isinstance(d['_lastprivate'], Nil):
-                    ls = d['_lastprivate']
-                    ls = [_format_str(a) for a in ls]
-                    lastprivate = OMP_LastPrivateClause(*ls)
-            # ...
-
-            # ... reduction
-            if not(d['_reduction'] is None):
-                if not isinstance(d['_reduction'], Nil):
-                    ls = d['_reduction']
-                    ls = [_format_str(a) for a in ls]
-                    reduction = OMP_ReductionClause(*ls)
-            # ...
-
-            # ... schedule
-            if not(d['_schedule'] is None):
-                if not isinstance(d['_schedule'], Nil):
-                    ls = d['_schedule']
-                    if isinstance(ls, str):
-                        ls = [ls]
-
-                    ls[0] = _format_str(ls[0])
-                    schedule = OMP_ScheduleClause(*ls)
-            # ...
-
-            # ... ordered
-            if not(d['_ordered'] is None):
-                if not isinstance(d['_ordered'], Nil):
-                    ls = d['_ordered']
-
-                    args = []
-                    if isinstance(ls, (int, Integer)):
-                        args.append(ls)
-
-                    ordered = OMP_OrderedClause(*args)
-            # ...
-
-            # ... linear
-            if not(d['_linear'] is None):
-                if not isinstance(d['_linear'], Nil):
-                    # we need to convert Tuple to list here
-                    ls = list(d['_linear'])
-
-                    if len(ls) < 2:
-                        raise ValueError('Expecting at least 2 entries, '
-                                         'given {0}'.format(len(ls)))
-
-                    variables = [a.strip('\'') for a in ls[0:-1]]
-                    ls[0:-1]  = variables
-
-                    linear = OMP_LinearClause(*ls)
-            # ...
-
-            # ...
-            clauses = (private, firstprivate, lastprivate,
-                       reduction, schedule,
-                       ordered, collapse, linear)
-            clauses = [i for i in clauses if not(i is None)]
-            clauses = Tuple(*clauses)
-            # ...
-
-            loop = ForIterator(target, iterable, body, strict=False)
-            return OMP_For(loop, clauses, nowait)
-        else:
+        if (clauses is None):
             return ForIterator(target, iterable, body, strict=False)
-        # ...
+        else:
+            loop   = ForIterator(target, iterable, body, strict=False)
+            nowait = info['nowait']
+            return OMP_For(loop, clauses, nowait)
     if isinstance(stmt, For):
         iterable = openmpfy(stmt.iterable, **options)
         target   = stmt.target
@@ -816,7 +697,6 @@ def get_with_clauses(expr):
     # ...
 
     # ... private
-    private = None
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
@@ -825,7 +705,6 @@ def get_with_clauses(expr):
     # ...
 
     # ... firstprivate
-    firstprivate = None
     if not(d['_firstprivate'] is None):
         if not isinstance(d['_firstprivate'], Nil):
             ls = d['_firstprivate']
@@ -834,7 +713,6 @@ def get_with_clauses(expr):
     # ...
 
     # ... shared
-    shared = None
     if not(d['_shared'] is None):
         if not isinstance(d['_shared'], Nil):
             ls = d['_shared']
@@ -851,7 +729,6 @@ def get_with_clauses(expr):
     # ...
 
     # ... copyin
-    copyin = None
     if not(d['_copyin'] is None):
         if not isinstance(d['_copyin'], Nil):
             ls = d['_copyin']
@@ -910,4 +787,178 @@ def get_with_clauses(expr):
     # ...
 
     return clauses
+# ...
+
+# ...
+def get_for_clauses(expr):
+    # ...
+    def _format_str(a):
+        if isinstance(a, str):
+            return a.strip('\'')
+        else:
+            return a
+    # ...
+
+    # ...
+    d_attributs = {}
+    d_args      = {}
+    # ...
+
+    # ... we first create a dictionary of attributs
+    if isinstance(expr, Variable):
+        if expr.cls_base:
+            d_attributs = expr.cls_base.attributs_as_dict
+    elif isinstance(expr, ConstructorCall):
+        attrs = expr.attributs
+        for i in attrs:
+            d_attributs[str(i).replace('self.', '')] = i
+    # ...
+
+    # ...
+    if not d_attributs:
+        raise ValueError('Can not find attributs')
+    # ...
+
+    # ...
+    if isinstance(expr, Variable):
+        cls_base = expr.cls_base
+
+        if not cls_base:
+            return None
+
+        if not(('openmp' in cls_base.options) and ('iterable' in cls_base.options)):
+            return None
+    elif isinstance(expr, ConstructorCall):
+        # arguments[0] is 'self'
+        # TODO must be improved in syntax, so that a['value'] is a sympy object
+        for a in expr.arguments[1:]:
+            if isinstance(a, dict):
+                # we add '_' tp be conform with the private variables convention
+                d_args['_{0}'.format(a['key'])] = a['value']
+    else:
+        return None
+    # ...
+
+    # ... get initial values for all attributs
+    #     TODO do we keep 'self' hard coded?
+    d = {}
+    for k,v in d_attributs.items():
+        i = DottedName('self', k)
+        d[k] = get_initial_value(expr, i)
+    # ...
+
+    # ... update the dictionary with the class parameters
+    for k,v in d_args.items():
+        d[k] = d_args[k]
+    # ...
+
+    # ... initial values for clauses
+    nowait       = None
+
+    collapse     = None
+    private      = None
+    firstprivate = None
+    lastprivate  = None
+    reduction    = None
+    schedule     = None
+    ordered      = None
+    linear       = None
+    # ...
+
+    # ... nowait
+    nowait = d['_nowait']
+    # ...
+
+    # ... collapse
+    if not(d['_collapse'] is None):
+        if not isinstance(d['_collapse'], Nil):
+            ls = [d['_collapse']]
+            collapse = OMP_CollapseClause(*ls)
+    # ...
+
+    # ... private
+    if not(d['_private'] is None):
+        if not isinstance(d['_private'], Nil):
+            ls = d['_private']
+            ls = [_format_str(a) for a in ls]
+            private = OMP_PrivateClause(*ls)
+    # ...
+
+    # ... firstprivate
+    if not(d['_firstprivate'] is None):
+        if not isinstance(d['_firstprivate'], Nil):
+            ls = d['_firstprivate']
+            ls = [_format_str(a) for a in ls]
+            firstprivate = OMP_FirstPrivateClause(*ls)
+    # ...
+
+    # ... lastprivate
+    if not(d['_lastprivate'] is None):
+        if not isinstance(d['_lastprivate'], Nil):
+            ls = d['_lastprivate']
+            ls = [_format_str(a) for a in ls]
+            lastprivate = OMP_LastPrivateClause(*ls)
+    # ...
+
+    # ... reduction
+    if not(d['_reduction'] is None):
+        if not isinstance(d['_reduction'], Nil):
+            ls = d['_reduction']
+            ls = [_format_str(a) for a in ls]
+            reduction = OMP_ReductionClause(*ls)
+    # ...
+
+    # ... schedule
+    if not(d['_schedule'] is None):
+        if not isinstance(d['_schedule'], Nil):
+            ls = d['_schedule']
+            if isinstance(ls, str):
+                ls = [ls]
+
+            ls[0] = _format_str(ls[0])
+            schedule = OMP_ScheduleClause(*ls)
+    # ...
+
+    # ... ordered
+    if not(d['_ordered'] is None):
+        if not isinstance(d['_ordered'], Nil):
+            ls = d['_ordered']
+
+            args = []
+            if isinstance(ls, (int, Integer)):
+                args.append(ls)
+
+            ordered = OMP_OrderedClause(*args)
+    # ...
+
+    # ... linear
+    if not(d['_linear'] is None):
+        if not isinstance(d['_linear'], Nil):
+            # we need to convert Tuple to list here
+            ls = list(d['_linear'])
+
+            if len(ls) < 2:
+                raise ValueError('Expecting at least 2 entries, '
+                                 'given {0}'.format(len(ls)))
+
+            variables = [a.strip('\'') for a in ls[0:-1]]
+            ls[0:-1]  = variables
+
+            linear = OMP_LinearClause(*ls)
+    # ...
+
+    # ...
+    clauses = (private, firstprivate, lastprivate,
+               reduction, schedule,
+               ordered, collapse, linear)
+    clauses = [i for i in clauses if not(i is None)]
+    clauses = Tuple(*clauses)
+    # ...
+
+    # ...
+    info = {}
+    info['nowait'] = nowait
+    # ...
+
+    return info, clauses
 # ...

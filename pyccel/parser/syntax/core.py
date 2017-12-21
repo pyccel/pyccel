@@ -1017,18 +1017,19 @@ def expr_with_trailer(expr, trailer=None):
                 if str(i.name)=='__init__':
                     method=i
 
-#            if name == 'MPI_Tensor':
-#                args = [this, npts, periods, reorder, pads]
             d_var = {}
             dtype = cls_constructs[str(expr.name)]()
+
             d_var['datatype']    = dtype
             d_var['allocatable'] = False
             d_var['shape']       = None
             d_var['rank']        = 0
             d_var['intent']      = 'inout'
+            d_var['cls_base']    = namespace[str(expr.name)]
+
             insert_variable('self', **d_var)
             args = [namespace['self']] + list(args)
-            expr = ConstructorCall(method, args,cls_variable=namespace['self'])
+            expr = ConstructorCall(method, args, cls_variable=namespace['self'])
         else:
             f_name = str(expr)
             if isinstance(expr, FunctionDef):
@@ -1850,7 +1851,7 @@ class ForStmt(BasicStmt):
         else:
             i = Symbol(self.iterable, integer=True)
 
-        if isinstance(self.range, RangeStmt):
+        if isinstance(self.range, (RangeStmt, ArithmeticExpression)):
             r = self.range.expr
         elif isinstance(self.range, str):
             if not self.range in namespace:
@@ -1859,8 +1860,9 @@ class ForStmt(BasicStmt):
         else:
             raise TypeError('Expecting an Iterable')
 
-        if not isinstance(r, (Range, Tensor, Variable)):
-            raise TypeError('Expecting an Iterable or an object')
+        if not isinstance(r, (Range, Tensor, Variable, ConstructorCall)):
+            raise TypeError('Expecting an Iterable or an object, '
+                            'given {0}'.format(type(r)))
 
         if isinstance(r, Variable):
             if r.dtype.name == 'MPI_Tensor':
@@ -1888,6 +1890,8 @@ class ForStmt(BasicStmt):
         body = self.body.expr
 
         if isinstance(r, Variable) and is_iterable_datatype(r.dtype):
+            return ForIterator(i, r, body)
+        if isinstance(r, ConstructorCall) and is_iterable_datatype(r.this.dtype):
             return ForIterator(i, r, body)
         else:
             return For(i, r, body)
