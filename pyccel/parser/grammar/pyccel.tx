@@ -216,7 +216,7 @@ ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':'
                body=SuiteStmt
 ;
 
-WithDomain: ID;
+WithDomain: Expression;
 WithStmt:
   WITH domain=WithDomain ':'
   body=SuiteStmt

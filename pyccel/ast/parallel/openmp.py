@@ -26,7 +26,7 @@ from pyccel.ast.core import Len
 from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, With, If, Del, Sync, With
 from pyccel.ast.core import FunctionDef, ClassDef
-from pyccel.ast.core import MethodCall, FunctionCall
+from pyccel.ast.core import MethodCall, FunctionCall, ConstructorCall
 
 from pyccel.ast.parallel.basic import Basic
 
@@ -692,140 +692,14 @@ def openmpfy(stmt, **options):
         body     = openmpfy(stmt.body, **options)
         settings = openmpfy(stmt.settings, **options)
 
-        cls_base = test.cls_base
+        clauses = get_with_clauses(test)
 
-        # ... if using OpenMP
-        if ('openmp' in cls_base.options) and ('with' in cls_base.options):
-            # ...
-            def _format_str(a):
-                if isinstance(a, str):
-                    return a.strip('\'')
-                else:
-                    return a
-            # ...
-
-            # ... get initial values for all attributs
-            d_attributs = cls_base.attributs_as_dict
-
-            d = {}
-            for k,v in d_attributs.items():
-                i = DottedName('self', k)
-                d[k] = get_initial_value(cls_base, i)
-            # ...
-
-            # ... initial values for clauses
-            private      = None
-            firstprivate = None
-            shared       = None
-            reduction    = None
-            copyin       = None
-            default      = None
-            proc_bind    = None
-            num_threads  = None
-            if_test      = None
-            # ...
-
-            # ... private
-            private = None
-            if not(d['_private'] is None):
-                if not isinstance(d['_private'], Nil):
-                    ls = d['_private']
-                    ls = [_format_str(a) for a in ls]
-                    private = OMP_PrivateClause(*ls)
-            # ...
-
-            # ... firstprivate
-            firstprivate = None
-            if not(d['_firstprivate'] is None):
-                if not isinstance(d['_firstprivate'], Nil):
-                    ls = d['_firstprivate']
-                    ls = [_format_str(a) for a in ls]
-                    firstprivate = OMP_FirstPrivateClause(*ls)
-            # ...
-
-            # ... shared
-            shared = None
-            if not(d['_shared'] is None):
-                if not isinstance(d['_shared'], Nil):
-                    ls = d['_shared']
-                    ls = [_format_str(a) for a in ls]
-                    shared = OMP_SharedClause(*ls)
-            # ...
-
-            # ... reduction
-            if not(d['_reduction'] is None):
-                if not isinstance(d['_reduction'], Nil):
-                    ls = d['_reduction']
-                    ls = [_format_str(a) for a in ls]
-                    reduction = OMP_ReductionClause(*ls)
-            # ...
-
-            # ... copyin
-            copyin = None
-            if not(d['_copyin'] is None):
-                if not isinstance(d['_copyin'], Nil):
-                    ls = d['_copyin']
-                    ls = [_format_str(a) for a in ls]
-                    copyin = OMP_CopyinClause(*ls)
-            # ...
-
-            # ... default
-            if not(d['_default'] is None):
-                if not isinstance(d['_default'], Nil):
-                    ls = d['_default']
-                    if isinstance(ls, str):
-                        ls = [ls]
-
-                    ls[0] = _format_str(ls[0])
-                    default = OMP_ParallelDefaultClause(*ls)
-            # ...
-
-            # ... proc_bind
-            if not(d['_proc_bind'] is None):
-                if not isinstance(d['_proc_bind'], Nil):
-                    ls = d['_proc_bind']
-                    if isinstance(ls, str):
-                        ls = [ls]
-
-                    ls[0] = _format_str(ls[0])
-                    proc_bind = OMP_ParallelProcBindClause(*ls)
-            # ...
-
-            # ... num_threads
-            #     TODO improve this to take any int expression for arg.
-            #     see OpenMP specifications for num_threads clause
-            if not(d['_num_threads'] is None):
-                if not isinstance(d['_num_threads'], Nil):
-                    arg = d['_num_threads']
-                    ls = [arg]
-                    num_threads = OMP_ParallelNumThreadClause(*ls)
-            # ...
-
-            # ... if_test
-            #     TODO improve this to take any boolean expression for arg.
-            #     see OpenMP specifications for if_test clause
-            if not(d['_if_test'] is None):
-                if not isinstance(d['_if_test'], Nil):
-                    arg = d['_if_test']
-                    ls = [arg]
-                    if_test = OMP_ParallelIfClause(*ls)
-            # ...
-
-            # ...
-            clauses = (private, firstprivate, shared,
-                       reduction, default, copyin,
-                       proc_bind, num_threads, if_test)
-            clauses = [i for i in clauses if not(i is None)]
-            clauses = Tuple(*clauses)
-            # ...
-
+        if (clauses is None):
+            return With(test, body, settings)
+        else:
             # TODO to be defined
             variables = []
-
             return OMP_Parallel(clauses, variables, body)
-        else:
-            return With(test, body, settings)
-        # ...
     if isinstance(stmt, If):
         args = []
         for block in stmt.args:
@@ -865,3 +739,175 @@ def openmpfy(stmt, **options):
 
     return stmt
 ##########################################################
+
+# ...
+def get_with_clauses(expr):
+    # ...
+    def _format_str(a):
+        if isinstance(a, str):
+            return a.strip('\'')
+        else:
+            return a
+    # ...
+
+    # ...
+    d_attributs = {}
+    d_args      = {}
+    # ...
+
+    # ... we first create a dictionary of attributs
+    if isinstance(expr, Variable):
+        if expr.cls_base:
+            d_attributs = expr.cls_base.attributs_as_dict
+    elif isinstance(expr, ConstructorCall):
+        attrs = expr.attributs
+        for i in attrs:
+            d_attributs[str(i).replace('self.', '')] = i
+    # ...
+
+    # ...
+    if not d_attributs:
+        raise ValueError('Can not find attributs')
+    # ...
+
+    # ...
+    if isinstance(expr, Variable):
+        cls_base = expr.cls_base
+
+        if not cls_base:
+            return None
+
+        if not(('openmp' in cls_base.options) and ('with' in cls_base.options)):
+            return None
+    elif isinstance(expr, ConstructorCall):
+        # arguments[0] is 'self'
+        # TODO must be improved in syntax, so that a['value'] is a sympy object
+        for a in expr.arguments[1:]:
+            if isinstance(a, dict):
+                # we add '_' tp be conform with the private variables convention
+                d_args['_{0}'.format(a['key'])] = a['value']
+    else:
+        return None
+    # ...
+
+    # ... get initial values for all attributs
+    #     TODO do we keep 'self' hard coded?
+    d = {}
+    for k,v in d_attributs.items():
+        i = DottedName('self', k)
+        d[k] = get_initial_value(expr, i)
+    # ...
+
+    # ... update the dictionary with the class parameters
+    for k,v in d_args.items():
+        d[k] = d_args[k]
+    # ...
+
+    # ... initial values for clauses
+    private      = None
+    firstprivate = None
+    shared       = None
+    reduction    = None
+    copyin       = None
+    default      = None
+    proc_bind    = None
+    num_threads  = None
+    if_test      = None
+    # ...
+
+    # ... private
+    private = None
+    if not(d['_private'] is None):
+        if not isinstance(d['_private'], Nil):
+            ls = d['_private']
+            ls = [_format_str(a) for a in ls]
+            private = OMP_PrivateClause(*ls)
+    # ...
+
+    # ... firstprivate
+    firstprivate = None
+    if not(d['_firstprivate'] is None):
+        if not isinstance(d['_firstprivate'], Nil):
+            ls = d['_firstprivate']
+            ls = [_format_str(a) for a in ls]
+            firstprivate = OMP_FirstPrivateClause(*ls)
+    # ...
+
+    # ... shared
+    shared = None
+    if not(d['_shared'] is None):
+        if not isinstance(d['_shared'], Nil):
+            ls = d['_shared']
+            ls = [_format_str(a) for a in ls]
+            shared = OMP_SharedClause(*ls)
+    # ...
+
+    # ... reduction
+    if not(d['_reduction'] is None):
+        if not isinstance(d['_reduction'], Nil):
+            ls = d['_reduction']
+            ls = [_format_str(a) for a in ls]
+            reduction = OMP_ReductionClause(*ls)
+    # ...
+
+    # ... copyin
+    copyin = None
+    if not(d['_copyin'] is None):
+        if not isinstance(d['_copyin'], Nil):
+            ls = d['_copyin']
+            ls = [_format_str(a) for a in ls]
+            copyin = OMP_CopyinClause(*ls)
+    # ...
+
+    # ... default
+    if not(d['_default'] is None):
+        if not isinstance(d['_default'], Nil):
+            ls = d['_default']
+            if isinstance(ls, str):
+                ls = [ls]
+
+            ls[0] = _format_str(ls[0])
+            default = OMP_ParallelDefaultClause(*ls)
+    # ...
+
+    # ... proc_bind
+    if not(d['_proc_bind'] is None):
+        if not isinstance(d['_proc_bind'], Nil):
+            ls = d['_proc_bind']
+            if isinstance(ls, str):
+                ls = [ls]
+
+            ls[0] = _format_str(ls[0])
+            proc_bind = OMP_ParallelProcBindClause(*ls)
+    # ...
+
+    # ... num_threads
+    #     TODO improve this to take any int expression for arg.
+    #     see OpenMP specifications for num_threads clause
+    if not(d['_num_threads'] is None):
+        if not isinstance(d['_num_threads'], Nil):
+            arg = d['_num_threads']
+            ls = [arg]
+            num_threads = OMP_ParallelNumThreadClause(*ls)
+    # ...
+
+    # ... if_test
+    #     TODO improve this to take any boolean expression for arg.
+    #     see OpenMP specifications for if_test clause
+    if not(d['_if_test'] is None):
+        if not isinstance(d['_if_test'], Nil):
+            arg = d['_if_test']
+            ls = [arg]
+            if_test = OMP_ParallelIfClause(*ls)
+    # ...
+
+    # ...
+    clauses = (private, firstprivate, shared,
+               reduction, default, copyin,
+               proc_bind, num_threads, if_test)
+    clauses = [i for i in clauses if not(i is None)]
+    clauses = Tuple(*clauses)
+    # ...
+
+    return clauses
+# ...

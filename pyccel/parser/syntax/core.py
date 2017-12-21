@@ -1916,13 +1916,11 @@ class WithStmt(BasicStmt):
         """
         self.update()
 
-        domain = self.domain
+        domain = self.domain.expr
 
-        # TODO improve this
-        if not(domain in namespace):
-            raise ValueError('undefined {0} domain'.format(domain))
-
-        domain = namespace[domain]
+        if not (isinstance(domain, (Variable, ConstructorCall))):
+            if not(domain in namespace):
+                raise ValueError('undefined {0} domain'.format(domain))
 
         body = self.body.expr
         settings = None

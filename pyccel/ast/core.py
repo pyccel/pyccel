@@ -1434,6 +1434,16 @@ class ConstructorCall(FunctionCall):
     def this(self):
         return self.arguments[0]
 
+    @property
+    def attributs(self):
+        """Returns all attributs of the __init__ function."""
+        attr = []
+        for i in self.func.body:
+            if isinstance(i, Assign) and (str(i.lhs).startswith('self.')):
+                attr += [i.lhs]
+        return attr
+
+
 class MethodCall(AtomicExpr):
     """
     Base class for applied mathematical functions.
@@ -1533,15 +1543,6 @@ class MethodCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
-
-class ConstructorCall(FunctionCall):
-    """
-    class for a call to class constructor in the code.
-    """
-    @property
-    def this(self):
-        return self.arguments[0]
-
 
 class Nil(Basic):
     """
@@ -3499,6 +3500,10 @@ def get_initial_value(expr, var):
             if not (r is None):
                 return r
         return value
+    elif isinstance(expr, FunctionCall):
+        return get_initial_value(expr.func, var)
+    elif isinstance(expr, ConstructorCall):
+        return get_initial_value(expr.func, var)
     elif isinstance(expr, (list, tuple, Tuple)):
         for i in expr:
             value = get_initial_value(i, var)
