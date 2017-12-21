@@ -77,9 +77,7 @@ MPI
 OpenMP
 ^^^^^^
 
-* implement *parallel* as a metaclass with block, using __enter__
-
-* remove *prange* and *parallel* constructs
+* add create Clauses in openmpfy for With construct
 
 * improve import
 
