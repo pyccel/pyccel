@@ -52,8 +52,8 @@ from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
-from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
-                             For, ForIterator, Assign, ParallelBlock, \
+from pyccel.ast.core import (Sync, Tile, Range, Tensor, \
+                             For, ForIterator, Assign, \
                              Declare, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
                              VariableHeader, \
@@ -100,8 +100,6 @@ from pyccel.ast.parallel.mpi import MPI_comm_cart_sub
 from pyccel.ast.parallel.mpi import MPI_dims_create
 from pyccel.ast.parallel.mpi import MPI_Tensor
 from pyccel.ast.parallel.mpi import mpi_definitions
-
-from pyccel.ast.parallel.openmp import OMP_ParallelNumThreadClause
 
 from pyccel.stdlib.stdlib     import stdlib_definitions
 
@@ -577,9 +575,6 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, Range):
                 grid = i
                 rank = 1
-            elif isinstance(i, ParallelRange):
-                grid = i
-                rank = 1
             elif isinstance(i, Variable):
                 ctype = i.dtype
                 if ctype in builtin_datatypes:
@@ -780,23 +775,6 @@ def builtin_function(name, args, lhs=None, op=None):
         namespace[lhs] = Range(*args)
         lhs = namespace[lhs]
         expr = Range(*args)
-        return assign(lhs, expr, op, strict=False)
-    elif name == "prange":
-        if not lhs:
-            raise ValueError("Expecting a lhs.")
-        if not(len(args) in [2, 3]):
-            raise ValueError("Expecting exactly two or three arguments.")
-
-        d_var = {}
-        d_var['datatype']    = NativeParallelRange()
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-
-        insert_variable(lhs, **d_var)
-        namespace[lhs] = ParallelRange(*args)
-        lhs = namespace[lhs]
-        expr = ParallelRange(*args)
         return assign(lhs, expr, op, strict=False)
     elif name == "tensor":
         if not lhs:
@@ -1812,40 +1790,6 @@ class RangeStmt(BasicStmt):
 
         return Range(b,e,s)
 
-class ParallelRangeStmt(BasicStmt):
-    """Class representing a parallel Range statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the Range statement.
-
-        start: str
-            start index
-        end: str
-            end index
-        step: str
-            step for the iterable. if not given, 1 will be used.
-        """
-        self.start    = kwargs.pop('start')
-        self.end      = kwargs.pop('end')
-        self.step     = kwargs.pop('step', None)
-
-        super(ParallelRangeStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the Range statement by returning a pyccel.ast.core object
-        """
-        b = self.start.expr
-        e = self.end.expr
-        if self.step:
-            s = self.step.expr
-        else:
-            s = 1
-
-        return ParallelRange(b,e,s)
-
 class ForStmt(BasicStmt):
     """Class representing a For statement."""
 
@@ -1905,7 +1849,7 @@ class ForStmt(BasicStmt):
         else:
             i = Symbol(self.iterable, integer=True)
 
-        if isinstance(self.range, (RangeStmt, ParallelRangeStmt)):
+        if isinstance(self.range, RangeStmt):
             r = self.range.expr
         elif isinstance(self.range, str):
             if not self.range in namespace:
@@ -1947,6 +1891,44 @@ class ForStmt(BasicStmt):
         else:
             return For(i, r, body)
 
+class WithStmt(BasicStmt):
+    """Class representing a With statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the With statement.
+
+        domain: WithDomain
+            domain of with statement
+        body: list
+            a list of statements for the body of the With statement.
+        """
+        self.domain = kwargs.pop('domain')
+        self.body   = kwargs.pop('body')
+
+        super(WithStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the With statement by returning a pyccel.ast.core object
+        """
+        self.update()
+
+        domain = self.domain
+        print('> domain : ', domain, type(domain))
+
+        # TODO improve this
+        if not(domain in namespace):
+            raise ValueError('undefined {0} domain'.format(domain))
+
+        domain = namespace[domain]
+
+        body = self.body.expr
+        settings = None
+
+        return With(domain, body, settings)
+
 class WhileStmt(BasicStmt):
     """Class representing a While statement."""
 
@@ -1985,53 +1967,6 @@ class WhileStmt(BasicStmt):
         body = self.body.expr
 
         return While(test, body)
-
-class ParallelBlockStmt(BasicStmt):
-    """Class representing a With statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the With statement.
-
-        test: Test
-            a test expression
-        body: list
-            a list of statements for the body of the With statement.
-        """
-        self.num_threads = kwargs.pop('num_threads', None)
-        self.body = kwargs.pop('body')
-
-        super(ParallelBlockStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """Statement variables."""
-        ls = []
-        for stmt in self.body.stmts:
-            ls += stmt.local_vars
-            ls += stmt.stmt_vars
-        return ls
-
-    @property
-    def expr(self):
-        """
-        Process the With statement by returning a pyccel.ast.core object
-        """
-        self.update()
-
-        num_threads = self.num_threads
-        body = self.body.expr
-
-        # TODO - set variables and clauses
-        #      - add status for variables (shared, private)
-        variables = []
-        clauses   = []
-
-        if num_threads:
-            clauses += [OMP_ParallelNumThreadClause(num_threads)]
-
-        return ParallelBlock(clauses, variables, body)
-
 
 class ExpressionElement(object):
     """Class representing an element of an expression."""

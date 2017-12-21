@@ -24,7 +24,7 @@ from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
 from pyccel.ast.core import Len
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, ForIterator, While, If, Del, Sync, With
+from pyccel.ast.core import For, ForIterator, While, With, If, Del, Sync, With
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall
 
@@ -660,6 +660,11 @@ def openmpfy(stmt, **options):
         test = openmpfy(stmt.test, **options)
         body = openmpfy(stmt.body, **options)
         return While(test, body)
+    if isinstance(stmt, With):
+        test     = openmpfy(stmt.test, **options)
+        body     = openmpfy(stmt.body, **options)
+        settings = openmpfy(stmt.settings, **options)
+        return With(test, body, settings)
     if isinstance(stmt, If):
         args = []
         for block in stmt.args:

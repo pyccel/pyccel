@@ -27,7 +27,7 @@ def test_core():
 
 # ...
 def test_openmp():
-    ignored = []
+    ignored = ['matrix_multiplication.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/openmp')

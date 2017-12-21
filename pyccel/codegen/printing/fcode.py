@@ -36,7 +36,7 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import Range, Tensor, ParallelRange, Block
+from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
                               Variable, Declare, ValuedVariable, \
                               Len, Shape, Dot, Sign, subs, \
@@ -1372,12 +1372,6 @@ class FCodePrinter(CodePrinter):
         stop  = self._print(expr.stop)
         return '{0}, {1}'.format(start, stop)
 
-    def _print_ParallelRange(self, expr):
-        start = self._print(expr.start)
-        stop  = self._print(expr.stop-1)
-        step  = self._print(expr.step)
-        return '{0}, {1}, {2}'.format(start, stop, step)
-
     def _print_For(self, expr):
         prolog = ''
         epilog = ''
@@ -1410,10 +1404,6 @@ class FCodePrinter(CodePrinter):
             msg  = "Only iterable currently supported are Range, "
             msg += "Tensor and MPI_Tensor"
             raise NotImplementedError(msg)
-
-        if isinstance(expr.iterable, ParallelRange):
-            prolog = '!$omp do schedule(runtime)\n'
-            epilog = '!$omp end do nowait\n'
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target[0], expr.iterable, \

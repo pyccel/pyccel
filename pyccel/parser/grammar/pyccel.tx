@@ -62,7 +62,7 @@ CompoundStmt:
   | ForStmt 
   | DecoratedStmt
   | WhileStmt
-  | ParallelBlockStmt
+  | WithStmt
 ;
 
 AnnotatedStmt:
@@ -202,14 +202,15 @@ RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
 ;
 
-ParallelRangeStmt:
-  'prange' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
-;
-
-IterableRange: RangeStmt | ParallelRangeStmt | ID;
-
+IterableRange: RangeStmt | ID;
 ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':' 
                body=SuiteStmt
+;
+
+WithDomain: ID;
+WithStmt:
+  WITH domain=WithDomain ':'
+  body=SuiteStmt
 ;
 
 WhileStmt:
@@ -225,11 +226,6 @@ IfStmt:
 
 ElifStmt:
   (ELIF test=Test ':' body=SuiteStmt) 
-;
-
-ParallelBlockStmt:
-  WITH PARALLEL '(' (num_threads=Number)? ')' ':'
-  body=SuiteStmt
 ;
 
 
@@ -347,7 +343,6 @@ NONLOCAL : 'nonlocal';
 NOT : 'not';
 OR : 'or';
 PASS : 'pass';
-PARALLEL : 'parallel';
 RETURN : 'return';
 SYNC : 'sync';
 RAISE : 'raise';
