@@ -63,6 +63,7 @@ class OMP_Parallel(ParallelBlock, OMP):
     n := 1 + n
     """
     _prefix = '#pragma'
+    name = 'parallel'
     def __new__(cls, clauses, variables, body):
         if not iterable(clauses):
             raise TypeError('Expecting an iterable for clauses')
@@ -90,7 +91,8 @@ class OMP_For(ForIterator, OMP):
 
     """
     _prefix = '#pragma'
-    def __new__(cls, target, iterable, body, clauses, nowait):
+    name = 'do'
+    def __new__(cls, loop, clauses, nowait):
         if not iterable(clauses):
             raise TypeError('Expecting an iterable for clauses')
 
@@ -108,27 +110,31 @@ class OMP_For(ForIterator, OMP):
                 raise TypeError('Wrong clause for OMP_For, '
                                'given {0}'.format(type(clause)))
 
-        return Basic.__new__(cls, target, iterable, body, clauses, nowait)
+        return Basic.__new__(cls, loop, clauses, nowait)
 
     @property
-    def target(self):
+    def loop(self):
         return self._args[0]
 
     @property
-    def iterable(self):
+    def clauses(self):
         return self._args[1]
 
     @property
-    def body(self):
+    def nowait(self):
         return self._args[2]
 
     @property
-    def clauses(self):
-        return self._args[3]
+    def target(self):
+        return self.loop.target
 
     @property
-    def nowait(self):
-        return self._args[4]
+    def iterable(self):
+        return self.loop.iterable
+
+    @property
+    def body(self):
+        return self.loop.body
 
 
 class OMP_ParallelNumThreadClause(OMP):
@@ -141,6 +147,7 @@ class OMP_ParallelNumThreadClause(OMP):
     >>> OMP_ParallelNumThreadClause(4)
     num_threads(4)
     """
+    name = 'num_threads'
     def __new__(cls, *args, **options):
         num_threads = args[0]
         return Basic.__new__(cls, num_threads)
@@ -163,6 +170,7 @@ class OMP_ParallelDefaultClause(OMP):
     >>> OMP_ParallelDefaultClause('shared')
     default(shared)
     """
+    name = None
     def __new__(cls, *args, **options):
         status = args[0]
         return Basic.__new__(cls, status)
@@ -190,6 +198,7 @@ class OMP_ParallelProcBindClause(OMP):
     >>> OMP_ParallelProcBindClause('master')
     proc_bind(master)
     """
+    name = 'proc_bind'
     def __new__(cls, *args, **options):
         status = args[0]
         return Basic.__new__(cls, status)
@@ -217,6 +226,7 @@ class OMP_PrivateClause(OMP):
     >>> OMP_PrivateClause('x', 'y')
     private(x, y)
     """
+    name = 'private'
     def __new__(cls, *args, **options):
         return Basic.__new__(cls, args)
 
@@ -239,6 +249,7 @@ class OMP_SharedClause(OMP):
     >>> OMP_SharedClause('x', 'y')
     shared(x, y)
     """
+    name = 'shared'
     def __new__(cls, *args, **options):
         return Basic.__new__(cls, args)
 
@@ -261,6 +272,7 @@ class OMP_FirstPrivateClause(OMP):
     >>> OMP_FirstPrivateClause('x', 'y')
     firstprivate(x, y)
     """
+    name = 'firstprivate'
     def __new__(cls, *args, **options):
         return Basic.__new__(cls, args)
 
@@ -283,6 +295,7 @@ class OMP_LastPrivateClause(OMP):
     >>> OMP_LastPrivateClause('x', 'y')
     lastprivate(x, y)
     """
+    name = 'lastprivate'
     def __new__(cls, *args, **options):
         return Basic.__new__(cls, args)
 
@@ -305,6 +318,7 @@ class OMP_CopyinClause(OMP):
     >>> OMP_CopyinClause('x', 'y')
     copyin(x, y)
     """
+    name = 'copyin'
     def __new__(cls, *args, **options):
         return Basic.__new__(cls, args)
 
@@ -327,6 +341,7 @@ class OMP_ReductionClause(OMP):
     >>> OMP_ReductionClause('+', 'x', 'y')
     reduction('+': (x, y))
     """
+    name = 'reduction'
     def __new__(cls, *args, **options):
         op = args[0]
         arguments = args[1:]
@@ -344,7 +359,7 @@ class OMP_ReductionClause(OMP):
         sstr = printer.doprint
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         op   = sstr(self.operation)
-        return "reduction('{0}': {1})".format(op, args)
+        return "reduction({0}: {1})".format(op, args)
 
 class OMP_ScheduleClause(OMP):
     """
@@ -356,6 +371,7 @@ class OMP_ScheduleClause(OMP):
     >>> OMP_ScheduleClause('static', 2)
     schedule(static, 2)
     """
+    name = 'schedule'
     def __new__(cls, *args, **options):
         if not(len(args) in [1, 2]):
             raise ValueError('Expecting 1 or 2 entries, '
@@ -400,6 +416,7 @@ class OMP_OrderedClause(OMP):
     >>> OMP_OrderedClause()
     ordered
     """
+    name = 'ordered'
     def __new__(cls, *args, **options):
         if not(len(args) in [0, 1]):
             raise ValueError('Expecting 0 or 1 entries, '
@@ -434,6 +451,7 @@ class OMP_CollapseClause(OMP):
     >>> OMP_CollapseClause(2)
     collapse(2)
     """
+    name = 'collapse'
     def __new__(cls, *args, **options):
         if not(len(args) == 1):
             raise ValueError('Expecting 1 entry, '
@@ -462,6 +480,7 @@ class OMP_LinearClause(OMP):
     >>> OMP_LinearClause('x', 'y', 2)
     linear((x, y): 2)
     """
+    name = 'linear'
     # TODO check type of step => must be int, Integer
     def __new__(cls, *args, **options):
         variables = args[0:-1]
@@ -480,7 +499,7 @@ class OMP_LinearClause(OMP):
         sstr = printer.doprint
         variables= ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         step = sstr(self.step)
-        return "linear('{0}': {1})".format(variables, step)
+        return "linear({0}: {1})".format(variables, step)
 
 ##########################################################
 
@@ -625,8 +644,8 @@ def openmpfy(stmt, **options):
             clauses = Tuple(*clauses)
             # ...
 
-            return OMP_For(target, iterable, body, clauses, nowait)
-#            return ForIterator(target, iterable, body, strict=False)
+            loop = ForIterator(target, iterable, body, strict=False)
+            return OMP_For(loop, clauses, nowait)
         else:
             return ForIterator(target, iterable, body, strict=False)
         # ...
