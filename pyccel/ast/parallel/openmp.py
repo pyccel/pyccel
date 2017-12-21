@@ -69,6 +69,7 @@ class OMP_Parallel(ParallelBlock, OMP):
             raise TypeError('Expecting an iterable for clauses')
 
         _valid_clauses = (OMP_ParallelNumThreadClause, \
+                          OMP_ParallelIfClause, \
                           OMP_ParallelDefaultClause, \
                           OMP_PrivateClause, \
                           OMP_SharedClause, \
@@ -159,6 +160,29 @@ class OMP_ParallelNumThreadClause(OMP):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'num_threads({})'.format(sstr(self.num_threads))
+
+class OMP_ParallelIfClause(OMP):
+    """
+    OMP ParallelIfClause statement.
+
+    Examples
+
+    >>> from pyccel.parallel.openmp import OMP_ParallelIfClause
+    >>> OMP_ParallelIfClause(True)
+    if (True)
+    """
+    name = 'if'
+    def __new__(cls, *args, **options):
+        test = args[0]
+        return Basic.__new__(cls, test)
+
+    @property
+    def test(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'if({})'.format(sstr(self.test))
 
 class OMP_ParallelDefaultClause(OMP):
     """
@@ -550,8 +574,18 @@ def openmpfy(stmt, **options):
             nowait = d['_nowait']
             # ...
 
+            # ... initial values for clauses
+            collapse     = None
+            private      = None
+            firstprivate = None
+            lastprivate  = None
+            reduction    = None
+            schedule     = None
+            ordered      = None
+            linear       = None
+            # ...
+
             # ... collapse
-            collapse = None
             if not(d['_collapse'] is None):
                 if not isinstance(d['_collapse'], Nil):
                     ls = [d['_collapse']]
@@ -559,7 +593,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... private
-            private = None
             if not(d['_private'] is None):
                 if not isinstance(d['_private'], Nil):
                     ls = d['_private']
@@ -568,7 +601,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... firstprivate
-            firstprivate = None
             if not(d['_firstprivate'] is None):
                 if not isinstance(d['_firstprivate'], Nil):
                     ls = d['_firstprivate']
@@ -577,7 +609,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... lastprivate
-            lastprivate = None
             if not(d['_lastprivate'] is None):
                 if not isinstance(d['_lastprivate'], Nil):
                     ls = d['_lastprivate']
@@ -586,7 +617,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... reduction
-            reduction = None
             if not(d['_reduction'] is None):
                 if not isinstance(d['_reduction'], Nil):
                     ls = d['_reduction']
@@ -595,7 +625,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... schedule
-            schedule = None
             if not(d['_schedule'] is None):
                 if not isinstance(d['_schedule'], Nil):
                     ls = d['_schedule']
@@ -607,7 +636,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... ordered
-            ordered = None
             if not(d['_ordered'] is None):
                 if not isinstance(d['_ordered'], Nil):
                     ls = d['_ordered']
@@ -620,7 +648,6 @@ def openmpfy(stmt, **options):
             # ...
 
             # ... linear
-            linear = None
             if not(d['_linear'] is None):
                 if not isinstance(d['_linear'], Nil):
                     # we need to convert Tuple to list here
@@ -686,13 +713,110 @@ def openmpfy(stmt, **options):
                 d[k] = get_initial_value(cls_base, i)
             # ...
 
+            # ... initial values for clauses
+            private      = None
+            firstprivate = None
+            shared       = None
+            reduction    = None
+            copyin       = None
+            default      = None
+            proc_bind    = None
+            num_threads  = None
+            if_test      = None
             # ...
-#            clauses = (private, firstprivate, lastprivate,
-#                       reduction, schedule,
-#                       ordered, collapse, linear)
-#            clauses = [i for i in clauses if not(i is None)]
-#            clauses = Tuple(*clauses)
-            clauses = ()
+
+            # ... private
+            private = None
+            if not(d['_private'] is None):
+                if not isinstance(d['_private'], Nil):
+                    ls = d['_private']
+                    ls = [_format_str(a) for a in ls]
+                    private = OMP_PrivateClause(*ls)
+            # ...
+
+            # ... firstprivate
+            firstprivate = None
+            if not(d['_firstprivate'] is None):
+                if not isinstance(d['_firstprivate'], Nil):
+                    ls = d['_firstprivate']
+                    ls = [_format_str(a) for a in ls]
+                    firstprivate = OMP_FirstPrivateClause(*ls)
+            # ...
+
+            # ... shared
+            shared = None
+            if not(d['_shared'] is None):
+                if not isinstance(d['_shared'], Nil):
+                    ls = d['_shared']
+                    ls = [_format_str(a) for a in ls]
+                    shared = OMP_SharedClause(*ls)
+            # ...
+
+            # ... reduction
+            if not(d['_reduction'] is None):
+                if not isinstance(d['_reduction'], Nil):
+                    ls = d['_reduction']
+                    ls = [_format_str(a) for a in ls]
+                    reduction = OMP_ReductionClause(*ls)
+            # ...
+
+            # ... copyin
+            copyin = None
+            if not(d['_copyin'] is None):
+                if not isinstance(d['_copyin'], Nil):
+                    ls = d['_copyin']
+                    ls = [_format_str(a) for a in ls]
+                    copyin = OMP_CopyinClause(*ls)
+            # ...
+
+            # ... default
+            if not(d['_default'] is None):
+                if not isinstance(d['_default'], Nil):
+                    ls = d['_default']
+                    if isinstance(ls, str):
+                        ls = [ls]
+
+                    ls[0] = _format_str(ls[0])
+                    default = OMP_ParallelDefaultClause(*ls)
+            # ...
+
+            # ... proc_bind
+            if not(d['_proc_bind'] is None):
+                if not isinstance(d['_proc_bind'], Nil):
+                    ls = d['_proc_bind']
+                    if isinstance(ls, str):
+                        ls = [ls]
+
+                    ls[0] = _format_str(ls[0])
+                    proc_bind = OMP_ParallelProcBindClause(*ls)
+            # ...
+
+            # ... num_threads
+            #     TODO improve this to take any int expression for arg.
+            #     see OpenMP specifications for num_threads clause
+            if not(d['_num_threads'] is None):
+                if not isinstance(d['_num_threads'], Nil):
+                    arg = d['_num_threads']
+                    ls = [arg]
+                    num_threads = OMP_ParallelNumThreadClause(*ls)
+            # ...
+
+            # ... if_test
+            #     TODO improve this to take any boolean expression for arg.
+            #     see OpenMP specifications for if_test clause
+            if not(d['_if_test'] is None):
+                if not isinstance(d['_if_test'], Nil):
+                    arg = d['_if_test']
+                    ls = [arg]
+                    if_test = OMP_ParallelIfClause(*ls)
+            # ...
+
+            # ...
+            clauses = (private, firstprivate, shared,
+                       reduction, default, copyin,
+                       proc_bind, num_threads, if_test)
+            clauses = [i for i in clauses if not(i is None)]
+            clauses = Tuple(*clauses)
             # ...
 
             # TODO to be defined

@@ -1092,6 +1092,9 @@ class FCodePrinter(CodePrinter):
     def _print_OMP_ParallelNumThreadClause(self, expr):
         return 'num_threads({})'.format(self._print(expr.num_threads))
 
+    def _print_OMP_ParallelIfClause(self, expr):
+        return 'if({})'.format(self._print(expr.test))
+
     def _print_Sync(self, expr):
         return 'Sync'
 

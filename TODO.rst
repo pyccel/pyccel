@@ -77,7 +77,7 @@ MPI
 OpenMP
 ^^^^^^
 
-* add create Clauses in openmpfy for With construct
+* check valid values for clause arguments
 
 * improve import
 

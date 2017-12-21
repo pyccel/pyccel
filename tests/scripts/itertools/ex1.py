@@ -27,7 +27,7 @@ class Range(object):
 
     def __init__(self, start, stop, step, nowait=True, collapse=None,
                  private=['i', 'idx'], firstprivate=None, lastprivate=None,
-                 reduction=('+', 'x'), schedule='static', ordered=True, linear=None):
+                 reduction=['+', 'x'], schedule='static', ordered=True, linear=None):
 
         self.start = start
         self.stop  = stop
