@@ -165,13 +165,11 @@ def clean_namespace():
     global namespace
     global declarations
     global cls_constructs
-    global class_defs
     global _extra_stmts
 
     namespace      = {}
     declarations   = {}
     cls_constructs = {}
-    class_defs     = {}
     _extra_stmts   = []
 # ...
 
@@ -228,7 +226,6 @@ builtin_datatypes  = [datatype(i) for i in builtin_types]
 
 # ... will contain user defined types
 cls_constructs   = {}
-class_defs       = {}
 
 # ... builtin functions
 builtin_funcs_math_nores = ['print']
@@ -839,7 +836,7 @@ def get_class_attribut(name):
         raise TypeError("Expecting a Pyccel DataType instance")
     dtype = cls.dtype
     cls_name = dtype.name
-    cls = class_defs[cls_name]
+    cls = namespace[cls_name]
 
     attributs = {}
     for i in cls.attributs:
@@ -1171,20 +1168,6 @@ class Pyccel(object):
             list of parsed statements.
         """
         self.statements = kwargs.pop('statements', [])
-
-#        # ... TODO uncomment
-#        ns, ds, cs, classes, stmts = stdlib_definitions()
-#        for k,v in ns.items():
-#            namespace[k] = v
-#        for k,v in ds.items():
-#            declarations[k] = v
-#        for k,v in cs.items():
-#            cls_constructs[k] = v
-#        for k,v in classes.items():
-#            class_defs[k] = v
-#        for i in stmts:
-#            _extra_stmts.append(i)
-#        # ...
 
     @property
     def declarations(self):
@@ -1572,7 +1555,7 @@ class AssignStmt(BasicStmt):
             if isinstance(rhs, assignable):
                 d_var['value'] = rhs
             if is_pyccel_datatype(d_var['datatype']):
-                d_var['cls_base']=class_defs[d_var['datatype'].name]
+                d_var['cls_base']= namespace[d_var['datatype'].name]
             insert_variable(var_name, **d_var)
 
         if self.trailer is None:
@@ -1868,7 +1851,7 @@ class ForStmt(BasicStmt):
             if r.dtype.name == 'MPI_Tensor':
                 ranges = []
 
-                cls = class_defs[r.dtype.name]
+                cls = namespace[r.dtype.name]
                 attributs = {}
                 for a in cls.attributs:
                     attributs[str(a.name)] = a
@@ -2576,10 +2559,7 @@ class FunctionDefStmt(BasicStmt):
                     Var=AssignStmt(**c).expr
                     attr+=[Var.lhs]
             # we first create and append an empty class to the namespace
-            cls=ClassDef(cls_instance,attr,[],[])
-            namespace[cls_instance]=cls
-            class_defs[cls_instance]=cls
-
+            namespace[cls_instance] = ClassDef(cls_instance,attr,[],[])
 
         body = self.body.expr
         if args_0:
@@ -2723,7 +2703,7 @@ class ClassDefStmt(BasicStmt):
         body    = self.body.expr
 
         # ...
-        attributs =class_defs[name].attributs
+        attributs = namespace[name].attributs
 
 
         methods = []
@@ -2733,7 +2713,6 @@ class ClassDefStmt(BasicStmt):
 
         stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
-        class_defs[name] = stmt
 
         # ... cleaning
 
@@ -3599,43 +3578,6 @@ class ImportFromStmt(BasicStmt):
         if not isinstance(funcs, (tuple, list)):
             funcs = str(funcs) # cast unicode to str
 
-        # TODO improve
-        if str(fil) == 'pyccel.mpi':
-            raise NotImplementedError('uncomment')
-
-#        if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
-#            fil   = 'mpi'
-#            funcs = None
-#            ns, ds, cs, classes, stmts = mpi_definitions()
-#            for k,v in list(ns.items()):
-#                namespace[k] = v
-#            for k,v in list(ds.items()):
-#                declarations[k] = v
-#            for k,v in list(cs.items()):
-#                cls_constructs[k] = v
-#            for k,v in list(classes.items()):
-#                class_defs[k] = v
-#            for i in stmts:
-#                _extra_stmts.append(i)
-#
-#        if str(fil).startswith('spl.'):
-#            module = str(fil).split('spl.')[-1]
-#            fil = 'spl_m_{}'.format(module.lower())
-#            ns, ds = spl_definitions()
-#            for k,v in list(ns.items()):
-#                namespace[k] = v
-#            for k,v in list(ds.items()):
-#                declarations[k] = v
-#        if str(fil).startswith('plaf.'):
-#            module = str(fil).split('plaf.')[-1]
-#            fil = 'plf_m_{}'.format(module.lower())
-#            ns, ds, cs = plaf_definitions()
-#            for k,v in list(ns.items()):
-#                namespace[k] = v
-#            for k,v in list(ds.items()):
-#                declarations[k] = v
-#            for k,v in list(cs.items()):
-#                cls_constructs[k] = v
         return Import(fil, funcs)
 
 class ImportAsNames(BasicStmt):
