@@ -230,7 +230,12 @@ def build_file(filename, language, compiler, \
             else:
                 raise TypeError('Expecting a str, tuple or list')
 
-        imports_src[module] = f_names
+        # this is to avoid duplication in filenames,
+        # we avoid using sets here, to respect the imports order
+        imports_src[module] = []
+        for f_name in f_names:
+            if not(f_name in imports_src[module]):
+                imports_src[module] += [f_name]
     #...
 
     # ...
@@ -246,8 +251,8 @@ def build_file(filename, language, compiler, \
         if not(module in namespaces):
             namespaces[module] = {}
 
-        f_name = imports_src[module]
-        for f_name in imports_src[module]:
+        f_names = imports_src[module]
+        for f_name in f_names:
 #            print('> treating {0}'.format(f_name))
             codegen_m = FCodegen(filename=f_name,
                                  name=module,
@@ -270,11 +275,6 @@ def build_file(filename, language, compiler, \
             if _append_module:
                 ms.append(codegen_m)
 
-#            print('--------')
-#            for k,v in codegen_m.namespace.items():
-#                print(k)
-#            print('--------')
-
             for k,v in codegen_m.namespace.items():
                 namespaces[module][k] = v
 
@@ -289,7 +289,6 @@ def build_file(filename, language, compiler, \
                 namespace_user['cls_constructs'][k] = v
 
             # TODO add aliases or what to import (names)
-            #      for the moment, we are exporting everything
 
     from pyccel.parser.syntax.core import update_namespace
     from pyccel.parser.syntax.core import get_namespace
