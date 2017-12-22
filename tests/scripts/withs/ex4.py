@@ -1,8 +1,8 @@
 # coding: utf-8
 
 from pyccel.stdlib.parallel.openmp import omp_get_thread_num
-from pyccel.stdlib.parallel.myopenmp import Range
-from pyccel.stdlib.parallel.myopenmp import Parallel
+from pyccel.stdlib.parallel.openmp import Range
+from pyccel.stdlib.parallel.openmp import Parallel
 
 x = 0.0
 

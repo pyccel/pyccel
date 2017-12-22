@@ -248,7 +248,7 @@ def build_file(filename, language, compiler, \
 
         f_name = imports_src[module]
         for f_name in imports_src[module]:
-            print('> treating {0}'.format(f_name))
+#            print('> treating {0}'.format(f_name))
             codegen_m = FCodegen(filename=f_name,
                                  name=module,
                                  is_module=True,
@@ -270,23 +270,26 @@ def build_file(filename, language, compiler, \
             if _append_module:
                 ms.append(codegen_m)
 
-    #        print('--------')
-    #        for k,v in codegen_m.namespace.items():
-    #            print(k,v)
-    #        print('--------')
+#            print('--------')
+#            for k,v in codegen_m.namespace.items():
+#                print(k)
+#            print('--------')
+
             for k,v in codegen_m.namespace.items():
                 namespaces[module][k] = v
-    #        print('PAR ICI')
 
             cls_constructs = namespaces[module].pop('cls_constructs', {})
 
-            for n in names:
+            avail_names = set(namespaces[module].keys())
+            avail_names = set(names).intersection(avail_names)
+            for n in avail_names:
                 namespace_user[n] = namespaces[module][n]
 
             for k,v in cls_constructs.items():
                 namespace_user['cls_constructs'][k] = v
 
             # TODO add aliases or what to import (names)
+            #      for the moment, we are exporting everything
 
     from pyccel.parser.syntax.core import update_namespace
     from pyccel.parser.syntax.core import get_namespace

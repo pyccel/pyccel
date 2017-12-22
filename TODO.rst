@@ -13,6 +13,8 @@ Imports
 
 * openmp.pyh only if openmp is used
 
+* improve imports by using groupby to gather imported things by their module, and have to process the module only once
+
 Parser
 ******
 
