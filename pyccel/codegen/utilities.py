@@ -223,7 +223,13 @@ def build_file(filename, language, compiler, \
                     raise ValueError('Could not find '
                                      '{0} or {1}'.format(filename_py, filename_pyh))
 
-            f_names.append(f_name)
+            if isinstance(f_name, str):
+                f_names.append(f_name)
+            elif isinstance(f_name, (list, tuple)):
+                f_names += list(f_name)
+            else:
+                raise TypeError('Expecting a str, tuple or list')
+
         imports_src[module] = f_names
     #...
 
@@ -240,46 +246,47 @@ def build_file(filename, language, compiler, \
         if not(module in namespaces):
             namespaces[module] = {}
 
-        f_name = imports_src[module][0] #TODO loop over files
-#        print('> treating {0}'.format(f_name))
-        codegen_m = FCodegen(filename=f_name,
-                             name=module,
-                             is_module=True,
-                             output_dir=output_dir)
-        codegen_m.doprint(language=language,
-                          accelerator=accelerator,
-                          ignored_modules=ignored_modules,
-                          with_mpi=with_mpi)
-        _append_module = True
-        if '__ignore_at_import__' in codegen_m.metavars:
-            if codegen_m.metavars['__ignore_at_import__']:
-                ignored_modules.append(module)
-                _append_module = False
+        f_name = imports_src[module]
+        for f_name in imports_src[module]:
+            print('> treating {0}'.format(f_name))
+            codegen_m = FCodegen(filename=f_name,
+                                 name=module,
+                                 is_module=True,
+                                 output_dir=output_dir)
+            codegen_m.doprint(language=language,
+                              accelerator=accelerator,
+                              ignored_modules=ignored_modules,
+                              with_mpi=with_mpi)
+            _append_module = True
+            if '__ignore_at_import__' in codegen_m.metavars:
+                if codegen_m.metavars['__ignore_at_import__']:
+                    ignored_modules.append(module)
+                    _append_module = False
 
-        if '__libraries__' in codegen_m.metavars:
-            deps = codegen_m.metavars['__libraries__'].split(',')
-            d_libraries += deps
+            if '__libraries__' in codegen_m.metavars:
+                deps = codegen_m.metavars['__libraries__'].split(',')
+                d_libraries += deps
 
-        if _append_module:
-            ms.append(codegen_m)
+            if _append_module:
+                ms.append(codegen_m)
 
-#        print('--------')
-#        for k,v in codegen_m.namespace.items():
-#            print(k,v)
-#        print('--------')
-        for k,v in codegen_m.namespace.items():
-            namespaces[module][k] = v
-#        print('PAR ICI')
+    #        print('--------')
+    #        for k,v in codegen_m.namespace.items():
+    #            print(k,v)
+    #        print('--------')
+            for k,v in codegen_m.namespace.items():
+                namespaces[module][k] = v
+    #        print('PAR ICI')
 
-        cls_constructs = namespaces[module].pop('cls_constructs', {})
+            cls_constructs = namespaces[module].pop('cls_constructs', {})
 
-        for n in names:
-            namespace_user[n] = namespaces[module][n]
+            for n in names:
+                namespace_user[n] = namespaces[module][n]
 
-        for k,v in cls_constructs.items():
-            namespace_user['cls_constructs'][k] = v
+            for k,v in cls_constructs.items():
+                namespace_user['cls_constructs'][k] = v
 
-        # TODO add aliases or what to import (names)
+            # TODO add aliases or what to import (names)
 
     from pyccel.parser.syntax.core import update_namespace
     from pyccel.parser.syntax.core import get_namespace
@@ -622,13 +629,17 @@ def get_parallel_path(ext, module=None):
     filename_py  = os.path.join(ext_dir, filename_py)
     filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
 
-    if os.path.isfile(filename_py):
-        return filename_py
-    elif os.path.isfile(filename_pyh):
-        return filename_pyh
-    else:
+    if not os.path.isfile(filename_py) and not os.path.isfile(filename_pyh):
         raise ImportError('could not find {0} or {1}'.format(filename_py,
                                                              filename_pyh))
+
+    files = []
+    if os.path.isfile(filename_py):
+        files.append(filename_py)
+    if os.path.isfile(filename_pyh):
+        files.append(filename_pyh)
+
+    return files
 # ...
 
 # ...
