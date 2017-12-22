@@ -1,0 +1,27 @@
+# pyccel header for OpenMP.
+
+__ignore_at_import__ = True
+__version__          = '3.1'
+
+# ............................................................
+#            MPI Constants
+# ............................................................
+
+# mpi_status_size
+# mpi_proc_null
+# mpi_comm_world
+
+# ............................................................
+
+# ............................................................
+#            Runtime Library Routines for Fortran
+# ............................................................
+
+#$ header function mpi_init(int)
+#$ header function mpi_finalize(int)
+
+#$ header function mpi_comm_size(int, int, int)
+#$ header function mpi_comm_rank(int, int, int)
+
+
+# ............................................................

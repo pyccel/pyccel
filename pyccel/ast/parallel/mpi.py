@@ -93,6 +93,7 @@ class MPI_status_size(MPI):
     >>> MPI_status_size()
     mpi_status_size
     """
+# ---- DONE ----
     is_integer     = True
 
     def _sympystr(self, printer):
@@ -109,6 +110,7 @@ class MPI_proc_null(MPI):
     >>> MPI_proc_null()
     mpi_proc_null
     """
+# ---- DONE ----
     is_integer     = True
 
     def _sympystr(self, printer):
@@ -125,6 +127,7 @@ class MPI_comm(MPI):
     >>> MPI_comm('comm')
     comm
     """
+# ---- DONE ----  not needed
     is_integer = True
 
     def __new__(cls, *args, **options):
@@ -153,6 +156,7 @@ class MPI_comm_world(UniversalCommunicator, MPI_comm):
     >>> MPI_comm_world()
     mpi_comm_world
     """
+# ---- DONE ----
     is_integer     = True
 
     def _sympystr(self, printer):
