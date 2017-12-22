@@ -50,6 +50,8 @@ AST
 Codegen
 *******
 
+* improve *namespace* property. For the moment, we only create the definition for FunctionHeader (if not MethodHeaded)
+
 * in fcode: use  self._get_statement for every statement
 
 * improve debug mode and verbosity in fcode and codegen

@@ -132,8 +132,7 @@ def build_file(filename, language, compiler, \
         pyccel_modules.append('mpi')
     # ...
 
-    # ... TODO add only if used
-#    user_modules = ['m_pyccel']
+    # ...
     user_modules = []
     # ...
 
@@ -142,11 +141,7 @@ def build_file(filename, language, compiler, \
 
     # ignoring pyccel.stdlib import
     ignored_modules.append('pyccel.stdlib')
-
-#    ignored_modules.append('pyccel')
-#    for n in pyccel_modules:
-#        ignored_modules.append('pyccel.{0}'.format(n))
-#        ignored_modules.append(n)
+    ignored_modules.append('pyccel.stdlib.parallel.myopenmp')
 
     # ...
     def _ignore_module(key):
@@ -166,11 +161,17 @@ def build_file(filename, language, compiler, \
     for key, value in list(d.items()):
         if not _ignore_module(key):
             imports[key] = value
+#    print('PAR ICI')
+#    print(imports)
+#    print(d)
+#    print(filename)
 
     imports_src = {}
     for module, names in list(imports.items()):
+#        print('> module, names = ', module, names)
         f_names = []
         for n in names:
+#            print('> n = ', n)
             if module.startswith('pyccelext'):
                 ext_full  = module.split('pyccelext.')[-1]
                 ext       = ext_full.split('.')[0] # to remove submodule
@@ -182,6 +183,7 @@ def build_file(filename, language, compiler, \
                 else:
                     submodule = ext_full.split('.')[-1] # to get submodule
 
+                    # TODO 'elif' test is wrong
                     if is_extension_submodule(module, submodule):
                         f_name = get_extension_path(ext, module=submodule)
                     elif is_external_submodule(module, submodule):
@@ -193,9 +195,10 @@ def build_file(filename, language, compiler, \
                 ext       = ext_full.split('.')[0] # to remove submodule
 
                 submodule = ext_full.split('.')[-1] # to get submodule
+#                print(ext, submodule)
 
                 if is_parallel_submodule(module, submodule):
-                    f_name = get_parallel_path(ext, module=submodule, is_external=True)
+                    f_name = get_parallel_path(ext, module=submodule)
                 else:
                     raise ValueError('non valid import for parallel pyccel package.')
             elif module.startswith('pyccel.stdlib.external'):
@@ -227,13 +230,18 @@ def build_file(filename, language, compiler, \
     # ...
     namespaces = {}
     namespace_user = {}
+    namespace_user['cls_constructs'] = {}
 
     # we store here the external library dependencies for every module
     d_libraries = []
 
     ms = []
     for module, names in list(imports.items()):
+        if not(module in namespaces):
+            namespaces[module] = {}
+
         f_name = imports_src[module][0] #TODO loop over files
+#        print('> treating {0}'.format(f_name))
         codegen_m = FCodegen(filename=f_name,
                              name=module,
                              is_module=True,
@@ -255,15 +263,21 @@ def build_file(filename, language, compiler, \
         if _append_module:
             ms.append(codegen_m)
 
-        if module in namespaces:
-            namespaces[module] = codegen_m.namespace
-            for k,v in codegen_m.namespace.items():
-                namespaces[module][k] = v
-        else:
-            namespaces[module] = codegen_m.namespace
+#        print('--------')
+#        for k,v in codegen_m.namespace.items():
+#            print(k,v)
+#        print('--------')
+        for k,v in codegen_m.namespace.items():
+            namespaces[module][k] = v
+#        print('PAR ICI')
+
+        cls_constructs = namespaces[module].pop('cls_constructs', {})
+
         for n in names:
             namespace_user[n] = namespaces[module][n]
 
+        for k,v in cls_constructs.items():
+            namespace_user['cls_constructs'][k] = v
 
         # TODO add aliases or what to import (names)
 
@@ -346,14 +360,21 @@ def build_file(filename, language, compiler, \
     # ...
     if compiler and (not codegen.is_header):
         for codegen_m in ms:
-            compiler_m = Compiler(codegen_m, \
-                                  compiler=compiler, \
-                                  accelerator=accelerator, \
-                                  debug=debug, \
-                                  include=include, \
-                                  libdir=libdir, \
-                                  libs=libs)
-            compiler_m.compile(verbose=verbose)
+
+            # we only compile a module if it is non empty
+            is_valid = len(codegen_m.body.strip() +
+                           codegen_m.routines.strip()  +
+                           codegen_m.classes.strip() ) > 0
+
+            if is_valid:
+                compiler_m = Compiler(codegen_m, \
+                                      compiler=compiler, \
+                                      accelerator=accelerator, \
+                                      debug=debug, \
+                                      include=include, \
+                                      libdir=libdir, \
+                                      libs=libs)
+                compiler_m.compile(verbose=verbose)
 
         c = Compiler(codegen, \
                      compiler=compiler, \
@@ -580,7 +601,7 @@ def build_cmakelists_dir(src_dir, force=True, testing=False):
 # ...
 
 # ...
-def get_parallel_path(ext, module=None, is_external=False):
+def get_parallel_path(ext, module=None):
     """Finds the path of a pyccel parallel package (.py or .pyh).
     A specific module can also be given."""
 
@@ -598,12 +619,8 @@ def get_parallel_path(ext, module=None, is_external=False):
     filename_py  = '{0}.py'.format(module)
     filename_pyh = '{0}.pyh'.format(module)
 
-    if not is_external:
-        filename_py  = os.path.join(ext_dir, filename_py)
-        filename_pyh = os.path.join(ext_dir, filename_pyh)
-    else:
-        filename_py  = os.path.join(ext_dir, filename_py)
-        filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
+    filename_py  = os.path.join(ext_dir, filename_py)
+    filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
 
     if os.path.isfile(filename_py):
         return filename_py

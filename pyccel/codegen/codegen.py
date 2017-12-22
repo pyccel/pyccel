@@ -14,6 +14,7 @@ from pyccel.parser.syntax.core import clean_namespace
 
 from pyccel.ast.core import subs
 from pyccel.ast.core import is_valid_module
+from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import DataType, DataTypeFactory
 from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               For, Assign, Declare, Variable, \
@@ -408,9 +409,14 @@ class Codegen(object):
         # in the case of a header file, we need to convert the headers to
         # FunctionDef or ClassCef
         namespace = self._namespace
-        for k,v in self.headers.items():
-            f = v.create_definition()
-            namespace[k] = f
+
+        # TODO must create the definition only if only the header exists
+        #      for the moment, we only export functions
+        if self.is_header:
+            for k,v in self.headers.items():
+                if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
+                    f = v.create_definition()
+                    namespace[k] = f
 
         return namespace
 
@@ -545,6 +551,8 @@ class Codegen(object):
 #            print stmt
 
             if isinstance(stmt, (Comment, AnnotatedComment)):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, EmptyLine):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):
                 name = str(stmt.fil)

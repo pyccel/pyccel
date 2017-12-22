@@ -52,6 +52,7 @@ from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
+from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import (Sync, Tile, Range, Tensor, \
                              For, ForIterator, Assign, \
                              Declare, Variable, ValuedVariable, \
@@ -164,12 +165,12 @@ def clean_namespace():
     """Cleans the global variables."""
     global namespace
     global declarations
-    global cls_constructs
     global _extra_stmts
 
-    namespace      = {}
+    namespace = {}
+    namespace['cls_constructs'] = {}
+
     declarations   = {}
-    cls_constructs = {}
     _extra_stmts   = []
 # ...
 
@@ -179,10 +180,31 @@ def update_namespace(d):
     global namespace
 
     for k,v in d.items():
-        if k in namespace:
-            raise ValueError('{0} already exists in namespace.'.format(k))
+        if not(k == 'cls_constructs'):
+            if k in namespace:
+                raise ValueError('{0} already exists in namespace.'.format(k))
 
-        namespace[k] = v
+            namespace[k] = v
+
+    if 'cls_constructs' in d:
+        for k,v in d['cls_constructs'].items():
+            namespace['cls_constructs'][k] = v
+# ...
+
+# ...
+def get_class_construct(name):
+    """Returns the class datatype for name."""
+    global namespace
+
+    return namespace['cls_constructs'][name]
+# ...
+
+# ...
+def set_class_construct(name, value):
+    """Sets the class datatype for name."""
+    global namespace
+
+    namespace['cls_constructs'][name] = value
 # ...
 
 # ...
@@ -210,10 +232,13 @@ def datatype_from_string(txt):
 
 # Global variable namespace
 namespace    = {}
+namespace['cls_constructs'] = {}
+
 headers      = {}
 declarations = {}
 _extra_stmts  = []
 
+# TODO do we keep this?
 namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
@@ -223,9 +248,6 @@ namespace["pi"]    = pi
 builtin_types      = ['int', 'float', 'double', 'complex', 'bool']
 builtin_datatypes  = [datatype(i) for i in builtin_types]
 # ...
-
-# ... will contain user defined types
-cls_constructs   = {}
 
 # ... builtin functions
 builtin_funcs_math_nores = ['print']
@@ -1015,7 +1037,7 @@ def expr_with_trailer(expr, trailer=None):
                     method=i
 
             d_var = {}
-            dtype = cls_constructs[str(expr.name)]()
+            dtype = get_class_construct(str(expr.name))()
 
             d_var['datatype']    = dtype
             d_var['allocatable'] = False
@@ -1241,7 +1263,7 @@ class ConstructorStmt(BasicStmt):
         rank     = 0
         datatype = constructor
         insert_variable(var_name, datatype=datatype, rank=rank)
-        return Comment("")
+        return EmptyLine()
 
 class DeclarationStmt(BasicStmt):
     """Class representing a declaration statement."""
@@ -2479,7 +2501,7 @@ class FunctionDefStmt(BasicStmt):
 
             # insert self to namespace
             d_var = {}
-            dtype = cls_constructs[cls_instance]()
+            dtype = get_class_construct(cls_instance)()
             d_var['datatype']    = dtype
             d_var['allocatable'] = False
             d_var['shape']       = None
@@ -2539,8 +2561,8 @@ class FunctionDefStmt(BasicStmt):
                         rank += 1
                 d_var = {}
                 if d[0]==cls_instance:
-                    d_var['datatype']=cls_constructs[cls_instance]()
-                    d_var['cls_base']    = cls_instance
+                    d_var['datatype'] = get_class_construct(cls_instance)()
+                    d_var['cls_base'] = cls_instance
                 else:
                     d_var['datatype']    = d[0]
                 d_var['allocatable'] = False
@@ -2753,7 +2775,10 @@ class CommentStmt(BasicStmt):
         by returning the appropriate object from pyccel.ast.core
         """
         self.update()
-        return Comment(self.text)
+        if self.text:
+            return Comment(self.text)
+        else:
+            return EmptyLine()
 
 class SuiteStmt(BasicStmt):
     """Class representing a Suite statement in the grammar."""
@@ -3474,9 +3499,10 @@ class ClassHeaderStmt(BasicStmt):
         with_construct = ('with' in options)
 
         # create a new Datatype for the current class
-        cls_constructs[self.name] = DataTypeFactory(self.name, ("_name"),
-                                                    is_iterable=iterable,
-                                                    is_with_construct=with_construct)
+        dtype = DataTypeFactory(self.name, ("_name"),
+                                is_iterable=iterable,
+                                is_with_construct=with_construct)
+        set_class_construct(self.name, dtype)
 
         h = ClassHeader(self.name, self.options)
         headers[self.name] = h

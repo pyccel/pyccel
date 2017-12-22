@@ -824,10 +824,10 @@ def get_for_clauses(expr):
         cls_base = expr.cls_base
 
         if not cls_base:
-            return None
+            return None, None
 
         if not(('openmp' in cls_base.options) and ('iterable' in cls_base.options)):
-            return None
+            return None, None
     elif isinstance(expr, ConstructorCall):
         # arguments[0] is 'self'
         # TODO must be improved in syntax, so that a['value'] is a sympy object
@@ -836,7 +836,7 @@ def get_for_clauses(expr):
                 # we add '_' tp be conform with the private variables convention
                 d_args['_{0}'.format(a['key'])] = a['value']
     else:
-        return None
+        return None, None
     # ...
 
     # ... get initial values for all attributs
