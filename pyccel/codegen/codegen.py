@@ -20,6 +20,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               For, Assign, Declare, Variable, \
                               NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
+                              VariableHeader, \
                               datatype, While, With, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, AugAssign, FunctionCall, \
@@ -561,7 +562,10 @@ class Codegen(object):
                     modules += [name]
             elif isinstance(stmt, Declare):
                 decs = stmt
-            elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
+            elif isinstance(stmt, (FunctionHeader, ClassHeader,
+                                   MethodHeader, VariableHeader,
+                                   Variable)):
+                # Variable is also ignored, since we can export them in headers
                 continue
             elif isinstance(stmt, Assign):
                 if isinstance(stmt.rhs, MPI_Tensor):

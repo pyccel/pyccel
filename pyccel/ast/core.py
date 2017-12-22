@@ -2999,7 +2999,7 @@ class VariableHeader(Basic):
 #        else:
 #            raise TypeError("Wrong element in dtypes.")
 
-        return Basic.__new__(cls, name, types)
+        return Basic.__new__(cls, name, dtypes)
 
     @property
     def name(self):

@@ -1,4 +1,6 @@
-# pyccel header for OpenMP.
+# pyccel header for MPI.
+# Conventions: - data are treated as str
+#              - datatype are treated as str
 
 __ignore_at_import__ = True
 __version__          = '3.1'
@@ -6,22 +8,36 @@ __version__          = '3.1'
 # ............................................................
 #            MPI Constants
 # ............................................................
-
-# mpi_status_size
-# mpi_proc_null
-# mpi_comm_world
-
+#
+#$ header variable mpi_comm_world  int 
+#$ header variable mpi_status_size int 
+#$ header variable mpi_proc_null   int 
+#
 # ............................................................
 
 # ............................................................
 #            Runtime Library Routines for Fortran
 # ............................................................
-
+#
 #$ header function mpi_init(int)
 #$ header function mpi_finalize(int)
+#
+# ............................................................
 
+# ............................................................
+#          Communicator Accessors
+# ............................................................
+#
 #$ header function mpi_comm_size(int, int, int)
 #$ header function mpi_comm_rank(int, int, int)
-
-
+#
+# ............................................................
+#
+#
+# ............................................................
+#          Point-to-Point Communication
+# ............................................................
+#
+#$ header function mpi_recv (str, int, str, int, int, int, int)
+#
 # ............................................................

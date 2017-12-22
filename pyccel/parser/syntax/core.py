@@ -3391,7 +3391,8 @@ class VariableHeaderStmt(BasicStmt):
 
     def __init__(self, **kwargs):
         """
-        Constructor for a VariableHeader statement
+        Constructor for a VariableHeader statement.
+        In the case of builtin datatypes, we export a Variable
 
         name: str
             variable name
@@ -3413,7 +3414,29 @@ class VariableHeaderStmt(BasicStmt):
 
         h = VariableHeader(self.name, (dtype, attr, star))
         headers[self.name] = h
-        return h
+
+        # for builtin types, we will return a variable instead of its header
+        if not(dtype in builtin_types):
+            return h
+
+        # ... computing attributs for Variable
+        rank = 0
+        for i in attr:
+            if isinstance(i, Slice):
+                rank += 1
+        d_var = {}
+        d_var['datatype']    = dtype
+        d_var['allocatable'] = star
+        d_var['shape']       = None
+        d_var['rank']        = rank
+        insert_variable(self.name, **d_var)
+        # ...
+
+        # we don't forget to remove the variable from headers
+        var = namespace[self.name]
+        headers.pop(self.name)
+
+        return var
 
 class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""

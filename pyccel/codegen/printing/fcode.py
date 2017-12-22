@@ -194,8 +194,6 @@ class FCodePrinter(CodePrinter):
         fil = self._print(expr.fil)
         if isinstance(expr.fil, DottedName):
             # pyccel-extension case
-            print(expr.fil)
-            import sys; sys.exit(0)
             if expr.fil.name[0] == 'pyccelext':
                 fil = '_'.join(self._print(i) for i in expr.fil.name)
                 fil = 'm_{0}'.format(fil)
