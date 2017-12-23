@@ -1,7 +1,7 @@
 # coding: utf-8
 
 # Usage:
-#   python tests/test_pyccel_openmp.py --openmp
+#   python tests/test_pyccel_openmp.py --openmp --execute
 
 import os
 
@@ -15,7 +15,7 @@ def test_core():
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/openmp/core')
 
-    files = os.listdir(path_dir)
+    files = sorted(os.listdir(path_dir))
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
     os.chdir(path_dir)
@@ -32,7 +32,7 @@ def test_openmp():
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/openmp')
 
-    files = os.listdir(path_dir)
+    files = sorted(os.listdir(path_dir))
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
     os.chdir(path_dir)
