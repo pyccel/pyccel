@@ -28,13 +28,14 @@ def test_core(n_procs=2):
     d_tests['ex14.py'] = 4
     d_tests['ex15.py'] = 4
 
-    os.chdir(path_dir)
     for f in files:
+        f_name = os.path.join(path_dir, f)
+
         # we only convert and compile the generated code
-        pyccel(files=[f], openmp=True)
+        pyccel(files=[f_name], openmp=True)
 
         # then we use 'mpirun'
-        binary = f.split('.py')[0]
+        binary = f_name.split('.py')[0]
         _n_procs = n_procs
         if f in d_tests:
             _n_procs = d_tests[f]
@@ -44,8 +45,7 @@ def test_core(n_procs=2):
         print('> {0}'.format(cmd))
         os.system(cmd)
 
-        print(' testing {0}: done'.format(str(f)))
-    os.chdir(base_dir)
+        print('> testing {0}: done'.format(str(f)))
 # ...
 
 ################################

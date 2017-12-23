@@ -16,7 +16,7 @@ def test_1():
         filename = 'tests/scripts/core/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])
-            print(' testing {0}: done'.format(str(i)))
+            print('> testing {0}: done'.format(str(i)))
 # ...
 
 # ...
@@ -30,11 +30,11 @@ def test_2():
     files = sorted(os.listdir(path_dir))
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
-    os.chdir(path_dir)
     for f in files:
-        pyccel(files=[f])
-        print(' testing {0}: done'.format(str(f)))
-    os.chdir(base_dir)
+        f_name = os.path.join(path_dir, f)
+
+        pyccel(files=[f_name])
+        print('> testing {0}: done'.format(str(f)))
 # ...
 
 ################################
