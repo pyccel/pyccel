@@ -35,8 +35,9 @@ if rank == master:
 
     print('I, process ', rank ,' send my values array', values)
 
-mpi_scatter (values, block_length, MPI_INTEGER, data, block_length,
-             MPI_INTEGER, master, comm, ierr)
+mpi_scatter (values, block_length, MPI_INTEGER,
+             data,   block_length, MPI_INTEGER,
+             master, comm, ierr)
 
 print('I, process ', rank, ', received ', data, ' of process ', master)
 

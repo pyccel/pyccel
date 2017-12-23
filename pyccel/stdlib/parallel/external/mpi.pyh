@@ -14,7 +14,8 @@ __version__          = '3.1'
 #$ header variable mpi_proc_null   int 
 #
 #$ header variable MPI_INTEGER int 
-#$ header variable MPI_DOUBLE int 
+#$ header variable MPI_REAL    int 
+#$ header variable MPI_DOUBLE  int 
 #
 # ............................................................
 
@@ -54,6 +55,9 @@ __version__          = '3.1'
 #
 #$ header function mpi_bcast (str, int, int, int, int, int)
 #$ header function mpi_scatter (str, int, int, str, int, int, int, int, int)
+#$ header function mpi_gather (str, int, int, str, int, int, int, int, int)
+#$ header function mpi_allgather (str, int, int, str, int, int, int, int)
+
 #
 #$ header function mpi_waitall (int, int [:], int [:,:], int)
 #
