@@ -53,6 +53,7 @@ __version__          = '3.1'
 #$ header function mpi_sendrecv_replace (str, int, int, int, int, int, int, int, int [:], int)
 #
 #$ header function mpi_bcast (str, int, int, int, int, int)
+#$ header function mpi_scatter (str, int, int, str, int, int, int, int, int)
 #
 #$ header function mpi_waitall (int, int [:], int [:,:], int)
 #
