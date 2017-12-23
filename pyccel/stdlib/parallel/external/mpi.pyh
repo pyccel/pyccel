@@ -13,23 +13,32 @@ __version__          = '3.1'
 #$ header variable mpi_status_size int 
 #$ header variable mpi_proc_null   int 
 #
+#$ header variable MPI_LOGICAL     int 
 #$ header variable MPI_INTEGER     int 
 #$ header variable MPI_REAL        int 
 #$ header variable MPI_DOUBLE      int 
+#$ header variable MPI_COMPLEX     int 
+#$ header variable MPI_CHARACTER   int 
 #                                 
 #$ header variable MPI_SUM         int 
 #$ header variable MPI_PROD        int 
-#$ header variable MPI_MIN         int 
 #$ header variable MPI_MAX         int 
+#$ header variable MPI_MIN         int 
+#$ header variable MPI_MAXLOC      int 
+#$ header variable MPI_MINLOC      int 
+#$ header variable MPI_LAND        int 
+#$ header variable MPI_LOR         int 
+#$ header variable MPI_LXOR        int 
 #
 # ............................................................
 
 # ............................................................
-#            Runtime Library Routines for Fortran
+#            
 # ............................................................
 #
 #$ header function mpi_init (int)
 #$ header function mpi_finalize (int)
+#$ header function mpi_abort (int, int, int)
 #
 # ............................................................
 
@@ -48,6 +57,10 @@ __version__          = '3.1'
 #
 #$ header function mpi_recv (str, int, int, int, int, int, int [:], int)
 #$ header function mpi_send (str, int, int, int, int, int, int)
+#$ header function mpi_ssend (str, int, int, int, int, int, int)
+#$ header function mpi_bsend (str, int, int, int, int, int, int)
+#$ header function mpi_buffer_attach(str, int, int)
+#$ header function mpi_buffer_dettach(str, int, int)
 
 #$ header function mpi_irecv (str, int, int, int, int, int, int, int)
 #$ header function mpi_isend (str, int, int, int, int, int, int, int)
@@ -62,12 +75,22 @@ __version__          = '3.1'
 #$ header function mpi_scatter (str, int, int, str, int, int, int, int, int)
 #$ header function mpi_gather (str, int, int, str, int, int, int, int, int)
 #$ header function mpi_allgather (str, int, int, str, int, int, int, int)
+#$ header function mpi_gatherv(str, int, int, str, int [:], int [:], int, int, int, int)
 #$ header function mpi_alltoall (str, int, int, str, int, int, int, int)
 
 #$ header function mpi_reduce (str, str, int, int, int, int, int, int)
 #$ header function mpi_allreduce (str, str, int, int, int, int, int)
 
+#$ header function mpi_wait (int, int [:], int)
 #$ header function mpi_waitall (int, int [:], int [:,:], int)
+#$ header function mpi_waitany (int, int [:], int, int [:], int)
+#$ header function mpi_waitsome (int, int [:], int, int [:], int [:,:], int)
+
+#$ header function mpi_test (int, bool, int [:], int)
+#$ header function mpi_testall (int, bool, int [:], int [:,:], int)
+#$ header function mpi_testany (int, int [:], int, bool, int [:], int)
+#$ header function mpi_testsome (int, int [:], int, int [:], int [:,:], int)
+
 #$ header function mpi_comm_split (int, int, int, int, int)
 #$ header function mpi_comm_free (int, int)
 
@@ -77,6 +100,19 @@ __version__          = '3.1'
 #$ header function mpi_cart_sub (int, int [:], int, int)
 
 #$ header function mpi_dims_create (int, int, int [:], int)
+#
+# ............................................................
 
+# ............................................................
+#          Derived datatypes
+# ............................................................
+#
+#$ header function mpi_type_contiguous (int, int, int, int)
+#$ header function mpi_type_vector (int, int, int, int, int, int)
+#$ header function mpi_type_commit (int, int)
+#$ header function mpi_type_free (int, int)
+#
+#$ header function mpi_type_indexed (int, int [:], int [:], int, int, int)
+#$ header function mpi_type_create_subarray (int, int [:], int [:], int [:], int, int, int, int)
 #
 # ............................................................
