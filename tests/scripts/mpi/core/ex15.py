@@ -63,7 +63,7 @@ mpi_cart_coords (comm_2d, rank_in_topo, ndims, coords, ierr)
 # Search of my West and East neigbors
 mpi_cart_shift (comm_2d, 0, steps[0], neighbor[west], neighbor[east], ierr)
 
-#Search of my South and North neighbors
+# Search of my South and North neighbors
 mpi_cart_shift (comm_2d, 1, steps[1], neighbor[south], neighbor[north], ierr)
 
 m = 4
