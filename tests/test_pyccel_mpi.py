@@ -13,7 +13,8 @@ from utils import clean_tests
 
 # ...
 def test_core(n_procs=2):
-    ignored = ['poisson_fd_1d.py']
+    ignored = ['poisson_fd_1d.py',
+               'poisson_fd_2d.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/mpi/core')
