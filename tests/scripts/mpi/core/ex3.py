@@ -9,6 +9,7 @@ from pyccel.stdlib.parallel.mpi import mpi_status_size
 from pyccel.stdlib.parallel.mpi import mpi_isend
 from pyccel.stdlib.parallel.mpi import mpi_irecv
 from pyccel.stdlib.parallel.mpi import mpi_waitall
+from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines

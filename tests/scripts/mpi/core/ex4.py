@@ -7,6 +7,7 @@ from pyccel.stdlib.parallel.mpi import mpi_comm_rank
 from pyccel.stdlib.parallel.mpi import mpi_comm_world
 from pyccel.stdlib.parallel.mpi import mpi_status_size
 from pyccel.stdlib.parallel.mpi import mpi_sendrecv
+from pyccel.stdlib.parallel.mpi import MPI_INTEGER
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
