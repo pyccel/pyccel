@@ -22,6 +22,7 @@ virtualenv:
 before_install:
   - sudo apt-get install gfortran
   - sudo apt-get install libblas-dev liblapack-dev
+  - sudo apt-get install libcr-dev mpich2
 
 # command to install dependencies
 install:
@@ -36,3 +37,4 @@ script:
   - python tests/test_pyccel.py --execute
   - python tests/test_pyccel_openmp.py --openmp --execute
   - python tests/test_pyccel_lapack.py --libs='blas lapack' --execute
+  - python tests/test_pyccel_mpi.py --compiler=mpif90
