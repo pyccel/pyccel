@@ -78,9 +78,6 @@ MPI
 
 * improve import
 
-from pyccel.ast.parallel.mpi import MPI_comm_cart_sub
-from pyccel.ast.parallel.mpi import MPI_dims_create
-
 from pyccel.ast.parallel.mpi import MPI_Tensor
 from pyccel.ast.parallel.mpi import MPI_TensorCommunication
 
