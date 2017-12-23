@@ -22,11 +22,10 @@ def test_core(n_procs=2):
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
     # we give here tests that only works with a given number of procs,
-    d_tests = {}
-    d_tests['ex4.py']  = 2
-    d_tests['ex5.py']  = 2
-    d_tests['ex14.py'] = 4
-    d_tests['ex15.py'] = 4
+    d_tests = {'sendrecv.py': 2,
+               'sendrecv_replace.py': 2,
+               'cart2d_1.py': 4,
+               'cart2d_2.py': 4}
 
     for f in files:
         f_name = os.path.join(path_dir, f)
