@@ -6,8 +6,7 @@ from pyccel.stdlib.parallel.mpi import mpi_comm_size
 from pyccel.stdlib.parallel.mpi import mpi_comm_rank
 from pyccel.stdlib.parallel.mpi import mpi_comm_world
 from pyccel.stdlib.parallel.mpi import mpi_status_size
-from pyccel.stdlib.parallel.mpi import mpi_send
-from pyccel.stdlib.parallel.mpi import mpi_recv
+from pyccel.stdlib.parallel.mpi import mpi_sendrecv
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
@@ -21,21 +20,21 @@ comm = mpi_comm_world
 mpi_comm_size(comm, size, ierr)
 mpi_comm_rank(comm, rank, ierr)
 
-nx = 4
-x = zeros(nx, double)
-
 if rank == 0:
-    x = 1.0
+    partner = 1
 
-source = 0
-dest   = 1
+if rank == 1:
+    partner = 0
 
-# ...
-tag1 = 1234
-if rank == source:
-    x[1] = 2.0
-    mpi_send(x[1], 1, MPI_DOUBLE, dest, tag1, comm, ierr)
-    print("> processor ", rank, " sent x(1) = ", x)
-# ...
+msg = rank + 1000
+val = -1
+tag = 1234
+status = zeros(mpi_status_size, int)
+
+mpi_sendrecv (msg, 1, MPI_INTEGER, partner, tag,
+              val, 1, MPI_INTEGER, partner, tag,
+              comm, status, ierr)
+
+print('I, process ', rank, ', I received', val, ' from process ', partner)
 
 mpi_finalize(ierr)
