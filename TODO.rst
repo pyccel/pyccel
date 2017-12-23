@@ -78,12 +78,6 @@ MPI
 
 * improve import
 
-from pyccel.ast.parallel.mpi import MPI_comm_barrier
-from pyccel.ast.parallel.mpi import MPI_comm_split
-from pyccel.ast.parallel.mpi import MPI_comm_free
-from pyccel.ast.parallel.mpi import MPI_comm_cart_create
-from pyccel.ast.parallel.mpi import MPI_comm_cart_coords
-from pyccel.ast.parallel.mpi import MPI_comm_cart_shift
 from pyccel.ast.parallel.mpi import MPI_comm_cart_sub
 from pyccel.ast.parallel.mpi import MPI_dims_create
 

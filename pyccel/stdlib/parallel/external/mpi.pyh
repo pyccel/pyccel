@@ -67,9 +67,14 @@ __version__          = '3.1'
 
 #$ header function mpi_reduce (str, str, int, int, int, int, int, int)
 #$ header function mpi_allreduce (str, str, int, int, int, int, int)
-#
+
 #$ header function mpi_waitall (int, int [:], int [:,:], int)
 #$ header function mpi_comm_split (int, int, int, int, int)
 #$ header function mpi_comm_free (int, int)
+#
+
+#$ header function mpi_cart_create (int, int, int [:], int [:], bool, int, int)
+#$ header function mpi_cart_coords (int, int, int, int [:], int) 
+#$ header function mpi_cart_shift (int, int, int, int, int, int)  
 #
 # ............................................................
