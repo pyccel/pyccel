@@ -17,6 +17,8 @@ __version__          = '3.1'
 #$ header variable MPI_REAL    int 
 #$ header variable MPI_DOUBLE  int 
 #
+#$ header variable MPI_SUM     int 
+#
 # ............................................................
 
 # ............................................................
@@ -59,6 +61,8 @@ __version__          = '3.1'
 #$ header function mpi_allgather (str, int, int, str, int, int, int, int)
 #$ header function mpi_alltoall (str, int, int, str, int, int, int, int)
 
+#$ header function mpi_reduce (str, str, int, int, int, int, int, int)
+#$ header function mpi_allreduce (str, str, int, int, int, int, int)
 #
 #$ header function mpi_waitall (int, int [:], int [:,:], int)
 #
