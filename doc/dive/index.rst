@@ -33,17 +33,6 @@ Typical processing using **Pyccel** can be splitted into 3 main stages:
   \draw[->,very thick] (3.5,0)--(5.3,0) ;
   \draw[->,very thick] (6.7,0)--(f90) ;
 
-Specifications
-**************
-
-We follow `Python 3.6.2`_ specifications.
-
-.. _Python 3.6.2: https://docs.python.org/3/reference/grammar.html
-
-**Pyccel** grammar was derived from `ANTLR`_
-
-.. _ANTLR: https://github.com/antlr/grammars-v4/blob/master/python3/Python3.g4
-
 Types
 ^^^^^
 
@@ -302,16 +291,32 @@ The generated *Fortran* code is
 
 The following plot shows the scalability of the generated code on **LRZ** using :math:`(n,m,p) = (5000,7000,5000)`.
 
-.. figure:: include/openmp/matrix_product_scalability.png 
+.. figure:: ../include/openmp/matrix_product_scalability.png 
    :align: center
    :scale: 25% 
 
    Weak scalability on LRZ. CPU time is given in seconds.
 
-.. figure:: include/openmp/matrix_product_speedup.png 
+.. figure:: ../include/openmp/matrix_product_speedup.png 
    :align: center
    :scale: 25% 
 
    Speedup on LRZ
 
+Contents
+********
 
+.. toctree::
+
+  introduction
+  lexsyn
+  expressions
+  flow
+  functions
+  modules
+  oop
+  legacy
+  io
+  stdlib
+  fp
+  specs/index

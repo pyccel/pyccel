@@ -13,15 +13,12 @@ Welcome to Pyccel's documentation!
    :caption: Contents:
 
    tutorial
-   dive
+   dive/index
+   parallel/index
    man/index
    domains
-   oop
-   hpc
-   stdlib
    extensions
    analysis
-   specs
 
    devguide
    source/modules
