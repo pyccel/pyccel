@@ -286,7 +286,7 @@ class FCodePrinter(CodePrinter):
                 ends   = [tensor.stop ]
                 steps  = [tensor.step ]
 
-                pads = np.zeros(len(starts), dtype=int)
+            pads = np.zeros(len(starts), dtype=int)
 
             shape_code = ', '.join('{0}:{1}'.format(self._print(s-p),  \
                                                     self._print(e+p)) \

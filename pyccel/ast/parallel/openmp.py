@@ -540,10 +540,9 @@ def openmpfy(stmt, **options):
     """
     if isinstance(stmt, (list, tuple, Tuple)):
         return [openmpfy(i, **options) for i in stmt]
-#    if isinstance(stmt, OPENMP):
-#        return stmt
     if isinstance(stmt, Tensor):
-        raise NotImplementedError('Tensor stmt not available')
+        # TODO to implement
+        return stmt
     if isinstance(stmt, ForIterator):
         iterable = openmpfy(stmt.iterable, **options)
         target   = stmt.target

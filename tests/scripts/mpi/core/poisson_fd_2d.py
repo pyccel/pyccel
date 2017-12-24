@@ -22,8 +22,8 @@ from pyccel.stdlib.parallel.mpi import mpi_type_free
 from pyccel.stdlib.parallel.mpi import mpi_allreduce
 
 # ...
-ntx = 64
-nty = 64
+ntx = 16
+nty = 16
 
 # Grid spacing
 hx = 1.0/(ntx+1)
