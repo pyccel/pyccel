@@ -25,6 +25,8 @@ def test_core(n_procs=2):
     # we give here tests that only works with a given number of procs,
     d_tests = {'sendrecv.py': 2,
                'sendrecv_replace.py': 2,
+               'line.py': 2,
+               'column.py': 2,
                'cart2d_1.py': 4,
                'cart2d_2.py': 4}
 
