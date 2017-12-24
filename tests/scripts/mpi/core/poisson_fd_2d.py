@@ -8,6 +8,7 @@ from pyccel.stdlib.parallel.mpi import mpi_comm_world
 from pyccel.stdlib.parallel.mpi import mpi_status_size
 from pyccel.stdlib.parallel.mpi import MPI_INTEGER
 from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
+from pyccel.stdlib.parallel.mpi import MPI_SUM
 from pyccel.stdlib.parallel.mpi import mpi_sendrecv
 from pyccel.stdlib.parallel.mpi import mpi_dims_create
 from pyccel.stdlib.parallel.mpi import mpi_cart_create
@@ -18,10 +19,11 @@ from pyccel.stdlib.parallel.mpi import mpi_type_contiguous
 from pyccel.stdlib.parallel.mpi import mpi_type_vector
 from pyccel.stdlib.parallel.mpi import mpi_type_commit
 from pyccel.stdlib.parallel.mpi import mpi_type_free
+from pyccel.stdlib.parallel.mpi import mpi_allreduce
 
 # ...
-ntx = 8
-nty = 4
+ntx = 64
+nty = 64
 
 # Grid spacing
 hx = 1.0/(ntx+1)
@@ -141,11 +143,11 @@ tol = 1.0e-10
 tag = 1234
 status = zeros (mpi_status_size, int)
 
-n_iterations = 1
+n_iterations = 1000
 for it in range(0, n_iterations):
-    u = u_new
+    u[sx:ex+1,sy:ey+1] = u_new[sx:ex+1,sy:ey+1]
 
-    # Communication
+    # ... Communication
     # Send to neighbour north and receive from neighbour south
     mpi_sendrecv (  u[sx, sy], 1, type_line, neighbour[north], tag, u[ex+1, sy], 1, type_line, neighbour[south], tag, comm_2d, status, ierr)
 
@@ -157,8 +159,32 @@ for it in range(0, n_iterations):
 
     # Send to neighbour east  and receive from neighbour west
     mpi_sendrecv (  u[sx, ey], 1, type_column, neighbour[east], tag, u[sx, sy-1], 1, type_column, neighbour[west], tag, comm_2d, status, ierr)
+    # ...
 
+    # ... Computation of u at the n+1 iteration
+    for i,j in mesh:
+        u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+    # ...
 
+    # ... Computation of the global error
+    u_error = 0.0
+    for i,j in mesh:
+        u_error += abs(u[i,j]-u_new[i,j])
+    local_error = u_error/(ntx*nty)
+
+    # Reduction
+    global_error = 0.0
+    mpi_allreduce (local_error, global_error, 1, MPI_DOUBLE, MPI_SUM, comm_2d, ierr)
+    # ...
+
+    # ...
+    if (global_error < tol) or (it == n_iterations - 1):
+        if rank == 0:
+            print ("> convergence after ", it, " iterations")
+            print ("  local  error = ", local_error)
+            print ("  global error = ", global_error)
+        break
+    # ...
 
 # Destruction of the communicators
 mpi_comm_free (comm_2d, ierr)
