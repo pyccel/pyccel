@@ -65,8 +65,8 @@ periods = [False, True]
 reorder = False
 
 neighbour = zeros(4, int)
-coords   = zeros(2, int)
-dims     = zeros(ndims, int)
+coords    = zeros(2, int)
+dims      = zeros(ndims, int)
 
 # Know the number of processes along x and y
 mpi_dims_create (size, ndims, dims, ierr)
@@ -110,14 +110,18 @@ mpi_type_commit (type_column, ierr)
 # ...
 
 # ...
+r_ext_x = range(sx-1, ex+1+1)
+r_ext_y = range(sy-1, ey+1+1)
+mesh_ext = tensor(r_ext_x, r_ext_y)
+
+u       = zeros(mesh_ext, double)
+u_new   = zeros(mesh_ext, double)
+u_exact = zeros(mesh_ext, double)
+f       = zeros(mesh_ext, double)
+
 r_x = range(sx, ex+1)
 r_y = range(sy, ey+1)
 mesh = tensor(r_x, r_y)
-
-u       = zeros(mesh, double)
-u_new   = zeros(mesh, double)
-u_exact = zeros(mesh, double)
-f       = zeros(mesh, double)
 
 # Initialization
 x = 0.0
