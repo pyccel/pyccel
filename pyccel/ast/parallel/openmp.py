@@ -606,8 +606,6 @@ def openmpfy(stmt, **options):
         options     = openmpfy(stmt.options,     **options)
 
         return ClassDef(name, attributs, methods, options)
-    if isinstance(stmt, Sync):
-        raise NotImplementedError('Sync stmt not available')
     if isinstance(stmt, With):
         raise NotImplementedError('With stmt not available')
     if isinstance(stmt, ParallelBlock):
