@@ -31,7 +31,6 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
-from pyccel.ast.parallel.mpi import MPI_Tensor
 from pyccel.ast.parallel.mpi import mpify
 from pyccel.ast.parallel.openmp import openmpfy
 
@@ -568,12 +567,7 @@ class Codegen(object):
                 # Variable is also ignored, since we can export them in headers
                 continue
             elif isinstance(stmt, Assign):
-                if isinstance(stmt.rhs, MPI_Tensor):
-                    for dec in stmt.rhs.declarations:
-                        preludes += printer(dec) + "\n"
-                    for s in stmt.rhs.body:
-                        body += printer(s) + "\n"
-                elif isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
+                if isinstance(stmt.rhs, (Range, Tensor)):
                     continue
                 elif isinstance(stmt.lhs, Variable) and stmt.lhs.name.startswith('__'):
                     metavars[stmt.lhs.name] = stmt.rhs

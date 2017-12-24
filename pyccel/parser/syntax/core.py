@@ -48,7 +48,7 @@ from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeBool, NativeFloat, NativeNil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
+from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
@@ -71,38 +71,8 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, \
                              Min, Max, Mod)
 
 from pyccel.ast.parallel.mpi import MPI
-from pyccel.ast.parallel.mpi import MPI_ERROR, MPI_STATUS
-from pyccel.ast.parallel.mpi import MPI_Assign, MPI_Declare
-from pyccel.ast.parallel.mpi import MPI_waitall
-from pyccel.ast.parallel.mpi import MPI_INTEGER, MPI_REAL, MPI_DOUBLE
-from pyccel.ast.parallel.mpi import MPI_comm
-from pyccel.ast.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
-from pyccel.ast.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
-from pyccel.ast.parallel.mpi import MPI_proc_null, MPI_PROC_NULL
-from pyccel.ast.parallel.mpi import MPI_comm_size, MPI_comm_rank
-from pyccel.ast.parallel.mpi import MPI_comm_recv, MPI_comm_send
-from pyccel.ast.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
-from pyccel.ast.parallel.mpi import MPI_comm_sendrecv
-from pyccel.ast.parallel.mpi import MPI_comm_sendrecv_replace
-from pyccel.ast.parallel.mpi import MPI_comm_barrier
-from pyccel.ast.parallel.mpi import MPI_comm_bcast
-from pyccel.ast.parallel.mpi import MPI_comm_scatter
-from pyccel.ast.parallel.mpi import MPI_comm_gather
-from pyccel.ast.parallel.mpi import MPI_comm_allgather
-from pyccel.ast.parallel.mpi import MPI_comm_alltoall
-from pyccel.ast.parallel.mpi import MPI_comm_reduce
-from pyccel.ast.parallel.mpi import MPI_comm_allreduce
-from pyccel.ast.parallel.mpi import MPI_comm_split
-from pyccel.ast.parallel.mpi import MPI_comm_free
-from pyccel.ast.parallel.mpi import MPI_comm_cart_create
-from pyccel.ast.parallel.mpi import MPI_comm_cart_coords
-from pyccel.ast.parallel.mpi import MPI_comm_cart_shift
-from pyccel.ast.parallel.mpi import MPI_comm_cart_sub
-from pyccel.ast.parallel.mpi import MPI_dims_create
-from pyccel.ast.parallel.mpi import MPI_Tensor
-from pyccel.ast.parallel.mpi import mpi_definitions
 
-from pyccel.stdlib.stdlib     import stdlib_definitions
+from pyccel.stdlib.stdlib import stdlib_definitions
 
 DEBUG = False
 #DEBUG = True
@@ -222,12 +192,6 @@ def datatype_from_string(txt):
         return NativeComplex()
     elif txt == 'bool':
         return NativeBool()
-    elif txt == 'mpi_int':
-        return MPI_INTEGER()
-    elif txt == 'mpi_float':
-        return MPI_FLOAT()
-    elif txt == 'mpi_double':
-        return MPI_DOUBLE()
 # ...
 
 # Global variable namespace
@@ -267,11 +231,8 @@ builtin_funcs_math = builtin_funcs_math_un + \
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 
-builtin_funcs_iter = ['range', 'tensor', 'prange']
+builtin_funcs_iter = ['range', 'tensor']
 builtin_funcs += builtin_funcs_iter
-
-builtin_funcs_mpi = ['mpi_waitall']
-builtin_funcs += builtin_funcs_mpi
 # ...
 
 # ...
@@ -356,31 +317,8 @@ def get_attributs(expr):
     elif isinstance(expr, Nil):
         d_var['datatype']    = NativeNil()
         return d_var
-#    elif isinstance(expr, DottedVariable):
-#        comm = expr.name[0]
-#        attr = expr.name[-1]
-#        base = comm.cls_base
-#        if not isinstance(base, MPI):
-#            raise TypeError("Expecting MPI instance, given ", base)
-#
-#        dtype = base.dtype(attr)
-#
-#        d_var['datatype']    = dtype
-#        d_var['allocatable'] = False
-#        d_var['shape']       = None
-#        d_var['rank']        = 0
-#        d_var['cls_base']    = None
-#        return d_var
     elif isinstance(expr, MPI):
-        if expr.is_integer:
-            d_var['datatype']    = 'int'
-        else:
-            raise ValueError("Expecting a integer")
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-        d_var['cls_base']    = MPI_COMM_WORLD
-        return d_var
+        raise NotImplementedError('')
     elif isinstance(expr, CustomDataType):
         raise NotImplementedError('')
         d_var['datatype']    = expr
@@ -813,24 +751,6 @@ def builtin_function(name, args, lhs=None, op=None):
         namespace[lhs] = expr
         lhs = namespace[lhs]
         return assign(lhs, expr, op, strict=False)
-    elif name == "mpi_waitall":
-        if not lhs:
-            raise ValueError("Expecting a lhs.")
-        if not(len(args) == 2):
-            raise ValueError("Expecting exactly two arguments.")
-        if not(args[0].name in namespace):
-            raise ValueError("Undefined variable {0}".format(name))
-
-        d_var = {}
-        d_var['datatype']    = 'int'
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-
-        insert_variable(lhs, **d_var)
-        lhs = namespace[lhs]
-        rhs = MPI_waitall(*args)
-        return MPI_Assign(lhs, rhs, strict=False)
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
@@ -987,28 +907,7 @@ def expr_with_trailer(expr, trailer=None):
                     expr=expr_with_trailer(expr, i.args)
             return expr
 
-
-        if expr.cls_base:
-            if isinstance(expr.cls_base, MPI):
-                comm = expr
-                func = trailer[0].expr
-                args = trailer[1].expr
-                if func in ['split', 'cart_create', 'cart_sub']:
-                    newcomm = args[-1]
-                    if not newcomm in namespace:
-                        d_var = {}
-                        d_var['datatype']    = 'int'
-                        d_var['allocatable'] = False
-                        d_var['shape']       = None
-                        d_var['rank']        = 0
-                        d_var['cls_base']    = MPI_comm()
-
-                        insert_variable(newcomm, **d_var)
-                args += [comm]
-                expr = eval('MPI_comm_{0}'.format(func))(*args)
-            else:
-                raise TypeError("Expecting MPI class based")
-        else:
+        if not expr.cls_base:
             raise ValueError('Unable to construct expr from trailers.')
         return expr
 
@@ -1097,14 +996,10 @@ def expr_with_trailer(expr, trailer=None):
 
             obj  = expr.name[0]
             base = obj.cls_base
-            if isinstance(base, MPI):
-                attr = expr.name[-1]
-                expr = eval('MPI_comm_{0}'.format(attr))(obj)
-            else:
-                attr = get_class_attribut(expr)
-                d_var = get_attributs(expr)
-                insert_variable(expr, **d_var)
-                expr = namespace[expr]
+            attr = get_class_attribut(expr)
+            d_var = get_attributs(expr)
+            insert_variable(expr, **d_var)
+            expr = namespace[expr]
     return expr
 # ...
 
@@ -1595,12 +1490,7 @@ class AssignStmt(BasicStmt):
             else:
                 raise TypeError("Expecting SubscriptList or Dot")
 
-        if not isinstance(rhs, MPI):
-            stmt = Assign(l, rhs, strict=False, status=status, like=like)
-            return stmt
-#            return Assign(l, rhs, strict=False, status=status, like=like)
-        else:
-            return MPI_Assign(l, rhs, strict=False, status=status, like=like)
+        return Assign(l, rhs, strict=False, status=status, like=like)
 
 class AugAssignStmt(BasicStmt):
     """Class representing an assign statement."""
@@ -1682,12 +1572,7 @@ class AugAssignStmt(BasicStmt):
             else:
                 raise TypeError("Expecting SubscriptList or Dot")
 
-        if not isinstance(rhs, MPI):
-            return AugAssign(l, op, rhs, strict=False, status=status, like=like)
-        else:
-            raise NotImplementedError('MPI case missing for AugAssignStmt')
-#            return MPI_AugAssign(l, rhs, strict=False, status=status, like=like)
-
+        return AugAssign(l, op, rhs, strict=False, status=status, like=like)
 
 class MultiAssignStmt(BasicStmt):
     """
@@ -1870,24 +1755,7 @@ class ForStmt(BasicStmt):
                             'given {0}'.format(type(r)))
 
         if isinstance(r, Variable):
-            if r.dtype.name == 'MPI_Tensor':
-                ranges = []
-
-                cls = namespace[r.dtype.name]
-                attributs = {}
-                for a in cls.attributs:
-                    attributs[str(a.name)] = a
-                starts = DottedName(str(r.name), 'starts')
-                ends   = DottedName(str(r.name), 'ends')
-
-                starts = IndexedVariable(starts, dtype=NativeInteger())
-                ends   = IndexedVariable(ends,   dtype=NativeInteger())
-
-                rs = []
-                for ijk in range(0, len(i)):
-                    rs += [Tile(starts[ijk], ends[ijk])]
-                r = Tensor(*rs)
-            elif not is_iterable_datatype(r.dtype):
+            if not is_iterable_datatype(r.dtype):
                 raise TypeError('Expecting an iterable variable')
 
         self.update()
