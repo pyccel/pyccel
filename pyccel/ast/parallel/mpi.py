@@ -29,7 +29,7 @@ from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
 from pyccel.ast.core import Len
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, ForIterator, While, If, Del, Sync
+from pyccel.ast.core import For, ForIterator, While, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall
 

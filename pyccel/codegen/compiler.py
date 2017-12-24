@@ -15,7 +15,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, AugAssign, \
-                              FunctionDef, ClassDef, Sync, Del, Print, Import, \
+                              FunctionDef, ClassDef, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               Stencil, Ceil, Break, \
@@ -460,8 +460,6 @@ class Codegen(object):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Del):
                 # TODO is it ok to put it in the body?
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Sync):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):
                 body += printer(stmt) + "\n"

@@ -2473,61 +2473,6 @@ class Del(Basic):
     def variables(self):
         return self._args[0]
 
-# TODO: use dict instead of list for options
-class Sync(Basic):
-    """Represents a memory sync in the code.
-
-    variables : list, tuple
-        a list of pyccel variables
-
-    master: Basic
-        a master object running sync
-
-    action: str
-        the action to apply in parallel (ex: 'reduce')
-
-    options: list
-        a list of additional options (ex: '+' in case of reduce)
-
-    Examples
-
-    >>> from pyccel.ast.core import Sync, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
-    >>> Sync([x])
-    Sync([x])
-    >>> master = Variable('int', 'master')
-    >>> Sync([x], master=master)
-    Sync([x], master)
-    """
-
-    def __new__(cls, expr, master=None, action=None, options=[]):
-        if not iterable(expr):
-            expr = Tuple(expr)
-        if action:
-            if not isinstance(action, str):
-                raise TypeError('Expecting a string')
-        if not isinstance(options, list):
-            raise TypeError('Expecting a list')
-
-        return Basic.__new__(cls, expr, master, action, options)
-
-    @property
-    def variables(self):
-        return self._args[0]
-
-    @property
-    def master(self):
-        return self._args[1]
-
-    @property
-    def action(self):
-        return self._args[2]
-
-    @property
-    def options(self):
-        return self._args[3]
-
-
 class EmptyLine(Basic):
     """Represents a EmptyLine in the code.
 

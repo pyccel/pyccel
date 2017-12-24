@@ -591,9 +591,6 @@ class FCodePrinter(CodePrinter):
     def _print_OMP_ParallelIfClause(self, expr):
         return 'if({})'.format(self._print(expr.test))
 
-    def _print_Sync(self, expr):
-        return 'Sync'
-
     def _print_NativeBool(self, expr):
         return 'logical'
 

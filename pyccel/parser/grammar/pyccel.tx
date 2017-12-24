@@ -12,7 +12,6 @@
 //       - Atom: add  '...'
 //       - Atom: add yield expr 
 //       - AtomExpr: allow multiple trailers 
-//       - DecoratedStmt: add async_funcdef 
 //       - FunctionHeaderStmt: add HeaderResults  
 //       - MethodHeaderStmt: add HeaderResults  
 //       -  
@@ -54,7 +53,6 @@ FlowStmt:
   | ReturnStmt 
   | RaiseStmt 
   | YieldStmt
-  | SyncStmt
 ;
 
 CompoundStmt:
@@ -126,7 +124,6 @@ YieldStmt: label=YIELD;
 
 ReturnStmt: label=RETURN (variables*=Expression[',']);
 DelStmt: DEL variables*=AtomExpr[','];
-SyncStmt: SYNC (trailer=TrailerArgList)? (variables*=Expression[',']);
 
 CommentStmt:
 //  '#' text=/[^x].*$/  
@@ -353,7 +350,6 @@ NOT : 'not';
 OR : 'or';
 PASS : 'pass';
 RETURN : 'return';
-SYNC : 'sync';
 RAISE : 'raise';
 TRUE : 'True';
 TRY : 'try';
