@@ -7,11 +7,17 @@ from pyccel.stdlib.parallel.mpi import mpi_comm_rank
 from pyccel.stdlib.parallel.mpi import mpi_comm_world
 from pyccel.stdlib.parallel.mpi import mpi_status_size
 from pyccel.stdlib.parallel.mpi import MPI_INTEGER
+from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
+from pyccel.stdlib.parallel.mpi import mpi_sendrecv
 from pyccel.stdlib.parallel.mpi import mpi_dims_create
 from pyccel.stdlib.parallel.mpi import mpi_cart_create
 from pyccel.stdlib.parallel.mpi import mpi_cart_coords
 from pyccel.stdlib.parallel.mpi import mpi_cart_shift
 from pyccel.stdlib.parallel.mpi import mpi_comm_free
+from pyccel.stdlib.parallel.mpi import mpi_type_contiguous
+from pyccel.stdlib.parallel.mpi import mpi_type_vector
+from pyccel.stdlib.parallel.mpi import mpi_type_commit
+from pyccel.stdlib.parallel.mpi import mpi_type_free
 
 # ...
 ntx = 8
@@ -58,7 +64,7 @@ periods = [False, True]
 
 reorder = False
 
-neighbor = zeros(4, int)
+neighbour = zeros(4, int)
 coords   = zeros(2, int)
 dims     = zeros(ndims, int)
 
@@ -82,11 +88,25 @@ sy = (coords[1]*nty)/dims[1]
 ey = ((coords[1]+1)*nty)/dims[1] - 1
 
 # ... Neighbours
-#     Search of my West and East neigbors
-mpi_cart_shift (comm_2d, 0, steps[0], neighbor[west], neighbor[east], ierr)
+#     Search of my West and East neigbours
+mpi_cart_shift (comm_2d, 0, steps[0], neighbour[west], neighbour[east], ierr)
 
-#     Search of my South and North neighbors
-mpi_cart_shift (comm_2d, 1, steps[1], neighbor[south], neighbor[north], ierr)
+#     Search of my South and North neighbours
+mpi_cart_shift (comm_2d, 1, steps[1], neighbour[south], neighbour[north], ierr)
+# ...
+
+# ... Derived Types
+#     Creation of the type_line derived datatype to exchange points
+#     with northern to southern neighbours
+type_line = -1
+mpi_type_vector (ey-sy+1, 1, ex-sx+3, MPI_DOUBLE, type_line, ierr)
+mpi_type_commit (type_line, ierr)
+
+#     Creation of the type_column derived datatype to exchange points
+#     with western to eastern neighbours
+type_column = -1
+mpi_type_contiguous (ex - sx + 1, MPI_DOUBLE, type_column, ierr)
+mpi_type_commit (type_column, ierr)
 # ...
 
 # ...
@@ -99,7 +119,7 @@ u_new   = zeros(mesh, double)
 u_exact = zeros(mesh, double)
 f       = zeros(mesh, double)
 
-#Initialization
+# Initialization
 x = 0.0
 y = 0.0
 for i,j in mesh:
@@ -113,6 +133,27 @@ for i,j in mesh:
 
 # Linear solver tolerance
 tol = 1.0e-10
+
+tag = 1234
+status = zeros (mpi_status_size, int)
+
+n_iterations = 1
+for it in range(0, n_iterations):
+    u = u_new
+
+    # Communication
+    # Send to neighbour north and receive from neighbour south
+    mpi_sendrecv (  u[sx, sy], 1, type_line, neighbour[north], tag, u[ex+1, sy], 1, type_line, neighbour[south], tag, comm_2d, status, ierr)
+
+    # Send to neighbour south and receive from neighbour north
+    mpi_sendrecv (  u[ex, sy], 1, type_line, neighbour[south], tag, u[sx-1, sy], 1, type_line, neighbour[north], tag, comm_2d, status, ierr)
+
+    # Send to neighbour west  and receive from neighbour east
+    mpi_sendrecv (  u[sx, sy], 1, type_column, neighbour[west], tag, u[sx, ey+1], 1, type_column, neighbour[east], tag, comm_2d, status, ierr)
+
+    # Send to neighbour east  and receive from neighbour west
+    mpi_sendrecv (  u[sx, ey], 1, type_column, neighbour[east], tag, u[sx, sy-1], 1, type_column, neighbour[west], tag, comm_2d, status, ierr)
+
 
 
 # Destruction of the communicators
