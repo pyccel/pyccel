@@ -225,8 +225,8 @@ class DottedName(Basic):
     >>> from pyccel.ast.core import DottedName
     >>> DottedName('matrix', 'n_rows')
     matrix.n_rows
-    >>> DottedName('pyccel', 'mpi', 'mpi_init')
-    pyccel.mpi.mpi_init
+    >>> DottedName('pyccel', 'stdlib', 'parallel')
+    pyccel.stdlib.parallel
     """
     def __new__(cls, *args):
         return Basic.__new__(cls, *args)
@@ -2009,11 +2009,11 @@ class Import(Basic):
 
     >>> from pyccel.ast.core import DottedName
     >>> from pyccel.ast.core import Import
-    >>> mpi = DottedName('pyccel', 'mpi')
+    >>> mpi = DottedName('pyccel', 'stdlib', 'parallel', 'mpi')
     >>> Import(mpi, 'mpi_init')
-    Import(pyccel.mpi, (mpi_init,))
+    Import(pyccel.stdlib.parallel.mpi, (mpi_init,))
     >>> Import(mpi, '*')
-    Import(pyccel.mpi, (*,))
+    Import(pyccel.stdlib.parallel.mpi, (*,))
     """
 
     def __new__(cls, fil, funcs=None):
@@ -3037,8 +3037,6 @@ class FunctionHeader(Basic):
     >>> from pyccel.ast.core import FunctionHeader
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
-    >>> FunctionHeader('mpi_dims_create', ['int', 'int', ('int', [Slice(None,None)])], results=['int'])
-    FunctionHeader(mpi_dims_create, [(NativeInteger(), []), (NativeInteger(), []), (int, [ : ])], [(NativeInteger(), [])], function)
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
