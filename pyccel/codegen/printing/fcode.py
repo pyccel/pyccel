@@ -579,7 +579,7 @@ class FCodePrinter(CodePrinter):
 
         # ...
         code = ('{prolog}'
-                '{body}'
+                '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
         # ...
 
