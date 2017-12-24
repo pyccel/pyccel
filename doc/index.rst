@@ -16,7 +16,6 @@ Welcome to Pyccel's documentation!
    dive/index
    parallel/index
    man/index
-   domains
    extensions
    analysis
 
