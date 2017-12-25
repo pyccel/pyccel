@@ -987,7 +987,7 @@ def expr_with_trailer(expr, trailer=None):
     elif isinstance(trailer, TrailerSubscriptList):
         args = trailer.expr
 
-        v = namespace[expr.name]
+        v = namespace[str(expr.name)]
         expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
 
