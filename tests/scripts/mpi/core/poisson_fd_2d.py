@@ -186,6 +186,10 @@ for it in range(0, n_iterations):
         break
     # ...
 
+# Free the datatype
+mpi_type_free (type_line, ierr)
+mpi_type_free (type_column, ierr)
+
 # Destruction of the communicators
 mpi_comm_free (comm_2d, ierr)
 

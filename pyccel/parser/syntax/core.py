@@ -987,6 +987,7 @@ def expr_with_trailer(expr, trailer=None):
     elif isinstance(trailer, TrailerSubscriptList):
         args = trailer.expr
 
+        # we use str(.) because expr.name can be a DottedName
         v = namespace[str(expr.name)]
         expr = IndexedVariable(v.name, dtype=v.dtype)[args]
     elif isinstance(trailer, TrailerDots):
@@ -2532,7 +2533,7 @@ class ClassDefStmt(BasicStmt):
         attributs = []
         for stmt in init_method.body:
             if isinstance(stmt, (Assign, Zeros, Ones, ZerosLike)):
-                assignable = (Variable, IndexedVariable, IndexedElement)
+                assignable = (Variable, IndexedVariable)
                 if (isinstance(stmt.lhs, assignable) and
                     isinstance(stmt.lhs.name, DottedName)):
 
