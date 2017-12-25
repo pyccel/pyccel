@@ -14,6 +14,7 @@
 //       - AtomExpr: allow multiple trailers 
 //       - FunctionHeaderStmt: add HeaderResults  
 //       - MethodHeaderStmt: add HeaderResults  
+//       - AugAssign: to be similar to Assign
 //       -  
 //       -  
 //       -  
@@ -72,12 +73,10 @@ AnnotatedStmt:
 ;
 
 ExprStmt: 
-    StencilStmt 
-  | ExecStmt 
+    ExecStmt 
   | EvalStmt 
   | AssignStmt 
   | AugAssignStmt 
-  | MultiAssignStmt
   | CallStmt 
 ;
 
@@ -184,20 +183,11 @@ IdentifierOrNumber: Number | ID;
 ArgList: '(' args+=Args[','] ')';
 Args: ArgList | DictElement | IdentifierOrNumber;
 
-PythonPrintStmt: name='print' '('   (args+=PrintStmt[',']) ')';
-PrintStmt: STRING | Expression;
-
-// TODO: remove
-ParameterValue: (value=IdentifierOrNumber |value=ArgList);
-ParameterSingle: label=ParameterTest '=' value=ParameterValue;
-
 AssignRHS: Expression | ExpressionDict | ExpressionTuple | ExpressionList;
 
-AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=AssignRHS;
+AssignStmt: lhs=Expression '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
-MultiAssignStmt: lhs+=ID[','] '=' rhs=Expression;
 
-StencilStmt: lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' ;
 ExecStmt: 
   lhs+=ID[','] '=' 'exec' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
 ;

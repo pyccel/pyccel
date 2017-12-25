@@ -64,7 +64,7 @@ from pyccel.ast.core import (Tile, Range, Tensor, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, Assert, If, \
-                             Stencil, Ceil, Break, Continue, Raise, \
+                             Ceil, Break, Continue, Raise, \
                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
                              Dot, Sign, IndexedElement,\
                              Pass, \
@@ -240,11 +240,15 @@ def print_namespace():
     print("-------- namespace --------")
     for key, value in list(namespace.items()):
         if not(key in ['True', 'False', 'pi']):
-            print((key, type(value)))
-#            if isinstance(value, Variable):
-#                print key, type(value), value.rank #, id(value)
-#            else:
-#                print key, type(value)
+            print('{0} :: {1}'.format(key, type(value)))
+    print("---------------------------")
+# ...
+
+# ...
+def print_declarations():
+    print("-------- declarations --------")
+    for key, value in list(declarations.items()):
+        print('{0} :: {1}'.format(key, value))
     print("---------------------------")
 # ...
 
@@ -547,7 +551,7 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, Integer):
                 shape.append(i)
             else:
-                raise TypeError('Unexpected type')
+                raise TypeError('wrong argument {0} of type {1}'.format(i, type(i)))
 
         if rank is None:
             rank = len(shape)
@@ -760,6 +764,8 @@ def builtin_function(name, args, lhs=None, op=None):
 def get_class_attribut(name):
     """
     Returns the attribut (if exists) of a class providing a DottedName.
+    In the special case of class attribut, this function will return None, if
+    the attribut is not a member of the class.
 
     name: DottedName
         a class attribut
@@ -785,7 +791,7 @@ def get_class_attribut(name):
         attributs[str(i.name)] = i
 
     if not (attr_name in attributs):
-        raise ValueError("Undefined attribut {}".format(attr_name))
+        return None
 
     return attributs[attr_name]
 # ...
@@ -845,13 +851,22 @@ def insert_variable(var_name, \
 
     if DEBUG:
 #    if True:
-        print((">>>> trying to insert : ", var_name))
-        txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
-                .format(datatype, rank, allocatable, shape, intent)
+        print("> inserting : {0}".format(var_name))
+        txt = ('     datatype    = {0} \n'
+               '     rank        = {1}, \n'
+               '     allocatable = {2}, \n'
+               '     shape       = {3}, \n'
+               '     intent      = {4}').format(datatype, rank,
+                                                allocatable, shape,
+                                                intent)
         print(txt)
 
+    if isinstance(var_name, Variable):
+        var_name = var_name.name
+
     if not isinstance(var_name, (str, DottedName)):
-        raise TypeError("Expecting a string for var_name.")
+        raise TypeError("Expecting a str or DottedName, "
+                        "given {0}.".format(type(var_name)))
 
     if isinstance(var_name, str):
         if var_name in namespace:
@@ -953,22 +968,17 @@ def expr_with_trailer(expr, trailer=None):
             if isinstance(expr, FunctionDef):
                 expr = expr(*args)
             elif f_name in builtin_funcs:
-                # TODO may be we should test only on math funcs
-                expr = Function(f_name)(*args)
-            #elif isinstance(expr,ClassDef):
-             #   args = trailer.expr
-              #  args=tuple(args)
-               # return FunctionCall(expr.methods['__init__'],args)
+                _args = []
+                for a in args:
+                    if str(a) in namespace:
+                        _args.append(namespace[str(a)])
+                    else:
+                        # TODO may be we should raise an error here
+                        _args.append(a)
+                expr = Function(f_name)(*_args)
             else:
                 raise NotImplementedError('expr is not FunctionDef '
                                          'and {0} is not a builtin function'.format(f_name))
-#            if len(args) > 0:
-#                else:
-#                    func = namespace[f_name]
-#                    expr = FunctionCall(func, args)
-#            else:
-#                func = namespace[str(expr)]
-#                expr = FunctionCall(func, None)
     elif isinstance(trailer, TrailerSubscriptList):
         args = trailer.expr
 
@@ -977,7 +987,6 @@ def expr_with_trailer(expr, trailer=None):
     elif isinstance(trailer, TrailerDots):
 
         args = trailer.expr
-
 
         # TODO add IndexedVariable, IndexedElement
         dottables = (Variable)
@@ -996,10 +1005,15 @@ def expr_with_trailer(expr, trailer=None):
 
             obj  = expr.name[0]
             base = obj.cls_base
+
             attr = get_class_attribut(expr)
-            d_var = get_attributs(expr)
-            insert_variable(expr, **d_var)
-            expr = namespace[expr]
+            if not(attr is None):
+                return attr
+            else:
+                # now, we insert the class attribut as a sympy Symbol in the
+                # namespace. Later, this will be decorated, when processing an
+                # AssignStmt.
+                namespace[expr] = Symbol(str(expr))
     return expr
 # ...
 
@@ -1380,38 +1394,35 @@ class AssignStmt(BasicStmt):
             raise TypeError("Expecting an expression")
 
         rhs      = self.rhs.expr
+        lhs      = self.lhs.expr
         status   = None
         like     = None
 
-        var_name = self.lhs
-
-        trailer  = None
-        args     = None
-        if self.trailer:
-            trailer = self.trailer.args
-            args    = self.trailer.expr
-            if isinstance(trailer, TrailerDots):
-                if not iterable(args):
-                    args = Tuple(args)
-                var_name = DottedName(self.lhs, *args)
+#        print('{0} := {1}'.format(lhs, rhs))
+#        print('{0} :: {1}'.format(lhs, type(lhs)))
+#        import sys; sys.exit(0)
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
             if name.lower() in builtin_funcs:
-                args = rhs.args
-                return builtin_function(name.lower(), args, lhs=var_name)
+                # here rhs.args are sympy Symbols
+                args = []
+                for a in rhs.args:
+                    if str(a) in namespace:
+                        args.append(namespace[str(a)])
+                    else:
+                        # TODO may be we should raise an error here
+                        args.append(a)
+                return builtin_function(name.lower(), args, lhs=lhs)
 
-        if isinstance(var_name, str) and not(var_name in namespace):
-
+        if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
-
-#            print ">>>> AssignStmt : ", var_name, d_var
 
             if not isinstance(rhs, Tuple):
                 d_var['allocatable'] = not(d_var['shape'] is None)
                 if d_var['shape']:
                     if DEBUG:
-                        print(("> Found an unallocated variable: ", var_name))
+                        print(("> Found an unallocated variable: ", lhs))
                     status = 'unallocated'
                     like = allocatable_like(rhs)
 
@@ -1421,24 +1432,29 @@ class AssignStmt(BasicStmt):
                 d_var['value'] = rhs
             if is_pyccel_datatype(d_var['datatype']):
                 d_var['cls_base']= namespace[d_var['datatype'].name]
-            insert_variable(var_name, **d_var)
+            insert_variable(lhs, **d_var)
 
-        if self.trailer is None:
-            l = namespace[self.lhs]
-        else:
-            if isinstance(trailer, TrailerSubscriptList):
-                v = namespace[str(self.lhs)]
-                l = IndexedVariable(v.name, dtype=v.dtype)[args]
-            elif isinstance(trailer, TrailerDots):
-                # check that class attribut exists
-                attr = get_class_attribut(var_name)
-                if attr is None:
-                    raise ValueError('Undefined attribut')
-                l = var_name
-            else:
-                raise TypeError("Expecting SubscriptList or Dot")
+        # change lhs from Symbol to Pyccel datatype (Variable, etc)
+        if isinstance(lhs, DottedName) and (lhs in namespace):
+            d_var = get_attributs(rhs)
 
-        return Assign(l, rhs, strict=False, status=status, like=like)
+            if not isinstance(rhs, Tuple):
+                d_var['allocatable'] = not(d_var['shape'] is None)
+                if d_var['shape']:
+                    if DEBUG:
+                        print(("> Found an unallocated variable: ", lhs))
+                    status = 'unallocated'
+                    like = allocatable_like(rhs)
+
+            # TODO improve assignable
+            assignable = (sp_Integer, sp_Float)
+            if isinstance(rhs, assignable):
+                d_var['value'] = rhs
+            if is_pyccel_datatype(d_var['datatype']):
+                d_var['cls_base']= namespace[d_var['datatype'].name]
+            insert_variable(lhs, **d_var)
+
+        return Assign(lhs, rhs, strict=False, status=status, like=like)
 
 class AugAssignStmt(BasicStmt):
     """Class representing an assign statement."""
@@ -1521,80 +1537,6 @@ class AugAssignStmt(BasicStmt):
                 raise TypeError("Expecting SubscriptList or Dot")
 
         return AugAssign(l, op, rhs, strict=False, status=status, like=like)
-
-class MultiAssignStmt(BasicStmt):
-    """
-    Class representing multiple assignments.
-    In fortran, this correspondans to the call of a subroutine.
-    """
-    def __init__(self, **kwargs):
-        """
-        Constructor for the multi Assign statement.
-
-        lhs: list of str
-            variables to assign to
-        rhs: ArithmeticExpression
-            expression to assign to the lhs
-        """
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = kwargs.pop('rhs')
-
-        super(MultiAssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """Statement variables."""
-        return self.lhs
-
-    @property
-    def expr(self):
-        """
-        Process the MultiAssign statement by returning a pyccel.ast.core object
-        """
-        lhs = self.lhs
-        rhs = self.rhs.expr
-
-        if not(isinstance(rhs, (Function, FunctionCall))):
-            raise TypeError("Expecting a Function or FunctionCall")
-
-        # TODO additional functions like : shape
-        if isinstance(rhs, FunctionCall):
-            F = rhs.func
-        elif isinstance(rhs, Function):
-            f_name = str(type(rhs).__name__)
-
-            if not(f_name in namespace):
-                raise ValueError("Undefined function call {}.".format(f_name))
-
-            F = namespace[f_name]
-            if not(isinstance(F, FunctionDef)):
-                raise TypeError("Expecting a FunctionDef")
-
-        if not(len(F.results) == len(self.lhs)):
-            raise ValueError("Wrong number of outputs.")
-
-        for (var_name, result) in zip(self.lhs, F.results):
-            if not(var_name in namespace):
-                d_var = {}
-                d_var['datatype']    = result.dtype
-                d_var['allocatable'] = result.allocatable
-                d_var['shape']       = result.shape
-                d_var['rank']        = result.rank
-                d_var['intent']      = None
-
-#                print ">>>> MultiAssignStmt : ", var_name
-#                print "                     : ", d_var
-
-                d_var['allocatable'] = not(d_var['shape'] is None)
-                insert_variable(var_name, **d_var)
-        return MultiAssign(lhs, rhs)
-
-#        if name == 'shape':
-#            if not(len(args) == 1):
-#                raise ValueError('shape takes only one argument.')
-#            return Shape(lhs, args[0])
-#        else:
-#            return MultiAssign(lhs, rhs, args)
 
 class RangeStmt(BasicStmt):
     """Class representing a Range statement."""
@@ -1941,6 +1883,7 @@ class Atom(ExpressionElement):
             print("> Atom ")
 
         op = self.op
+#        print('> {0} of type {1}'.format(op, type(op)))
 #        if op in ['shape']:
 #            raise ValueError('shape function can not be used in an expression.')
 
@@ -2253,6 +2196,7 @@ class RaiseStmt(FlowStmt):
 
 class YieldStmt(FlowStmt):
     """Base class representing a Yield statement in the grammar."""
+    pass
 
 class FunctionDefStmt(BasicStmt):
     """Class representing the definition of a function in the grammar."""
@@ -2388,7 +2332,7 @@ class FunctionDefStmt(BasicStmt):
                 d_var['intent']      = 'in'
                 insert_variable(arg_name, **d_var)
                 var = namespace[arg_name]
-        if self.name=='__init__':
+        if self.name == '__init__':
             attr=[]
             for i in self.body.stmts:
                 if isinstance(i,AssignStmt) and i.lhs=='self':
@@ -2403,7 +2347,6 @@ class FunctionDefStmt(BasicStmt):
         if args_0:
             arg_names+=['self']
 
-
         prelude = [declarations[a] for a in arg_names]
 
         # ... TODO improve
@@ -2411,7 +2354,6 @@ class FunctionDefStmt(BasicStmt):
             if a in namespace:
                 var = namespace.pop(a)
                 dec = declarations.pop(a)
-
 
         # TODO: for the moment we do not infer the results type
         if with_header and len(results) > 0:
@@ -2540,10 +2482,48 @@ class ClassDefStmt(BasicStmt):
 
         body    = self.body.expr
 
+        # ... we first process the __init__ method to find class attributs
+        init_method = [i for i in body if isinstance(i, FunctionDef) and
+                       str(i.name) == '__init__']
+
+        if not init_method:
+            raise ValueError('Class missing __init__ method.')
+        if len(init_method) > 1:
+            raise ValueError('Found multiple definitions of __init__.')
+
+        init_method = init_method[0]
         # ...
-        attributs = namespace[name].attributs
 
+        # ... we then process __init__ method to find all attributs.
+        #     the idea is that they will be defined by an Assign statement.
+        attributs = []
+        for stmt in init_method.body:
+            if isinstance(stmt, Assign):
+                lhs = stmt.lhs
+                if isinstance(lhs, DottedName):
+                    this = str(lhs.name[0])
+                    if this == 'self':
+                        if len(lhs.name) > 2:
+                            raise ValueError('Only one level access is available.')
 
+                        attr_name = str(lhs.name[1])
+                        if not(lhs in namespace):
+                            raise ValueError('Namespace must contain '
+                                             '{0}'.format(lhs))
+
+                        # then we clone 'self.member' to 'member'
+                        attr = namespace[lhs]
+                        # TODO must check if attr can be cloned
+                        attr = attr.clone(attr_name)
+
+                        attributs.append(attr)
+                        # we do not forget to remove lhs from namespace
+                        namespace.pop(lhs)
+                        # TODO shall we do this?
+#                        declarations.pop(lhs)
+        # ...
+
+        # ...
         methods = []
         for stmt in body:
             if isinstance(stmt, FunctionDef):
@@ -2551,9 +2531,9 @@ class ClassDefStmt(BasicStmt):
 
         stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
+        # ...
 
         # ... cleaning
-
         for k in attributs:
             if k.name in namespace.keys():
                 namespace.pop(k.name)
@@ -2867,148 +2847,6 @@ class ArgList(BasicStmt):
                 else:
                     ls.append(arg)
         return ls
-
-class StencilStmt(AssignStmt):
-    """Class representing a Stencil statement in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Stencil statement.
-
-        lhs: str
-            variable name to create
-        parameters: list
-            list of parameters needed for the Stencil object.
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.parameters = kwargs.pop('parameters')
-
-        labels = [str(p.label) for p in self.parameters]
-        values = [p.value.value for p in self.parameters]
-        d = {}
-        for (label, value) in zip(labels, values):
-            d[label] = value
-        self.parameters = d
-
-        try:
-            self.datatype = self.parameters['dtype']
-        except:
-            self.datatype = DEFAULT_TYPE
-
-        try:
-            self.shape = self.parameters['shape']
-            # on LRZ, self.shape can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.shape, list):
-                if isinstance(self.shape[0], ArgList):
-                    self.shape = self.shape[0].args
-            elif isinstance(self.shape, ArgList):
-                self.shape = self.shape.args
-        except:
-            raise Exception('Expecting shape at position {}'
-                            .format(self._tx_position))
-
-        try:
-            self.step = self.parameters['step']
-            # on LRZ, self.step can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.step, list):
-                if isinstance(self.step[0], ArgList):
-                    self.step = self.step[0].args
-            elif isinstance(self.step, ArgList):
-                self.step = self.step.args
-        except:
-            raise Exception('Expecting step at position {}'
-                            .format(self._tx_position))
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns statement variables."""
-        return [self.lhs]
-
-    def update(self):
-        """
-        specific treatments before process
-        """
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print(("> Found new variable " + var_name))
-
-            datatype = self.datatype
-
-            # ...
-            def format_entry(s_in):
-                rank = 0
-                if isinstance(s_in, int):
-                    s_out = s_in
-                    rank = 1
-                elif isinstance(s_in, float):
-                    s_out = int(s_in)
-                    rank = 1
-                elif isinstance(s_in, list):
-                    s_out = []
-                    for s in s_in:
-                        if isinstance(s, (int, float)):
-                            s_out.append(int(s))
-                        elif isinstance(s, str):
-                            if not(s in namespace):
-                                raise Exception('Could not find s_out variable.')
-                            s_out.append(namespace[s])
-    #                    elif isinstance(s,ArgList):
-    #                        s_out.append(s.expr)
-                        else:
-                            print(("> given type: ", type(s)))
-                            raise TypeError('Expecting a int, float or string')
-                    rank = len(s_out)
-                else:
-                    s_out = str(s_in)
-                    if s_out in namespace:
-                        s_out = namespace[s_out]
-                        # TODO compute rank
-                        rank = 1
-                    else:
-                        raise Exception('Wrong instance for s_out : '.format(type(s_in)))
-                return s_out, rank
-            # ...
-
-            # ...
-            self.shape, r_1 = format_entry(self.shape)
-            self.step,  r_2 = format_entry(self.step)
-            rank = r_1 + r_2
-            # ...
-
-            if datatype is None:
-                if DEBUG:
-                    print("> No Datatype is specified, int will be used.")
-                datatype = 'int'
-            elif isinstance(datatype, list):
-                datatype = datatype[0] # otherwise, it's not working on LRZ
-            # TODO check if var is a return value
-            insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape = self.shape)
-
-    @property
-    def expr(self):
-        """
-        Process the Stencil statement,
-        by returning the appropriate object from pyccel.ast.core
-        """
-        self.update()
-
-        shape = self.shape
-        step  = self.step
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        return Stencil(var, shape, step)
 
 class EvalStmt(BasicStmt):
     """

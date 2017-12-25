@@ -13,7 +13,7 @@ from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        DelStmt, \
                                        PassStmt, \
                                        ExpressionDict, ArgValued, \
-                                       AssignStmt, MultiAssignStmt, AugAssignStmt, \
+                                       AssignStmt, AugAssignStmt, \
                                        FlowStmt, BreakStmt, ContinueStmt, \
                                        RaiseStmt, YieldStmt, ReturnStmt, \
                                        RangeStmt, \
@@ -23,7 +23,6 @@ from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        CallStmt, \
                                        CommentStmt, SuiteStmt, \
                                        EvalStmt, \
-                                       StencilStmt, \
                                        # test bool
                                        Test, OrTest, AndTest, NotTest, Comparison, \
                                        # Trailers
@@ -194,7 +193,7 @@ class PyccelParser(Parser):
                    VariableHeaderStmt, \
                    # statements
                    DeclarationStmt, ConstructorStmt, \
-                   AssignStmt, MultiAssignStmt, AugAssignStmt, \
+                   AssignStmt, AugAssignStmt, \
                    DelStmt, \
                    PassStmt, \
                    ExpressionDict, ArgValued, \
@@ -208,7 +207,6 @@ class PyccelParser(Parser):
                    ImportFromStmt, ImportAsNames, \
                    CommentStmt, SuiteStmt, \
                    EvalStmt, \
-                   StencilStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers
