@@ -103,3 +103,11 @@ External
 * BLAS
 
 * LAPACK
+
+* FFTW
+
+* HDF5
+
+* SUPERLU
+
+* PASTIX
