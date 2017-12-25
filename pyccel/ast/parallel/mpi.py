@@ -87,15 +87,17 @@ def mpify(stmt, **options):
             args.append((t,s))
         return If(*args)
     if isinstance(stmt, FunctionDef):
-        name        = mpify(stmt.name,        **options)
-        arguments   = mpify(stmt.arguments,   **options)
-        results     = mpify(stmt.results,     **options)
-        body        = mpify(stmt.body,        **options)
-        local_vars  = mpify(stmt.local_vars,  **options)
-        global_vars = mpify(stmt.global_vars, **options)
-
-        return FunctionDef(name, arguments, results, \
-                           body, local_vars, global_vars)
+        return stmt
+        # TODO uncomment this
+#        name        = mpify(stmt.name,        **options)
+#        arguments   = mpify(stmt.arguments,   **options)
+#        results     = mpify(stmt.results,     **options)
+#        body        = mpify(stmt.body,        **options)
+#        local_vars  = mpify(stmt.local_vars,  **options)
+#        global_vars = mpify(stmt.global_vars, **options)
+#
+#        return FunctionDef(name, arguments, results, \
+#                           body, local_vars, global_vars)
     if isinstance(stmt, ClassDef):
         name        = mpify(stmt.name,        **options)
         attributs   = mpify(stmt.attributs,   **options)

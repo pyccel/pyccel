@@ -376,6 +376,7 @@ def build_file(filename, language, compiler, \
                            codegen_m.classes.strip() ) > 0
 
             if is_valid:
+                print('>>>>>> {0}'.format(codegen_m.filename))
                 compiler_m = Compiler(codegen_m, \
                                       compiler=compiler, \
                                       accelerator=accelerator, \

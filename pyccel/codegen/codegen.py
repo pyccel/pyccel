@@ -672,14 +672,6 @@ class Codegen(object):
             is_module = True
         # ...
 
-#        # ...
-#        if with_mpi:
-#            for stmt in stmts:
-#                if isinstance(stmt, _module_stmt)):
-#                    is_module = False
-#                    break
-#        # ...
-
         # ... cleaning
         clean_namespace()
         # ...
@@ -772,6 +764,7 @@ class FCodegen(Codegen):
             name_module = 'm_{0}'.format(name_module)
 
             code += "module " + name_module     +"\n"
+            code += imports                     +"\n"
             code += classes                     +"\n"
             code += "end module " + name_module +'\n'
 
