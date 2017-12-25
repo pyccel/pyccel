@@ -60,7 +60,7 @@ class Cart(object):
         size = -1
         rank = -1
         rank_in_topo = -1
-        comm_2d = -1
+        self.comm_cart = -1
 
         comm = mpi_comm_world
         mpi_comm_size(comm, size, ierr)
@@ -74,11 +74,11 @@ class Cart(object):
 
         # ...
         # Create a 2d mpi cart
-        mpi_cart_create (comm, self.ndims, self.dims, self.periods, self.reorder, comm_2d, ierr)
+        mpi_cart_create (comm, self.ndims, self.dims, self.periods, self.reorder, self.comm_cart, ierr)
 
         # Know my coordinates in the topology
-        mpi_comm_rank (comm_2d, rank_in_topo, ierr)
-        mpi_cart_coords (comm_2d, rank_in_topo, self.ndims, self.coords, ierr)
+        mpi_comm_rank (self.comm_cart, rank_in_topo, ierr)
+        mpi_cart_coords (self.comm_cart, rank_in_topo, self.ndims, self.coords, ierr)
 
         # X-axis limits
         sx = (self.coords[0]*ntx)/self.dims[0]
@@ -99,10 +99,10 @@ class Cart(object):
 
         # ... Neighbours
         #     Search of my West and East neigbours
-        mpi_cart_shift (comm_2d, 0, self.steps[0], self.neighbour[west], self.neighbour[east], ierr)
+        mpi_cart_shift (self.comm_cart, 0, self.steps[0], self.neighbour[west], self.neighbour[east], ierr)
 
         #     Search of my South and North neighbours
-        mpi_cart_shift (comm_2d, 1, self.steps[1], self.neighbour[south], self.neighbour[north], ierr)
+        mpi_cart_shift (self.comm_cart, 1, self.steps[1], self.neighbour[south], self.neighbour[north], ierr)
         # ...
 
         # ... Derived Types
@@ -119,19 +119,15 @@ class Cart(object):
         mpi_type_commit (self.type_column, ierr)
         # ...
 
+    def __del__(self):
+        ierr = -1
 
-
-        # ... TODO to be moved to __del__
         # Free the datatype
         mpi_type_free (self.type_line, ierr)
         mpi_type_free (self.type_column, ierr)
 
         # Destruction of the communicators
-        mpi_comm_free (comm_2d, ierr)
-        # ...
-
-    def __del__(self):
-        pass
+        mpi_comm_free (self.comm_cart, ierr)
 
 ierr = -1
 
