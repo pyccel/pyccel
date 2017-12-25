@@ -2455,6 +2455,7 @@ class FunctionDefStmt(BasicStmt):
                             local_vars += [stmt.lhs]
                     else:
                         local_vars += [stmt.lhs]
+        local_vars = list(set(local_vars))
         # ...
 
         # rename the method in the class case
@@ -2557,6 +2558,7 @@ class ClassDefStmt(BasicStmt):
                         namespace.pop(str(lhs))
                         if str(lhs) in declarations:
                             declarations.pop(str(lhs))
+        attributs = list(set(attributs))
         # ...
 
         # ...

@@ -10,7 +10,8 @@ from utils import clean_tests
 
 # ...
 def test_1():
-    ignored = [15, 18]
+#    ignored = [15, 18]
+    ignored = [15, 18, 5, 21, 22]
 
     for i in range(0, 23+1):
         filename = 'tests/scripts/core/ex{0}.py'.format(str(i))
@@ -21,7 +22,11 @@ def test_1():
 
 # ...
 def test_2():
-    ignored = ['eval.py', 'parallel.py', 'mpi.py',
+#    ignored = ['eval.py', 'parallel.py', 'mpi.py',
+#               'modules.py', 'imports.py', 'dict.py']
+
+    ignored = ['functions.py', 'classes.py', 'arrays.py',
+               'eval.py', 'parallel.py', 'mpi.py',
                'modules.py', 'imports.py', 'dict.py']
 
     base_dir = os.getcwd()
@@ -31,6 +36,7 @@ def test_2():
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
     for f in files:
+        print(' {0}: '.format(str(f)))
         f_name = os.path.join(path_dir, f)
 
         pyccel(files=[f_name])
