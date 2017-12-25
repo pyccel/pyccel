@@ -417,6 +417,7 @@ class Codegen(object):
                 if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
                     f = v.create_definition()
                     namespace[k] = f
+#                    print '{0} :: {1}'.format(k, f)
 
         return namespace
 
@@ -516,7 +517,6 @@ class Codegen(object):
 
         # ...
         pyccel = PyccelParser()
-#        print('>>>> filename = ', filename)
         ast    = pyccel.parse_from_file(filename)
         # ...
 
@@ -532,7 +532,6 @@ class Codegen(object):
         stmts = ast.expr
 
         # new namespace
-#        self._namespace = ast.get_namespace() # TODO do not user ast
         self._namespace = get_namespace()
         self._headers   = get_headers()
         # ...
