@@ -2412,13 +2412,14 @@ class FunctionDefStmt(BasicStmt):
             del declarations[a]
             del namespace[a]
 
-        ls = self.local_vars + self.stmt_vars
-        for var_name in ls:
-            if var_name in namespace:
-                prelude.append(declarations[var_name])
-
-                del namespace[var_name]
-                del declarations[var_name]
+        # TODO improve this. it is not working right now
+#        ls = self.local_vars + self.stmt_vars
+#        for var_name in ls:
+#            if var_name in namespace:
+#                prelude.append(declarations[var_name])
+#
+#                del namespace[var_name]
+#                del declarations[var_name]
         # ...
 
         # ...
@@ -2433,6 +2434,22 @@ class FunctionDefStmt(BasicStmt):
 
         # ...
         body = prelude + body
+        # ...
+
+        # ... define local_vars as any lhs in Assign, if it is not global
+        #     or class member 'self.member'
+        for stmt in body:
+            if isinstance(stmt, (Assign, Zeros, ZerosLike, Ones)):
+                if (isinstance(stmt.lhs, Variable) and
+                    not(stmt.lhs in results) and
+                    not(stmt.lhs in global_vars)):
+                    if isinstance(stmt.lhs.name, DottedName):
+                        lhs  = stmt.lhs.name
+                        this = str(lhs.name[0])
+                        if not(this == 'self'):
+                            local_vars += [stmt.lhs]
+                    else:
+                        local_vars += [stmt.lhs]
         # ...
 
         # rename the method in the class case
