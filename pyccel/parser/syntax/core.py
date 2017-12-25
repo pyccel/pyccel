@@ -873,6 +873,7 @@ def insert_variable(var_name, \
             var = namespace[var_name]
     elif isinstance(var_name, DottedName):
         var = get_class_attribut(var_name)
+        var_name = str(var_name)
         to_declare = False
 
     if var:
@@ -1010,7 +1011,7 @@ def expr_with_trailer(expr, trailer=None):
                 # now, we insert the class attribut as a sympy Symbol in the
                 # namespace. Later, this will be decorated, when processing an
                 # AssignStmt.
-                namespace[expr]= Symbol(str(expr))
+                namespace[str(expr)] = Symbol(str(expr))
     return expr
 # ...
 
@@ -1395,6 +1396,10 @@ class AssignStmt(BasicStmt):
         status   = None
         like     = None
 
+#        print('{0} := {1}'.format(lhs, rhs))
+#        print_namespace()
+#        print('{0} :: {1}'.format(lhs, type(lhs)))
+
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
             if name.lower() in builtin_funcs:
@@ -1429,7 +1434,8 @@ class AssignStmt(BasicStmt):
             lhs = namespace[lhs]
 
         # change lhs from Symbol to Pyccel datatype (Variable, etc)
-        if isinstance(lhs, DottedName) and (lhs in namespace):
+#        print_namespace()
+        if isinstance(lhs, DottedName) and (str(lhs) in namespace):
             d_var = get_attributs(rhs)
 
             if not isinstance(rhs, Tuple):
@@ -1446,8 +1452,12 @@ class AssignStmt(BasicStmt):
                 d_var['value'] = rhs
             if is_pyccel_datatype(d_var['datatype']):
                 d_var['cls_base']= namespace[d_var['datatype'].name]
+
+            # we remove the sympy Symbol
+            namespace.pop(str(lhs))
+
             insert_variable(lhs, **d_var)
-            lhs = namespace[lhs]
+            lhs = namespace[str(lhs)]
 
 #        print('{0} := {1}'.format(lhs, rhs))
 #        print('{0} :: {1}'.format(lhs, type(lhs)))
@@ -2510,18 +2520,18 @@ class ClassDefStmt(BasicStmt):
                             raise ValueError('Only one level access is available.')
 
                         attr_name = str(lhs.name[1])
-                        if not(lhs in namespace):
+                        if not(str(lhs) in namespace):
                             raise ValueError('Namespace must contain '
                                              '{0}'.format(lhs))
 
                         # then we clone 'self.member' to 'member'
-                        attr = namespace[lhs]
+                        attr = namespace[str(lhs)]
                         # TODO must check if attr can be cloned
                         attr = attr.clone(attr_name)
 
                         attributs.append(attr)
                         # we do not forget to remove lhs from namespace
-                        namespace.pop(lhs)
+                        namespace.pop(str(lhs))
                         # TODO shall we do this?
 #                        declarations.pop(lhs)
         # ...
