@@ -298,7 +298,7 @@ class FCodePrinter(CodePrinter):
 
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
         code_init = "{0} = {1}".format(lhs_code, self._print(init_value))
-        code = "{0}; {1}".format(code_alloc, code_init)
+        code = "{0}\n{1}".format(code_alloc, code_init)
         return self._get_statement(code)
 
     def _print_Array(self,expr):

@@ -617,7 +617,11 @@ def builtin_function(name, args, lhs=None, op=None):
         if not lhs:
             raise ValueError("Expecting a lhs.")
         d_var, grid = get_arguments_zeros()
+#        print_namespace()
         insert_variable(lhs, **d_var)
+#        print('\n')
+#        print_namespace()
+#        import sys; sys.exit(0)
         lhs = namespace[lhs]
         f_name = name.capitalize()
         f_name = eval(f_name)
@@ -1411,7 +1415,8 @@ class AssignStmt(BasicStmt):
                     else:
                         # TODO may be we should raise an error here
                         args.append(a)
-                return builtin_function(name.lower(), args, lhs=lhs)
+                # we use str(lhs) to make it work for DottedName
+                return builtin_function(name.lower(), args, lhs=str(lhs))
 
         if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
@@ -2525,8 +2530,9 @@ class ClassDefStmt(BasicStmt):
         #     the idea is that they will be defined by an Assign statement.
         attributs = []
         for stmt in init_method.body:
-            if isinstance(stmt, Assign):
-                if (isinstance(stmt.lhs, Variable) and
+            if isinstance(stmt, (Assign, Zeros, Ones, ZerosLike)):
+                assignable = (Variable, IndexedVariable, IndexedElement)
+                if (isinstance(stmt.lhs, assignable) and
                     isinstance(stmt.lhs.name, DottedName)):
 
                     lhs = stmt.lhs.name
@@ -2549,8 +2555,8 @@ class ClassDefStmt(BasicStmt):
                         attributs.append(attr)
                         # we do not forget to remove lhs from namespace
                         namespace.pop(str(lhs))
-                        # TODO shall we do this?
-#                        declarations.pop(lhs)
+                        if str(lhs) in declarations:
+                            declarations.pop(str(lhs))
         # ...
 
         # ...
@@ -2570,6 +2576,7 @@ class ClassDefStmt(BasicStmt):
             if k.name in declarations.keys():
                 declarations.pop(k.name)
         # ...
+#        print_declarations()
 
 #        print "*********** ClassDefStmt.expr: End"
 

@@ -643,7 +643,9 @@ class Codegen(object):
         for key, dec in list(ast.declarations.items()):
             if isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 continue
-            elif isinstance(dec.variables[0], Variable) and dec.variables[0].name.startswith('__'):
+            elif (isinstance(dec.variables[0], Variable) and
+                  str(dec.variables[0].name).startswith('__')):
+                # we use str, for the case of DottedName
                 continue
             else:
                 preludes += printer(dec) + "\n"
