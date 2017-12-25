@@ -1003,9 +1003,6 @@ def expr_with_trailer(expr, trailer=None):
                 raise ValueError("Undefined variable {}".format(expr.name))
             expr = DottedName(expr, args)
 
-            obj  = expr.name[0]
-            base = obj.cls_base
-
             attr = get_class_attribut(expr)
             if not(attr is None):
                 return attr
@@ -1013,7 +1010,7 @@ def expr_with_trailer(expr, trailer=None):
                 # now, we insert the class attribut as a sympy Symbol in the
                 # namespace. Later, this will be decorated, when processing an
                 # AssignStmt.
-                namespace[expr] = Symbol(str(expr))
+                namespace[expr]= Symbol(str(expr))
     return expr
 # ...
 
@@ -1398,10 +1395,6 @@ class AssignStmt(BasicStmt):
         status   = None
         like     = None
 
-#        print('{0} := {1}'.format(lhs, rhs))
-#        print('{0} :: {1}'.format(lhs, type(lhs)))
-#        import sys; sys.exit(0)
-
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
             if name.lower() in builtin_funcs:
@@ -1433,6 +1426,7 @@ class AssignStmt(BasicStmt):
             if is_pyccel_datatype(d_var['datatype']):
                 d_var['cls_base']= namespace[d_var['datatype'].name]
             insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
 
         # change lhs from Symbol to Pyccel datatype (Variable, etc)
         if isinstance(lhs, DottedName) and (lhs in namespace):
@@ -1453,6 +1447,12 @@ class AssignStmt(BasicStmt):
             if is_pyccel_datatype(d_var['datatype']):
                 d_var['cls_base']= namespace[d_var['datatype'].name]
             insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
+
+#        print('{0} := {1}'.format(lhs, rhs))
+#        print('{0} :: {1}'.format(lhs, type(lhs)))
+#        print_namespace()
+#        import sys; sys.exit(0)
 
         return Assign(lhs, rhs, strict=False, status=status, like=like)
 
@@ -2499,8 +2499,11 @@ class ClassDefStmt(BasicStmt):
         attributs = []
         for stmt in init_method.body:
             if isinstance(stmt, Assign):
-                lhs = stmt.lhs
-                if isinstance(lhs, DottedName):
+                if (isinstance(stmt.lhs, Variable) and
+                    isinstance(stmt.lhs.name, DottedName)):
+
+                    lhs = stmt.lhs.name
+
                     this = str(lhs.name[0])
                     if this == 'self':
                         if len(lhs.name) > 2:
