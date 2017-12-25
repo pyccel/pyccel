@@ -47,6 +47,8 @@ class Cart(object):
         self.neighbour = zeros(self.n_neighbour, int)
         self.coords    = zeros(self.ndims, int)
         self.dims      = zeros(self.ndims, int)
+        self.starts    = zeros(self.ndims, int)
+        self.ends      = zeros(self.ndims, int)
 
         self.steps   = [1, 1]
         self.periods = [False, True]
@@ -85,6 +87,14 @@ class Cart(object):
         # Y-axis limits
         sy = (self.coords[1]*nty)/self.dims[1]
         ey = ((self.coords[1]+1)*nty)/self.dims[1] - 1
+        # ...
+
+        # ...
+        self.starts[0] = sx
+        self.ends[0]   = ex+1
+
+        self.starts[1] = sy
+        self.ends[1]   = ey+1
         # ...
 
         # ... Neighbours
