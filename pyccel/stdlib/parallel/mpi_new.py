@@ -168,6 +168,4 @@ class Cart(object):
 
     def reduce(self, x):
         ierr     = -1
-        global_x = 0.0
-
-        mpi_allreduce (x, global_x, 1, MPI_DOUBLE, MPI_SUM, self.comm_cart, ierr)
+        mpi_allreduce (x, x, 1, MPI_DOUBLE, MPI_SUM, self.comm_cart, ierr)

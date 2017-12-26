@@ -68,7 +68,7 @@ for i,j in grid:
 # Linear solver tolerance
 tol = 1.0e-10
 
-n_iterations = 1
+n_iterations = 1000
 for it in range(0, n_iterations):
     u[sx:ex+1,sy:ey+1] = u_new[sx:ex+1,sy:ey+1]
 
@@ -83,24 +83,19 @@ for it in range(0, n_iterations):
     u_error = 0.0
     for i,j in grid:
         u_error += abs(u[i,j]-u_new[i,j])
-    local_error = u_error/(ntx*nty)
+    u_error = u_error/(ntx*nty)
 
-    # TODO add reduction
     # Reduction
-    global_error = 0.0
-    mesh.reduce(local_error)
+    mesh.reduce(u_error)
     # ...
 
     # ...
-    if (global_error < tol) or (it == n_iterations - 1):
+    if (u_error < tol) or (it == n_iterations - 1):
         if mesh.rank == 0:
             print ("> convergence after ", it, " iterations")
-            print ("  local  error = ", local_error)
-            print ("  global error = ", global_error)
+            print ("  error = ", u_error)
         break
     # ...
-
-
 
 del mesh
 
