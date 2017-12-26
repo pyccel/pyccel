@@ -22,7 +22,6 @@ from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        FunctionDefStmt, ClassDefStmt, \
                                        CallStmt, \
                                        CommentStmt, SuiteStmt, \
-                                       EvalStmt, \
                                        # test bool
                                        Test, OrTest, AndTest, NotTest, Comparison, \
                                        # Trailers
@@ -206,7 +205,6 @@ class PyccelParser(Parser):
                    CallStmt, \
                    ImportFromStmt, ImportAsNames, \
                    CommentStmt, SuiteStmt, \
-                   EvalStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers

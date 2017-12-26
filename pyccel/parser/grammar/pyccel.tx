@@ -73,9 +73,7 @@ AnnotatedStmt:
 ;
 
 ExprStmt: 
-    ExecStmt 
-  | EvalStmt 
-  | AssignStmt 
+    AssignStmt 
   | AugAssignStmt 
   | CallStmt 
 ;
@@ -187,12 +185,6 @@ AssignRHS: Expression | ExpressionDict | ExpressionTuple | ExpressionList;
 
 AssignStmt: lhs=Expression '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
-
-ExecStmt: 
-  lhs+=ID[','] '=' 'exec' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
-;
-
-EvalStmt: lhs=ID '=' 'eval' '(' expression=STRING ')';
 
 RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
