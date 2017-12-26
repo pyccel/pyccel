@@ -9,6 +9,7 @@ import numpy as np
 from shutil import copyfile
 
 
+from pyccel.ast.core import DottedName
 from pyccel.parser.utilities import find_imports
 from pyccel.codegen.codegen  import FCodegen
 from pyccel.codegen.compiler import Compiler
@@ -132,8 +133,24 @@ def construct_tree(filename, ignored_modules):
         imports_src[module] = []
         for f_name in f_names:
             if not(f_name in imports_src[module]):
+                # we don't process header files
+                if f_name.endswith('.py'):
+                    ims, ims_src = construct_tree(f_name, ignored_modules)
+                    for m, ns in ims.items():
+                        if m in imports:
+                            imports[m] += ns
+                        else:
+                            imports[m]  = ns
+
+                        if m in imports_src:
+                            imports_src[m] += ims_src[m]
+                        else:
+                            imports_src[m]  = ims_src[m]
+
                 imports_src[module] += [f_name]
     #...
+
+    # TODO must use ordered dictionaries from here
 
     return imports, imports_src
 # ...
@@ -256,15 +273,25 @@ def build_file(filename, language, compiler, \
     d_libraries = []
 
     ms = []
+    treated_files = []
     for module, names in list(imports.items()):
         if not(module in namespaces):
             namespaces[module] = {}
 
+#        print('>>> processing module:{0}, and names:{1}'.format(module, names))
+
         f_names = imports_src[module]
         for f_name in f_names:
-#            print('> treating {0}'.format(f_name))
+            if f_name in treated_files:
+                break
+
+            print('> treating {0}'.format(f_name))
+
+            module_name = str(module).replace('.', '_')
+            module_name = 'm_{0}'.format(module_name)
+
             codegen_m = FCodegen(filename=f_name,
-                                 name=module,
+                                 name=module_name,
                                  is_module=True,
                                  output_dir=output_dir)
             codegen_m.doprint(language=language,
@@ -297,11 +324,17 @@ def build_file(filename, language, compiler, \
             for k,v in cls_constructs.items():
                 namespace_user['cls_constructs'][k] = v
 
-            # TODO add aliases or what to import (names)
+            from pyccel.parser.syntax.core import print_namespace
+            from pyccel.parser.syntax.core import update_namespace
+            from pyccel.parser.syntax.core import get_namespace
 
-    from pyccel.parser.syntax.core import update_namespace
-    from pyccel.parser.syntax.core import get_namespace
-    update_namespace(namespace_user)
+            update_namespace(namespace_user)
+            treated_files += [f_name]
+#            print_namespace()
+
+            # TODO add aliases or what to import (names)
+#    import sys; sys.exit(0)
+
 
     codegen = FCodegen(filename=filename,
                        name=name,
@@ -362,8 +395,9 @@ def build_file(filename, language, compiler, \
 
             # this commented line must be removed.
             # otherwise, we will print all used modules in the current file
-            #ls = ms + [codegen]
-            ls = [codegen]
+            # TODO ARA : to remove
+            ls = ms + [codegen]
+            #ls = [codegen]
             codes = [m.code for m in ls]
             for code in codes:
                 for line in code:
@@ -385,24 +419,30 @@ def build_file(filename, language, compiler, \
                            codegen_m.classes.strip() ) > 0
 
             if is_valid:
-                print('>>>>>> {0}'.format(codegen_m.filename))
-                compiler_m = Compiler(codegen_m, \
-                                      compiler=compiler, \
-                                      accelerator=accelerator, \
-                                      debug=debug, \
-                                      include=include, \
-                                      libdir=libdir, \
+                if str(codegen_m.name).startswith('m_pyccel_stdlib_'):
+                    break
+
+#                print('>>>>>> {0}'.format(codegen_m.filename))
+                compiler_m = Compiler(codegen_m,
+                                      compiler=compiler,
+                                      accelerator=accelerator,
+                                      debug=debug,
+                                      include=include,
+                                      libdir=libdir,
                                       libs=libs)
                 compiler_m.compile(verbose=verbose)
 
-        c = Compiler(codegen, \
-                     compiler=compiler, \
-                     inline=inline, \
-                     accelerator=accelerator, \
-                     debug=debug, \
-                     include=include, \
-                     libdir=libdir, \
-                     libs=libs)
+        # TODO ARA : to remove
+        ignored_modules += ['pyccel.stdlib.parallel.mpi_new']
+        c = Compiler(codegen,
+                     compiler=compiler,
+                     inline=inline,
+                     accelerator=accelerator,
+                     debug=debug,
+                     include=include,
+                     libdir=libdir,
+                     libs=libs,
+                     ignored_modules=ignored_modules)
         c.compile(verbose=verbose)
 
         if execute:

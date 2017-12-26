@@ -463,8 +463,7 @@ class Codegen(object):
             name of the selected accelerator.
             For the moment, only 'openmp' is available
         ignored_modules: list
-            list of modules to ignore (like 'numpy', 'sympy').
-            These modules do not have a correspondence in Fortran.
+            list of modules to ignore.
         with_mpi: bool
             True if using MPI
         pyccel_modules: list
@@ -682,7 +681,7 @@ class Codegen(object):
         self._body      = body
         self._routines  = routines
         self._classes   = classes
-        self._modules   = modules
+        self._modules   = list(set(modules))
         self._is_module = is_module
         self._language  = language
         self._metavars  = metavars

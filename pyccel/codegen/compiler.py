@@ -205,10 +205,16 @@ def separator(n=40):
 
 class Compiler(object):
     """Base class for Code compiler for the Pyccel Grammar"""
-    def __init__(self, codegen, compiler, \
-                 flags=None, accelerator=None, \
-                 binary=None, debug=False, \
-                 inline=False, include=[], libdir=[], libs=[]):
+    def __init__(self, codegen, compiler,
+                 flags=None,
+                 accelerator=None,
+                 binary=None,
+                 debug=False,
+                 inline=False,
+                 include=[],
+                 libdir=[],
+                 libs=[],
+                 ignored_modules=[]):
         """
         Constructor of the code compiler.
 
@@ -233,16 +239,19 @@ class Compiler(object):
             list of lib directories paths
         libs: list
             list of libraries to link with
+        ignored_modules: list
+            list of modules to ignore.
         """
-        self._codegen     = codegen
-        self._compiler    = compiler
-        self._binary      = binary
-        self._debug       = debug
-        self._inline      = inline
-        self._accelerator = accelerator
-        self._include     = include
-        self._libdir      = libdir
-        self._libs        = libs
+        self._codegen         = codegen
+        self._compiler        = compiler
+        self._binary          = binary
+        self._debug           = debug
+        self._inline          = inline
+        self._accelerator     = accelerator
+        self._include         = include
+        self._libdir          = libdir
+        self._libs            = libs
+        self._ignored_modules = ignored_modules
 
         if flags:
             self._flags = flags
@@ -298,6 +307,11 @@ class Compiler(object):
     def libs(self):
         """Returns libraries to link with"""
         return self._libs
+
+    @property
+    def ignored_modules(self):
+        """Returns ignored modules"""
+        return self._ignored_modules
 
     def construct_flags(self):
         """
@@ -358,21 +372,9 @@ class Compiler(object):
         is_module = self.codegen.is_module
         modules   = self.codegen.modules
 
-        ignored_modules  = ['plaf', 'spl', 'disco', 'fema']
-        ignored_modules += ['plf', 'dsc', 'jrk']
-        # ...
-        def _ignore_module(key):
-            for i in ignored_modules:
-                if i == key:
-                    return True
-                else:
-                    n = len(i)
-                    if i == key[:n]:
-                        return True
-            return False
-        # ...
-
-        modules = [m for m in modules if not _ignore_module(m)]
+#        print('> ignored = ', self.ignored_modules)
+#        print('> modules = ', modules)
+        modules = [m for m in modules if not(m in self.ignored_modules)]
 
         binary = ""
         if self.binary is None:
