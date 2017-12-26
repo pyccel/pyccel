@@ -23,4 +23,7 @@ a[0] = 3
 p.translate(a)
 print(p.x)
 
+#b = p.x[0]
+#p.x[0] = 2.0
+
 del p
