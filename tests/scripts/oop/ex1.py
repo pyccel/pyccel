@@ -18,4 +18,9 @@ class Point(object):
 x = ones(3, double)
 p = Point (x)
 
+a = zeros(3, double)
+a[0] = 3
+p.translate(a)
+print(p.x)
+
 del p
