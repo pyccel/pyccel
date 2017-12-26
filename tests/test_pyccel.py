@@ -43,9 +43,21 @@ def test_2():
         print('> testing {0}: done'.format(str(f)))
 # ...
 
+# ...
+def test_3():
+    ignored = []
+
+    for i in range(0, 0+1):
+        filename = 'tests/scripts/oop/ex{0}.py'.format(str(i))
+        if not(i in ignored):
+            pyccel(files=[filename])
+            print('> testing {0}: done'.format(str(i)))
+# ...
+
 ################################
 if __name__ == '__main__':
     clean_tests()
     test_1()
     test_2()
+    test_3()
     clean_tests()
