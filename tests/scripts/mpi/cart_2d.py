@@ -10,8 +10,23 @@ ierr = -1
 mpi_init(ierr)
 
 # ...
-ntx = 16
-nty = 16
+npts    = zeros(2, int)
+steps   = ones(2, int)
+periods = zeros(2, bool)
+reorder = False
+# ...
+
+# ...
+npts[0] = 16
+npts[1] = 16
+
+periods[0] = False
+periods[1] = True
+# ...
+
+
+ntx = npts[0]
+nty = npts[1]
 
 # Grid spacing
 hx = 1.0/(ntx+1)
@@ -23,7 +38,7 @@ c1 = 1.0/(hx*hx)
 c2 = 1.0/(hy*hy)
 # ...
 
-mesh = Cart()
+mesh = Cart(npts, steps, periods, reorder)
 
 # ...
 sx = mesh.starts[0]

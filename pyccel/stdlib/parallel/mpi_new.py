@@ -22,19 +22,16 @@ from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
 from pyccel.stdlib.parallel.mpi import MPI_SUM
 
 #$ header class Cart(public)
-#$ header method __init__(Cart)
+#$ header method __init__(Cart, int [:], int [:], bool [:], bool)
 #$ header method __del__(Cart)
 #$ header method communicate(Cart, double [:,:])
 #$ header method reduce(Cart, double)
 
 class Cart(object):
-    def __init__(self):
+    def __init__(self, npts, steps, periods, reorder):
 
-        ntx = 16
-        nty = 16
-        steps   = [1, 1]
-        periods = [False, True]
-        reorder = False
+        ntx = npts[0]
+        nty = npts[1]
 
         # ... TODO : to be computed using 'len'
         self.ndims       = 2
