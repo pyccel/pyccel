@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# TODO improve reduce and communicate methods
+
 from pyccel.stdlib.parallel.mpi import mpi_comm_size
 from pyccel.stdlib.parallel.mpi import mpi_comm_rank
 from pyccel.stdlib.parallel.mpi import mpi_comm_world
@@ -13,10 +15,17 @@ from pyccel.stdlib.parallel.mpi import mpi_type_contiguous
 from pyccel.stdlib.parallel.mpi import mpi_type_vector
 from pyccel.stdlib.parallel.mpi import mpi_type_commit
 from pyccel.stdlib.parallel.mpi import mpi_type_free
+from pyccel.stdlib.parallel.mpi import mpi_sendrecv
+from pyccel.stdlib.parallel.mpi import mpi_allreduce
+from pyccel.stdlib.parallel.mpi import MPI_INTEGER
+from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
+from pyccel.stdlib.parallel.mpi import MPI_SUM
 
 #$ header class Cart(public)
 #$ header method __init__(Cart)
 #$ header method __del__(Cart)
+#$ header method communicate(Cart, double [:,:])
+#$ header method reduce(Cart, double)
 
 class Cart(object):
     def __init__(self):
@@ -54,13 +63,13 @@ class Cart(object):
         # ... TODO: remove from here
         ierr = -1
         size = -1
-        rank = -1
-        rank_in_topo = -1
+        self.rank = -1
+        self.rank_in_topo = -1
         self.comm_cart = -1
 
         comm = mpi_comm_world
         mpi_comm_size(comm, size, ierr)
-        mpi_comm_rank(comm, rank, ierr)
+        mpi_comm_rank(comm, self.rank, ierr)
         # ...
 
         # ...
@@ -73,8 +82,8 @@ class Cart(object):
         mpi_cart_create (comm, self.ndims, self.dims, self.periods, self.reorder, self.comm_cart, ierr)
 
         # Know my coordinates in the topology
-        mpi_comm_rank (self.comm_cart, rank_in_topo, ierr)
-        mpi_cart_coords (self.comm_cart, rank_in_topo, self.ndims, self.coords, ierr)
+        mpi_comm_rank (self.comm_cart, self.rank_in_topo, ierr)
+        mpi_cart_coords (self.comm_cart, self.rank_in_topo, self.ndims, self.coords, ierr)
 
         # X-axis limits
         sx = (self.coords[0]*ntx)/self.dims[0]
@@ -87,10 +96,10 @@ class Cart(object):
 
         # ...
         self.starts[0] = sx
-        self.ends[0]   = ex+1
+        self.ends[0]   = ex
 
         self.starts[1] = sy
-        self.ends[1]   = ey+1
+        self.ends[1]   = ey
         # ...
 
         # ... Neighbours
@@ -124,3 +133,41 @@ class Cart(object):
 
         # Destruction of the communicators
         mpi_comm_free (self.comm_cart, ierr)
+
+    def communicate(self, u):
+        ierr = -1
+        tag  = 1435
+        status = zeros (mpi_status_size, int)
+
+        # ... Constants
+        north = 0
+        east  = 1
+        south = 2
+        west  = 3
+        # ...
+
+        sx = self.starts[0]
+        ex = self.ends[0]
+
+        sy = self.starts[1]
+        ey = self.ends[1]
+
+        # ... Communication
+        # Send to neighbour north and receive from neighbour south
+        mpi_sendrecv (  u[sx, sy], 1, self.type_line, self.neighbour[north], tag, u[ex+1, sy], 1, self.type_line, self.neighbour[south], tag, self.comm_cart, status, ierr)
+
+        # Send to neighbour south and receive from neighbour north
+        mpi_sendrecv (  u[ex, sy], 1, self.type_line, self.neighbour[south], tag, u[sx-1, sy], 1, self.type_line, self.neighbour[north], tag, self.comm_cart, status, ierr)
+
+        # Send to neighbour west  and receive from neighbour east
+        mpi_sendrecv (  u[sx, sy], 1, self.type_column, self.neighbour[west], tag, u[sx, ey+1], 1, self.type_column, self.neighbour[east], tag, self.comm_cart, status, ierr)
+
+        # Send to neighbour east  and receive from neighbour west
+        mpi_sendrecv (  u[sx, ey], 1, self.type_column, self.neighbour[east], tag, u[sx, sy-1], 1, self.type_column, self.neighbour[west], tag, self.comm_cart, status, ierr)
+        # ...
+
+    def reduce(self, x):
+        ierr     = -1
+        global_x = 0.0
+
+        mpi_allreduce (x, global_x, 1, MPI_DOUBLE, MPI_SUM, self.comm_cart, ierr)

@@ -34,15 +34,15 @@ ey = mesh.ends[1]
 # ...
 
 # ... grid without ghost cells
-r_x  = range(sx, ex)
-r_y  = range(sy, ey)
+r_x  = range(sx, ex+1)
+r_y  = range(sy, ey+1)
 
 grid = tensor(r_x, r_y)
 # ...
 
 # ... extended grid with ghost cells
-r_ext_x = range(sx-1, ex+1)
-r_ext_y = range(sy-1, ey+1)
+r_ext_x = range(sx-1, ex+1+1)
+r_ext_y = range(sy-1, ey+1+1)
 
 grid_ext = tensor(r_ext_x, r_ext_y)
 # ...
@@ -64,6 +64,42 @@ for i,j in grid:
     f[i, j] = 2.0*(x*x-x+y*y-y)
     u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 # ...
+
+# Linear solver tolerance
+tol = 1.0e-10
+
+n_iterations = 1
+for it in range(0, n_iterations):
+    u[sx:ex+1,sy:ey+1] = u_new[sx:ex+1,sy:ey+1]
+
+    mesh.communicate(u)
+
+    # ... Computation of u at the n+1 iteration
+    for i,j in grid:
+        u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+    # ...
+
+    # ... Computation of the global error
+    u_error = 0.0
+    for i,j in grid:
+        u_error += abs(u[i,j]-u_new[i,j])
+    local_error = u_error/(ntx*nty)
+
+    # TODO add reduction
+    # Reduction
+    global_error = 0.0
+    mesh.reduce(local_error)
+    # ...
+
+    # ...
+    if (global_error < tol) or (it == n_iterations - 1):
+        if mesh.rank == 0:
+            print ("> convergence after ", it, " iterations")
+            print ("  local  error = ", local_error)
+            print ("  global error = ", global_error)
+        break
+    # ...
+
 
 
 del mesh
