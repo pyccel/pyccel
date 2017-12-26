@@ -567,8 +567,12 @@ class Codegen(object):
             elif isinstance(stmt, Assign):
                 if isinstance(stmt.rhs, (Range, Tensor)):
                     continue
-                elif isinstance(stmt.lhs, Variable) and stmt.lhs.name.startswith('__'):
-                    metavars[stmt.lhs.name] = stmt.rhs
+                elif isinstance(stmt.lhs, Variable):
+                    if (isinstance(stmt.lhs.name, str) and
+                        stmt.lhs.name.startswith('__')):
+                        metavars[stmt.lhs.name] = stmt.rhs
+                    else:
+                        body += printer(stmt) + "\n"
                 else:
                     body += printer(stmt) + "\n"
             elif isinstance(stmt, AugAssign):
