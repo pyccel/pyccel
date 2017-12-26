@@ -912,30 +912,65 @@ def insert_variable(var_name, \
         declarations[var_name] = dec
 
 # ...
-def expr_with_trailer(expr, trailer=None):
+def expr_with_trailer(expr, trailer):
+    # we apply the 'expr' property after checking which type is the trailer
 
+    if isinstance(trailer, TrailerSubscriptList):
+        args = trailer.expr
 
-    if trailer is None:
-        return expr
-    if isinstance(trailer, (tuple, list)):
-        if len(trailer) == 0:
-            return expr
-        if len(trailer) == 1:
-            return expr_with_trailer(expr, trailer[0])
-        if expr.cls_base and len(trailer)>1:
-            for i in trailer:
-                    expr=expr_with_trailer(expr, i.args)
-            return expr
+        # we use str(.) because expr.name can be a DottedName
+        v = namespace[str(expr.name)]
+        expr = IndexedVariable(v.name, dtype=v.dtype)[args]
+
+    elif isinstance(trailer, TrailerDots):
+
+        # TODO add IndexedVariable, IndexedElement
+        if not(isinstance(expr, Variable)):
+            raise TypeError("Expecting Variable")
 
         if not expr.cls_base:
-            raise ValueError('Unable to construct expr from trailers.')
-        return expr
+            raise ValueError("Expecting an object")
 
-    if isinstance(trailer, Trailer):
+        arg      = trailer.expr
+        cls_base = expr.cls_base
 
-        return expr_with_trailer(expr, trailer.args)
+        # be careful, inside '__init__' attributs are not yet known
+        # for the moment, inside the definition of the class, cls_base is of
+        # type str
+        attributs = []
+        if isinstance(cls_base, ClassDef):
+            d_attributs = cls_base.attributs_as_dict
+            if not(arg in d_attributs):
+                raise ValueError('{0} is not a member of '
+                                 '{1}'.format(arg, expr))
 
-    if isinstance(trailer, TrailerArgList):
+            attribut = d_attributs[arg]
+
+            var_name = DottedName(expr.name, arg)
+            var = attribut.clone(var_name)
+            return var
+        elif isinstance(cls_base, str):
+            var_name = DottedName(expr.name, arg)
+            if str(var_name) in namespace:
+                expr = namespace[str(var_name)]
+            else:
+                if not(expr.name in namespace):
+                    raise ValueError("Undefined variable {}".format(expr.name))
+
+                expr = DottedName(expr, arg)
+
+                attr = get_class_attribut(expr)
+                if not(attr is None):
+                    return attr
+                else:
+                    # now, we insert the class attribut as a sympy Symbol in the
+                    # namespace. Later, this will be decorated, when processing an
+                    # AssignStmt.
+                    namespace[str(expr)] = Symbol(str(expr))
+        else:
+            raise TypeError('expecting a ClassDef or str')
+
+    elif isinstance(trailer, TrailerArgList):
         args = trailer.expr
 
         ls = []
@@ -984,39 +1019,6 @@ def expr_with_trailer(expr, trailer=None):
             else:
                 raise NotImplementedError('expr is not FunctionDef '
                                          'and {0} is not a builtin function'.format(f_name))
-    elif isinstance(trailer, TrailerSubscriptList):
-        args = trailer.expr
-
-        # we use str(.) because expr.name can be a DottedName
-        v = namespace[str(expr.name)]
-        expr = IndexedVariable(v.name, dtype=v.dtype)[args]
-    elif isinstance(trailer, TrailerDots):
-
-        args = trailer.expr
-
-        # TODO add IndexedVariable, IndexedElement
-        dottables = (Variable)
-        if not(isinstance(expr, dottables)):
-            raise TypeError("Expecting Variable")
-        var_name = '{0}.{1}'.format(expr.name, args)
-        found_var = (var_name in namespace)
-#            if not(found_var):
-#                raise ValueError("Undefined variable {}".format(var_name))
-        if var_name in namespace:
-            expr = namespace[var_name]
-        else:
-            if not(expr.name in namespace):
-                raise ValueError("Undefined variable {}".format(expr.name))
-            expr = DottedName(expr, args)
-
-            attr = get_class_attribut(expr)
-            if not(attr is None):
-                return attr
-            else:
-                # now, we insert the class attribut as a sympy Symbol in the
-                # namespace. Later, this will be decorated, when processing an
-                # AssignStmt.
-                namespace[str(expr)] = Symbol(str(expr))
     return expr
 # ...
 
@@ -1814,8 +1816,19 @@ class AtomExpr(ExpressionElement, BasicStmt):
         """
         if DEBUG:
             print("> AtomExpr ")
-        expr = self.op.expr
-        return expr_with_trailer(expr, self.trailers)
+
+        e = self.op.expr
+        trailer = self.trailers
+
+        # if trailer is None or empty list
+        if not trailer:
+            return e
+
+        # now we loop over all trailers
+        # this must be done from left to right
+        for i in trailer:
+            e = expr_with_trailer(e, i.args)
+        return e
 
 class Power(ExpressionElement, BasicStmt):
     """Class representing an atomic expression."""

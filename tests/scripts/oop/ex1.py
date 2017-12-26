@@ -22,7 +22,9 @@ p = Point (0.0, 0.0)
 p.translate(1.0, 2.0)
 
 #print(p.x, p.y)
-#a = p.x
+a = p.x
+#p.y = a + 5
+#p.y = p.x + 5
 #print(a)
 
 del p
