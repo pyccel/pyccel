@@ -932,19 +932,23 @@ def insert_variable(var_name, \
 def expr_with_trailer(expr, trailer):
     # we apply the 'expr' property after checking which type is the trailer
 
+    # we use str(.) because expr.name can be a DottedName
+    if isinstance(expr, str):
+        print(expr)
+        print_namespace()
+        expr = namespace[expr]
+
     if isinstance(trailer, TrailerSubscriptList):
         args = trailer.expr
 
-        # we use str(.) because expr.name can be a DottedName
-        if isinstance(expr, str):
-            expr = namespace[expr]
         expr = IndexedVariable(expr.name, dtype=expr.dtype)[args]
 
     elif isinstance(trailer, TrailerDots):
 
         # TODO add IndexedVariable, IndexedElement
         if not(isinstance(expr, Variable)):
-            raise TypeError("Expecting Variable")
+            raise TypeError("Expecting Variable, given "
+                            "{0}".format(type(expr)))
 
         if not expr.cls_base:
             raise ValueError("Expecting an object")
@@ -2458,14 +2462,10 @@ class FunctionDefStmt(BasicStmt):
         if args_0:
             args=[args_0]+args
 
-        # ... cleaning the namespace
-        for a in arg_names:
-            del declarations[a]
-            del namespace[a]
-
         # TODO improve this. it is not working right now
         ls = self.local_vars + self.stmt_vars
-        ls = [str(e.expr) for e in ls]
+        ls = [e.expr for e in ls]
+#        ls = [str(e.expr) for e in ls]
         for var_name in ls:
             if var_name in namespace:
 #                prelude.append(declarations[var_name])
@@ -2473,6 +2473,11 @@ class FunctionDefStmt(BasicStmt):
                 del namespace[var_name]
                 del declarations[var_name]
         # ...
+
+        # ... cleaning the namespace
+        for a in arg_names:
+            del declarations[a]
+            del namespace[a]
 
         # ...
         for arg_name, var in list(scope_vars.items()):
