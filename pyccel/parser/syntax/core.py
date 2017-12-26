@@ -936,8 +936,9 @@ def expr_with_trailer(expr, trailer):
         args = trailer.expr
 
         # we use str(.) because expr.name can be a DottedName
-        v = namespace[str(expr.name)]
-        expr = IndexedVariable(v.name, dtype=v.dtype)[args]
+        if isinstance(expr, str):
+            expr = namespace[expr]
+        expr = IndexedVariable(expr.name, dtype=expr.dtype)[args]
 
     elif isinstance(trailer, TrailerDots):
 
