@@ -52,7 +52,7 @@ class Cart(object):
         self.starts    = zeros(self.ndims, int)
         self.ends      = zeros(self.ndims, int)
 
-        self.steps   = [1, 1]
+        self.steps   = steps
         self.periods = [False, True]
         self.reorder = False
         # ...

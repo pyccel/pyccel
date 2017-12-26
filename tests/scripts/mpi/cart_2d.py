@@ -24,20 +24,6 @@ periods[0] = False
 periods[1] = True
 # ...
 
-
-ntx = npts[0]
-nty = npts[1]
-
-# Grid spacing
-hx = 1.0/(ntx+1)
-hy = 1.0/(nty+1)
-
-# Equation Coefficients
-c0 = (0.5*hx*hx*hy*hy)/(hx*hx+hy*hy)
-c1 = 1.0/(hx*hx)
-c2 = 1.0/(hy*hy)
-# ...
-
 mesh = Cart(npts, steps, periods, reorder)
 
 # ...
@@ -67,6 +53,19 @@ u       = zeros(grid_ext, double)
 u_new   = zeros(grid_ext, double)
 u_exact = zeros(grid_ext, double)
 f       = zeros(grid_ext, double)
+# ...
+
+ntx = npts[0]
+nty = npts[1]
+
+# Grid spacing
+hx = 1.0/(ntx+1)
+hy = 1.0/(nty+1)
+
+# Equation Coefficients
+c0 = (0.5*hx*hx*hy*hy)/(hx*hx+hy*hy)
+c1 = 1.0/(hx*hx)
+c2 = 1.0/(hy*hy)
 # ...
 
 # Initialization
