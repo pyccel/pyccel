@@ -47,7 +47,7 @@ def test_2():
 def test_3():
     ignored = []
 
-    for i in range(0, 0+1):
+    for i in range(0, 1+1):
         filename = 'tests/scripts/oop/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])

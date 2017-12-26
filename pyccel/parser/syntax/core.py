@@ -1464,12 +1464,14 @@ class AssignStmt(BasicStmt):
             d_var = get_attributs(rhs)
 
             if not isinstance(rhs, Tuple):
-                d_var['allocatable'] = not(d_var['shape'] is None)
-                if d_var['shape']:
-                    if DEBUG:
-                        print(("> Found an unallocated variable: ", lhs))
+                if isinstance(namespace[str(lhs)], Symbol):
+                    # TODO improve this when handling symbolic computation
+                    d_var['allocatable'] = not(d_var['shape'] is None)
                     status = 'unallocated'
-                    like = allocatable_like(rhs)
+                    if d_var['rank'] > 0:
+                        like = allocatable_like(rhs)
+                    else:
+                        like = None
 
             # TODO improve assignable
             assignable = (sp_Integer, sp_Float)

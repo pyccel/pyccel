@@ -285,7 +285,7 @@ def build_file(filename, language, compiler, \
             if f_name in treated_files:
                 break
 
-            print('> treating {0}'.format(f_name))
+#            print('> treating {0}'.format(f_name))
 
             module_name = str(module).replace('.', '_')
             module_name = 'm_{0}'.format(module_name)
