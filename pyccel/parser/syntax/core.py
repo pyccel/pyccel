@@ -2464,13 +2464,14 @@ class FunctionDefStmt(BasicStmt):
             del namespace[a]
 
         # TODO improve this. it is not working right now
-#        ls = self.local_vars + self.stmt_vars
-#        for var_name in ls:
-#            if var_name in namespace:
+        ls = self.local_vars + self.stmt_vars
+        ls = [str(e.expr) for e in ls]
+        for var_name in ls:
+            if var_name in namespace:
 #                prelude.append(declarations[var_name])
-#
-#                del namespace[var_name]
-#                del declarations[var_name]
+
+                del namespace[var_name]
+                del declarations[var_name]
         # ...
 
         # ...
