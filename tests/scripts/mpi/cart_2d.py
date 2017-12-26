@@ -3,6 +3,11 @@
 from pyccel.stdlib.parallel.mpi import mpi_init
 from pyccel.stdlib.parallel.mpi import mpi_finalize
 
+from pyccel.stdlib.parallel.mpi import mpi_allreduce
+from pyccel.stdlib.parallel.mpi import MPI_INTEGER
+from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
+from pyccel.stdlib.parallel.mpi import MPI_SUM
+
 from pyccel.stdlib.parallel.mpi_new import Cart
 
 ierr = -1
@@ -34,6 +39,10 @@ sy = mesh.starts[1]
 ey = mesh.ends[1]
 # ...
 
+# ...
+print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
+# ...
+
 # ... grid without ghost cells
 r_x  = range(sx, ex+1)
 r_y  = range(sy, ey+1)
@@ -55,6 +64,7 @@ u_exact = zeros(grid_ext, double)
 f       = zeros(grid_ext, double)
 # ...
 
+# ...
 ntx = npts[0]
 nty = npts[1]
 
@@ -97,17 +107,20 @@ for it in range(0, n_iterations):
     u_error = 0.0
     for i,j in grid:
         u_error += abs(u[i,j]-u_new[i,j])
-    u_error = u_error/(ntx*nty)
+    local_error = u_error/(ntx*nty)
 
     # Reduction
-    mesh.reduce(u_error)
+    ierr = -1
+    global_error = 0.0
+    mpi_allreduce (local_error, global_error, 1, MPI_DOUBLE, MPI_SUM, mesh.comm_cart, ierr)
     # ...
 
     # ...
-    if (u_error < tol) or (it == n_iterations - 1):
+    if (global_error < tol) or (it == n_iterations - 1):
         if mesh.rank == 0:
             print ("> convergence after ", it, " iterations")
-            print ("  error = ", u_error)
+            print ("  local  error = ", local_error)
+            print ("  global error = ", global_error)
         break
     # ...
 

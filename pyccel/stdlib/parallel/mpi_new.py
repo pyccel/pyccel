@@ -1,6 +1,7 @@
 # coding: utf-8
 
-# TODO improve reduce and communicate methods
+# TODO - improve communicate method
+#      - debug reduce method: it must return the global error
 
 from pyccel.stdlib.parallel.mpi import mpi_comm_size
 from pyccel.stdlib.parallel.mpi import mpi_comm_rank
@@ -53,7 +54,7 @@ class Cart(object):
         self.ends      = zeros(self.ndims, int)
 
         self.steps   = steps
-        self.periods = [False, True]
+        self.periods = [False, False]
         self.reorder = False
         # ...
 
@@ -165,4 +166,8 @@ class Cart(object):
 
     def reduce(self, x):
         ierr     = -1
-        mpi_allreduce (x, x, 1, MPI_DOUBLE, MPI_SUM, self.comm_cart, ierr)
+
+        global_x = 0.0
+
+        mpi_allreduce (x, global_x, 1, MPI_DOUBLE, MPI_SUM, self.comm_cart, ierr)
+        print(global_x, x)
