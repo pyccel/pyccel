@@ -934,8 +934,6 @@ def expr_with_trailer(expr, trailer):
 
     # we use str(.) because expr.name can be a DottedName
     if isinstance(expr, str):
-        print(expr)
-        print_namespace()
         expr = namespace[expr]
 
     if isinstance(trailer, TrailerSubscriptList):
@@ -2304,9 +2302,10 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.ast.core
         """
-#        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.trailer.expr
+
+#        print (">>>>>>>>>>> FunctionDefStmt {0}: Begin".format(name))
 
         local_vars  = []
         global_vars = []
@@ -2522,10 +2521,13 @@ class FunctionDefStmt(BasicStmt):
                            cls_name=cls_name)
         namespace[name] = stmt
 
+#        print('======= name = {0}'.format(name))
+#        print_namespace()
+
         # ... TODO add a call to is_compatible_header
         #         the FunctionDef is created, and before the return
 
-#        print "*********** FunctionDefStmt.expr: End"
+#        print "<<<<<<<<<<< FunctionDefStmt : End"
         return stmt
 
 class ClassDefStmt(BasicStmt):
@@ -2555,8 +2557,11 @@ class ClassDefStmt(BasicStmt):
         Process the Class Definition by returning the appropriate object from
         pyccel.ast.core
         """
-#        print "*********** ClassDefStmt.expr: Begin"
         name = str(self.name)
+
+#        print (">>>>>>>>>>> ClassDefStmt {0}: Begin".format(name))
+#        print('===== BEFORE =====')
+#        print_namespace()
 
         if not(name in headers):
             raise Exception('Class header could not be found for {0}.'
@@ -2629,10 +2634,16 @@ class ClassDefStmt(BasicStmt):
                 namespace.pop(k.name)
             if k.name in declarations.keys():
                 declarations.pop(k.name)
-        # ...
-#        print_declarations()
 
-#        print "*********** ClassDefStmt.expr: End"
+        for m in methods:
+            if not(str(m.name) == '__init__'):
+                namespace.pop('{0}.{1}'.format(name, str(m.name)))
+        # ...
+
+#        print('===== AFTER =====')
+#        print_namespace()
+
+#        print "<<<<<<<<<<< ClassDefStmt : End"
 
         return stmt
 

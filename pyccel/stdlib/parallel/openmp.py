@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# TODO raise StopIteration() instead of 'StopIteration'
+
 #$ header class StopIteration(public, hide)
 #$ header method __init__(StopIteration)
 #$ header method __del__(StopIteration)
@@ -49,7 +51,7 @@ class Range(object):
             i = self.i
             self.i = self.i + 1
         else:
-            raise StopIteration()
+            raise 'StopIteration'
 
 #$ header class Parallel(public, with, openmp)
 #$ header method __init__(Parallel, str, str, str [:], str [:], str [:], str [:], str, str [:], str)
