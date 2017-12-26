@@ -697,6 +697,9 @@ def get_with_clauses(expr):
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             private = OMP_PrivateClause(*ls)
     # ...
@@ -705,6 +708,9 @@ def get_with_clauses(expr):
     if not(d['_firstprivate'] is None):
         if not isinstance(d['_firstprivate'], Nil):
             ls = d['_firstprivate']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             firstprivate = OMP_FirstPrivateClause(*ls)
     # ...
@@ -713,6 +719,9 @@ def get_with_clauses(expr):
     if not(d['_shared'] is None):
         if not isinstance(d['_shared'], Nil):
             ls = d['_shared']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             shared = OMP_SharedClause(*ls)
     # ...
@@ -721,6 +730,9 @@ def get_with_clauses(expr):
     if not(d['_reduction'] is None):
         if not isinstance(d['_reduction'], Nil):
             ls = d['_reduction']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             reduction = OMP_ReductionClause(*ls)
     # ...
@@ -729,6 +741,9 @@ def get_with_clauses(expr):
     if not(d['_copyin'] is None):
         if not isinstance(d['_copyin'], Nil):
             ls = d['_copyin']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             copyin = OMP_CopyinClause(*ls)
     # ...
@@ -877,6 +892,9 @@ def get_for_clauses(expr):
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             private = OMP_PrivateClause(*ls)
     # ...
@@ -885,6 +903,9 @@ def get_for_clauses(expr):
     if not(d['_firstprivate'] is None):
         if not isinstance(d['_firstprivate'], Nil):
             ls = d['_firstprivate']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             firstprivate = OMP_FirstPrivateClause(*ls)
     # ...
@@ -893,6 +914,9 @@ def get_for_clauses(expr):
     if not(d['_lastprivate'] is None):
         if not isinstance(d['_lastprivate'], Nil):
             ls = d['_lastprivate']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             lastprivate = OMP_LastPrivateClause(*ls)
     # ...
@@ -901,6 +925,9 @@ def get_for_clauses(expr):
     if not(d['_reduction'] is None):
         if not isinstance(d['_reduction'], Nil):
             ls = d['_reduction']
+            if isinstance(ls, str):
+                ls = [ls]
+
             ls = [_format_str(a) for a in ls]
             reduction = OMP_ReductionClause(*ls)
     # ...

@@ -240,7 +240,8 @@ AtomExpr: op=Atom (trailers*=Trailer)?;
 
 Number: Float | INT;
 Atom: 
-   '(' op=Expression ')'
+    (op=ExpressionTuple)
+  | (op=ExpressionList)
   | (op=Number) 
   | (op=ID) 
   | (op=NONE)

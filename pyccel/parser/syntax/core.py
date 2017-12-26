@@ -1957,6 +1957,18 @@ class Atom(ExpressionElement):
                                     .format(O, self._tx_position))
         elif isinstance(op, ExpressionElement):
             return op.expr
+        elif isinstance(op, ExpressionList):
+            e = op.expr
+            if len(e) == 1:
+                return e[0]
+            else:
+                return e
+        elif isinstance(op, ExpressionTuple):
+            e = op.expr
+            if len(e) == 1:
+                return e[0]
+            else:
+                return e
         elif op in namespace:
             if isinstance(namespace[op], FunctionDef):
                 F = namespace[op]

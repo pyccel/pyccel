@@ -503,10 +503,18 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in expr.rhs.arguments[1:])
             return 'call {0}({1})'.format(rhs_code, code_args)
         elif isinstance(expr.rhs, FunctionCall):
+            # in the case of a function that returns a list,
+            # we should append them to the procedure arguments
+            if isinstance(expr.lhs, (tuple, list, Tuple)):
+                lhs_code = ', '.join(self._print(i) for i in expr.lhs)
             rhs_code = self._print(expr.rhs.name)
             func = expr.rhs.func
             if func.cls_name:
+                # TODO: do we keep this?
+                if isinstance(expr.lhs, (tuple, list, Tuple)):
+                    raise TypeError('Expecting a single lhs')
                 rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
+
             is_procedure = func.is_procedure
             args = expr.rhs.arguments
             f_args = func.arguments
@@ -572,6 +580,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_OMP_Parallel(self, expr):
         # prelude will not be printed
+#        from pyccel.ast.parallel.openmp import OMP_PrivateClause
+#        for i in expr.clauses:
+#            if isinstance(i, OMP_PrivateClause):
+#                print(i, i.variables, type(i))
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
         body    = '\n'.join(self._print(i) for i in expr.body)
 
@@ -846,29 +858,6 @@ class FCodePrinter(CodePrinter):
 
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
         return self._print(stmt)
-
-    def _print_MultiAssign(self, expr):
-        if isinstance(expr.rhs, FunctionCall):
-            # TODO check number of arguments and ValuedVariables
-            prec =  self._settings['precision']
-
-            args = expr.rhs.arguments
-            args = [N(a, prec) for a in args]
-            func = expr.rhs.func
-            f_name = self._print(func.name)
-            args    = ', '.join(self._print(i) for i in args)
-            outputs = ', '.join(self._print(i) for i in expr.lhs)
-            code = 'call {0} ({1}, {2})'.format(f_name, args, outputs)
-        elif isinstance(expr.rhs, Function):
-            prec =  self._settings['precision']
-            args = [N(a, prec) for a in expr.rhs.args]
-            func = expr.rhs.func
-            args    = ', '.join(self._print(i) for i in args)
-            outputs = ', '.join(self._print(i) for i in expr.lhs)
-            code = 'call {0} ({1}, {2})'.format(func, args, outputs)
-        else:
-            raise TypeError('Expecting a Function call.')
-        return self._get_statement(code)
 
     def _print_Range(self, expr):
         start = self._print(expr.start)
