@@ -54,8 +54,8 @@ class Cart(object):
         self.ends      = zeros(self.ndims, int)
 
         self.steps   = steps
-        self.periods = [False, False]
-        self.reorder = False
+        self.periods = periods
+        self.reorder = reorder
         # ...
 
         # ... TODO: remove from here

@@ -2379,7 +2379,7 @@ class Array(Basic):
     def shape(self):
         return self._args[2]
 
-# TODO add examples
+# TODO - add examples
 class ZerosLike(Basic):
     """Represents variable assignment using numpy.zeros_like for code generation.
 
@@ -2423,6 +2423,23 @@ class ZerosLike(Basic):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def init_value(self):
+        dtype = self.rhs.dtype
+        if isinstance(dtype, NativeInteger):
+            value = 0
+        elif isinstance(dtype, NativeFloat):
+            value = 0.0
+        elif isinstance(dtype, NativeDouble):
+            value = 0.0
+        elif isinstance(dtype, NativeComplex):
+            value = 0.0
+        elif isinstance(dtype, NativeBool):
+            value = BooleanFalse()
+        else:
+            raise TypeError('Unknown type')
+        return value
 
 # TODO: treat as a function
 class Print(Basic):

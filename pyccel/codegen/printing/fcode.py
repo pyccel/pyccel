@@ -292,12 +292,10 @@ class FCodePrinter(CodePrinter):
                                                     self._print(e+p)) \
                                    for (s,e, p) in zip(starts, ends, pads))
 
-        init_value = None
-        dtype = expr.lhs.dtype
-        init_value = expr.init_value
+        init_value = self._print(expr.init_value)
 
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
-        code_init = "{0} = {1}".format(lhs_code, self._print(init_value))
+        code_init = "{0} = {1}".format(lhs_code, init_value)
         code = "{0}\n{1}".format(code_alloc, code_init)
         return self._get_statement(code)
 
@@ -340,7 +338,12 @@ class FCodePrinter(CodePrinter):
             r = '{0}:{1}'.format(l,u)
             rs.append(r)
         shape = ', '.join(self._print(i) for i in rs)
-        code  = 'allocate({0}({1})) ; {0} = 0'.format(lhs, shape)
+        init_value = self._print(expr.init_value)
+
+        code  = ('allocate({lhs}({shape}))\n'
+                 '{lhs} = {init_value}').format(lhs=lhs,
+                                                shape=shape,
+                                                init_value=init_value)
 
         return self._get_statement(code)
 
