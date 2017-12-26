@@ -19,10 +19,11 @@ class Point(object):
 
 p = Point (0.0, 0.0)
 
-#a = 2 * p.x - 2
-
 a = p.x
 a = p.x - 2
+a = 2 * p.x - 2
+a = 2 * (p.x + 6) - 2
+
 p.y = a + 5
 p.y = p.x + 5
 

@@ -493,9 +493,26 @@ def get_attributs(expr):
                 args.append(arg)
             else:
                 if isinstance(arg, (Variable, IndexedVariable, FunctionDef)):
+#                    print_namespace()
                     name = arg.name
-                    var = namespace[name]
-                    return get_attributs(var)
+                    if not isinstance(name, DottedName):
+                        var = namespace[name]
+                        return get_attributs(var)
+                    else:
+                        # see remark in expr_with_trailer (TrailerDots)
+                        cls_base = namespace[name.name[0]]
+                        # TODO wil not work in nested classes
+                        member   = name.name[1]
+
+                        attributs = []
+                        if isinstance(cls_base, ClassDef):
+                            d_attributs = cls_base.attributs_as_dict
+                            if not(member in d_attributs):
+                                raise ValueError('{0} is not a member of '
+                                                 '{1}'.format(member, expr))
+
+                            attribut = d_attributs[member]
+                            return get_attributs(attribut)
                 else:
                     return get_attributs(arg)
         return get_attributs(args)
