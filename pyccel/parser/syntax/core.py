@@ -48,12 +48,13 @@ from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeBool, NativeFloat, NativeNil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeRange, NativeTensor, NativeParallelRange
+from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
-from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
-                             For, ForIterator, Assign, ParallelBlock, \
+from pyccel.ast.core import EmptyLine
+from pyccel.ast.core import (Tile, Range, Tensor, \
+                             For, ForIterator, Assign, \
                              Declare, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
                              VariableHeader, \
@@ -63,47 +64,15 @@ from pyccel.ast.core import (Sync, Tile, Range, Tensor, ParallelRange, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, Assert, If, \
-                             Stencil, Ceil, Break, Continue, Raise, \
+                             Ceil, Break, Continue, Raise, \
                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
                              Dot, Sign, IndexedElement,\
                              Pass, \
                              Min, Max, Mod)
 
 from pyccel.ast.parallel.mpi import MPI
-from pyccel.ast.parallel.mpi import MPI_ERROR, MPI_STATUS
-from pyccel.ast.parallel.mpi import MPI_Assign, MPI_Declare
-from pyccel.ast.parallel.mpi import MPI_waitall
-from pyccel.ast.parallel.mpi import MPI_INTEGER, MPI_REAL, MPI_DOUBLE
-from pyccel.ast.parallel.mpi import MPI_comm
-from pyccel.ast.parallel.mpi import MPI_comm_world, MPI_COMM_WORLD
-from pyccel.ast.parallel.mpi import MPI_status_size, MPI_STATUS_SIZE
-from pyccel.ast.parallel.mpi import MPI_proc_null, MPI_PROC_NULL
-from pyccel.ast.parallel.mpi import MPI_comm_size, MPI_comm_rank
-from pyccel.ast.parallel.mpi import MPI_comm_recv, MPI_comm_send
-from pyccel.ast.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
-from pyccel.ast.parallel.mpi import MPI_comm_sendrecv
-from pyccel.ast.parallel.mpi import MPI_comm_sendrecv_replace
-from pyccel.ast.parallel.mpi import MPI_comm_barrier
-from pyccel.ast.parallel.mpi import MPI_comm_bcast
-from pyccel.ast.parallel.mpi import MPI_comm_scatter
-from pyccel.ast.parallel.mpi import MPI_comm_gather
-from pyccel.ast.parallel.mpi import MPI_comm_allgather
-from pyccel.ast.parallel.mpi import MPI_comm_alltoall
-from pyccel.ast.parallel.mpi import MPI_comm_reduce
-from pyccel.ast.parallel.mpi import MPI_comm_allreduce
-from pyccel.ast.parallel.mpi import MPI_comm_split
-from pyccel.ast.parallel.mpi import MPI_comm_free
-from pyccel.ast.parallel.mpi import MPI_comm_cart_create
-from pyccel.ast.parallel.mpi import MPI_comm_cart_coords
-from pyccel.ast.parallel.mpi import MPI_comm_cart_shift
-from pyccel.ast.parallel.mpi import MPI_comm_cart_sub
-from pyccel.ast.parallel.mpi import MPI_dims_create
-from pyccel.ast.parallel.mpi import MPI_Tensor
-from pyccel.ast.parallel.mpi import mpi_definitions
 
-from pyccel.ast.parallel.openmp import OMP_ParallelNumThreadClause
-
-from pyccel.stdlib.stdlib     import stdlib_definitions
+from pyccel.stdlib.stdlib import stdlib_definitions
 
 DEBUG = False
 #DEBUG = True
@@ -166,14 +135,12 @@ def clean_namespace():
     """Cleans the global variables."""
     global namespace
     global declarations
-    global cls_constructs
-    global class_defs
     global _extra_stmts
 
-    namespace      = {}
+    namespace = {}
+    namespace['cls_constructs'] = {}
+
     declarations   = {}
-    cls_constructs = {}
-    class_defs     = {}
     _extra_stmts   = []
 # ...
 
@@ -183,10 +150,31 @@ def update_namespace(d):
     global namespace
 
     for k,v in d.items():
-        if k in namespace:
-            raise ValueError('{0} already exists in namespace.'.format(k))
+        if not(k == 'cls_constructs'):
+            if k in namespace:
+                raise ValueError('{0} already exists in namespace.'.format(k))
 
-        namespace[k] = v
+            namespace[k] = v
+
+    if 'cls_constructs' in d:
+        for k,v in d['cls_constructs'].items():
+            namespace['cls_constructs'][k] = v
+# ...
+
+# ...
+def get_class_construct(name):
+    """Returns the class datatype for name."""
+    global namespace
+
+    return namespace['cls_constructs'][name]
+# ...
+
+# ...
+def set_class_construct(name, value):
+    """Sets the class datatype for name."""
+    global namespace
+
+    namespace['cls_constructs'][name] = value
 # ...
 
 # ...
@@ -204,20 +192,17 @@ def datatype_from_string(txt):
         return NativeComplex()
     elif txt == 'bool':
         return NativeBool()
-    elif txt == 'mpi_int':
-        return MPI_INTEGER()
-    elif txt == 'mpi_float':
-        return MPI_FLOAT()
-    elif txt == 'mpi_double':
-        return MPI_DOUBLE()
 # ...
 
 # Global variable namespace
 namespace    = {}
+namespace['cls_constructs'] = {}
+
 headers      = {}
 declarations = {}
 _extra_stmts  = []
 
+# TODO do we keep this?
 namespace["True"]  = true
 namespace["False"] = false
 namespace["pi"]    = pi
@@ -227,10 +212,6 @@ namespace["pi"]    = pi
 builtin_types      = ['int', 'float', 'double', 'complex', 'bool']
 builtin_datatypes  = [datatype(i) for i in builtin_types]
 # ...
-
-# ... will contain user defined types
-cls_constructs   = {}
-class_defs       = {}
 
 # ... builtin functions
 builtin_funcs_math_nores = ['print']
@@ -250,11 +231,8 @@ builtin_funcs_math = builtin_funcs_math_un + \
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
 builtin_funcs += builtin_funcs_math
 
-builtin_funcs_iter = ['range', 'tensor', 'prange']
+builtin_funcs_iter = ['range', 'tensor']
 builtin_funcs += builtin_funcs_iter
-
-builtin_funcs_mpi = ['mpi_waitall']
-builtin_funcs += builtin_funcs_mpi
 # ...
 
 # ...
@@ -262,11 +240,15 @@ def print_namespace():
     print("-------- namespace --------")
     for key, value in list(namespace.items()):
         if not(key in ['True', 'False', 'pi']):
-            print((key, type(value)))
-#            if isinstance(value, Variable):
-#                print key, type(value), value.rank #, id(value)
-#            else:
-#                print key, type(value)
+            print('{0} :: {1}'.format(key, type(value)))
+    print("---------------------------")
+# ...
+
+# ...
+def print_declarations():
+    print("-------- declarations --------")
+    for key, value in list(declarations.items()):
+        print('{0} :: {1}'.format(key, value))
     print("---------------------------")
 # ...
 
@@ -339,31 +321,8 @@ def get_attributs(expr):
     elif isinstance(expr, Nil):
         d_var['datatype']    = NativeNil()
         return d_var
-#    elif isinstance(expr, DottedVariable):
-#        comm = expr.name[0]
-#        attr = expr.name[-1]
-#        base = comm.cls_base
-#        if not isinstance(base, MPI):
-#            raise TypeError("Expecting MPI instance, given ", base)
-#
-#        dtype = base.dtype(attr)
-#
-#        d_var['datatype']    = dtype
-#        d_var['allocatable'] = False
-#        d_var['shape']       = None
-#        d_var['rank']        = 0
-#        d_var['cls_base']    = None
-#        return d_var
     elif isinstance(expr, MPI):
-        if expr.is_integer:
-            d_var['datatype']    = 'int'
-        else:
-            raise ValueError("Expecting a integer")
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-        d_var['cls_base']    = MPI_COMM_WORLD
-        return d_var
+        raise NotImplementedError('')
     elif isinstance(expr, CustomDataType):
         raise NotImplementedError('')
         d_var['datatype']    = expr
@@ -455,6 +414,7 @@ def get_attributs(expr):
                                 prefix=prefix, \
                                 alias=dtype.alias, \
                                 is_iterable=dtype.is_iterable, \
+                                is_with_construct=dtype.is_with_construct, \
                                 is_polymorphic=False)()
 
         d_var['datatype']    = dtype
@@ -533,9 +493,26 @@ def get_attributs(expr):
                 args.append(arg)
             else:
                 if isinstance(arg, (Variable, IndexedVariable, FunctionDef)):
+#                    print_namespace()
                     name = arg.name
-                    var = namespace[name]
-                    return get_attributs(var)
+                    if not isinstance(name, DottedName):
+                        var = namespace[name]
+                        return get_attributs(var)
+                    else:
+                        # see remark in expr_with_trailer (TrailerDots)
+                        cls_base = namespace[name.name[0]]
+                        # TODO wil not work in nested classes
+                        member   = name.name[1]
+
+                        attributs = []
+                        if isinstance(cls_base, ClassDef):
+                            d_attributs = cls_base.attributs_as_dict
+                            if not(member in d_attributs):
+                                raise ValueError('{0} is not a member of '
+                                                 '{1}'.format(member, expr))
+
+                            attribut = d_attributs[member]
+                            return get_attributs(attribut)
                 else:
                     return get_attributs(arg)
         return get_attributs(args)
@@ -577,9 +554,6 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, Range):
                 grid = i
                 rank = 1
-            elif isinstance(i, ParallelRange):
-                grid = i
-                rank = 1
             elif isinstance(i, Variable):
                 ctype = i.dtype
                 if ctype in builtin_datatypes:
@@ -594,7 +568,7 @@ def builtin_function(name, args, lhs=None, op=None):
             elif isinstance(i, Integer):
                 shape.append(i)
             else:
-                raise TypeError('Unexpected type')
+                raise TypeError('wrong argument {0} of type {1}'.format(i, type(i)))
 
         if rank is None:
             rank = len(shape)
@@ -660,7 +634,11 @@ def builtin_function(name, args, lhs=None, op=None):
         if not lhs:
             raise ValueError("Expecting a lhs.")
         d_var, grid = get_arguments_zeros()
+#        print_namespace()
         insert_variable(lhs, **d_var)
+#        print('\n')
+#        print_namespace()
+#        import sys; sys.exit(0)
         lhs = namespace[lhs]
         f_name = name.capitalize()
         f_name = eval(f_name)
@@ -781,23 +759,6 @@ def builtin_function(name, args, lhs=None, op=None):
         lhs = namespace[lhs]
         expr = Range(*args)
         return assign(lhs, expr, op, strict=False)
-    elif name == "prange":
-        if not lhs:
-            raise ValueError("Expecting a lhs.")
-        if not(len(args) in [2, 3]):
-            raise ValueError("Expecting exactly two or three arguments.")
-
-        d_var = {}
-        d_var['datatype']    = NativeParallelRange()
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-
-        insert_variable(lhs, **d_var)
-        namespace[lhs] = ParallelRange(*args)
-        lhs = namespace[lhs]
-        expr = ParallelRange(*args)
-        return assign(lhs, expr, op, strict=False)
     elif name == "tensor":
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -815,24 +776,6 @@ def builtin_function(name, args, lhs=None, op=None):
         namespace[lhs] = expr
         lhs = namespace[lhs]
         return assign(lhs, expr, op, strict=False)
-    elif name == "mpi_waitall":
-        if not lhs:
-            raise ValueError("Expecting a lhs.")
-        if not(len(args) == 2):
-            raise ValueError("Expecting exactly two arguments.")
-        if not(args[0].name in namespace):
-            raise ValueError("Undefined variable {0}".format(name))
-
-        d_var = {}
-        d_var['datatype']    = 'int'
-        d_var['allocatable'] = False
-        d_var['shape']       = None
-        d_var['rank']        = 0
-
-        insert_variable(lhs, **d_var)
-        lhs = namespace[lhs]
-        rhs = MPI_waitall(*args)
-        return MPI_Assign(lhs, rhs, strict=False)
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
@@ -842,6 +785,8 @@ def builtin_function(name, args, lhs=None, op=None):
 def get_class_attribut(name):
     """
     Returns the attribut (if exists) of a class providing a DottedName.
+    In the special case of class attribut, this function will return None, if
+    the attribut is not a member of the class.
 
     name: DottedName
         a class attribut
@@ -860,14 +805,14 @@ def get_class_attribut(name):
         raise TypeError("Expecting a Pyccel DataType instance")
     dtype = cls.dtype
     cls_name = dtype.name
-    cls = class_defs[cls_name]
+    cls = namespace[cls_name]
 
     attributs = {}
     for i in cls.attributs:
         attributs[str(i.name)] = i
 
     if not (attr_name in attributs):
-        raise ValueError("Undefined attribut {}".format(attr_name))
+        return None
 
     return attributs[attr_name]
 # ...
@@ -927,19 +872,29 @@ def insert_variable(var_name, \
 
     if DEBUG:
 #    if True:
-        print((">>>> trying to insert : ", var_name))
-        txt = '     datatype={0}, rank={1}, allocatable={2}, shape={3}, intent={4}'\
-                .format(datatype, rank, allocatable, shape, intent)
+        print("> inserting : {0}".format(var_name))
+        txt = ('     datatype    = {0} \n'
+               '     rank        = {1}, \n'
+               '     allocatable = {2}, \n'
+               '     shape       = {3}, \n'
+               '     intent      = {4}').format(datatype, rank,
+                                                allocatable, shape,
+                                                intent)
         print(txt)
 
+    if isinstance(var_name, Variable):
+        var_name = var_name.name
+
     if not isinstance(var_name, (str, DottedName)):
-        raise TypeError("Expecting a string for var_name.")
+        raise TypeError("Expecting a str or DottedName, "
+                        "given {0}.".format(type(var_name)))
 
     if isinstance(var_name, str):
         if var_name in namespace:
             var = namespace[var_name]
     elif isinstance(var_name, DottedName):
         var = get_class_attribut(var_name)
+        var_name = str(var_name)
         to_declare = False
 
     if var:
@@ -974,51 +929,68 @@ def insert_variable(var_name, \
         declarations[var_name] = dec
 
 # ...
-def expr_with_trailer(expr, trailer=None):
+def expr_with_trailer(expr, trailer):
+    # we apply the 'expr' property after checking which type is the trailer
 
+    # we use str(.) because expr.name can be a DottedName
+    if isinstance(expr, str):
+        expr = namespace[expr]
 
-    if trailer is None:
-        return expr
-    if isinstance(trailer, (tuple, list)):
-        if len(trailer) == 0:
-            return expr
-        if len(trailer) == 1:
-            return expr_with_trailer(expr, trailer[0])
-        if expr.cls_base and len(trailer)>1:
-            for i in trailer:
-                    expr=expr_with_trailer(expr, i.args)
-            return expr
+    if isinstance(trailer, TrailerSubscriptList):
+        args = trailer.expr
 
+        expr = IndexedVariable(expr.name, dtype=expr.dtype)[args]
 
-        if expr.cls_base:
-            if isinstance(expr.cls_base, MPI):
-                comm = expr
-                func = trailer[0].expr
-                args = trailer[1].expr
-                if func in ['split', 'cart_create', 'cart_sub']:
-                    newcomm = args[-1]
-                    if not newcomm in namespace:
-                        d_var = {}
-                        d_var['datatype']    = 'int'
-                        d_var['allocatable'] = False
-                        d_var['shape']       = None
-                        d_var['rank']        = 0
-                        d_var['cls_base']    = MPI_comm()
+    elif isinstance(trailer, TrailerDots):
 
-                        insert_variable(newcomm, **d_var)
-                args += [comm]
-                expr = eval('MPI_comm_{0}'.format(func))(*args)
+        # TODO add IndexedVariable, IndexedElement
+        if not(isinstance(expr, Variable)):
+            raise TypeError("Expecting Variable, given "
+                            "{0}".format(type(expr)))
+
+        if not expr.cls_base:
+            raise ValueError("Expecting an object")
+
+        arg      = trailer.expr
+        cls_base = expr.cls_base
+
+        # be careful, inside '__init__' attributs are not yet known
+        # for the moment, inside the definition of the class, cls_base is of
+        # type str
+        attributs = []
+        if isinstance(cls_base, ClassDef):
+            d_attributs = cls_base.attributs_as_dict
+            if not(arg in d_attributs):
+                raise ValueError('{0} is not a member of '
+                                 '{1}'.format(arg, expr))
+
+            attribut = d_attributs[arg]
+
+            var_name = DottedName(expr.name, arg)
+            var = attribut.clone(var_name)
+            return var
+        elif isinstance(cls_base, str):
+            var_name = DottedName(expr.name, arg)
+            if str(var_name) in namespace:
+                expr = namespace[str(var_name)]
             else:
-                raise TypeError("Expecting MPI class based")
+                if not(expr.name in namespace):
+                    raise ValueError("Undefined variable {}".format(expr.name))
+
+                expr = DottedName(expr, arg)
+
+                attr = get_class_attribut(expr)
+                if not(attr is None):
+                    return attr
+                else:
+                    # now, we insert the class attribut as a sympy Symbol in the
+                    # namespace. Later, this will be decorated, when processing an
+                    # AssignStmt.
+                    namespace[str(expr)] = Symbol(str(expr))
         else:
-            raise ValueError('Unable to construct expr from trailers.')
-        return expr
+            raise TypeError('expecting a ClassDef or str')
 
-    if isinstance(trailer, Trailer):
-
-        return expr_with_trailer(expr, trailer.args)
-
-    if isinstance(trailer, TrailerArgList):
+    elif isinstance(trailer, TrailerArgList):
         args = trailer.expr
 
         ls = []
@@ -1038,74 +1010,35 @@ def expr_with_trailer(expr, trailer=None):
                 if str(i.name)=='__init__':
                     method=i
 
-#            if name == 'MPI_Tensor':
-#                args = [this, npts, periods, reorder, pads]
             d_var = {}
-            dtype = cls_constructs[str(expr.name)]()
+            dtype = get_class_construct(str(expr.name))()
+
             d_var['datatype']    = dtype
             d_var['allocatable'] = False
             d_var['shape']       = None
             d_var['rank']        = 0
             d_var['intent']      = 'inout'
+            d_var['cls_base']    = namespace[str(expr.name)]
+
             insert_variable('self', **d_var)
             args = [namespace['self']] + list(args)
-            expr = ConstructorCall(method, args,cls_variable=namespace['self'])
+            expr = ConstructorCall(method, args, cls_variable=namespace['self'])
         else:
             f_name = str(expr)
             if isinstance(expr, FunctionDef):
                 expr = expr(*args)
             elif f_name in builtin_funcs:
-                # TODO may be we should test only on math funcs
-                expr = Function(f_name)(*args)
-            #elif isinstance(expr,ClassDef):
-             #   args = trailer.expr
-              #  args=tuple(args)
-               # return FunctionCall(expr.methods['__init__'],args)
+                _args = []
+                for a in args:
+                    if str(a) in namespace:
+                        _args.append(namespace[str(a)])
+                    else:
+                        # TODO may be we should raise an error here
+                        _args.append(a)
+                expr = Function(f_name)(*_args)
             else:
                 raise NotImplementedError('expr is not FunctionDef '
                                          'and {0} is not a builtin function'.format(f_name))
-#            if len(args) > 0:
-#                else:
-#                    func = namespace[f_name]
-#                    expr = FunctionCall(func, args)
-#            else:
-#                func = namespace[str(expr)]
-#                expr = FunctionCall(func, None)
-    elif isinstance(trailer, TrailerSubscriptList):
-        args = trailer.expr
-
-        v = namespace[expr.name]
-        expr = IndexedVariable(v.name, dtype=v.dtype)[args]
-    elif isinstance(trailer, TrailerDots):
-
-        args = trailer.expr
-
-
-        # TODO add IndexedVariable, IndexedElement
-        dottables = (Variable)
-        if not(isinstance(expr, dottables)):
-            raise TypeError("Expecting Variable")
-        var_name = '{0}.{1}'.format(expr.name, args)
-        found_var = (var_name in namespace)
-#            if not(found_var):
-#                raise ValueError("Undefined variable {}".format(var_name))
-        if var_name in namespace:
-            expr = namespace[var_name]
-        else:
-            if not(expr.name in namespace):
-                raise ValueError("Undefined variable {}".format(expr.name))
-            expr = DottedName(expr, args)
-
-            obj  = expr.name[0]
-            base = obj.cls_base
-            if isinstance(base, MPI):
-                attr = expr.name[-1]
-                expr = eval('MPI_comm_{0}'.format(attr))(obj)
-            else:
-                attr = get_class_attribut(expr)
-                d_var = get_attributs(expr)
-                insert_variable(expr, **d_var)
-                expr = namespace[expr]
     return expr
 # ...
 
@@ -1192,20 +1125,6 @@ class Pyccel(object):
         """
         self.statements = kwargs.pop('statements', [])
 
-#        # ... TODO uncomment
-#        ns, ds, cs, classes, stmts = stdlib_definitions()
-#        for k,v in ns.items():
-#            namespace[k] = v
-#        for k,v in ds.items():
-#            declarations[k] = v
-#        for k,v in cs.items():
-#            cls_constructs[k] = v
-#        for k,v in classes.items():
-#            class_defs[k] = v
-#        for i in stmts:
-#            _extra_stmts.append(i)
-#        # ...
-
     @property
     def declarations(self):
         """
@@ -1278,7 +1197,7 @@ class ConstructorStmt(BasicStmt):
         rank     = 0
         datatype = constructor
         insert_variable(var_name, datatype=datatype, rank=rank)
-        return Comment("")
+        return EmptyLine()
 
 class DeclarationStmt(BasicStmt):
     """Class representing a declaration statement."""
@@ -1355,58 +1274,6 @@ class DelStmt(BasicStmt):
         self.update()
 
         return Del(ls)
-
-class SyncStmt(BasicStmt):
-    """Class representing a sync statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the Sync statement class.
-
-        variables: list of str
-            variables to delete
-        """
-        self.variables = kwargs.pop('variables')
-        self.trailer   = kwargs.pop('trailer', None)
-
-        super(SyncStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the Sync statement by returning a pyccel.ast.core object
-        """
-        trailer = self.trailer.expr
-
-        master  = None
-        action  = None
-        options = []
-        if len(trailer) >= 1:
-            master = trailer[0]
-        if len(trailer) >= 2:
-            action = trailer[1]
-        if len(trailer) >= 3:
-            options = trailer[2:]
-
-        variables = [v.expr for v in self.variables]
-        ls = []
-        for var in variables:
-            if isinstance(var, Variable):
-                name = var.name
-                if isinstance(name, (list, tuple)):
-                    name = '{0}.{1}'.format(name[0], name[1])
-                if name in namespace:
-                    ls.append(namespace[name])
-                else:
-                    raise Exception('Unknown variable {}'.format(name))
-            elif isinstance(var, Tensor):
-                ls.append(var)
-            else:
-                raise NotImplementedError('Only Variable is trated')
-
-        self.update()
-
-        return Sync(ls, master=master, action=action, options=options)
 
 # TODO: improve by creating the corresponding object in pyccel.ast.core
 class PassStmt(BasicStmt):
@@ -1546,43 +1413,42 @@ class AssignStmt(BasicStmt):
         Process the Assign statement by returning a pyccel.ast.core object
         """
         if not isinstance(self.rhs, (ArithmeticExpression, \
+                                     ExpressionTuple, \
                                      ExpressionList, \
                                      ExpressionDict)):
             raise TypeError("Expecting an expression")
 
         rhs      = self.rhs.expr
+        lhs      = self.lhs.expr
         status   = None
         like     = None
 
-        var_name = self.lhs
-
-        trailer  = None
-        args     = None
-        if self.trailer:
-            trailer = self.trailer.args
-            args    = self.trailer.expr
-            if isinstance(trailer, TrailerDots):
-                if not iterable(args):
-                    args = Tuple(args)
-                var_name = DottedName(self.lhs, *args)
+#        print('{0} := {1}'.format(lhs, rhs))
+#        print_namespace()
+#        print('{0} :: {1}'.format(lhs, type(lhs)))
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
             if name.lower() in builtin_funcs:
-                args = rhs.args
-                return builtin_function(name.lower(), args, lhs=var_name)
+                # here rhs.args are sympy Symbols
+                args = []
+                for a in rhs.args:
+                    if str(a) in namespace:
+                        args.append(namespace[str(a)])
+                    else:
+                        # TODO may be we should raise an error here
+                        args.append(a)
+                # we use str(lhs) to make it work for DottedName
+                return builtin_function(name.lower(), args, lhs=str(lhs))
 
-        if isinstance(var_name, str) and not(var_name in namespace):
-
+        if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
-
-#            print ">>>> AssignStmt : ", var_name, d_var
 
             if not isinstance(rhs, Tuple):
                 d_var['allocatable'] = not(d_var['shape'] is None)
                 if d_var['shape']:
                     if DEBUG:
-                        print(("> Found an unallocated variable: ", var_name))
+                        print(("> Found an unallocated variable: ", lhs))
                     status = 'unallocated'
                     like = allocatable_like(rhs)
 
@@ -1591,30 +1457,44 @@ class AssignStmt(BasicStmt):
             if isinstance(rhs, assignable):
                 d_var['value'] = rhs
             if is_pyccel_datatype(d_var['datatype']):
-                d_var['cls_base']=class_defs[d_var['datatype'].name]
-            insert_variable(var_name, **d_var)
+                d_var['cls_base']= namespace[d_var['datatype'].name]
+            insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
 
-        if self.trailer is None:
-            l = namespace[self.lhs]
-        else:
-            if isinstance(trailer, TrailerSubscriptList):
-                v = namespace[str(self.lhs)]
-                l = IndexedVariable(v.name, dtype=v.dtype)[args]
-            elif isinstance(trailer, TrailerDots):
-                # check that class attribut exists
-                attr = get_class_attribut(var_name)
-                if attr is None:
-                    raise ValueError('Undefined attribut')
-                l = var_name
-            else:
-                raise TypeError("Expecting SubscriptList or Dot")
+        # change lhs from Symbol to Pyccel datatype (Variable, etc)
+#        print_namespace()
+        if isinstance(lhs, DottedName) and (str(lhs) in namespace):
+            d_var = get_attributs(rhs)
 
-        if not isinstance(rhs, MPI):
-            stmt = Assign(l, rhs, strict=False, status=status, like=like)
-            return stmt
-#            return Assign(l, rhs, strict=False, status=status, like=like)
-        else:
-            return MPI_Assign(l, rhs, strict=False, status=status, like=like)
+            if not isinstance(rhs, Tuple):
+                if isinstance(namespace[str(lhs)], Symbol):
+                    # TODO improve this when handling symbolic computation
+                    d_var['allocatable'] = not(d_var['shape'] is None)
+                    status = 'unallocated'
+                    if d_var['rank'] > 0:
+                        like = allocatable_like(rhs)
+                    else:
+                        like = None
+
+            # TODO improve assignable
+            assignable = (sp_Integer, sp_Float)
+            if isinstance(rhs, assignable):
+                d_var['value'] = rhs
+            if is_pyccel_datatype(d_var['datatype']):
+                d_var['cls_base']= namespace[d_var['datatype'].name]
+
+            # we remove the sympy Symbol
+            namespace.pop(str(lhs))
+
+            insert_variable(lhs, **d_var)
+            lhs = namespace[str(lhs)]
+
+#        print('{0} := {1}'.format(lhs, rhs))
+#        print('{0} :: {1}'.format(lhs, type(lhs)))
+#        print_namespace()
+#        import sys; sys.exit(0)
+
+        return Assign(lhs, rhs, strict=False, status=status, like=like)
 
 class AugAssignStmt(BasicStmt):
     """Class representing an assign statement."""
@@ -1696,86 +1576,7 @@ class AugAssignStmt(BasicStmt):
             else:
                 raise TypeError("Expecting SubscriptList or Dot")
 
-        if not isinstance(rhs, MPI):
-            return AugAssign(l, op, rhs, strict=False, status=status, like=like)
-        else:
-            raise NotImplementedError('MPI case missing for AugAssignStmt')
-#            return MPI_AugAssign(l, rhs, strict=False, status=status, like=like)
-
-
-class MultiAssignStmt(BasicStmt):
-    """
-    Class representing multiple assignments.
-    In fortran, this correspondans to the call of a subroutine.
-    """
-    def __init__(self, **kwargs):
-        """
-        Constructor for the multi Assign statement.
-
-        lhs: list of str
-            variables to assign to
-        rhs: ArithmeticExpression
-            expression to assign to the lhs
-        """
-        self.lhs = kwargs.pop('lhs')
-        self.rhs = kwargs.pop('rhs')
-
-        super(MultiAssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """Statement variables."""
-        return self.lhs
-
-    @property
-    def expr(self):
-        """
-        Process the MultiAssign statement by returning a pyccel.ast.core object
-        """
-        lhs = self.lhs
-        rhs = self.rhs.expr
-
-        if not(isinstance(rhs, (Function, FunctionCall))):
-            raise TypeError("Expecting a Function or FunctionCall")
-
-        # TODO additional functions like : shape
-        if isinstance(rhs, FunctionCall):
-            F = rhs.func
-        elif isinstance(rhs, Function):
-            f_name = str(type(rhs).__name__)
-
-            if not(f_name in namespace):
-                raise ValueError("Undefined function call {}.".format(f_name))
-
-            F = namespace[f_name]
-            if not(isinstance(F, FunctionDef)):
-                raise TypeError("Expecting a FunctionDef")
-
-        if not(len(F.results) == len(self.lhs)):
-            raise ValueError("Wrong number of outputs.")
-
-        for (var_name, result) in zip(self.lhs, F.results):
-            if not(var_name in namespace):
-                d_var = {}
-                d_var['datatype']    = result.dtype
-                d_var['allocatable'] = result.allocatable
-                d_var['shape']       = result.shape
-                d_var['rank']        = result.rank
-                d_var['intent']      = None
-
-#                print ">>>> MultiAssignStmt : ", var_name
-#                print "                     : ", d_var
-
-                d_var['allocatable'] = not(d_var['shape'] is None)
-                insert_variable(var_name, **d_var)
-        return MultiAssign(lhs, rhs)
-
-#        if name == 'shape':
-#            if not(len(args) == 1):
-#                raise ValueError('shape takes only one argument.')
-#            return Shape(lhs, args[0])
-#        else:
-#            return MultiAssign(lhs, rhs, args)
+        return AugAssign(l, op, rhs, strict=False, status=status, like=like)
 
 class RangeStmt(BasicStmt):
     """Class representing a Range statement."""
@@ -1810,40 +1611,6 @@ class RangeStmt(BasicStmt):
             s = 1
 
         return Range(b,e,s)
-
-class ParallelRangeStmt(BasicStmt):
-    """Class representing a parallel Range statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the Range statement.
-
-        start: str
-            start index
-        end: str
-            end index
-        step: str
-            step for the iterable. if not given, 1 will be used.
-        """
-        self.start    = kwargs.pop('start')
-        self.end      = kwargs.pop('end')
-        self.step     = kwargs.pop('step', None)
-
-        super(ParallelRangeStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the Range statement by returning a pyccel.ast.core object
-        """
-        b = self.start.expr
-        e = self.end.expr
-        if self.step:
-            s = self.step.expr
-        else:
-            s = 1
-
-        return ParallelRange(b,e,s)
 
 class ForStmt(BasicStmt):
     """Class representing a For statement."""
@@ -1904,7 +1671,7 @@ class ForStmt(BasicStmt):
         else:
             i = Symbol(self.iterable, integer=True)
 
-        if isinstance(self.range, (RangeStmt, ParallelRangeStmt)):
+        if isinstance(self.range, (RangeStmt, ArithmeticExpression)):
             r = self.range.expr
         elif isinstance(self.range, str):
             if not self.range in namespace:
@@ -1913,28 +1680,12 @@ class ForStmt(BasicStmt):
         else:
             raise TypeError('Expecting an Iterable')
 
-        if not isinstance(r, (Range, Tensor, Variable)):
-            raise TypeError('Expecting an Iterable or an object')
+        if not isinstance(r, (Range, Tensor, Variable, ConstructorCall)):
+            raise TypeError('Expecting an Iterable or an object, '
+                            'given {0}'.format(type(r)))
 
         if isinstance(r, Variable):
-            if r.dtype.name == 'MPI_Tensor':
-                ranges = []
-
-                cls = class_defs[r.dtype.name]
-                attributs = {}
-                for a in cls.attributs:
-                    attributs[str(a.name)] = a
-                starts = DottedName(str(r.name), 'starts')
-                ends   = DottedName(str(r.name), 'ends')
-
-                starts = IndexedVariable(starts, dtype=NativeInteger())
-                ends   = IndexedVariable(ends,   dtype=NativeInteger())
-
-                rs = []
-                for ijk in range(0, len(i)):
-                    rs += [Tile(starts[ijk], ends[ijk])]
-                r = Tensor(*rs)
-            elif not is_iterable_datatype(r.dtype):
+            if not is_iterable_datatype(r.dtype):
                 raise TypeError('Expecting an iterable variable')
 
         self.update()
@@ -1943,8 +1694,45 @@ class ForStmt(BasicStmt):
 
         if isinstance(r, Variable) and is_iterable_datatype(r.dtype):
             return ForIterator(i, r, body)
+        if isinstance(r, ConstructorCall) and is_iterable_datatype(r.this.dtype):
+            return ForIterator(i, r, body)
         else:
             return For(i, r, body)
+
+class WithStmt(BasicStmt):
+    """Class representing a With statement."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for the With statement.
+
+        domain: WithDomain
+            domain of with statement
+        body: list
+            a list of statements for the body of the With statement.
+        """
+        self.domain = kwargs.pop('domain')
+        self.body   = kwargs.pop('body')
+
+        super(WithStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        """
+        Process the With statement by returning a pyccel.ast.core object
+        """
+        self.update()
+
+        domain = self.domain.expr
+
+        if not (isinstance(domain, (Variable, ConstructorCall))):
+            if not(domain in namespace):
+                raise ValueError('undefined {0} domain'.format(domain))
+
+        body = self.body.expr
+        settings = None
+
+        return With(domain, body, settings)
 
 class WhileStmt(BasicStmt):
     """Class representing a While statement."""
@@ -1984,53 +1772,6 @@ class WhileStmt(BasicStmt):
         body = self.body.expr
 
         return While(test, body)
-
-class ParallelBlockStmt(BasicStmt):
-    """Class representing a With statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the With statement.
-
-        test: Test
-            a test expression
-        body: list
-            a list of statements for the body of the With statement.
-        """
-        self.num_threads = kwargs.pop('num_threads', None)
-        self.body = kwargs.pop('body')
-
-        super(ParallelBlockStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """Statement variables."""
-        ls = []
-        for stmt in self.body.stmts:
-            ls += stmt.local_vars
-            ls += stmt.stmt_vars
-        return ls
-
-    @property
-    def expr(self):
-        """
-        Process the With statement by returning a pyccel.ast.core object
-        """
-        self.update()
-
-        num_threads = self.num_threads
-        body = self.body.expr
-
-        # TODO - set variables and clauses
-        #      - add status for variables (shared, private)
-        variables = []
-        clauses   = []
-
-        if num_threads:
-            clauses += [OMP_ParallelNumThreadClause(num_threads)]
-
-        return ParallelBlock(clauses, variables, body)
-
 
 class ExpressionElement(object):
     """Class representing an element of an expression."""
@@ -2097,8 +1838,19 @@ class AtomExpr(ExpressionElement, BasicStmt):
         """
         if DEBUG:
             print("> AtomExpr ")
-        expr = self.op.expr
-        return expr_with_trailer(expr, self.trailers)
+
+        e = self.op.expr
+        trailer = self.trailers
+
+        # if trailer is None or empty list
+        if not trailer:
+            return e
+
+        # now we loop over all trailers
+        # this must be done from left to right
+        for i in trailer:
+            e = expr_with_trailer(e, i.args)
+        return e
 
 class Power(ExpressionElement, BasicStmt):
     """Class representing an atomic expression."""
@@ -2182,6 +1934,7 @@ class Atom(ExpressionElement):
             print("> Atom ")
 
         op = self.op
+#        print('> {0} of type {1}'.format(op, type(op)))
 #        if op in ['shape']:
 #            raise ValueError('shape function can not be used in an expression.')
 
@@ -2206,6 +1959,18 @@ class Atom(ExpressionElement):
                                     .format(O, self._tx_position))
         elif isinstance(op, ExpressionElement):
             return op.expr
+        elif isinstance(op, ExpressionList):
+            e = op.expr
+            if len(e) == 1:
+                return e[0]
+            else:
+                return e
+        elif isinstance(op, ExpressionTuple):
+            e = op.expr
+            if len(e) == 1:
+                return e[0]
+            else:
+                return e
         elif op in namespace:
             if isinstance(namespace[op], FunctionDef):
                 F = namespace[op]
@@ -2325,6 +2090,25 @@ class Comparison(ExpressionElement):
                 raise NotImplementedError('operation {0} not yet available'.format(operation))
         return ret
 
+class ExpressionTuple(BasicStmt):
+    """Base class representing a list of elements statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Expression list statement
+
+        args: list, tuple
+            list of elements
+        """
+        self.args = kwargs.pop('args')
+
+        super(ExpressionTuple, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = [a.expr for a in self.args]
+        return Tuple(*args)
+
 class ExpressionList(BasicStmt):
     """Base class representing a list of elements statement in the grammar."""
 
@@ -2342,6 +2126,8 @@ class ExpressionList(BasicStmt):
     @property
     def expr(self):
         args = [a.expr for a in self.args]
+        # TODO use List object from AST
+        #return List(*args)
         return Tuple(*args)
 
 class ExpressionDict(BasicStmt):
@@ -2473,6 +2259,7 @@ class RaiseStmt(FlowStmt):
 
 class YieldStmt(FlowStmt):
     """Base class representing a Yield statement in the grammar."""
+    pass
 
 class FunctionDefStmt(BasicStmt):
     """Class representing the definition of a function in the grammar."""
@@ -2515,9 +2302,10 @@ class FunctionDefStmt(BasicStmt):
         Process the Function Definition by returning the appropriate object from
         pyccel.ast.core
         """
-#        print "*********** FunctionDefStmt.expr: Begin"
         name = str(self.name)
         args = self.trailer.expr
+
+#        print (">>>>>>>>>>> FunctionDefStmt {0}: Begin".format(name))
 
         local_vars  = []
         global_vars = []
@@ -2537,7 +2325,7 @@ class FunctionDefStmt(BasicStmt):
 
             # insert self to namespace
             d_var = {}
-            dtype = cls_constructs[cls_instance]()
+            dtype = get_class_construct(cls_instance)()
             d_var['datatype']    = dtype
             d_var['allocatable'] = False
             d_var['shape']       = None
@@ -2597,8 +2385,8 @@ class FunctionDefStmt(BasicStmt):
                         rank += 1
                 d_var = {}
                 if d[0]==cls_instance:
-                    d_var['datatype']=cls_constructs[cls_instance]()
-                    d_var['cls_base']    = cls_instance
+                    d_var['datatype'] = get_class_construct(cls_instance)()
+                    d_var['cls_base'] = cls_instance
                 else:
                     d_var['datatype']    = d[0]
                 d_var['allocatable'] = False
@@ -2608,7 +2396,7 @@ class FunctionDefStmt(BasicStmt):
                 d_var['intent']      = 'in'
                 insert_variable(arg_name, **d_var)
                 var = namespace[arg_name]
-        if self.name=='__init__':
+        if self.name == '__init__':
             attr=[]
             for i in self.body.stmts:
                 if isinstance(i,AssignStmt) and i.lhs=='self':
@@ -2617,15 +2405,11 @@ class FunctionDefStmt(BasicStmt):
                     Var=AssignStmt(**c).expr
                     attr+=[Var.lhs]
             # we first create and append an empty class to the namespace
-            cls=ClassDef(cls_instance,attr,[],[])
-            namespace[cls_instance]=cls
-            class_defs[cls_instance]=cls
-
+            namespace[cls_instance] = ClassDef(cls_instance,attr,[],[])
 
         body = self.body.expr
         if args_0:
             arg_names+=['self']
-
 
         prelude = [declarations[a] for a in arg_names]
 
@@ -2634,7 +2418,6 @@ class FunctionDefStmt(BasicStmt):
             if a in namespace:
                 var = namespace.pop(a)
                 dec = declarations.pop(a)
-
 
         # TODO: for the moment we do not infer the results type
         if with_header and len(results) > 0:
@@ -2678,19 +2461,22 @@ class FunctionDefStmt(BasicStmt):
         if args_0:
             args=[args_0]+args
 
-        # ... cleaning the namespace
-        for a in arg_names:
-            del declarations[a]
-            del namespace[a]
-
+        # TODO improve this. it is not working right now
         ls = self.local_vars + self.stmt_vars
+        ls = [e.expr for e in ls]
+#        ls = [str(e.expr) for e in ls]
         for var_name in ls:
             if var_name in namespace:
-                prelude.append(declarations[var_name])
+#                prelude.append(declarations[var_name])
 
                 del namespace[var_name]
                 del declarations[var_name]
         # ...
+
+        # ... cleaning the namespace
+        for a in arg_names:
+            del declarations[a]
+            del namespace[a]
 
         # ...
         for arg_name, var in list(scope_vars.items()):
@@ -2706,6 +2492,23 @@ class FunctionDefStmt(BasicStmt):
         body = prelude + body
         # ...
 
+        # ... define local_vars as any lhs in Assign, if it is not global
+        #     or class member 'self.member'
+        for stmt in body:
+            if isinstance(stmt, (Assign, Zeros, ZerosLike, Ones)):
+                if (isinstance(stmt.lhs, Variable) and
+                    not(stmt.lhs in results) and
+                    not(stmt.lhs in global_vars)):
+                    if isinstance(stmt.lhs.name, DottedName):
+                        lhs  = stmt.lhs.name
+                        this = str(lhs.name[0])
+                        if not(this == 'self'):
+                            local_vars += [stmt.lhs]
+                    else:
+                        local_vars += [stmt.lhs]
+        local_vars = list(set(local_vars))
+        # ...
+
         # rename the method in the class case
         # TODO do we keep this?
         f_name = name
@@ -2718,10 +2521,13 @@ class FunctionDefStmt(BasicStmt):
                            cls_name=cls_name)
         namespace[name] = stmt
 
+#        print('======= name = {0}'.format(name))
+#        print_namespace()
+
         # ... TODO add a call to is_compatible_header
         #         the FunctionDef is created, and before the return
 
-#        print "*********** FunctionDefStmt.expr: End"
+#        print "<<<<<<<<<<< FunctionDefStmt : End"
         return stmt
 
 class ClassDefStmt(BasicStmt):
@@ -2751,8 +2557,11 @@ class ClassDefStmt(BasicStmt):
         Process the Class Definition by returning the appropriate object from
         pyccel.ast.core
         """
-#        print "*********** ClassDefStmt.expr: Begin"
         name = str(self.name)
+
+#        print (">>>>>>>>>>> ClassDefStmt {0}: Begin".format(name))
+#        print('===== BEFORE =====')
+#        print_namespace()
 
         if not(name in headers):
             raise Exception('Class header could not be found for {0}.'
@@ -2763,10 +2572,53 @@ class ClassDefStmt(BasicStmt):
 
         body    = self.body.expr
 
+        # ... we first process the __init__ method to find class attributs
+        init_method = [i for i in body if isinstance(i, FunctionDef) and
+                       str(i.name) == '__init__']
+
+        if not init_method:
+            raise ValueError('Class missing __init__ method.')
+        if len(init_method) > 1:
+            raise ValueError('Found multiple definitions of __init__.')
+
+        init_method = init_method[0]
         # ...
-        attributs =class_defs[name].attributs
 
+        # ... we then process __init__ method to find all attributs.
+        #     the idea is that they will be defined by an Assign statement.
+        attributs = []
+        for stmt in init_method.body:
+            if isinstance(stmt, (Assign, Zeros, Ones, ZerosLike)):
+                assignable = (Variable, IndexedVariable)
+                if (isinstance(stmt.lhs, assignable) and
+                    isinstance(stmt.lhs.name, DottedName)):
 
+                    lhs = stmt.lhs.name
+
+                    this = str(lhs.name[0])
+                    if this == 'self':
+                        if len(lhs.name) > 2:
+                            raise ValueError('Only one level access is available.')
+
+                        attr_name = str(lhs.name[1])
+                        if not(str(lhs) in namespace):
+                            raise ValueError('Namespace must contain '
+                                             '{0}'.format(lhs))
+
+                        # then we clone 'self.member' to 'member'
+                        attr = namespace[str(lhs)]
+                        # TODO must check if attr can be cloned
+                        attr = attr.clone(attr_name)
+
+                        attributs.append(attr)
+                        # we do not forget to remove lhs from namespace
+                        namespace.pop(str(lhs))
+                        if str(lhs) in declarations:
+                            declarations.pop(str(lhs))
+        attributs = list(set(attributs))
+        # ...
+
+        # ...
         methods = []
         for stmt in body:
             if isinstance(stmt, FunctionDef):
@@ -2774,18 +2626,24 @@ class ClassDefStmt(BasicStmt):
 
         stmt = ClassDef(name, attributs, methods, options)
         namespace[name] = stmt
-        class_defs[name] = stmt
+        # ...
 
         # ... cleaning
-
         for k in attributs:
             if k.name in namespace.keys():
                 namespace.pop(k.name)
             if k.name in declarations.keys():
                 declarations.pop(k.name)
+
+        for m in methods:
+            if not(str(m.name) == '__init__'):
+                namespace.pop('{0}.{1}'.format(name, str(m.name)))
         # ...
 
-#        print "*********** ClassDefStmt.expr: End"
+#        print('===== AFTER =====')
+#        print_namespace()
+
+#        print "<<<<<<<<<<< ClassDefStmt : End"
 
         return stmt
 
@@ -2815,7 +2673,10 @@ class CommentStmt(BasicStmt):
         by returning the appropriate object from pyccel.ast.core
         """
         self.update()
-        return Comment(self.text)
+        if self.text:
+            return Comment(self.text)
+        else:
+            return EmptyLine()
 
 class SuiteStmt(BasicStmt):
     """Class representing a Suite statement in the grammar."""
@@ -3089,346 +2950,13 @@ class ArgList(BasicStmt):
                     ls.append(arg)
         return ls
 
-class StencilStmt(AssignStmt):
-    """Class representing a Stencil statement in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Stencil statement.
-
-        lhs: str
-            variable name to create
-        parameters: list
-            list of parameters needed for the Stencil object.
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.parameters = kwargs.pop('parameters')
-
-        labels = [str(p.label) for p in self.parameters]
-        values = [p.value.value for p in self.parameters]
-        d = {}
-        for (label, value) in zip(labels, values):
-            d[label] = value
-        self.parameters = d
-
-        try:
-            self.datatype = self.parameters['dtype']
-        except:
-            self.datatype = DEFAULT_TYPE
-
-        try:
-            self.shape = self.parameters['shape']
-            # on LRZ, self.shape can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.shape, list):
-                if isinstance(self.shape[0], ArgList):
-                    self.shape = self.shape[0].args
-            elif isinstance(self.shape, ArgList):
-                self.shape = self.shape.args
-        except:
-            raise Exception('Expecting shape at position {}'
-                            .format(self._tx_position))
-
-        try:
-            self.step = self.parameters['step']
-            # on LRZ, self.step can be a list of ArgList
-            # this is why we do the following check
-            # maybe a bug in textX
-            if isinstance(self.step, list):
-                if isinstance(self.step[0], ArgList):
-                    self.step = self.step[0].args
-            elif isinstance(self.step, ArgList):
-                self.step = self.step.args
-        except:
-            raise Exception('Expecting step at position {}'
-                            .format(self._tx_position))
-
-        super(AssignStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns statement variables."""
-        return [self.lhs]
-
-    def update(self):
-        """
-        specific treatments before process
-        """
-        var_name = self.lhs
-        if not(var_name in namespace):
-            if DEBUG:
-                print(("> Found new variable " + var_name))
-
-            datatype = self.datatype
-
-            # ...
-            def format_entry(s_in):
-                rank = 0
-                if isinstance(s_in, int):
-                    s_out = s_in
-                    rank = 1
-                elif isinstance(s_in, float):
-                    s_out = int(s_in)
-                    rank = 1
-                elif isinstance(s_in, list):
-                    s_out = []
-                    for s in s_in:
-                        if isinstance(s, (int, float)):
-                            s_out.append(int(s))
-                        elif isinstance(s, str):
-                            if not(s in namespace):
-                                raise Exception('Could not find s_out variable.')
-                            s_out.append(namespace[s])
-    #                    elif isinstance(s,ArgList):
-    #                        s_out.append(s.expr)
-                        else:
-                            print(("> given type: ", type(s)))
-                            raise TypeError('Expecting a int, float or string')
-                    rank = len(s_out)
-                else:
-                    s_out = str(s_in)
-                    if s_out in namespace:
-                        s_out = namespace[s_out]
-                        # TODO compute rank
-                        rank = 1
-                    else:
-                        raise Exception('Wrong instance for s_out : '.format(type(s_in)))
-                return s_out, rank
-            # ...
-
-            # ...
-            self.shape, r_1 = format_entry(self.shape)
-            self.step,  r_2 = format_entry(self.step)
-            rank = r_1 + r_2
-            # ...
-
-            if datatype is None:
-                if DEBUG:
-                    print("> No Datatype is specified, int will be used.")
-                datatype = 'int'
-            elif isinstance(datatype, list):
-                datatype = datatype[0] # otherwise, it's not working on LRZ
-            # TODO check if var is a return value
-            insert_variable(var_name, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=True,shape = self.shape)
-
-    @property
-    def expr(self):
-        """
-        Process the Stencil statement,
-        by returning the appropriate object from pyccel.ast.core
-        """
-        self.update()
-
-        shape = self.shape
-        step  = self.step
-
-        var_name = self.lhs
-        var = Symbol(var_name)
-
-        return Stencil(var, shape, step)
-
-class EvalStmt(BasicStmt):
-    """
-    Class representing an Eval statement in the grammar
-    """
-    def __init__(self, **kwargs):
-        """
-        Constructor for a eval statement.
-
-        lhs: str
-            variable name to create
-        expression: str
-            Expression to be evaluated
-        """
-        self.lhs        = kwargs.pop('lhs')
-        self.expression = kwargs.pop('expression')
-
-        super(EvalStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the Eval statement,
-        by returning a list of appropriate objects from pyccel.ast.core
-        """
-        f_name = str(self.lhs)
-
-        if not(f_name in headers):
-            raise Exception('Function header could not be found for {0}.'
-                           .format(f_name))
-
-        h = headers[f_name]
-
-        # ... treating function/procedure arguments
-        args = []
-        for d in h.dtypes:
-            var_name = 'arg_%d' % abs(hash(d))
-            rank = 0
-            for i in d[1]:
-                if isinstance(i, Slice):
-                    rank += 1
-            datatype    = d[0]
-            allocatable = False
-            shape       = None
-            var = Variable(datatype, var_name, \
-                           rank=rank, \
-                           allocatable=allocatable, \
-                           shape=shape)
-            args.append(var)
-        # ...
-
-        # ... treating function/procedure results
-        results = []
-        for d in h.results:
-            var_name = 'result_%d' % abs(hash(d))
-            rank = 0
-            for i in d[1]:
-                if isinstance(i, Slice):
-                    rank += 1
-            datatype    = d[0]
-            allocatable = False
-            shape       = None
-            var = Variable(datatype, var_name, \
-                           rank=rank, \
-                           allocatable=allocatable, \
-                           shape=shape)
-            results.append(var)
-        # ...
-
-        body        = []
-        local_vars  = []
-        global_vars = []
-        hide        = True
-        stmt = FunctionDef(f_name, args, results, \
-                           body, local_vars, global_vars, \
-                           hide=hide, kind=h.kind)
-        namespace[f_name] = stmt
-
-        return stmt
-
-class ExecStmt(BasicStmt):
-    """
-    Class representing an Exec statement in the grammar
-    """
-    def __init__(self, **kwargs):
-        """
-        Constructor for a eval statement.
-
-        lhs: str
-            variable name to create
-        module: str
-            module where the function lives
-        function: str
-            function to call from the module
-        args: list
-            list of arguments to feed the function call
-        """
-        self.lhs      = kwargs.pop('lhs')
-        self.module   = kwargs.pop('module')
-        self.function = kwargs.pop('function')
-        self.args     = kwargs.pop('args')
-
-        super(ExecStmt, self).__init__(**kwargs)
-
-    @property
-    def stmt_vars(self):
-        """returns the statement variables."""
-        return self.lhs
-
-    def update(self):
-        """
-        Pre-process. We check that the lhs is not in the namespace.
-        """
-        for var_name in self.lhs:
-            if not(var_name in namespace):
-                raise Exception('Undefined variable {}.'.format(var_name))
-
-    @property
-    def expr(self):
-        """
-        Process the Exec statement,
-        by returning a list of appropriate objects from pyccel.ast.core
-        """
-        # TODO must check compatibility
-#        self.update()
-
-        module_name   = self.module
-        function_name = self.function
-
-        try:
-            import importlib
-            module   = importlib.import_module(module_name)
-        except:
-            raise Exception('Could not import module {}.'.format(module_name))
-
-        try:
-            function = getattr(module, "{}".format(function_name))
-        except:
-            raise Exception('Could not import function {}.'.format(function_name))
-
-        args = self.args.expr
-        rs   = function(*args)
-
-        if isinstance(rs, tuple):
-            rs = list(rs)
-
-        if not isinstance(rs, list):
-            rs = [rs]
-
-        if not(len(rs) == len(self.lhs)):
-            raise Exception('Incompatible lhs with function output.')
-
-        ls = []
-        for (l,r) in zip(self.lhs, rs):
-            if isinstance(r, (int, float, complex)):
-                rank        = 0
-                shape       = None
-                allocatable = False
-                # check if numpy variable
-                if (type(r).__module__ == np.__name__):
-                    t = r.dtype
-                else:
-                    t = type(r)
-                datatype = convert_numpy_type(t)
-
-            elif isinstance(r, ndarray):
-                shape       = r.shape
-                rank        = len(shape)
-                allocatable = True
-                datatype    = convert_numpy_type(r.dtype)
-            else:
-                raise TypeError('Expecting int, float, complex or numpy array.')
-
-            if l in namespace:
-                raise Exception('Variable {} already defined, '
-                                'cannot be used in eval statement.'.format(l))
-
-            insert_variable(l, \
-                            datatype=datatype, \
-                            rank=rank, \
-                            allocatable=allocatable, \
-                            shape=shape)
-
-            var = namespace[l]
-            if isinstance(r, ndarray):
-                stmt = Array(var, r, shape)
-            else:
-                stmt = Assign(var, r)
-
-            ls.append(stmt)
-
-        return ls
-
 class VariableHeaderStmt(BasicStmt):
     """Base class representing a header statement in the grammar."""
 
     def __init__(self, **kwargs):
         """
-        Constructor for a VariableHeader statement
+        Constructor for a VariableHeader statement.
+        In the case of builtin datatypes, we export a Variable
 
         name: str
             variable name
@@ -3450,7 +2978,29 @@ class VariableHeaderStmt(BasicStmt):
 
         h = VariableHeader(self.name, (dtype, attr, star))
         headers[self.name] = h
-        return h
+
+        # for builtin types, we will return a variable instead of its header
+        if not(dtype in builtin_types):
+            return h
+
+        # ... computing attributs for Variable
+        rank = 0
+        for i in attr:
+            if isinstance(i, Slice):
+                rank += 1
+        d_var = {}
+        d_var['datatype']    = dtype
+        d_var['allocatable'] = star
+        d_var['shape']       = None
+        d_var['rank']        = rank
+        insert_variable(self.name, **d_var)
+        # ...
+
+        # we don't forget to remove the variable from headers
+        var = namespace[self.name]
+        headers.pop(self.name)
+
+        return var
 
 class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""
@@ -3532,11 +3082,14 @@ class ClassHeaderStmt(BasicStmt):
     def expr(self):
         options = [str(i) for i in self.options]
 
-        iterable    = ('iterable' in options)
+        iterable       = ('iterable' in options)
+        with_construct = ('with' in options)
 
         # create a new Datatype for the current class
-        cls_constructs[self.name] = DataTypeFactory(self.name, ("_name"),
-                                                    is_iterable=iterable)
+        dtype = DataTypeFactory(self.name, ("_name"),
+                                is_iterable=iterable,
+                                is_with_construct=with_construct)
+        set_class_construct(self.name, dtype)
 
         h = ClassHeader(self.name, self.options)
         headers[self.name] = h
@@ -3638,43 +3191,6 @@ class ImportFromStmt(BasicStmt):
         if not isinstance(funcs, (tuple, list)):
             funcs = str(funcs) # cast unicode to str
 
-        # TODO improve
-        if str(fil) == 'pyccel.mpi':
-            raise NotImplementedError('uncomment')
-
-#        if (str(fil) == 'pyccel.mpi') and (funcs == '*'):
-#            fil   = 'mpi'
-#            funcs = None
-#            ns, ds, cs, classes, stmts = mpi_definitions()
-#            for k,v in list(ns.items()):
-#                namespace[k] = v
-#            for k,v in list(ds.items()):
-#                declarations[k] = v
-#            for k,v in list(cs.items()):
-#                cls_constructs[k] = v
-#            for k,v in list(classes.items()):
-#                class_defs[k] = v
-#            for i in stmts:
-#                _extra_stmts.append(i)
-#
-#        if str(fil).startswith('spl.'):
-#            module = str(fil).split('spl.')[-1]
-#            fil = 'spl_m_{}'.format(module.lower())
-#            ns, ds = spl_definitions()
-#            for k,v in list(ns.items()):
-#                namespace[k] = v
-#            for k,v in list(ds.items()):
-#                declarations[k] = v
-#        if str(fil).startswith('plaf.'):
-#            module = str(fil).split('plaf.')[-1]
-#            fil = 'plf_m_{}'.format(module.lower())
-#            ns, ds, cs = plaf_definitions()
-#            for k,v in list(ns.items()):
-#                namespace[k] = v
-#            for k,v in list(ds.items()):
-#                declarations[k] = v
-#            for k,v in list(cs.items()):
-#                cls_constructs[k] = v
         return Import(fil, funcs)
 
 class ImportAsNames(BasicStmt):

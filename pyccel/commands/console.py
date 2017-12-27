@@ -89,7 +89,7 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
     if not files:
         files = args.files
 
-    if not compiler:
+    if args.compiler:
         compiler = args.compiler
 
     if not openmp:

@@ -43,11 +43,37 @@ level-1
 
 This is a high level that enables the use of *OpenMP* through simple instructions.
 
+.. automodule:: pyccel.stdlib.parallel.openmp
+.. currentmodule:: pyccel.stdlib.parallel.openmp
+
+.. autoclass:: Range
+   :members:
+   :private-members:
+   :special-members:
+
+.. autoclass:: Parallel
+   :members:
+   :private-members:
+   :special-members:
+
+
+from pyccel.stdlib.parallel.openmp import Range
+from pyccel.stdlib.parallel.openmp import Parallel
+
+Example: Hello world
+____________________
+
+.. literalinclude:: ../../tests/scripts/openmp/helloworld.py 
+  :language: python
+
+See :download:`script <../../tests/scripts/openmp/helloworld.py>`.
+
+
 Example: matrix multiplication
 ______________________________
 
 .. literalinclude:: ../../tests/scripts/openmp/matrix_multiplication.py 
   :language: python
 
-See :download:`script <../../tests/scripts/openmp/core/matrix_multiplication.py>`.
+See :download:`script <../../tests/scripts/openmp/matrix_multiplication.py>`.
 

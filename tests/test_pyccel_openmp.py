@@ -1,7 +1,7 @@
 # coding: utf-8
 
 # Usage:
-#   python tests/test_pyccel_openmp.py --openmp
+#   python tests/test_pyccel_openmp.py --openmp --execute
 
 import os
 
@@ -15,31 +15,31 @@ def test_core():
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/openmp/core')
 
-    files = os.listdir(path_dir)
+    files = sorted(os.listdir(path_dir))
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
-    os.chdir(path_dir)
     for f in files:
-        pyccel(files=[f], openmp=True)
-        print(' testing {0}: done'.format(str(f)))
-    os.chdir(base_dir)
+        f_name = os.path.join(path_dir, f)
+
+        pyccel(files=[f_name], openmp=True)
+        print('> testing {0}: done'.format(str(f)))
 # ...
 
 # ...
 def test_openmp():
-    ignored = []
+    ignored = ['matrix_multiplication.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/openmp')
 
-    files = os.listdir(path_dir)
+    files = sorted(os.listdir(path_dir))
     files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
 
-    os.chdir(path_dir)
     for f in files:
-        pyccel(files=[f], openmp=True)
-        print(' testing {0}: done'.format(str(f)))
-    os.chdir(base_dir)
+        f_name = os.path.join(path_dir, f)
+
+        pyccel(files=[f_name], openmp=True)
+        print('> testing {0}: done'.format(str(f)))
 # ...
 
 ################################

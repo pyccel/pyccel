@@ -3,25 +3,25 @@
 import os
 
 from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
-                                       ArithmeticExpression, Term, Atom, ExpressionList, \
+                                       ArithmeticExpression, Term, Atom, \
+                                       ExpressionTuple, ExpressionList, \
                                        FactorSigned, AtomExpr, AtomExpr, Power, \
                                        FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                                        VariableHeaderStmt, \
                                        # statements
                                        DeclarationStmt, ConstructorStmt, \
-                                       DelStmt, SyncStmt, \
+                                       DelStmt, \
                                        PassStmt, \
                                        ExpressionDict, ArgValued, \
-                                       AssignStmt, MultiAssignStmt, AugAssignStmt, \
+                                       AssignStmt, AugAssignStmt, \
                                        FlowStmt, BreakStmt, ContinueStmt, \
                                        RaiseStmt, YieldStmt, ReturnStmt, \
-                                       RangeStmt, ParallelRangeStmt, \
-                                       AssertStmt, IfStmt, ForStmt, WhileStmt, ParallelBlockStmt, \
+                                       RangeStmt, \
+                                       AssertStmt, IfStmt, ForStmt, \
+                                       WhileStmt, WithStmt, \
                                        FunctionDefStmt, ClassDefStmt, \
                                        CallStmt, \
                                        CommentStmt, SuiteStmt, \
-                                       EvalStmt, \
-                                       StencilStmt, \
                                        # test bool
                                        Test, OrTest, AndTest, NotTest, Comparison, \
                                        # Trailers
@@ -185,26 +185,26 @@ class PyccelParser(Parser):
         It takes the same arguments as the Parser class.
         """
         classes = [Pyccel, \
-                   ArithmeticExpression, Term, Atom, ExpressionList, \
+                   ArithmeticExpression, Term, Atom, \
+                   ExpressionTuple, ExpressionList,  \
                    FactorSigned, AtomExpr, AtomExpr, Power, \
                    FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                    VariableHeaderStmt, \
                    # statements
                    DeclarationStmt, ConstructorStmt, \
-                   AssignStmt, MultiAssignStmt, AugAssignStmt, \
-                   DelStmt, SyncStmt, \
+                   AssignStmt, AugAssignStmt, \
+                   DelStmt, \
                    PassStmt, \
                    ExpressionDict, ArgValued, \
                    FlowStmt, BreakStmt, ContinueStmt, \
                    RaiseStmt, YieldStmt, ReturnStmt, \
-                   RangeStmt, ParallelRangeStmt, \
-                   AssertStmt, IfStmt, ForStmt, WhileStmt, ParallelBlockStmt, \
+                   RangeStmt, \
+                   AssertStmt, IfStmt, ForStmt, \
+                   WhileStmt, WithStmt, \
                    FunctionDefStmt, ClassDefStmt, \
                    CallStmt, \
                    ImportFromStmt, ImportAsNames, \
                    CommentStmt, SuiteStmt, \
-                   EvalStmt, \
-                   StencilStmt, \
                    # test bool
                    Test, OrTest, AndTest, NotTest, Comparison, \
                    # Trailers

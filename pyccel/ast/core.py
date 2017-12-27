@@ -225,8 +225,8 @@ class DottedName(Basic):
     >>> from pyccel.ast.core import DottedName
     >>> DottedName('matrix', 'n_rows')
     matrix.n_rows
-    >>> DottedName('pyccel', 'mpi', 'mpi_init')
-    pyccel.mpi.mpi_init
+    >>> DottedName('pyccel', 'stdlib', 'parallel')
+    pyccel.stdlib.parallel
     """
     def __new__(cls, *args):
         return Basic.__new__(cls, *args)
@@ -917,6 +917,8 @@ class For(Basic):
             cond_iter = cond_iter or (isinstance(iter, (Range, Tensor)))
             cond_iter = cond_iter or (isinstance(iter, Variable)
                                       and is_iterable_datatype(iter.dtype))
+            cond_iter = cond_iter or (isinstance(iter, ConstructorCall)
+                                      and is_iterable_datatype(iter.this.dtype))
             if not cond_iter:
                 raise TypeError("iter must be an iterable")
 
@@ -953,177 +955,28 @@ class ForIterator(For):
     @property
     def depth(self):
         it = self.iterable
-        cls_base = it.cls_base
-        methods = cls_base.methods_as_dict
+        if isinstance(it, Variable):
+            cls_base = it.cls_base
+            if not cls_base:
+                raise TypeError('cls_base undefined')
 
-        it_method = methods['__iter__']
+            methods = cls_base.methods_as_dict
 
-        it_vars = []
-        for stmt in it_method.body:
-            if isinstance(stmt, Assign):
-                it_vars.append(stmt.lhs)
+            it_method = methods['__iter__']
 
-        n = len(set([str(var.name) for var in it_vars]))
-        return n
+            it_vars = []
+            for stmt in it_method.body:
+                if isinstance(stmt, Assign):
+                    it_vars.append(stmt.lhs)
+
+            n = len(set([str(var.name) for var in it_vars]))
+            return n
+        else: # isinstance(it, ConstructorCall)
+            return 1
 
     @property
     def ranges(self):
-        depth = self.depth
-
-        it          = self.iterable
-        cls_base    = it.cls_base
-        methods     = cls_base.methods_as_dict
-        init_method = methods['__init__']
-
-        args   = init_method.arguments[1:]
-        args   = [str(i) for i in args]
-        params = [str(i) for i in it.cls_parameters]
-
-        # ...
-        it_method = methods['__iter__']
-        targets = []
-        starts = []
-        for stmt in it_method.body:
-            if isinstance(stmt, Assign):
-                targets.append(stmt.lhs)
-                starts.append(stmt.lhs)
-
-        if not(len(targets) == depth):
-            raise ValueError('wrong number of targets')
-
-        names = []
-        for i in starts:
-            if isinstance(i, IndexedElement):
-                names.append(str(i.base))
-            else:
-                names.append(str(i))
-        names = list(set(names))
-
-        inits = {}
-        for stmt in init_method.body:
-            if isinstance(stmt, Assign):
-                if str(stmt.lhs) in names:
-                    expr = stmt.rhs
-                    for a_old, a_new in zip(args, params):
-                        dtype = datatype(stmt.rhs)
-                        v_old = Variable(dtype, a_old)
-                        v_new = Variable(dtype, a_new)
-                        expr = subs(expr, v_old, v_new)
-                        inits[str(stmt.lhs)] = expr
-
-        _starts = []
-        for i in starts:
-            if isinstance(i, IndexedElement):
-                _starts.append(i.base)
-            else:
-                _starts.append(i)
-        starts = [inits[str(i)] for i in _starts]
-
-
-        # TODO uncomment this later, after fixing it
-#        inits = {}
-#        # TODO not use str
-#        names = [str(i) for i in starts]
-#        for stmt in init_method.body:
-#            if isinstance(stmt, Assign):
-#                if str(stmt.lhs) in names:
-#                    for a_old, a_new in zip(args, params):
-#                        v_old = Variable('int', a_old)
-#                        v_new = Variable('int', a_new)
-#                        print('> before : ', stmt.rhs)
-#                        expr = subs(stmt.rhs, v_old, v_new)
-#                        print('> after  : ', expr)
-#                        inits[str(stmt.lhs)] = expr
-#
-#        starts = [inits[str(i)] for i in starts]
-#        print('-----------')
-        # ...
-
-        # ...
-        def _find_stopping_criterium(stmts):
-            for stmt in stmts:
-                if isinstance(stmt, If):
-                    if not(len(stmt.args) == 2):
-                        raise ValueError('Wrong __next__ pattern')
-
-                    ct, et = stmt.args[0]
-                    cf, ef = stmt.args[1]
-
-                    for i in et:
-                        if isinstance(i, Raise):
-                            return cf
-
-                    for i in ef:
-                        if isinstance(i, Raise):
-                            return ct
-
-                    raise TypeError('Wrong type for __next__ pattern')
-
-            return None
-        # ...
-
-        # ...
-        def doit(expr, targets):
-            if isinstance(expr, Relational):
-                if (str(expr.lhs) in targets) and (expr.rel_op in ['<', '<=']):
-                    return expr.rhs
-                elif (str(expr.rhs) in targets) and (expr.rel_op in ['>', '>=']):
-                    return expr.lhs
-                else:
-                    return None
-            elif isinstance(expr, And):
-                return [doit(a, targets) for a in expr.args]
-            else:
-                raise TypeError('Expecting And logical expression.')
-        # ...
-
-        # ...
-        next_method = methods['__next__']
-        ends = []
-        cond = _find_stopping_criterium(next_method.body)
-        # TODO treate case of cond with 'and' operation
-        # TODO we should avoid using str
-        #      must change target from DottedName to Variable
-        targets = [str(i) for i in targets]
-        ends    = doit(cond, targets)
-
-        # TODO not use str
-        if not isinstance(ends, (list, tuple)):
-            ends = [ends]
-
-        names = []
-        for i in ends:
-            if isinstance(i, IndexedElement):
-                names.append(str(i.base))
-            else:
-                names.append(str(i))
-        names = list(set(names))
-
-        inits = {}
-        for stmt in init_method.body:
-            if isinstance(stmt, Assign):
-                if str(stmt.lhs) in names:
-                    expr = stmt.rhs
-                    for a_old, a_new in zip(args, params):
-                        dtype = datatype(stmt.rhs)
-                        v_old = Variable(dtype, a_old)
-                        v_new = Variable(dtype, a_new)
-                        expr = subs(expr, v_old, v_new)
-                        inits[str(stmt.lhs)] = expr
-
-        _ends = []
-        for i in ends:
-            if isinstance(i, IndexedElement):
-                _ends.append(i.base)
-            else:
-                _ends.append(i)
-        ends = [inits[str(i)] for i in _ends]
-
-        if not(len(ends) == depth):
-            raise ValueError('wrong number of ends')
-        # ...
-
-        return [Range(s, e, 1) for s,e in zip(starts, ends)]
+        return get_iterable_ranges(self.iterable)
 
 
 # The following are defined to be sympy approved nodes. If there is something
@@ -1213,6 +1066,7 @@ def DataTypeFactory(name, argnames=["_name"], \
                     prefix=None, \
                     alias=None, \
                     is_iterable=False, \
+                    is_with_construct=False, \
                     is_polymorphic=True):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
@@ -1229,13 +1083,14 @@ def DataTypeFactory(name, argnames=["_name"], \
     else:
         prefix = 'Pyccel{0}'.format(prefix)
 
-    newclass = type(prefix + name, (BaseClass,), \
-                    {"__init__":       __init__, \
-                     "_name":          name, \
-                     "prefix":         prefix, \
-                     "alias":          alias, \
-                     "is_iterable":    is_iterable, \
-                     "is_polymorphic": is_polymorphic})
+    newclass = type(prefix + name, (BaseClass,),
+                    {"__init__":          __init__,
+                     "_name":             name,
+                     "prefix":            prefix,
+                     "alias":             alias,
+                     "is_iterable":       is_iterable,
+                     "is_with_construct": is_with_construct,
+                     "is_polymorphic":    is_polymorphic})
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -1251,6 +1106,17 @@ def is_iterable_datatype(dtype):
     try:
         if is_pyccel_datatype(dtype):
             return dtype.is_iterable
+        else:
+            return False
+    except:
+        return False
+
+# TODO improve and remove try/except
+def is_with_construct_datatype(dtype):
+    """Returns True if dtype is an with_construct class."""
+    try:
+        if is_pyccel_datatype(dtype):
+            return dtype.is_with_construct
         else:
             return False
     except:
@@ -1359,7 +1225,7 @@ class FunctionCall(AtomicExpr):
     """
     is_commutative = True
 
-    def __new__(cls, func, arguments,cls_variable=None, kind='function'):
+    def __new__(cls, func, arguments, cls_variable=None, kind='function'):
         if not isinstance(func, (FunctionDef, str)):
             raise TypeError("Expecting func to be a FunctionDef or str")
 
@@ -1374,15 +1240,13 @@ class FunctionCall(AtomicExpr):
         if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
             raise TypeError("Expecting a cls_variable.")
 
-
-
         f_name = func.name
 
         obj = Basic.__new__(cls, f_name)
 
-        obj._kind      = kind
-        obj._func      = func
-        obj._arguments = arguments
+        obj._kind         = kind
+        obj._func         = func
+        obj._arguments    = arguments
 
         return obj
 
@@ -1420,6 +1284,16 @@ class ConstructorCall(FunctionCall):
     @property
     def this(self):
         return self.arguments[0]
+
+    @property
+    def attributs(self):
+        """Returns all attributs of the __init__ function."""
+        attr = []
+        for i in self.func.body:
+            if isinstance(i, Assign) and (str(i.lhs).startswith('self.')):
+                attr += [i.lhs]
+        return attr
+
 
 class MethodCall(AtomicExpr):
     """
@@ -1521,15 +1395,6 @@ class MethodCall(AtomicExpr):
         else:
             return self.func
 
-class ConstructorCall(FunctionCall):
-    """
-    class for a call to class constructor in the code.
-    """
-    @property
-    def this(self):
-        return self.arguments[0]
-
-
 class Nil(Basic):
     """
     class for None object in the code.
@@ -1589,7 +1454,8 @@ class Variable(Symbol):
                 name = DottedName(*name)
 
         if not isinstance(name, (str, DottedName)):
-            raise TypeError("Expecting a string or DottedName.")
+            raise TypeError('Expecting a string or DottedName, '
+                            'given {0}'.format(type(name)))
 
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
@@ -1672,12 +1538,15 @@ class ValuedVariable(Basic):
         if not isinstance(variable, Variable):
             raise TypeError("variable must be of type Variable")
 
-        _valid_instances = (Variable, IndexedVariable, IndexedElement, \
-                           int, float, complex, \
-                            Integer, Double, Float, Complex, Bool)
+        _valid_instances = (Nil, Variable,
+                            IndexedVariable, IndexedElement,
+                            Tuple,
+                            int, float, bool, complex, str,
+                            Boolean, sp_Integer, sp_Float)
 
         if not isinstance(value, _valid_instances):
-            raise TypeError("non-valid instance for value")
+            raise TypeError('non-valid instance for value, '
+                            'given {0}'.format(type(value)))
 
         return Basic.__new__(cls, variable, value)
 
@@ -2082,11 +1951,24 @@ class ClassDef(Basic):
             return False
 
     @property
+    def is_with_construct(self):
+        """Returns True if the class is a with construct."""
+        names = [str(m.name) for m in self.methods]
+        if ('__enter__' in names) and ('__exit__' in names):
+            return True
+        elif ('__enter__' in names):
+            raise ValueError('ClassDef does not contain __exit__ method')
+        elif ('__exit__' in names):
+            raise ValueError('ClassDef does not contain __enter__ method')
+        else:
+            return False
+
+    @property
     def hide(self):
         if 'hide' in self.options:
             return True
         else:
-            return self.is_iterable
+            return self.is_iterable or self.is_with_construct
 
 class Ceil(Function):
     """
@@ -2127,11 +2009,11 @@ class Import(Basic):
 
     >>> from pyccel.ast.core import DottedName
     >>> from pyccel.ast.core import Import
-    >>> mpi = DottedName('pyccel', 'mpi')
+    >>> mpi = DottedName('pyccel', 'stdlib', 'parallel', 'mpi')
     >>> Import(mpi, 'mpi_init')
-    Import(pyccel.mpi, (mpi_init,))
+    Import(pyccel.stdlib.parallel.mpi, (mpi_init,))
     >>> Import(mpi, '*')
-    Import(pyccel.mpi, (*,))
+    Import(pyccel.stdlib.parallel.mpi, (*,))
     """
 
     def __new__(cls, fil, funcs=None):
@@ -2497,7 +2379,7 @@ class Array(Basic):
     def shape(self):
         return self._args[2]
 
-# TODO add examples
+# TODO - add examples
 class ZerosLike(Basic):
     """Represents variable assignment using numpy.zeros_like for code generation.
 
@@ -2541,6 +2423,23 @@ class ZerosLike(Basic):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def init_value(self):
+        dtype = self.rhs.dtype
+        if isinstance(dtype, NativeInteger):
+            value = 0
+        elif isinstance(dtype, NativeFloat):
+            value = 0.0
+        elif isinstance(dtype, NativeDouble):
+            value = 0.0
+        elif isinstance(dtype, NativeComplex):
+            value = 0.0
+        elif isinstance(dtype, NativeBool):
+            value = BooleanFalse()
+        else:
+            raise TypeError('Unknown type')
+        return value
 
 # TODO: treat as a function
 class Print(Basic):
@@ -2590,61 +2489,6 @@ class Del(Basic):
     @property
     def variables(self):
         return self._args[0]
-
-# TODO: use dict instead of list for options
-class Sync(Basic):
-    """Represents a memory sync in the code.
-
-    variables : list, tuple
-        a list of pyccel variables
-
-    master: Basic
-        a master object running sync
-
-    action: str
-        the action to apply in parallel (ex: 'reduce')
-
-    options: list
-        a list of additional options (ex: '+' in case of reduce)
-
-    Examples
-
-    >>> from pyccel.ast.core import Sync, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
-    >>> Sync([x])
-    Sync([x])
-    >>> master = Variable('int', 'master')
-    >>> Sync([x], master=master)
-    Sync([x], master)
-    """
-
-    def __new__(cls, expr, master=None, action=None, options=[]):
-        if not iterable(expr):
-            expr = Tuple(expr)
-        if action:
-            if not isinstance(action, str):
-                raise TypeError('Expecting a string')
-        if not isinstance(options, list):
-            raise TypeError('Expecting a list')
-
-        return Basic.__new__(cls, expr, master, action, options)
-
-    @property
-    def variables(self):
-        return self._args[0]
-
-    @property
-    def master(self):
-        return self._args[1]
-
-    @property
-    def action(self):
-        return self._args[2]
-
-    @property
-    def options(self):
-        return self._args[3]
-
 
 class EmptyLine(Basic):
     """Represents a EmptyLine in the code.
@@ -3117,7 +2961,7 @@ class VariableHeader(Basic):
 #        else:
 #            raise TypeError("Wrong element in dtypes.")
 
-        return Basic.__new__(cls, name, types)
+        return Basic.__new__(cls, name, dtypes)
 
     @property
     def name(self):
@@ -3155,8 +2999,6 @@ class FunctionHeader(Basic):
     >>> from pyccel.ast.core import FunctionHeader
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
-    >>> FunctionHeader('mpi_dims_create', ['int', 'int', ('int', [Slice(None,None)])], results=['int'])
-    FunctionHeader(mpi_dims_create, [(NativeInteger(), []), (NativeInteger(), []), (int, [ : ])], [(NativeInteger(), [])], function)
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
@@ -3435,6 +3277,12 @@ def get_initial_value(expr, var):
     var: str, Variable, DottedName, list, tuple
         variable name
     """
+    # ...
+    def is_None(expr):
+        """Returns True if expr is None or Nil()."""
+        return isinstance(expr, Nil) or (expr is None)
+    # ...
+
     if isinstance(var, str):
         return get_initial_value(expr, [var])
     elif isinstance(var, DottedName):
@@ -3442,7 +3290,8 @@ def get_initial_value(expr, var):
     elif isinstance(var, Variable):
         return get_initial_value(expr, [var.name])
     elif not isinstance(var, (list, tuple)):
-        raise TypeError('Expecting var to be str, list, tuple or Variable')
+        raise TypeError('Expecting var to be str, list, tuple or Variable, '
+                        'given {0}'.format(type(var)))
 
     if isinstance(expr, ValuedVariable):
         if expr.variable.name in var:
@@ -3455,11 +3304,24 @@ def get_initial_value(expr, var):
         if str(expr.lhs) in var:
             return expr.rhs
     elif isinstance(expr, FunctionDef):
-        return get_initial_value(expr.body, var)
+        value = get_initial_value(expr.body, var)
+        if not is_None(value):
+            r = get_initial_value(expr.arguments, value)
+#            if 'self._collapse' in var:
+#                print('>>>> ', var, value, r)
+            if not (r is None):
+                return r
+        return value
+    elif isinstance(expr, FunctionCall):
+        return get_initial_value(expr.func, var)
+    elif isinstance(expr, ConstructorCall):
+        return get_initial_value(expr.func, var)
     elif isinstance(expr, (list, tuple, Tuple)):
         for i in expr:
             value = get_initial_value(i, var)
-            if not(value is None):
+            # here we make a difference between None and Nil,
+            # since the output of our function can be None
+            if not (value is None):
                 return value
     elif isinstance(expr, ClassDef):
         methods     = expr.methods_as_dict
@@ -3467,4 +3329,173 @@ def get_initial_value(expr, var):
         return get_initial_value(init_method, var)
 
     return None
+# ...
+
+# ...
+def get_iterable_ranges(it):
+    """Returns ranges of an iterable object."""
+    if isinstance(it, Variable):
+        if it.cls_base is None:
+            raise TypeError('iterable must be an iterable Variable object')
+
+        cls_base = it.cls_base
+        params   = [str(i) for i in it.cls_parameters]
+    elif isinstance(it, ConstructorCall):
+        cls_base = it.this.cls_base
+
+        # arguments[0] is 'self'
+        # TODO must be improved in syntax, so that a['value'] is a sympy object
+        args   = []
+        kwargs = {}
+        for a in it.arguments[1:]:
+            if isinstance(a, dict):
+                # we add '_' tp be conform with the private variables convention
+                kwargs['{0}'.format(a['key'])] = a['value']
+            else:
+                args.append(a)
+
+        # TODO improve
+        params = args
+
+#        for k,v in kwargs:
+#            params.append(k)
+
+    methods     = cls_base.methods_as_dict
+    init_method = methods['__init__']
+
+    args   = init_method.arguments[1:]
+    args   = [str(i) for i in args]
+
+    # ...
+    it_method = methods['__iter__']
+    targets = []
+    starts = []
+    for stmt in it_method.body:
+        if isinstance(stmt, Assign):
+            targets.append(stmt.lhs)
+            starts.append(stmt.lhs)
+
+    names = []
+    for i in starts:
+        if isinstance(i, IndexedElement):
+            names.append(str(i.base))
+        else:
+            names.append(str(i))
+    names = list(set(names))
+
+    inits = {}
+    for stmt in init_method.body:
+        if isinstance(stmt, Assign):
+            if str(stmt.lhs) in names:
+                expr = stmt.rhs
+                for a_old, a_new in zip(args, params):
+                    dtype = datatype(stmt.rhs)
+                    v_old = Variable(dtype, a_old)
+                    if isinstance(a_new, (IndexedVariable, IndexedElement,
+                                          str, Variable)):
+                        v_new = Variable(dtype, a_new)
+                    else:
+                        v_new = a_new
+                    expr = subs(expr, v_old, v_new)
+                    inits[str(stmt.lhs)] = expr
+
+    _starts = []
+    for i in starts:
+        if isinstance(i, IndexedElement):
+            _starts.append(i.base)
+        else:
+            _starts.append(i)
+    starts = [inits[str(i)] for i in _starts]
+
+    # ...
+    def _find_stopping_criterium(stmts):
+        for stmt in stmts:
+            if isinstance(stmt, If):
+                if not(len(stmt.args) == 2):
+                    raise ValueError('Wrong __next__ pattern')
+
+                ct, et = stmt.args[0]
+                cf, ef = stmt.args[1]
+
+                for i in et:
+                    if isinstance(i, Raise):
+                        return cf
+
+                for i in ef:
+                    if isinstance(i, Raise):
+                        return ct
+
+                raise TypeError('Wrong type for __next__ pattern')
+
+        return None
+    # ...
+
+    # ...
+    def doit(expr, targets):
+        if isinstance(expr, Relational):
+            if (str(expr.lhs) in targets) and (expr.rel_op in ['<', '<=']):
+                return expr.rhs
+            elif (str(expr.rhs) in targets) and (expr.rel_op in ['>', '>=']):
+                return expr.lhs
+            else:
+                return None
+        elif isinstance(expr, And):
+            return [doit(a, targets) for a in expr.args]
+        else:
+            raise TypeError('Expecting And logical expression.')
+    # ...
+
+    # ...
+    next_method = methods['__next__']
+    ends = []
+    cond = _find_stopping_criterium(next_method.body)
+    # TODO treate case of cond with 'and' operation
+    # TODO we should avoid using str
+    #      must change target from DottedName to Variable
+    targets = [str(i) for i in targets]
+    ends    = doit(cond, targets)
+
+    # TODO not use str
+    if not isinstance(ends, (list, tuple)):
+        ends = [ends]
+
+    names = []
+    for i in ends:
+        if isinstance(i, IndexedElement):
+            names.append(str(i.base))
+        else:
+            names.append(str(i))
+    names = list(set(names))
+
+    inits = {}
+    for stmt in init_method.body:
+        if isinstance(stmt, Assign):
+            if str(stmt.lhs) in names:
+                expr = stmt.rhs
+                for a_old, a_new in zip(args, params):
+                    dtype = datatype(stmt.rhs)
+                    v_old = Variable(dtype, a_old)
+                    if isinstance(a_new, (IndexedVariable, IndexedElement,
+                                          str, Variable)):
+                        v_new = Variable(dtype, a_new)
+                    else:
+                        v_new = a_new
+                    expr = subs(expr, v_old, v_new)
+                    inits[str(stmt.lhs)] = expr
+
+    _ends = []
+    for i in ends:
+        if isinstance(i, IndexedElement):
+            _ends.append(i.base)
+        else:
+            _ends.append(i)
+    ends = [inits[str(i)] for i in _ends]
+    # ...
+
+    # ...
+    if not(len(ends) == len(starts)):
+        raise ValueError('wrong number of starts/ends')
+    # ...
+
+    return [Range(s, e, 1) for s,e in zip(starts, ends)]
 # ...

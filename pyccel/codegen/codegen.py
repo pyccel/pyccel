@@ -2,6 +2,8 @@
 
 import os
 
+import re
+
 from sympy.core import Tuple
 
 from pyccel.codegen.printing import fcode
@@ -12,22 +14,23 @@ from pyccel.parser.syntax.core import clean_namespace
 
 from pyccel.ast.core import subs
 from pyccel.ast.core import is_valid_module
+from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import DataType, DataTypeFactory
 from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               For, Assign, Declare, Variable, \
                               NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
-                              datatype, While, NativeFloat, \
+                              VariableHeader, \
+                              datatype, While, With, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
                               MultiAssign, AugAssign, FunctionCall, \
-                              FunctionDef,MethodCall, ClassDef, Sync, Del, Print, Import, \
+                              FunctionDef,MethodCall, ClassDef, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, Assert, If, \
                               Stencil, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
-from pyccel.ast.parallel.mpi import MPI_Tensor
 from pyccel.ast.parallel.mpi import mpify
 from pyccel.ast.parallel.openmp import openmpfy
 
@@ -69,6 +72,59 @@ def make_tmp_file(filename, output_dir=None):
         name = os.path.basename(name)
         name = os.path.join(output_dir, name)
     return name + ".pyccel"
+# ...
+
+# ...
+def updateNewLineInList(s, kind='list'):
+    """
+    removing 'new line', inside a list, tuple, dict
+    """
+    if kind == 'list':
+#        rule = '\[(.*[\w\W\s\S]+.*)\]'
+#        rule = r'\[(.*\n[\w\W\s\S]+.*)\]'
+#        rule = '\[([\w,=:]*\n[\w\W\s\S]+.*)\]'
+#        rule = '\[([\w,=: \t]*\n[\w\W\s\S]+.*)\]'
+
+        rule = '\[([\w,=: \t]*\n[^)]+)\]'
+
+        leftLim = '['
+        rightLim = ']'
+    elif kind == 'tuple':
+#        rule = '\((.*[\w\W\s\S]+.*)\)'
+#        rule = r'\((.*\n[\w\W\s\S]+.*)\)'
+#        rule = '\(([\w,=:]*\n[\w\W\s\S]+.*)\)'
+#        rule = '\(([\w,=: \t]*\n[\w\W\s\S]+.*)\)'
+
+        rule = '\(([\w,=: \t]*\n[^)]+)\)'
+
+        leftLim = '('
+        rightLim = ')'
+    else:
+        raise ValueError('Expecting list or tuple values for kind')
+
+    p = re.compile(rule)
+    #p = re.compile(rule, re.IGNORECASE)
+
+    # ...
+    list_data = p.split(s) # split the whole text with respect to the rule
+    list_exp  = p.findall(s) # get all expressions to replace
+
+    if len(list_exp) == 0:
+        return s
+
+    _format = lambda s: s.replace('\n', ' ')
+
+    list_text = ""
+    for data in list_data:
+        # TODO improve this in case of \t, etc
+        #      this will be needed only if we want
+        #      to have \n inside expressions.
+        new_data = data
+        if data in list_exp:
+            new_data = leftLim + _format(data) + rightLim
+        list_text += new_data
+
+    return list_text
 # ...
 
 # ...
@@ -151,9 +207,23 @@ def preprocess(filename, filename_out):
     filename_out: str
         name of the temporary file that will be parsed by textX.
     """
+#    # ...
+#    f = open(filename)
+#    lines = f.readlines()
+#    f.close()
+#    # ...
+
+    # ...
     f = open(filename)
-    lines = f.readlines()
+    code = f.read()
     f.close()
+
+    # remove new lines between '(' and ')'
+    code = updateNewLineInList(code, kind='tuple')
+    code = updateNewLineInList(code, kind='list')
+    lines = code.split('\n')
+    lines = [l+'\n' for l in lines]
+    # ...
 
     lines_new = preprocess_as_str(lines)
 
@@ -339,9 +409,15 @@ class Codegen(object):
         # in the case of a header file, we need to convert the headers to
         # FunctionDef or ClassCef
         namespace = self._namespace
-        for k,v in self.headers.items():
-            f = v.create_definition()
-            namespace[k] = f
+
+        # TODO must create the definition only if only the header exists
+        #      for the moment, we only export functions
+        if self.is_header:
+            for k,v in self.headers.items():
+                if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
+                    f = v.create_definition()
+                    namespace[k] = f
+#                    print '{0} :: {1}'.format(k, f)
 
         return namespace
 
@@ -387,8 +463,7 @@ class Codegen(object):
             name of the selected accelerator.
             For the moment, only 'openmp' is available
         ignored_modules: list
-            list of modules to ignore (like 'numpy', 'sympy').
-            These modules do not have a correspondence in Fortran.
+            list of modules to ignore.
         with_mpi: bool
             True if using MPI
         pyccel_modules: list
@@ -456,7 +531,6 @@ class Codegen(object):
         stmts = ast.expr
 
         # new namespace
-#        self._namespace = ast.get_namespace() # TODO do not user ast
         self._namespace = get_namespace()
         self._headers   = get_headers()
         # ...
@@ -476,6 +550,8 @@ class Codegen(object):
 
             if isinstance(stmt, (Comment, AnnotatedComment)):
                 body += printer(stmt) + "\n"
+            elif isinstance(stmt, EmptyLine):
+                body += printer(stmt) + "\n"
             elif isinstance(stmt, Import):
                 name = str(stmt.fil)
                 if not(name in ignored_modules):
@@ -483,18 +559,20 @@ class Codegen(object):
                     modules += [name]
             elif isinstance(stmt, Declare):
                 decs = stmt
-            elif isinstance(stmt, (FunctionHeader, ClassHeader, MethodHeader)):
+            elif isinstance(stmt, (FunctionHeader, ClassHeader,
+                                   MethodHeader, VariableHeader,
+                                   Variable)):
+                # Variable is also ignored, since we can export them in headers
                 continue
             elif isinstance(stmt, Assign):
-                if isinstance(stmt.rhs, MPI_Tensor):
-                    for dec in stmt.rhs.declarations:
-                        preludes += printer(dec) + "\n"
-                    for s in stmt.rhs.body:
-                        body += printer(s) + "\n"
-                elif isinstance(stmt.rhs, (Range, Tensor, MPI_Tensor)):
+                if isinstance(stmt.rhs, (Range, Tensor)):
                     continue
-                elif isinstance(stmt.lhs, Variable) and stmt.lhs.name.startswith('__'):
-                    metavars[stmt.lhs.name] = stmt.rhs
+                elif isinstance(stmt.lhs, Variable):
+                    if (isinstance(stmt.lhs.name, str) and
+                        stmt.lhs.name.startswith('__')):
+                        metavars[stmt.lhs.name] = stmt.rhs
+                    else:
+                        body += printer(stmt) + "\n"
                 else:
                     body += printer(stmt) + "\n"
             elif isinstance(stmt, AugAssign):
@@ -508,6 +586,8 @@ class Codegen(object):
             elif isinstance(stmt, For):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, While):
+                body += printer(stmt) + "\n"
+            elif isinstance(stmt, With):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Assert):
                 body += printer(stmt) + "\n"
@@ -532,8 +612,6 @@ class Codegen(object):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Del):
                 # TODO is it ok to put it in the body?
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Sync):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):
                 body += printer(stmt) + "\n"
@@ -567,7 +645,9 @@ class Codegen(object):
         for key, dec in list(ast.declarations.items()):
             if isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 continue
-            elif isinstance(dec.variables[0], Variable) and dec.variables[0].name.startswith('__'):
+            elif (isinstance(dec.variables[0], Variable) and
+                  str(dec.variables[0].name).startswith('__')):
+                # we use str, for the case of DottedName
                 continue
             else:
                 preludes += printer(dec) + "\n"
@@ -594,14 +674,6 @@ class Codegen(object):
             is_module = True
         # ...
 
-#        # ...
-#        if with_mpi:
-#            for stmt in stmts:
-#                if isinstance(stmt, _module_stmt)):
-#                    is_module = False
-#                    break
-#        # ...
-
         # ... cleaning
         clean_namespace()
         # ...
@@ -613,7 +685,7 @@ class Codegen(object):
         self._body      = body
         self._routines  = routines
         self._classes   = classes
-        self._modules   = modules
+        self._modules   = list(set(modules))
         self._is_module = is_module
         self._language  = language
         self._metavars  = metavars
@@ -694,6 +766,7 @@ class FCodegen(Codegen):
             name_module = 'm_{0}'.format(name_module)
 
             code += "module " + name_module     +"\n"
+            code += imports                     +"\n"
             code += classes                     +"\n"
             code += "end module " + name_module +'\n'
 

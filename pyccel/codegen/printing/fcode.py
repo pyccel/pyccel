@@ -16,6 +16,7 @@ from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
+from sympy import Integer
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -23,9 +24,12 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 
 from pyccel.ast.core import get_initial_value
+from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import DataType, is_pyccel_datatype, is_iterable_datatype
+from pyccel.ast.core import DataType, is_pyccel_datatype
+from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.core import ClassDef
+from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef
@@ -34,7 +38,7 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import Range, Tensor, ParallelRange, Block
+from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
                               Variable, Declare, ValuedVariable, \
                               Len, Shape, Dot, Sign, subs, \
@@ -42,36 +46,9 @@ from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+from pyccel.ast.parallel.openmp import OMP_For
+
 from pyccel.ast.parallel.mpi import MPI
-from pyccel.ast.parallel.mpi import MPI_ERROR, MPI_STATUS
-from pyccel.ast.parallel.mpi import MPI_Init
-from pyccel.ast.parallel.mpi import MPI_Finalize
-from pyccel.ast.parallel.mpi import MPI_comm_world, MPI_status_size, MPI_proc_null
-from pyccel.ast.parallel.mpi import MPI_comm_size, MPI_comm_rank
-from pyccel.ast.parallel.mpi import MPI_comm_recv, MPI_comm_send
-from pyccel.ast.parallel.mpi import MPI_comm_irecv, MPI_comm_isend
-from pyccel.ast.parallel.mpi import MPI_comm_sendrecv
-from pyccel.ast.parallel.mpi import MPI_comm_sendrecv_replace
-from pyccel.ast.parallel.mpi import MPI_comm_barrier
-from pyccel.ast.parallel.mpi import MPI_comm_bcast
-from pyccel.ast.parallel.mpi import MPI_waitall
-from pyccel.ast.parallel.mpi import MPI_comm_scatter
-from pyccel.ast.parallel.mpi import MPI_comm_gather
-from pyccel.ast.parallel.mpi import MPI_comm_allgather
-from pyccel.ast.parallel.mpi import MPI_comm_alltoall
-from pyccel.ast.parallel.mpi import MPI_comm_reduce
-from pyccel.ast.parallel.mpi import MPI_comm_allreduce
-from pyccel.ast.parallel.mpi import MPI_comm_split
-from pyccel.ast.parallel.mpi import MPI_comm_free
-from pyccel.ast.parallel.mpi import MPI_comm_cart_create
-from pyccel.ast.parallel.mpi import MPI_comm_cart_coords
-from pyccel.ast.parallel.mpi import MPI_comm_cart_shift
-from pyccel.ast.parallel.mpi import MPI_comm_cart_sub
-from pyccel.ast.parallel.mpi import MPI_dims_create
-from pyccel.ast.parallel.mpi import MPI_SUM, MPI_PROD
-from pyccel.ast.parallel.mpi import MPI_MIN, MPI_MAX
-from pyccel.ast.parallel.mpi import MPI_Tensor
-from pyccel.ast.parallel.mpi import MPI_TensorCommunication
 
 
 # TODO: add examples
@@ -192,7 +169,8 @@ class FCodePrinter(CodePrinter):
                 fil = '_'.join(self._print(i) for i in expr.fil.name)
                 fil = 'm_{0}'.format(fil)
             else:
-                raise NotImplementedError('Can not import dotted names')
+                fil = '_'.join(self._print(i) for i in expr.fil.name)
+                fil = 'm_{0}'.format(fil)
 
         if not expr.funcs:
             return 'use {0}'.format(fil)
@@ -206,17 +184,17 @@ class FCodePrinter(CodePrinter):
             raise TypeError('Wrong type for funcs')
 
     def _print_Print(self, expr):
-        Str=[]
+        args = []
         for f in expr.expr:
-             if isinstance(f,str):
-                 Str.append(repr(f))
-             else:
-                Str.append(self._print(f))
+            if isinstance(f, str):
+                args.append("{0}".format(f))
+            else:
+                args.append("{0}".format(self._print(f)))
 
+        fs = ', '.join(i for i in args)
 
-        fs = ','.join(Str)
-
-        return 'print * ,{0} '.format(fs)
+        code = 'print *, {0}'.format(fs)
+        return self._get_statement(code)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -308,22 +286,17 @@ class FCodePrinter(CodePrinter):
                 ends   = [tensor.stop ]
                 steps  = [tensor.step ]
 
-            if isinstance(tensor, MPI_Tensor):
-                pads = tensor.pads
-            else:
-                pads = np.zeros(2, dtype=int)
+            pads = np.zeros(len(starts), dtype=int)
 
             shape_code = ', '.join('{0}:{1}'.format(self._print(s-p),  \
                                                     self._print(e+p)) \
                                    for (s,e, p) in zip(starts, ends, pads))
 
-        init_value = None
-        dtype = expr.lhs.dtype
-        init_value = expr.init_value
+        init_value = self._print(expr.init_value)
 
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
-        code_init = "{0} = {1}".format(lhs_code, self._print(init_value))
-        code = "{0}; {1}".format(code_alloc, code_init)
+        code_init = "{0} = {1}".format(lhs_code, init_value)
+        code = "{0}\n{1}".format(code_alloc, code_init)
         return self._get_statement(code)
 
     def _print_Array(self,expr):
@@ -365,7 +338,12 @@ class FCodePrinter(CodePrinter):
             r = '{0}:{1}'.format(l,u)
             rs.append(r)
         shape = ', '.join(self._print(i) for i in rs)
-        code  = 'allocate({0}({1})) ; {0} = 0'.format(lhs, shape)
+        init_value = self._print(expr.init_value)
+
+        code  = ('allocate({lhs}({shape}))\n'
+                 '{lhs} = {init_value}').format(lhs=lhs,
+                                                shape=shape,
+                                                init_value=init_value)
 
         return self._get_statement(code)
 
@@ -409,6 +387,9 @@ class FCodePrinter(CodePrinter):
         if is_iterable_datatype(expr.dtype):
             return ''
 
+        if is_with_construct_datatype(expr.dtype):
+            return ''
+
         dtype = self._print(expr.dtype)
 
         code_value = ''
@@ -434,12 +415,14 @@ class FCodePrinter(CodePrinter):
         s = '0'
         e = ''
         var = expr.variables[0]
+        enable_alloc = True
         if allocatable or (var.shape is None):
             s = ''
         if rank == 0:
             rankstr =  ''
         elif (rank == 1) and (isinstance(shape, int)):   # TODO improve
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
+            enable_alloc = False
         else:
             rankstr = ', '.join(s+':'+e for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
@@ -447,7 +430,7 @@ class FCodePrinter(CodePrinter):
         # TODO: it would be great to use allocatable but then we have to pay
         #       attention to the starting index (in the case of 0 for example).
         #       this is the reason why we print 'pointer' instead of 'allocatable'
-        if allocatable or rank > 0:
+        if enable_alloc and (allocatable or rank > 0):
 #            allocatablestr = ', allocatable'
             allocatablestr = ', pointer'
         else:
@@ -462,454 +445,6 @@ class FCodePrinter(CodePrinter):
                         format(*args))
 
         return '\n'.join(decs)
-
-    def _print_MPI_comm_world(self, expr):
-        return 'MPI_comm_world'
-
-    def _print_MPI_comm_size(self, expr):
-        return 'MPI_comm_size'
-
-    def _print_MPI_comm_rank(self, expr):
-        return 'MPI_comm_rank'
-
-    def _print_MPI_comm_recv(self, expr):
-        ierr     = self._print(MPI_ERROR)
-        istatus  = self._print(MPI_STATUS)
-
-        data   = expr.data
-        count  = expr.count
-        dtype  = expr.datatype
-        source = expr.source
-        tag    = expr.tag
-        comm   = expr.comm
-
-        args = (data, count, dtype, source, tag, comm, istatus, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_recv ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_send(self, expr):
-        ierr  = self._print(MPI_ERROR)
-
-        data  = expr.data
-        count = expr.count
-        dtype = expr.datatype
-        dest  = expr.dest
-        tag   = expr.tag
-        comm  = expr.comm
-
-        args = (data, count, dtype, dest, tag, comm, ierr)
-        t = self._print(data)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_send ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_irecv(self, expr):
-        ierr     = self._print(MPI_ERROR)
-
-        data    = expr.data
-        count   = expr.count
-        dtype   = expr.datatype
-        source  = expr.source
-        tag     = expr.tag
-        comm    = expr.comm
-        request = expr.request
-
-        args = (data, count, dtype, source, tag, comm, request, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_irecv ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_isend(self, expr):
-        ierr     = self._print(MPI_ERROR)
-
-        data    = expr.data
-        count   = expr.count
-        dtype   = expr.datatype
-        dest    = expr.dest
-        tag     = expr.tag
-        comm    = expr.comm
-        request = expr.request
-
-        args = (data, count, dtype, dest, tag, comm, request, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_isend ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_sendrecv(self, expr):
-        ierr      = self._print(MPI_ERROR)
-        istatus   = self._print(MPI_STATUS)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        sendcount = expr.sendcount
-        recvcount = expr.recvcount
-        sendtype  = expr.senddatatype
-        recvtype  = expr.recvdatatype
-        dest      = expr.dest
-        source    = expr.source
-        sendtag   = expr.sendtag
-        recvtag   = expr.recvtag
-        comm      = expr.comm
-
-        args = (senddata, sendcount, sendtype, dest,   sendtag, \
-                recvdata, recvcount, recvtype, source, recvtag, \
-                comm, istatus, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_sendrecv ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_sendrecv_replace(self, expr):
-        ierr      = self._print(MPI_ERROR)
-        istatus   = self._print(MPI_STATUS)
-
-        data      = expr.data
-        count     = expr.count
-        dtype     = expr.datatype
-        dest      = expr.dest
-        source    = expr.source
-        sendtag   = expr.sendtag
-        recvtag   = expr.recvtag
-        comm      = expr.comm
-
-        args = (data, count, dtype, dest, sendtag, source, recvtag, \
-                comm, istatus, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_sendrecv_replace ({0})'.format(args)
-        return code
-
-    def _print_MPI_waitall(self, expr):
-        ierr     = self._print(MPI_ERROR)
-
-        requests = expr.requests
-        count    = expr.count
-        status   = expr.status
-
-        args = (count, requests, status, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_waitall ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_barrier(self, expr):
-        comm     = self._print(expr.comm)
-        ierr     = self._print(MPI_ERROR)
-
-        code = 'call mpi_barrier ({0}, {1})'.format(comm, ierr)
-        return code
-
-    def _print_MPI_comm_bcast(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        data      = expr.data
-        count     = expr.count
-        dtype     = expr.datatype
-        root      = expr.root
-        comm      = expr.comm
-
-        args = (data, count, dtype, root, comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_bcast ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_scatter(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        sendcount = expr.sendcount
-        recvcount = expr.recvcount
-        sendtype  = expr.senddatatype
-        recvtype  = expr.recvdatatype
-        root      = expr.root
-        comm      = expr.comm
-
-        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                root, comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_scatter ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_gather(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        sendcount = expr.sendcount
-        recvcount = expr.recvcount
-        sendtype  = expr.senddatatype
-        recvtype  = expr.recvdatatype
-        root      = expr.root
-        comm      = expr.comm
-
-        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                root, comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_gather ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_allgather(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        sendcount = expr.sendcount
-        recvcount = expr.recvcount
-        sendtype  = expr.senddatatype
-        recvtype  = expr.recvdatatype
-        comm      = expr.comm
-
-        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_allgather ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_alltoall(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        sendcount = expr.sendcount
-        recvcount = expr.recvcount
-        sendtype  = expr.senddatatype
-        recvtype  = expr.recvdatatype
-        comm      = expr.comm
-
-        args = (senddata, sendcount, sendtype, recvdata, recvcount, recvtype, \
-                comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_alltoall ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_reduce(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        count     = expr.count
-        dtype     = expr.datatype
-        op        = expr.op
-        root      = expr.root
-        comm      = expr.comm
-
-        args = (senddata, recvdata, count, dtype, op, \
-                root, comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_reduce ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_allreduce(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        senddata  = expr.senddata
-        recvdata  = expr.recvdata
-        count     = expr.count
-        dtype     = expr.datatype
-        op        = expr.op
-        comm      = expr.comm
-
-        args = (senddata, recvdata, count, dtype, op, \
-                comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_allreduce ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_split(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        color     = expr.color
-        key       = expr.key
-        comm      = expr.comm
-        newcomm   = expr.newcomm
-
-        args = (comm, color, key, newcomm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_comm_split ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_free(self, expr):
-        ierr = self._print(MPI_ERROR)
-        comm = expr.comm
-
-        args = (comm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_comm_free ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_cart_create(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        ndims     = expr.ndims
-        dims      = expr.dims
-        periods   = expr.periods
-        reorder   = expr.reorder
-        comm      = expr.comm
-        newcomm   = expr.newcomm
-
-        args = (comm, ndims, dims, periods, reorder, newcomm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_cart_create ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_cart_coords(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        rank   = expr.rank
-        ndims  = expr.ndims
-        coords = expr.coords
-        comm   = expr.comm
-
-        args = (comm, rank, ndims, coords, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_cart_coords ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_cart_shift(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        direction = expr.direction
-        disp      = expr.disp
-        source    = expr.source
-        dest      = expr.dest
-        comm      = expr.comm
-
-        args = (comm, direction, disp, source, dest, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_cart_shift ({0})'.format(args)
-        return code
-
-    def _print_MPI_comm_cart_sub(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        dims      = expr.dims
-        comm      = expr.comm
-        newcomm   = expr.newcomm
-
-        args = (comm, dims, newcomm, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_cart_sub ({0})'.format(args)
-        return code
-
-    def _print_MPI_type_contiguous(self, expr):
-        ierr     = self._print(MPI_ERROR)
-
-        count       = self._print(expr.count)
-        oldtype     = self._print(expr.oldtype)
-        newtype     = self._print(expr.newtype)
-
-        args = (count, oldtype, newtype, ierr)
-        args  = ', '.join('{0}'.format(a) for a in args)
-        code = 'call MPI_type_contiguous ({0})'.format(args)
-
-        commit = 'call MPI_type_commit ({0}, {1})'.format(newtype, ierr)
-
-        code = '{0}\n{1}'.format(code, commit)
-        return code
-
-    def _print_MPI_type_vector(self, expr):
-        ierr     = self._print(MPI_ERROR)
-
-        count       = self._print(expr.count)
-        blocklength = self._print(expr.blocklength)
-        stride      = self._print(expr.stride)
-        oldtype     = self._print(expr.oldtype)
-        newtype     = self._print(expr.newtype)
-
-        args = (count, blocklength, stride, oldtype, newtype, ierr)
-        args  = ', '.join('{0}'.format(a) for a in args)
-        code = 'call MPI_type_vector ({0})'.format(args)
-
-        commit = 'call MPI_type_commit ({0}, {1})'.format(newtype, ierr)
-
-        code = '{0}\n{1}'.format(code, commit)
-        return code
-
-    def _print_MPI_dims_create(self, expr):
-        ierr      = self._print(MPI_ERROR)
-
-        nnodes  = expr.nnodes
-        ndims   = expr.ndims
-        dims    = expr.dims
-
-        args = (nnodes, ndims, dims, ierr)
-        args  = ', '.join('{0}'.format(self._print(a)) for a in args)
-        code = 'call mpi_dims_create ({0})'.format(args)
-        return code
-
-    def _print_MPI_INTEGER(self, expr):
-        return 'MPI_INTEGER'
-
-    def _print_MPI_REAL(self, expr):
-        return 'MPI_REAL'
-
-    def _print_MPI_DOUBLE(self, expr):
-        return 'MPI_DOUBLE'
-
-    def _print_MPI_SUM(self, expr):
-        return 'MPI_SUM'
-
-    def _print_MPI_PROD(self, expr):
-        return 'MPI_PROD'
-
-    def _print_MPI_MAX(self, expr):
-        return 'MPI_MAX'
-
-    def _print_MPI_MIN(self, expr):
-        return 'MPI_MIN'
-
-    def _print_MPI_status_size(self, expr):
-        return 'MPI_status_size'
-
-    def _print_MPI_status_type(self, expr):
-        # TODO to remove
-        return 'integer, dimension(MPI_STATUS_SIZE)'
-
-    def _print_MPI_proc_null(self, expr):
-        return 'MPI_proc_null'
-
-    def _print_MPI_comm(self, expr):
-        return expr.name
-
-    def _print_MPI_Declare(self, expr):
-        dtype = self._print(expr.dtype)
-        # Group the variables by intent
-
-        arg_types        = [type(v) for v in expr.variables]
-        arg_ranks        = [v.rank for v in expr.variables]
-        arg_allocatables = [v.allocatable for v in expr.variables]
-
-        decs = []
-        intent = expr.intent
-        vstr = ', '.join(self._print(i.name) for i in expr.variables)
-
-        # TODO ARA improve
-        rank        = arg_ranks[0]
-        allocatable = arg_allocatables[0]
-
-        # arrays are 0-based in pyccel, to avoid ambiguity with range
-        base = '0'
-        if allocatable:
-            base = ''
-        if rank == 0:
-            rankstr =  ''
-        else:
-            rankstr = ', '.join(base+':' for f in range(0, rank))
-            rankstr = '(' + rankstr + ')'
-
-        if allocatable:
-            allocatablestr = ', allocatable'
-        else:
-            allocatablestr = ''
-
-        if intent:
-            decs.append('{0}, intent({1}) {2} :: {3} {4}'.
-                        format(dtype, intent, allocatablestr, vstr, rankstr))
-        else:
-            decs.append('{0}{1} :: {2} {3}'.
-                        format(dtype, allocatablestr, vstr, rankstr))
-
-        return '\n'.join(decs)
-
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -949,8 +484,13 @@ class FCodePrinter(CodePrinter):
             func = expr.rhs.func
             name = str(func.name)
             this = expr.rhs.this
+
             # we don't print the constructor call if iterable object
             if this.dtype.is_iterable:
+                return ''
+
+            # we don't print the constructor call if with construct object
+            if this.dtype.is_with_construct:
                 return ''
 
             if name == "__init__":
@@ -963,10 +503,18 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in expr.rhs.arguments[1:])
             return 'call {0}({1})'.format(rhs_code, code_args)
         elif isinstance(expr.rhs, FunctionCall):
+            # in the case of a function that returns a list,
+            # we should append them to the procedure arguments
+            if isinstance(expr.lhs, (tuple, list, Tuple)):
+                lhs_code = ', '.join(self._print(i) for i in expr.lhs)
             rhs_code = self._print(expr.rhs.name)
             func = expr.rhs.func
             if func.cls_name:
+                # TODO: do we keep this?
+                if isinstance(expr.lhs, (tuple, list, Tuple)):
+                    raise TypeError('Expecting a single lhs')
                 rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
+
             is_procedure = func.is_procedure
             args = expr.rhs.arguments
             f_args = func.arguments
@@ -983,11 +531,9 @@ class FCodePrinter(CodePrinter):
             # TODO check this for MPI
             if is_procedure:
                 code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
-            elif not isinstance(expr.rhs.func, (MPI_Init, MPI_Finalize)):
+            else:
                 rhs_code = '{0}({1})'.format(rhs_code, code_args)
                 code = '{0} = {1}'.format(lhs_code, rhs_code)
-            else:
-                raise NotImplementedError('update MPI case')
 
             return self._get_statement(code)
 
@@ -1032,48 +578,33 @@ class FCodePrinter(CodePrinter):
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
-    def _print_MPI_Assign(self, expr):
-        lhs_code = self._print(expr.lhs)
-        is_procedure = False
-        MPI_CONSTANTS = (MPI_comm_world, MPI_status_size, MPI_proc_null)
-        if isinstance(expr.rhs, MPI_CONSTANTS):
-            rhs_code = self._print(expr.rhs)
-            code = '{0} = {1}'.format(lhs_code, rhs_code)
-        elif isinstance(expr.rhs, MPI_comm_size):
-            comm = self._print(expr.rhs.comm)
-            size = self._print(expr.lhs)
-            ierr = self._print(MPI_ERROR)
-            code = 'call mpi_comm_size ({0}, {1}, {2})'.format(comm, size, ierr)
-        elif isinstance(expr.rhs, MPI_comm_rank):
-            comm = self._print(expr.rhs.comm)
-            rank = self._print(expr.lhs)
-            ierr = self._print(MPI_ERROR)
-            code = 'call mpi_comm_rank ({0}, {1}, {2})'.format(comm, rank, ierr)
-        elif isinstance(expr.rhs, MPI):
-            code = self._print(expr.rhs)
-        else:
-            raise TypeError('{0} Not yet implemented.'.format(type(expr.rhs)))
-        return self._get_statement(code)
-
-
     def _print_OMP_Parallel(self, expr):
         # prelude will not be printed
-        prefix  = '!$omp'
+#        from pyccel.ast.parallel.openmp import OMP_PrivateClause
+#        for i in expr.clauses:
+#            if isinstance(i, OMP_PrivateClause):
+#                print(i, i.variables, type(i))
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
         body    = '\n'.join(self._print(i) for i in expr.body)
-        prelude = '\n'.join(self._print(i) for i in expr.declarations)
 
-        body  = ('{0} parallel {1}\n'
-                 '{2}\n'
-                 '{0} end parallel').format(prefix, clauses, body)
+        # ... TODO adapt get_statement to have continuation with OpenMP
+        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
+        epilog = '!$omp end parallel\n'
+        # ...
 
-        return body
+        # ...
+        code = ('{prolog}'
+                '{body}\n'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
 
     def _print_OMP_ParallelNumThreadClause(self, expr):
         return 'num_threads({})'.format(self._print(expr.num_threads))
 
-    def _print_Sync(self, expr):
-        return 'Sync'
+    def _print_OMP_ParallelIfClause(self, expr):
+        return 'if({})'.format(self._print(expr.test))
 
     def _print_NativeBool(self, expr):
         return 'logical'
@@ -1250,18 +781,14 @@ class FCodePrinter(CodePrinter):
                     code = 'call {0} % free()'.format(self._print(var))
                 else:
                     code = 'deallocate({0}){1}'.format(self._print(var), code)
-            elif isinstance(var, MPI_Tensor):
-                stmts = var.free_statements()
-                for stmt in stmts:
-                    code = '{0}\n{1}'.format(self._print(stmt), code)
             else:
-                msg  = 'Only Variable and MPI_Tensor are treated.'
+                msg  = 'Only Variable is treated.'
                 msg += ' Given {0}'.format(type(var))
                 raise NotImplementedError(msg)
         return code
 
     def _print_ClassDef(self, expr):
-        if expr.is_iterable:
+        if expr.hide:
             return ''
 
         name = self._print(expr.name)
@@ -1332,29 +859,6 @@ class FCodePrinter(CodePrinter):
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
         return self._print(stmt)
 
-    def _print_MultiAssign(self, expr):
-        if isinstance(expr.rhs, FunctionCall):
-            # TODO check number of arguments and ValuedVariables
-            prec =  self._settings['precision']
-
-            args = expr.rhs.arguments
-            args = [N(a, prec) for a in args]
-            func = expr.rhs.func
-            f_name = self._print(func.name)
-            args    = ', '.join(self._print(i) for i in args)
-            outputs = ', '.join(self._print(i) for i in expr.lhs)
-            code = 'call {0} ({1}, {2})'.format(f_name, args, outputs)
-        elif isinstance(expr.rhs, Function):
-            prec =  self._settings['precision']
-            args = [N(a, prec) for a in expr.rhs.args]
-            func = expr.rhs.func
-            args    = ', '.join(self._print(i) for i in args)
-            outputs = ', '.join(self._print(i) for i in expr.lhs)
-            code = 'call {0} ({1}, {2})'.format(func, args, outputs)
-        else:
-            raise TypeError('Expecting a Function call.')
-        return self._get_statement(code)
-
     def _print_Range(self, expr):
         start = self._print(expr.start)
         stop  = self._print(expr.stop-1)
@@ -1365,12 +869,6 @@ class FCodePrinter(CodePrinter):
         start = self._print(expr.start)
         stop  = self._print(expr.stop)
         return '{0}, {1}'.format(start, stop)
-
-    def _print_ParallelRange(self, expr):
-        start = self._print(expr.start)
-        stop  = self._print(expr.stop-1)
-        step  = self._print(expr.step)
-        return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_For(self, expr):
         prolog = ''
@@ -1400,19 +898,15 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
-        if not isinstance(expr.iterable, (Range, Tensor, MPI_Tensor)):
+        if not isinstance(expr.iterable, (Range, Tensor)):
             msg  = "Only iterable currently supported are Range, "
-            msg += "Tensor and MPI_Tensor"
+            msg += "Tensor"
             raise NotImplementedError(msg)
-
-        if isinstance(expr.iterable, ParallelRange):
-            prolog = '!$omp do schedule(runtime)\n'
-            epilog = '!$omp end do nowait\n'
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target[0], expr.iterable, \
                                        prolog, epilog)
-        elif isinstance(expr.iterable, (Tensor, MPI_Tensor)):
+        elif isinstance(expr.iterable, Tensor):
             for i,a in zip(expr.target, expr.iterable.ranges):
                 prolog, epilog = _do_range(i, a, \
                                            prolog, epilog)
@@ -1423,6 +917,100 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
+    def _print_OMP_ParallelNumThreadClause(self, expr):
+        return 'num_threads({})'.format(self._print(expr.num_threads))
+
+    def _print_OMP_ParallelDefaultClause(self, expr):
+        status = expr.status
+        if status:
+            status = self._print(expr.status)
+        else:
+            status = ''
+        return 'default({})'.format(status)
+
+    def _print_OMP_ParallelProcBindClause(self, expr):
+        status = expr.status
+        if status:
+            status = self._print(expr.status)
+        else:
+            status = ''
+        return 'proc_bind({})'.format(status)
+
+    def _print_OMP_PrivateClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'private({})'.format(args)
+
+    def _print_OMP_SharedClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'shared({})'.format(args)
+
+    def _print_OMP_FirstPrivateClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'firstprivate({})'.format(args)
+
+    def _print_OMP_LastPrivateClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'lastprivate({})'.format(args)
+
+    def _print_OMP_CopyinClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyin({})'.format(args)
+
+    def _print_OMP_ReductionClause(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        op   = self._print(expr.operation)
+        return "reduction({0}: {1})".format(op, args)
+
+    def _print_OMP_ScheduleClause(self, expr):
+        kind = self._print(expr.kind)
+
+        chunk_size = ''
+        if expr.chunk_size:
+            chunk_size = ', {0}'.format(self._print(expr.chunk_size))
+
+        return 'schedule({0}{1})'.format(kind, chunk_size)
+
+    def _print_OMP_OrderedClause(self, expr):
+        n_loops = ''
+        if expr.n_loops:
+            n_loops = '({0})'.format(self._print(expr.n_loops))
+
+        return 'ordered{0}'.format(n_loops)
+
+    def _print_OMP_CollapseClause(self, expr):
+        n_loops = '{0}'.format(self._print(expr.n_loops))
+
+        return 'collapse({0})'.format(n_loops)
+
+    def _print_OMP_LinearClause(self, expr):
+        variables= ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        step = self._print(expr.step)
+        return "linear({0}: {1})".format(variables, step)
+
+    def _print_OMP_For(self, expr):
+        # ...
+        loop    = self._print(expr.loop)
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+
+        nowait  = ''
+        if not(expr.nowait is None):
+            nowait = 'nowait'
+        # ...
+
+        # ... TODO adapt get_statement to have continuation with OpenMP
+        prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
+        epilog = '!$omp end do {0}\n'.format(nowait)
+        # ...
+
+        # ...
+        code = ('{prolog}'
+                '{loop}\n'
+                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
+
+
     def _print_ForIterator(self, expr):
         depth = expr.depth
 
@@ -1430,15 +1018,8 @@ class FCodePrinter(CodePrinter):
         epilog = ''
         code   = ''
 
-        prolog_omp = ''
-        epilog_omp = ''
-
         # ...
         def _do_range(target, iter, prolog, epilog):
-#            if not isinstance(iter, Range):
-#                msg = "Only iterable currently supported is Range"
-#                raise NotImplementedError(msg)
-
             tar        = self._print(target)
             range_code = self._print(iter)
 
@@ -1457,48 +1038,25 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
-        if not isinstance(expr.iterable, Variable):
-            raise TypeError('Expecting iterable to be a Variable.')
+        # ...
+        if not isinstance(expr.iterable, (Variable, ConstructorCall)):
+            raise TypeError('iterable must be Variable or ConstructorCall.')
+        # ...
 
+        # ...
         targets = expr.target
-        iters   = expr.ranges
+        if isinstance(expr.iterable, Variable):
+            iters = expr.ranges
+        elif isinstance(expr.iterable, ConstructorCall):
+            iters = get_iterable_ranges(expr.iterable)
+        # ...
 
+        # ...
         for i,a in zip(targets, iters):
             prolog, epilog = _do_range(i, a, \
                                        prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
-
-        iterable = expr.iterable
-        cls_base = iterable.cls_base
-
-        # ... if using OpenMP
-        #     TODO improve this
-        if ('openmp' in cls_base.options):
-            nowait = ''
-            d_attributs = cls_base.attributs_as_dict
-
-            # ... get initial values for all attributs
-            d = {}
-            for k,v in d_attributs.items():
-                i = DottedName('self', k)
-                d[k] = get_initial_value(cls_base, i)
-            # ...
-
-            # ... nowait
-            if d['_nowait']:
-                nowait = 'nowait'
-            # ...
-
-            # ...
-            prolog_omp = '!$omp do schedule(runtime)\n'
-            epilog_omp = '!$omp end do {0}\n'.format(nowait)
-            # ...
-
-        if prolog_omp:
-            prolog = '{0}\n{1}'.format(prolog_omp, prolog)
-        if epilog_omp:
-            epilog = '{0}\n{1}'.format(epilog, epilog_omp)
         # ...
 
         return ('{prolog}'
@@ -1527,10 +1085,10 @@ class FCodePrinter(CodePrinter):
         DEBUG = True
 
         err = ErrorExit()
-        args = [(Not(expr.test), [Print(['Assert Failed']), err])]
+        args = [(Not(expr.test), [Print(["'Assert Failed'"]), err])]
 
         if DEBUG:
-            args.append((True, Print(['PASSED'])))
+            args.append((True, Print(["'PASSED'"])))
 
         stmt = If(*args)
         code = self._print(stmt)

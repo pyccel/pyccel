@@ -12,9 +12,9 @@
 //       - Atom: add  '...'
 //       - Atom: add yield expr 
 //       - AtomExpr: allow multiple trailers 
-//       - DecoratedStmt: add async_funcdef 
 //       - FunctionHeaderStmt: add HeaderResults  
 //       - MethodHeaderStmt: add HeaderResults  
+//       - AugAssign: to be similar to Assign
 //       -  
 //       -  
 //       -  
@@ -54,7 +54,6 @@ FlowStmt:
   | ReturnStmt 
   | RaiseStmt 
   | YieldStmt
-  | SyncStmt
 ;
 
 CompoundStmt:
@@ -62,7 +61,7 @@ CompoundStmt:
   | ForStmt 
   | DecoratedStmt
   | WhileStmt
-  | ParallelBlockStmt
+  | WithStmt
 ;
 
 AnnotatedStmt:
@@ -74,12 +73,8 @@ AnnotatedStmt:
 ;
 
 ExprStmt: 
-    StencilStmt 
-  | ExecStmt 
-  | EvalStmt 
-  | AssignStmt 
+    AssignStmt 
   | AugAssignStmt 
-  | MultiAssignStmt
   | CallStmt 
 ;
 
@@ -126,7 +121,6 @@ YieldStmt: label=YIELD;
 
 ReturnStmt: label=RETURN (variables*=Expression[',']);
 DelStmt: DEL variables*=AtomExpr[','];
-SyncStmt: SYNC (trailer=TrailerArgList)? (variables*=Expression[',']);
 
 CommentStmt:
 //  '#' text=/[^x].*$/  
@@ -153,7 +147,16 @@ FunctionHeaderStmt:
 
 FunctionKind: 'function' | 'procedure';
 
-ClassOptions: 'abstract' | 'private' | 'public' | 'iterable' | 'hide' | 'openmp';
+ClassOptions: 
+    'abstract' 
+  | 'private' 
+  | 'public' 
+  | 'iterable' 
+  | 'with' 
+  | 'hide' 
+  | 'openmp'
+;
+
 DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
 
@@ -178,38 +181,24 @@ IdentifierOrNumber: Number | ID;
 ArgList: '(' args+=Args[','] ')';
 Args: ArgList | DictElement | IdentifierOrNumber;
 
-PythonPrintStmt: name='print' '('   (args+=PrintStmt[',']) ')';
-PrintStmt: STRING | Expression;
+AssignRHS: Expression | ExpressionDict | ExpressionTuple | ExpressionList;
 
-// TODO: remove
-ParameterValue: (value=IdentifierOrNumber |value=ArgList);
-ParameterSingle: label=ParameterTest '=' value=ParameterValue;
-
-AssignRHS: Expression | ExpressionDict | ExpressionList;
-
-AssignStmt: lhs=ID (trailer=Trailer)? '=' rhs=AssignRHS;
+AssignStmt: lhs=Expression '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
-MultiAssignStmt: lhs+=ID[','] '=' rhs=Expression;
-
-StencilStmt: lhs=ID '=' 'stencil' '(' parameters+=ParameterSingle[','] ')' ;
-ExecStmt: 
-  lhs+=ID[','] '=' 'exec' '(' module=STRING ',' function=STRING ',' args=ArgList ')'
-;
-
-EvalStmt: lhs=ID '=' 'eval' '(' expression=STRING ')';
 
 RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
 ;
 
-ParallelRangeStmt:
-  'prange' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
-;
-
-IterableRange: RangeStmt | ParallelRangeStmt | ID;
-
+IterableRange: RangeStmt | Expression;
 ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':' 
                body=SuiteStmt
+;
+
+WithDomain: Expression;
+WithStmt:
+  WITH domain=Expression ':'
+  body=SuiteStmt
 ;
 
 WhileStmt:
@@ -225,11 +214,6 @@ IfStmt:
 
 ElifStmt:
   (ELIF test=Test ':' body=SuiteStmt) 
-;
-
-ParallelBlockStmt:
-  WITH PARALLEL '(' (num_threads=Number)? ')' ':'
-  body=SuiteStmt
 ;
 
 
@@ -248,7 +232,8 @@ AtomExpr: op=Atom (trailers*=Trailer)?;
 
 Number: Float | INT;
 Atom: 
-   '(' op=Expression ')'
+    (op=ExpressionTuple)
+  | (op=ExpressionList)
   | (op=Number) 
   | (op=ID) 
   | (op=NONE)
@@ -258,11 +243,12 @@ Atom:
   | '(' op=Test ')'
 ;
 
-ExpressionList: '(' args+=Expression[',']   ')';
-ExpressionDict: '{' args+=DictElement[',']   '}';
+ExpressionTuple: '(' args+=Expression[',']  ')';
+ExpressionList:  '[' args+=Expression[',']  ']';
+ExpressionDict:  '{' args+=DictElement[','] '}';
 
 IDorSTRING: ID | STRING; 
-ArgValued: (key=IDorSTRING '=')? value=Expression ;
+ArgValued: (key=IDorSTRING '=')? value=AssignRHS ;
 DictElement: key=IDorSTRING ':' value=Atom;
 
 OpPlusOrMinus: '+' | '-';
@@ -346,9 +332,7 @@ NONLOCAL : 'nonlocal';
 NOT : 'not';
 OR : 'or';
 PASS : 'pass';
-PARALLEL : 'parallel';
 RETURN : 'return';
-SYNC : 'sync';
 RAISE : 'raise';
 TRUE : 'True';
 TRY : 'try';

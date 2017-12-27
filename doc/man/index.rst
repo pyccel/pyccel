@@ -7,7 +7,6 @@ Core Applications
 *****************
 
 .. toctree::
-   :maxdepth: 1
 
    pyccel-quickstart
    pyccel-build

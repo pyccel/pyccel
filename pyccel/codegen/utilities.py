@@ -9,6 +9,7 @@ import numpy as np
 from shutil import copyfile
 
 
+from pyccel.ast.core import DottedName
 from pyccel.parser.utilities import find_imports
 from pyccel.codegen.codegen  import FCodegen
 from pyccel.codegen.compiler import Compiler
@@ -34,6 +35,124 @@ def mkdir_p(dir):
     if os.path.isdir(dir):
         return
     os.makedirs(dir)
+# ...
+
+# ...
+def construct_tree(filename, ignored_modules):
+    """Constructs a tree of dependencies given a file to process."""
+    # ...
+    def _ignore_module(key):
+        pattern = lambda s: '{0}.'.format(s)
+        return np.asarray([key == pattern(i) for i in ignored_modules]).any()
+    # ...
+
+    # ... filters
+    is_external_submodule  = lambda m,s: m == 'pyccelext.{0}.external.{1}'.format(ext, s)
+    is_extension_submodule = lambda m,s: m == 'pyccelext.{0}.{1}'.format(ext, s)
+
+    is_parallel_submodule  = lambda m,s: m == 'pyccel.stdlib.parallel.{0}'.format(s)
+    is_stdlib_external_submodule  = lambda m,s: m == 'pyccel.stdlib.external.{0}'.format(s)
+    # ...
+
+    # ... parse imports within the current file
+    d = find_imports(filename=filename)
+
+    imports = {}
+    for key, value in list(d.items()):
+        if not _ignore_module(key):
+            imports[key] = value
+    # ...
+
+    # ...
+    imports_src = {}
+    for module, names in list(imports.items()):
+#        print('> module, names = ', module, names)
+        f_names = []
+        for n in names:
+#            print('> n = ', n)
+            if module.startswith('pyccelext'):
+                ext_full  = module.split('pyccelext.')[-1]
+                ext       = ext_full.split('.')[0] # to remove submodule
+                if module == 'pyccelext.{0}'.format(ext):
+                    ext_dir = get_extension_path(ext)
+                    # TODO import all files within a package
+
+                    f_name = 'pyccelext_{0}.py'.format(n)
+                else:
+                    submodule = ext_full.split('.')[-1] # to get submodule
+
+                    # TODO 'elif' test is wrong
+                    if is_extension_submodule(module, submodule):
+                        f_name = get_extension_path(ext, module=submodule)
+                    elif is_external_submodule(module, submodule):
+                        f_name = get_extension_path(ext, module=submodule, is_external=True)
+                    else:
+                        raise ValueError('non valid import for pyccel extensions.')
+            elif module.startswith('pyccel.stdlib.parallel'):
+                ext_full  = module.split('pyccel.stdlib.parallel.')[-1]
+                ext       = ext_full.split('.')[0] # to remove submodule
+
+                submodule = ext_full.split('.')[-1] # to get submodule
+#                print(ext, submodule)
+
+                if is_parallel_submodule(module, submodule):
+                    f_name = get_parallel_path(ext, module=submodule)
+                else:
+                    raise ValueError('non valid import for parallel pyccel package.')
+            elif module.startswith('pyccel.stdlib.external'):
+                ext_full  = module.split('pyccel.stdlib.external.')[-1]
+                ext       = ext_full.split('.')[0] # to remove submodule
+
+                submodule = ext_full.split('.')[-1] # to get submodule
+
+                if is_stdlib_external_submodule(module, submodule):
+                    f_name = get_stdlib_external_path(ext, module=submodule)
+                else:
+                    raise ValueError('non valid import for pyccel stdlib external package.')
+            else:
+                filename_py  = '{0}.py'.format(module)
+                filename_pyh = '{0}.pyh'.format(module)
+
+                if os.path.isfile(filename_py):
+                    f_name = filename_py
+                elif os.path.isfile(filename_pyh):
+                    f_name = filename_pyh
+                else:
+                    raise ValueError('Could not find '
+                                     '{0} or {1}'.format(filename_py, filename_pyh))
+
+            if isinstance(f_name, str):
+                f_names.append(f_name)
+            elif isinstance(f_name, (list, tuple)):
+                f_names += list(f_name)
+            else:
+                raise TypeError('Expecting a str, tuple or list')
+
+        # this is to avoid duplication in filenames,
+        # we avoid using sets here, to respect the imports order
+        imports_src[module] = []
+        for f_name in f_names:
+            if not(f_name in imports_src[module]):
+                # we don't process header files
+                if f_name.endswith('.py'):
+                    ims, ims_src = construct_tree(f_name, ignored_modules)
+                    for m, ns in ims.items():
+                        if m in imports:
+                            imports[m] += ns
+                        else:
+                            imports[m]  = ns
+
+                        if m in imports_src:
+                            imports_src[m] += ims_src[m]
+                        else:
+                            imports_src[m]  = ims_src[m]
+
+                imports_src[module] += [f_name]
+    #...
+
+    # TODO must use ordered dictionaries from here
+
+    return imports, imports_src
 # ...
 
 # ...
@@ -132,144 +251,90 @@ def build_file(filename, language, compiler, \
         pyccel_modules.append('mpi')
     # ...
 
-    # ... TODO add only if used
-#    user_modules = ['m_pyccel']
+    # ...
     user_modules = []
     # ...
 
     # ...
-    imports = {}
-
     # ignoring pyccel.stdlib import
     ignored_modules.append('pyccel.stdlib')
+    # ...
 
-#    ignored_modules.append('pyccel')
-#    for n in pyccel_modules:
-#        ignored_modules.append('pyccel.{0}'.format(n))
-#        ignored_modules.append(n)
-
-    # ...
-    def _ignore_module(key):
-        pattern = lambda s: '{0}.'.format(s)
-
-        return np.asarray([key == pattern(i) for i in ignored_modules]).any()
-    # ...
-
-    # returns True if the submodule is external
-    is_external_submodule  = lambda m,s: m == 'pyccelext.{0}.external.{1}'.format(ext, s)
-    is_extension_submodule = lambda m,s: m == 'pyccelext.{0}.{1}'.format(ext, s)
-
-    is_parallel_submodule  = lambda m,s: m == 'pyccel.stdlib.parallel.{0}'.format(s)
-    is_stdlib_external_submodule  = lambda m,s: m == 'pyccel.stdlib.external.{0}'.format(s)
-
-    d = find_imports(filename=filename)
-    for key, value in list(d.items()):
-        if not _ignore_module(key):
-            imports[key] = value
-
-    imports_src = {}
-    for module, names in list(imports.items()):
-        f_names = []
-        for n in names:
-            if module.startswith('pyccelext'):
-                ext_full  = module.split('pyccelext.')[-1]
-                ext       = ext_full.split('.')[0] # to remove submodule
-                if module == 'pyccelext.{0}'.format(ext):
-                    ext_dir = get_extension_path(ext)
-                    # TODO import all files within a package
-
-                    f_name = 'pyccelext_{0}.py'.format(n)
-                else:
-                    submodule = ext_full.split('.')[-1] # to get submodule
-
-                    if is_extension_submodule(module, submodule):
-                        f_name = get_extension_path(ext, module=submodule)
-                    elif is_external_submodule(module, submodule):
-                        f_name = get_extension_path(ext, module=submodule, is_external=True)
-                    else:
-                        raise ValueError('non valid import for pyccel extensions.')
-            elif module.startswith('pyccel.stdlib.parallel'):
-                ext_full  = module.split('pyccel.stdlib.parallel.')[-1]
-                ext       = ext_full.split('.')[0] # to remove submodule
-
-                submodule = ext_full.split('.')[-1] # to get submodule
-
-                if is_parallel_submodule(module, submodule):
-                    f_name = get_parallel_path(ext, module=submodule, is_external=True)
-                else:
-                    raise ValueError('non valid import for parallel pyccel package.')
-            elif module.startswith('pyccel.stdlib.external'):
-                ext_full  = module.split('pyccel.stdlib.external.')[-1]
-                ext       = ext_full.split('.')[0] # to remove submodule
-
-                submodule = ext_full.split('.')[-1] # to get submodule
-
-                if is_stdlib_external_submodule(module, submodule):
-                    f_name = get_stdlib_external_path(ext, module=submodule)
-                else:
-                    raise ValueError('non valid import for pyccel stdlib external package.')
-            else:
-                filename_py  = '{0}.py'.format(module)
-                filename_pyh = '{0}.pyh'.format(module)
-
-                if os.path.isfile(filename_py):
-                    f_name = filename_py
-                elif os.path.isfile(filename_pyh):
-                    f_name = filename_pyh
-                else:
-                    raise ValueError('Could not find '
-                                     '{0} or {1}'.format(filename_py, filename_pyh))
-
-            f_names.append(f_name)
-        imports_src[module] = f_names
-    #...
+    # ...
+    imports, imports_src = construct_tree(filename, ignored_modules)
+    # ...
 
     # ...
     namespaces = {}
     namespace_user = {}
+    namespace_user['cls_constructs'] = {}
 
     # we store here the external library dependencies for every module
     d_libraries = []
 
     ms = []
+    treated_files = []
     for module, names in list(imports.items()):
-        f_name = imports_src[module][0] #TODO loop over files
-        codegen_m = FCodegen(filename=f_name,
-                             name=module,
-                             is_module=True,
-                             output_dir=output_dir)
-        codegen_m.doprint(language=language,
-                          accelerator=accelerator,
-                          ignored_modules=ignored_modules,
-                          with_mpi=with_mpi)
-        _append_module = True
-        if '__ignore_at_import__' in codegen_m.metavars:
-            if codegen_m.metavars['__ignore_at_import__']:
-                ignored_modules.append(module)
-                _append_module = False
+        if not(module in namespaces):
+            namespaces[module] = {}
 
-        if '__libraries__' in codegen_m.metavars:
-            deps = codegen_m.metavars['__libraries__'].split(',')
-            d_libraries += deps
+#        print('>>> processing module:{0}, and names:{1}'.format(module, names))
 
-        if _append_module:
-            ms.append(codegen_m)
+        f_names = imports_src[module]
+        for f_name in f_names:
+            if f_name in treated_files:
+                break
 
-        if module in namespaces:
-            namespaces[module] = codegen_m.namespace
+#            print('> treating {0}'.format(f_name))
+
+            module_name = str(module).replace('.', '_')
+            module_name = 'm_{0}'.format(module_name)
+
+            codegen_m = FCodegen(filename=f_name,
+                                 name=module_name,
+                                 is_module=True,
+                                 output_dir=output_dir)
+            codegen_m.doprint(language=language,
+                              accelerator=accelerator,
+                              ignored_modules=ignored_modules,
+                              with_mpi=with_mpi)
+            _append_module = True
+            if '__ignore_at_import__' in codegen_m.metavars:
+                if codegen_m.metavars['__ignore_at_import__']:
+                    ignored_modules.append(module)
+                    _append_module = False
+
+            if '__libraries__' in codegen_m.metavars:
+                deps = codegen_m.metavars['__libraries__'].split(',')
+                d_libraries += deps
+
+            if _append_module:
+                ms.append(codegen_m)
+
             for k,v in codegen_m.namespace.items():
                 namespaces[module][k] = v
-        else:
-            namespaces[module] = codegen_m.namespace
-        for n in names:
-            namespace_user[n] = namespaces[module][n]
 
+            cls_constructs = namespaces[module].pop('cls_constructs', {})
 
-        # TODO add aliases or what to import (names)
+            avail_names = set(namespaces[module].keys())
+            avail_names = set(names).intersection(avail_names)
+            for n in avail_names:
+                namespace_user[n] = namespaces[module][n]
 
-    from pyccel.parser.syntax.core import update_namespace
-    from pyccel.parser.syntax.core import get_namespace
-    update_namespace(namespace_user)
+            for k,v in cls_constructs.items():
+                namespace_user['cls_constructs'][k] = v
+
+            from pyccel.parser.syntax.core import print_namespace
+            from pyccel.parser.syntax.core import update_namespace
+            from pyccel.parser.syntax.core import get_namespace
+
+            update_namespace(namespace_user)
+            treated_files += [f_name]
+#            print_namespace()
+
+            # TODO add aliases or what to import (names)
+#    import sys; sys.exit(0)
+
 
     codegen = FCodegen(filename=filename,
                        name=name,
@@ -330,8 +395,9 @@ def build_file(filename, language, compiler, \
 
             # this commented line must be removed.
             # otherwise, we will print all used modules in the current file
-            #ls = ms + [codegen]
-            ls = [codegen]
+            # TODO ARA : to remove
+            ls = ms + [codegen]
+            #ls = [codegen]
             codes = [m.code for m in ls]
             for code in codes:
                 for line in code:
@@ -346,23 +412,37 @@ def build_file(filename, language, compiler, \
     # ...
     if compiler and (not codegen.is_header):
         for codegen_m in ms:
-            compiler_m = Compiler(codegen_m, \
-                                  compiler=compiler, \
-                                  accelerator=accelerator, \
-                                  debug=debug, \
-                                  include=include, \
-                                  libdir=libdir, \
-                                  libs=libs)
-            compiler_m.compile(verbose=verbose)
 
-        c = Compiler(codegen, \
-                     compiler=compiler, \
-                     inline=inline, \
-                     accelerator=accelerator, \
-                     debug=debug, \
-                     include=include, \
-                     libdir=libdir, \
-                     libs=libs)
+            # we only compile a module if it is non empty
+            is_valid = len(codegen_m.body.strip() +
+                           codegen_m.routines.strip()  +
+                           codegen_m.classes.strip() ) > 0
+
+            if is_valid:
+                if str(codegen_m.name).startswith('m_pyccel_stdlib_'):
+                    break
+
+#                print('>>>>>> {0}'.format(codegen_m.filename))
+                compiler_m = Compiler(codegen_m,
+                                      compiler=compiler,
+                                      accelerator=accelerator,
+                                      debug=debug,
+                                      include=include,
+                                      libdir=libdir,
+                                      libs=libs)
+                compiler_m.compile(verbose=verbose)
+
+        # TODO ARA : to remove
+        ignored_modules += ['pyccel.stdlib.parallel.mpi_new']
+        c = Compiler(codegen,
+                     compiler=compiler,
+                     inline=inline,
+                     accelerator=accelerator,
+                     debug=debug,
+                     include=include,
+                     libdir=libdir,
+                     libs=libs,
+                     ignored_modules=ignored_modules)
         c.compile(verbose=verbose)
 
         if execute:
@@ -580,7 +660,7 @@ def build_cmakelists_dir(src_dir, force=True, testing=False):
 # ...
 
 # ...
-def get_parallel_path(ext, module=None, is_external=False):
+def get_parallel_path(ext, module=None):
     """Finds the path of a pyccel parallel package (.py or .pyh).
     A specific module can also be given."""
 
@@ -598,20 +678,20 @@ def get_parallel_path(ext, module=None, is_external=False):
     filename_py  = '{0}.py'.format(module)
     filename_pyh = '{0}.pyh'.format(module)
 
-    if not is_external:
-        filename_py  = os.path.join(ext_dir, filename_py)
-        filename_pyh = os.path.join(ext_dir, filename_pyh)
-    else:
-        filename_py  = os.path.join(ext_dir, filename_py)
-        filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
+    filename_py  = os.path.join(ext_dir, filename_py)
+    filename_pyh = os.path.join(os.path.join(ext_dir, 'external'), filename_pyh)
 
-    if os.path.isfile(filename_py):
-        return filename_py
-    elif os.path.isfile(filename_pyh):
-        return filename_pyh
-    else:
+    if not os.path.isfile(filename_py) and not os.path.isfile(filename_pyh):
         raise ImportError('could not find {0} or {1}'.format(filename_py,
                                                              filename_pyh))
+
+    files = []
+    if os.path.isfile(filename_py):
+        files.append(filename_py)
+    if os.path.isfile(filename_pyh):
+        files.append(filename_pyh)
+
+    return files
 # ...
 
 # ...

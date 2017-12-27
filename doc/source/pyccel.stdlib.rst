@@ -6,7 +6,8 @@ Subpackages
 
 .. toctree::
 
-    pyccel.stdlib.clapp
+    pyccel.stdlib.external
+    pyccel.stdlib.parallel
 
 Submodules
 ----------

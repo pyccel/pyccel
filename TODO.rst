@@ -13,6 +13,8 @@ Imports
 
 * openmp.pyh only if openmp is used
 
+* improve imports by using groupby to gather imported things by their module, and have to process the module only once
+
 Parser
 ******
 
@@ -50,6 +52,8 @@ AST
 Codegen
 *******
 
+* improve *namespace* property. For the moment, we only create the definition for FunctionHeader (if not MethodHeaded)
+
 * in fcode: use  self._get_statement for every statement
 
 * improve debug mode and verbosity in fcode and codegen
@@ -74,12 +78,15 @@ MPI
 
 * improve import
 
+from pyccel.ast.parallel.mpi import MPI_Tensor
+from pyccel.ast.parallel.mpi import MPI_TensorCommunication
+
 OpenMP
 ^^^^^^
 
-* improve parallel constructor arguments
+* in get_with_clauses and get_for_clauses, we must be careful about args and kwargs for the __init__ call
 
-* improve *prange* (add new arguments, nowait, etc)
+* check valid values for clause arguments
 
 * improve import
 
@@ -96,3 +103,11 @@ External
 * BLAS
 
 * LAPACK
+
+* FFTW
+
+* HDF5
+
+* SUPERLU
+
+* PASTIX
