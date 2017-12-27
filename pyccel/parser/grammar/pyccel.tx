@@ -181,10 +181,12 @@ IdentifierOrNumber: Number | ID;
 ArgList: '(' args+=Args[','] ')';
 Args: ArgList | DictElement | IdentifierOrNumber;
 
-AssignRHS: Expression | ExpressionDict | ExpressionTuple | ExpressionList;
+AssignRHS: ExpressionLambda | Expression | ExpressionDict | ExpressionTuple | ExpressionList;
 
 AssignStmt: lhs=Expression '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
+
+ExpressionLambda: 'lambda' args*=ID[','] ':' rhs=Expression;
 
 RangeStmt:
   'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'

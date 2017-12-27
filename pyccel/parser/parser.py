@@ -5,6 +5,7 @@ import os
 from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        ArithmeticExpression, Term, Atom, \
                                        ExpressionTuple, ExpressionList, \
+                                       ExpressionLambda, \
                                        FactorSigned, AtomExpr, AtomExpr, Power, \
                                        FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                                        VariableHeaderStmt, \
@@ -187,6 +188,7 @@ class PyccelParser(Parser):
         classes = [Pyccel, \
                    ArithmeticExpression, Term, Atom, \
                    ExpressionTuple, ExpressionList,  \
+                   ExpressionLambda, \
                    FactorSigned, AtomExpr, AtomExpr, Power, \
                    FunctionHeaderStmt, ClassHeaderStmt, MethodHeaderStmt, \
                    VariableHeaderStmt, \

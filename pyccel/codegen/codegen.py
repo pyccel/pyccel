@@ -5,6 +5,7 @@ import os
 import re
 
 from sympy.core import Tuple
+from sympy import Lambda
 
 from pyccel.codegen.printing import fcode
 

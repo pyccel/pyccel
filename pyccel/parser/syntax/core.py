@@ -22,6 +22,9 @@ from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
                    csc,  cos,  sec,  tan,  cot,  asin, \
                    acsc, acos, asec, atan, acot, atan2)
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy import Lambda
+from sympy import sympify
+from sympy import symbols as sp_symbols
 
 
 from sympy.core.basic import Basic
@@ -1413,6 +1416,7 @@ class AssignStmt(BasicStmt):
         Process the Assign statement by returning a pyccel.ast.core object
         """
         if not isinstance(self.rhs, (ArithmeticExpression, \
+                                     ExpressionLambda, \
                                      ExpressionTuple, \
                                      ExpressionList, \
                                      ExpressionDict)):
@@ -1440,6 +1444,9 @@ class AssignStmt(BasicStmt):
                         args.append(a)
                 # we use str(lhs) to make it work for DottedName
                 return builtin_function(name.lower(), args, lhs=str(lhs))
+        elif isinstance(rhs, Lambda):
+            print('PAR ICI')
+            import sys; sys.exit(0)
 
         if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
@@ -2089,6 +2096,45 @@ class Comparison(ExpressionElement):
             else:
                 raise NotImplementedError('operation {0} not yet available'.format(operation))
         return ret
+
+class ExpressionLambda(BasicStmt):
+    """Base class representing a lambda expression in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Expression list statement
+
+        args: list, tuple
+            list of elements
+        """
+        self.args = kwargs.pop('args')
+        self.rhs  = kwargs.pop('rhs')
+
+        super(ExpressionLambda, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = sp_symbols(*self.args)
+
+        # ... we update the namespace
+        ls = args
+        if isinstance(args, Symbol):
+            ls = [args]
+
+        for i in ls:
+            namespace[str(i)] = i
+        # ...
+
+        # ... we do it here after the namespace has been updated
+        e = self.rhs.expr
+        # ...
+
+        # ... we clean the namespace
+        for i in ls:
+            namespace.pop(str(i))
+        # ...
+
+        return Lambda(args, e)
 
 class ExpressionTuple(BasicStmt):
     """Base class representing a list of elements statement in the grammar."""

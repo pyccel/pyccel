@@ -26,7 +26,7 @@ Parser
 
 * **inout** arguments are not handled yet
 
-* OOP
+* OOP: inheritence
 
 * improve debug mode and verbosity in parser and syntax
 
@@ -54,7 +54,7 @@ Codegen
 
 * improve *namespace* property. For the moment, we only create the definition for FunctionHeader (if not MethodHeaded)
 
-* in fcode: use  self._get_statement for every statement
+* in fcode: use  self._get_statement for every statement and be careful to comments (and omp pragmas)
 
 * improve debug mode and verbosity in fcode and codegen
 
@@ -72,14 +72,11 @@ Parallel
 MPI
 ^^^
 
-* have MPI as headers
+* Cart 3d
 
-* write a new *Pyccel* MPI class (instead of the current *sympy* implementation)
+* ietrators
 
-* improve import
-
-from pyccel.ast.parallel.mpi import MPI_Tensor
-from pyccel.ast.parallel.mpi import MPI_TensorCommunication
+* communication, reduction, etc
 
 OpenMP
 ^^^^^^
