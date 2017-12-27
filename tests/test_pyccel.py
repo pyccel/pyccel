@@ -11,7 +11,7 @@ from utils import clean_tests
 # ...
 def test_core():
 #    ignored = [15, 18]
-    ignored = [15, 18, 5, 21, 22]
+    ignored = [15, 18, 22]
 
     for i in range(0, 23+1):
         filename = 'tests/scripts/core/ex{0}.py'.format(str(i))

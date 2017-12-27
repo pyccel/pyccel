@@ -2488,7 +2488,6 @@ class FunctionDefStmt(BasicStmt):
                 d_var['shape']       = None
                 d_var['rank']        = rank
                 d_var['intent']      = 'out'
-#                print_namespace()
                 insert_variable(result_name, **d_var)
                 var = namespace[result_name]
                 _results.append(var)
@@ -2506,31 +2505,10 @@ class FunctionDefStmt(BasicStmt):
                 _args.append(a)
         args = _args
         # ...
+
+        # ...
         if args_0:
-            args=[args_0]+args
-
-        ls = self.local_vars + self.stmt_vars
-        ls = [str(e.expr) for e in ls]
-        for var_name in ls:
-            if var_name in namespace:
-
-                del namespace[var_name]
-                del declarations[var_name]
-        # ...
-
-        # ... cleaning the namespace
-        for a in arg_names:
-            del declarations[a]
-            del namespace[a]
-
-        # ...
-        for arg_name, var in list(scope_vars.items()):
-            var = scope_vars.pop(arg_name)
-            namespace[arg_name] = var
-
-        for arg_name, dec in list(scope_decs.items()):
-            dec = scope_decs.pop(arg_name)
-            declarations[arg_name] = dec
+            args = [args_0] + args
         # ...
 
         # ...
@@ -2539,7 +2517,7 @@ class FunctionDefStmt(BasicStmt):
 
         # ... define local_vars as any lhs in Assign, if it is not global
         #     or class member 'self.member'
-        #     TODO: do we keep it?
+        # TODO: to improve
         for stmt in body:
             if isinstance(stmt, (Assign, Zeros, ZerosLike, Ones)):
                 if (isinstance(stmt.lhs, Variable) and
@@ -2567,12 +2545,46 @@ class FunctionDefStmt(BasicStmt):
                            cls_name=cls_name)
         namespace[name] = stmt
 
+        # ...
+        ls = []
+        for e in self.local_vars + self.stmt_vars:
+            if isinstance(e, str):
+                ls += [e]
+            else:
+                ls += [str(e.expr)]
+
+        # we keep 'self.*' in the stack
+        ls = [i for i in ls if not str(i).startswith('self.')]
+
+        for var_name in ls:
+            if var_name in namespace:
+                del namespace[var_name]
+
+            if var_name in declarations:
+                del declarations[var_name]
+        # ...
+
+        # ... cleaning the namespace
+        for a in arg_names:
+            del declarations[a]
+            del namespace[a]
+
+        # ...
+        for arg_name, var in list(scope_vars.items()):
+            var = scope_vars.pop(arg_name)
+            namespace[arg_name] = var
+
+        for arg_name, dec in list(scope_decs.items()):
+            dec = scope_decs.pop(arg_name)
+            declarations[arg_name] = dec
+        # ...
+
         # ... cleaning
-        for k in local_vars:
-            if k.name in namespace.keys():
-                namespace.pop(k.name)
-            if k.name in declarations.keys():
-                declarations.pop(k.name)
+        #for k in local_vars:
+        #    if k.name in namespace.keys():
+        #        namespace.pop(k.name)
+        #    if k.name in declarations.keys():
+        #        declarations.pop(k.name)
         # ...
 
 #        print "<<<<<<<<<<< FunctionDefStmt : End"
@@ -2637,8 +2649,7 @@ class ClassDefStmt(BasicStmt):
         attributs = []
         for stmt in init_method.body:
             if isinstance(stmt, (Assign, Zeros, Ones, ZerosLike)):
-                assignable = (Variable, IndexedVariable)
-                if (isinstance(stmt.lhs, assignable) and
+                if (isinstance(stmt.lhs, (Variable, IndexedVariable)) and
                     isinstance(stmt.lhs.name, DottedName)):
 
                     lhs = stmt.lhs.name
