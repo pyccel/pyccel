@@ -237,28 +237,16 @@ class FCodePrinter(CodePrinter):
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
 
-    def _print_Stencil(self, expr):
-        lhs_code = self._print(expr.lhs)
+    def _print_Vector(self, expr):
+        lhs = self._print(expr.lhs)
 
-        if isinstance(expr.shape, Tuple):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-        elif isinstance(expr.shape,str):
-            shape_code = '0:' + self._print(expr.shape) + '-1'
-        else:
-            raise TypeError('Unknown type of shape'+str(type(expr.shape)))
+        _iprint = lambda a, b: '{start}:{stop}'.format(start=a, stop=b)
+        bounds = ', '.join(_iprint(a,b) for a,b in zip(expr.starts, expr.stops))
 
-        if isinstance(expr.step, Tuple):
-            # this is a correction. problem on LRZ
-            step_code = ', '.join('-' + self._print(i) + ':' + self._print(i) \
-                                  for i in expr.step)
-        elif isinstance(expr.step,str):
-            step_code = '-' + self._print(expr.step) + ':' + self._print(expr.step)
-        else:
-            raise TypeError('Unknown type of step'+str(type(expr.step)))
+        # TODO use init_value
+        code = ('allocate({lhs}({bounds}))\n'
+                '{lhs} = 0.0d0').format(lhs=lhs, bounds=bounds)
 
-        code ="allocate({0}({1}, {2})) ; {3} = 0".format(lhs_code, shape_code, \
-                                                         step_code, lhs_code)
         return self._get_statement(code)
 
     def _print_Zeros(self, expr):
@@ -635,6 +623,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_NativeString(self, expr):
         return 'char'
+
+    def _print_NativeVector(self, expr):
+        return 'real(kind=8)'
 
     def _print_DataType(self, expr):
         return self._print(expr.name)

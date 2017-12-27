@@ -47,7 +47,7 @@ from sympy.core.compatibility import is_sequence
 #      - Zeros, Ones, Array cases
 #      - AnnotatedComment case
 #      - Slice case
-#      - Stencil case
+#      - Vector case
 #      - FunctionHeader case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
@@ -1042,6 +1042,10 @@ class NativeParallelRange(NativeRange):
     _name = 'ParallelRange'
     pass
 
+class NativeVector(DataType):
+    _name = 'Vector'
+    pass
+
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
     pass
@@ -1055,6 +1059,7 @@ Complex = NativeComplex()
 Void    = NativeVoid()
 Nil     = NativeNil()
 String  = NativeString()
+_Vector = NativeVector()
 
 
 dtype_registry = {'bool': Bool,
@@ -1064,6 +1069,7 @@ dtype_registry = {'bool': Bool,
                   'complex': Complex,
                   'void': Void,
                   'nil': Nil,
+                  'vector': _Vector,
                   'str': String}
 
 
@@ -2874,7 +2880,7 @@ class MultiAssign(Basic):
         return '{0} := {1}'.format(outputs, rhs)
 
 # TODO: remove Len from here
-class Stencil(Basic):
+class Vector(Basic):
     """Represents variable assignment using a stencil for code generation.
 
     lhs : Expr
@@ -2883,65 +2889,37 @@ class Stencil(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    shape : int or list of integers
+    starts : int or list of integers
 
-    step : int or list of integers
+    stops : int or list of integers
 
     Examples
 
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Stencil
-    >>> x, y, z = symbols('x, y, z')
-    >>> m, n, p, q = symbols('m n p q', integer=True)
-    >>> Stencil(x, n, p)
-    Stencil(x, n, p)
-    >>> Stencil(y, (n,m), (p,q))
-    Stencil(y, (n, m), (p, q))
+    >>> from pyccel.ast.core import Vector
     """
 
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape, step):
+    def __new__(cls, lhs, starts, stops):
         # ...
-        def format_entry(s_in):
-            if isinstance(s_in, list):
-                # this is a correction. otherwise it is not working on LRZ
-                if isinstance(s_in[0], list):
-                    s_out = Tuple(*(sympify(i) for i in s_in[0]))
-                else:
-                    s_out = Tuple(*(sympify(i) for i in s_in))
-            elif isinstance(s_in, int):
-                s_out = Tuple(sympify(s_in))
-            elif isinstance(s_in, Basic) and not isinstance(s_in,Len):
-                s_out = str(s_in)
-            elif isinstance(s_in,Len):
-                s_our = s_in.str
-            else:
-                s_out = s_in
-            return s_out
-        # ...
-
-        # ...
-        lhs   = sympify(lhs)
-        shape = format_entry(shape)
-        step  = format_entry(step)
+        lhs = sympify(lhs)
         # ...
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs, shape, step)
+
+        return Basic.__new__(cls, lhs, starts, stops)
 
     @property
     def lhs(self):
         return self._args[0]
 
     @property
-    def shape(self):
+    def starts(self):
         return self._args[1]
 
     @property
-    def step(self):
+    def stops(self):
         return self._args[2]
 
 # TODO rename dtypes to arguments

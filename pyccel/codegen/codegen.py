@@ -28,7 +28,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               FunctionDef,MethodCall, ClassDef, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, Assert, If, \
-                              Stencil, Ceil, Break, \
+                              Vector, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
@@ -614,7 +614,7 @@ class Codegen(object):
             elif isinstance(stmt, Del):
                 # TODO is it ok to put it in the body?
                 body += printer(stmt) + "\n"
-            elif isinstance(stmt, Stencil):
+            elif isinstance(stmt, Vector):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, list):
                 for s in stmt:

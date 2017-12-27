@@ -23,7 +23,7 @@ from pyccel.ast.core import (For, Assign, Declare, Variable, \
                              FunctionDef, Import, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, If, \
-                             Stencil, \
+                             Vector, \
                              Zeros, Ones, Array, Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic import Complexity
