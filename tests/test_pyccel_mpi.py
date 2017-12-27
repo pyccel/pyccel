@@ -33,7 +33,7 @@ def test_core(n_procs=2):
         f_name = os.path.join(path_dir, f)
 
         # we only convert and compile the generated code
-        pyccel(files=[f_name], openmp=True)
+        pyccel(files=[f_name], openmp=False)
 
         # then we use 'mpirun'
         binary = f_name.split('.py')[0]
@@ -66,7 +66,7 @@ def test_examples(n_procs=2):
         f_name = os.path.join(path_dir, f)
 
         # we only convert and compile the generated code
-        pyccel(files=[f_name], openmp=True)
+        pyccel(files=[f_name], openmp=False)
 
         # then we use 'mpirun'
         binary = f_name.split('.py')[0]
