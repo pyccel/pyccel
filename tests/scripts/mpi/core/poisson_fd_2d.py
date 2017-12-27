@@ -121,20 +121,17 @@ u_new   = zeros(mesh_ext, double)
 u_exact = zeros(mesh_ext, double)
 f       = zeros(mesh_ext, double)
 
-r_x = range(sx, ex+1)
-r_y = range(sy, ey+1)
-mesh = tensor(r_x, r_y)
-
 # Initialization
 x = 0.0
 y = 0.0
-for i,j in mesh:
-    x = i*hx
-    y = j*hy
-#    print('> rank : ',rank_in_topo, '(i,j) = ',i,j)
+for i in range(sx, ex+1):
+    for j in range(sy, ey+1):
+        x = i*hx
+        y = j*hy
+#        print('> rank : ',rank_in_topo, '(i,j) = ',i,j)
 
-    f[i, j] = 2.0*(x*x-x+y*y-y)
-    u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
+        f[i, j] = 2.0*(x*x-x+y*y-y)
+        u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 # ...
 
 # Linear solver tolerance
@@ -162,14 +159,16 @@ for it in range(0, n_iterations):
     # ...
 
     # ... Computation of u at the n+1 iteration
-    for i,j in mesh:
-        u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+    for i in range(sx, ex+1):
+        for j in range(sy, ey+1):
+            u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
     # ...
 
     # ... Computation of the global error
     u_error = 0.0
-    for i,j in mesh:
-        u_error += abs(u[i,j]-u_new[i,j])
+    for i in range(sx, ex+1):
+        for j in range(sy, ey+1):
+            u_error += abs(u[i,j]-u_new[i,j])
     local_error = u_error/(ntx*nty)
 
     # Reduction

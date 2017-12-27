@@ -956,6 +956,12 @@ class ForIterator(For):
     def depth(self):
         it = self.iterable
         if isinstance(it, Variable):
+            if isinstance(it.dtype, NativeRange):
+                return 1
+            if isinstance(it.dtype, NativeTensor):
+                # TODO must be computed
+                return 2
+
             cls_base = it.cls_base
             if not cls_base:
                 raise TypeError('cls_base undefined')
@@ -1106,6 +1112,8 @@ def is_iterable_datatype(dtype):
     try:
         if is_pyccel_datatype(dtype):
             return dtype.is_iterable
+        elif isinstance(dtype, (NativeRange, NativeTensor)):
+            return True
         else:
             return False
     except:
@@ -1509,10 +1517,15 @@ class Variable(Symbol):
 
     def clone(self, name):
         cls = eval(self.__class__.__name__)
-        return cls(self.dtype, name, \
-                   rank=self.rank, \
-                   allocatable=self.allocatable, \
-                   shape=self.shape)
+
+        return cls(self.dtype,
+                   name,
+                   rank=self.rank,
+                   allocatable=self.allocatable,
+                   shape=self.shape,
+                   cls_base=self.cls_base,
+                   cls_parameters=self.cls_parameters)
+
 
 class ValuedVariable(Basic):
     """Represents a valued variable in the code.
@@ -3339,6 +3352,30 @@ def get_iterable_ranges(it):
             raise TypeError('iterable must be an iterable Variable object')
 
         cls_base = it.cls_base
+        if isinstance(cls_base, Range):
+            if not isinstance(it.name, DottedName):
+                raise TypeError('Expecting a DottedName, given '
+                                ' {0}'.format(type(it.name)))
+
+            # ...
+            def _construct_arg_Range(name):
+                if not isinstance(name, DottedName):
+                    raise TypeError('Expecting a DottedName, given '
+                                    ' {0}'.format(type(name)))
+
+                return DottedName(it.name.name[0], name.name[1])
+            # ...
+
+            args = []
+            for i in [cls_base.start, cls_base.stop, cls_base.step]:
+                arg = i.clone(_construct_arg_Range(i.name))
+                args += [arg]
+
+            return [Range(*args)]
+
+        elif isinstance(cls_base, Tensor):
+            raise NotImplementedError('TODO')
+
         params   = [str(i) for i in it.cls_parameters]
     elif isinstance(it, ConstructorCall):
         cls_base = it.this.cls_base

@@ -751,11 +751,14 @@ def builtin_function(name, args, lhs=None, op=None):
         if not(len(args) in [2, 3]):
             raise ValueError("Expecting exactly two or three arguments.")
 
+        expr = Range(*args)
+
         d_var = {}
         d_var['datatype']    = NativeRange()
         d_var['allocatable'] = False
         d_var['shape']       = None
         d_var['rank']        = 0
+        d_var['cls_base']    = expr
 
         # needed when lhs is a class member
         if lhs in namespace:
@@ -763,9 +766,8 @@ def builtin_function(name, args, lhs=None, op=None):
                 namespace.pop(lhs)
 
         insert_variable(lhs, **d_var)
-        namespace[lhs] = Range(*args)
+#        print_namespace()
         lhs = namespace[lhs]
-        expr = Range(*args)
         return assign(lhs, expr, op, strict=False)
     elif name == "tensor":
         if not lhs:
@@ -1704,7 +1706,8 @@ class ForStmt(BasicStmt):
 
         if isinstance(r, Variable):
             if not is_iterable_datatype(r.dtype):
-                raise TypeError('Expecting an iterable variable')
+                raise TypeError('Expecting an iterable variable, given '
+                                '{0}'.format(r.dtype))
 
         self.update()
 
@@ -2659,6 +2662,7 @@ class ClassDefStmt(BasicStmt):
         attributs = []
         for stmt in init_method.body:
             if isinstance(stmt, (Assign, Zeros, Ones, ZerosLike)):
+#                print(stmt.lhs, type(stmt.lhs))
                 if (isinstance(stmt.lhs, (Variable, IndexedVariable)) and
                     isinstance(stmt.lhs.name, DottedName)):
 
