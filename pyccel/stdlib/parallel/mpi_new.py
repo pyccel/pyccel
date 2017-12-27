@@ -100,7 +100,15 @@ class Cart(object):
         self.ends[1]   = ey
         # ...
 
-        self.rx = range(sx, ex)
+#        # ... grid without ghost cells
+#        self.r_x  = range(sx, ex+1)
+#        self.r_y  = range(sy, ey+1)
+#        # ...
+#
+#        # ... extended grid with ghost cells
+#        self.r_ext_x = range(sx-1, ex+1+1)
+#        self.r_ext_y = range(sy-1, ey+1+1)
+#        # ...
 
         # ... Neighbours
         #     Search of my West and East neigbours
