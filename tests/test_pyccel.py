@@ -9,7 +9,7 @@ from pyccel.commands.console import pyccel
 from utils import clean_tests
 
 # ...
-def test_1():
+def test_core():
 #    ignored = [15, 18]
     ignored = [15, 18, 5, 21, 22]
 
@@ -21,7 +21,7 @@ def test_1():
 # ...
 
 # ...
-def test_2():
+def test_examples():
 #    ignored = ['eval.py', 'parallel.py', 'mpi.py',
 #               'modules.py', 'imports.py', 'dict.py']
 
@@ -44,7 +44,7 @@ def test_2():
 # ...
 
 # ...
-def test_3():
+def test_oop():
     ignored = []
 
     for i in range(0, 1+1):
@@ -54,10 +54,22 @@ def test_3():
             print('> testing {0}: done'.format(str(i)))
 # ...
 
+# ...
+def test_lambda():
+    ignored = []
+
+    for i in range(1, 1+1):
+        filename = 'tests/scripts/lambda/ex{0}.py'.format(str(i))
+        if not(i in ignored):
+            pyccel(files=[filename])
+            print('> testing {0}: done'.format(str(i)))
+# ...
+
 ################################
 if __name__ == '__main__':
     clean_tests()
-    test_1()
-    test_2()
-    test_3()
+    test_core()
+    test_examples()
+    test_oop()
+    test_lambda()
     clean_tests()

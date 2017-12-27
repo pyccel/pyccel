@@ -2115,7 +2115,7 @@ class ExpressionLambda(BasicStmt):
 
     @property
     def expr(self):
-        args = sp_symbols(*self.args)
+        args = sp_symbols(self.args)
 
         # ... we update the namespace
         ls = args
