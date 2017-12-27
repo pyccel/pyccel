@@ -2676,7 +2676,7 @@ class ClassDefStmt(BasicStmt):
         # ...
 
         # ... cleaning
-        for k in attributs:
+        for k in attributs + init_method.local_vars:
             if k.name in namespace.keys():
                 namespace.pop(k.name)
             if k.name in declarations.keys():
@@ -2689,6 +2689,7 @@ class ClassDefStmt(BasicStmt):
 
 #        print('===== AFTER =====')
 #        print_namespace()
+#        print_declarations()
 
 #        print "<<<<<<<<<<< ClassDefStmt : End"
 
