@@ -1445,8 +1445,9 @@ class AssignStmt(BasicStmt):
                 # we use str(lhs) to make it work for DottedName
                 return builtin_function(name.lower(), args, lhs=str(lhs))
         elif isinstance(rhs, Lambda):
-            print('PAR ICI')
-            import sys; sys.exit(0)
+            lhs = Symbol(str(lhs))
+            namespace[str(lhs)] = lhs
+            return Assign(lhs, rhs, strict=False)
 
         if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
