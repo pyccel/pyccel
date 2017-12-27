@@ -449,7 +449,12 @@ class FCodePrinter(CodePrinter):
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
-        if isinstance(expr.rhs, Shape):
+
+        # we don't print Range, Tensor
+        # TODO treat the case of iterable classes
+        if isinstance(expr.rhs, (Range, Tensor)):
+            return ''
+        elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
 

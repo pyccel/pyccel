@@ -757,6 +757,11 @@ def builtin_function(name, args, lhs=None, op=None):
         d_var['shape']       = None
         d_var['rank']        = 0
 
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
+
         insert_variable(lhs, **d_var)
         namespace[lhs] = Range(*args)
         lhs = namespace[lhs]
@@ -773,6 +778,11 @@ def builtin_function(name, args, lhs=None, op=None):
         d_var['allocatable'] = False
         d_var['shape']       = None
         d_var['rank']        = 0
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
 
         insert_variable(lhs, **d_var)
         expr = Tensor(*args, name=lhs)

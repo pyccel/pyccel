@@ -100,6 +100,8 @@ class Cart(object):
         self.ends[1]   = ey
         # ...
 
+        self.rx = range(sx, ex)
+
         # ... Neighbours
         #     Search of my West and East neigbours
         mpi_cart_shift (self.comm_cart, 0, self.steps[0], self.neighbour[west], self.neighbour[east], ierr)
