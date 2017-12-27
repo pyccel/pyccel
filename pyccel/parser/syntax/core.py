@@ -2488,6 +2488,7 @@ class FunctionDefStmt(BasicStmt):
                 d_var['shape']       = None
                 d_var['rank']        = rank
                 d_var['intent']      = 'out'
+#                print_namespace()
                 insert_variable(result_name, **d_var)
                 var = namespace[result_name]
                 _results.append(var)
@@ -2508,13 +2509,10 @@ class FunctionDefStmt(BasicStmt):
         if args_0:
             args=[args_0]+args
 
-        # TODO improve this. it is not working right now
         ls = self.local_vars + self.stmt_vars
-        ls = [e.expr for e in ls]
-#        ls = [str(e.expr) for e in ls]
+        ls = [str(e.expr) for e in ls]
         for var_name in ls:
             if var_name in namespace:
-#                prelude.append(declarations[var_name])
 
                 del namespace[var_name]
                 del declarations[var_name]
@@ -2541,6 +2539,7 @@ class FunctionDefStmt(BasicStmt):
 
         # ... define local_vars as any lhs in Assign, if it is not global
         #     or class member 'self.member'
+        #     TODO: do we keep it?
         for stmt in body:
             if isinstance(stmt, (Assign, Zeros, ZerosLike, Ones)):
                 if (isinstance(stmt.lhs, Variable) and
@@ -2568,11 +2567,13 @@ class FunctionDefStmt(BasicStmt):
                            cls_name=cls_name)
         namespace[name] = stmt
 
-#        print('======= name = {0}'.format(name))
-#        print_namespace()
-
-        # ... TODO add a call to is_compatible_header
-        #         the FunctionDef is created, and before the return
+        # ... cleaning
+        for k in local_vars:
+            if k.name in namespace.keys():
+                namespace.pop(k.name)
+            if k.name in declarations.keys():
+                declarations.pop(k.name)
+        # ...
 
 #        print "<<<<<<<<<<< FunctionDefStmt : End"
         return stmt

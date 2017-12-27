@@ -40,6 +40,8 @@ Parser
 
 * Expression of booleans
 
+* add is_compatible_header for functions
+
 AST
 ***
 

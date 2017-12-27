@@ -1,8 +1,16 @@
 # coding: utf-8
 
 
-#$ header function f(double, double) results(double)
-def f(u,v):
+def f_pass():
+    pass
+
+#$ header fi(int, int) results(int)
+def fi(x, n=5):
+    y = x+1+n
+    return y
+
+#$ header function fd(double, double) results(double)
+def fd(u,v):
     t = u - v
     return t
 
@@ -13,27 +21,30 @@ def g(x,v):
     z =  2.0 * t
     return t, z
 
-#$ header fi(int, int) results(int)
-def fi(x, n=5):
-    y = x+1+n
-    return y
 
-def f_pass():
-    pass
+# ...
+f_pass()
+# ...
 
-x1 = 1.0
-y1 = 2.0
-
-w = 2 * f(x1,y1) + 1.0
-
-z, t = g(x1,w)
-
+# ...
 i = 1
 j = 3
+
 k = fi(i, j)
 k = fi(i)
+# ...
 
-f_pass()
+# ...
+xd = 1.0
+yd = 2.0
 
-print(z)
-print(t)
+w = fd(xd,yd)
+# ...
+
+z = 0.0
+t = 0.0
+
+[z, t] = g(xd,w)
+
+#print(z)
+#print(t)
