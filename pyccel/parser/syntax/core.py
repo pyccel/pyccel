@@ -2675,8 +2675,15 @@ class ClassDefStmt(BasicStmt):
         namespace[name] = stmt
         # ...
 
+        # ... local variables
+        local_vars = []
+        for m in methods:
+            local_vars += m.local_vars
+        local_vars = list(set(local_vars))
+        # ...
+
         # ... cleaning
-        for k in attributs + init_method.local_vars:
+        for k in attributs + local_vars:
             if k.name in namespace.keys():
                 namespace.pop(k.name)
             if k.name in declarations.keys():
