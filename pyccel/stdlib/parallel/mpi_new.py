@@ -37,6 +37,7 @@ class Cart(object):
         # ... TODO : to be computed using 'len'
         self.ndims       = 2
         self.n_neighbour = 4
+        self.pads        = [1, 1]
         # ...
 
         # ... Constants
@@ -100,15 +101,33 @@ class Cart(object):
         self.ends[1]   = ey
         # ...
 
-#        # ... grid without ghost cells
-#        self.r_x  = range(sx, ex+1)
-#        self.r_y  = range(sy, ey+1)
-#        # ...
-#
-#        # ... extended grid with ghost cells
-#        self.r_ext_x = range(sx-1, ex+1+1)
-#        self.r_ext_y = range(sy-1, ey+1+1)
-#        # ...
+        # ...
+        self.sx = sx
+        self.ex = ex + 1
+        self.sy = sy
+        self.ey = ey + 1
+        # ...
+
+        # ... grid without ghost cells
+        self.r_x  = range(self.sx, self.ex, self.steps[0])
+        self.r_y  = range(self.sy, self.ey, self.steps[1])
+
+        self.indices = tensor (self.r_x, self.r_y)
+        # ...
+
+        # ...
+        self.sx_ext = sx - self.pads[0]
+        self.ex_ext = ex + self.pads[0] + 1
+        self.sy_ext = sy - self.pads[1]
+        self.ey_ext = ey + self.pads[1] + 1
+        # ...
+
+        # ... extended grid with ghost cells
+        self.r_ext_x  = range(self.sx_ext, self.ex_ext, self.steps[0])
+        self.r_ext_y  = range(self.sy_ext, self.ey_ext, self.steps[1])
+
+        self.extended_indices = tensor (self.r_ext_x, self.r_ext_y)
+        # ...
 
         # ... Neighbours
         #     Search of my West and East neigbours

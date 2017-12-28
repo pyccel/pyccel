@@ -67,13 +67,12 @@ c2 = 1.0/(hy*hy)
 # Initialization
 x = 0.0
 y = 0.0
-for i in range(sx, ex+1):
-    for j in range(sy, ey+1):
-        x = i*hx
-        y = j*hy
+for i,j in mesh.extended_indices:
+    x = i*hx
+    y = j*hy
 
-        f[i, j] = 2.0*(x*x-x+y*y-y)
-        u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
+    f[i, j] = 2.0*(x*x-x+y*y-y)
+    u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 # ...
 
 # Linear solver tolerance
@@ -86,16 +85,14 @@ for it in range(0, n_iterations):
     mesh.communicate(u)
 
     # ... Computation of u at the n+1 iteration
-    for i in range(sx, ex+1):
-        for j in range(sy, ey+1):
-            u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+    for i,j in mesh.indices:
+        u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
     # ...
 
     # ... Computation of the global error
     u_error = 0.0
-    for i in range(sx, ex+1):
-        for j in range(sy, ey+1):
-            u_error += abs(u[i,j]-u_new[i,j])
+    for i,j in mesh.indices:
+        u_error += abs(u[i,j]-u_new[i,j])
     local_error = u_error/(ntx*nty)
 
     # Reduction
