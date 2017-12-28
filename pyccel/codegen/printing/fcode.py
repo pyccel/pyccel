@@ -241,11 +241,24 @@ class FCodePrinter(CodePrinter):
         lhs = self._print(expr.lhs)
 
         _iprint = lambda a, b: '{start}:{stop}'.format(start=a, stop=b)
-        bounds = ', '.join(_iprint(a,b) for a,b in zip(expr.starts, expr.stops))
+        bounds = ','.join(_iprint(a,b) for a,b in zip(expr.starts, expr.stops))
 
         # TODO use init_value
         code = ('allocate({lhs}({bounds}))\n'
                 '{lhs} = 0.0d0').format(lhs=lhs, bounds=bounds)
+
+        return self._get_statement(code)
+
+    def _print_Stencil(self, expr):
+        lhs = self._print(expr.lhs)
+
+        _iprint = lambda a, b: '{start}:{stop}'.format(start=a, stop=b)
+        bounds = ','.join(_iprint(a,b) for a,b in zip(expr.starts, expr.stops))
+        pads   = ','.join('-{0}:{0}'.format(self._print(i)) for i in expr.pads)
+
+        # TODO use init_value
+        code = ('allocate({lhs}({pads}, {bounds}))\n'
+                '{lhs} = 0.0d0').format(lhs=lhs, bounds=bounds, pads=pads)
 
         return self._get_statement(code)
 
@@ -625,6 +638,9 @@ class FCodePrinter(CodePrinter):
         return 'char'
 
     def _print_NativeVector(self, expr):
+        return 'real(kind=8)'
+
+    def _print_NativeStencil(self, expr):
         return 'real(kind=8)'
 
     def _print_DataType(self, expr):

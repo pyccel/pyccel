@@ -1042,8 +1042,14 @@ class NativeParallelRange(NativeRange):
     _name = 'ParallelRange'
     pass
 
+# TODO remove later
 class NativeVector(DataType):
     _name = 'Vector'
+    pass
+
+# TODO remove later
+class NativeStencil(DataType):
+    _name = 'Stencil'
     pass
 
 class CustomDataType(DataType):
@@ -1060,6 +1066,7 @@ Void    = NativeVoid()
 Nil     = NativeNil()
 String  = NativeString()
 _Vector = NativeVector()
+_Stencil = NativeStencil()
 
 
 dtype_registry = {'bool': Bool,
@@ -1070,6 +1077,7 @@ dtype_registry = {'bool': Bool,
                   'void': Void,
                   'nil': Nil,
                   'vector': _Vector,
+                  'stencil': _Stencil,
                   'str': String}
 
 
@@ -2881,7 +2889,7 @@ class MultiAssign(Basic):
 
 # TODO: to improve
 class Vector(Basic):
-    """Represents variable assignment using a stencil for code generation.
+    """Represents variable assignment using a vector for code generation.
 
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
@@ -2921,6 +2929,63 @@ class Vector(Basic):
     @property
     def stops(self):
         return self._args[2]
+
+    @property
+    def name(self):
+        return str(self.lhs)
+
+    @property
+    def dtype(self):
+        return NativeDouble()
+
+# TODO: to improve
+class Stencil(Basic):
+    """Represents variable assignment using a stencil for code generation.
+
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    starts : int or list of integers
+
+    stops : int or list of integers
+
+    pads : int or list of integers
+
+    Examples
+
+    >>> from pyccel.ast.core import Vector
+    """
+
+    def __new__(cls, lhs, starts, stops, pads):
+        # ...
+        lhs = sympify(lhs)
+        # ...
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+
+        return Basic.__new__(cls, lhs, starts, stops, pads)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def starts(self):
+        return self._args[1]
+
+    @property
+    def stops(self):
+        return self._args[2]
+
+    @property
+    def pads(self):
+        return self._args[3]
 
     @property
     def name(self):

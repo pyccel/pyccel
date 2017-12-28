@@ -49,7 +49,7 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeBool, NativeFloat, NativeNil, NativeVector
+from pyccel.ast.core import NativeBool, NativeFloat, NativeNil, NativeVector, NativeStencil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Import
@@ -58,7 +58,7 @@ from pyccel.ast.core import Nil
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import (Tile, Range, Tensor, \
                              For, ForIterator, Assign, \
-                             Declare, Vector, Variable, ValuedVariable, \
+                             Declare, Vector, Stencil, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
                              VariableHeader, \
                              datatype, While, With, NativeFloat, \
@@ -112,6 +112,7 @@ known_functions = {
     "sinh": "sinh",
     "sqrt": "sqrt",
     "vector": "Vector",
+    "stencil": "Stencil",
     "tan": "tan",
     "tanh": "tanh"
 }
@@ -233,7 +234,7 @@ builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like',
-                  'len', 'shape', 'vector']
+                  'len', 'shape', 'vector', 'stencil']
 builtin_funcs += builtin_funcs_math
 
 builtin_funcs_iter = ['range', 'tensor']
@@ -820,6 +821,37 @@ def builtin_function(name, args, lhs=None, op=None):
 
         insert_variable(lhs, **d_var)
         expr = Vector(lhs, *args)
+
+        namespace[lhs] = expr
+        return expr
+    elif name == "stencil":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        _args = []
+        for i in args:
+            if not isinstance(i, (list, tuple, Tuple)):
+                _args.append([i])
+            else:
+                _args.append(i)
+        args = _args
+
+        d_var = {}
+        d_var['datatype']    = NativeStencil()
+        d_var['allocatable'] = True
+        d_var['shape']       = None
+        d_var['rank']        = len(args[0]) + len(args[-1])
+        # because 'args[0] = starts' and  'args[-1] = pads'
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
+
+        insert_variable(lhs, **d_var)
+        expr = Stencil(lhs, *args)
 
         namespace[lhs] = expr
         return expr
