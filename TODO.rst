@@ -22,6 +22,8 @@ Parser
 
 * improve function headers (raise Exception NotImplemented when we have to type inference)
 
+* improve AugAssign (improve it like what has been done for Assign)
+
 * improve precision, add double complex
 
 * **inout** arguments are not handled yet
