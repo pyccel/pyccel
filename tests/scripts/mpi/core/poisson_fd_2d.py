@@ -112,14 +112,10 @@ mpi_type_commit (type_column, ierr)
 # ...
 
 # ...
-r_ext_x = range(sx-1, ex+1+1)
-r_ext_y = range(sy-1, ey+1+1)
-mesh_ext = tensor(r_ext_x, r_ext_y)
-
-u       = zeros(mesh_ext, double)
-u_new   = zeros(mesh_ext, double)
-u_exact = zeros(mesh_ext, double)
-f       = zeros(mesh_ext, double)
+u       = vector((sx-1,sy-1), (ex+1, ey+1))
+u_new   = vector((sx-1,sy-1), (ex+1, ey+1))
+u_exact = vector((sx-1,sy-1), (ex+1, ey+1))
+f       = vector((sx-1,sy-1), (ex+1, ey+1))
 
 # Initialization
 x = 0.0

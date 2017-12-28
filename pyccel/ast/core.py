@@ -2879,7 +2879,7 @@ class MultiAssign(Basic):
         outputs = ', '.join(sstr(i) for i in self.lhs)
         return '{0} := {1}'.format(outputs, rhs)
 
-# TODO: remove Len from here
+# TODO: to improve
 class Vector(Basic):
     """Represents variable assignment using a stencil for code generation.
 
@@ -2921,6 +2921,14 @@ class Vector(Basic):
     @property
     def stops(self):
         return self._args[2]
+
+    @property
+    def name(self):
+        return str(self.lhs)
+
+    @property
+    def dtype(self):
+        return NativeDouble()
 
 # TODO rename dtypes to arguments
 class VariableHeader(Basic):
