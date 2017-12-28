@@ -778,11 +778,14 @@ def builtin_function(name, args, lhs=None, op=None):
         if not(len(args) in [2, 3]):
             raise ValueError("Expecting exactly two or three arguments.")
 
+        expr = Tensor(*args)
+
         d_var = {}
         d_var['datatype']    = NativeTensor()
         d_var['allocatable'] = False
         d_var['shape']       = None
         d_var['rank']        = 0
+        d_var['cls_base']    = expr
 
         # needed when lhs is a class member
         if lhs in namespace:
@@ -790,8 +793,7 @@ def builtin_function(name, args, lhs=None, op=None):
                 namespace.pop(lhs)
 
         insert_variable(lhs, **d_var)
-        expr = Tensor(*args, name=lhs)
-        namespace[lhs] = expr
+#        print_namespace()
         lhs = namespace[lhs]
         return assign(lhs, expr, op, strict=False)
     elif name == "vector":

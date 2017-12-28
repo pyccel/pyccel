@@ -661,8 +661,12 @@ class Tensor(Basic):
 
     def __new__(cls, *args, **kwargs):
         for r in args:
-            if not isinstance(r, (Range, Tensor)):
-                raise TypeError("Expecting a Range or Tensor")
+            cond = (isinstance(r, Variable) and
+                    isinstance(r.dtype, (NativeRange, NativeTensor)))
+            cond = cond or isinstance(r, (Range, Tensor))
+
+            if not cond:
+                raise TypeError("non valid argument, given {0}".format(type(r)))
 
         try:
             name = kwargs['name']
