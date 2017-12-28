@@ -10,6 +10,7 @@ from utils import clean_tests
 
 # ...
 def test_core():
+    print('============== testing core ================')
 #    ignored = [15, 18]
     ignored = [15, 18, 22]
 
@@ -22,6 +23,7 @@ def test_core():
 
 # ...
 def test_examples():
+    print('============== testing examples ================')
 #    ignored = ['eval.py', 'parallel.py', 'mpi.py',
 #               'modules.py', 'imports.py', 'dict.py']
 
@@ -45,9 +47,10 @@ def test_examples():
 
 # ...
 def test_oop():
+    print('============== testing oop ================')
     ignored = []
 
-    for i in range(0, 1+1):
+    for i in range(0, 3+1):
         filename = 'tests/scripts/oop/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])
@@ -56,6 +59,7 @@ def test_oop():
 
 # ...
 def test_lambda():
+    print('============== testing lambda ================')
     ignored = []
 
     for i in range(1, 1+1):

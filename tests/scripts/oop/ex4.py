@@ -10,10 +10,10 @@ class Square(object):
         self.stops  = stops
         self.steps  = steps
 
-        rx = range(self.starts[0], self.stops[0], self.steps[0])
-        ry = range(self.starts[1], self.stops[1], self.steps[1])
+        self.rx = range(self.starts[0], self.stops[0], self.steps[0])
+        self.ry = range(self.starts[1], self.stops[1], self.steps[1])
 
-        indices = tensor (rx, ry)
+        self.indices = tensor (self.rx, self.ry)
 
     def __del__(self):
         pass
@@ -27,10 +27,7 @@ stops[1] = 5
 
 p = Square (starts, stops, steps)
 
-#for i in p.rx:
-#    print(i)
-
-#for i in p.indices:
-#    print(i)
+for i,j in p.indices:
+    print(i,j)
 
 del p

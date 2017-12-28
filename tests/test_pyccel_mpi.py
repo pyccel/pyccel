@@ -13,6 +13,7 @@ from utils import clean_tests
 
 # ...
 def test_core(n_procs=2):
+    print('============== testing core ================')
 #    ignored = ['poisson_fd_1d.py']
     ignored = ['poisson_fd_1d.py']
 
@@ -52,6 +53,7 @@ def test_core(n_procs=2):
 
 # ...
 def test_examples(n_procs=2):
+    print('============== testing examples ================')
     ignored = ['ex_mpi.py', 'cart_2d.py']
 
     base_dir = os.getcwd()

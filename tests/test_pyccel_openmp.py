@@ -10,6 +10,7 @@ from utils import clean_tests
 
 # ...
 def test_core():
+    print('============== testing core ================')
     ignored = []
 
     base_dir = os.getcwd()
@@ -27,6 +28,7 @@ def test_core():
 
 # ...
 def test_openmp():
+    print('============== testing examples ================')
     ignored = ['matrix_multiplication.py']
 
     base_dir = os.getcwd()

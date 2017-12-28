@@ -2670,6 +2670,13 @@ class IndexedVariable(IndexedBase):
     def name(self):
         return self._args[0]
 
+    # TODO what about kw_args in __new__?
+    def clone(self, name):
+        cls = eval(self.__class__.__name__)
+
+        return cls(name, shape=self.shape, dtype=self.dtype)
+
+
 class IndexedElement(Indexed):
     """
     Represents a mathematical object with indices.
@@ -3399,37 +3406,59 @@ def get_initial_value(expr, var):
     return None
 # ...
 
-# ...
-def get_iterable_ranges(it):
+# ... TODO: improve and make it recursive
+def get_iterable_ranges(it, var_name=None):
     """Returns ranges of an iterable object."""
     if isinstance(it, Variable):
         if it.cls_base is None:
             raise TypeError('iterable must be an iterable Variable object')
 
+        # ...
+        def _construct_arg_Range(name):
+            if not isinstance(name, DottedName):
+                raise TypeError('Expecting a DottedName, given '
+                                ' {0}'.format(type(name)))
+
+            if not var_name:
+                return DottedName(it.name.name[0], name.name[1])
+            else:
+                return DottedName(var_name, name.name[1])
+        # ...
+
         cls_base = it.cls_base
+
         if isinstance(cls_base, Range):
             if not isinstance(it.name, DottedName):
                 raise TypeError('Expecting a DottedName, given '
                                 ' {0}'.format(type(it.name)))
 
-            # ...
-            def _construct_arg_Range(name):
-                if not isinstance(name, DottedName):
-                    raise TypeError('Expecting a DottedName, given '
-                                    ' {0}'.format(type(name)))
-
-                return DottedName(it.name.name[0], name.name[1])
-            # ...
-
             args = []
             for i in [cls_base.start, cls_base.stop, cls_base.step]:
-                arg = i.clone(_construct_arg_Range(i.name))
+                if isinstance(i, (Variable, IndexedVariable)):
+                    arg_name = _construct_arg_Range(i.name)
+                    arg = i.clone(arg_name)
+                elif isinstance(i, IndexedElement):
+                    arg_name = _construct_arg_Range(i.base.name)
+                    base    = i.base.clone(arg_name)
+                    indices = i.indices
+                    arg = base[indices]
+                else:
+                    raise TypeError('Wrong type, given {0}'.format(type(i)))
                 args += [arg]
 
             return [Range(*args)]
 
         elif isinstance(cls_base, Tensor):
-            raise NotImplementedError('TODO')
+            if not isinstance(it.name, DottedName):
+                raise TypeError('Expecting a DottedName, given '
+                                ' {0}'.format(type(it.name)))
+            # ...
+            ranges = []
+            for r in cls_base.ranges:
+                ranges += get_iterable_ranges(r, var_name=str(it.name.name[0]))
+            # ...
+
+            return ranges
 
         params   = [str(i) for i in it.cls_parameters]
     elif isinstance(it, ConstructorCall):
