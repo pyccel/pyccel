@@ -44,6 +44,8 @@ Parser
 
 * add is_compatible_header for functions
 
+* stencil and vector must use Variable and be of any datatype
+
 AST
 ***
 
