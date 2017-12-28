@@ -562,11 +562,11 @@ class Codegen(object):
                 decs = stmt
             elif isinstance(stmt, (FunctionHeader, ClassHeader,
                                    MethodHeader, VariableHeader,
-                                   Variable)):
+                                   Variable, Lambda)):
                 # Variable is also ignored, since we can export them in headers
                 continue
             elif isinstance(stmt, Assign):
-                if isinstance(stmt.rhs, (Range, Tensor, Lambda)):
+                if isinstance(stmt.rhs, (Range, Tensor)):
                     continue
                 elif isinstance(stmt.lhs, Variable):
                     if (isinstance(stmt.lhs.name, str) and

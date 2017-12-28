@@ -1117,9 +1117,11 @@ def expr_with_trailer(expr, trailer):
                         # TODO may be we should raise an error here
                         _args.append(a)
                 expr = Function(f_name)(*_args)
+            elif isinstance(expr, Lambda):
+                expr = expr(*args)
             else:
-                raise NotImplementedError('expr is not FunctionDef '
-                                         'and {0} is not a builtin function'.format(f_name))
+                raise TypeError('Wrong type for {0}, '
+                                'given {1}'.format(f_name, type(expr)))
     return expr
 # ...
 
@@ -1524,8 +1526,8 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=str(lhs))
         elif isinstance(rhs, Lambda):
             lhs = Symbol(str(lhs))
-            namespace[str(lhs)] = lhs
-            return Assign(lhs, rhs, strict=False)
+            namespace[str(lhs)] = rhs
+            return rhs
 
         if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
@@ -2207,6 +2209,9 @@ class ExpressionLambda(BasicStmt):
 
         # ... we do it here after the namespace has been updated
         e = self.rhs.expr
+
+#        free_symbols = [str(i) for i in e.free_symbols]
+#        free_symbols = [i for i in free_symbols if i in namespace]
         # ...
 
         # ... we clean the namespace
