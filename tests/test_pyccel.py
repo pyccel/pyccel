@@ -50,7 +50,7 @@ def test_oop():
     print('============== testing oop ================')
     ignored = []
 
-    for i in range(0, 3+1):
+    for i in range(0, 4+1):
         filename = 'tests/scripts/oop/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])

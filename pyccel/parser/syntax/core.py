@@ -823,9 +823,9 @@ def builtin_function(name, args, lhs=None, op=None):
 
         insert_variable(lhs, **d_var)
         expr = Vector(lhs, *args)
-
-        namespace[lhs] = expr
         return expr
+#        namespace[lhs] = expr
+#        return assign(lhs, expr, op, strict=False)
     elif name == "stencil":
         if not lhs:
             raise ValueError("Expecting a lhs.")
@@ -854,9 +854,9 @@ def builtin_function(name, args, lhs=None, op=None):
 
         insert_variable(lhs, **d_var)
         expr = Stencil(lhs, *args)
-
-        namespace[lhs] = expr
         return expr
+#        namespace[lhs] = expr
+#        return assign(lhs, expr, op, strict=False)
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...

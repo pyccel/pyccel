@@ -43,25 +43,11 @@ ey = mesh.ends[1]
 print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
 # ...
 
-# ... grid without ghost cells
-r_x  = range(sx, ex+1)
-r_y  = range(sy, ey+1)
-
-grid = tensor(r_x, r_y)
 # ...
-
-# ... extended grid with ghost cells
-r_ext_x = range(sx-1, ex+1+1)
-r_ext_y = range(sy-1, ey+1+1)
-
-grid_ext = tensor(r_ext_x, r_ext_y)
-# ...
-
-# ...
-u       = zeros(grid_ext, double)
-u_new   = zeros(grid_ext, double)
-u_exact = zeros(grid_ext, double)
-f       = zeros(grid_ext, double)
+u       = vector((sx-1,sy-1), (ex+1, ey+1))
+u_new   = vector((sx-1,sy-1), (ex+1, ey+1))
+u_exact = vector((sx-1,sy-1), (ex+1, ey+1))
+f       = vector((sx-1,sy-1), (ex+1, ey+1))
 # ...
 
 # ...
@@ -81,12 +67,13 @@ c2 = 1.0/(hy*hy)
 # Initialization
 x = 0.0
 y = 0.0
-for i,j in grid:
-    x = i*hx
-    y = j*hy
+for i in range(sx, ex+1):
+    for j in range(sy, ey+1):
+        x = i*hx
+        y = j*hy
 
-    f[i, j] = 2.0*(x*x-x+y*y-y)
-    u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
+        f[i, j] = 2.0*(x*x-x+y*y-y)
+        u_exact[i, j] = x*y*(x-1.0)*(y-1.0)
 # ...
 
 # Linear solver tolerance
@@ -99,14 +86,16 @@ for it in range(0, n_iterations):
     mesh.communicate(u)
 
     # ... Computation of u at the n+1 iteration
-    for i,j in grid:
-        u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
+    for i in range(sx, ex+1):
+        for j in range(sy, ey+1):
+            u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
     # ...
 
     # ... Computation of the global error
     u_error = 0.0
-    for i,j in grid:
-        u_error += abs(u[i,j]-u_new[i,j])
+    for i in range(sx, ex+1):
+        for j in range(sy, ey+1):
+            u_error += abs(u[i,j]-u_new[i,j])
     local_error = u_error/(ntx*nty)
 
     # Reduction
