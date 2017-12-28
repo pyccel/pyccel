@@ -16,7 +16,7 @@ mpi_init(ierr)
 
 # ...
 npts    = zeros(2, int)
-steps   = ones(2, int)
+pads    = ones(2, int)
 periods = zeros(2, bool)
 reorder = False
 # ...
@@ -29,7 +29,7 @@ periods[0] = False
 periods[1] = True
 # ...
 
-mesh = Cart(npts, steps, periods, reorder)
+mesh = Cart(npts, pads, periods, reorder)
 
 # ...
 sx = mesh.starts[0]

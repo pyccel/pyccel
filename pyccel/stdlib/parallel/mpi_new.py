@@ -29,7 +29,7 @@ from pyccel.stdlib.parallel.mpi import MPI_SUM
 #$ header method reduce(Cart, double)
 
 class Cart(object):
-    def __init__(self, npts, steps, periods, reorder):
+    def __init__(self, npts, pads, periods, reorder):
 
         ntx = npts[0]
         nty = npts[1]
@@ -37,7 +37,6 @@ class Cart(object):
         # ... TODO : to be computed using 'len'
         self.ndims       = 2
         self.n_neighbour = 4
-        self.pads        = [1, 1]
         # ...
 
         # ... Constants
@@ -47,14 +46,15 @@ class Cart(object):
         west  = 3
         # ...
 
-        # ... TODO : use steps, periods, reorder arguments
+        # ...
         self.neighbour = zeros(self.n_neighbour, int)
         self.coords    = zeros(self.ndims, int)
         self.dims      = zeros(self.ndims, int)
         self.starts    = zeros(self.ndims, int)
         self.ends      = zeros(self.ndims, int)
 
-        self.steps   = steps
+        self.steps   = [1,1]
+        self.pads    = pads
         self.periods = periods
         self.reorder = reorder
         # ...
@@ -131,10 +131,10 @@ class Cart(object):
 
         # ... Neighbours
         #     Search of my West and East neigbours
-        mpi_cart_shift (self.comm_cart, 0, self.steps[0], self.neighbour[west], self.neighbour[east], ierr)
+        mpi_cart_shift (self.comm_cart, 0, self.pads[0], self.neighbour[west], self.neighbour[east], ierr)
 
         #     Search of my South and North neighbours
-        mpi_cart_shift (self.comm_cart, 1, self.steps[1], self.neighbour[south], self.neighbour[north], ierr)
+        mpi_cart_shift (self.comm_cart, 1, self.pads[1], self.neighbour[south], self.neighbour[north], ierr)
         # ...
 
         # ... Derived Types
