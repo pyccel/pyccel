@@ -2092,7 +2092,12 @@ class Load(Basic):
 
     def __new__(cls, module, funcs=None):
         if not isinstance(module, (str, DottedName, list, tuple, Tuple)):
-            raise TypeError('Expecting a string or DottedName')
+            raise TypeError('Expecting a string or DottedName, given'
+                            ' {0}'.format(type(module)))
+
+        # see syntax
+        if isinstance(module, str):
+            module = module.replace('__', '.')
 
         if isinstance(module, (list, tuple, Tuple)):
             module = DottedName(*module)

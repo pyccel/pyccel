@@ -911,8 +911,8 @@ def builtin_function(name, args, lhs=None, op=None):
                 a = str(i)
             elif isinstance(i, (list, tuple, Tuple)):
                 a = [str(j) for j in i]
-            else:
-                raise NotImplementedError('TODO')
+            elif not isinstance(i, DottedName):
+                raise NotImplementedError('given {0}'.format(type(i)))
             _args.append(a)
         args = _args
 
@@ -1177,18 +1177,30 @@ def expr_with_trailer(expr, trailer):
 #            print('> expr = {0}'.format(expr))
         else:
             f_name = str(expr)
+
+            # ... prepare args
+            _args = []
+            for a in args:
+                if str(a) in namespace:
+                    _args.append(namespace[str(a)])
+                else:
+                    # TODO may be we should raise an error here
+                    _args.append(a)
+            # ...
+
+            # ... we need to remove '.' from _args for 'load'
+            #     see Load in ast for more details
+            if f_name == 'load':
+                _args[0] = _args[0].replace('.', '__')
+            # ...
+
+            # ...
             if f_name in builtin_funcs + namespace.keys():
-                _args = []
-                for a in args:
-                    if str(a) in namespace:
-                        _args.append(namespace[str(a)])
-                    else:
-                        # TODO may be we should raise an error here
-                        _args.append(a)
                 expr = Function(f_name)(*_args)
             else:
                 raise TypeError('Wrong type for {0}, '
                                 'given {1}'.format(f_name, type(expr)))
+            # ...
     return expr
 # ...
 
