@@ -2088,12 +2088,15 @@ class Load(Basic):
     as_lambda: bool
         load as a Lambda expression, if True
 
+    nargs: int
+        number of arguments of the function to load. (default = 1)
+
     Examples
 
     >>> from pyccel.ast.core import Load
     """
 
-    def __new__(cls, module, funcs=None, as_lambda=False):
+    def __new__(cls, module, funcs=None, as_lambda=False, nargs=1):
         if not isinstance(module, (str, DottedName, list, tuple, Tuple)):
             raise TypeError('Expecting a string or DottedName, given'
                             ' {0}'.format(type(module)))
@@ -2117,7 +2120,7 @@ class Load(Basic):
         if not isinstance(as_lambda, (BooleanTrue, BooleanFalse, bool)):
             raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
 
-        return Basic.__new__(cls, module, funcs, as_lambda)
+        return Basic.__new__(cls, module, funcs, as_lambda, nargs)
 
     @property
     def module(self):
@@ -2130,6 +2133,10 @@ class Load(Basic):
     @property
     def as_lambda(self):
         return self._args[2]
+
+    @property
+    def nargs(self):
+        return self._args[3]
 
     def execute(self):
         module = str(self.module)
@@ -2147,8 +2154,15 @@ class Load(Basic):
 
             # TODO improve
             if self.as_lambda:
-                f = Symbol('f')
-                m = Lambda(f, m(f, evaluate=False))
+                args = []
+                for i in range(0, self.nargs):
+                    fi = Symbol('f{0}'.format(i))
+                    args.append(fi)
+                if len(args) == 1:
+                    arg = args[0]
+                    m = Lambda(arg, m(arg, evaluate=False))
+                else:
+                    m = Lambda(args, m(*args, evaluate=False))
 
             ls.append(m)
 

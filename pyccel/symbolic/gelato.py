@@ -910,10 +910,8 @@ class glt_function(Function):
             return
 
         f = _args[0]
-#        n = _args[1]
-#        p = _args[2]
-
-        n = [4, 4] ; p = [2, 2]
+        n = _args[1]
+        p = _args[2]
 
         discretization = {"n_elements": n, "degrees": p}
         expr = glt_symbol(f, dim=2, discretization=discretization, evaluate=True)

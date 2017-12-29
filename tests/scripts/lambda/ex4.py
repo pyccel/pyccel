@@ -1,13 +1,13 @@
 # coding: utf-8
 
-glt_function = load('pyccel.symbolic.gelato', 'glt_function', True)
-dx           = load('pyccel.symbolic.gelato', 'dx', False)
-dy           = load('pyccel.symbolic.gelato', 'dy', False)
+glt_function = load('pyccel.symbolic.gelato', 'glt_function', True, 3)
+dx           = load('pyccel.symbolic.gelato', 'dx', False, 1)
+dy           = load('pyccel.symbolic.gelato', 'dy', False, 1)
 
 laplace = lambda u,v: dx(u)*dx(v) + dy(u)*dy(v)
 a       = lambda u,v: laplace(u,v) + 0.1 * dx(u) * v
 
-ga = glt_function(a)
+ga = glt_function(a, [4, 4], [2, 2])
 g = lambdify(ga)
 
 # glt symbol is supposed to be 'complex' in this example
