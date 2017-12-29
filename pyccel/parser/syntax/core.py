@@ -1206,13 +1206,6 @@ class Pyccel(object):
         """
         self.statements = kwargs.pop('statements', [])
 
-        # ... TODO remove later
-        from pyccel.symbolic.gelato import dx, dy
-
-        namespace['dx'] = dx
-        namespace['dy'] = dy
-        # ...
-
     @property
     def declarations(self):
         """
@@ -2201,6 +2194,15 @@ class ExpressionLambda(BasicStmt):
 
     @property
     def expr(self):
+        # ... TODO - remove later
+        #          - must append to namespace all sympy utilities we want to
+        #          provide
+        from pyccel.symbolic.gelato import dx, dy
+
+        namespace['dx'] = dx
+        namespace['dy'] = dy
+        # ...
+
         args = sp_symbols(self.args)
 
         # ... we update the namespace
@@ -2238,6 +2240,10 @@ class ExpressionLambda(BasicStmt):
         print('> {0} '.format(expr))
         # ...
 
+        # ... TODO remove later
+        namespace.pop('dx')
+        namespace.pop('dy')
+        # ...
 
         return stmt
 
