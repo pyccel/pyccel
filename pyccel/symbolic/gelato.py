@@ -50,6 +50,35 @@ SETTINGS     = ["glt_integrate", "glt_formatting", "glt_formatting_atoms"]
 #                "glt_formatting_atoms"]
 
 
+# ...
+dx = Function('dx')
+dy = Function('dy')
+dz = Function('dz')
+# ...
+
+# ... TODO works only for scalar cases
+def normalize_weak_from(f):
+    """
+    Converts an expression using dx, dy, etc to a normal form, where we
+    introduce symbols with suffix to define derivatives.
+    """
+    if not isinstance(f, Lambda):
+        raise TypeError('Expecting a Lambda expression')
+
+    args = f.variables
+    expr = f.expr
+
+    for d in ['dx', 'dy', 'dz']:
+        for i, arg in enumerate(args):
+            atom = sympify('{0}({1})'.format(d, arg))
+            suffix = None
+            if i == 0:
+                suffix = 'i'
+            elif i == 1:
+                suffix = 'j'
+            expr = expr.subs({atom: Symbol('N{0}_{1}'.format(suffix, d[1]))})
+    return expr
+# ...
 
 # ...
 def basis_symbols(dim, n_deriv=1):
@@ -442,20 +471,11 @@ def glt_symbol(expr, dim, n_deriv=1, \
 
         # ...
         if isinstance(expr, Lambda):
-            args = expr.variables
-            expr = expr.expr
 
-            if not (len(args) == 2):
+            if not (len(expr.variables) == 2):
                 raise NotImplementedError('only scalar case is available.')
 
-            test  = args[0]
-            trial = args[1]
-
-            Ni    = Symbol('Ni')
-            Nj    = Symbol('Nj')
-
-            expr = expr.subs({str(test): Ni})
-            expr = expr.subs({str(trial): Nj})
+            expr = normalize_weak_from(expr)
         # ...
 
         # ...

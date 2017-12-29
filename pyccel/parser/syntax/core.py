@@ -1084,7 +1084,7 @@ def expr_with_trailer(expr, trailer):
         name = str(expr)
         if name in builtin_funcs_math + ['len']:
             expr = builtin_function(name, args)
-        elif isinstance(expr,ClassDef):
+        elif isinstance(expr, ClassDef):
             cls = namespace[str(expr.name)]
             methods = cls.methods
             for i in methods:
@@ -1104,11 +1104,11 @@ def expr_with_trailer(expr, trailer):
             insert_variable('self', **d_var)
             args = [namespace['self']] + list(args)
             expr = ConstructorCall(method, args, cls_variable=namespace['self'])
+        elif isinstance(expr, (FunctionDef, Lambda)):
+            expr = expr(*args)
         else:
             f_name = str(expr)
-            if isinstance(expr, FunctionDef):
-                expr = expr(*args)
-            elif f_name in builtin_funcs:
+            if f_name in builtin_funcs + namespace.keys():
                 _args = []
                 for a in args:
                     if str(a) in namespace:
@@ -1117,8 +1117,6 @@ def expr_with_trailer(expr, trailer):
                         # TODO may be we should raise an error here
                         _args.append(a)
                 expr = Function(f_name)(*_args)
-            elif isinstance(expr, Lambda):
-                expr = expr(*args)
             else:
                 raise TypeError('Wrong type for {0}, '
                                 'given {1}'.format(f_name, type(expr)))
@@ -1207,6 +1205,13 @@ class Pyccel(object):
             list of parsed statements.
         """
         self.statements = kwargs.pop('statements', [])
+
+        # ... TODO remove later
+        from pyccel.symbolic.gelato import dx, dy
+
+        namespace['dx'] = dx
+        namespace['dy'] = dy
+        # ...
 
     @property
     def declarations(self):
@@ -2219,7 +2224,22 @@ class ExpressionLambda(BasicStmt):
             namespace.pop(str(i))
         # ...
 
-        return Lambda(args, e)
+        stmt = Lambda(args, e)
+
+        # ... a discretization is defined as a dictionary
+        from pyccel.symbolic.gelato import glt_symbol
+
+        discretization = {"n_elements": [16, 16], "degrees": [3, 3]}
+
+        expr = glt_symbol(stmt, \
+                          dim=2, \
+                          discretization=discretization, \
+                          evaluate=False)
+        print('> {0} '.format(expr))
+        # ...
+
+
+        return stmt
 
 class ExpressionTuple(BasicStmt):
     """Base class representing a list of elements statement in the grammar."""
