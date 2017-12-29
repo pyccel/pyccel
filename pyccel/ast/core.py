@@ -1,9 +1,11 @@
 # coding: utf-8
 
 
+import importlib
 
 from numpy import ndarray
 
+from sympy import Lambda
 from sympy.core.expr import Expr
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational,Ne,Eq
@@ -2072,6 +2074,70 @@ class Import(Basic):
     @property
     def funcs(self):
         return self._args[1]
+
+class Load(Basic):
+    """Similar to 'importlib' in python. In addition, we can also provide the
+    functions we want to import.
+
+    module: str, DottedName
+        name of the module to load.
+
+    funcs: str, list, tuple, Tuple
+        a string representing the function to load, or a list of strings.
+
+    Examples
+
+    >>> from pyccel.ast.core import Load
+    """
+
+    def __new__(cls, module, funcs=None):
+        if not isinstance(module, (str, DottedName, list, tuple, Tuple)):
+            raise TypeError('Expecting a string or DottedName')
+
+        if isinstance(module, (list, tuple, Tuple)):
+            module = DottedName(*module)
+
+        if funcs:
+            if not isinstance(funcs, (str, DottedName, list, tuple, Tuple)):
+                raise TypeError('Expecting a string or DottedName')
+
+            if isinstance(funcs, str):
+                funcs = [funcs]
+            elif not isinstance(funcs, (list, tuple, Tuple)):
+                raise TypeError('Expecting a string, list, tuple, Tuple')
+
+        return Basic.__new__(cls, module, funcs)
+
+    @property
+    def module(self):
+        return self._args[0]
+
+    @property
+    def funcs(self):
+        return self._args[1]
+
+    # TODO improve
+    def execute(self):
+        module = str(self.module)
+        try:
+            package = importlib.import_module(module)
+        except:
+            raise ImportError('could not import {0}'.format(module))
+
+        ls = []
+        for f in self.funcs:
+            try:
+                m = getattr(package, '{0}'.format(str(f)))
+            except:
+                raise ImportError('could not import {0}'.format(f))
+
+            if module == 'pyccel.symbolic.gelato' and str(f) == 'glt_function':
+                f = Symbol('f')
+                m = Lambda(f, m(f, evaluate=False))
+
+            ls.append(m)
+
+        return ls
 
 
 # TODO: Should Declare have an optional init value for each var?

@@ -56,6 +56,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Eval
+from pyccel.ast.core import Load
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import (Tile, Range, Tensor, \
                              For, ForIterator, Assign, \
@@ -115,6 +116,7 @@ known_functions = {
     "vector": "Vector",
     "stencil": "Stencil",
     "eval": "Eval",
+    "load": "Load",
     "tan": "tan",
     "tanh": "tanh"
 }
@@ -236,7 +238,8 @@ builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like',
-                  'len', 'shape', 'vector', 'stencil', 'eval']
+                  'len', 'shape', 'vector', 'stencil',
+                  'eval', 'load']
 builtin_funcs += builtin_funcs_math
 
 builtin_funcs_iter = ['range', 'tensor']
@@ -891,6 +894,37 @@ def builtin_function(name, args, lhs=None, op=None):
         insert_variable(lhs, **d_var)
         expr = Eval(lhs, *args)
         return expr
+    elif name == "load":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+
+#        if not(len(args) in [2, 3]):
+#            raise ValueError("Expecting exactly two or three arguments.")
+
+        module = 'mon module'
+        funcs  = 'mes functions'
+        # right now args are all of type sympy Symbol
+        _args = []
+        for i in args:
+            a = None
+            if isinstance(i, Symbol):
+                a = str(i)
+            elif isinstance(i, (list, tuple, Tuple)):
+                a = [str(j) for j in i]
+            else:
+                raise NotImplementedError('TODO')
+            _args.append(a)
+        args = _args
+
+        loader = Load(*args)
+        funcs  = loader.execute()
+        for f_name, f in zip(loader.funcs, funcs):
+            if str(f_name) in namespace:
+                raise ValueError('{0} already in defined.'.format(f))
+
+            namespace[str(f_name)] = f
+
+        return None
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
@@ -2231,14 +2265,6 @@ class ExpressionLambda(BasicStmt):
 
     @property
     def expr(self):
-        # ... TODO - remove later
-        #          - must append to namespace all sympy utilities we want to
-        #          provide
-        from pyccel.symbolic.gelato import dx, dy
-
-        namespace['dx'] = dx
-        namespace['dy'] = dy
-        # ...
 
         args = sp_symbols(self.args)
 
@@ -2265,17 +2291,10 @@ class ExpressionLambda(BasicStmt):
 
         stmt = Lambda(args, e)
 
-        # ... a discretization is defined as a dictionary
-        from pyccel.symbolic.gelato import glt_function
-
-        f = Symbol('f')
-        namespace['glt_function'] = Lambda(f, glt_function(f, evaluate=False))
-        # ...
-
-        # ... TODO remove later
-        namespace.pop('dx')
-        namespace.pop('dy')
-        # ...
+#        # ...
+#        f = Symbol('f')
+#        namespace['glt_function'] = Lambda(f, glt_function(f, evaluate=False))
+#        # ...
 
         return stmt
 
