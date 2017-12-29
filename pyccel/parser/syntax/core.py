@@ -448,7 +448,7 @@ def get_attributs(expr):
         avail_funcs = builtin_funcs
         avail_funcs = []
         for n, F in list(namespace.items()):
-            if isinstance(F, FunctionDef):
+            if isinstance(F, (FunctionDef, Lambda)):
                 avail_funcs.append(str(n))
         avail_funcs += builtin_funcs
 
@@ -463,17 +463,24 @@ def get_attributs(expr):
 
         if name in namespace:
             F = namespace[name]
-            results = F.results
 
-            if not(len(results) == 1):
-                raise ValueError("Expecting a function with one return.")
+            if isinstance(F, FunctionDef):
+                results = F.results
 
-            var = results[0]
-            d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['rank']        = var.rank
-            if not(var.shape is None):
-                d_var['shape'] = var.shape
+                if not(len(results) == 1):
+                    raise ValueError("Expecting a function with one return.")
+
+                var = results[0]
+                d_var['datatype']    = var.dtype
+                d_var['allocatable'] = var.allocatable
+                d_var['rank']        = var.rank
+                if not(var.shape is None):
+                    d_var['shape'] = var.shape
+            elif isinstance(F, Lambda):
+                d_var['datatype'] = NativeSymbol()
+            else:
+                raise NotImplementedError('TODO')
+
         elif name in _known_functions:
             var = expr.args[0]
             if isinstance(var, Integer):
@@ -1133,6 +1140,7 @@ def expr_with_trailer(expr, trailer):
             expr = ConstructorCall(method, args, cls_variable=namespace['self'])
         elif isinstance(expr, (FunctionDef, Lambda)):
             expr = expr(*args)
+#            print('> expr = {0}'.format(expr))
         else:
             f_name = str(expr)
             if f_name in builtin_funcs + namespace.keys():
@@ -1551,6 +1559,8 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=str(lhs))
         elif isinstance(rhs, Lambda):
             lhs = Symbol(str(lhs))
+            print ('> lhs = {0}'.format(lhs))
+            print ('  rhs = {0}'.format(rhs))
             namespace[str(lhs)] = rhs
             return rhs
 
@@ -2256,15 +2266,10 @@ class ExpressionLambda(BasicStmt):
         stmt = Lambda(args, e)
 
         # ... a discretization is defined as a dictionary
-        from pyccel.symbolic.gelato import glt_symbol
+        from pyccel.symbolic.gelato import glt_function
 
-        discretization = {"n_elements": [16, 16], "degrees": [3, 3]}
-
-        expr = glt_symbol(stmt, \
-                          dim=2, \
-                          discretization=discretization, \
-                          evaluate=False)
-        print('> {0} '.format(expr))
+        f = Symbol('f')
+        namespace['glt_function'] = Lambda(f, glt_function(f, evaluate=False))
         # ...
 
         # ... TODO remove later

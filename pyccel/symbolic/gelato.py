@@ -22,6 +22,7 @@ from sympy import Matrix
 from sympy import latex
 from sympy import Integral
 from sympy import I as sympy_I
+from sympy.core import Basic
 from sympy.core.singleton import S
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.lambdify import implemented_function
@@ -307,6 +308,7 @@ def glt_update_atoms(expr, discretization):
     # ...
 
     # ...
+    args = []
     for k in range(0, dim):
         # ...
         t = Symbol('t'+str(k+1))
@@ -326,9 +328,13 @@ def glt_update_atoms(expr, discretization):
         expr = expr.subs({Symbol('a'+str(k+1)): a})
         expr = expr.subs({Symbol('t_a'+str(k+1)): t_a})
         # ...
+
+        # ...
+        args += [t]
+        # ...
     # ...
 
-    return expr
+    return Lambda(args, expr)
 # ...
 
 # ...
@@ -859,6 +865,49 @@ def glt_plot_eigenvalues(expr, discretization, \
             # ...
         # ...
     # ...
+# ...
+
+# ...
+class glt_function(Function):
+    """
+
+    Examples
+    ========
+
+    """
+
+    nargs = None
+
+    def __new__(cls, *args, **options):
+        # (Try to) sympify args first
+
+        if options.pop('evaluate', True):
+            r = cls.eval(*args)
+        else:
+            r = None
+
+        if r is None:
+            return Basic.__new__(cls, *args, **options)
+        else:
+            return r
+
+    @classmethod
+    def eval(cls, *_args):
+        """."""
+
+        if not _args:
+            return
+
+        f = _args[0]
+#        n = _args[1]
+#        p = _args[2]
+
+        n = [4, 4] ; p = [2, 2]
+
+        discretization = {"n_elements": n, "degrees": p}
+        expr = glt_symbol(f, dim=2, discretization=discretization, evaluate=True)
+        print '> ', expr
+        return expr
 # ...
 
 # ...

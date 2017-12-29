@@ -3,7 +3,7 @@
 a = lambda u,v: dx(u) * dx(v) + dy(u) * dy(v)
 
 ## vesion 1
-#glt = glt_symbol(a)
+g = glt_function(a)
 
 # vesion 2
-glt = eval('glt_symbol', a)
+#glt = eval('glt_symbol', a)

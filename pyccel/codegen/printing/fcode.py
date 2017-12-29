@@ -8,6 +8,7 @@ import string
 from itertools import groupby
 import numpy as np
 
+from sympy import Lambda
 from sympy.core import Symbol
 from sympy.core import Float
 from sympy.core import S, Add, N
@@ -459,8 +460,6 @@ class FCodePrinter(CodePrinter):
         # TODO treat the case of iterable classes
         if isinstance(expr.rhs, (Range, Tensor)):
             return ''
-#        if isinstance(expr.rhs, (Vector, Stencil)):
-#            return ''
         elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
@@ -549,6 +548,9 @@ class FCodePrinter(CodePrinter):
 
             return self._get_statement(code)
 
+        elif (isinstance(expr.lhs, Variable) and
+              expr.lhs.dtype == NativeSymbol()):
+            return ''
         else:
             rhs_code = self._print(expr.rhs)
 #            print("ASSIGN = ", rhs_code)
