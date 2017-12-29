@@ -117,6 +117,7 @@ known_functions = {
     "stencil": "Stencil",
     "eval": "Eval",
     "load": "Load",
+    "lambdify": "lambdify",
     "tan": "tan",
     "tanh": "tanh"
 }
@@ -239,7 +240,7 @@ builtin_funcs_math = builtin_funcs_math_un + \
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like',
                   'len', 'shape', 'vector', 'stencil',
-                  'eval', 'load']
+                  'eval', 'load', 'lambdify']
 builtin_funcs += builtin_funcs_math
 
 builtin_funcs_iter = ['range', 'tensor']
@@ -924,7 +925,34 @@ def builtin_function(name, args, lhs=None, op=None):
 
             namespace[str(f_name)] = f
 
+        # TODO keep it like this?
         return None
+    elif name == "lambdify":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+
+        func = args[0]
+        if not isinstance(func, Lambda):
+            raise TypeError('Expecting a Lambda function, given'
+                            ' {0}'.format(type(func)))
+
+        f_name = str(func)
+
+        arguments = []
+        for a in func.variables:
+            arg = Variable('double', str(a))
+            arguments.append(arg)
+
+        x_out   = Variable('double', 'x_out')
+        results = [x_out]
+
+        body = [Assign(x_out, func.expr)]
+
+        # TODO local_vars must be updated inside FunctionDef
+        #      this is needed for _print_FunctionDef
+        F = FunctionDef(str(lhs), arguments, results, body, local_vars=arguments)
+        namespace[str(lhs)] = F
+        return F
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
