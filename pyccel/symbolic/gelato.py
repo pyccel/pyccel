@@ -31,7 +31,6 @@ from sympy.matrices.dense import MutableDenseMatrix
 from itertools import product
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 # TODO find a better solution.
 #      this code is duplicated in printing.latex
@@ -796,6 +795,8 @@ def glt_plot_eigenvalues(expr, discretization, \
     settings: dict
         dictionary for different settings
     """
+    import matplotlib.pyplot as plt
+
     # ...
     M = None
     if matrix is not None:
