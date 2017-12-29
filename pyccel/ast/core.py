@@ -1056,6 +1056,10 @@ class NativeStencil(DataType):
     _name = 'Stencil'
     pass
 
+class NativeSymbol(DataType):
+    _name = 'Symbol'
+    pass
+
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
     pass
@@ -1071,6 +1075,7 @@ Nil     = NativeNil()
 String  = NativeString()
 _Vector = NativeVector()
 _Stencil = NativeStencil()
+_Symbol = NativeSymbol()
 
 
 dtype_registry = {'bool': Bool,
@@ -1082,6 +1087,7 @@ dtype_registry = {'bool': Bool,
                   'nil': Nil,
                   'vector': _Vector,
                   'stencil': _Stencil,
+                  'symbol': _Symbol,
                   'str': String}
 
 
@@ -2814,6 +2820,10 @@ class Assert(Basic):
     @property
     def test(self):
         return self._args[0]
+
+class Eval(Basic):
+    """Basic class for eval instruction."""
+    pass
 
 class Pass(Basic):
     """Basic class for pass instruction."""

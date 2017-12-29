@@ -37,7 +37,7 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import NativeBool, NativeFloat
+from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
@@ -390,6 +390,9 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if is_with_construct_datatype(expr.dtype):
+            return ''
+
+        if isinstance(expr.dtype, NativeSymbol):
             return ''
 
         dtype = self._print(expr.dtype)

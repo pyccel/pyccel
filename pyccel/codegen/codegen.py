@@ -18,7 +18,7 @@ from pyccel.ast.core import is_valid_module
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import DataType, DataTypeFactory
 from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
-                              For, Assign, Declare, Variable, \
+                              For, Assign, Declare, Variable, Eval, \
                               NativeRange, NativeTensor, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               VariableHeader, \
@@ -618,6 +618,8 @@ class Codegen(object):
                 body += printer(stmt) + "\n"
             elif isinstance(stmt, Stencil):
                 body += printer(stmt) + "\n"
+            elif isinstance(stmt, Eval):
+                continue
             elif isinstance(stmt, list):
                 for s in stmt:
                     body += printer(s) + "\n"

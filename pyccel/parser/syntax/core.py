@@ -51,10 +51,11 @@ from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeBool, NativeFloat, NativeNil, NativeVector, NativeStencil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeRange, NativeTensor
+from pyccel.ast.core import NativeRange, NativeTensor, NativeSymbol
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
+from pyccel.ast.core import Eval
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import (Tile, Range, Tensor, \
                              For, ForIterator, Assign, \
@@ -113,6 +114,7 @@ known_functions = {
     "sqrt": "sqrt",
     "vector": "Vector",
     "stencil": "Stencil",
+    "eval": "Eval",
     "tan": "tan",
     "tanh": "tanh"
 }
@@ -234,7 +236,7 @@ builtin_funcs_math = builtin_funcs_math_un + \
                      builtin_funcs_math_bin
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like',
-                  'len', 'shape', 'vector', 'stencil']
+                  'len', 'shape', 'vector', 'stencil', 'eval']
 builtin_funcs += builtin_funcs_math
 
 builtin_funcs_iter = ['range', 'tensor']
@@ -857,6 +859,31 @@ def builtin_function(name, args, lhs=None, op=None):
         return expr
 #        namespace[lhs] = expr
 #        return assign(lhs, expr, op, strict=False)
+    elif name == "eval":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+#        if not(len(args) in [2, 3]):
+#            raise ValueError("Expecting exactly two or three arguments.")
+
+        _args = []
+        for i in args:
+            if not isinstance(i, (list, tuple, Tuple)):
+                _args.append([i])
+            else:
+                _args.append(i)
+        args = _args
+
+        d_var = {}
+        d_var['datatype'] = NativeSymbol()
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
+
+        insert_variable(lhs, **d_var)
+        expr = Eval(lhs, *args)
+        return expr
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
