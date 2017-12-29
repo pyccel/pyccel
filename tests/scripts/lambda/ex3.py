@@ -7,6 +7,7 @@ dy           = load('pyccel.symbolic.gelato', 'dy')
 bracket = lambda u,v: dy(u)*dx(v) - dx(u)*dy(v)
 b       = lambda u,v: dx(u) * dx(v) + bracket(u,v)
 
-# TODO to fix: bracket is not processed. we should use subs
 gb = glt_function(b)
-print(gb)
+
+print('> b := ', b)
+print('> symbol := ', gb)

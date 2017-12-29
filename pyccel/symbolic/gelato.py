@@ -66,7 +66,8 @@ def normalize_weak_from(f):
         raise TypeError('Expecting a Lambda expression')
 
     args = f.variables
-    expr = f.expr
+    expr = sympify(f.expr)
+    print ('> expr = {0}'.format(expr))
 
     for d in ['dx', 'dy', 'dz']:
         for i, arg in enumerate(args):
@@ -77,6 +78,16 @@ def normalize_weak_from(f):
             elif i == 1:
                 suffix = 'j'
             expr = expr.subs({atom: Symbol('N{0}_{1}'.format(suffix, d[1]))})
+
+    for i, arg in enumerate(args):
+        atom = sympify('{0}'.format(arg))
+        suffix = None
+        if i == 0:
+            suffix = 'i'
+        elif i == 1:
+            suffix = 'j'
+        expr = expr.subs({atom: Symbol('N{0}'.format(suffix))})
+
     return expr
 # ...
 
