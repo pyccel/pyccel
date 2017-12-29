@@ -56,6 +56,16 @@ dy = Function('dy')
 dz = Function('dz')
 # ...
 
+# ...
+#Ni   = Function('Ni')
+#Ni_x = Function('Ni_x')
+#Ni_y = Function('Ni_y')
+#
+#Nj   = Function('Nj')
+#Nj_x = Function('Nj_x')
+#Nj_y = Function('Nj_y')
+# ...
+
 # ... TODO works only for scalar cases
 def normalize_weak_from(f):
     """
@@ -88,6 +98,48 @@ def normalize_weak_from(f):
         expr = expr.subs({atom: Symbol('N{0}'.format(suffix))})
 
     return expr
+# ...
+
+# ...
+class weak_formulation(Function):
+    """
+
+    Examples
+    ========
+
+    """
+
+    nargs = None
+
+    def __new__(cls, *args, **options):
+        # (Try to) sympify args first
+
+        if options.pop('evaluate', True):
+            r = cls.eval(*args)
+        else:
+            r = None
+
+        if r is None:
+            return Basic.__new__(cls, *args, **options)
+        else:
+            return r
+
+    @classmethod
+    def eval(cls, *_args):
+        """."""
+
+        if not _args:
+            return
+
+        f = _args[0]
+
+        expr = normalize_weak_from(f)
+
+        args = ['Ni', 'Ni_x', 'Ni_y', 'Nj', 'Nj_x', 'Nj_y']
+        args = [Symbol(i) for i in args]
+        expr = Lambda(args, expr)
+
+        return expr
 # ...
 
 # ...
@@ -498,6 +550,7 @@ def glt_symbol(expr, dim, n_deriv=1, \
         # ...
 
         # ... remove _0 for a nice printing
+        #     TODO remove
         expr = expr.subs({Symbol("Ni_0"): Symbol("Ni")})
         expr = expr.subs({Symbol("Nj_0"): Symbol("Nj")})
         # ...

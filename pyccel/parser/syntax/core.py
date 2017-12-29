@@ -281,6 +281,9 @@ def get_attributs(expr):
         d_var['rank']        = expr['rank']
         return d_var
     elif isinstance(expr, (list, tuple)):
+        if not expr:
+            return d_var
+
         ds = [get_attributs(a) for a in expr]
 
         a = ds[0]
