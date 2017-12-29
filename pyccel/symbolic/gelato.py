@@ -906,7 +906,6 @@ class glt_function(Function):
 
         discretization = {"n_elements": n, "degrees": p}
         expr = glt_symbol(f, dim=2, discretization=discretization, evaluate=True)
-        print '> ', expr
         return expr
 # ...
 

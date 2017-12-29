@@ -1593,8 +1593,6 @@ class AssignStmt(BasicStmt):
                 return builtin_function(name.lower(), args, lhs=str(lhs))
         elif isinstance(rhs, Lambda):
             lhs = Symbol(str(lhs))
-            print ('> lhs = {0}'.format(lhs))
-            print ('  rhs = {0}'.format(rhs))
             namespace[str(lhs)] = rhs
             return rhs
 
@@ -2279,9 +2277,6 @@ class ExpressionLambda(BasicStmt):
 
         # ... we do it here after the namespace has been updated
         e = self.rhs.expr
-
-#        free_symbols = [str(i) for i in e.free_symbols]
-#        free_symbols = [i for i in free_symbols if i in namespace]
         # ...
 
         # ... we clean the namespace
@@ -2289,14 +2284,7 @@ class ExpressionLambda(BasicStmt):
             namespace.pop(str(i))
         # ...
 
-        stmt = Lambda(args, e)
-
-#        # ...
-#        f = Symbol('f')
-#        namespace['glt_function'] = Lambda(f, glt_function(f, evaluate=False))
-#        # ...
-
-        return stmt
+        return Lambda(args, e)
 
 class ExpressionTuple(BasicStmt):
     """Base class representing a list of elements statement in the grammar."""
@@ -2360,7 +2348,6 @@ class ExpressionDict(BasicStmt):
             key   = a.key # to treat
             value = a.value
             args[key] = value
-        print(args)
         return Dict(**args)
 
 class ArgValued(BasicStmt):

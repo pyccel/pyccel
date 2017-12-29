@@ -239,6 +239,9 @@ class FCodePrinter(CodePrinter):
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
 
+    def _print_Lambda(self, expr):
+        return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
+
     def _print_Vector(self, expr):
         lhs = self._print(expr.lhs)
 
