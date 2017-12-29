@@ -2085,12 +2085,15 @@ class Load(Basic):
     funcs: str, list, tuple, Tuple
         a string representing the function to load, or a list of strings.
 
+    as_lambda: bool
+        load as a Lambda expression, if True
+
     Examples
 
     >>> from pyccel.ast.core import Load
     """
 
-    def __new__(cls, module, funcs=None):
+    def __new__(cls, module, funcs=None, as_lambda=False):
         if not isinstance(module, (str, DottedName, list, tuple, Tuple)):
             raise TypeError('Expecting a string or DottedName, given'
                             ' {0}'.format(type(module)))
@@ -2111,7 +2114,10 @@ class Load(Basic):
             elif not isinstance(funcs, (list, tuple, Tuple)):
                 raise TypeError('Expecting a string, list, tuple, Tuple')
 
-        return Basic.__new__(cls, module, funcs)
+        if not isinstance(as_lambda, (BooleanTrue, BooleanFalse, bool)):
+            raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
+
+        return Basic.__new__(cls, module, funcs, as_lambda)
 
     @property
     def module(self):
@@ -2121,7 +2127,10 @@ class Load(Basic):
     def funcs(self):
         return self._args[1]
 
-    # TODO improve
+    @property
+    def as_lambda(self):
+        return self._args[2]
+
     def execute(self):
         module = str(self.module)
         try:
@@ -2136,7 +2145,8 @@ class Load(Basic):
             except:
                 raise ImportError('could not import {0}'.format(f))
 
-            if module == 'pyccel.symbolic.gelato' and str(f) == 'glt_function':
+            # TODO improve
+            if self.as_lambda:
                 f = Symbol('f')
                 m = Lambda(f, m(f, evaluate=False))
 

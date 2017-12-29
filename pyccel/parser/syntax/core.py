@@ -899,11 +899,6 @@ def builtin_function(name, args, lhs=None, op=None):
         if not lhs:
             raise ValueError("Expecting a lhs.")
 
-#        if not(len(args) in [2, 3]):
-#            raise ValueError("Expecting exactly two or three arguments.")
-
-        module = 'mon module'
-        funcs  = 'mes functions'
         # right now args are all of type sympy Symbol
         _args = []
         for i in args:
@@ -912,8 +907,8 @@ def builtin_function(name, args, lhs=None, op=None):
                 a = str(i)
             elif isinstance(i, (list, tuple, Tuple)):
                 a = [str(j) for j in i]
-            elif not isinstance(i, DottedName):
-                raise NotImplementedError('given {0}'.format(type(i)))
+            else:
+                a = i
             _args.append(a)
         args = _args
 

@@ -67,7 +67,6 @@ def normalize_weak_from(f):
 
     args = f.variables
     expr = sympify(f.expr)
-    print ('> expr = {0}'.format(expr))
 
     for d in ['dx', 'dy', 'dz']:
         for i, arg in enumerate(args):
