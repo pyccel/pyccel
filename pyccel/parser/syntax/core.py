@@ -946,7 +946,9 @@ def builtin_function(name, args, lhs=None, op=None):
         x_out   = Variable('double', 'x_out')
         results = [x_out]
 
-        body = [Assign(x_out, func.expr)]
+        expr = sympify(func.expr).evalf()
+
+        body = [Assign(x_out, expr)]
 
         # TODO local_vars must be updated inside FunctionDef
         #      this is needed for _print_FunctionDef
