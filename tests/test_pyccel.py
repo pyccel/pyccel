@@ -62,7 +62,7 @@ def test_lambda():
     print('============== testing lambda ================')
     ignored = []
 
-    for i in range(1, 4+1):
+    for i in range(1, 5+1):
         filename = 'tests/scripts/lambda/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])
