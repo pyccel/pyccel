@@ -397,7 +397,7 @@ def parse(filename, debug=False):
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
-    grammar = join(this_folder, 'grammar.tx')
+    grammar = join(this_folder, 'grammar/openmp.tx')
     classes = [Openmp, OpenmpStmt, \
                ParallelStmt, \
                LoopStmt, \
