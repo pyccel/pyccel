@@ -420,25 +420,8 @@ def parse(filename=None, stmts=None, debug=False):
 
     # Get meta-model from language description
     grammar = join(this_folder, '../grammar/openmp.tx')
-    classes = [Openmp, OpenmpStmt, \
-               OmpParallelConstruct, \
-               OmpLoopConstruct, \
-               OmpSingleConstruct, \
-               OmpParallelNumThread, \
-               OmpParallelDefault, \
-               OmpParallelProcBind, \
-               OmpPrivate, \
-               OmpShared, \
-               OmpFirstPrivate, \
-               OmpLastPrivate, \
-               OmpCopyin, \
-               OmpReduction, \
-               OmpCollapse, \
-               OmpLinear, \
-               OmpSchedule, \
-               OmpOrdered \
-              ]
-    meta = metamodel_from_file(grammar, debug=debug, classes=classes)
+
+    meta = metamodel_from_file(grammar, debug=debug, classes=omp_classes)
 
     # Instantiate model
     if filename:
