@@ -15,20 +15,20 @@ OpenaccStmt: '#$' 'acc' stmt=AccConstructOrDirective;
 AccConstructOrDirective:
     AccParallelConstruct 
   | AccKernelsConstruct
-  | AccDataConstruct
-  | AccEnterDataDirective
-  | AccExitDataDirective
-  | AccHostDataDirective
-  | AccLoopConstruct
-  | AccAtomicConstruct
-  | AccDeclareDirective
-  | AccInitDirective
-  | AccShutDownDirective
-  | AccSetDirective
-  | AccUpdateDirective
-  | AccRoutineDirective
-  | AccWaitDirective
-  | AccEndClause
+//  | AccDataConstruct
+//  | AccEnterDataDirective
+//  | AccExitDataDirective
+//  | AccHostDataDirective
+//  | AccLoopConstruct
+//  | AccAtomicConstruct
+//  | AccDeclareDirective
+//  | AccInitDirective
+//  | AccShutDownDirective
+//  | AccSetDirective
+//  | AccUpdateDirective
+//  | AccRoutineDirective
+//  | AccWaitDirective
+//  | AccEndClause
 ;
 ////////////////////////////////////////////////////
 
@@ -71,7 +71,7 @@ AccParallelClause:
   | AccPresent 
   | AccDevicePtr 
   | AccPrivate 
-  | AccFirstprivate 
+  | AccFirstPrivate 
   | AccDefault 
 ;
 
@@ -135,6 +135,8 @@ AccLoopClause:
   | AccReduction 
 ;
 
+AccAtomicClause: AtomicStatus;
+
 AccDeclareClause: 
     AccCopy 
   | AccCopyin 
@@ -183,9 +185,7 @@ AccRoutineClause:
   | AccNoHost 
 ;
 
-AccWaitClause:
-  AccAsync
-;
+AccWaitClause: AccAsync;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ AccWaitClause:
 ////////////////////////////////////////////////////
 AccAsync: 'async' '(' args+=ID[','] ')';
 AccAuto: 'auto';
-AccBind: 'bind' '(' arg=IdOrString ')';
+AccBind: 'bind' '(' arg=STRING ')';
 AccCache: 'cache' '(' args+=ID[','] ')';
 AccCollapse: 'collapse' '(' n=INT ')'; 
 AccCopy: 'copy' '(' args+=ID[','] ')'; 
@@ -208,7 +208,7 @@ AccDeviceNum: 'device_num' '(' n=INT ')';
 AccDevicePtr: 'deviceptr' '(' args+=ID[','] ')'; 
 AccDeviceResident: 'device_resident' '(' args+=ID[','] ')';
 AccDeviceType: 'device_type' '(' args+=ID[','] ')'; 
-AccFirstprivate: 'firstprivate' '(' args+=ID[','] ')'; 
+AccFirstPrivate: 'firstprivate' '(' args+=ID[','] ')'; 
 AccFinalize: 'finalize'; 
 AccGang: 'gang' '(' args+=GangArg[','] ')'; 
 AccHost: 'host' '(' args+=ID[','] ')';
@@ -241,12 +241,9 @@ WorkerArg: ('num' ':')? arg=INT ;
 VectorArg: ('length' ':')? arg=INT ;
 AccConstructs: ('parallel' | 'loop');
 
-GangArg: GangNumArg | GangStaticArg
+GangArg: GangStaticArg | GangNumArg; 
 GangNumArg: ('num' ':')? arg=INT ;
 GangStaticArg: 'static' ':' arg=INT ;
-
-IdOrString: ID | STRING;
-IdOrInt:    ID | INT;
 
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////

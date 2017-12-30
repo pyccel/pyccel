@@ -393,11 +393,11 @@ class ScheduleClause(BasicStmt):
 
 
 
-def parse(filename, debug=False):
+def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
-    grammar = join(this_folder, 'grammar/openmp.tx')
+    grammar = join(this_folder, '../grammar/openmp.tx')
     classes = [Openmp, OpenmpStmt, \
                ParallelStmt, \
                LoopStmt, \
@@ -419,14 +419,14 @@ def parse(filename, debug=False):
     meta = metamodel_from_file(grammar, debug=debug, classes=classes)
 
     # Instantiate model
-    model = meta.model_from_file(filename)
+    if filename:
+        model = meta.model_from_file(filename)
+    elif stmts:
+        model = meta.model_from_str(stmts)
+    else:
+        raise ValueError('Expecting a filename or a string')
 
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
             e = stmt.stmt.expr
             print(e)
-
-####################################
-if __name__ == '__main__':
-    filename = 'test.py'
-    parse(filename, debug=False)
