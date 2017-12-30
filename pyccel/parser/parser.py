@@ -32,24 +32,8 @@ from pyccel.parser.syntax.core import (Pyccel, ImportFromStmt, ImportAsNames, \
                                        TrailerSlice, TrailerSliceRight, \
                                        TrailerSliceLeft, TrailerSliceEmpty)
 
-from pyccel.parser.syntax.openmp import (OpenmpStmt, \
-                                         ParallelStmt, \
-                                         LoopStmt, \
-                                         SingleStmt, \
-                                         ParallelNumThreadClause, \
-                                         ParallelDefaultClause, \
-                                         ParallelProcBindClause, \
-                                         PrivateClause, \
-                                         SharedClause, \
-                                         FirstPrivateClause, \
-                                         LastPrivateClause, \
-                                         CopyinClause, \
-                                         ReductionClause, \
-                                         CollapseClause, \
-                                         LinearClause, \
-                                         ScheduleClause, \
-                                         OrderedClause, \
-                                         EndConstructClause)
+from pyccel.parser.syntax.openmp  import omp_classes
+from pyccel.parser.syntax.openacc import acc_classes
 
 
 from textx.metamodel import metamodel_from_file
@@ -217,25 +201,8 @@ class PyccelParser(Parser):
                    TrailerSliceLeft, TrailerSliceEmpty
                    ]
 
-        classes += [OpenmpStmt, \
-                    ParallelStmt, \
-                    LoopStmt, \
-                    SingleStmt, \
-                    ParallelNumThreadClause, \
-                    ParallelDefaultClause, \
-                    ParallelProcBindClause, \
-                    PrivateClause, \
-                    SharedClause, \
-                    FirstPrivateClause, \
-                    LastPrivateClause, \
-                    CopyinClause, \
-                    ReductionClause, \
-                    CollapseClause, \
-                    LinearClause, \
-                    ScheduleClause, \
-                    OrderedClause, \
-                    EndConstructClause
-                   ]
+        classes += omp_classes
+        classes += acc_classes
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         filename = os.path.join(dir_path, "grammar/pyccel.tx")

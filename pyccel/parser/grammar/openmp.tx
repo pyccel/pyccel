@@ -6,62 +6,79 @@ Openmp:
 ;
 
 OpenmpStmt: 
-  '#$' 'omp' stmt=OpenmpConstruct
+  '#$' 'omp' stmt=OmpConstructOrDirective
 ;
 
-OpenmpConstruct:
-    ParallelStmt 
-  | LoopStmt
-  | SingleStmt
-  | EndConstructClause
+////////////////////////////////////////////////////
+//         Constructs and Directives
+////////////////////////////////////////////////////
+OmpConstructOrDirective:
+    OmpParallelConstruct 
+  | OmpLoopConstruct
+  | OmpSingleConstruct
+  | OmpEndClause
+;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//     Constructs and Directives definitions
+////////////////////////////////////////////////////
+OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
+OmpLoopConstruct:     'do'       clauses*=OmpLoopClause;
+OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//      Clauses for Constructs and Directives
+////////////////////////////////////////////////////
+OmpParallelClause:
+    OmpParallelNumThread
+  | OmpParallelDefault
+  | OmpPrivate
+  | OmpShared
+  | OmpFirstPrivate
+  | OmpCopyin
+  | OmpReduction
+  | OmpParallelProcBind
 ;
 
-ParallelStmt: 'parallel' clauses*=ParallelClause;
-LoopStmt: 'do' clauses*=LoopClause;
-SingleStmt: 'single' clauses*=SingleClause;
-
-ParallelClause:
-    ParallelNumThreadClause
-  | ParallelDefaultClause
-  | PrivateClause
-  | SharedClause
-  | FirstPrivateClause
-  | CopyinClause
-  | ReductionClause
-  | ParallelProcBindClause
+OmpLoopClause:
+    OmpPrivate
+  | OmpFirstPrivate
+  | OmpLastPrivate
+  | OmpLinear
+  | OmpReduction
+  | OmpSchedule
+  | OmpCollapse
+  | OmpOrdered
 ;
 
-LoopClause:
-    PrivateClause
-  | FirstPrivateClause
-  | LastPrivateClause
-  | LinearClause
-  | ReductionClause
-  | ScheduleClause
-  | CollapseClause
-  | OrderedClause
+OmpSingleClause:
+    OmpPrivate
+  | OmpFirstPrivate
 ;
+////////////////////////////////////////////////////
 
-SingleClause:
-    PrivateClause
-  | FirstPrivateClause
-;
+////////////////////////////////////////////////////
+//              Clauses definitions
+////////////////////////////////////////////////////
+OmpParallelNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpParallelDefault: 'default' '(' status=Status ')';
+OmpParallelProcBind: 'proc_bind' '(' status=ProcBind ')';
+OmpPrivate: 'private' '(' args+=ID[','] ')';
+OmpShared: 'shared' '(' args+=ID[','] ')';
+OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
+OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
+OmpCopyin: 'copyin' '(' args+=ID[','] ')';
+OmpReduction: 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')';
+OmpCollapse: 'collapse' '(' n=INT ')';
+OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
+OmpOrdered: 'ordered' ('(' n=INT ')')?;
+OmpSchedule: 'schedule' '(' kind=Schedule (',' chunk_size=INT)? ')';
+OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+////////////////////////////////////////////////////
 
-ParallelNumThreadClause: 'num_threads' '(' thread=ThreadIndex ')';
-ParallelDefaultClause: 'default' '(' status=Status ')';
-ParallelProcBindClause: 'proc_bind' '(' status=ProcBind ')';
-PrivateClause: 'private' '(' args+=ID[','] ')';
-SharedClause: 'shared' '(' args+=ID[','] ')';
-FirstPrivateClause: 'firstprivate' '(' args+=ID[','] ')';
-LastPrivateClause: 'lastprivate' '(' args+=ID[','] ')';
-CopyinClause: 'copyin' '(' args+=ID[','] ')';
-ReductionClause: 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')';
-CollapseClause: 'collapse' '(' n=INT ')';
-LinearClause: 'linear' '(' val=ID ':' step=INT ')';
-OrderedClause: 'ordered' ('(' n=INT ')')?;
-ScheduleClause: 'schedule' '(' kind=Schedule (',' chunk_size=INT)? ')';
-EndConstructClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
-
+////////////////////////////////////////////////////
 Schedule: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 ProcBind: ('master' | 'close' | 'spread');
 ReductionOperator: ('+' | '-' | '*' | '/');
@@ -70,3 +87,4 @@ OpenmpConstructs: ('single' | 'parallel' | 'do');
 
 ThreadIndex: (ID | INT);
 NotaStmt: /.*$/;
+////////////////////////////////////////////////////
