@@ -930,14 +930,12 @@ class ACC_VectorLength(ACC):
         return Basic.__new__(cls, n)
 
     @property
-    def n_worker(self):
+    def n(self):
         return self._args[0]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        n_worker = '{0}'.format(sstr(self.n_worker))
-
-        return 'vector_length({0})'.format(n_worker)
+        return 'vector_length({0})'.format(sstr(self.n))
 
 class ACC_Wait(ACC):
     """

@@ -1036,18 +1036,102 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_ACC_Collapse(self, expr):
-        n_loops = '{0}'.format(self._print(expr.n_loops))
+    def _print_ACC_Async(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'async({})'.format(args)
 
-        return 'collapse({0})'.format(n_loops)
+    def _print_ACC_Auto(self, expr):
+        return 'auto'
+
+    def _print_ACC_Bind(self, expr):
+        return 'bind({})'.format(self._print(expr.variable))
+
+    def _print_ACC_Collapse(self, expr):
+        return 'collapse({0})'.format(self._print(expr.n_loops))
+
+    def _print_ACC_Copy(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copy({})'.format(args)
 
     def _print_ACC_Copyin(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'copyin({})'.format(args)
 
+    def _print_ACC_Copyout(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyout({})'.format(args)
+
+    def _print_ACC_Create(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'create({})'.format(args)
+
+    def _print_ACC_Default(self, expr):
+        return 'default({})'.format(self._print(expr.status))
+
+    def _print_ACC_DefaultAsync(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'default_async({})'.format(args)
+
+    def _print_ACC_Delete(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'delete({})'.format(args)
+
+    def _print_ACC_Device(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'device({})'.format(args)
+
+    def _print_ACC_DeviceNum(self, expr):
+        return 'collapse({0})'.format(self._print(expr.n_device))
+
+    def _print_ACC_DevicePtr(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'deviceptr({})'.format(args)
+
+    def _print_ACC_DeviceResident(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'device_resident({})'.format(args)
+
+    def _print_ACC_DeviceType(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'device_type({})'.format(args)
+
+    def _print_ACC_Finalize(self, expr):
+        return 'finalize'
+
     def _print_ACC_FirstPrivate(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'firstprivate({})'.format(args)
+
+    def _print_ACC_Gang(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'gang({})'.format(args)
+
+    def _print_ACC_Host(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'host({})'.format(args)
+
+    def _print_ACC_If(self, expr):
+        return 'if({})'.format(self._print(expr.test))
+
+    def _print_ACC_Independent(self, expr):
+        return 'independent'
+
+    def _print_ACC_Link(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'link({})'.format(args)
+
+    def _print_ACC_NoHost(self, expr):
+        return 'nohost'
+
+    def _print_ACC_NumGangs(self, expr):
+        return 'num_gangs({0})'.format(self._print(expr.n_gang))
+
+    def _print_ACC_NumWorkers(self, expr):
+        return 'num_workers({0})'.format(self._print(expr.n_worker))
+
+    def _print_ACC_Present(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'present({})'.format(args)
 
     def _print_ACC_Private(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
@@ -1057,6 +1141,37 @@ class FCodePrinter(CodePrinter):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         op   = self._print(expr.operation)
         return "reduction({0}: {1})".format(op, args)
+
+    def _print_ACC_Self(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'self({})'.format(args)
+
+    def _print_ACC_Seq(self, expr):
+        return 'seq'
+
+    def _print_ACC_Tile(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'tile({})'.format(args)
+
+    def _print_ACC_UseDevice(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'use_device({})'.format(args)
+
+    def _print_ACC_Vector(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'vector({})'.format(args)
+
+    def _print_ACC_VectorLength(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'vector_length({})'.format(self._print(expr.n))
+
+    def _print_ACC_Wait(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'wait({})'.format(args)
+
+    def _print_ACC_Worker(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'worker({})'.format(args)
     # .....................................................
 
     def _print_ForIterator(self, expr):
