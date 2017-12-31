@@ -462,7 +462,7 @@ class Codegen(object):
             target language. Possible values {"fortran"}
         accelerator: str
             name of the selected accelerator.
-            For the moment, only 'openmp' is available
+            One among ('openmp', 'openacc')
         ignored_modules: list
             list of modules to ignore.
         with_mpi: bool
@@ -497,10 +497,13 @@ class Codegen(object):
         # ...
 
         # ...
-        with_openmp = False
+        with_openmp  = False
+        with_openacc = False
         if accelerator:
             if accelerator == "openmp":
                 with_openmp = True
+            elif accelerator == "openacc":
+                with_openacc = True
             else:
                 raise ValueError("Only openmp is available")
         # ...
@@ -513,6 +516,8 @@ class Codegen(object):
         # ... TODO use Import class
         if with_openmp:
             imports += "use omp_lib\n"
+        if with_openacc:
+            imports += "use openacc\n"
         # ...
 
         # ...

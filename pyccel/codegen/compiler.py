@@ -25,14 +25,11 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
 from pyccel.ast.parallel.mpi import mpify
 from pyccel.ast.parallel.openmp import openmpfy
 
-from pyccel.parser.parser  import PyccelParser
-from pyccel.parser.syntax.openmp import OpenmpStmt
-
-from pyccel.parser.utilities import find_imports
 
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)
+
 
 # ...
 def clean(filename):
@@ -226,7 +223,7 @@ class Compiler(object):
             compiler flags
         accelerator: str
             name of the selected accelerator.
-            For the moment, only 'openmp' is available
+            One among ('openmp', 'openacc')
         binary: str
             name of the binary file to generate.
         debug: bool
@@ -342,6 +339,8 @@ class Compiler(object):
         if not (accelerator is None):
             if accelerator == "openmp":
                 flags += " -fopenmp "
+            elif accelerator == "openacc":
+                flags += " -ta=multicore -Minfo=accel "
             else:
                 raise ValueError("Only openmp is available")
 
