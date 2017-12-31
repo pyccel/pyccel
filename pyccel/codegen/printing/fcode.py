@@ -597,9 +597,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_OMP_Parallel(self, expr):
         # prelude will not be printed
-#        from pyccel.ast.parallel.openmp import OMP_PrivateClause
+#        from pyccel.ast.parallel.openmp import OMP_Private
 #        for i in expr.clauses:
-#            if isinstance(i, OMP_PrivateClause):
+#            if isinstance(i, OMP_Private):
 #                print(i, i.variables, type(i))
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
         body    = '\n'.join(self._print(i) for i in expr.body)
@@ -617,10 +617,7 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_OMP_ParallelNumThreadClause(self, expr):
-        return 'num_threads({})'.format(self._print(expr.num_threads))
-
-    def _print_OMP_ParallelIfClause(self, expr):
+    def _print_OMP_If(self, expr):
         return 'if({})'.format(self._print(expr.test))
 
     def _print_NativeBool(self, expr):
@@ -940,10 +937,13 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
-    def _print_OMP_ParallelNumThreadClause(self, expr):
+    # .....................................................
+    #                   OpenMP statements
+    # .....................................................
+    def _print_OMP_NumThread(self, expr):
         return 'num_threads({})'.format(self._print(expr.num_threads))
 
-    def _print_OMP_ParallelDefaultClause(self, expr):
+    def _print_OMP_Default(self, expr):
         status = expr.status
         if status:
             status = self._print(expr.status)
@@ -951,7 +951,7 @@ class FCodePrinter(CodePrinter):
             status = ''
         return 'default({})'.format(status)
 
-    def _print_OMP_ParallelProcBindClause(self, expr):
+    def _print_OMP_ProcBind(self, expr):
         status = expr.status
         if status:
             status = self._print(expr.status)
@@ -959,32 +959,32 @@ class FCodePrinter(CodePrinter):
             status = ''
         return 'proc_bind({})'.format(status)
 
-    def _print_OMP_PrivateClause(self, expr):
+    def _print_OMP_Private(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'private({})'.format(args)
 
-    def _print_OMP_SharedClause(self, expr):
+    def _print_OMP_Shared(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'shared({})'.format(args)
 
-    def _print_OMP_FirstPrivateClause(self, expr):
+    def _print_OMP_FirstPrivate(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'firstprivate({})'.format(args)
 
-    def _print_OMP_LastPrivateClause(self, expr):
+    def _print_OMP_LastPrivate(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'lastprivate({})'.format(args)
 
-    def _print_OMP_CopyinClause(self, expr):
+    def _print_OMP_Copyin(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'copyin({})'.format(args)
 
-    def _print_OMP_ReductionClause(self, expr):
+    def _print_OMP_Reduction(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         op   = self._print(expr.operation)
         return "reduction({0}: {1})".format(op, args)
 
-    def _print_OMP_ScheduleClause(self, expr):
+    def _print_OMP_Schedule(self, expr):
         kind = self._print(expr.kind)
 
         chunk_size = ''
@@ -993,19 +993,19 @@ class FCodePrinter(CodePrinter):
 
         return 'schedule({0}{1})'.format(kind, chunk_size)
 
-    def _print_OMP_OrderedClause(self, expr):
+    def _print_OMP_Ordered(self, expr):
         n_loops = ''
         if expr.n_loops:
             n_loops = '({0})'.format(self._print(expr.n_loops))
 
         return 'ordered{0}'.format(n_loops)
 
-    def _print_OMP_CollapseClause(self, expr):
+    def _print_OMP_Collapse(self, expr):
         n_loops = '{0}'.format(self._print(expr.n_loops))
 
         return 'collapse({0})'.format(n_loops)
 
-    def _print_OMP_LinearClause(self, expr):
+    def _print_OMP_Linear(self, expr):
         variables= ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         step = self._print(expr.step)
         return "linear({0}: {1})".format(variables, step)
@@ -1032,7 +1032,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         return self._get_statement(code)
-
+    # .....................................................
 
     def _print_ForIterator(self, expr):
         depth = expr.depth
