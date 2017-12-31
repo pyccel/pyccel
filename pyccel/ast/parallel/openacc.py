@@ -1137,10 +1137,10 @@ def get_with_clauses(expr):
     # ... initial values for clauses
     _async        = None
     _wait         = None
-    _numGangs     = None
-    _numWorkers   = None
-    _vectorLength = None
-    _deviceType   = None
+    _num_gangs     = None
+    _num_workers   = None
+    _vector_length = None
+    _device_type   = None
     _if           = None
     _reduction    = None
     _copy         = None
@@ -1148,9 +1148,9 @@ def get_with_clauses(expr):
     _copyout      = None
     _create       = None
     _present      = None
-    _devicePtr    = None
+    _deviceptr    = None
     _private      = None
-    _firstPrivate = None
+    _firstprivate = None
     _default      = None
     # ...
 
@@ -1221,36 +1221,36 @@ def get_with_clauses(expr):
     # ...
 
     # ... deviceptr
-    if not(d['_devicePtr'] is None):
-        if not isinstance(d['_devicePtr'], Nil):
-            ls = d['_devicePtr']
+    if not(d['_deviceptr'] is None):
+        if not isinstance(d['_deviceptr'], Nil):
+            ls = d['_deviceptr']
             if isinstance(ls, str):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            _devicePtr = ACC_DevicePtr(*ls)
+            _deviceptr = ACC_DevicePtr(*ls)
     # ...
 
     # ... devicetype
-    if not(d['_deviceType'] is None):
-        if not isinstance(d['_deviceType'], Nil):
-            ls = d['_deviceType']
+    if not(d['_device_type'] is None):
+        if not isinstance(d['_device_type'], Nil):
+            ls = d['_device_type']
             if isinstance(ls, str):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            _deviceType = ACC_DeviceType(*ls)
+            _device_type = ACC_DeviceType(*ls)
     # ...
 
     # ... firstprivate
-    if not(d['_firstPrivate'] is None):
-        if not isinstance(d['_firstPrivate'], Nil):
-            ls = d['_firstPrivate']
+    if not(d['_firstprivate'] is None):
+        if not isinstance(d['_firstprivate'], Nil):
+            ls = d['_firstprivate']
             if isinstance(ls, str):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            _firstPrivate = ACC_FirstPrivate(*ls)
+            _firstprivate = ACC_FirstPrivate(*ls)
     # ...
 
     # ... if
@@ -1266,21 +1266,21 @@ def get_with_clauses(expr):
     # ... num_gangs
     #     TODO improve this to take any int expression for arg.
     #     see OpenACC specifications
-    if not(d['_numGangs'] is None):
-        if not isinstance(d['_numGangs'], Nil):
-            arg = d['_numGangs']
+    if not(d['_num_gangs'] is None):
+        if not isinstance(d['_num_gangs'], Nil):
+            arg = d['_num_gangs']
             ls = [arg]
-            _numGangs = ACC_NumGangs(*ls)
+            _num_gangs = ACC_NumGangs(*ls)
     # ...
 
     # ... num_workers
     #     TODO improve this to take any int expression for arg.
     #     see OpenACC specifications
-    if not(d['_numWorkers'] is None):
-        if not isinstance(d['_numWorkers'], Nil):
-            arg = d['_numWorkers']
+    if not(d['_num_workers'] is None):
+        if not isinstance(d['_num_workers'], Nil):
+            arg = d['_num_workers']
             ls = [arg]
-            _numWorkers = ACC_NumWorkers(*ls)
+            _num_workers = ACC_NumWorkers(*ls)
     # ...
 
     # ... present
@@ -1317,11 +1317,11 @@ def get_with_clauses(expr):
     # ...
 
     # ... vector_length
-    if not(d['_vectorLength'] is None):
-        if not isinstance(d['_vectorLength'], Nil):
-            arg = d['_vectorLength']
+    if not(d['_vector_length'] is None):
+        if not isinstance(d['_vector_length'], Nil):
+            arg = d['_vector_length']
             ls = [arg]
-            _vectorLength = ACC_VectorLength(*ls)
+            _vector_length = ACC_VectorLength(*ls)
     # ...
 
     # ... wait
@@ -1338,10 +1338,10 @@ def get_with_clauses(expr):
     # ...
     clauses = (_async,
                _wait,
-               _numGangs,
-               _numWorkers,
-               _vectorLength,
-               _deviceType,
+               _num_gangs,
+               _num_workers,
+               _vector_length,
+               _device_type,
                _if,
                _reduction,
                _copy,
@@ -1349,9 +1349,9 @@ def get_with_clauses(expr):
                _copyout,
                _create,
                _present,
-               _devicePtr,
+               _deviceptr,
                _private,
-               _firstPrivate,
+               _firstprivate,
                _default)
 
     clauses = [i for i in clauses if not(i is None)]

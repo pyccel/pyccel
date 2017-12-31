@@ -20,30 +20,30 @@ class StopIteration(object):
 #$ header method __exit__(Parallel, str, str, str)
 class Parallel(object):
 
-    def __init__(self, Async=None, wait=None, numGangs=None,
-                 numWorkers=None, vectorLength=None, deviceType=None,
+    def __init__(self, Async=None, wait=None, num_gangs=None,
+                 num_workers=None, vector_length=None, device_type=None,
                  If=None, reduction=None,
                  copy=None, copyin=None, copyout=None,
-                 create=None, present=None, devicePtr=None,
-                 private=None, firstPrivate=None, default=None):
+                 create=None, present=None, deviceptr=None,
+                 private=None, firstprivate=None, default=None):
 
-        self._async        = Async
-        self._wait         = wait
-        self._numGangs     = numGangs
-        self._numWorkers   = numWorkers
-        self._vectorLength = vectorLength
-        self._deviceType   = deviceType
-        self._if           = If
-        self._reduction    = reduction
-        self._copy         = copy
-        self._copyin       = copyin
-        self._copyout      = copyout
-        self._create       = create
-        self._present      = present
-        self._devicePtr    = devicePtr
-        self._private      = private
-        self._firstPrivate = firstPrivate
-        self._default      = default
+        self._async         = Async
+        self._wait          = wait
+        self._num_gangs     = num_gangs
+        self._num_workers   = num_workers
+        self._vector_length = vector_length
+        self._device_type   = device_type
+        self._if            = If
+        self._reduction     = reduction
+        self._copy          = copy
+        self._copyin        = copyin
+        self._copyout       = copyout
+        self._create        = create
+        self._present       = present
+        self._deviceptr     = deviceptr
+        self._private       = private
+        self._firstprivate  = firstprivate
+        self._default       = default
 
     def __del__(self):
         pass
