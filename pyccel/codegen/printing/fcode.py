@@ -48,9 +48,9 @@ from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
-from pyccel.ast.parallel.openmp import OMP_For
-
-from pyccel.ast.parallel.mpi import MPI
+from pyccel.ast.parallel.mpi     import MPI
+from pyccel.ast.parallel.openmp  import OMP_For
+from pyccel.ast.parallel.openacc import ACC_For
 
 
 # TODO: add examples
@@ -209,19 +209,6 @@ class FCodePrinter(CodePrinter):
         accel = self._print(expr.accel)
         txt   = str(expr.txt)
         return '!${0} {1}'.format(accel, txt)
-
-    def _print_ThreadID(self, expr):
-        lhs_code = self._print(expr.lhs)
-        func = 'omp_get_thread_num'
-        code = "{0} = {1}()".format(lhs_code, func)
-        return self._get_statement(code)
-
-    def _print_ThreadsNumber(self, expr):
-        lhs_code = self._print(expr.lhs)
-        func = 'omp_get_num_threads'
-        code = "{0} = {1}()".format(lhs_code, func)
-        return self._get_statement(code)
-
 
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -595,31 +582,6 @@ class FCodePrinter(CodePrinter):
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
-    def _print_OMP_Parallel(self, expr):
-        # prelude will not be printed
-#        from pyccel.ast.parallel.openmp import OMP_Private
-#        for i in expr.clauses:
-#            if isinstance(i, OMP_Private):
-#                print(i, i.variables, type(i))
-        clauses = ' '.join(self._print(i)  for i in expr.clauses)
-        body    = '\n'.join(self._print(i) for i in expr.body)
-
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end parallel\n'
-        # ...
-
-        # ...
-        code = ('{prolog}'
-                '{body}\n'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
-        # ...
-
-        return self._get_statement(code)
-
-    def _print_OMP_If(self, expr):
-        return 'if({})'.format(self._print(expr.test))
-
     def _print_NativeBool(self, expr):
         return 'logical'
 
@@ -940,6 +902,46 @@ class FCodePrinter(CodePrinter):
     # .....................................................
     #                   OpenMP statements
     # .....................................................
+    def _print_OMP_Parallel(self, expr):
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        body    = '\n'.join(self._print(i) for i in expr.body)
+
+        # ... TODO adapt get_statement to have continuation with OpenMP
+        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
+        epilog = '!$omp end parallel\n'
+        # ...
+
+        # ...
+        code = ('{prolog}'
+                '{body}\n'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
+
+    def _print_OMP_For(self, expr):
+        # ...
+        loop    = self._print(expr.loop)
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+
+        nowait  = ''
+        if not(expr.nowait is None):
+            nowait = 'nowait'
+        # ...
+
+        # ... TODO adapt get_statement to have continuation with OpenMP
+        prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
+        epilog = '!$omp end do {0}\n'.format(nowait)
+        # ...
+
+        # ...
+        code = ('{prolog}'
+                '{loop}\n'
+                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
+
     def _print_OMP_NumThread(self, expr):
         return 'num_threads({})'.format(self._print(expr.num_threads))
 
@@ -1010,28 +1012,51 @@ class FCodePrinter(CodePrinter):
         step = self._print(expr.step)
         return "linear({0}: {1})".format(variables, step)
 
-    def _print_OMP_For(self, expr):
-        # ...
-        loop    = self._print(expr.loop)
+    def _print_OMP_If(self, expr):
+        return 'if({})'.format(self._print(expr.test))
+    # .....................................................
+
+    # .....................................................
+    #                   OpenACC statements
+    # .....................................................
+    def _print_ACC_Parallel(self, expr):
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        body    = '\n'.join(self._print(i) for i in expr.body)
 
-        nowait  = ''
-        if not(expr.nowait is None):
-            nowait = 'nowait'
-        # ...
-
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end do {0}\n'.format(nowait)
+        # ... TODO adapt get_statement to have continuation with OpenACC
+        prolog = '!$acc parallel {clauses}\n'.format(clauses=clauses)
+        epilog = '!$acc end parallel\n'
         # ...
 
         # ...
         code = ('{prolog}'
-                '{loop}\n'
-                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+                '{body}\n'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
         # ...
 
         return self._get_statement(code)
+
+    def _print_ACC_Collapse(self, expr):
+        n_loops = '{0}'.format(self._print(expr.n_loops))
+
+        return 'collapse({0})'.format(n_loops)
+
+    def _print_ACC_Copyin(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyin({})'.format(args)
+
+    def _print_ACC_FirstPrivate(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'firstprivate({})'.format(args)
+
+    def _print_ACC_Private(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'private({})'.format(args)
+
+    def _print_ACC_Reduction(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        op   = self._print(expr.operation)
+        return "reduction({0}: {1})".format(op, args)
     # .....................................................
 
     def _print_ForIterator(self, expr):

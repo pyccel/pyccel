@@ -22,8 +22,9 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
-from pyccel.ast.parallel.mpi import mpify
-from pyccel.ast.parallel.openmp import openmpfy
+from pyccel.ast.parallel.mpi     import mpify
+from pyccel.ast.parallel.openmp  import openmpfy
+from pyccel.ast.parallel.openacc import openaccfy
 
 
 
@@ -342,7 +343,7 @@ class Compiler(object):
             elif accelerator == "openacc":
                 flags += " -ta=multicore -Minfo=accel "
             else:
-                raise ValueError("Only openmp is available")
+                raise ValueError("Only openmp and openacc are available")
 
         if isinstance(include, str):
             include = [include]

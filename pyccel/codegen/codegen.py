@@ -32,12 +32,11 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
-from pyccel.ast.parallel.mpi import mpify
-from pyccel.ast.parallel.openmp import openmpfy
+from pyccel.ast.parallel.mpi     import mpify
+from pyccel.ast.parallel.openmp  import openmpfy
+from pyccel.ast.parallel.openacc import openaccfy
 
-from pyccel.parser.parser  import PyccelParser
-from pyccel.parser.syntax.openmp import OpenmpStmt
-
+from pyccel.parser.parser    import PyccelParser
 from pyccel.parser.utilities import find_imports
 
 
@@ -549,6 +548,11 @@ class Codegen(object):
         # ...
         if with_openmp:
             stmts = [openmpfy(s) for s in stmts]
+        # ...
+
+        # ...
+        if with_openacc:
+            stmts = [openaccfy(s) for s in stmts]
         # ...
 
         for stmt in stmts:

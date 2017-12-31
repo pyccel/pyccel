@@ -332,7 +332,7 @@ class ACC_Default(ACC):
 
     Examples
 
-    >>> from pyccel.parallel.openmp import ACC_Default
+    >>> from pyccel.parallel.openacc import ACC_Default
     >>> ACC_Default('present')
     default(present)
     """
@@ -1223,9 +1223,9 @@ def get_with_clauses(expr):
     # ...
 
     # ... deviceptr
-    if not(d['_deviceptr'] is None):
-        if not isinstance(d['_deviceptr'], Nil):
-            ls = d['_deviceptr']
+    if not(d['_devicePtr'] is None):
+        if not isinstance(d['_devicePtr'], Nil):
+            ls = d['_devicePtr']
             if isinstance(ls, str):
                 ls = [ls]
 
@@ -1234,9 +1234,9 @@ def get_with_clauses(expr):
     # ...
 
     # ... devicetype
-    if not(d['_devicetype'] is None):
-        if not isinstance(d['_devicetype'], Nil):
-            ls = d['_devicetype']
+    if not(d['_deviceType'] is None):
+        if not isinstance(d['_deviceType'], Nil):
+            ls = d['_deviceType']
             if isinstance(ls, str):
                 ls = [ls]
 
@@ -1245,14 +1245,14 @@ def get_with_clauses(expr):
     # ...
 
     # ... firstprivate
-    if not(d['_firstprivate'] is None):
-        if not isinstance(d['_firstprivate'], Nil):
-            ls = d['_firstprivate']
+    if not(d['_firstPrivate'] is None):
+        if not isinstance(d['_firstPrivate'], Nil):
+            ls = d['_firstPrivate']
             if isinstance(ls, str):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            _firstprivate = ACC_FirstPrivate(*ls)
+            _firstPrivate = ACC_FirstPrivate(*ls)
     # ...
 
     # ... if
@@ -1268,21 +1268,21 @@ def get_with_clauses(expr):
     # ... num_gangs
     #     TODO improve this to take any int expression for arg.
     #     see OpenACC specifications
-    if not(d['_num_gangs'] is None):
-        if not isinstance(d['_num_gangs'], Nil):
-            arg = d['_num_gangs']
+    if not(d['_numGangs'] is None):
+        if not isinstance(d['_numGangs'], Nil):
+            arg = d['_numGangs']
             ls = [arg]
-            _num_gangs = ACC_NumGangs(*ls)
+            _numGangs = ACC_NumGangs(*ls)
     # ...
 
     # ... num_workers
     #     TODO improve this to take any int expression for arg.
     #     see OpenACC specifications
-    if not(d['_num_workers'] is None):
-        if not isinstance(d['_num_workers'], Nil):
-            arg = d['_num_workers']
+    if not(d['_numWorkers'] is None):
+        if not isinstance(d['_numWorkers'], Nil):
+            arg = d['_numWorkers']
             ls = [arg]
-            _num_workers = ACC_NumWorkers(*ls)
+            _numWorkers = ACC_NumWorkers(*ls)
     # ...
 
     # ... present
@@ -1319,11 +1319,11 @@ def get_with_clauses(expr):
     # ...
 
     # ... vector_length
-    if not(d['_vector_length'] is None):
-        if not isinstance(d['_vector_length'], Nil):
-            arg = d['_vector_length']
+    if not(d['_vectorLength'] is None):
+        if not isinstance(d['_vectorLength'], Nil):
+            arg = d['_vectorLength']
             ls = [arg]
-            _vector_length = ACC_VectorLength(*ls)
+            _vectorLength = ACC_VectorLength(*ls)
     # ...
 
     # ... wait

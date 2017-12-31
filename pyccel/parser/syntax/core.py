@@ -41,7 +41,6 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.core.containers import Dict
 
 from pyccel.parser.syntax.basic   import BasicStmt
-from pyccel.parser.syntax.openmp  import OpenmpStmt
 
 from pyccel.ast.core import allocatable_like
 from pyccel.ast.core import FunctionCall,MethodCall
