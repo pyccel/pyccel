@@ -53,3 +53,48 @@ class Parallel(object):
 
     def __exit__(self, type, value, tb):
         pass
+
+#$ header class Range(public, iterable, openacc)
+#$ header method __init__(Range, int, int, int, int, str [:], str [:], str [:], str, str, str [:], str [:], str, str [:], str[:])
+#$ header method __del__(Range)
+#$ header method __iter__(Range)
+#$ header method __next__(Range)
+class Range(object):
+
+    def __init__(self, start, stop, step, collapse=None,
+                 gang=None, worker=None, vector=None,
+                 seq=None, auto=None, tile=None,
+                 device_type=None, independent=None,
+                 private=None, reduction=None):
+
+        self.start = start
+        self.stop  = stop
+        self.step  = step
+
+        self._collapse    = collapse
+        self._gang        = gang
+        self._worker      = worker
+        self._vector      = vector
+        self._seq         = seq
+        self._auto        = auto
+        self._tile        = tile
+        self._device_type = device_type
+        self._independent = independent
+        self._private     = private
+        self._reduction   = reduction
+
+        self.i = start
+
+    def __del__(self):
+        print('> free')
+
+    def __iter__(self):
+        self.i = 0
+
+    def __next__(self):
+        if (self.i < self.stop):
+            i = self.i
+            self.i = self.i + 1
+        else:
+            raise 'StopIteration'
+

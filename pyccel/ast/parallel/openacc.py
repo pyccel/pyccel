@@ -1002,7 +1002,7 @@ def openaccfy(stmt, **options):
         target   = stmt.target
         body     = openaccfy(stmt.body, **options)
 
-        info, clauses = get_for_clauses(iterable)
+        clauses = get_for_clauses(iterable)
 
         if (clauses is None):
             return ForIterator(target, iterable, body, strict=False)
@@ -1135,23 +1135,23 @@ def get_with_clauses(expr):
     # ...
 
     # ... initial values for clauses
-    _async        = None
-    _wait         = None
+    _async         = None
+    _wait          = None
     _num_gangs     = None
     _num_workers   = None
     _vector_length = None
     _device_type   = None
-    _if           = None
-    _reduction    = None
-    _copy         = None
-    _copyin       = None
-    _copyout      = None
-    _create       = None
-    _present      = None
-    _deviceptr    = None
-    _private      = None
-    _firstprivate = None
-    _default      = None
+    _if            = None
+    _reduction     = None
+    _copy          = None
+    _copyin        = None
+    _copyout       = None
+    _create        = None
+    _present       = None
+    _deviceptr     = None
+    _private       = None
+    _firstprivate  = None
+    _default       = None
     # ...
 
     # ... async
@@ -1425,27 +1425,58 @@ def get_for_clauses(expr):
     # ...
 
     # ... initial values for clauses
-    nowait       = None
-
-    collapse     = None
-    private      = None
-    firstprivate = None
-    lastprivate  = None
-    reduction    = None
-    schedule     = None
-    ordered      = None
-    linear       = None
+    _collapse    = None
+    _gang        = None
+    _worker      = None
+    _vector      = None
+    _seq         = None
+    _auto        = None
+    _tile        = None
+    _device_type = None
+    _independent = None
+    _private     = None
+    _reduction   = None
     # ...
 
-    # ... nowait
-    nowait = d['_nowait']
+    # ... auto
+    if not(d['_auto'] is None):
+        if not isinstance(d['_auto'], Nil):
+            _auto = ACC_Auto()
     # ...
 
     # ... collapse
     if not(d['_collapse'] is None):
         if not isinstance(d['_collapse'], Nil):
             ls = [d['_collapse']]
-            collapse = ACC_Collapse(*ls)
+            _collapse = ACC_Collapse(*ls)
+    # ...
+
+    # ... device_type
+    if not(d['_device_type'] is None):
+        if not isinstance(d['_device_type'], Nil):
+            ls = d['_device_type']
+            if isinstance(ls, str):
+                ls = [ls]
+
+            ls = [_format_str(a) for a in ls]
+            _device_type = ACC_DeviceType(*ls)
+    # ...
+
+    # ... gang
+    if not(d['_gang'] is None):
+        if not isinstance(d['_gang'], Nil):
+            ls = d['_gang']
+            if isinstance(ls, str):
+                ls = [ls]
+
+            ls = [_format_str(a) for a in ls]
+            _gang = ACC_Gang(*ls)
+    # ...
+
+    # ... independent
+    if not(d['_independent'] is None):
+        if not isinstance(d['_independent'], Nil):
+            _independent = ACC_Independent()
     # ...
 
     # ... private
@@ -1456,29 +1487,7 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            private = ACC_Private(*ls)
-    # ...
-
-    # ... firstprivate
-    if not(d['_firstprivate'] is None):
-        if not isinstance(d['_firstprivate'], Nil):
-            ls = d['_firstprivate']
-            if isinstance(ls, str):
-                ls = [ls]
-
-            ls = [_format_str(a) for a in ls]
-            firstprivate = ACC_FirstPrivate(*ls)
-    # ...
-
-    # ... lastprivate
-    if not(d['_lastprivate'] is None):
-        if not isinstance(d['_lastprivate'], Nil):
-            ls = d['_lastprivate']
-            if isinstance(ls, str):
-                ls = [ls]
-
-            ls = [_format_str(a) for a in ls]
-            lastprivate = ACC_LastPrivate(*ls)
+            _private = ACC_Private(*ls)
     # ...
 
     # ... reduction
@@ -1489,60 +1498,64 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            reduction = ACC_Reduction(*ls)
+            _reduction = ACC_Reduction(*ls)
     # ...
 
-    # ... schedule
-    if not(d['_schedule'] is None):
-        if not isinstance(d['_schedule'], Nil):
-            ls = d['_schedule']
+    # ... seq
+    if not(d['_seq'] is None):
+        if not isinstance(d['_seq'], Nil):
+            _seq = ACC_Seq()
+    # ...
+
+    # ... tile
+    if not(d['_tile'] is None):
+        if not isinstance(d['_tile'], Nil):
+            ls = d['_tile']
             if isinstance(ls, str):
                 ls = [ls]
 
-            ls[0] = _format_str(ls[0])
-            schedule = ACC_Schedule(*ls)
+            ls = [_format_str(a) for a in ls]
+            _tile = ACC_Tile(*ls)
     # ...
 
-    # ... ordered
-    if not(d['_ordered'] is None):
-        if not isinstance(d['_ordered'], Nil):
-            ls = d['_ordered']
+    # ... vector
+    if not(d['_vector'] is None):
+        if not isinstance(d['_vector'], Nil):
+            ls = d['_vector']
+            if isinstance(ls, str):
+                ls = [ls]
 
-            args = []
-            if isinstance(ls, (int, Integer)):
-                args.append(ls)
-
-            ordered = ACC_Ordered(*args)
+            ls = [_format_str(a) for a in ls]
+            _vector = ACC_Vector(*ls)
     # ...
 
-    # ... linear
-    if not(d['_linear'] is None):
-        if not isinstance(d['_linear'], Nil):
-            # we need to convert Tuple to list here
-            ls = list(d['_linear'])
+    # ... worker
+    if not(d['_worker'] is None):
+        if not isinstance(d['_worker'], Nil):
+            ls = d['_worker']
+            if isinstance(ls, str):
+                ls = [ls]
 
-            if len(ls) < 2:
-                raise ValueError('Expecting at least 2 entries, '
-                                 'given {0}'.format(len(ls)))
-
-            variables = [a.strip('\'') for a in ls[0:-1]]
-            ls[0:-1]  = variables
-
-            linear = ACC_Linear(*ls)
+            ls = [_format_str(a) for a in ls]
+            _worker = ACC_Worker(*ls)
     # ...
 
     # ...
-    clauses = (private, firstprivate, lastprivate,
-               reduction, schedule,
-               ordered, collapse, linear)
+    clauses = (_collapse,
+               _gang,
+               _worker,
+               _vector,
+               _seq,
+               _auto,
+               _tile,
+               _device_type,
+               _independent,
+               _private,
+               _reduction)
+
     clauses = [i for i in clauses if not(i is None)]
     clauses = Tuple(*clauses)
     # ...
 
-    # ...
-    info = {}
-    info['nowait'] = nowait
-    # ...
-
-    return info, clauses
+    return clauses
 # ...

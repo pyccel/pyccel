@@ -1036,6 +1036,25 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
+    def _print_ACC_For(self, expr):
+        # ...
+        loop    = self._print(expr.loop)
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        # ...
+
+        # ... TODO adapt get_statement to have continuation with OpenACC
+        prolog = '!$acc loop {clauses}\n'.format(clauses=clauses)
+        epilog = '!$acc end loop\n'
+        # ...
+
+        # ...
+        code = ('{prolog}'
+                '{loop}\n'
+                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
+
     def _print_ACC_Async(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'async({})'.format(args)
