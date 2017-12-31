@@ -44,26 +44,26 @@ TOLERANCE    = 1.e-10
 #TOLERANCE    = 1.e-4
 SETTINGS     = ["glt_integrate", "glt_formatting", "glt_formatting_atoms"]
 
-#SETTINGS     = ["glt_integrate", \
-#                "glt_simplify", \
-#                "glt_formatting", \
-#                "glt_formatting_atoms"]
-
 
 # ...
+coordinates = ['x', 'y', 'z']
+
 dx = Function('dx')
 dy = Function('dy')
 dz = Function('dz')
-# ...
 
-# ...
-#Ni   = Function('Ni')
-#Ni_x = Function('Ni_x')
-#Ni_y = Function('Ni_y')
-#
-#Nj   = Function('Nj')
-#Nj_x = Function('Nj_x')
-#Nj_y = Function('Nj_y')
+dxx = Function('dxx')
+dyy = Function('dyy')
+dzz = Function('dzz')
+dxy = Function('dxy')
+dyz = Function('dyz')
+dzx = Function('dzx')
+
+# TODO how to treat 1d, 2d, 3d etc?
+grad = lambda u: (dx(u), dy(u))
+curl = lambda u: dy(u[0]) - dx(u[1])
+rot  = lambda u: (dy(u), -dx(u))
+div  = lambda u: dx(u[0]) + dy(u[1])
 # ...
 
 # ... TODO works only for scalar cases
@@ -75,8 +75,9 @@ def normalize_weak_from(f):
     if not isinstance(f, Lambda):
         raise TypeError('Expecting a Lambda expression')
 
-    args = f.variables
-    expr = sympify(f.expr)
+    args = [i for i in f.variables if str(i) not in coordinates]
+#    expr = sympify(f.expr)
+    expr = f.expr
 
     for d in ['dx', 'dy', 'dz']:
         for i, arg in enumerate(args):
@@ -135,6 +136,7 @@ class weak_formulation(Function):
 
         expr = normalize_weak_from(f)
 
+#        args = ['x', 'y', 'Ni', 'Ni_x', 'Ni_y', 'Nj', 'Nj_x', 'Nj_y']
         args = ['Ni', 'Ni_x', 'Ni_y', 'Nj', 'Nj_x', 'Nj_y']
         args = [Symbol(i) for i in args]
         expr = Lambda(args, expr)
