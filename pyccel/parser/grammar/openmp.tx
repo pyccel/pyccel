@@ -32,14 +32,14 @@ OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
 //      Clauses for Constructs and Directives
 ////////////////////////////////////////////////////
 OmpParallelClause:
-    OmpParallelNumThread
-  | OmpParallelDefault
+    OmpNumThread
+  | OmpDefault
   | OmpPrivate
   | OmpShared
   | OmpFirstPrivate
   | OmpCopyin
   | OmpReduction
-  | OmpParallelProcBind
+  | OmpProcBind
 ;
 
 OmpLoopClause:
@@ -62,27 +62,27 @@ OmpSingleClause:
 ////////////////////////////////////////////////////
 //              Clauses definitions
 ////////////////////////////////////////////////////
-OmpParallelNumThread: 'num_threads' '(' thread=ThreadIndex ')';
-OmpParallelDefault: 'default' '(' status=Status ')';
-OmpParallelProcBind: 'proc_bind' '(' status=ProcBind ')';
+OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
+OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
 OmpPrivate: 'private' '(' args+=ID[','] ')';
 OmpShared: 'shared' '(' args+=ID[','] ')';
 OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
 OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
 OmpCopyin: 'copyin' '(' args+=ID[','] ')';
-OmpReduction: 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')';
+OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
 OmpCollapse: 'collapse' '(' n=INT ')';
 OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
-OmpSchedule: 'schedule' '(' kind=Schedule (',' chunk_size=INT)? ')';
+OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
 OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
-Schedule: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
-ProcBind: ('master' | 'close' | 'spread');
-ReductionOperator: ('+' | '-' | '*' | '/');
-Status: ('private' | 'firstprivate' | 'shared' | 'none');
+OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
+OmpProcBindStatus: ('master' | 'close' | 'spread');
+OmpReductionOperator: ('+' | '-' | '*' | '/');
+OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
 OpenmpConstructs: ('single' | 'parallel' | 'do');
 
 ThreadIndex: (ID | INT);

@@ -135,7 +135,7 @@ AccLoopClause:
   | AccReduction 
 ;
 
-AccAtomicClause: AtomicStatus;
+AccAtomicClause: AccAtomicStatus;
 
 AccDeclareClause: 
     AccCopy 
@@ -200,7 +200,7 @@ AccCopy: 'copy' '(' args+=ID[','] ')';
 AccCopyin: 'copyin' '(' args+=ID[','] ')'; 
 AccCopyout: 'copyout' '(' args+=ID[','] ')'; 
 AccCreate: 'create' '(' args+=ID[','] ')'; 
-AccDefault: 'default' '(' status=DefaultStatus ')';
+AccDefault: 'default' '(' status=AccDefaultStatus ')';
 AccDefaultAsync: 'default_async' '(' args+=ID[','] ')';
 AccDelete: 'delete' '(' args+=ID[','] ')';
 AccDevice: 'device' '(' args+=ID[','] ')';
@@ -210,7 +210,7 @@ AccDeviceResident: 'device_resident' '(' args+=ID[','] ')';
 AccDeviceType: 'device_type' '(' args+=ID[','] ')'; 
 AccFirstPrivate: 'firstprivate' '(' args+=ID[','] ')'; 
 AccFinalize: 'finalize'; 
-AccGang: 'gang' '(' args+=GangArg[','] ')'; 
+AccGang: 'gang' '(' args+=AccGangArg[','] ')'; 
 AccHost: 'host' '(' args+=ID[','] ')';
 AccIf: 'if' cond=ID; 
 AccIfPresent: 'if_present';
@@ -221,29 +221,29 @@ AccNumGangs: 'num_gangs' '(' n=INT ')';
 AccNumWorkers: 'num_workers' '(' n=INT ')'; 
 AccPresent: 'present' '(' args+=ID[','] ')'; 
 AccPrivate: 'private' '(' args+=ID[','] ')'; 
-AccReduction: 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')'; 
+AccReduction: 'reduction' '('op=AccReductionOperator ':' args+=ID[','] ')'; 
 AccSeq: 'seq';
 AccSelf: 'self' '(' args+=ID[','] ')';
 AccTile: 'tile' '(' args+=ID[','] ')'; 
 AccUseDevice: 'use_device' '(' args+=ID[','] ')';
-AccVector: 'vector' ('(' args+=VectorArg ')')?;
+AccVector: 'vector' ('(' args+=AccVectorArg ')')?;
 AccVectorLength: 'vector_length' '(' n=INT ')'; 
 AccWait: 'wait' '(' args+=ID[','] ')'; 
-AccWorker: 'worker' ('(' args+=WorkerArg ')')?;
+AccWorker: 'worker' ('(' args+=AccWorkerArg ')')?;
 AccEndClause: 'end' construct=AccConstructs;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
-ReductionOperator: ('+' | '-' | '*' | '/');
-DefaultStatus: ('none' | 'present');
-AtomicStatus: ('read' | 'write' | 'update' | 'capture');
-WorkerArg: ('num' ':')? arg=INT ;
-VectorArg: ('length' ':')? arg=INT ;
+AccReductionOperator: ('+' | '-' | '*' | '/');
+AccDefaultStatus: ('none' | 'present');
+AccAtomicStatus: ('read' | 'write' | 'update' | 'capture');
+AccWorkerArg: ('num' ':')? arg=INT ;
+AccVectorArg: ('length' ':')? arg=INT ;
 AccConstructs: ('parallel' | 'loop');
 
-GangArg: GangStaticArg | GangNumArg; 
-GangNumArg: ('num' ':')? arg=INT ;
-GangStaticArg: 'static' ':' arg=INT ;
+AccGangArg: AccGangStaticArg | AccGangNumArg; 
+AccGangNumArg: ('num' ':')? arg=INT ;
+AccGangStaticArg: 'static' ':' arg=INT ;
 
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
