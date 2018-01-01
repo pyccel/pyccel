@@ -8,7 +8,7 @@ dy               = load('pyccel.symbolic.gelato', 'dy', False, 1)
 # ...
 
 # ... weak formulation
-a  = lambda x,y,u,v: (1+x**2+y**2) * dx(u) * dx(v) + dy(u) * dy(v)
+a = lambda x,y,u,v: (1+x**2+y**2) * dx(u) * dx(v) + dy(u) * dy(v)
 
 wf        = weak_formulation(a)
 weak_form = lambdify(wf)
@@ -28,4 +28,4 @@ print(' a          := ', a)
 print(' wf         := ', wf)
 print(' glt symbol := ', ga)
 print('')
-print(' symbol(0.2, 0.2, 1.1, 3.1) = ', y)
+print(' symbol (0.2, 0.2, 1.1, 3.1) = ', y)

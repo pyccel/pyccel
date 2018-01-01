@@ -140,21 +140,25 @@ class weak_formulation(Function):
         if not _args:
             return
 
+        # ...
         f = _args[0]
 
         expr = normalize_weak_from(f)
+        # ...
 
-        registery = _coord_registery + _basis_registery
+        # TODO must be computed somehow
+        dim = 2
 
+        # ...
         free_symbols = [str(i) for i in expr.free_symbols]
         free_symbols.sort()
 
-        args = []
-        for a in free_symbols:
-            if a in registery:
-                args += [a]
+        args  = _coord_registery[:dim]
+        args += [i for i in free_symbols if i in _basis_registery]
 
         args = [Symbol(i) for i in args]
+        # ...
+
         expr = Lambda(args, expr)
 
         return expr
@@ -387,14 +391,7 @@ def glt_update_atoms(expr, discretization):
     # ...
 
     # ...
-    free_symbols = [str(i) for i in expr.free_symbols]
-    free_symbols.sort()
-
-    args = []
-    for a in free_symbols:
-        if a in _coord_registery:
-            args += [a]
-
+    args = _coord_registery[:dim]
     args = [Symbol(i) for i in args]
     # ...
 
