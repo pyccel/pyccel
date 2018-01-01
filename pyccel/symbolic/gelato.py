@@ -46,7 +46,15 @@ SETTINGS     = ["glt_integrate", "glt_formatting", "glt_formatting_atoms"]
 
 
 # ...
-coordinates = ['x', 'y', 'z']
+_coord_registery = ['x', 'y', 'z']
+_basis_registery = ['Ni',
+                    'Ni_x', 'Ni_y', 'Ni_z',
+                    'Ni_xx', 'Ni_yy', 'Ni_zz',
+                    'Ni_xy', 'Ni_yz', 'Ni_zx',
+                    'Nj',
+                    'Nj_x', 'Nj_y', 'Nj_z',
+                    'Ni_xx', 'Ni_yy', 'Ni_zz',
+                    'Ni_xy', 'Ni_yz', 'Ni_zx']
 
 dx = Function('dx')
 dy = Function('dy')
@@ -75,7 +83,7 @@ def normalize_weak_from(f):
     if not isinstance(f, Lambda):
         raise TypeError('Expecting a Lambda expression')
 
-    args = [i for i in f.variables if str(i) not in coordinates]
+    args = [i for i in f.variables if str(i) not in _coord_registery]
 #    expr = sympify(f.expr)
     expr = f.expr
 
@@ -136,8 +144,16 @@ class weak_formulation(Function):
 
         expr = normalize_weak_from(f)
 
-#        args = ['x', 'y', 'Ni', 'Ni_x', 'Ni_y', 'Nj', 'Nj_x', 'Nj_y']
-        args = ['Ni', 'Ni_x', 'Ni_y', 'Nj', 'Nj_x', 'Nj_y']
+        registery = _coord_registery + _basis_registery
+
+        free_symbols = [str(i) for i in expr.free_symbols]
+        free_symbols.sort()
+
+        args = []
+        for a in free_symbols:
+            if a in registery:
+                args += [a]
+
         args = [Symbol(i) for i in args]
         expr = Lambda(args, expr)
 
