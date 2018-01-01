@@ -114,3 +114,14 @@ External
 * SUPERLU
 
 * PASTIX
+
+Symbolic Computation
+********************
+
+* treate **1d** and **3d** cases for **weak_formulation**
+
+* maybe we should add the *dim* as argument of **lambdify**
+
+* vector case for glt and weak formulation
+
+* algebra for differential operators (so that we can do *dx(u+v)*)
