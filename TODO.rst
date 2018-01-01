@@ -1,6 +1,11 @@
 TODO
 ====
 
+Commands
+********
+
+* add *--fflags* to **pyccel** command.
+
 Exceptions and Errors
 *********************
 

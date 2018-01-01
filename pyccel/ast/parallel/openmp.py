@@ -49,14 +49,14 @@ class OMP_Parallel(ParallelBlock, OMP):
     Examples
 
     >>> from pyccel.parallel.openmp import OMP_Parallel
-    >>> from pyccel.parallel.openmp import OMP_ParallelNumThreadClause
-    >>> from pyccel.parallel.openmp import OMP_ParallelDefaultClause
+    >>> from pyccel.parallel.openmp import OMP_NumThread
+    >>> from pyccel.parallel.openmp import OMP_Default
     >>> from pyccel.ast.core import Variable, Assign, Block
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x')
     >>> body = [Assign(x,2.*n + 1.), Assign(n, n + 1)]
     >>> variables = [x,n]
-    >>> clauses = [OMP_ParallelNumThreadClause(4), OMP_ParallelDefaultClause('shared')]
+    >>> clauses = [OMP_NumThread(4), OMP_Default('shared')]
     >>> OMP_Parallel(clauses, variables, body)
     #pragma parallel num_threads(4) default(shared)
     x := 1.0 + 2.0*n
@@ -68,15 +68,15 @@ class OMP_Parallel(ParallelBlock, OMP):
         if not iterable(clauses):
             raise TypeError('Expecting an iterable for clauses')
 
-        _valid_clauses = (OMP_ParallelNumThreadClause, \
-                          OMP_ParallelIfClause, \
-                          OMP_ParallelDefaultClause, \
-                          OMP_PrivateClause, \
-                          OMP_SharedClause, \
-                          OMP_FirstPrivateClause, \
-                          OMP_CopyinClause, \
-                          OMP_ReductionClause, \
-                          OMP_ParallelProcBindClause)
+        _valid_clauses = (OMP_NumThread, \
+                          OMP_If, \
+                          OMP_Default, \
+                          OMP_Private, \
+                          OMP_Shared, \
+                          OMP_FirstPrivate, \
+                          OMP_Copyin, \
+                          OMP_Reduction, \
+                          OMP_ProcBind)
 
         for clause in clauses:
             if not isinstance(clause, _valid_clauses):
@@ -97,14 +97,14 @@ class OMP_For(ForIterator, OMP):
         if not iterable(clauses):
             raise TypeError('Expecting an iterable for clauses')
 
-        _valid_clauses = (OMP_ScheduleClause, \
-                          OMP_PrivateClause, \
-                          OMP_FirstPrivateClause, \
-                          OMP_LastPrivateClause, \
-                          OMP_ReductionClause, \
-                          OMP_CollapseClause, \
-                          OMP_OrderedClause, \
-                          OMP_LinearClause)
+        _valid_clauses = (OMP_Schedule, \
+                          OMP_Private, \
+                          OMP_FirstPrivate, \
+                          OMP_LastPrivate, \
+                          OMP_Reduction, \
+                          OMP_Collapse, \
+                          OMP_Ordered, \
+                          OMP_Linear)
 
         for clause in clauses:
             if not isinstance(clause, _valid_clauses):
@@ -138,14 +138,14 @@ class OMP_For(ForIterator, OMP):
         return self.loop.body
 
 
-class OMP_ParallelNumThreadClause(OMP):
+class OMP_NumThread(OMP):
     """
     OMP ParallelNumThreadClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_ParallelNumThreadClause
-    >>> OMP_ParallelNumThreadClause(4)
+    >>> from pyccel.parallel.openmp import OMP_NumThread
+    >>> OMP_NumThread(4)
     num_threads(4)
     """
     name = 'num_threads'
@@ -161,14 +161,14 @@ class OMP_ParallelNumThreadClause(OMP):
         sstr = printer.doprint
         return 'num_threads({})'.format(sstr(self.num_threads))
 
-class OMP_ParallelIfClause(OMP):
+class OMP_If(OMP):
     """
     OMP ParallelIfClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_ParallelIfClause
-    >>> OMP_ParallelIfClause(True)
+    >>> from pyccel.parallel.openmp import OMP_If
+    >>> OMP_If(True)
     if (True)
     """
     name = 'if'
@@ -184,14 +184,14 @@ class OMP_ParallelIfClause(OMP):
         sstr = printer.doprint
         return 'if({})'.format(sstr(self.test))
 
-class OMP_ParallelDefaultClause(OMP):
+class OMP_Default(OMP):
     """
     OMP ParallelDefaultClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_ParallelDefaultClause
-    >>> OMP_ParallelDefaultClause('shared')
+    >>> from pyccel.parallel.openmp import OMP_Default
+    >>> OMP_Default('shared')
     default(shared)
     """
     name = None
@@ -212,14 +212,14 @@ class OMP_ParallelDefaultClause(OMP):
             status = ''
         return 'default({})'.format(status)
 
-class OMP_ParallelProcBindClause(OMP):
+class OMP_ProcBind(OMP):
     """
     OMP ParallelProcBindClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_ParallelProcBindClause
-    >>> OMP_ParallelProcBindClause('master')
+    >>> from pyccel.parallel.openmp import OMP_ProcBind
+    >>> OMP_ProcBind('master')
     proc_bind(master)
     """
     name = 'proc_bind'
@@ -240,14 +240,14 @@ class OMP_ParallelProcBindClause(OMP):
             status = ''
         return 'proc_bind({})'.format(status)
 
-class OMP_PrivateClause(OMP):
+class OMP_Private(OMP):
     """
     OMP PrivateClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_PrivateClause
-    >>> OMP_PrivateClause('x', 'y')
+    >>> from pyccel.parallel.openmp import OMP_Private
+    >>> OMP_Private('x', 'y')
     private(x, y)
     """
     name = 'private'
@@ -263,14 +263,14 @@ class OMP_PrivateClause(OMP):
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         return 'private({})'.format(args)
 
-class OMP_SharedClause(OMP):
+class OMP_Shared(OMP):
     """
     OMP SharedClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_SharedClause
-    >>> OMP_SharedClause('x', 'y')
+    >>> from pyccel.parallel.openmp import OMP_Shared
+    >>> OMP_Shared('x', 'y')
     shared(x, y)
     """
     name = 'shared'
@@ -286,14 +286,14 @@ class OMP_SharedClause(OMP):
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         return 'shared({})'.format(args)
 
-class OMP_FirstPrivateClause(OMP):
+class OMP_FirstPrivate(OMP):
     """
     OMP FirstPrivateClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_FirstPrivateClause
-    >>> OMP_FirstPrivateClause('x', 'y')
+    >>> from pyccel.parallel.openmp import OMP_FirstPrivate
+    >>> OMP_FirstPrivate('x', 'y')
     firstprivate(x, y)
     """
     name = 'firstprivate'
@@ -309,14 +309,14 @@ class OMP_FirstPrivateClause(OMP):
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         return 'firstprivate({})'.format(args)
 
-class OMP_LastPrivateClause(OMP):
+class OMP_LastPrivate(OMP):
     """
     OMP LastPrivateClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_LastPrivateClause
-    >>> OMP_LastPrivateClause('x', 'y')
+    >>> from pyccel.parallel.openmp import OMP_LastPrivate
+    >>> OMP_LastPrivate('x', 'y')
     lastprivate(x, y)
     """
     name = 'lastprivate'
@@ -332,14 +332,14 @@ class OMP_LastPrivateClause(OMP):
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         return 'lastprivate({})'.format(args)
 
-class OMP_CopyinClause(OMP):
+class OMP_Copyin(OMP):
     """
     OMP CopyinClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_CopyinClause
-    >>> OMP_CopyinClause('x', 'y')
+    >>> from pyccel.parallel.openmp import OMP_Copyin
+    >>> OMP_Copyin('x', 'y')
     copyin(x, y)
     """
     name = 'copyin'
@@ -355,14 +355,14 @@ class OMP_CopyinClause(OMP):
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         return 'copyin({})'.format(args)
 
-class OMP_ReductionClause(OMP):
+class OMP_Reduction(OMP):
     """
     OMP ReductionClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_ReductionClause
-    >>> OMP_ReductionClause('+', 'x', 'y')
+    >>> from pyccel.parallel.openmp import OMP_Reduction
+    >>> OMP_Reduction('+', 'x', 'y')
     reduction('+': (x, y))
     """
     name = 'reduction'
@@ -385,14 +385,14 @@ class OMP_ReductionClause(OMP):
         op   = sstr(self.operation)
         return "reduction({0}: {1})".format(op, args)
 
-class OMP_ScheduleClause(OMP):
+class OMP_Schedule(OMP):
     """
     OMP ScheduleClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_ScheduleClause
-    >>> OMP_ScheduleClause('static', 2)
+    >>> from pyccel.parallel.openmp import OMP_Schedule
+    >>> OMP_Schedule('static', 2)
     schedule(static, 2)
     """
     name = 'schedule'
@@ -428,16 +428,16 @@ class OMP_ScheduleClause(OMP):
 
         return 'schedule({0}{1})'.format(kind, chunk_size)
 
-class OMP_OrderedClause(OMP):
+class OMP_Ordered(OMP):
     """
     OMP OrderedClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_OrderedClause
-    >>> OMP_OrderedClause(2)
+    >>> from pyccel.parallel.openmp import OMP_Ordered
+    >>> OMP_Ordered(2)
     ordered(2)
-    >>> OMP_OrderedClause()
+    >>> OMP_Ordered()
     ordered
     """
     name = 'ordered'
@@ -465,14 +465,14 @@ class OMP_OrderedClause(OMP):
 
         return 'ordered{0}'.format(n_loops)
 
-class OMP_CollapseClause(OMP):
+class OMP_Collapse(OMP):
     """
     OMP CollapseClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_CollapseClause
-    >>> OMP_CollapseClause(2)
+    >>> from pyccel.parallel.openmp import OMP_Collapse
+    >>> OMP_Collapse(2)
     collapse(2)
     """
     name = 'collapse'
@@ -494,14 +494,14 @@ class OMP_CollapseClause(OMP):
 
         return 'collapse({0})'.format(n_loops)
 
-class OMP_LinearClause(OMP):
+class OMP_Linear(OMP):
     """
     OMP LinearClause statement.
 
     Examples
 
-    >>> from pyccel.parallel.openmp import OMP_LinearClause
-    >>> OMP_LinearClause('x', 'y', 2)
+    >>> from pyccel.parallel.openmp import OMP_Linear
+    >>> OMP_Linear('x', 'y', 2)
     linear((x, y): 2)
     """
     name = 'linear'
@@ -701,7 +701,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            private = OMP_PrivateClause(*ls)
+            private = OMP_Private(*ls)
     # ...
 
     # ... firstprivate
@@ -712,7 +712,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            firstprivate = OMP_FirstPrivateClause(*ls)
+            firstprivate = OMP_FirstPrivate(*ls)
     # ...
 
     # ... shared
@@ -723,7 +723,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            shared = OMP_SharedClause(*ls)
+            shared = OMP_Shared(*ls)
     # ...
 
     # ... reduction
@@ -734,7 +734,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            reduction = OMP_ReductionClause(*ls)
+            reduction = OMP_Reduction(*ls)
     # ...
 
     # ... copyin
@@ -745,7 +745,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            copyin = OMP_CopyinClause(*ls)
+            copyin = OMP_Copyin(*ls)
     # ...
 
     # ... default
@@ -756,7 +756,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])
-            default = OMP_ParallelDefaultClause(*ls)
+            default = OMP_Default(*ls)
     # ...
 
     # ... proc_bind
@@ -767,7 +767,7 @@ def get_with_clauses(expr):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])
-            proc_bind = OMP_ParallelProcBindClause(*ls)
+            proc_bind = OMP_ProcBind(*ls)
     # ...
 
     # ... num_threads
@@ -777,7 +777,7 @@ def get_with_clauses(expr):
         if not isinstance(d['_num_threads'], Nil):
             arg = d['_num_threads']
             ls = [arg]
-            num_threads = OMP_ParallelNumThreadClause(*ls)
+            num_threads = OMP_NumThread(*ls)
     # ...
 
     # ... if_test
@@ -787,7 +787,7 @@ def get_with_clauses(expr):
         if not isinstance(d['_if_test'], Nil):
             arg = d['_if_test']
             ls = [arg]
-            if_test = OMP_ParallelIfClause(*ls)
+            if_test = OMP_If(*ls)
     # ...
 
     # ...
@@ -885,7 +885,7 @@ def get_for_clauses(expr):
     if not(d['_collapse'] is None):
         if not isinstance(d['_collapse'], Nil):
             ls = [d['_collapse']]
-            collapse = OMP_CollapseClause(*ls)
+            collapse = OMP_Collapse(*ls)
     # ...
 
     # ... private
@@ -896,7 +896,7 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            private = OMP_PrivateClause(*ls)
+            private = OMP_Private(*ls)
     # ...
 
     # ... firstprivate
@@ -907,7 +907,7 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            firstprivate = OMP_FirstPrivateClause(*ls)
+            firstprivate = OMP_FirstPrivate(*ls)
     # ...
 
     # ... lastprivate
@@ -918,7 +918,7 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            lastprivate = OMP_LastPrivateClause(*ls)
+            lastprivate = OMP_LastPrivate(*ls)
     # ...
 
     # ... reduction
@@ -929,7 +929,7 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
-            reduction = OMP_ReductionClause(*ls)
+            reduction = OMP_Reduction(*ls)
     # ...
 
     # ... schedule
@@ -940,7 +940,7 @@ def get_for_clauses(expr):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])
-            schedule = OMP_ScheduleClause(*ls)
+            schedule = OMP_Schedule(*ls)
     # ...
 
     # ... ordered
@@ -952,7 +952,7 @@ def get_for_clauses(expr):
             if isinstance(ls, (int, Integer)):
                 args.append(ls)
 
-            ordered = OMP_OrderedClause(*args)
+            ordered = OMP_Ordered(*args)
     # ...
 
     # ... linear
@@ -968,7 +968,7 @@ def get_for_clauses(expr):
             variables = [a.strip('\'') for a in ls[0:-1]]
             ls[0:-1]  = variables
 
-            linear = OMP_LinearClause(*ls)
+            linear = OMP_Linear(*ls)
     # ...
 
     # ...

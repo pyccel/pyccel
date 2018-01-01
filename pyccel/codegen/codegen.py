@@ -32,12 +32,11 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
-from pyccel.ast.parallel.mpi import mpify
-from pyccel.ast.parallel.openmp import openmpfy
+from pyccel.ast.parallel.mpi     import mpify
+from pyccel.ast.parallel.openmp  import openmpfy
+from pyccel.ast.parallel.openacc import openaccfy
 
-from pyccel.parser.parser  import PyccelParser
-from pyccel.parser.syntax.openmp import OpenmpStmt
-
+from pyccel.parser.parser    import PyccelParser
 from pyccel.parser.utilities import find_imports
 
 
@@ -462,7 +461,7 @@ class Codegen(object):
             target language. Possible values {"fortran"}
         accelerator: str
             name of the selected accelerator.
-            For the moment, only 'openmp' is available
+            One among ('openmp', 'openacc')
         ignored_modules: list
             list of modules to ignore.
         with_mpi: bool
@@ -497,10 +496,13 @@ class Codegen(object):
         # ...
 
         # ...
-        with_openmp = False
+        with_openmp  = False
+        with_openacc = False
         if accelerator:
             if accelerator == "openmp":
                 with_openmp = True
+            elif accelerator == "openacc":
+                with_openacc = True
             else:
                 raise ValueError("Only openmp is available")
         # ...
@@ -513,6 +515,8 @@ class Codegen(object):
         # ... TODO use Import class
         if with_openmp:
             imports += "use omp_lib\n"
+        if with_openacc:
+            imports += "use openacc\n"
         # ...
 
         # ...
@@ -544,6 +548,11 @@ class Codegen(object):
         # ...
         if with_openmp:
             stmts = [openmpfy(s) for s in stmts]
+        # ...
+
+        # ...
+        if with_openacc:
+            stmts = [openaccfy(s) for s in stmts]
         # ...
 
         for stmt in stmts:

@@ -988,6 +988,21 @@ class AccLink(AccBasic):
         args = ', '.join(str(arg) for arg in self.args)
         return 'link({})'.format(args)
 
+#AccNoHost: 'nohost';
+class AccNoHost(AccBasic):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        super(AccNoHost, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> AccNoHost: expr")
+
+        return 'nohost'
+
 #AccNumGangs: 'num_gangs' '(' n=INT ')';
 class AccNumGangs(AccBasic):
     """Class representing a ."""
@@ -1021,21 +1036,6 @@ class AccNumWorkers(AccBasic):
             print("> AccNumWorkers: expr")
 
         return 'num_workers({})'.format(self.n)
-
-#AccNoHost: 'nohost';
-class AccNoHost(AccBasic):
-    """Class representing a ."""
-    def __init__(self, **kwargs):
-        """
-        """
-        super(AccNoHost, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> AccNoHost: expr")
-
-        return 'nohost'
 
 #AccPresent: 'present' '(' args+=ID[','] ')';
 class AccPresent(AccBasic):
@@ -1275,10 +1275,10 @@ acc_clauses = [AccAsync,
                AccDefaultAsync,
                AccDelete,
                AccDevice,
-               AccDeviceType,
-               AccDevicePtr,
                AccDeviceNum,
+               AccDevicePtr,
                AccDeviceResident,
+               AccDeviceType,
                AccFinalize,
                AccFirstPrivate,
                AccGang,
@@ -1287,16 +1287,16 @@ acc_clauses = [AccAsync,
                AccIfPresent,
                AccIndependent,
                AccLink,
-               AccPresent,
-               AccPrivate,
                AccNoHost,
                AccNumGangs,
                AccNumWorkers,
+               AccPresent,
+               AccPrivate,
+               AccReduction,
                AccSelf,
                AccSeq,
                AccTile,
-               AccReduction,
-               AccVectorLength,
+               AccUseDevice,
                AccVector,
                AccVectorLength,
                AccWait,

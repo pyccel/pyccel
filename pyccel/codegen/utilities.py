@@ -178,7 +178,7 @@ def build_file(filename, language, compiler, \
         execute the generated code, after compiling if True.
     accelerator: str
         name of the selected accelerator.
-        For the moment, only 'openmp' is available
+        One among ('openmp', 'openacc')
     debug: bool
         add some useful prints that may help for debugging.
     verbose: bool

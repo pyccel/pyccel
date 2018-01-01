@@ -48,9 +48,9 @@ from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
-from pyccel.ast.parallel.openmp import OMP_For
-
-from pyccel.ast.parallel.mpi import MPI
+from pyccel.ast.parallel.mpi     import MPI
+from pyccel.ast.parallel.openmp  import OMP_For
+from pyccel.ast.parallel.openacc import ACC_For
 
 
 # TODO: add examples
@@ -209,19 +209,6 @@ class FCodePrinter(CodePrinter):
         accel = self._print(expr.accel)
         txt   = str(expr.txt)
         return '!${0} {1}'.format(accel, txt)
-
-    def _print_ThreadID(self, expr):
-        lhs_code = self._print(expr.lhs)
-        func = 'omp_get_thread_num'
-        code = "{0} = {1}()".format(lhs_code, func)
-        return self._get_statement(code)
-
-    def _print_ThreadsNumber(self, expr):
-        lhs_code = self._print(expr.lhs)
-        func = 'omp_get_num_threads'
-        code = "{0} = {1}()".format(lhs_code, func)
-        return self._get_statement(code)
-
 
     def _print_Tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -595,34 +582,6 @@ class FCodePrinter(CodePrinter):
             code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
-    def _print_OMP_Parallel(self, expr):
-        # prelude will not be printed
-#        from pyccel.ast.parallel.openmp import OMP_PrivateClause
-#        for i in expr.clauses:
-#            if isinstance(i, OMP_PrivateClause):
-#                print(i, i.variables, type(i))
-        clauses = ' '.join(self._print(i)  for i in expr.clauses)
-        body    = '\n'.join(self._print(i) for i in expr.body)
-
-        # ... TODO adapt get_statement to have continuation with OpenMP
-        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
-        epilog = '!$omp end parallel\n'
-        # ...
-
-        # ...
-        code = ('{prolog}'
-                '{body}\n'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
-        # ...
-
-        return self._get_statement(code)
-
-    def _print_OMP_ParallelNumThreadClause(self, expr):
-        return 'num_threads({})'.format(self._print(expr.num_threads))
-
-    def _print_OMP_ParallelIfClause(self, expr):
-        return 'if({})'.format(self._print(expr.test))
-
     def _print_NativeBool(self, expr):
         return 'logical'
 
@@ -940,75 +899,25 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
-    def _print_OMP_ParallelNumThreadClause(self, expr):
-        return 'num_threads({})'.format(self._print(expr.num_threads))
+    # .....................................................
+    #                   OpenMP statements
+    # .....................................................
+    def _print_OMP_Parallel(self, expr):
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        body    = '\n'.join(self._print(i) for i in expr.body)
 
-    def _print_OMP_ParallelDefaultClause(self, expr):
-        status = expr.status
-        if status:
-            status = self._print(expr.status)
-        else:
-            status = ''
-        return 'default({})'.format(status)
+        # ... TODO adapt get_statement to have continuation with OpenMP
+        prolog = '!$omp parallel {clauses}\n'.format(clauses=clauses)
+        epilog = '!$omp end parallel\n'
+        # ...
 
-    def _print_OMP_ParallelProcBindClause(self, expr):
-        status = expr.status
-        if status:
-            status = self._print(expr.status)
-        else:
-            status = ''
-        return 'proc_bind({})'.format(status)
+        # ...
+        code = ('{prolog}'
+                '{body}\n'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        # ...
 
-    def _print_OMP_PrivateClause(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'private({})'.format(args)
-
-    def _print_OMP_SharedClause(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'shared({})'.format(args)
-
-    def _print_OMP_FirstPrivateClause(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'firstprivate({})'.format(args)
-
-    def _print_OMP_LastPrivateClause(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'lastprivate({})'.format(args)
-
-    def _print_OMP_CopyinClause(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        return 'copyin({})'.format(args)
-
-    def _print_OMP_ReductionClause(self, expr):
-        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        op   = self._print(expr.operation)
-        return "reduction({0}: {1})".format(op, args)
-
-    def _print_OMP_ScheduleClause(self, expr):
-        kind = self._print(expr.kind)
-
-        chunk_size = ''
-        if expr.chunk_size:
-            chunk_size = ', {0}'.format(self._print(expr.chunk_size))
-
-        return 'schedule({0}{1})'.format(kind, chunk_size)
-
-    def _print_OMP_OrderedClause(self, expr):
-        n_loops = ''
-        if expr.n_loops:
-            n_loops = '({0})'.format(self._print(expr.n_loops))
-
-        return 'ordered{0}'.format(n_loops)
-
-    def _print_OMP_CollapseClause(self, expr):
-        n_loops = '{0}'.format(self._print(expr.n_loops))
-
-        return 'collapse({0})'.format(n_loops)
-
-    def _print_OMP_LinearClause(self, expr):
-        variables= ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
-        step = self._print(expr.step)
-        return "linear({0}: {1})".format(variables, step)
+        return self._get_statement(code)
 
     def _print_OMP_For(self, expr):
         # ...
@@ -1033,6 +942,256 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
+    def _print_OMP_NumThread(self, expr):
+        return 'num_threads({})'.format(self._print(expr.num_threads))
+
+    def _print_OMP_Default(self, expr):
+        status = expr.status
+        if status:
+            status = self._print(expr.status)
+        else:
+            status = ''
+        return 'default({})'.format(status)
+
+    def _print_OMP_ProcBind(self, expr):
+        status = expr.status
+        if status:
+            status = self._print(expr.status)
+        else:
+            status = ''
+        return 'proc_bind({})'.format(status)
+
+    def _print_OMP_Private(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'private({})'.format(args)
+
+    def _print_OMP_Shared(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'shared({})'.format(args)
+
+    def _print_OMP_FirstPrivate(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'firstprivate({})'.format(args)
+
+    def _print_OMP_LastPrivate(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'lastprivate({})'.format(args)
+
+    def _print_OMP_Copyin(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyin({})'.format(args)
+
+    def _print_OMP_Reduction(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        op   = self._print(expr.operation)
+        return "reduction({0}: {1})".format(op, args)
+
+    def _print_OMP_Schedule(self, expr):
+        kind = self._print(expr.kind)
+
+        chunk_size = ''
+        if expr.chunk_size:
+            chunk_size = ', {0}'.format(self._print(expr.chunk_size))
+
+        return 'schedule({0}{1})'.format(kind, chunk_size)
+
+    def _print_OMP_Ordered(self, expr):
+        n_loops = ''
+        if expr.n_loops:
+            n_loops = '({0})'.format(self._print(expr.n_loops))
+
+        return 'ordered{0}'.format(n_loops)
+
+    def _print_OMP_Collapse(self, expr):
+        n_loops = '{0}'.format(self._print(expr.n_loops))
+
+        return 'collapse({0})'.format(n_loops)
+
+    def _print_OMP_Linear(self, expr):
+        variables= ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        step = self._print(expr.step)
+        return "linear({0}: {1})".format(variables, step)
+
+    def _print_OMP_If(self, expr):
+        return 'if({})'.format(self._print(expr.test))
+    # .....................................................
+
+    # .....................................................
+    #                   OpenACC statements
+    # .....................................................
+    def _print_ACC_Parallel(self, expr):
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        body    = '\n'.join(self._print(i) for i in expr.body)
+
+        # ... TODO adapt get_statement to have continuation with OpenACC
+        prolog = '!$acc parallel {clauses}\n'.format(clauses=clauses)
+        epilog = '!$acc end parallel\n'
+        # ...
+
+        # ...
+        code = ('{prolog}'
+                '{body}\n'
+                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
+
+    def _print_ACC_For(self, expr):
+        # ...
+        loop    = self._print(expr.loop)
+        clauses = ' '.join(self._print(i)  for i in expr.clauses)
+        # ...
+
+        # ... TODO adapt get_statement to have continuation with OpenACC
+        prolog = '!$acc loop {clauses}\n'.format(clauses=clauses)
+        epilog = '!$acc end loop\n'
+        # ...
+
+        # ...
+        code = ('{prolog}'
+                '{loop}\n'
+                '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
+        # ...
+
+        return self._get_statement(code)
+
+    def _print_ACC_Async(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'async({})'.format(args)
+
+    def _print_ACC_Auto(self, expr):
+        return 'auto'
+
+    def _print_ACC_Bind(self, expr):
+        return 'bind({})'.format(self._print(expr.variable))
+
+    def _print_ACC_Collapse(self, expr):
+        return 'collapse({0})'.format(self._print(expr.n_loops))
+
+    def _print_ACC_Copy(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copy({})'.format(args)
+
+    def _print_ACC_Copyin(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyin({})'.format(args)
+
+    def _print_ACC_Copyout(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'copyout({})'.format(args)
+
+    def _print_ACC_Create(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'create({})'.format(args)
+
+    def _print_ACC_Default(self, expr):
+        return 'default({})'.format(self._print(expr.status))
+
+    def _print_ACC_DefaultAsync(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'default_async({})'.format(args)
+
+    def _print_ACC_Delete(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'delete({})'.format(args)
+
+    def _print_ACC_Device(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'device({})'.format(args)
+
+    def _print_ACC_DeviceNum(self, expr):
+        return 'collapse({0})'.format(self._print(expr.n_device))
+
+    def _print_ACC_DevicePtr(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'deviceptr({})'.format(args)
+
+    def _print_ACC_DeviceResident(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'device_resident({})'.format(args)
+
+    def _print_ACC_DeviceType(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'device_type({})'.format(args)
+
+    def _print_ACC_Finalize(self, expr):
+        return 'finalize'
+
+    def _print_ACC_FirstPrivate(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'firstprivate({})'.format(args)
+
+    def _print_ACC_Gang(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'gang({})'.format(args)
+
+    def _print_ACC_Host(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'host({})'.format(args)
+
+    def _print_ACC_If(self, expr):
+        return 'if({})'.format(self._print(expr.test))
+
+    def _print_ACC_Independent(self, expr):
+        return 'independent'
+
+    def _print_ACC_Link(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'link({})'.format(args)
+
+    def _print_ACC_NoHost(self, expr):
+        return 'nohost'
+
+    def _print_ACC_NumGangs(self, expr):
+        return 'num_gangs({0})'.format(self._print(expr.n_gang))
+
+    def _print_ACC_NumWorkers(self, expr):
+        return 'num_workers({0})'.format(self._print(expr.n_worker))
+
+    def _print_ACC_Present(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'present({})'.format(args)
+
+    def _print_ACC_Private(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'private({})'.format(args)
+
+    def _print_ACC_Reduction(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        op   = self._print(expr.operation)
+        return "reduction({0}: {1})".format(op, args)
+
+    def _print_ACC_Self(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'self({})'.format(args)
+
+    def _print_ACC_Seq(self, expr):
+        return 'seq'
+
+    def _print_ACC_Tile(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'tile({})'.format(args)
+
+    def _print_ACC_UseDevice(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'use_device({})'.format(args)
+
+    def _print_ACC_Vector(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'vector({})'.format(args)
+
+    def _print_ACC_VectorLength(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'vector_length({})'.format(self._print(expr.n))
+
+    def _print_ACC_Wait(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'wait({})'.format(args)
+
+    def _print_ACC_Worker(self, expr):
+        args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
+        return 'worker({})'.format(args)
+    # .....................................................
 
     def _print_ForIterator(self, expr):
         depth = expr.depth

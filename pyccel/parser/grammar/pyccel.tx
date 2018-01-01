@@ -19,6 +19,7 @@
 //       -  
 //       -  
 
+import openacc
 import openmp
 import imports
 
@@ -155,6 +156,7 @@ ClassOptions:
   | 'with' 
   | 'hide' 
   | 'openmp'
+  | 'openacc'
 ;
 
 DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;

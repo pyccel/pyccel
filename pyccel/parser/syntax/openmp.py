@@ -61,14 +61,14 @@ class OmpParallelConstruct(BasicStmt):
         if DEBUG:
             print("> OmpParallelConstruct: expr")
 
-        _valid_clauses = (OmpParallelNumThread, \
-                         OmpParallelDefault, \
+        _valid_clauses = (OmpNumThread, \
+                         OmpDefault, \
                          OmpPrivate, \
                          OmpShared, \
                          OmpFirstPrivate, \
                          OmpCopyin, \
                          OmpReduction, \
-                         OmpParallelProcBind)
+                         OmpProcBind)
 
         txt = 'parallel'
         for clause in self.clauses:
@@ -157,53 +157,53 @@ class OmpEndClause(BasicStmt):
         txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
         return AnnotatedComment('omp', txt)
 
-class OmpParallelNumThread(BasicStmt):
+class OmpNumThread(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.thread = kwargs.pop('thread')
 
-        super(OmpParallelNumThread, self).__init__(**kwargs)
+        super(OmpNumThread, self).__init__(**kwargs)
 
     @property
     def expr(self):
         # TODO check if variable exist in namespace
         if DEBUG:
-            print("> OmpParallelNumThread: expr")
+            print("> OmpNumThread: expr")
 
         thread = self.thread
         return 'num_threads({})'.format(thread)
 
-class OmpParallelDefault(BasicStmt):
+class OmpDefault(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.status = kwargs.pop('status')
 
-        super(OmpParallelDefault, self).__init__(**kwargs)
+        super(OmpDefault, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> OmpParallelDefault: expr")
+            print("> OmpDefault: expr")
 
         return 'default({})'.format(self.status)
 
-class OmpParallelProcBind(BasicStmt):
+class OmpProcBind(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.status = kwargs.pop('status')
 
-        super(OmpParallelProcBind, self).__init__(**kwargs)
+        super(OmpProcBind, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> OmpParallelProcBind: expr")
+            print("> OmpProcBind: expr")
 
         return 'proc_bind({})'.format(self.status)
 
@@ -404,10 +404,10 @@ omp_clauses = [OmpCollapse,
                OmpLastPrivate,
                OmpLinear,
                OmpOrdered,
-               OmpParallelNumThread,
-               OmpParallelDefault,
+               OmpNumThread,
+               OmpDefault,
                OmpPrivate,
-               OmpParallelProcBind,
+               OmpProcBind,
                OmpPrivate,
                OmpReduction,
                OmpSchedule,
