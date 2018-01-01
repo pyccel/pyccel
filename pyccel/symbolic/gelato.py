@@ -387,7 +387,18 @@ def glt_update_atoms(expr, discretization):
     # ...
 
     # ...
+    free_symbols = [str(i) for i in expr.free_symbols]
+    free_symbols.sort()
+
     args = []
+    for a in free_symbols:
+        if a in _coord_registery:
+            args += [a]
+
+    args = [Symbol(i) for i in args]
+    # ...
+
+    # ...
     for k in range(0, dim):
         # ...
         t = Symbol('t'+str(k+1))
@@ -556,10 +567,6 @@ def glt_symbol(expr, dim, n_deriv=1, \
 
         # ...
         if isinstance(expr, Lambda):
-
-            if not (len(expr.variables) == 2):
-                raise NotImplementedError('only scalar case is available.')
-
             expr = normalize_weak_from(expr)
         # ...
 
