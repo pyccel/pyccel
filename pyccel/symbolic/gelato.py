@@ -78,14 +78,95 @@ rot  = lambda u: (dy(u), -dx(u))
 div  = lambda u: dx(u[0]) + dy(u[1])
 # ...
 
+def initialize_weak_form(f, dim):
+    if not isinstance(f, Lambda):
+        raise TypeError('Expecting a Lambda')
+
+    args = f.variables
+    n_args = len(args)
+    if (n_args - dim) % 2 == 1:
+        raise ValueError('Wrong number of arguments')
+
+    n = (n_args - dim) / 2
+
+    coords = Tuple(*args[:dim])
+    tests  = Tuple(*args[dim:dim+n])
+    trials = Tuple(*args[dim+n:])
+
+#    print('> coords : {0}'.format(coords))
+#    print('> tests  : {0}'.format(tests))
+#    print('> trials : {0}'.format(trials))
+
+    test_names  = [str(i) for i in tests]
+    trial_names = [str(i) for i in trials]
+    coord_names = [str(i) for i in coords]
+
+    d = {}
+    d_args = {}
+    for i_test in range(0, n):
+        for i_trial in range(0, n):
+            d[(i_test, i_trial)] = S.Zero
+            d_args[(i_test, i_trial)] = []
+
+    expr = f.expr
+    for arg in preorder_traversal(expr):
+        if isinstance(arg, Mul):
+            found_test  = False
+            found_trial = False
+
+            test  = None
+            trial = None
+
+            for a in preorder_traversal(arg):
+                if isinstance(a, Function):
+                    pass
+                elif isinstance(a, Symbol):
+                    if str(a) in test_names:
+                        found_test  = True
+                        test = a
+                    if str(a) in trial_names:
+                        found_trial  = True
+                        trial = a
+            i_test = tests.index(test)
+            i_trial = trials.index(trial)
+
+            d[(i_test, i_trial)] += arg
+            d_args[(i_test, i_trial)] = Tuple(test, trial)
+
+    expr = {}
+    for k,e in d.items():
+        args = list(coords) + list(d_args[k])
+        expr[k] = Lambda(args, e)
+
+    info = {}
+    info['coords'] = coords
+    info['tests']  = tests
+    info['trials'] = trials
+
+    return expr, info
+
+
 # ... TODO works only for scalar cases
 def normalize_weak_from(f):
     """
     Converts an expression using dx, dy, etc to a normal form, where we
     introduce symbols with suffix to define derivatives.
     """
+    # ...
+    if type(f) == dict:
+        d_expr = {}
+        for key, g in list(f.items()):
+            # ...
+            d_expr[key] = normalize_weak_from(g)
+            # ...
+
+        return dict_to_matrix(d_expr)
+    # ...
+
+    # ...
     if not isinstance(f, Lambda):
         raise TypeError('Expecting a Lambda expression')
+    # ...
 
     args = [i for i in f.variables if str(i) not in _coord_registery]
 #    expr = sympify(f.expr)
@@ -146,14 +227,28 @@ class weak_formulation(Function):
 
         # ...
         f = _args[0]
-
-        expr = normalize_weak_from(f)
         # ...
 
         # TODO must be computed somehow
         dim = 2
 
         # ...
+        f, info = initialize_weak_form(f, dim)
+
+        coords = info['coords']
+        tests  = info['tests']
+        trials = info['trials']
+
+        test_names  = [str(i) for i in tests]
+        trial_names = [str(i) for i in trials]
+        coord_names = [str(i) for i in coords]
+        # ...
+
+        # ...
+        expr = normalize_weak_from(f)
+        # ...
+
+        # ... TODO improve
         free_symbols = [str(i) for i in expr.free_symbols]
         free_symbols.sort()
 
@@ -995,65 +1090,17 @@ class glt_function(Function):
         discretization = {"n_elements": n, "degrees": p}
         dim = len(n)
 
-        expr = f.expr
-        if isinstance(f, Lambda):
-            args = f.variables
-            n_args = len(args)
-            if (n_args - dim) % 2 == 1:
-                raise ValueError('Wrong number of arguments')
+        f, info = initialize_weak_form(f, dim)
 
-            n = (n_args - dim) / 2
+        coords = info['coords']
+        tests  = info['tests']
+        trials = info['trials']
 
-            coords = Tuple(*args[:dim])
-            tests  = Tuple(*args[dim:dim+n])
-            trials = Tuple(*args[dim+n:])
+        test_names  = [str(i) for i in tests]
+        trial_names = [str(i) for i in trials]
+        coord_names = [str(i) for i in coords]
 
-            print('> coords : {0}'.format(coords))
-            print('> tests  : {0}'.format(tests))
-            print('> trials : {0}'.format(trials))
-
-            test_names  = [str(i) for i in tests]
-            trial_names = [str(i) for i in trials]
-            coord_names = [str(i) for i in coords]
-
-            d = {}
-            d_args = {}
-            for i_test in range(0, n):
-                for i_trial in range(0, n):
-                    d[(i_test, i_trial)] = S.Zero
-                    d_args[(i_test, i_trial)] = []
-
-            expr = f.expr
-            for arg in preorder_traversal(expr):
-                if isinstance(arg, Mul):
-                    found_test  = False
-                    found_trial = False
-
-                    test  = None
-                    trial = None
-
-                    for a in preorder_traversal(arg):
-                        if isinstance(a, Function):
-                            pass
-                        elif isinstance(a, Symbol):
-                            if str(a) in test_names:
-                                found_test  = True
-                                test = a
-                            if str(a) in trial_names:
-                                found_trial  = True
-                                trial = a
-                    i_test = tests.index(test)
-                    i_trial = trials.index(trial)
-
-                    d[(i_test, i_trial)] += arg
-                    d_args[(i_test, i_trial)] = Tuple(test, trial)
-
-            expr = {}
-            for k,e in d.items():
-                args = list(coords) + list(d_args[k])
-                expr[k] = Lambda(args, e)
-
-        F = glt_symbol(expr, dim=2, discretization=discretization, evaluate=True)
+        F = glt_symbol(f, dim=2, discretization=discretization, evaluate=True)
 
         # glt_symbol may return a matrix of lambdas
         if isinstance(F, Matrix):
