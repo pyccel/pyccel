@@ -34,6 +34,9 @@ from sympy import preorder_traversal
 
 from itertools import product
 
+
+from pyccel.ast.core import IndexedVariable
+
 import numpy as np
 
 # TODO find a better solution.
@@ -72,12 +75,21 @@ dyz = Function('dyz')
 dzx = Function('dzx')
 
 # TODO how to treat 1d, 2d, 3d etc?
-grad = lambda u: (dx(u), dy(u))
-curl = lambda u: dy(u[0]) - dx(u[1])
-rot  = lambda u: (dy(u), -dx(u))
-div  = lambda u: dx(u[0]) + dy(u[1])
+u = Symbol('u')
+Grad = Lambda(u, Tuple(dx(u), dy(u)))
+
+u = IndexedVariable('u')
+v = IndexedVariable('v')
+
+Curl = Lambda(u, Tuple(dy(u), -dx(u)))
+Div  = Lambda(u, dx(u[0]) + dy(u[1]))
+Rot  = Lambda(u, dy(u[0]) - dx(u[1]))
+
+Cross  = Lambda(Tuple(u,v), u[0]*v[1] - u[1]*v[0])
+Dot    = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1])
 # ...
 
+# ...
 def initialize_weak_form(f, dim):
     if not isinstance(f, Lambda):
         raise TypeError('Expecting a Lambda')
