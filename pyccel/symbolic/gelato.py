@@ -27,6 +27,10 @@ from sympy.core.singleton import S
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy import Mul
+from sympy import Tuple
+from sympy import postorder_traversal
+from sympy import preorder_traversal
 
 from itertools import product
 
@@ -989,8 +993,81 @@ class glt_function(Function):
         p = _args[2]
 
         discretization = {"n_elements": n, "degrees": p}
-        expr = glt_symbol(f, dim=2, discretization=discretization, evaluate=True)
-        return expr
+        dim = len(n)
+
+        expr = f.expr
+        if isinstance(f, Lambda):
+            args = f.variables
+            n_args = len(args)
+            if (n_args - dim) % 2 == 1:
+                raise ValueError('Wrong number of arguments')
+
+            n = (n_args - dim) / 2
+
+            coords = Tuple(*args[:dim])
+            tests  = Tuple(*args[dim:dim+n])
+            trials = Tuple(*args[dim+n:])
+
+            print('> coords : {0}'.format(coords))
+            print('> tests  : {0}'.format(tests))
+            print('> trials : {0}'.format(trials))
+
+            test_names  = [str(i) for i in tests]
+            trial_names = [str(i) for i in trials]
+            coord_names = [str(i) for i in coords]
+
+            d = {}
+            d_args = {}
+            for i_test in range(0, n):
+                for i_trial in range(0, n):
+                    d[(i_test, i_trial)] = S.Zero
+                    d_args[(i_test, i_trial)] = []
+
+            expr = f.expr
+            for arg in preorder_traversal(expr):
+                if isinstance(arg, Mul):
+                    found_test  = False
+                    found_trial = False
+
+                    test  = None
+                    trial = None
+
+                    for a in preorder_traversal(arg):
+                        if isinstance(a, Function):
+                            pass
+                        elif isinstance(a, Symbol):
+                            if str(a) in test_names:
+                                found_test  = True
+                                test = a
+                            if str(a) in trial_names:
+                                found_trial  = True
+                                trial = a
+                    i_test = tests.index(test)
+                    i_trial = trials.index(trial)
+
+                    d[(i_test, i_trial)] += arg
+                    d_args[(i_test, i_trial)] = Tuple(test, trial)
+
+            expr = {}
+            for k,e in d.items():
+                args = list(coords) + list(d_args[k])
+                expr[k] = Lambda(args, e)
+
+        F = glt_symbol(expr, dim=2, discretization=discretization, evaluate=True)
+
+        # glt_symbol may return a matrix of lambdas
+        if isinstance(F, Matrix):
+            expressions = []
+            for i in range(0, F.shape[0]):
+                row = []
+                for j in range(0, F.shape[1]):
+                    row += [F[i,j].expr]
+                expressions += [row]
+            args = list(coords)
+            args += [a for a in F[i,j].variables if not(str(a) in coord_names)]
+            F = Lambda(args, Matrix(expressions))
+
+        return F
 # ...
 
 # ...
