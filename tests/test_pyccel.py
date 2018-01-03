@@ -62,11 +62,37 @@ def test_lambda():
     print('============== testing lambda ================')
     ignored = []
 
-    for i in range(1, 9+1):
-        filename = 'tests/scripts/lambda/ex{0}.py'.format(str(i))
-        if not(i in ignored):
-            pyccel(files=[filename])
-            print('> testing {0}: done'.format(str(i)))
+    base_dir = os.getcwd()
+
+    # ...
+    def _get_files(path):
+        path_dir = os.path.join(base_dir, path)
+
+        files = sorted(os.listdir(path_dir))
+        files = [f for f in files if not(f in ignored) and (f.endswith(".py"))]
+        return [os.path.join(path_dir, f) for f in files]
+    # ...
+
+    # ...
+    folders = ['tests/scripts/lambda/',
+               'tests/scripts/lambda/pdes/1d',
+               'tests/scripts/lambda/pdes/2d',
+               'tests/scripts/lambda/pdes/3d']
+    # ...
+
+    # ...
+    files = []
+    for r in folders:
+        files += _get_files(r)
+    # ...
+
+    # ...
+    for f_name in files:
+        f = os.path.basename(f_name)
+
+        pyccel(files=[f_name])
+        print('> testing {0}: done'.format(str(f)))
+    # ...
 # ...
 
 ################################
