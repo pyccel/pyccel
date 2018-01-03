@@ -60,9 +60,9 @@ def test_oop():
 # ...
 def test_lambda():
     print('============== testing lambda ================')
-    ignored = []
+    ignored = [5, 7]
 
-    for i in range(1, 7+1):
+    for i in range(1, 9+1):
         filename = 'tests/scripts/lambda/ex{0}.py'.format(str(i))
         if not(i in ignored):
             pyccel(files=[filename])

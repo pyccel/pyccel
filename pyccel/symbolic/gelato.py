@@ -103,6 +103,7 @@ def initialize_weak_form(f, dim):
 
     d = {}
     d_args = {}
+    # TODO must fix the precision for S.Zero?
     for i_test in range(0, n):
         for i_trial in range(0, n):
             d[(i_test, i_trial)] = S.Zero
@@ -651,6 +652,10 @@ def glt_symbol(expr, dim, n_deriv=1, \
                                      instructions=instructions, \
                                      **settings)
             # ...
+
+        if len(d_expr) == 1:
+            key = d_expr.keys()[0]
+            return d_expr[key]
 
         return dict_to_matrix(d_expr, instructions=instructions, **settings)
     else:
