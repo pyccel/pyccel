@@ -246,6 +246,15 @@ class weak_formulation(Function):
 
         # ...
         expr = normalize_weak_from(f)
+
+        if isinstance(expr, Matrix):
+            expressions = []
+            nr = expr.shape[0]
+            nc = expr.shape[1]
+            for ir in range(0, nr):
+                for ic in range(0, nc):
+                    expressions += [expr[ir,ic]]
+            expr = Tuple(*expressions)
         # ...
 
         # ... TODO improve

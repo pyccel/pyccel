@@ -940,10 +940,24 @@ def builtin_function(name, args, lhs=None, op=None):
             arg = Variable('double', str(a))
             arguments.append(arg)
 
-        x_out   = Variable('double', 'x_out')
-        results = [x_out]
 
-        expr = sympify(func.expr).evalf()
+        # since we allow Lambda expressions to return a Tuple,
+        # we have to use isinstance
+        if isinstance(func.expr, (Tuple, list, tuple)):
+            n = len(func.expr)
+            x_out   = Variable('double', 'x_out', rank=1, shape=n)
+            results = [x_out]
+
+            expressions = []
+            for i in func.expr:
+                expressions += [sympify(i).evalf()]
+            expr = Tuple(*expressions)
+        else:
+            # TODO to treat other cases
+            x_out   = Variable('double', 'x_out')
+            results = [x_out]
+
+            expr = sympify(func.expr).evalf()
 
         body = [Assign(x_out, expr)]
 
