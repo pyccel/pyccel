@@ -256,6 +256,9 @@ class weak_formulation(Function):
                 for ic in range(0, nc):
                     expressions += [expr[ir,ic]]
             expr = Tuple(*expressions)
+
+            if len(expr) == 1:
+                expr = expr[0]
         # ...
 
         # ... TODO improve

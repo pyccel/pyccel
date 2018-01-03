@@ -60,7 +60,7 @@ def test_oop():
 # ...
 def test_lambda():
     print('============== testing lambda ================')
-    ignored = [5, 7]
+    ignored = [7]
 
     for i in range(1, 9+1):
         filename = 'tests/scripts/lambda/ex{0}.py'.format(str(i))
