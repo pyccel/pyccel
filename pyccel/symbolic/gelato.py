@@ -1103,8 +1103,13 @@ class glt_function(Function):
         n = _args[1]
         p = _args[2]
 
+        if isinstance(n, (Tuple, list, tuple)):
+            dim = len(n)
+        else:
+            dim = 1
+            n = [n]
+            p = [p]
         discretization = {"n_elements": n, "degrees": p}
-        dim = len(n)
 
         f, info = initialize_weak_form(f, dim)
 
@@ -1116,7 +1121,7 @@ class glt_function(Function):
         trial_names = [str(i) for i in trials]
         coord_names = [str(i) for i in coords]
 
-        F = glt_symbol(f, dim=2, discretization=discretization, evaluate=True)
+        F = glt_symbol(f, dim=dim, discretization=discretization, evaluate=True)
 
         # glt_symbol may return a matrix of lambdas
         if isinstance(F, Matrix):
@@ -1129,6 +1134,9 @@ class glt_function(Function):
             args = list(coords)
             args += [a for a in F[i,j].variables if not(str(a) in coord_names)]
             F = Lambda(args, Matrix(expressions))
+
+#        print(F)
+#        import sys; sys.exit(1)
 
         return F
 # ...
