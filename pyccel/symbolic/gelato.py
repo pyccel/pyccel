@@ -128,11 +128,12 @@ def initialize_weak_form(f, dim):
                     if str(a) in trial_names:
                         found_trial  = True
                         trial = a
-            i_test = tests.index(test)
-            i_trial = trials.index(trial)
+            if found_test and found_trial:
+                i_test = tests.index(test)
+                i_trial = trials.index(trial)
 
-            d[(i_test, i_trial)] += arg
-            d_args[(i_test, i_trial)] = Tuple(test, trial)
+                d[(i_test, i_trial)] += arg
+                d_args[(i_test, i_trial)] = Tuple(test, trial)
 
     expr = {}
     for k,e in d.items():
