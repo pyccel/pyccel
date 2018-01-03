@@ -4,14 +4,14 @@
 #       - improve how we pass arguments to weak_form
 
 # ... import symbolic tools
-weak_formulation = load('pyccel.symbolic.gelato', 'weak_formulation', True, 1)
+weak_formulation = load('pyccel.symbolic.gelato', 'weak_formulation', True, 2)
 dx               = load('pyccel.symbolic.gelato', 'dx', False, 1)
 dy               = load('pyccel.symbolic.gelato', 'dy', False, 1)
 # ...
 
 # ... weak formulation
 a  = lambda x,y,u,v: dx(u) * dx(v) + dy(u) * dy(v)
-wf = weak_formulation(a)
+wf = weak_formulation(a, 2)
 
 weak_form = lambdify(wf)
 # ...

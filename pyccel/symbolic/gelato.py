@@ -228,11 +228,9 @@ class weak_formulation(Function):
             return
 
         # ...
-        f = _args[0]
+        f   = _args[0]
+        dim = _args[1]
         # ...
-
-        # TODO must be computed somehow
-        dim = 2
 
         # ...
         f, info = initialize_weak_form(f, dim)
