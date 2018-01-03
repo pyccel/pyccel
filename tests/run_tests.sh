@@ -11,4 +11,4 @@ python tests/test_pyccel_openmp.py --openmp --execute
 python tests/test_pyccel_lapack.py --libs='blas lapack' --execute
 python tests/test_pyccel_mpi.py --compiler=mpif90
 
-python tests/test_pyccel_openacc.py --compiler=pgfortran --openacc --execute 
+#python tests/test_pyccel_openacc.py --compiler=pgfortran --openacc --execute 
