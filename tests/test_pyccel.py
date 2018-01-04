@@ -74,10 +74,14 @@ def test_lambda():
     # ...
 
     # ...
+#    folders = ['tests/scripts/lambda/',
+#               'tests/scripts/lambda/pdes/1d',
+#               'tests/scripts/lambda/pdes/2d',
+#               'tests/scripts/lambda/pdes/3d']
+
     folders = ['tests/scripts/lambda/',
                'tests/scripts/lambda/pdes/1d',
-               'tests/scripts/lambda/pdes/2d',
-               'tests/scripts/lambda/pdes/3d']
+               'tests/scripts/lambda/pdes/2d']
     # ...
 
     # ...

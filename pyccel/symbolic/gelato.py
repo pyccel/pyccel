@@ -79,40 +79,164 @@ dzx = Function('dzx')
 # ................................................
 #                 2d case
 # ................................................
-#u = Symbol('u')
-#Grad = Lambda(u, Tuple(dx(u), dy(u)))
-#
-#u = IndexedVariable('u')
-#v = IndexedVariable('v')
-#
-#Curl = Lambda(u, Tuple( dy(u),
-#                       -dx(u)))
-#Div  = Lambda(u, dx(u[0]) + dy(u[1]))
-#Rot  = Lambda(u, dy(u[0]) - dx(u[1]))
-#
-#Cross = Lambda(Tuple(u,v), u[0]*v[1] - u[1]*v[0])
-#Dot   = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1])
+u = Symbol('u')
+Grad = Lambda(u, Tuple(dx(u), dy(u)))
+
+u = IndexedVariable('u')
+v = IndexedVariable('v')
+
+Curl = Lambda(u, Tuple( dy(u),
+                       -dx(u)))
+Div  = Lambda(u, dx(u[0]) + dy(u[1]))
+Rot  = Lambda(u, dy(u[0]) - dx(u[1]))
+
+Cross = Lambda(Tuple(u,v), u[0]*v[1] - u[1]*v[0])
+Dot   = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1])
 # ................................................
 
 # ................................................
 #                 3d case
 # ................................................
-u = Symbol('u')
-Grad = Lambda(u, Tuple(dx(u), dy(u), dz(u)))
-
-u = IndexedVariable('u')
-v = IndexedVariable('v')
-
-Curl = Lambda(u, Tuple(dy(u[2]) - dz(u[1]),
-                       dz(u[0]) - dx(u[2]),
-                       dx(u[1]) - dy(u[0])))
-Div  = Lambda(u, dx(u[0]) + dy(u[1]) + dz(u[2]))
-
-Cross = Lambda(Tuple(u,v), Tuple(u[1]*v[2] - u[2]*v[1],
-                                 u[2]*v[0] - u[0]*v[2],
-                                 u[0]*v[1] - u[1]*v[0]))
-Dot   = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1] + u[2]*v[2])
+#u = Symbol('u')
+#Grad = Lambda(u, Tuple(dx(u), dy(u), dz(u)))
+#
+#u = IndexedVariable('u')
+#v = IndexedVariable('v')
+#
+#Curl = Lambda(u, Tuple(dy(u[2]) - dz(u[1]),
+#                       dz(u[0]) - dx(u[2]),
+#                       dx(u[1]) - dy(u[0])))
+#Div  = Lambda(u, dx(u[0]) + dy(u[1]) + dz(u[2]))
+#
+#Cross = Lambda(Tuple(u,v), Tuple(u[1]*v[2] - u[2]*v[1],
+#                                 u[2]*v[0] - u[0]*v[2],
+#                                 u[0]*v[1] - u[1]*v[0]))
+#Dot   = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1] + u[2]*v[2])
 # ................................................
+
+## ...
+#class Dot(Function):
+#    """
+#
+#    Examples
+#    ========
+#
+#    """
+#
+#    nargs = None
+#
+#    def __new__(cls, *args, **options):
+#        # (Try to) sympify args first
+#
+#        if options.pop('evaluate', True):
+#            r = cls.eval(*args)
+#        else:
+#            r = None
+#
+#        if r is None:
+#            return Basic.__new__(cls, *args, **options)
+#        else:
+#            return r
+#
+#    @classmethod
+#    def eval(cls, *_args):
+#        """."""
+#
+#        if not _args:
+#            return
+#
+#        # ...
+#        u   = _args[0]
+#        v   = _args[1]
+#        try:
+#            dim = _args[2]
+#        except:
+#            dim = 3
+#        # ...
+#
+#        # ...
+#        if dim == 1:
+#            u = Symbol(str(u))
+#            v = Symbol(str(v))
+#
+#            expr = u * v
+#        elif dim == 2:
+#            u = IndexedVariable(str(u))
+#            v = IndexedVariable(str(v))
+#
+#            expr = u[0]*v[0] + u[1]*v[1]
+#        elif dim == 3:
+#            u = IndexedVariable(str(u))
+#            v = IndexedVariable(str(v))
+#
+#            expr = u[0]*v[0] + u[1]*v[1] + u[2]*v[2]
+#        else:
+#            raise NotImplementedError('Only 1d, 2d and 3d cases are available')
+#        # ...
+#
+#        return expr
+## ...
+
+
+## ...
+#class Grad(Function):
+#    """
+#
+#    Examples
+#    ========
+#
+#    """
+#
+#    nargs = None
+#
+#    def __new__(cls, *args, **options):
+#        # (Try to) sympify args first
+#
+#        if options.pop('evaluate', True):
+#            r = cls.eval(*args)
+#        else:
+#            r = None
+#
+#        if r is None:
+#            return Basic.__new__(cls, *args, **options)
+#        else:
+#            return r
+#
+#    @classmethod
+#    def eval(cls, *_args):
+#        """."""
+#
+#        if not _args:
+#            return
+#
+#        # ...
+#        u   = _args[0]
+#        try:
+#            dim = _args[1]
+#        except:
+#            dim = 3
+#        # ...
+#
+#        # ...
+#        if dim == 1:
+#            u = Symbol(str(u))
+#
+#            expr = dx(u)
+#        elif dim == 2:
+#            u = Symbol(str(u))
+#
+#            expr = Tuple(dx(u), dy(u))
+#        elif dim == 3:
+#            u = Symbol(str(u))
+#
+#            expr = Tuple(dx(u), dy(u), dz(u))
+#        else:
+#            raise NotImplementedError('Only 1d, 2d and 3d cases are available')
+#        # ...
+#
+#        return expr
+## ...
+
 
 # ...
 def subs(expr, old, new):
@@ -252,12 +376,17 @@ def initialize_weak_form(f, dim):
         elif isinstance(expr, Add):
             for e in expr._args:
                 _decompose(e)
+#        else:
+#            raise NotImplementedError('given type {0}'.format(type(expr)))
 
         return d, d_args
     # ...
 
     expr = f.expr
     expr = expr.expand()
+#    expr = expr.subs({Function('Grad'): Grad})
+#    expr = expr.subs({Function('Dot'): Dot})
+
     d, d_args = _decompose(expr)
 
     d_expr = {}
