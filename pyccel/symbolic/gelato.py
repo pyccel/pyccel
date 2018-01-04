@@ -234,14 +234,17 @@ def initialize_weak_form(f, dim):
     # ...
 
     expr = f.expr
+    expr = expr.expand()
     d, d_args = _decompose(expr)
 
     d_expr = {}
     for k,expr in d.items():
         args = list(coords)
 
+        found_vector = False
         for u in d_args[k]:
             if _is_vector(expr, u):
+                found_vector = True
                 for i in range(0, dim):
                     uofi = IndexedVariable(str(u))[i]
                     ui = Symbol('{0}{1}'.format(u, i+1))
@@ -251,12 +254,15 @@ def initialize_weak_form(f, dim):
                 args += [u]
 
         d_expr[k] = Lambda(args, expr)
+        if found_vector:
+            d_expr[k], _infos = initialize_weak_form(d_expr[k], dim)
 
     info = {}
     info['coords'] = coords
     info['tests']  = tests
     info['trials'] = trials
-    print d_expr
+#    print d_expr
+#    print info
 #    import sys; sys.exit(0)
 
     return d_expr, info
