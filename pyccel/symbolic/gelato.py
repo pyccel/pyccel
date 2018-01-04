@@ -76,20 +76,43 @@ dxy = Function('dxy')
 dyz = Function('dyz')
 dzx = Function('dzx')
 
-# TODO how to treat 1d, 2d, 3d etc?
+# ................................................
+#                 2d case
+# ................................................
+#u = Symbol('u')
+#Grad = Lambda(u, Tuple(dx(u), dy(u)))
+#
+#u = IndexedVariable('u')
+#v = IndexedVariable('v')
+#
+#Curl = Lambda(u, Tuple( dy(u),
+#                       -dx(u)))
+#Div  = Lambda(u, dx(u[0]) + dy(u[1]))
+#Rot  = Lambda(u, dy(u[0]) - dx(u[1]))
+#
+#Cross = Lambda(Tuple(u,v), u[0]*v[1] - u[1]*v[0])
+#Dot   = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1])
+# ................................................
+
+# ................................................
+#                 3d case
+# ................................................
 u = Symbol('u')
-Grad = Lambda(u, Tuple(dx(u), dy(u)))
+Grad = Lambda(u, Tuple(dx(u), dy(u), dz(u)))
 
 u = IndexedVariable('u')
 v = IndexedVariable('v')
 
-Curl = Lambda(u, Tuple(dy(u), -dx(u)))
-Div  = Lambda(u, dx(u[0]) + dy(u[1]))
-Rot  = Lambda(u, dy(u[0]) - dx(u[1]))
+Curl = Lambda(u, Tuple(dy(u[2]) - dz(u[1]),
+                       dz(u[0]) - dx(u[2]),
+                       dx(u[1]) - dy(u[0])))
+Div  = Lambda(u, dx(u[0]) + dy(u[1]) + dz(u[2]))
 
-Cross  = Lambda(Tuple(u,v), u[0]*v[1] - u[1]*v[0])
-Dot    = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1])
-# ...
+Cross = Lambda(Tuple(u,v), Tuple(u[1]*v[2] - u[2]*v[1],
+                                 u[2]*v[0] - u[0]*v[2],
+                                 u[0]*v[1] - u[1]*v[0]))
+Dot   = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1] + u[2]*v[2])
+# ................................................
 
 # ...
 def subs(expr, old, new):
