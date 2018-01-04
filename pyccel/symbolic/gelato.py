@@ -27,7 +27,7 @@ from sympy.core.singleton import S
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices.dense import MutableDenseMatrix
-from sympy import Mul
+from sympy import Mul, Add
 from sympy import Tuple
 from sympy import postorder_traversal
 from sympy import preorder_traversal
@@ -36,6 +36,8 @@ from itertools import product
 
 
 from pyccel.ast.core import IndexedVariable
+from pyccel.ast.core import IndexedElement
+from pyccel.ast.core import Variable
 
 import numpy as np
 
@@ -90,6 +92,44 @@ Dot    = Lambda(Tuple(u,v), u[0]*v[0] + u[1]*v[1])
 # ...
 
 # ...
+def subs(expr, old, new):
+    """another implementation of subs that treats only arithmetic expressions."""
+
+    if isinstance(expr, (list, tuple, Tuple)):
+        return [subs(i, old, new) for i in expr]
+
+    if isinstance(expr, Function):
+        args = subs(expr.args, old, new)
+        return Function(str(expr.func))(*args)
+
+    if isinstance(expr, Add):
+        args = subs(expr._args, old, new)
+        return Add(*args)
+
+    if isinstance(expr, Mul):
+        args = subs(expr._args, old, new)
+        return Mul(*args)
+
+    if isinstance(expr, IndexedElement):
+        if str(expr) == str(old):
+            if isinstance(new, str):
+                indices = expr.indices
+                return IndexedVariable(new)[indices]
+            else:
+                return new
+
+    if isinstance(expr, Variable):
+        if str(expr) == str(old):
+            return Variable(str(new))
+
+    if isinstance(expr, Symbol):
+        if str(expr) == str(old):
+            return Symbol(str(new))
+
+    return expr
+# ...
+
+# ...
 def initialize_weak_form(f, dim):
     if not isinstance(f, Lambda):
         raise TypeError('Expecting a Lambda')
@@ -121,43 +161,105 @@ def initialize_weak_form(f, dim):
             d[(i_test, i_trial)] = S.Zero
             d_args[(i_test, i_trial)] = []
 
+
+    # ...
+    def _find_atom(expr, atom):
+        """."""
+        if not(isinstance(atom, (Symbol, IndexedVariable, Variable))):
+            raise TypeError('Wrong type, given {0}'.format(type(atom)))
+
+        if isinstance(expr, (list, tuple, Tuple)):
+            ls = [_find_atom(i, atom) for i in expr]
+            return np.array(ls).any()
+
+        if isinstance(expr, Add):
+            return _find_atom(expr._args, atom)
+
+        if isinstance(expr, Mul):
+            return _find_atom(expr._args, atom)
+
+        if isinstance(expr, Function):
+            return _find_atom(expr.args, atom)
+
+        if isinstance(expr, IndexedElement):
+            return (str(expr.base) == str(atom))
+
+        if isinstance(expr, Variable):
+            return (str(expr) == str(atom))
+
+        if isinstance(expr, Symbol):
+            return (str(expr) == str(atom))
+
+        return False
+    # ...
+
+    # ...
+    def _is_vector(expr, atom):
+        """."""
+        if not(isinstance(atom, (Symbol, IndexedVariable, Variable))):
+            raise TypeError('Wrong type, given {0}'.format(type(atom)))
+
+        if isinstance(expr, (list, tuple, Tuple)):
+            ls = [_is_vector(i, atom) for i in expr]
+            return np.array(ls).any()
+
+        if isinstance(expr, Add):
+            return _is_vector(expr._args, atom)
+
+        if isinstance(expr, Mul):
+            return _is_vector(expr._args, atom)
+
+        if isinstance(expr, Function):
+            return _is_vector(expr.args, atom)
+
+        if isinstance(expr, IndexedElement):
+            return True
+
+        return False
+    # ...
+
+    # ... be careful here, we are using side effect on (d, d_args)
+    def _decompose(expr):
+        if isinstance(expr, Mul):
+            for i_test, test in enumerate(tests):
+                for i_trial, trial in enumerate(trials):
+                    if _find_atom(expr, test) and _find_atom(expr, trial):
+                        d[(i_test, i_trial)] += expr
+                        d_args[(i_test, i_trial)] = Tuple(test, trial)
+        elif isinstance(expr, Add):
+            for e in expr._args:
+                _decompose(e)
+
+        return d, d_args
+    # ...
+
     expr = f.expr
-    for arg in preorder_traversal(expr):
-        if isinstance(arg, Mul):
-            found_test  = False
-            found_trial = False
+    d, d_args = _decompose(expr)
 
-            test  = None
-            trial = None
+    d_expr = {}
+    for k,expr in d.items():
+        args = list(coords)
 
-            for a in preorder_traversal(arg):
-                if isinstance(a, Function):
-                    pass
-                elif isinstance(a, Symbol):
-                    if str(a) in test_names:
-                        found_test  = True
-                        test = a
-                    if str(a) in trial_names:
-                        found_trial  = True
-                        trial = a
-            if found_test and found_trial:
-                i_test = tests.index(test)
-                i_trial = trials.index(trial)
+        for u in d_args[k]:
+            if _is_vector(expr, u):
+                for i in range(0, dim):
+                    uofi = IndexedVariable(str(u))[i]
+                    ui = Symbol('{0}{1}'.format(u, i+1))
+                    expr = subs(expr, uofi, ui)
+                    args += [ui]
+            else:
+                args += [u]
 
-                d[(i_test, i_trial)] += arg
-                d_args[(i_test, i_trial)] = Tuple(test, trial)
-
-    expr = {}
-    for k,e in d.items():
-        args = list(coords) + list(d_args[k])
-        expr[k] = Lambda(args, e)
+        d_expr[k] = Lambda(args, expr)
 
     info = {}
     info['coords'] = coords
     info['tests']  = tests
     info['trials'] = trials
+    print d_expr
+#    import sys; sys.exit(0)
 
-    return expr, info
+    return d_expr, info
 
 
 # ... TODO works only for scalar cases
