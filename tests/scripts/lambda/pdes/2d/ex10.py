@@ -1,8 +1,8 @@
 # coding: utf-8
 
 # ... import symbolic tools
-glt_function = load('pyccel.symbolic.gelato', 'glt_function', True, 3)
 weak_formulation = load('pyccel.symbolic.gelato', 'weak_formulation', True, 2)
+glt_function     = load('pyccel.symbolic.gelato', 'glt_function',     True, 3)
 
 Grad  = load('pyccel.symbolic.gelato', 'Grad',  False, 1)
 Curl  = load('pyccel.symbolic.gelato', 'Curl',  False, 1)
@@ -26,7 +26,7 @@ print('')
 # ...
 
 # ...
-a2  = lambda x,y,v,u: Rot(u) * Rot(v) + 0.2 * Div(u) * Div(v)
+a2  = lambda x,y,v,u: Rot(u) * Rot(v) + Div(u) * Div(v) + 0.2 * Dot(u, v)
 
 ga2 = glt_function(a2, [4, 4], [2, 2])
 wa2 = weak_formulation(a2, 2)
@@ -34,5 +34,17 @@ wa2 = weak_formulation(a2, 2)
 print(' a2            := ', a2)
 print(' glt symbol a2 := ', ga2)
 print('wa2            := ', wa2)
+print('')
+# ...
+
+# ...
+a3  = lambda x,y,v,u: Cross(Curl(u), Curl(v)) + 0.2 * u * v
+
+ga3 = glt_function(a3, [4, 4], [2, 2])
+wa3 = weak_formulation(a3, 2)
+
+print(' a3            := ', a3)
+print(' glt symbol a3 := ', ga3)
+print('wa3            := ', wa3)
 print('')
 # ...
