@@ -8,13 +8,14 @@ from sympy import Integer, Float
 
 
 from sympy import symbols, Tuple, Lambda, Symbol, sympify, expand
-from sympy import Add, Mul, Function, Basic
+from sympy import Add, Mul
 from sympy import preorder_traversal, Expr
 from sympy import Indexed, IndexedBase
 from sympy import simplify
 from sympy import S
 from sympy.core.compatibility import is_sequence
-
+from sympy import Basic
+from sympy import Function
 
 # ...
 class LinearOperator(Function):
@@ -608,14 +609,77 @@ class Div_3d(DivBasic):
         return dx(u[0]) + dy(u[1]) + dz(u[2])
 # ...
 
+# ...
+_operators_1d = [Dot_1d,
+                 Grad_1d, Div_1d]
+
+_operators_2d = [Dot_2d, Cross_2d,
+                 Grad_2d, Curl_2d, Rot_2d, Div_2d]
+
+_operators_3d = [Dot_3d, Cross_3d,
+                 Grad_3d, Curl_3d, Div_3d]
+# ...
 
 
+# ... generic operators
+class GenericFunction(Function):
 
+    def __getitem__(self, indices, **kw_args):
+        if is_sequence(indices):
+            # Special case needed because M[*my_tuple] is a syntax error.
+            return Indexed(self, *indices, **kw_args)
+        else:
+            return Indexed(self, indices, **kw_args)
 
+class Dot(GenericFunction):
+    pass
 
-#Div  = Lambda(u, dx(u[0]) + dy(u[1]))
-#Rot  = Lambda(u, dy(u[0]) - dx(u[1]))
+class Cross(GenericFunction):
+    pass
 
+class Grad(GenericFunction):
+    pass
+
+class Curl(GenericFunction):
+    pass
+
+class Rot(GenericFunction):
+    pass
+
+class Div(GenericFunction):
+    pass
+
+_generic_ops  = (Dot, Cross,
+                 Grad, Curl, Rot, Div)
+# ...
+
+# ...
+def gelatize(expr, dim):
+    # ... in the case of a Lambda expression
+    args = None
+    if isinstance(expr, Lambda):
+        args = expr.variables
+        expr = expr.expr
+    # ...
+
+    # ... we first need to find the ordered list of generic operators
+    ops = [a for a in preorder_traversal(expr) if isinstance(a, _generic_ops)]
+    # ...
+
+    # ...
+    for i in ops:
+        # if i = Grad(u) then type(i) is Grad
+        op = type(i)
+
+        new  = eval('{0}_{1}d'.format(op, dim))
+        expr = expr.subs(op, new)
+    # ...
+
+    if args:
+        return Lambda(args, expr)
+    else:
+        return expr
+# ...
 
 
 
@@ -698,15 +762,10 @@ def test_2d_1():
     u = Symbol('u')
     v = Symbol('v')
 
-    Dot  = Function('Dot')
-    Grad = Function('Grad')
-
     a = Lambda((x,y,v,u), Dot(Grad(u), Grad(v)))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Grad, Grad_2d)
-    expr = expr.subs(Dot,  Dot_2d)
+    expr = gelatize(a, dim=2)
 
     print '> final := {0}'.format(expr)
     print('')
@@ -719,17 +778,10 @@ def test_2d_2():
     u = IndexedBase('u')
     v = IndexedBase('v')
 
-    Dot  = Function('Dot')
-    Rot  = Function('Rot')
-    Div  = Function('Div')
-
     a = Lambda((x,y,v,u), Rot(u) * Rot(v) + Div(u) * Div(v) + 0.2 * Dot(u, v))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Rot, Rot_2d)
-    expr = expr.subs(Div, Div_2d)
-    expr = expr.subs(Dot, Dot_2d)
+    expr = gelatize(a, dim=2)
 
     print '> final := {0}'.format(expr.expand())
     print('')
@@ -742,15 +794,10 @@ def test_2d_3():
     u = Symbol('u')
     v = Symbol('v')
 
-    Cross = Function('Cross')
-    Curl  = Function('Curl')
-
     a = Lambda((x,y,v,u), Cross(Curl(u), Curl(v)) + 0.2 * u * v)
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Curl, Curl_2d)
-    expr = expr.subs(Cross, Cross_2d)
+    expr = gelatize(a, dim=2)
 
     print '> final := {0}'.format(expr.expand())
     print('')
@@ -763,15 +810,10 @@ def test_3d_1():
     u = Symbol('u')
     v = Symbol('v')
 
-    Dot  = Function('Dot')
-    Grad = Function('Grad')
-
     a = Lambda((x,y,z,v,u), Dot(Grad(u), Grad(v)))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Grad, Grad_3d)
-    expr = expr.subs(Dot,  Dot_3d)
+    expr = gelatize(a, dim=3)
 
     print '> final := {0}'.format(expr)
     print('')
@@ -784,15 +826,11 @@ def test_3d_2():
     u = IndexedBase('u')
     v = IndexedBase('v')
 
-    Dot  = Function('Dot')
-    Div  = Function('Div')
 
     a = Lambda((x,y,v,u), Div(u) * Div(v) + 0.2 * Dot(u, v))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Div, Div_3d)
-    expr = expr.subs(Dot, Dot_3d)
+    expr = gelatize(a, dim=3)
 
     print '> final := {0}'.format(expr.expand())
     print('')
@@ -805,15 +843,10 @@ def test_3d_3():
     u = IndexedBase('u')
     v = IndexedBase('v')
 
-    Dot  = Function('Dot')
-    Curl = Function('Curl')
-
     a = Lambda((x,y,v,u), Dot(Curl(u), Curl(v)) + 0.2 * Dot(u, v))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Curl, Curl_3d)
-    expr = expr.subs(Dot, Dot_3d)
+    expr = gelatize(a, dim=3)
 
     print '> final := {0}'.format(expr.expand())
     print('')
@@ -828,17 +861,10 @@ def test_3d_4a():
 
     b = Tuple(1.0, 0., 0.)
 
-    Cross = Function('Cross')
-    Dot  = Function('Dot')
-    Curl = Function('Curl')
-
     a = Lambda((x,y,v,u), Dot(Curl(Cross(b,u)), Curl(Cross(b,v))) + 0.2 * Dot(u, v))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Cross, Cross_3d)
-    expr = expr.subs(Curl, Curl_3d)
-    expr = expr.subs(Dot, Dot_3d)
+    expr = gelatize(a, dim=3)
 
     print '> final := {0}'.format(expr.expand())
     print('')
@@ -846,6 +872,7 @@ def test_3d_4a():
 
 # ...
 def test_3d_4b():
+    """Alfven operator."""
     x,y = symbols('x y')
 
     u = IndexedBase('u')
@@ -853,17 +880,14 @@ def test_3d_4b():
 
     b = IndexedBase('b')
 
-    Cross = Function('Cross')
-    Dot  = Function('Dot')
-    Curl = Function('Curl')
+    c0,c1,c2 = symbols('c0 c1 c2')
 
-    a = Lambda((x,y,v,u), Dot(Curl(Cross(b,u)), Curl(Cross(b,v))) + 0.2 * Dot(u, v))
+    a = Lambda((x,y,v,u), (  c0 * Dot(u, v)
+                           - c1 * Div(u) * Div(v) + c2 *
+                           Dot(Curl(Cross(b,u)), Curl(Cross(b,v)))))
     print '> input := {0}'.format(a)
 
-    expr = a.expr
-    expr = expr.subs(Cross, Cross_3d)
-    expr = expr.subs(Curl, Curl_3d)
-    expr = expr.subs(Dot, Dot_3d)
+    expr = gelatize(a, dim=3)
 
     print '> final := {0}'.format(expr.expand())
     print('')
