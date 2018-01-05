@@ -1,3 +1,4 @@
 # -*- coding: UTF-8 -*-
 
-from .gelato import *
+from .calculus import *
+from .gelato   import *
