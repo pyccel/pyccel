@@ -22,11 +22,8 @@ reorder = False
 # ...
 
 # ...
-npts[0] = 16
-npts[1] = 16
-
-periods[0] = False
-periods[1] = True
+npts[0] = 2048
+npts[1] = 2048
 # ...
 
 mesh = Cart(npts, pads, periods, reorder)
@@ -40,7 +37,7 @@ ey = mesh.ends[1]
 # ...
 
 # ...
-print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
+#print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
 # ...
 
 # ...
@@ -78,7 +75,7 @@ for i,j in mesh.extended_indices:
 # Linear solver tolerance
 tol = 1.0e-10
 
-n_iterations = 1000
+n_iterations = 80000
 for it in range(0, n_iterations):
     u[sx:ex+1,sy:ey+1] = u_new[sx:ex+1,sy:ey+1]
 
