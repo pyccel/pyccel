@@ -22,8 +22,8 @@ reorder = False
 # ...
 
 # ...
-npts[0] = 2048
-npts[1] = 2048
+npts[0] = 32
+npts[1] = 32
 # ...
 
 mesh = Cart(npts, pads, periods, reorder)
