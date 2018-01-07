@@ -1237,7 +1237,11 @@ def expr_with_trailer(expr, trailer):
 
             # ...
             if f_name in builtin_funcs + namespace.keys():
-                expr = Function(f_name)(*_args)
+                if f_name in namespace:
+                    F = namespace[f_name]
+                    expr = F(*_args)
+                else:
+                    expr = Function(f_name)(*_args)
             else:
                 raise TypeError('Wrong type for {0}, '
                                 'given {1}'.format(f_name, type(expr)))
@@ -2181,13 +2185,9 @@ class Atom(ExpressionElement):
             else:
                 return e
         elif op in namespace:
-            if isinstance(namespace[op], FunctionDef):
-                F = namespace[op]
-                # function arguments are not known yet.
-                # they will be handled in expr_with_trailer
-                return F
-            else:
-                return namespace[op]
+            # function arguments are not known yet.
+            # they will be handled in expr_with_trailer
+            return namespace[op]
         elif op in builtin_funcs:
             return Function(op)
         elif op in builtin_types:
