@@ -63,6 +63,8 @@ AST
 Codegen
 *******
 
+* Matrix is not printed correctly (must check what is done in Sympy)
+
 * improve *namespace* property. For the moment, we only create the definition for FunctionHeader (if not MethodHeaded)
 
 * in fcode: use  self._get_statement for every statement and be careful to comments (and omp pragmas)
