@@ -168,7 +168,7 @@ def preprocess_as_str(lines):
 
         if n == depth * tab + tab:
             depth += 1
-            lines_new += "indent" + "\n"
+            lines_new += "indent\n" + "\n"
             lines_new += line
         elif not skipped:
             d = n // tab
@@ -177,7 +177,7 @@ def preprocess_as_str(lines):
                 m = (old - n) // tab
                 depth -= m
                 for j in range(0, m):
-                    lines_new += "dedent" + "\n"
+                    lines_new += "dedent\n" + "\n"
                 lines_new += annotated
                 annotated = ""
             lines_new += line
