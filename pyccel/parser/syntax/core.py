@@ -1576,6 +1576,7 @@ class AssignStmt(BasicStmt):
     @property
     def stmt_vars(self):
         """Statement variables."""
+        # TODO must be improved in the case of Tuples
         return [self.lhs]
 
     @property
@@ -1598,6 +1599,7 @@ class AssignStmt(BasicStmt):
 #        print('{0} := {1}'.format(lhs, rhs))
 #        print_namespace()
 #        print('{0} :: {1}'.format(lhs, type(lhs)))
+#        print('{0} :: {1}'.format(rhs, type(rhs)))
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
@@ -1612,10 +1614,24 @@ class AssignStmt(BasicStmt):
                         args.append(a)
                 # we use str(lhs) to make it work for DottedName
                 return builtin_function(name.lower(), args, lhs=str(lhs))
+
         elif isinstance(rhs, Lambda):
             lhs = Symbol(str(lhs))
             namespace[str(lhs)] = rhs
             return rhs
+
+        # TODO results must be set as stmt_vars,
+        #      so they can be deleted by the next block
+        elif isinstance(rhs, FunctionCall):
+            func = rhs.func
+            results = func.results
+            if isinstance(results, Tuple) and isinstance(lhs, Tuple):
+                if not(len(results) == len(lhs)):
+                    raise ValueError('Wrong number of results')
+
+                for res,e in zip(results, lhs):
+                    d_var = get_attributs(res)
+                    insert_variable(str(e), **d_var)
 
         if isinstance(lhs, str) and not(lhs in namespace):
             d_var = get_attributs(rhs)
@@ -2575,9 +2591,13 @@ class FunctionDefStmt(BasicStmt):
 
             with_header = True
 
+        # ...............................
+        #         Treating inputs
+        # ...............................
         if with_header and (len(args) > 0):
-            # old occurence of args will be stored in scope
             h = headers[name]
+
+            # old occurence of args will be stored in scope
             for a, d in zip(args, h.dtypes):
                 # case of arg with key
                 if isinstance(a, dict):
@@ -2609,7 +2629,9 @@ class FunctionDefStmt(BasicStmt):
                 d_var['rank']        = rank
                 d_var['intent']      = 'in'
                 insert_variable(arg_name, **d_var)
-                var = namespace[arg_name]
+        # ...............................
+
+        # ... case of class constructor
         if self.name == '__init__':
             attr=[]
             for i in self.body.stmts:
@@ -2620,6 +2642,7 @@ class FunctionDefStmt(BasicStmt):
                     attr+=[Var.lhs]
             # we first create and append an empty class to the namespace
             namespace[cls_instance] = ClassDef(cls_instance,attr,[],[])
+        # ...
 
         body = self.body.expr
         if args_0:
