@@ -2518,6 +2518,8 @@ class FunctionDefStmt(BasicStmt):
         args = self.trailer.expr
 
 #        print (">>>>>>>>>>> FunctionDefStmt {0}: Begin".format(name))
+#        print_namespace()
+#        print_declarations()
 
         local_vars  = []
         global_vars = []
@@ -2695,7 +2697,16 @@ class FunctionDefStmt(BasicStmt):
                             local_vars += [stmt.lhs]
                     else:
                         local_vars += [stmt.lhs]
+        # ...
+
+        # ...
+        local_vars += [i.expr for i in self.stmt_vars if isinstance(i, Variable)]
         local_vars = list(set(local_vars))
+        # ...
+
+        # ... remove results from local_vars
+        res_names = [str(i) for i in results]
+        local_vars = [i for i in local_vars if not(str(i) in res_names)]
         # ...
 
         # rename the method in the class case
@@ -2711,15 +2722,8 @@ class FunctionDefStmt(BasicStmt):
         namespace[name] = stmt
 
         # ...
-        ls = []
-        for e in self.local_vars + self.stmt_vars:
-            if isinstance(e, str):
-                ls += [e]
-            else:
-                ls += [str(e.expr)]
-
         # we keep 'self.*' in the stack
-        ls = [i for i in ls if not str(i).startswith('self.')]
+        ls = [str(i) for i in local_vars+results if not str(i).startswith('self.')]
 
         for var_name in ls:
             if var_name in namespace:
@@ -2751,7 +2755,9 @@ class FunctionDefStmt(BasicStmt):
         #    if k.name in declarations.keys():
         #        declarations.pop(k.name)
         # ...
-
+#        print_namespace()
+#        print_declarations()
+#
 #        print "<<<<<<<<<<< FunctionDefStmt : End"
         return stmt
 

@@ -2199,18 +2199,16 @@ class Declare(Basic):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
-        # the following is not working for other concept than Variable
-        # needed for example for MPI atoms
-        if isinstance(variables, Variable):
+
+        if not isinstance(variables, (list, tuple, Tuple)):
             variables = [variables]
-#        if not isinstance(variables, (list, tuple)):
-#            variables = [variables]
         for var in variables:
             if not isinstance(var, Variable):
-                raise TypeError("var must be of type Variable")
+                raise TypeError("var must be of type Variable, given {0}".format(var))
             if var.dtype != dtype:
                 raise ValueError("All variables must have the same dtype")
         variables = Tuple(*variables)
+
         if intent:
             if not(intent in ['in', 'out', 'inout']):
                 raise ValueError("intent must be one among {'in', 'out', 'inout'}")

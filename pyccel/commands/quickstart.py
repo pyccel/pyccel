@@ -181,7 +181,7 @@ def generate(d, silent=False):
         if flag:
             flags[key.upper()] = flag
 
-    if flags['BLASLAPACK_DIR']:
+    if ('BLASLAPACK_DIR' in flags) and flags['BLASLAPACK_DIR']:
         flags['LAPACK_ENABLED'] = 'ON'
 
     d['flags'] = flags
