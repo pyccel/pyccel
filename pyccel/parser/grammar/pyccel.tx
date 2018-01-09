@@ -44,7 +44,6 @@ SmallStmt:
   | DelStmt 
   | ImportStmt 
   | ConstructorStmt 
-  | DeclarationStmt 
   | ExprStmt 
   | AssertStmt
 ;
@@ -161,8 +160,6 @@ ClassOptions:
 
 DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
-
-DeclarationStmt: datatype=DataType variables+=ID[','];
 
 DataType:
     'double' 

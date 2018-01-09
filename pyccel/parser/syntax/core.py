@@ -1406,42 +1406,6 @@ class ConstructorStmt(BasicStmt):
         insert_variable(var_name, datatype=datatype, rank=rank)
         return EmptyLine()
 
-class DeclarationStmt(BasicStmt):
-    """Class representing a declaration statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the declaration statement.
-
-        variables_names: list of str
-            list of variable names.
-        datatype: str
-            datatype of the declared variables.
-        """
-        self.variables_name = kwargs.pop('variables')
-        self.datatype = kwargs.pop('datatype')
-
-        raise Exception("Need to be updated! not used anymore.")
-
-        super(DeclarationStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the declaration statement. This property will return a list of
-        declarations statements.
-        """
-        datatype = str(self.datatype)
-        decs = []
-        # TODO depending on additional options from the grammar
-        for var in self.variables:
-            dec = Variable(datatype, var.expr)
-            decs.append(Declare(datatype, dec, intent='in'))
-
-        self.update()
-
-        return decs
-
 # TODO: improve by creating the corresponding object in pyccel.ast.core
 class DelStmt(BasicStmt):
     """Class representing a delete statement."""
