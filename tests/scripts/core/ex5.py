@@ -44,7 +44,7 @@ w = fd(xd,yd)
 z = 0.0
 t = 0.0
 
-# subroutine call
+# ...
 [z, t] = g(xd,w)
 
 print(z)
