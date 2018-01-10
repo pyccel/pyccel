@@ -96,7 +96,7 @@ set( __SUFFIX___DEPS ${__SUFFIX___DEPS} CACHE INTERNAL "List of external depende
 # Installation (library, headers, mod files)
 install( FILES ${__SUFFIX___LIB}    DESTINATION lib )
 install( DIRECTORY "${CMAKE_Fortran_MODULE_DIRECTORY}/"
-  DESTINATION "include/__LIBNAME__" FILES_MATCHING PATTERN "plf_*.mod" )
+  DESTINATION "include/__LIBNAME__" FILES_MATCHING PATTERN "*.mod" )
 
 #===============================================================================
 # Print PALFConfig.cmake for external use with cmake
