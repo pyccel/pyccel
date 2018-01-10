@@ -36,8 +36,8 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock,
                              Module, Program)
 
 from pyccel.ast.parallel.mpi     import mpify
-from pyccel.ast.parallel.openmp  import openmpfy
-from pyccel.ast.parallel.openacc import openaccfy
+from pyccel.ast.parallel.openmp  import ompfy
+from pyccel.ast.parallel.openacc import accfy
 
 from pyccel.parser.parser    import PyccelParser
 from pyccel.parser.utilities import find_imports
@@ -262,8 +262,7 @@ class Codegen(object):
                  body=None, \
                  routines=None, \
                  classes=None, \
-                 modules=None, \
-                 is_module=False):
+                 modules=None):
         """Constructor for the Codegen class.
 
         filename: str
@@ -286,8 +285,6 @@ class Codegen(object):
             list of all classes definitions.
         modules: list
             list of used modules.
-        is_module: bool
-            True if the input file will be treated as a module and not a program
         """
         # ... TODO improve once TextX will handle indentation
         clean(filename)
@@ -316,7 +313,6 @@ class Codegen(object):
         self._language     = None
         self._imports      = imports
         self._name         = name
-        self._is_module    = is_module
         self._body         = body
         self._preludes     = preludes
         self._routines     = routines
@@ -471,7 +467,7 @@ class Codegen(object):
     @property
     def is_module(self):
         """Returns True if we are treating a module."""
-        return self._is_module
+        return isinstance(self.expr, Module)
 
     @property
     def printer(self):
@@ -585,18 +581,6 @@ class Codegen(object):
                 raise ValueError("Only openmp is available")
         # ...
 
-        # ... TODO use Import class
-        if with_mpi:
-            imports += "use MPI\n"
-        # ...
-
-        # ... TODO use Import class
-        if with_openmp:
-            imports += "use omp_lib\n"
-        if with_openacc:
-            imports += "use openacc\n"
-        # ...
-
         ####################################################
 
         # ... TODO improve
@@ -607,34 +591,6 @@ class Codegen(object):
         # ...
         expr = self.expr
         # ...
-
-#        # ...
-#        for dec in expr.declarations:
-#            if isinstance(dec.dtype, (NativeRange, NativeTensor)):
-#                continue
-#            elif (isinstance(dec.variables[0], Variable) and
-#                  str(dec.variables[0].name).startswith('__')):
-#                # we use str, for the case of DottedName
-#                continue
-#            else:
-#                preludes += printer(dec) + "\n"
-#        # ...
-#
-#        # ...
-#        def _construct_prelude(stmt):
-#            preludes = ''
-#            if isinstance(stmt, (list, tuple, Tuple)):
-#                for dec in stmt:
-#                    preludes += _construct_prelude(dec)
-#            if isinstance(stmt, (For, While)):
-#                preludes += _construct_prelude(stmt.body)
-#            if isinstance(stmt, Block):
-#                for dec in stmt.declarations:
-#                    preludes += printer(dec) + "\n"
-#            return preludes
-#
-#        preludes += _construct_prelude(expr.body)
-#        # ...
 
         # ...
         settings = {}
@@ -650,17 +606,12 @@ class Codegen(object):
         # ...
 
         # ...
-        is_module = isinstance(expr, Module)
-        # ...
-
-        # ...
         self._imports   = imports
         self._preludes  = preludes
         self._body      = body
         self._routines  = routines
         self._classes   = classes
         self._modules   = list(set(modules))
-        self._is_module = is_module
         self._language  = language
         self._metavars  = metavars
         # ...
@@ -794,6 +745,12 @@ def pyccelize(expr, **settings):
     """."""
 
     # ...
+    with_mpi  = False
+    if 'with_mpi' in settings:
+        with_mpi  = settings['with_mpi']
+    # ...
+
+    # ...
     with_openmp  = False
     if 'with_openmp' in settings:
         with_openmp  = settings['with_openmp']
@@ -898,26 +855,22 @@ def pyccelize(expr, **settings):
         # ...
 
         info['metavars'] = metavars
-
-        return expr, info
     # ...
 
+    # ...
+    if with_mpi:
+        expr = mpify(expr)
+    # ...
 
+    # ...
+    if with_openmp:
+        expr = ompfy(expr)
+    # ...
 
-#        # ...
-#        if with_mpi:
-#            stmts = [mpify(s) for s in stmts]
-#        # ...
-#
-#        # ...
-#        if with_openmp:
-#            stmts = [openmpfy(s) for s in stmts]
-#        # ...
-#
-#        # ...
-#        if with_openacc:
-#            stmts = [openaccfy(s) for s in stmts]
-#        # ...
+    # ...
+    if with_openacc:
+        expr = accfy(expr)
+    # ...
 
+    return expr, info
 # ...
-

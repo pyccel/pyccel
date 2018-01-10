@@ -22,11 +22,6 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
-from pyccel.ast.parallel.mpi     import mpify
-from pyccel.ast.parallel.openmp  import openmpfy
-from pyccel.ast.parallel.openacc import openaccfy
-
-
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)

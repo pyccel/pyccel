@@ -5,6 +5,7 @@ from sympy.core import Tuple
 from sympy.utilities.iterables import iterable
 from sympy import Integer
 
+from pyccel.ast.core import Module, Program
 from pyccel.ast.core import Nil
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import DottedName
@@ -24,7 +25,7 @@ from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
 from pyccel.ast.core import Len
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, ForIterator, While, With, If, Del, With
+from pyccel.ast.core import For, ForIterator, While, With, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall, ConstructorCall
 
@@ -531,7 +532,7 @@ class OMP_Linear(OMP):
 ##########################################################
 #             useful functions
 ##########################################################
-def openmpfy(stmt, **options):
+def ompfy(stmt, **options):
     """
     Converts some statements to OpenMP statments.
 
@@ -539,14 +540,16 @@ def openmpfy(stmt, **options):
         statement or a list of statements
     """
     if isinstance(stmt, (list, tuple, Tuple)):
-        return [openmpfy(i, **options) for i in stmt]
+        return [ompfy(i, **options) for i in stmt]
+
     if isinstance(stmt, Tensor):
         # TODO to implement
         return stmt
+
     if isinstance(stmt, ForIterator):
-        iterable = openmpfy(stmt.iterable, **options)
+        iterable = ompfy(stmt.iterable, **options)
         target   = stmt.target
-        body     = openmpfy(stmt.body, **options)
+        body     = ompfy(stmt.body, **options)
 
         info, clauses = get_for_clauses(iterable)
 
@@ -556,21 +559,25 @@ def openmpfy(stmt, **options):
             loop   = ForIterator(target, iterable, body, strict=False)
             nowait = info['nowait']
             return OMP_For(loop, clauses, nowait)
+
     if isinstance(stmt, For):
-        iterable = openmpfy(stmt.iterable, **options)
+        iterable = ompfy(stmt.iterable, **options)
         target   = stmt.target
-        body     = openmpfy(stmt.body, **options)
+        body     = ompfy(stmt.body, **options)
         return For(target, iterable, body, strict=False)
+
     if isinstance(stmt, list):
-        return [openmpfy(a, **options) for a in stmt]
+        return [ompfy(a, **options) for a in stmt]
+
     if isinstance(stmt, While):
-        test = openmpfy(stmt.test, **options)
-        body = openmpfy(stmt.body, **options)
+        test = ompfy(stmt.test, **options)
+        body = ompfy(stmt.body, **options)
         return While(test, body)
+
     if isinstance(stmt, With):
-        test     = openmpfy(stmt.test, **options)
-        body     = openmpfy(stmt.body, **options)
-        settings = openmpfy(stmt.settings, **options)
+        test     = ompfy(stmt.test, **options)
+        body     = ompfy(stmt.body, **options)
+        settings = ompfy(stmt.settings, **options)
 
         clauses = get_with_clauses(test)
 
@@ -580,34 +587,60 @@ def openmpfy(stmt, **options):
             # TODO to be defined
             variables = []
             return OMP_Parallel(clauses, variables, body)
+
     if isinstance(stmt, If):
         args = []
         for block in stmt.args:
             test  = block[0]
             stmts = block[1]
-            t = openmpfy(test,  **options)
-            s = openmpfy(stmts, **options)
+            t = ompfy(test,  **options)
+            s = ompfy(stmts, **options)
             args.append((t,s))
         return If(*args)
-    if isinstance(stmt, FunctionDef):
-        name        = openmpfy(stmt.name,        **options)
-        arguments   = openmpfy(stmt.arguments,   **options)
-        results     = openmpfy(stmt.results,     **options)
-        body        = openmpfy(stmt.body,        **options)
-        local_vars  = openmpfy(stmt.local_vars,  **options)
-        global_vars = openmpfy(stmt.global_vars, **options)
 
-        return FunctionDef(name, arguments, results, \
+    if isinstance(stmt, FunctionDef):
+        name        = ompfy(stmt.name,        **options)
+        arguments   = ompfy(stmt.arguments,   **options)
+        results     = ompfy(stmt.results,     **options)
+        body        = ompfy(stmt.body,        **options)
+        local_vars  = ompfy(stmt.local_vars,  **options)
+        global_vars = ompfy(stmt.global_vars, **options)
+
+        return FunctionDef(name, arguments, results,
                            body, local_vars, global_vars)
+
     if isinstance(stmt, ClassDef):
-        name        = openmpfy(stmt.name,        **options)
-        attributs   = openmpfy(stmt.attributs,   **options)
-        methods     = openmpfy(stmt.methods,     **options)
-        options     = openmpfy(stmt.options,     **options)
+        name        = ompfy(stmt.name,        **options)
+        attributs   = ompfy(stmt.attributs,   **options)
+        methods     = ompfy(stmt.methods,     **options)
+        options     = ompfy(stmt.options,     **options)
 
         return ClassDef(name, attributs, methods, options)
-    if isinstance(stmt, With):
-        raise NotImplementedError('With stmt not available')
+
+    if isinstance(stmt, Module):
+        name        = ompfy(stmt.name,        **options)
+        variables   = ompfy(stmt.variables,   **options)
+        funcs       = ompfy(stmt.funcs    ,   **options)
+        classes     = ompfy(stmt.classes  ,   **options)
+        imports     = ompfy(stmt.imports  ,   **options)
+        imports    += [Import('omp_lib')]
+
+        return Module(name, variables, funcs, classes,
+                      imports=imports)
+
+    if isinstance(stmt, Program):
+        name        = ompfy(stmt.name,        **options)
+        variables   = ompfy(stmt.variables,   **options)
+        funcs       = ompfy(stmt.funcs    ,   **options)
+        classes     = ompfy(stmt.classes  ,   **options)
+        imports     = ompfy(stmt.imports  ,   **options)
+        body        = ompfy(stmt.body  ,   **options)
+        modules     = ompfy(stmt.modules  ,   **options)
+        imports    += [Import('omp_lib')]
+
+        return Program(name, variables, funcs, classes, body,
+                       imports=imports, modules=modules)
+
     if isinstance(stmt, ParallelBlock):
         variables = stmt.variables
         body      = stmt.body

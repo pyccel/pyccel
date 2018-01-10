@@ -13,6 +13,7 @@ from sympy.utilities.iterables import iterable
 from sympy.core.function import Function
 from sympy.core.function import UndefinedFunction
 
+from pyccel.ast.core import Module, Program
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
 from pyccel.ast.core import Assign, Declare, AugAssign
@@ -56,27 +57,34 @@ def mpify(stmt, **options):
     """
     if isinstance(stmt, (list, tuple, Tuple)):
         return [mpify(i, **options) for i in stmt]
+
     if isinstance(stmt, MPI):
         return stmt
+
     if isinstance(stmt, Tensor):
         options['label'] = stmt.name
         return stmt
+
     if isinstance(stmt, ForIterator):
         iterable = mpify(stmt.iterable, **options)
         target   = stmt.target
         body     = mpify(stmt.body, **options)
         return ForIterator(target, iterable, body, strict=False)
+
     if isinstance(stmt, For):
         iterable = mpify(stmt.iterable, **options)
         target   = stmt.target
         body     = mpify(stmt.body, **options)
         return For(target, iterable, body, strict=False)
+
     if isinstance(stmt, list):
         return [mpify(a, **options) for a in stmt]
+
     if isinstance(stmt, While):
         test = mpify(stmt.test, **options)
         body = mpify(stmt.body, **options)
         return While(test, body)
+
     if isinstance(stmt, If):
         args = []
         for block in stmt.args:
@@ -86,6 +94,7 @@ def mpify(stmt, **options):
             s = mpify(stmts, **options)
             args.append((t,s))
         return If(*args)
+
     if isinstance(stmt, FunctionDef):
         return stmt
         # TODO uncomment this
@@ -98,6 +107,7 @@ def mpify(stmt, **options):
 #
 #        return FunctionDef(name, arguments, results, \
 #                           body, local_vars, global_vars)
+
     if isinstance(stmt, ClassDef):
         name        = mpify(stmt.name,        **options)
         attributs   = mpify(stmt.attributs,   **options)
@@ -105,6 +115,7 @@ def mpify(stmt, **options):
         options     = mpify(stmt.options,     **options)
 
         return ClassDef(name, attributs, methods, options)
+
     if isinstance(stmt, Assign):
         if isinstance(stmt.rhs, Tensor):
             lhs = stmt.lhs
@@ -115,19 +126,47 @@ def mpify(stmt, **options):
                           strict=stmt.strict, \
                           status=stmt.status, \
                           like=stmt.like)
+
     if isinstance(stmt, Del):
         variables = [mpify(a, **options) for a in stmt.variables]
         return Del(variables)
+
     if isinstance(stmt, Ones):
         if stmt.grid:
             lhs   = stmt.lhs
             shape = stmt.shape
             grid  = mpify(stmt.grid, **options)
             return Ones(lhs, grid=grid)
+
     if isinstance(stmt, Zeros):
         if stmt.grid:
             lhs   = stmt.lhs
             shape = stmt.shape
             grid  = mpify(stmt.grid, **options)
             return Zeros(lhs, grid=grid)
+
+    if isinstance(stmt, Module):
+        name        = mpify(stmt.name,        **options)
+        variables   = mpify(stmt.variables,   **options)
+        funcs       = mpify(stmt.funcs    ,   **options)
+        classes     = mpify(stmt.classes  ,   **options)
+        imports     = mpify(stmt.imports  ,   **options)
+        imports    += [Import('mpi')]
+
+        return Module(name, variables, funcs, classes,
+                      imports=imports)
+
+    if isinstance(stmt, Program):
+        name        = mpify(stmt.name,        **options)
+        variables   = mpify(stmt.variables,   **options)
+        funcs       = mpify(stmt.funcs    ,   **options)
+        classes     = mpify(stmt.classes  ,   **options)
+        imports     = mpify(stmt.imports  ,   **options)
+        body        = mpify(stmt.body  ,   **options)
+        modules     = mpify(stmt.modules  ,   **options)
+        imports    += [Import('mpi')]
+
+        return Program(name, variables, funcs, classes, body,
+                       imports=imports, modules=modules)
+
     return stmt

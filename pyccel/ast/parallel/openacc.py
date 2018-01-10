@@ -4,6 +4,7 @@ from sympy.core import Tuple
 from sympy.utilities.iterables import iterable
 from sympy import Integer
 
+from pyccel.ast.core import Module, Program
 from pyccel.ast.core import Nil
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import DottedName
@@ -23,7 +24,7 @@ from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
 from pyccel.ast.core import Len
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, ForIterator, While, With, If, Del, With
+from pyccel.ast.core import For, ForIterator, While, With, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall, ConstructorCall
 
@@ -985,7 +986,7 @@ class ACC_Worker(ACC):
 ##########################################################
 #             useful functions
 ##########################################################
-def openaccfy(stmt, **options):
+def accfy(stmt, **options):
     """
     Converts some statements to OpenACC statments.
 
@@ -993,14 +994,16 @@ def openaccfy(stmt, **options):
         statement or a list of statements
     """
     if isinstance(stmt, (list, tuple, Tuple)):
-        return [openaccfy(i, **options) for i in stmt]
+        return [accfy(i, **options) for i in stmt]
+
     if isinstance(stmt, Tensor):
         # TODO to implement
         return stmt
+
     if isinstance(stmt, ForIterator):
-        iterable = openaccfy(stmt.iterable, **options)
+        iterable = accfy(stmt.iterable, **options)
         target   = stmt.target
-        body     = openaccfy(stmt.body, **options)
+        body     = accfy(stmt.body, **options)
 
         clauses = get_for_clauses(iterable)
 
@@ -1009,21 +1012,25 @@ def openaccfy(stmt, **options):
         else:
             loop   = ForIterator(target, iterable, body, strict=False)
             return ACC_For(loop, clauses)
+
     if isinstance(stmt, For):
-        iterable = openaccfy(stmt.iterable, **options)
+        iterable = accfy(stmt.iterable, **options)
         target   = stmt.target
-        body     = openaccfy(stmt.body, **options)
+        body     = accfy(stmt.body, **options)
         return For(target, iterable, body, strict=False)
+
     if isinstance(stmt, list):
-        return [openaccfy(a, **options) for a in stmt]
+        return [accfy(a, **options) for a in stmt]
+
     if isinstance(stmt, While):
-        test = openaccfy(stmt.test, **options)
-        body = openaccfy(stmt.body, **options)
+        test = accfy(stmt.test, **options)
+        body = accfy(stmt.body, **options)
         return While(test, body)
+
     if isinstance(stmt, With):
-        test     = openaccfy(stmt.test, **options)
-        body     = openaccfy(stmt.body, **options)
-        settings = openaccfy(stmt.settings, **options)
+        test     = accfy(stmt.test, **options)
+        body     = accfy(stmt.body, **options)
+        settings = accfy(stmt.settings, **options)
 
         clauses = get_with_clauses(test)
 
@@ -1033,34 +1040,60 @@ def openaccfy(stmt, **options):
             # TODO to be defined
             variables = []
             return ACC_Parallel(clauses, variables, body)
+
     if isinstance(stmt, If):
         args = []
         for block in stmt.args:
             test  = block[0]
             stmts = block[1]
-            t = openaccfy(test,  **options)
-            s = openaccfy(stmts, **options)
+            t = accfy(test,  **options)
+            s = accfy(stmts, **options)
             args.append((t,s))
         return If(*args)
+
     if isinstance(stmt, FunctionDef):
-        name        = openaccfy(stmt.name,        **options)
-        arguments   = openaccfy(stmt.arguments,   **options)
-        results     = openaccfy(stmt.results,     **options)
-        body        = openaccfy(stmt.body,        **options)
-        local_vars  = openaccfy(stmt.local_vars,  **options)
-        global_vars = openaccfy(stmt.global_vars, **options)
+        name        = accfy(stmt.name,        **options)
+        arguments   = accfy(stmt.arguments,   **options)
+        results     = accfy(stmt.results,     **options)
+        body        = accfy(stmt.body,        **options)
+        local_vars  = accfy(stmt.local_vars,  **options)
+        global_vars = accfy(stmt.global_vars, **options)
 
         return FunctionDef(name, arguments, results, \
                            body, local_vars, global_vars)
+
     if isinstance(stmt, ClassDef):
-        name        = openaccfy(stmt.name,        **options)
-        attributs   = openaccfy(stmt.attributs,   **options)
-        methods     = openaccfy(stmt.methods,     **options)
-        options     = openaccfy(stmt.options,     **options)
+        name        = accfy(stmt.name,        **options)
+        attributs   = accfy(stmt.attributs,   **options)
+        methods     = accfy(stmt.methods,     **options)
+        options     = accfy(stmt.options,     **options)
 
         return ClassDef(name, attributs, methods, options)
-    if isinstance(stmt, With):
-        raise NotImplementedError('With stmt not available')
+
+    if isinstance(stmt, Module):
+        name        = accfy(stmt.name,        **options)
+        variables   = accfy(stmt.variables,   **options)
+        funcs       = accfy(stmt.funcs    ,   **options)
+        classes     = accfy(stmt.classes  ,   **options)
+        imports     = accfy(stmt.imports  ,   **options)
+        imports    += [Import('openacc')]
+
+        return Module(name, variables, funcs, classes,
+                      imports=imports)
+
+    if isinstance(stmt, Program):
+        name        = accfy(stmt.name,        **options)
+        variables   = accfy(stmt.variables,   **options)
+        funcs       = accfy(stmt.funcs    ,   **options)
+        classes     = accfy(stmt.classes  ,   **options)
+        imports     = accfy(stmt.imports  ,   **options)
+        body        = accfy(stmt.body  ,   **options)
+        modules     = accfy(stmt.modules  ,   **options)
+        imports    += [Import('openacc')]
+
+        return Program(name, variables, funcs, classes, body,
+                       imports=imports, modules=modules)
+
     if isinstance(stmt, ParallelBlock):
         variables = stmt.variables
         body      = stmt.body

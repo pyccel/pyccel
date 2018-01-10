@@ -298,7 +298,6 @@ def build_file(filename, language, compiler, \
 
             codegen_m = FCodegen(filename=f_name,
                                  name=module_name,
-                                 is_module=True,
                                  output_dir=output_dir)
             codegen_m.doprint(language=language,
                               accelerator=accelerator,
@@ -457,7 +456,6 @@ def build_file(filename, language, compiler, \
 
     # ...
     info = {}
-    info['is_module']  = codegen.is_module
     info['namespaces'] = namespaces
     info['libs']   = d_libraries
     # ...

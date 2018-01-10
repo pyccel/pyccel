@@ -136,12 +136,13 @@ class FCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_Module(self, expr):
-        # ...
+
         name    = 'm_{0}'.format(self._print(expr.name))
+        name = name.replace('.', '_')
+
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
-        # ...
 
         # ...
         sep = self._print(SeparatorComment(40))
@@ -178,9 +179,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
 
-        name    = 'prog_{0}'.format(self._print(expr.name))
+        name = 'prog_{0}'.format(self._print(expr.name))
+        name = name.replace('.', '_')
+
         modules = ''
-        imports = ''
+        imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
@@ -195,13 +198,10 @@ class FCodePrinter(CodePrinter):
                                   imports=expr.imports)
 
             modules = self._print(module_utils)
-            imports = 'use m_{0}'.format(expr.name)
+            imports = ('{imports}\n'
+                       'use m_{name}').format(imports=imports, name=expr.name)
 
         else:
-            # ...
-            imports = '\n'.join(self._print(i) for i in expr.imports)
-            # ...
-
             # ... uncomment this later and remove it from the top
 #            decs    = '\n'.join(self._print(i) for i in expr.declarations)
             # ...
@@ -857,7 +857,7 @@ class FCodePrinter(CodePrinter):
     def _print_ClassDef(self, expr):
         # ... we don't print 'hidden' classes
         if expr.hide:
-            return ''
+            return '', ''
         # ...
 
         name = self._print(expr.name)
