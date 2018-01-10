@@ -8,7 +8,7 @@ get_property( library_targets GLOBAL PROPERTY LIBRARY_TARGETS )
 
 # Distinguish between "internal" and "external" libraries
 foreach( lib ${library_targets} )
-  if( ${lib} MATCHES "plf_[a-zA-Z0-9]" )
+  if( ${lib} MATCHES "pyccelext_[a-zA-Z0-9]" )
     list( APPEND __SUFFIX___LIBS ${lib} )
   else()
     get_target_property( libpath ${lib} SOURCE_DIR )

@@ -151,9 +151,10 @@ def generate(d, silent=False):
         if len(d['suffix-library']) != 3:
             raise ValueError('Library suffix must contain exactly 3 letters.')
 
-        suffix = d['suffix-library']
+        suffix_library = d['suffix-library']
     else:
-        suffix  = d['path'][:3]
+        suffix_library = d['path'][:3]
+        d['suffix-library'] = suffix_library
 
     mkdir_p(builddir)
 #    mkdir_p(path.join(srcdir, 'external'))
@@ -189,7 +190,7 @@ def generate(d, silent=False):
 
     # ...
     if not('prefix' in d) or not(d['prefix']):
-        d['prefix'] = os.path.join(base_dir, 'usr')
+        d['prefix'] = os.path.join(d['path'], 'usr')
     # ...
 
     # ...

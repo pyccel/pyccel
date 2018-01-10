@@ -970,7 +970,7 @@ def load_extension(ext, output_dir,
 # ...
 
 # ... # default values of FC etc must be done in settings before
-def initialize_project(base_dir, project, libname, settings):
+def initialize_project(base_dir, project, libname, settings, verbose=False):
 
     # ...
     if not os.path.exists(base_dir):
@@ -982,7 +982,7 @@ def initialize_project(base_dir, project, libname, settings):
     fflags = settings['fflags']
     flags  = settings['flags']
     fc     = settings['fc']
-    suffix = settings['suffix']
+    suffix = settings['suffix-library']
     # ...
 
     # ...
@@ -999,11 +999,9 @@ def initialize_project(base_dir, project, libname, settings):
 
     cmake.initialize(base_dir, project, suffix, libname, force=True)
 
-    cmake.configure()
-    cmake.make()
-
-    # TODO uncomment install
-    #cmake.install()
+    cmake.configure(verbose=verbose)
+    cmake.make(verbose=verbose)
+    cmake.install()
     # ...
 # ...
 

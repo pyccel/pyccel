@@ -61,6 +61,10 @@ class CMake(object):
 
         # ...
         if prefix:
+            if not os.path.exists(prefix):
+                mkdir_p(prefix)
+            prefix = os.path.abspath(prefix)
+
             args += [' -DCMAKE_INSTALL_PREFIX={0}'.format(prefix)]
 
         if flags_fortran:
@@ -178,7 +182,12 @@ class CMake(object):
         import shutil, errno
         def _copydata(src, dst):
             try:
-                shutil.copytree(src, dst)
+                # TODO improve
+                if os.path.exists(dst):
+                    os.system('rm -rf {0}'.format(dst))
+
+                shutil.copytree(src, dst, ignore=shutil.ignore_patterns('*.pyc'))
+
             except OSError as exc: # python >2.5
                 if exc.errno == errno.ENOTDIR:
                     shutil.copy(src, dst)
@@ -207,6 +216,28 @@ class CMake(object):
                 f.close()
         # ...
 
+        # ... update make_package.py
+        def _print_make_package(package_src, package_dst):
+
+            src = os.path.join(package_src, 'make_package.py')
+            dst = os.path.join(package_dst, 'make_package.py')
+
+            f = open(src, 'r')
+            code = f.readlines()
+            f.close()
+
+            code = ''.join(l for l in code)
+
+            code = code.replace('__PROJECT__', project)
+            code = code.replace('__SUFFIX__',  suffix.upper())
+            code = code.replace('__LIBNAME__', libname)
+
+            if force or (not os.path.isfile(dst)):
+                f = open(dst, 'w')
+                f.write(code)
+                f.close()
+        # ...
+
         # ... TODO: uncomment add_subdirectory(package) from templates/CMakeLists.txt
         _print_cmakelists(cmakelists_src, cmakelists_dst)
         # ...
@@ -221,4 +252,8 @@ class CMake(object):
         dst = os.path.join(package_dst, 'CMakeLists.txt')
 
         _print_cmakelists(src, dst)
+        # ...
+
+        # ...
+        _print_make_package(package_src, package_dst)
         # ...
