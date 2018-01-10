@@ -239,6 +239,12 @@ def build_file(filename, language, compiler, \
     ============================
     """
 #    print('>>>> calling build_file for {0}'.format(filename))
+
+    # ...
+    if not name:
+        name = os.path.basename(filename.split('.')[0])
+    # ...
+
     # ...
     with_mpi = False
     if compiler:

@@ -19,7 +19,6 @@ from pyccel.parser.syntax.core import (AssignStmt, \
 from pyccel.ast.core import (For, Assign, Declare, Variable, \
                              datatype, While, NativeFloat, \
                              EqualityStmt, NotequalStmt, \
-                             MultiAssign, \
                              FunctionDef, Import, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, If, \

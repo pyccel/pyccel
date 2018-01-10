@@ -14,7 +14,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              MultiAssign, AugAssign, \
+                              AugAssign, \
                               FunctionDef, ClassDef, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \

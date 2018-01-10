@@ -64,7 +64,7 @@ from pyccel.ast.core import (Tile, Range, Tensor, \
                              VariableHeader, \
                              datatype, While, With, NativeFloat, \
                              EqualityStmt, NotequalStmt, \
-                             MultiAssign, AugAssign, \
+                             AugAssign, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, Assert, If, \

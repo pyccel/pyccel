@@ -17,20 +17,22 @@ from pyccel.ast.core import subs
 from pyccel.ast.core import is_valid_module
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import DataType, DataTypeFactory
-from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
-                              For, Assign, Declare, Variable, Load, Eval, \
-                              NativeRange, NativeTensor, \
-                              FunctionHeader, ClassHeader, MethodHeader, \
-                              VariableHeader, \
-                              datatype, While, With, NativeFloat, \
-                              EqualityStmt, NotequalStmt, \
-                              MultiAssign, AugAssign, FunctionCall, \
-                              FunctionDef,MethodCall, ClassDef, Del, Print, Import, \
-                              Comment, AnnotatedComment, \
-                              IndexedVariable, Slice, Assert, If, \
-                              Vector, Stencil, Ceil, Break, \
-                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
-                              Dot, Sign, IndexedElement, Module, DottedName)
+from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock,
+                             For, Assign, Declare, Variable,
+                             Load, Eval,
+                             NativeRange, NativeTensor,
+                             FunctionHeader, ClassHeader,
+                             MethodHeader, VariableHeader,
+                             datatype, While, With, NativeFloat,
+                             EqualityStmt, NotequalStmt,
+                             AugAssign, FunctionCall,
+                             FunctionDef,MethodCall, ClassDef,
+                             Del, Print, Import, Comment, AnnotatedComment,
+                             IndexedVariable, Slice, Assert, If,
+                             Vector, Stencil, Ceil, Break,
+                             Zeros, Ones, Array, ZerosLike, Shape, Len,
+                             Dot, Sign, IndexedElement, DottedName,
+                             Module, Program)
 
 from pyccel.ast.parallel.mpi     import mpify
 from pyccel.ast.parallel.openmp  import openmpfy
@@ -325,6 +327,92 @@ class Codegen(object):
         self._headers      = None
         self._is_header    = is_header
 
+        # ...
+        pyccel = PyccelParser()
+        ast    = pyccel.parse_from_file(filename)
+
+        self._ast = ast
+        # ...
+
+        # ... this is important to update the namespace
+        # old namespace
+        namespace_user = get_namespace()
+
+        stmts = ast.expr
+
+        # new namespace
+        self._namespace = get_namespace()
+        self._headers   = get_headers()
+        # ...
+
+        # ...................................................
+        # reorganizing the code to get a Module or a Program
+        # ...................................................
+        variables = []
+        funcs     = []
+        classes   = []
+        imports   = []
+        modules   = []
+        body      = []
+        decs      = []
+
+        # ... TODO update Declare so that we don't use a list of variables
+        for key, dec in list(ast.declarations.items()):
+            decs += [dec]
+            variables += [dec.variables[0]]
+        # ...
+
+        # ...
+        for stmt in stmts:
+            if isinstance(stmt, FunctionDef):
+                funcs += [stmt]
+            elif isinstance(stmt, ClassDef):
+                classes += [stmt]
+            elif isinstance(stmt, Import):
+                imports += [stmt]
+            else:
+                body += [stmt]
+        # ...
+
+        # ...
+        _module_stmts = (FunctionDef, ClassDef)
+
+        ls = [i for i in body if isinstance(i, _module_stmts)]
+        is_module = (len(ls) > 0)
+        # ...
+
+        # ...
+        expr = None
+        if is_module:
+            expr = Module(name, variables, funcs, classes,
+                          imports=imports)
+        else:
+            expr = Program(name, variables, funcs, classes, body,
+                           imports=imports, modules=modules)
+        self._expr = expr
+        # ...
+        # ...................................................
+
+#        # ...
+#        if with_mpi:
+#            stmts = [mpify(s) for s in stmts]
+#        # ...
+#
+#        # ...
+#        if with_openmp:
+#            stmts = [openmpfy(s) for s in stmts]
+#        # ...
+#
+#        # ...
+#        if with_openacc:
+#            stmts = [openaccfy(s) for s in stmts]
+#        # ...
+
+    @property
+    def expr(self):
+        """Returns the ast as sympy object: Module or Program."""
+        return self._expr
+
     @property
     def filename(self):
         """Returns the name of the file to convert."""
@@ -519,10 +607,7 @@ class Codegen(object):
             imports += "use openacc\n"
         # ...
 
-        # ...
-        pyccel = PyccelParser()
-        ast    = pyccel.parse_from_file(filename)
-        # ...
+        ####################################################
 
         # ... TODO improve
         for i in user_modules:
@@ -530,135 +615,34 @@ class Codegen(object):
         # ...
 
         # ...
-        # old namespace
-        namespace_user = get_namespace()
-
-        stmts = ast.expr
-
-        # new namespace
-        self._namespace = get_namespace()
-        self._headers   = get_headers()
+        expr = self.expr
         # ...
 
         # ...
-        if with_mpi:
-            stmts = [mpify(s) for s in stmts]
+        for stmt in expr.imports:
+            name = str(stmt.fil)
+            if not(name in ignored_modules):
+                imports += printer(stmt) + "\n"
+                modules += [name]
         # ...
 
         # ...
-        if with_openmp:
-            stmts = [openmpfy(s) for s in stmts]
-        # ...
-
-        # ...
-        if with_openacc:
-            stmts = [openaccfy(s) for s in stmts]
-        # ...
-
-        for stmt in stmts:
-#            print stmt
-
-            if isinstance(stmt, (Comment, AnnotatedComment)):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, EmptyLine):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Import):
-                name = str(stmt.fil)
-                if not(name in ignored_modules):
-                    imports += printer(stmt) + "\n"
-                    modules += [name]
-            elif isinstance(stmt, Declare):
-                decs = stmt
-            elif isinstance(stmt, (FunctionHeader, ClassHeader,
-                                   MethodHeader, VariableHeader,
-                                   Variable, Lambda)):
-                # Variable is also ignored, since we can export them in headers
+        for stmt in expr.funcs:
+            if stmt.hide:
                 continue
-            elif isinstance(stmt, Assign):
-                if isinstance(stmt.rhs, (Range, Tensor)):
-                    continue
-                elif isinstance(stmt.lhs, Variable):
-                    if (isinstance(stmt.lhs.name, str) and
-                        stmt.lhs.name.startswith('__')):
-                        metavars[stmt.lhs.name] = stmt.rhs
-                    else:
-                        body += printer(stmt) + "\n"
-                else:
-                    body += printer(stmt) + "\n"
-            elif isinstance(stmt, AugAssign):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, MultiAssign):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, (Zeros, Ones, ZerosLike, Array)):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, (Shape, Len)):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, For):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, While):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, With):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Assert):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, If):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt,MethodCall):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, FunctionCall):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, FunctionDef):
-                expr = stmt
-                if expr.hide:
-                    continue
-                sep = separator()
-                routines += sep + printer(expr) + "\n" \
-                          + sep + '\n'
-            elif isinstance(stmt, ClassDef):
-                if stmt.hide:
-                    continue
-                classes += printer(stmt) + "\n"
-            elif isinstance(stmt, Print):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Del):
-                # TODO is it ok to put it in the body?
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Vector):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Stencil):
-                body += printer(stmt) + "\n"
-            elif isinstance(stmt, Eval):
-                continue
-            elif isinstance(stmt, Load):
-                continue
-            elif isinstance(stmt, list):
-                for s in stmt:
-                    body += printer(s) + "\n"
-            elif isinstance(stmt, ParallelBlock):
-                body += printer(stmt) + "\n"
-                # TODO use local vars to a parallel block (offloading?)
-#                for dec in stmt.declarations:
-#                    preludes += "\n" + printer(dec) + "\n"
-            elif isinstance(stmt, Block):
-                # TODO - now we can apply printer to Block directly. must be
-                #      updated here => remove the body loop
-                #      - printer(stmt) must return only body code, then preludes
-                #      are treated somewhere?
-                for s in stmt.body:
-                    body += "\n" + printer(s) + "\n"
-                for dec in stmt.declarations:
-                    preludes += "\n" + printer(dec) + "\n"
-            elif isinstance(stmt, Module):
-                body += "\n" + printer(stmt) + "\n"
-            else:
-                if True:
-                    print(("> uncovered statement of type : ", type(stmt)))
-                else:
-                    raise Exception('Statement not yet handled.')
+            sep = separator()
+            routines += sep + printer(stmt) + "\n" + sep + '\n'
         # ...
 
         # ...
-        for key, dec in list(ast.declarations.items()):
+        for stmt in expr.classes:
+            if stmt.hide:
+                continue
+            classes += sep + printer(stmt) + "\n" + sep + '\n'
+        # ...
+
+        # ...
+        for dec in expr.declarations:
             if isinstance(dec.dtype, (NativeRange, NativeTensor)):
                 continue
             elif (isinstance(dec.variables[0], Variable) and
@@ -667,7 +651,9 @@ class Codegen(object):
                 continue
             else:
                 preludes += printer(dec) + "\n"
+        # ...
 
+        # ...
         def _construct_prelude(stmt):
             preludes = ''
             if isinstance(stmt, (list, tuple, Tuple)):
@@ -680,14 +666,45 @@ class Codegen(object):
                     preludes += printer(dec) + "\n"
             return preludes
 
-        preludes += _construct_prelude(stmts)
+        preludes += _construct_prelude(expr.body)
         # ...
 
         # ...
-        if not self.is_module:
-            is_module = is_valid_module(stmts)
-        else:
-            is_module = True
+        _hidden_stmts = (Eval, Load)
+        if isinstance(expr, Program):
+            for stmt in expr.body:
+                # Variable is also ignored, since we can export them in headers
+                if isinstance(stmt, (FunctionHeader, ClassHeader,
+                                     MethodHeader, VariableHeader,
+                                     Variable, Lambda)):
+                    continue
+                elif isinstance(stmt, Assign):
+                    if isinstance(stmt.rhs, (Range, Tensor)):
+                        continue
+                    elif isinstance(stmt.lhs, Variable):
+                        if (isinstance(stmt.lhs.name, str) and
+                            stmt.lhs.name.startswith('__')):
+                            metavars[stmt.lhs.name] = stmt.rhs
+                        else:
+                            body += printer(stmt) + "\n"
+                    else:
+                        body += printer(stmt) + "\n"
+                elif isinstance(stmt, _hidden_stmts):
+                    continue
+                elif isinstance(stmt, Block):
+                    # TODO - now we can apply printer to Block directly. must be
+                    #      updated here => remove the body loop
+                    #      - printer(stmt) must return only body code, then preludes
+                    #      are treated somewhere?
+                    for s in stmt.body:
+                        body += "\n" + printer(s) + "\n"
+                    for dec in stmt.declarations:
+                        preludes += "\n" + printer(dec) + "\n"
+                else:
+                    body += "\n" + printer(stmt) + "\n"
+        # ...
+
+        is_module = isinstance(expr, Module)
         # ...
 
         # ... cleaning
@@ -695,7 +712,6 @@ class Codegen(object):
         # ...
 
         # ...
-        self._ast       = ast
         self._imports   = imports
         self._preludes  = preludes
         self._body      = body

@@ -791,7 +791,7 @@ class ParallelBlock(Block):
         return code
 
 class Module(Basic):
-    """Represents a block in the code. A block consists of the following inputs
+    """Represents a module in the code. A block consists of the following inputs
 
     variables: list
         list of the variables that appear in the block.
@@ -890,6 +890,132 @@ class Module(Basic):
     @property
     def body(self):
         return self.funcs + self.classes
+
+class Program(Basic):
+    """Represents a Program in the code. A block consists of the following inputs
+
+    variables: list
+        list of the variables that appear in the block.
+
+    declarations: list
+        list of declarations of the variables that appear in the block.
+
+    funcs: list
+        a list of FunctionDef instances
+
+    classes: list
+        a list of ClassDef instances
+
+    body: list
+        a list of statements
+
+    imports: list, tuple
+        list of needed imports
+
+    modules: list, tuple
+        list of needed modules
+
+    Examples
+
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> x = Variable('double', 'x')
+    >>> y = Variable('double', 'y')
+    >>> z = Variable('double', 'z')
+    >>> t = Variable('double', 't')
+    >>> a = Variable('double', 'a')
+    >>> b = Variable('double', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributs   = [x,y]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributs, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> Module('my_module', [], [incr, decr], [Point])
+    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
+    """
+
+    def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
+        if not isinstance(name, str):
+            raise TypeError('name must be a string')
+
+        if not iterable(variables):
+            raise TypeError("variables must be an iterable")
+        for i in variables:
+            if not isinstance(i, Variable):
+                raise TypeError("Only a Variable instance is allowed.")
+
+        if not iterable(funcs):
+            raise TypeError("funcs must be an iterable")
+        for i in funcs:
+            if not isinstance(i, FunctionDef):
+                raise TypeError("Only a FunctionDef instance is allowed.")
+
+        if not iterable(body):
+            raise TypeError("body must be an iterable")
+
+        if not iterable(classes):
+            raise TypeError("classes must be an iterable")
+        for i in classes:
+            if not isinstance(i, ClassDef):
+                raise TypeError("Only a ClassDef instance is allowed.")
+
+        if not iterable(imports):
+            raise TypeError("imports must be an iterable")
+
+        for i in funcs:
+            imports += i.imports
+        for i in classes:
+            imports += i.imports
+        imports = set(imports) # for unicity
+        imports = Tuple(*imports)
+
+        if not iterable(modules):
+            raise TypeError("modules must be an iterable")
+
+
+        #TODO
+#        elif isinstance(stmt, list):
+#            for s in stmt:
+#                body += printer(s) + "\n"
+
+
+        return Basic.__new__(cls, name, variables, funcs, classes, body, imports, modules)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def variables(self):
+        return self._args[1]
+
+    @property
+    def funcs(self):
+        return self._args[2]
+
+    @property
+    def classes(self):
+        return self._args[3]
+
+    @property
+    def body(self):
+        return self._args[4]
+
+    @property
+    def imports(self):
+        return self._args[5]
+
+    @property
+    def modules(self):
+        return self._args[6]
+
+    @property
+    def declarations(self):
+        return [Declare(i.dtype, i) for i in self.variables]
+
+
 
 class For(Basic):
     """Represents a 'for-loop' in the code.
@@ -2959,47 +3085,6 @@ class If(Basic):
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
-
-class MultiAssign(Basic):
-    """Represents a multiple assignment statement in the code.
-    In Fortran, this will be interpreted as a subroutine call.
-
-    lhs : list Expr
-        list of assignable objects
-    rhs : Function
-        function call expression
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import MultiAssign
-    >>> from pyccel.ast.core import Assign, Variable, FunctionDef
-    >>> x, y, z, t = symbols('x, y, z, t')
-    >>> args        = [Variable('float', x), Variable('float', y)]
-    >>> results     = [Variable('float', z), Variable('float', t)]
-    >>> body        = [Assign(z,x+y), Assign(t,x*y)]
-    >>> local_vars  = []
-    >>> global_vars = []
-    >>> f = FunctionDef('f', args, results, body, local_vars, global_vars)
-    >>> MultiAssign((z,t), f)
-    z, t := FunctionDef(f, (x, y), (z, t), [z := x + y, t := x*y], [], [])
-    """
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        sstr    = printer.doprint
-        rhs     = sstr(self.rhs)
-        outputs = ', '.join(sstr(i) for i in self.lhs)
-        return '{0} := {1}'.format(outputs, rhs)
 
 # TODO: to improve
 class Vector(Basic):

@@ -41,7 +41,7 @@ from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import Range, Tensor, Block
-from pyccel.ast.core import (Assign, MultiAssign, AugAssign, \
+from pyccel.ast.core import (Assign, AugAssign, \
                               Variable, Declare, ValuedVariable, \
                               Len, Shape, Dot, Sign, subs, \
                               IndexedElement, Slice, DottedName, Print, If)
