@@ -49,3 +49,6 @@ t = 0.0
 
 print(z)
 print(t)
+
+xr = random()
+print(xr)

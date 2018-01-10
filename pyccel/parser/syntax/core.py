@@ -54,6 +54,7 @@ from pyccel.ast.core import NativeRange, NativeTensor, NativeSymbol
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
+from pyccel.ast.core import Random
 from pyccel.ast.core import Eval
 from pyccel.ast.core import Load
 from pyccel.ast.core import EmptyLine
@@ -116,6 +117,7 @@ known_functions = {
     "stencil": "Stencil",
     "eval": "Eval",
     "load": "Load",
+    "random": "Random",
     "lambdify": "lambdify",
     "tan": "tan",
     "tanh": "tanh"
@@ -224,6 +226,7 @@ builtin_datatypes  = [datatype(i) for i in builtin_types]
 
 # ... builtin functions
 builtin_funcs_math_nores = ['print']
+builtin_funcs_math_noarg = []
 
 builtin_funcs_math_un = ['abs', \
 #                         'asin', 'acsc', 'acot', \
@@ -234,8 +237,11 @@ builtin_funcs_math_un = ['abs', \
                          'sec', 'sign', 'sin', 'sinh', \
                          'sqrt', 'tan', 'tanh']
 builtin_funcs_math_bin = ['dot', 'pow', 'mod']
-builtin_funcs_math = builtin_funcs_math_un + \
-                     builtin_funcs_math_bin
+
+builtin_funcs_math  = builtin_funcs_math_noarg
+builtin_funcs_math += builtin_funcs_math_un
+builtin_funcs_math += builtin_funcs_math_bin
+builtin_funcs_math += ['random']
 
 builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like',
                   'len', 'shape', 'vector', 'stencil',
@@ -358,6 +364,11 @@ def get_attributs(expr):
         return d_var
     elif isinstance(expr, (Ceil, Len)):
         d_var['datatype']    = 'int'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+        return d_var
+    elif isinstance(expr, Random):
+        d_var['datatype']    = 'double'
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
@@ -747,6 +758,23 @@ def builtin_function(name, args, lhs=None, op=None):
             insert_variable(lhs, **d_var)
             lhs = namespace[lhs]
             expr = func(*args)
+            return assign(lhs, expr, op)
+    elif name in ['random']:
+        # TODO add arguments
+#        if not(len(args) == 0):
+#            raise ValueError("function takes no arguments")
+
+        func = eval(known_functions[name])
+        _args = [0]
+        if lhs is None:
+            return func(*_args)
+        else:
+            d_var = {}
+            d_var['datatype'] = 'double'
+            d_var['rank']     = 0
+            insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
+            expr = func(*_args)
             return assign(lhs, expr, op)
     elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):

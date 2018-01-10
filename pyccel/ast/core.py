@@ -2368,6 +2368,23 @@ class Raise(Basic):
     pass
 
 # TODO: improve with __new__ from Function and add example
+class Random(Function):
+    """
+    Represents a 'random' number in the code.
+    """
+    # TODO : remove later
+    def __str__(self):
+        return "random"
+
+    def __new__(cls, seed):
+        return Basic.__new__(cls, seed)
+
+    @property
+    def seed(self):
+        return self._args[0]
+
+
+# TODO: improve with __new__ from Function and add example
 class Len(Function):
     """
     Represents a 'len' expression in the code.

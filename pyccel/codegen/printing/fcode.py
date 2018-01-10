@@ -45,7 +45,7 @@ from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
-                             Len, Shape, Dot, Sign, subs,
+                             Len, Shape, Dot, Sign, subs, Random,
                              IndexedElement, Slice, DottedName, Print, If)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -533,6 +533,7 @@ class FCodePrinter(CodePrinter):
         # TODO treat the case of iterable classes
         if isinstance(expr.rhs, (Range, Tensor)):
             return ''
+
         elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
@@ -561,9 +562,16 @@ class FCodePrinter(CodePrinter):
             code  = '{0}\n{1}'.format(code, sizes)
 
             return self._get_statement(code)
+
+        elif isinstance(expr.rhs, Random):
+            lhs = self._print(expr.lhs)
+            code = 'call random_number({0})'.format(lhs)
+            return self._get_statement(code)
+
         elif isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
             is_procedure = expr.rhs.is_procedure
+
         elif isinstance(expr.rhs, ConstructorCall):
             func = expr.rhs.func
             name = str(func.name)
