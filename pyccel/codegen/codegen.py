@@ -510,14 +510,6 @@ class Codegen(object):
         """Returns True if generated code is a header"""
         return self._is_header
 
-    def as_module(self):
-        """Generate code as a module. Every extension must implement this method."""
-        pass
-
-    def as_program(self):
-        """Generate code as a program. Every extension must implement this method."""
-        pass
-
     def doprint(self, language,
                 accelerator=None,
                 ignored_modules=[],
@@ -636,77 +628,6 @@ class FCodegen(Codegen):
         """
         super(FCodegen, self).__init__(*args, **kwargs)
 
-    def as_module(self):
-        """Generate code as a module."""
-        name     = self.name
-        imports  = self.imports
-        preludes = self.preludes
-        body     = self.body
-        routines = self.routines
-        classes  = self.classes
-        modules  = self.modules
-
-        if name is None:
-            name = self.filename.split(".")[0]
-            name = name.replace('/', '_')
-            name = 'm_{0}'.format(name)
-
-        code  = "module " + str(name)     + "\n"
-        code += imports                   + "\n"
-        code += "implicit none"           + "\n"
-        code += preludes                  + "\n"
-
-        if len(routines) > 0:
-            code += "contains"            + "\n"
-            code += routines              + "\n"
-        if len(classes) > 0:
-            code += classes               + "\n"
-        code += "end module " + str(name) + "\n"
-
-        return code
-
-    def as_program(self):
-        """Generate code as a program."""
-        name     = self.name
-        imports  = self.imports
-        preludes = self.preludes
-        body     = self.body
-        routines = self.routines
-        classes  = self.classes
-        modules  = self.modules
-
-        code = ''
-
-        # ...
-        if classes:
-            name_module= self.filename.split(".")[0]
-            name_module = name_module.replace('/', '_')
-            name_module = 'm_{0}'.format(name_module)
-
-            code += "module " + name_module     +"\n"
-            code += imports                     +"\n"
-            code += classes                     +"\n"
-            code += "end module " + name_module +'\n'
-
-            imports += 'use ' + name_module + '\n'
-
-        # ...
-        if name is None:
-            name = 'main'
-
-        code += "program " + str(name)    + "\n"
-        code += imports                   + "\n"
-        code += "implicit none"           + "\n"
-        code += preludes                  + "\n"
-
-        if len(body) > 0:
-            code += body                  + "\n"
-        if len(routines) > 0:
-            code += "contains"            + "\n"
-            code += routines              + "\n"
-        code += "end"                     + "\n"
-
-        return code
 
 class PyccelCodegen(Codegen):
     """Code generation for the Pyccel Grammar"""
@@ -724,20 +645,6 @@ def get_extension(language):
         return "f90"
     else:
         raise ValueError("Only fortran is available")
-# ...
-
-# ...
-def separator(n=40):
-    """
-    Creates a separator string.
-    This is used to improve the readability of the generated code.
-
-    n: int
-        length of the separator
-    """
-    txt = "."*n
-    comment = '!'
-    return '{0} {1}\n'.format(comment, txt)
 # ...
 
 # ...

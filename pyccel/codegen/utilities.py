@@ -294,7 +294,6 @@ def build_file(filename, language, compiler, \
 #            print('> treating {0}'.format(f_name))
 
             module_name = str(module).replace('.', '_')
-            module_name = 'm_{0}'.format(module_name)
 
             codegen_m = FCodegen(filename=f_name,
                                  name=module_name,
@@ -369,49 +368,50 @@ def build_file(filename, language, compiler, \
     # ...
 
     # ... TODO improve and remove single_file
-    if single_file:
-        if not codegen.is_header:
-            # ... create a Module for pyccel extra definitions
-            pyccel_vars    = []
-            pyccel_funcs   = []
-            pyccel_classes = []
+    if not codegen.is_header:
+        # ... create a Module for pyccel extra definitions
+        pyccel_vars    = []
+        pyccel_funcs   = []
+        pyccel_classes = []
 
-            stmts = codegen.ast.extra_stmts
-            pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
-            pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
+        stmts = codegen.ast.extra_stmts
+        pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
+        pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
 
-            pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
-            if pyccel_vars or pyccel_funcs or pyccel_classes:
-                pyccel_stmts += [Module('m_pyccel', \
-                                        pyccel_vars, \
-                                        pyccel_funcs, \
-                                        pyccel_classes)]
+        pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
+        if pyccel_vars or pyccel_funcs or pyccel_classes:
+            pyccel_stmts += [Module('m_pyccel', \
+                                    pyccel_vars, \
+                                    pyccel_funcs, \
+                                    pyccel_classes)]
 
-            pyccel_code = ''
-            for stmt in pyccel_stmts:
-                pyccel_code += codegen.printer(stmt) + "\n"
-            # ...
+        pyccel_code = ''
+        for stmt in pyccel_stmts:
+            pyccel_code += codegen.printer(stmt) + "\n"
+        # ...
 
-            # ...
-            f = open(codegen.filename_out, "w")
-
-            for line in pyccel_code:
-                f.write(line)
-
-            # this commented line must be removed.
-            # otherwise, we will print all used modules in the current file
-            # TODO ARA : to remove
+        # ...
+        if single_file:
             ls = ms + [codegen]
-            #ls = [codegen]
-            codes = [m.code for m in ls]
-            for code in codes:
-                for line in code:
-                    f.write(line)
+        else:
+            ls = [codegen]
 
-            f.close()
-            # ...
-    else:
-        raise NotImplementedError('single_file must be True')
+        codes = [m.code for m in ls]
+        # ...
+
+        # ...
+        f = open(codegen.filename_out, "w")
+
+        for line in pyccel_code:
+            f.write(line)
+
+        for code in codes:
+            for line in code:
+                f.write(line)
+            f.write('\n')
+
+        f.close()
+        # ...
     # ...
 
     # ...
@@ -870,12 +870,14 @@ def load_extension(ext, output_dir,
             f_name = os.path.basename(filename)
             print ('> converting extensions/{0}/{1}'.format(ext, f_name))
 
-        module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
+        module_name = 'pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
+
         infos[module] = build_file(filename,
                                    language=language,
                                    compiler=None,
                                    output_dir=output_dir,
-                                   name=module_name)
+                                   name=module_name,
+                                   single_file=False)
     # ...
 
     # remove .pyccel temporary files
@@ -936,9 +938,10 @@ def load_extension(ext, output_dir,
             mkdir_p(output_testing_dir)
 
             infos[filename] = build_file(filename,
-                                       language=language,
-                                       compiler=None,
-                                       output_dir=output_testing_dir)
+                                         language=language,
+                                         compiler=None,
+                                         single_file=False,
+                                         output_dir=output_testing_dir)
 
         # ... construct external library dependencies
         libs = []

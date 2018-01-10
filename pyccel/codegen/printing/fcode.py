@@ -137,8 +137,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
 
-        name    = 'm_{0}'.format(self._print(expr.name))
+        name = self._print(expr.name)
         name = name.replace('.', '_')
+        if not name.startswith('mod_'):
+            name = 'mod_{0}'.format(name)
 
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
@@ -160,7 +162,7 @@ class FCodePrinter(CodePrinter):
             # update decs with declarations from ClassDef
             c_decs, c_funcs = self._print(i)
             decs = '{0}\n{1}'.format(decs, c_decs)
-            body = '{0}\n{1}'.format(body, c_funcs)
+            body = '{0}\n{1}\n'.format(body, c_funcs)
         # ...
 
 
@@ -172,10 +174,10 @@ class FCodePrinter(CodePrinter):
                 'implicit none\n'
                 '{decs}\n'
                 '{body}\n'
-                'end module {name}\n').format(name=name,
-                                               imports=imports,
-                                               decs=decs,
-                                               body=body)
+                'end module\n').format(name=name,
+                                       imports=imports,
+                                       decs=decs,
+                                       body=body)
 
     def _print_Program(self, expr):
 
@@ -198,8 +200,9 @@ class FCodePrinter(CodePrinter):
                                   imports=expr.imports)
 
             modules = self._print(module_utils)
+
             imports = ('{imports}\n'
-                       'use m_{name}').format(imports=imports, name=expr.name)
+                       'use mod_{name}\n').format(imports=imports, name=expr.name)
 
         else:
             # ... uncomment this later and remove it from the top
@@ -239,10 +242,10 @@ class FCodePrinter(CodePrinter):
             # pyccel-extension case
             if expr.fil.name[0] == 'pyccelext':
                 fil = '_'.join(self._print(i) for i in expr.fil.name)
-                fil = 'm_{0}'.format(fil)
+                fil = 'mod_{0}'.format(fil)
             else:
                 fil = '_'.join(self._print(i) for i in expr.fil.name)
-                fil = 'm_{0}'.format(fil)
+                fil = 'mod_{0}'.format(fil)
 
         if not expr.funcs:
             return 'use {0}'.format(fil)
