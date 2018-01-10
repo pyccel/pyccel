@@ -765,7 +765,7 @@ def builtin_function(name, args, lhs=None, op=None):
 #            raise ValueError("function takes no arguments")
 
         func = eval(known_functions[name])
-        _args = [0]
+        _args = [None]
         if lhs is None:
             return func(*_args)
         else:
