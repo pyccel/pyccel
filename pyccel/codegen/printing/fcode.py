@@ -40,11 +40,12 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
+from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
-from pyccel.ast.core import (Assign, AugAssign, \
-                              Variable, Declare, ValuedVariable, \
-                              Len, Shape, Dot, Sign, subs, \
-                              IndexedElement, Slice, DottedName, Print, If)
+from pyccel.ast.core import (Assign, AugAssign, Variable,
+                             Declare, ValuedVariable,
+                             Len, Shape, Dot, Sign, subs,
+                             IndexedElement, Slice, DottedName, Print, If)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -134,6 +135,8 @@ class FCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_Module(self, expr):
+        raise NotImplementedError('')
+
         name    = self._print(expr.name)
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
@@ -162,6 +165,36 @@ class FCodePrinter(CodePrinter):
                 'contains\n'
                 '{2}\n'
                 '{3}\n').format(prelude, decs, body, epilog)
+
+    # TODO add classes/modules
+    def _print_Program(self, expr):
+        name    = self._print(expr.name)
+        imports = '\n'.join(self._print(i) for i in expr.imports)
+        body    = '\n'.join(self._print(i) for i in expr.body)
+        decs    = '\n'.join(self._print(i) for i in expr.declarations)
+
+        sep = self._print(SeparatorComment(40))
+        funcs = ''
+        if expr.funcs:
+            for i in expr.funcs:
+                funcs = ('{funcs}\n'
+                         '{sep}\n'
+                         '{f}\n'
+                         '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
+
+            funcs = 'contains\n{0}'.format(funcs)
+
+        return ('program {name}\n'
+                '{imports}\n'
+                'implicit none\n'
+                '{decs}\n'
+                '{body}\n'
+                '{funcs}\n'
+                'end program {name}\n').format(name=name,
+                                               imports=imports,
+                                               decs=decs,
+                                               body=body,
+                                               funcs=funcs)
 
     def _print_Import(self, expr):
         fil = self._print(expr.fil)
@@ -376,6 +409,7 @@ class FCodePrinter(CodePrinter):
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
 
     def _print_Declare(self, expr):
+        # ... ignored declarations
         # we don't print the declaration if iterable object
         if is_iterable_datatype(expr.dtype):
             return ''
@@ -385,6 +419,15 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.dtype, NativeSymbol):
             return ''
+
+        if isinstance(expr.dtype, (NativeRange, NativeTensor)):
+            return ''
+
+        # meta-variables
+        if (isinstance(expr.variables[0], Variable) and
+              str(expr.variables[0].name).startswith('__')):
+            return ''
+        # ...
 
         dtype = self._print(expr.dtype)
 
@@ -646,6 +689,11 @@ class FCodePrinter(CodePrinter):
         return '.False.'
 
     def _print_FunctionDef(self, expr):
+        # ... we don't print 'hidden' functions
+        if expr.hide:
+            return ''
+        # ...
+
         name = str(expr.name)
         if expr.cls_name:
             for k,m in list(_default_methods.items()):
@@ -770,8 +818,10 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_ClassDef(self, expr):
+        # ... we don't print 'hidden' classes
         if expr.hide:
             return ''
+        # ...
 
         name = self._print(expr.name)
         base = None # TODO: add base in ClassDef
@@ -1343,6 +1393,9 @@ class FCodePrinter(CodePrinter):
                 )
         else:
             return CodePrinter._print_Add(self, expr)
+
+    def _print_Header(self, expr):
+        return ''
 
     def _print_Function(self, expr):
         # All constant function args are evaluated as floats

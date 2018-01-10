@@ -393,20 +393,9 @@ class Codegen(object):
         # ...
         # ...................................................
 
-#        # ...
-#        if with_mpi:
-#            stmts = [mpify(s) for s in stmts]
-#        # ...
-#
-#        # ...
-#        if with_openmp:
-#            stmts = [openmpfy(s) for s in stmts]
-#        # ...
-#
-#        # ...
-#        if with_openacc:
-#            stmts = [openaccfy(s) for s in stmts]
-#        # ...
+        # ... cleaning
+        clean_namespace()
+        # ...
 
     @property
     def expr(self):
@@ -618,97 +607,49 @@ class Codegen(object):
         expr = self.expr
         # ...
 
+#        # ...
+#        for dec in expr.declarations:
+#            if isinstance(dec.dtype, (NativeRange, NativeTensor)):
+#                continue
+#            elif (isinstance(dec.variables[0], Variable) and
+#                  str(dec.variables[0].name).startswith('__')):
+#                # we use str, for the case of DottedName
+#                continue
+#            else:
+#                preludes += printer(dec) + "\n"
+#        # ...
+#
+#        # ...
+#        def _construct_prelude(stmt):
+#            preludes = ''
+#            if isinstance(stmt, (list, tuple, Tuple)):
+#                for dec in stmt:
+#                    preludes += _construct_prelude(dec)
+#            if isinstance(stmt, (For, While)):
+#                preludes += _construct_prelude(stmt.body)
+#            if isinstance(stmt, Block):
+#                for dec in stmt.declarations:
+#                    preludes += printer(dec) + "\n"
+#            return preludes
+#
+#        preludes += _construct_prelude(expr.body)
+#        # ...
+
         # ...
-        for stmt in expr.imports:
-            name = str(stmt.fil)
-            if not(name in ignored_modules):
-                imports += printer(stmt) + "\n"
-                modules += [name]
+        settings = {}
+
+        settings['ignored_modules'] = ignored_modules
+        settings['with_openmp']     = with_openmp
+        settings['with_openacc']    = with_openacc
+        settings['with_mpi']        = with_mpi
+
+        e, info = pyccelize(expr, **settings)
+        metavars = info['metavars']
+        code = printer(e)
         # ...
 
         # ...
-        for stmt in expr.funcs:
-            if stmt.hide:
-                continue
-            sep = separator()
-            routines += sep + printer(stmt) + "\n" + sep + '\n'
-        # ...
-
-        # ...
-        for stmt in expr.classes:
-            if stmt.hide:
-                continue
-            classes += sep + printer(stmt) + "\n" + sep + '\n'
-        # ...
-
-        # ...
-        for dec in expr.declarations:
-            if isinstance(dec.dtype, (NativeRange, NativeTensor)):
-                continue
-            elif (isinstance(dec.variables[0], Variable) and
-                  str(dec.variables[0].name).startswith('__')):
-                # we use str, for the case of DottedName
-                continue
-            else:
-                preludes += printer(dec) + "\n"
-        # ...
-
-        # ...
-        def _construct_prelude(stmt):
-            preludes = ''
-            if isinstance(stmt, (list, tuple, Tuple)):
-                for dec in stmt:
-                    preludes += _construct_prelude(dec)
-            if isinstance(stmt, (For, While)):
-                preludes += _construct_prelude(stmt.body)
-            if isinstance(stmt, Block):
-                for dec in stmt.declarations:
-                    preludes += printer(dec) + "\n"
-            return preludes
-
-        preludes += _construct_prelude(expr.body)
-        # ...
-
-        # ...
-        _hidden_stmts = (Eval, Load)
-        if isinstance(expr, Program):
-            for stmt in expr.body:
-                # Variable is also ignored, since we can export them in headers
-                if isinstance(stmt, (FunctionHeader, ClassHeader,
-                                     MethodHeader, VariableHeader,
-                                     Variable, Lambda)):
-                    continue
-                elif isinstance(stmt, Assign):
-                    if isinstance(stmt.rhs, (Range, Tensor)):
-                        continue
-                    elif isinstance(stmt.lhs, Variable):
-                        if (isinstance(stmt.lhs.name, str) and
-                            stmt.lhs.name.startswith('__')):
-                            metavars[stmt.lhs.name] = stmt.rhs
-                        else:
-                            body += printer(stmt) + "\n"
-                    else:
-                        body += printer(stmt) + "\n"
-                elif isinstance(stmt, _hidden_stmts):
-                    continue
-                elif isinstance(stmt, Block):
-                    # TODO - now we can apply printer to Block directly. must be
-                    #      updated here => remove the body loop
-                    #      - printer(stmt) must return only body code, then preludes
-                    #      are treated somewhere?
-                    for s in stmt.body:
-                        body += "\n" + printer(s) + "\n"
-                    for dec in stmt.declarations:
-                        preludes += "\n" + printer(dec) + "\n"
-                else:
-                    body += "\n" + printer(stmt) + "\n"
-        # ...
-
         is_module = isinstance(expr, Module)
-        # ...
-
-        # ... cleaning
-        clean_namespace()
         # ...
 
         # ...
@@ -721,13 +662,6 @@ class Codegen(object):
         self._is_module = is_module
         self._language  = language
         self._metavars  = metavars
-        # ...
-
-        # ...
-        if is_module:
-            code = self.as_module()
-        else:
-            code = self.as_program()
         # ...
 
         # ...
@@ -853,3 +787,136 @@ def separator(n=40):
     comment = '!'
     return '{0} {1}\n'.format(comment, txt)
 # ...
+
+# ...
+def pyccelize(expr, **settings):
+    """."""
+
+    # ...
+    with_openmp  = False
+    if 'with_openmp' in settings:
+        with_openmp  = settings['with_openmp']
+    # ...
+
+    # ...
+    with_openacc  = False
+    if 'with_openacc' in settings:
+        with_openacc  = settings['with_openacc']
+    # ...
+
+    # ...
+    ignored_modules  = []
+    if 'ignored_modules' in settings:
+        ignored_modules  = settings['ignored_modules']
+    # ...
+
+    # ...
+    if not isinstance(expr, (Module, Program)):
+        raise NotImplementedError('')
+    # ...
+
+    # ...
+    if isinstance(expr, (Module, Program)):
+        # ...
+        name      = expr.name
+        variables = expr.variables
+        funcs     = expr.funcs
+        classes   = expr.classes
+
+        imports  = []
+        modules  = []
+        body     = []
+        decs     = []
+        metavars = {}
+        info     = {}
+        # ...
+
+        # ...
+        for stmt in expr.imports:
+            name = str(stmt.fil)
+            if not(name in ignored_modules):
+                imports += [stmt]
+        # ...
+
+#        # ...
+#        def _construct_prelude(stmt):
+#            preludes = ''
+#            if isinstance(stmt, (list, tuple, Tuple)):
+#                for dec in stmt:
+#                    preludes += _construct_prelude(dec)
+#            if isinstance(stmt, (For, While)):
+#                preludes += _construct_prelude(stmt.body)
+#            if isinstance(stmt, Block):
+#                for dec in stmt.declarations:
+#                    preludes += printer(dec) + "\n"
+#            return preludes
+#
+#        preludes += _construct_prelude(expr.body)
+#        # ...
+
+        # ...
+        _hidden_stmts = (Eval, Load)
+        if isinstance(expr, Program):
+            for stmt in expr.body:
+                # Variable is also ignored, since we can export them in headers
+                if isinstance(stmt, (Variable, Lambda)):
+                    continue
+                elif isinstance(stmt, Assign):
+                    if isinstance(stmt.rhs, (Range, Tensor)):
+                        continue
+                    elif isinstance(stmt.lhs, Variable):
+                        if (isinstance(stmt.lhs.name, str) and
+                            stmt.lhs.name.startswith('__')):
+                            metavars[stmt.lhs.name] = stmt.rhs
+                        else:
+                            body += [stmt]
+                    else:
+                        body += [stmt]
+                elif isinstance(stmt, _hidden_stmts):
+                    continue
+                elif isinstance(stmt, Block):
+                    # TODO - now we can apply printer to Block directly. must be
+                    #      updated here => remove the body loop
+                    #      - printer(stmt) must return only body code, then preludes
+                    #      are treated somewhere?
+                    for s in stmt.body:
+                        body += [stmt]
+#                    for dec in stmt.declarations:
+#                        preludes += "\n" + printer(dec) + "\n"
+                else:
+                    body += [stmt]
+        # ...
+
+        # ...
+        if isinstance(expr, Module):
+            expr = Module(name, variables, funcs, classes,
+                          imports=imports)
+        else:
+            expr = Program(name, variables, funcs, classes, body,
+                           imports=imports, modules=modules)
+        # ...
+
+        info['metavars'] = metavars
+
+        return expr, info
+    # ...
+
+
+
+#        # ...
+#        if with_mpi:
+#            stmts = [mpify(s) for s in stmts]
+#        # ...
+#
+#        # ...
+#        if with_openmp:
+#            stmts = [openmpfy(s) for s in stmts]
+#        # ...
+#
+#        # ...
+#        if with_openacc:
+#            stmts = [openaccfy(s) for s in stmts]
+#        # ...
+
+# ...
+

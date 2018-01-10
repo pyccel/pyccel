@@ -50,7 +50,6 @@ from sympy.core.compatibility import is_sequence
 #      - AnnotatedComment case
 #      - Slice case
 #      - Vector case
-#      - FunctionHeader case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
@@ -3194,8 +3193,11 @@ class Stencil(Basic):
     def dtype(self):
         return NativeDouble()
 
+class Header(Basic):
+    pass
+
 # TODO rename dtypes to arguments
-class VariableHeader(Basic):
+class VariableHeader(Header):
     """Represents a variable header in the code.
 
     name: str
@@ -3238,9 +3240,8 @@ class VariableHeader(Basic):
         """Returns a Variable."""
         raise NotImplementedError('TODO')
 
-
 # TODO rename dtypes to arguments
-class FunctionHeader(Basic):
+class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
     func: str
@@ -3467,7 +3468,7 @@ class MethodHeader(FunctionHeader):
     def results(self):
         return self._args[2]
 
-class ClassHeader(Basic):
+class ClassHeader(Header):
     """Represents class header in the code.
 
     name: str
