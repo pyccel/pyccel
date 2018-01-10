@@ -31,6 +31,7 @@ from pyccel.ast.core import DataType, is_pyccel_datatype
 from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
+from pyccel.ast.core import Module
 from pyccel.ast.core import Vector, Stencil
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
@@ -139,19 +140,17 @@ class FCodePrinter(CodePrinter):
         name    = 'm_{0}'.format(self._print(expr.name))
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
+        body    = ''
         # ...
 
         # ...
         sep = self._print(SeparatorComment(40))
-        funcs = ''
         if expr.funcs:
             for i in expr.funcs:
-                funcs = ('{funcs}\n'
+                body = ('{body}\n'
                          '{sep}\n'
                          '{f}\n'
-                         '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
-
-            funcs = 'contains\n{0}'.format(funcs)
+                         '{sep}\n').format(body=body, sep=sep, f=self._print(i))
         # ...
 
         # ...
@@ -159,45 +158,69 @@ class FCodePrinter(CodePrinter):
         for i in expr.classes:
             # update decs with declarations from ClassDef
             c_decs, c_funcs = self._print(i)
-            decs  = '{0}\n{1}'.format(decs, c_decs)
-            funcs = '{0}\n{1}'.format(funcs, c_funcs)
+            decs = '{0}\n{1}'.format(decs, c_decs)
+            body = '{0}\n{1}'.format(body, c_funcs)
         # ...
+
+
+        if expr.funcs or expr.classes:
+            body = 'contains\n{0}'.format(body)
 
         return ('module {name}\n'
                 '{imports}\n'
                 'implicit none\n'
                 '{decs}\n'
-                '{funcs}\n'
-                '{classes}\n'
+                '{body}\n'
                 'end module {name}\n').format(name=name,
                                                imports=imports,
                                                decs=decs,
-                                               classes=classes,
-                                               funcs=funcs)
+                                               body=body)
 
-    # TODO add classes/modules
     def _print_Program(self, expr):
-        # ...
+
         name    = 'prog_{0}'.format(self._print(expr.name))
-        imports = '\n'.join(self._print(i) for i in expr.imports)
-        body    = '\n'.join(self._print(i) for i in expr.body)
+        modules = ''
+        imports = ''
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
-        # ...
+        funcs   = ''
+        body    = '\n'.join(self._print(i) for i in expr.body)
 
-        # ...
-        sep = self._print(SeparatorComment(40))
-        funcs = ''
-        if expr.funcs:
-            for i in expr.funcs:
-                funcs = ('{funcs}\n'
-                         '{sep}\n'
-                         '{f}\n'
-                         '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
+        if expr.classes:
+            # TODO shall we use expr.variables? or have a more involved algo
+            #      we will need to walk through the expression and see what are
+            #      the variables that are needed in the definitions of classes
+            variables = []
+            module_utils = Module(expr.name, variables,
+                                  expr.funcs, expr.classes,
+                                  imports=expr.imports)
 
-            funcs = 'contains\n{0}'.format(funcs)
-        # ...
+            modules = self._print(module_utils)
+            imports = 'use m_{0}'.format(expr.name)
 
-        return ('program {name}\n'
+        else:
+            # ...
+            imports = '\n'.join(self._print(i) for i in expr.imports)
+            # ...
+
+            # ... uncomment this later and remove it from the top
+#            decs    = '\n'.join(self._print(i) for i in expr.declarations)
+            # ...
+
+            # ...
+            sep = self._print(SeparatorComment(40))
+            funcs = ''
+            if expr.funcs:
+                for i in expr.funcs:
+                    funcs = ('{funcs}\n'
+                             '{sep}\n'
+                             '{f}\n'
+                             '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
+
+                funcs = 'contains\n{0}'.format(funcs)
+            # ...
+
+        return ('{modules}\n'
+                'program {name}\n'
                 '{imports}\n'
                 'implicit none\n'
                 '{decs}\n'
@@ -207,7 +230,8 @@ class FCodePrinter(CodePrinter):
                                                imports=imports,
                                                decs=decs,
                                                body=body,
-                                               funcs=funcs)
+                                               funcs=funcs,
+                                               modules=modules)
 
     def _print_Import(self, expr):
         fil = self._print(expr.fil)
@@ -871,9 +895,16 @@ class FCodePrinter(CodePrinter):
 
         # we rename all methods because of the aliasing
         cls_methods = [i.rename('{0}'.format(i.name)) for i in expr.methods]
-        methods = '\n'.join(self._print(i) for i in cls_methods)
 
-        return decs+' \n contains \n'+methods
+        sep = self._print(SeparatorComment(40))
+        methods = ''
+        for i in cls_methods:
+            methods = ('{methods}\n'
+                     '{sep}\n'
+                     '{f}\n'
+                     '{sep}\n').format(methods=methods, sep=sep, f=self._print(i))
+
+        return decs, methods
 
     def _print_Break(self,expr):
         return 'exit'
