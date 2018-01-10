@@ -14,6 +14,7 @@ from pyccel.parser.syntax.core import get_namespace
 from pyccel.parser.syntax.core import clean_namespace
 
 from pyccel.ast.core import subs
+from pyccel.ast.core import Header
 from pyccel.ast.core import is_valid_module
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import DataType, DataTypeFactory
@@ -375,10 +376,10 @@ class Codegen(object):
         # ...
 
         # ...
-        _module_stmts = (FunctionDef, ClassDef)
+        _stmts = (Header, EmptyLine, Comment)
 
-        ls = [i for i in body if isinstance(i, _module_stmts)]
-        is_module = (len(ls) > 0)
+        ls = [i for i in body if not isinstance(i, _stmts)]
+        is_module = (len(ls) == 0)
         # ...
 
         # ...

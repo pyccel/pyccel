@@ -135,44 +135,13 @@ class FCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_Module(self, expr):
-        raise NotImplementedError('')
-
-        name    = self._print(expr.name)
+        # ...
+        name    = 'm_{0}'.format(self._print(expr.name))
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
+        # ...
 
-        prelude = ('module {0}\n'
-                   '{1}\n'
-                   'implicit none').format(name, imports)
-        epilog  = 'end module {0}'.format(name)
-
-        sep = self._print(SeparatorComment(40))
-        prelude = '{0}\n{1}'.format(sep, prelude)
-        epilog  = '{0}\n{1}\n'.format(epilog, sep)
-
-        body = ''
-        for i in expr.body:
-            # update decs with declarations from ClassDef
-            if isinstance(i, ClassDef):
-                c_decs, c_body = self._print(i)
-                decs = '{0}\n{1}'.format(decs, c_decs)
-                body = '{0}\n{1}'.format(body, c_body)
-            else:
-                body = '{0}\n{1}'.format(body, self._print(i))
-
-        return ('{0}\n'
-                '{1}\n'
-                'contains\n'
-                '{2}\n'
-                '{3}\n').format(prelude, decs, body, epilog)
-
-    # TODO add classes/modules
-    def _print_Program(self, expr):
-        name    = self._print(expr.name)
-        imports = '\n'.join(self._print(i) for i in expr.imports)
-        body    = '\n'.join(self._print(i) for i in expr.body)
-        decs    = '\n'.join(self._print(i) for i in expr.declarations)
-
+        # ...
         sep = self._print(SeparatorComment(40))
         funcs = ''
         if expr.funcs:
@@ -183,6 +152,50 @@ class FCodePrinter(CodePrinter):
                          '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
 
             funcs = 'contains\n{0}'.format(funcs)
+        # ...
+
+        # ...
+        classes = ''
+        for i in expr.classes:
+            # update decs with declarations from ClassDef
+            c_decs, c_funcs = self._print(i)
+            decs  = '{0}\n{1}'.format(decs, c_decs)
+            funcs = '{0}\n{1}'.format(funcs, c_funcs)
+        # ...
+
+        return ('module {name}\n'
+                '{imports}\n'
+                'implicit none\n'
+                '{decs}\n'
+                '{funcs}\n'
+                '{classes}\n'
+                'end module {name}\n').format(name=name,
+                                               imports=imports,
+                                               decs=decs,
+                                               classes=classes,
+                                               funcs=funcs)
+
+    # TODO add classes/modules
+    def _print_Program(self, expr):
+        # ...
+        name    = 'prog_{0}'.format(self._print(expr.name))
+        imports = '\n'.join(self._print(i) for i in expr.imports)
+        body    = '\n'.join(self._print(i) for i in expr.body)
+        decs    = '\n'.join(self._print(i) for i in expr.declarations)
+        # ...
+
+        # ...
+        sep = self._print(SeparatorComment(40))
+        funcs = ''
+        if expr.funcs:
+            for i in expr.funcs:
+                funcs = ('{funcs}\n'
+                         '{sep}\n'
+                         '{f}\n'
+                         '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
+
+            funcs = 'contains\n{0}'.format(funcs)
+        # ...
 
         return ('program {name}\n'
                 '{imports}\n'
