@@ -21,42 +21,93 @@ from pyccelext.math.quadratures  import legendre
 from pyccelext.math.external.bsp import spl_eval_splines_ders
 
 
-def test_legendre():
-    m = 3
+# ...
+n_elements_1 = 4
+n_elements_2 = 4
 
-    # ...
-    [x,w] = legendre(m)
-    # ...
+p1 = 3
+p2 = 3
 
-    print(x)
-    print(w)
+n1 = p1 + n_elements_1
+n2 = p2 + n_elements_2
+
+k1 = p1+1
+k2 = p2+1
+# ...
+
+# ...
+[u1,w1] = legendre(p1)
+# ...
+
+# ...
+[u2,w2] = legendre(p2)
+# ...
+
+# ...
+knots1 = make_knots (n1, p1)
+knots2 = make_knots (n2, p2)
+
+print("> knots1 = ", knots1)
+print("> knots2 = ", knots2)
+# ...
+
+# ... TODO fix args of zeros
+m1 = n_elements_1+1
+m2 = n_elements_2+1
+
+grid_1 = zeros(m1, double)
+grid_2 = zeros(m2, double)
+
+for i in range(0, n_elements_1 + 1):
+    grid_1[i] = knots1[i+p1]
+
+for i in range(0, n_elements_2+1):
+    grid_2[i] = knots2[i+p2]
+
+print("> grid_1 = ", grid_1)
+print("> grid_2 = ", grid_2)
+# ...
+
+# ...
+points_1  = zeros((k1, n_elements_1), double)
+weights_1 = zeros((k1, n_elements_1), double)
+
+points_2  = zeros((k2, n_elements_2), double)
+weights_2 = zeros((k2, n_elements_2), double)
+# ...
+
+# ... construct the quadrature points grid
+for i_element in range(0, n_elements_1):
+    a = grid_1[i_element]
+    b = grid_1[i_element+1]
+    half = (b - a)/2.0
+
+    for i_point in range(0, k1):
+        points_1 [i_point, i_element] = a + (1.0 + u1[i_point]) * half
+        weights_1[i_point, i_element] = half * w1[i_point]
+# ...
+
+# ... construct the quadrature points grid
+for i_element in range(0, n_elements_2):
+    a = grid_2[i_element]
+    b = grid_2[i_element+1]
+    half = (b - a)/2.0
+
+    for i_point in range(0, k2):
+        points_2 [i_point, i_element] = a + (1.0 + u2[i_point]) * half
+        weights_2[i_point, i_element] = half * w2[i_point]
+# ...
+
+# ...
+print("> points_1 = ", points_1)
+print("> points_2 = ", points_2)
+# ...
 
 
-def test_2():
-    n_elements = 4
-    p = 2
-    n = p+n_elements
 
-    knots = make_knots(n, p)
-    print(" knots    = ", knots)
-
-    d = 2
-    r = 3
-    r1 = r + 1
-    p1 = p + 1
-    d1 = d + 1
-
-    tau = zeros(r1, double)
-    tau[0] = 0.1
-    tau[1] = 0.3
-    tau[2] = 0.7
-    tau[3] = 0.8
-
-    dN = zeros((p1,d1,r1), double)
-    dN = spl_eval_splines_ders(p,n,d,r,knots,tau)
-
-    print(" dN = ", dN)
-
-test_2()
-
-print('> PASSED')
+## number of derivatives
+#d1 = 2
+#d2 = 2
+#
+#dN1 = zeros((p1+1,d1+1,p1+1), double)
+#dN1 = spl_eval_splines_ders(p1, n1, d1, p1, knots1, u1)
