@@ -24,12 +24,8 @@ def test_core():
 # ...
 def test_examples():
     print('============== testing examples ================')
-#    ignored = ['eval.py', 'parallel.py', 'mpi.py',
-#               'modules.py', 'imports.py', 'dict.py']
 
-    ignored = ['functions.py', 'classes.py', 'arrays.py',
-               'eval.py', 'parallel.py', 'mpi.py',
-               'modules.py', 'imports.py', 'dict.py']
+    ignored = ['classes.py', 'eval.py', 'dict.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts')

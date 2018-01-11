@@ -33,6 +33,7 @@ install:
 script:
 #  - pytest # or py.test for Python versions 3.5 and below
   - pytest tests/pyccel/ast/test_ast.py
+  - pytest tests/pyccel/ast/test_parallel.py
   - pytest tests/pyccel/parser/test_imports.py
   - pytest tests/pyccel/parser/test_openmp.py
   - pytest tests/pyccel/parser/test_openacc.py

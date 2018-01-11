@@ -24,7 +24,7 @@ class Group(FiniteSet):
 
     Examples
 
-    >>> from pyccel.parallel.group import Group
+    >>> from pyccel.ast.parallel.group import Group
     >>> g = Group(1, 2, 3, 4)
     >>> g
     {1, 2, 3, 4}
@@ -90,7 +90,7 @@ class Group(FiniteSet):
 
         As a shortcut it is possible to use the '+' operator:
 
-        >>> from pyccel.parallel.group import Group
+        >>> from pyccel.ast.parallel.group import Group
         >>> g1 = Group(1, 3, 6, 7, 8, 9)
         >>> g2 = Group(0, 2, 4, 5, 8, 9)
         >>> g1.union(g2)
@@ -107,7 +107,7 @@ class Group(FiniteSet):
 
         Examples
 
-        >>> from pyccel.parallel.group import Group
+        >>> from pyccel.ast.parallel.group import Group
         >>> g1 = Group(1, 3, 6, 7, 8, 9)
         >>> g2 = Group(0, 2, 4, 5, 8, 9)
         >>> g1.intersection(g2)
@@ -125,7 +125,7 @@ class Group(FiniteSet):
 
         As a shortcut it is possible to use the '-' operator:
 
-        >>> from pyccel.parallel.group import Group
+        >>> from pyccel.ast.parallel.group import Group
         >>> g1 = Group(1, 3, 6, 7, 8, 9)
         >>> g2 = Group(0, 2, 4, 5, 8, 9)
         >>> g1.difference(g2)
@@ -141,7 +141,7 @@ class Union(sm_Union):
 
     Examples
 
-    >>> from pyccel.parallel.group import Group, Union
+    >>> from pyccel.ast.parallel.group import Group, Union
     >>> g1 = Group(1, 3, 6, 7, 8, 9)
     >>> g2 = Group(0, 2, 4, 5, 8, 9)
     >>> Union(g1, g2)
@@ -159,7 +159,7 @@ class Intersection(sm_Intersection):
 
     Examples
 
-    >>> from pyccel.parallel.group import Group, Intersection
+    >>> from pyccel.ast.parallel.group import Group, Intersection
     >>> g1 = Group(1, 3, 6, 7, 8, 9)
     >>> g2 = Group(0, 2, 4, 5, 8, 9)
     >>> Intersection(g1, g2)
@@ -177,7 +177,7 @@ class Difference(Complement):
 
     Examples
 
-    >>> from pyccel.parallel.group import Group, Difference
+    >>> from pyccel.ast.parallel.group import Group, Difference
     >>> g1 = Group(1, 3, 6, 7, 8, 9)
     >>> g2 = Group(0, 2, 4, 5, 8, 9)
     >>> Difference(g1, g2)
@@ -195,7 +195,7 @@ class Range(sm_Range):
 
     Examples
 
-    >>> from pyccel.parallel.group import Range
+    >>> from pyccel.ast.parallel.group import Range
     >>> from sympy import Symbol
     >>> n = Symbol('n')
     >>> Range(0, n)
@@ -234,7 +234,7 @@ class UniversalGroup(Naturals):
 
     @property
     def communicator(self):
-        from pyccel.parallel.communicator import UniversalCommunicator
+        from pyccel.ast.parallel.communicator import UniversalCommunicator
         return UniversalCommunicator()
 
     @property
@@ -250,8 +250,8 @@ class Split(Group):
 
     Examples
 
-    >>> from pyccel.parallel.group import UniversalGroup
-    >>> from pyccel.parallel.communicator import UniversalCommunicator, split
+    >>> from pyccel.ast.parallel.group import UniversalGroup
+    >>> from pyccel.ast.parallel.communicator import UniversalCommunicator, split
     >>> colors = [1, 1, 0, 1, 0, 0]
     >>> g = Split(UniversalGroup(), colors, 0)
     >>> g

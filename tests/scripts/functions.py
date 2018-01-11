@@ -16,7 +16,9 @@ x1 = 1.0
 y1 = 2.0
 
 w    = 2 * f(x1,y1) + 1.0
-z, t = g(x1,w)
+
+# TODO
+[z, t] = g(x1,w)
 
 print(z)
 print(t)
