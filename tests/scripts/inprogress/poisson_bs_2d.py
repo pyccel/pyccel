@@ -33,6 +33,12 @@ n2 = p2 + n_elements_2
 
 k1 = p1+1
 k2 = p2+1
+
+# number of derivatives
+d1 = 1
+d2 = 1
+
+verbose = False
 # ...
 
 # ...
@@ -47,8 +53,9 @@ k2 = p2+1
 knots1 = make_knots (n1, p1)
 knots2 = make_knots (n2, p2)
 
-print("> knots1 = ", knots1)
-print("> knots2 = ", knots2)
+if verbose:
+    print("> knots1 = ", knots1)
+    print("> knots2 = ", knots2)
 # ...
 
 # ... TODO fix args of zeros
@@ -64,8 +71,9 @@ for i in range(0, n_elements_1 + 1):
 for i in range(0, n_elements_2+1):
     grid_2[i] = knots2[i+p2]
 
-print("> grid_1 = ", grid_1)
-print("> grid_2 = ", grid_2)
+if verbose:
+    print("> grid_1 = ", grid_1)
+    print("> grid_2 = ", grid_2)
 # ...
 
 # ...
@@ -85,9 +93,7 @@ for i_element in range(0, n_elements_1):
     for i_point in range(0, k1):
         points_1 [i_point, i_element] = a + (1.0 + u1[i_point]) * half
         weights_1[i_point, i_element] = half * w1[i_point]
-# ...
 
-# ... construct the quadrature points grid
 for i_element in range(0, n_elements_2):
     a = grid_2[i_element]
     b = grid_2[i_element+1]
@@ -99,15 +105,46 @@ for i_element in range(0, n_elements_2):
 # ...
 
 # ...
-print("> points_1 = ", points_1)
-print("> points_2 = ", points_2)
+if verbose:
+    print("> points_1 = ", points_1)
+    print("> points_2 = ", points_2)
 # ...
 
+# ...
+basis_1  = zeros((d1+1, k1, k1, n_elements_1), double)
+basis_2  = zeros((d1+1, k2, k2, n_elements_2), double)
 
+dN1 = zeros((p1+1, d1+1, k1), double)
+dN2 = zeros((p2+1, d2+1, k2), double)
+# ...
 
-## number of derivatives
-#d1 = 2
-#d2 = 2
-#
-#dN1 = zeros((p1+1,d1+1,p1+1), double)
-#dN1 = spl_eval_splines_ders(p1, n1, d1, p1, knots1, u1)
+# ... evaluates B-Splines and their derivatives on the quad grid
+for i_element in range(0, n_elements_1):
+    dN1 = 0.0
+    dN1 = spl_eval_splines_ders(p1, n1, d1, p1, knots1, u1)
+    basis_1[:,:,:,i_element] = dN1
+
+for i_element in range(0, n_elements_2):
+    dN2 = 0.0
+    dN2 = spl_eval_splines_ders(p2, n2, d2, p2, knots2, u2)
+    basis_2[:,:,:,i_element] = dN2
+# ...
+
+# ...
+if verbose:
+    print("> basis_1 = ", basis_1)
+    print("> basis_2 = ", basis_2)
+# ...
+
+del knots1
+del knots2
+del grid_1
+del grid_2
+del points_1
+del weights_1
+del points_2
+del weights_2
+del basis_1
+del basis_2
+del dN1
+del dN2

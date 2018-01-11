@@ -1,6 +1,11 @@
 TODO
 ====
 
+Bugs
+****
+
+- **Del** for a list of variables
+
 Commands
 ********
 
