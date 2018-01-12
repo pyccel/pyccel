@@ -111,23 +111,65 @@ if verbose:
 # ...
 
 # ...
-basis_1  = zeros((d1+1, k1, k1, n_elements_1), double)
-basis_2  = zeros((d1+1, k2, k2, n_elements_2), double)
-
-dN1 = zeros((p1+1, d1+1, k1), double)
-dN2 = zeros((p2+1, d2+1, k2), double)
+basis_1  = zeros((p1+1, d1+1, k1, n_elements_1), double)
+basis_2  = zeros((p2+1, d1+1, k2, n_elements_2), double)
 # ...
 
 # ... evaluates B-Splines and their derivatives on the quad grid
+dN1 = zeros((p1+1, d1+1, k1), double)
 for i_element in range(0, n_elements_1):
     dN1 = 0.0
     dN1 = spl_eval_splines_ders(p1, n1, d1, p1, knots1, u1)
     basis_1[:,:,:,i_element] = dN1
+del dN1
 
+dN2 = zeros((p2+1, d2+1, k2), double)
 for i_element in range(0, n_elements_2):
     dN2 = 0.0
     dN2 = spl_eval_splines_ders(p2, n2, d2, p2, knots2, u2)
     basis_2[:,:,:,i_element] = dN2
+del dN2
+# ...
+
+# TODO - 'i1 <--> loc_i1, ie1'
+#      - ''
+
+# ...
+for i1 in range(0, p1):
+    for i2 in range(0, p2):
+        for m1 in range(-p1, p1):
+            for m2 in range(-p2, p2):
+                j1  = 0
+                j2  = 0
+
+                ie1 = 0
+                ie2 = 0
+
+                v = 0.0
+                for g1 in range(0, k1):
+                    for g2 in range(0, k2):
+                        bi1_0 = basis_1[i1, 0, g1, ie1]
+                        bi1_s = basis_1[i1, 1, g1, ie1]
+                        bi2_0 = basis_2[i2, 0, g2, ie2]
+                        bi2_s = basis_2[i2, 2, g2, ie2]
+
+                        bj1_0 = basis_1[j1, 0, g1, ie1]
+                        bj1_s = basis_1[j1, 1, g1, ie1]
+                        bj2_0 = basis_2[j2, 0, g2, ie2]
+                        bj2_s = basis_2[j2, 2, g2, ie2]
+
+                        bi_0  = bi1_0 * bi2_0
+                        bi_x  = bi1_s * bi2_0
+                        bi_y  = bi1_0 * bi2_s
+
+                        bj_0  = bj1_0 * bj2_0
+                        bj_x  = bj1_s * bj2_0
+                        bj_y  = bj1_0 * bj2_s
+
+                        wvol = weights_1[g1, ie1] * weights_2[g2, ie2]
+
+                        v += (bi_0 * bj_0 + bi_x * bj_x + bi_y * bj_y) * wvol
+
 # ...
 
 # ...
@@ -146,5 +188,3 @@ del points_2
 del weights_2
 del basis_1
 del basis_2
-del dN1
-del dN2

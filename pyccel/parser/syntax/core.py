@@ -269,7 +269,7 @@ def print_declarations():
     print("---------------------------")
 # ...
 
-def get_attributs(expr):
+def infere_type(expr):
     """
     finds attributs of the expression
     """
@@ -289,7 +289,7 @@ def get_attributs(expr):
         if not expr:
             return d_var
 
-        ds = [get_attributs(a) for a in expr]
+        ds = [infere_type(a) for a in expr]
 
         a = ds[0]
         d_var['datatype']    = a['datatype']
@@ -309,7 +309,7 @@ def get_attributs(expr):
                 d_var['rank'] = a['rank']
         return d_var
     elif isinstance(expr, Tuple):
-        a = get_attributs(expr[0])
+        a = infere_type(expr[0])
 
         d_var['datatype']    = a['datatype']
         d_var['allocatable'] = False
@@ -399,8 +399,6 @@ def get_attributs(expr):
         if name in namespace:
             var = namespace[name]
             d_var['datatype']    = var.dtype
-
-
 
             if iterable(var.shape):
                 shape = []
@@ -529,7 +527,7 @@ def get_attributs(expr):
                     name = arg.name
                     if not isinstance(name, DottedName):
                         var = namespace[name]
-                        return get_attributs(var)
+                        return infere_type(var)
                     else:
                         # see remark in expr_with_trailer (TrailerDots)
                         cls_base = namespace[name.name[0]]
@@ -544,12 +542,12 @@ def get_attributs(expr):
                                                  '{1}'.format(member, expr))
 
                             attribut = d_attributs[member]
-                            return get_attributs(attribut)
+                            return infere_type(attribut)
                 else:
-                    return get_attributs(arg)
-        return get_attributs(args)
+                    return infere_type(arg)
+        return infere_type(args)
     else:
-        raise TypeError("get_attributs is not available for {0}".format(type(expr)))
+        raise TypeError("infere_type is not available for {0}".format(type(expr)))
 
     return d_var
 
@@ -1658,15 +1656,19 @@ class AssignStmt(BasicStmt):
                     raise ValueError('Wrong number of results')
 
                 for res,e in zip(results, lhs):
-                    d_var = get_attributs(res)
+                    d_var = infere_type(res)
                     insert_variable(str(e), **d_var)
 
         if isinstance(lhs, str) and not(lhs in namespace):
-            d_var = get_attributs(rhs)
+            d_var = infere_type(rhs)
 
             if not isinstance(rhs, Tuple):
-                d_var['allocatable'] = not(d_var['shape'] is None)
-                if d_var['shape']:
+                # to be allocatable, the shape must not be None or empry list
+                if isinstance(d_var['shape'], (list, tuple, Tuple)):
+                    if len(d_var['shape']) > 0:
+                        d_var['allocatable'] = True
+
+                if d_var['allocatable']:
                     if DEBUG:
                         print(("> Found an unallocated variable: ", lhs))
                     status = 'unallocated'
@@ -1684,7 +1686,7 @@ class AssignStmt(BasicStmt):
         # change lhs from Symbol to Pyccel datatype (Variable, etc)
 #        print_namespace()
         if isinstance(lhs, DottedName) and (str(lhs) in namespace):
-            d_var = get_attributs(rhs)
+            d_var = infere_type(rhs)
 
             if not isinstance(rhs, Tuple):
                 if isinstance(namespace[str(lhs)], Symbol):
@@ -1772,7 +1774,7 @@ class AugAssignStmt(BasicStmt):
 
         found_var = (var_name in namespace)
         if not(found_var):
-            d_var = get_attributs(rhs)
+            d_var = infere_type(rhs)
 
 #            print ">>>> AugAssignStmt : ", var_name, d_var
 

@@ -54,7 +54,7 @@ def test_core(n_procs=2):
 # ...
 def test_examples(n_procs=2):
     print('============== testing examples ================')
-    ignored = ['ex_mpi.py', 'cart_2d.py']
+    ignored = ['cart_2d.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/mpi/')
