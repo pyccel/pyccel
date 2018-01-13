@@ -284,7 +284,7 @@ def build_file(filename, language, compiler, \
         if not(module in namespaces):
             namespaces[module] = {}
 
-#        print('>>> processing module:{0}, and names:{1}'.format(module, names))
+#        print('>>> processing module: {0}, and names: {1}'.format(module, names))
 
         f_names = imports_src[module]
         for f_name in f_names:
@@ -334,11 +334,9 @@ def build_file(filename, language, compiler, \
 
             update_namespace(namespace_user)
             treated_files += [f_name]
-#            print_namespace()
 
             # TODO add aliases or what to import (names)
 #    import sys; sys.exit(0)
-
 
     codegen = FCodegen(filename=filename,
                        name=name,
@@ -868,7 +866,7 @@ def load_extension(ext, output_dir,
         filename = get_extension_path(ext, module=module)
         if not silent:
             f_name = os.path.basename(filename)
-            print ('> converting extensions/{0}/{1}'.format(ext, f_name))
+#            print ('> converting extensions/{0}/{1}'.format(ext, f_name))
 
         module_name = 'pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
 

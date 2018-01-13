@@ -491,7 +491,6 @@ class Codegen(object):
                 if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
                     f = v.create_definition()
                     namespace[k] = f
-#                    print '{0} :: {1}'.format(k, f)
 
         return namespace
 

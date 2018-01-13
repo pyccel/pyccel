@@ -503,7 +503,7 @@ class FCodePrinter(CodePrinter):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
         else:
-            rankstr = ', '.join(s+':'+e for f in range(0, rank))
+            rankstr = ', '.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
         # TODO: it would be great to use allocatable but then we have to pay

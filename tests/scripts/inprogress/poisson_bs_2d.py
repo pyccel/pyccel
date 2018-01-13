@@ -19,6 +19,7 @@ from pyccelext.math.bsplines     import make_knots
 from pyccelext.math.bsplines     import make_greville
 from pyccelext.math.quadratures  import legendre
 from pyccelext.math.external.bsp import spl_eval_splines_ders
+from pyccelext.math.external.bsp import spl_compute_spans
 
 
 # ...
@@ -131,8 +132,20 @@ for i_element in range(0, n_elements_2):
 del dN2
 # ...
 
-# TODO - 'i1 <--> loc_i1, ie1'
-#      - ''
+# ...
+spans_1 = zeros(n_elements_1, int)
+spans_2 = zeros(n_elements_2, int)
+
+basis_elements_1 = zeros(n1, int)
+basis_elements_2 = zeros(n2, int)
+# ...
+
+# subroutine call
+[spans_1, basis_elements_1] = spl_compute_spans(p1, n1, knots1)
+
+# subroutine call
+[spans_2, basis_elements_2] = spl_compute_spans(p2, n2, knots2)
+# ...
 
 # ...
 for i1 in range(0, p1):
