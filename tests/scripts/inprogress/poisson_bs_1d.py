@@ -136,7 +136,8 @@ for ie1 in range(0, n_elements_1):
 
                 wvol = weights_1[g1, ie1]
 
-                v += (bi_0 * bj_0 + bi_x * bj_x) * wvol
+#                v += (bi_0 * bj_0 + bi_x * bj_x) * wvol
+                v += bi_0 * bj_0 * wvol
 
             matrix[j1 - i1, i1] += v
 # ...
@@ -144,6 +145,9 @@ for ie1 in range(0, n_elements_1):
 # ... apply dirichlet boundary conditions
 matrix[:,0]    = 0.0
 matrix[:,n1-1] = 0.0
+
+rhs[0]    = 0.0
+rhs[n1-1] = 0.0
 # ...
 
 # ... define matrix-vector product
@@ -178,8 +182,87 @@ for ie1 in range(0, n_elements_1):
 # ...
 x0 = vector(start_1-pad_1, end_1+pad_1)
 y  = vector(start_1-pad_1, end_1+pad_1)
+# ...
 
-mv(matrix, rhs, y)
+# ... CGL performs maxit CG iterations on the linear system Ax = b
+#     starting from x = x0
+# TODO not working yet
+
+#$ header procedure cgl(double [:,:], double [:], double [:], int)
+def cgl(mat, b, x0, maxit):
+    xk = zeros_like(x0)
+    mx = zeros_like(x0)
+    p  = zeros_like(x0)
+    q  = zeros_like(x0)
+    r  = zeros_like(x0)
+
+    xk = x0
+
+    mv(mat, x0, mx)
+    r = b - mx
+    p = r
+    rdr = dot(r,r)
+    for i_iter in range(1, maxit+1):
+        mv(mat, p, q)
+        alpha = rdr / dot (p, q)
+        xk = xk + alpha * p
+        r  = r - alpha * q
+        rdrold = rdr
+        rdr = dot(r, r)
+        beta = rdr / rdrold
+        p = r + beta * p
+
+    x0 = x
+    print ('> cgl-error = ', rdr)
+# ...
+
+# ... CRL performs maxit CG iterations on the linear system Ax = b
+#     where A is a symmetric positive definite matrix, using CG method
+#     starting from x = x0
+
+#$ header procedure crl(double [:,:], double [:], double [:], int)
+def crl(mat, b, x0, maxit):
+    xk = zeros_like(x0)
+    mx = zeros_like(x0)
+    p  = zeros_like(x0)
+    q  = zeros_like(x0)
+    r  = zeros_like(x0)
+    s  = zeros_like(x0)
+
+    xk = x0
+
+    mv(mat, x0, mx)
+    r = b - mx
+    p = r
+    mv(mat, p, q)
+    s = q
+    sdr = dot(s,r)
+    for i_iter in range(1, maxit+1):
+        alpha = sdr / dot (q, q)
+        xk = xk + alpha * p
+        r  = r - alpha * q
+        mv(mat, r, s)
+        sdrold = sdr
+        sdr = dot(s, r)
+        beta = sdr / sdrold
+        p = r + beta * p
+        q = s + beta * q
+
+    x0 = x
+    print ('> crl-error = ', sdr)
+# ...
+
+# ...
+n_maxiter = 100
+
+xn = vector(start_1-pad_1, end_1+pad_1)
+crl(matrix, rhs, xn, n_maxiter)
+
+mv(matrix, xn, x0)
+err = vector(start_1-pad_1, end_1+pad_1)
+err = abs(x0-rhs)
+err_linfty = max(err)
+print ('> error = ', err_linfty)
 # ...
 
 # ...

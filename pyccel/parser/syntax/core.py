@@ -2633,7 +2633,7 @@ class FunctionDefStmt(BasicStmt):
                 if isinstance(a, dict):
                     arg_name = a['key']
                 else:
-                    arg_name = a
+                    arg_name = str(a)
                 arg_names.append(arg_name)
 
                 if arg_name in namespace:
