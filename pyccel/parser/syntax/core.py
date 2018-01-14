@@ -2578,10 +2578,6 @@ class FunctionDefStmt(BasicStmt):
 
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
-            # remove self from args
-            if args[0]=='self':
-                this='self'
-                args = args[1:]
 
             # insert self to namespace
             d_var = {}
@@ -2593,6 +2589,11 @@ class FunctionDefStmt(BasicStmt):
             d_var['intent']      = 'inout'
             d_var['cls_base']    = cls_instance
             insert_variable('self', **d_var)
+
+            # remove self from args
+            if args[0] == 'self':
+                args = args[1:]
+                this = namespace['self']
 
         # ...
         results = []
@@ -2664,20 +2665,21 @@ class FunctionDefStmt(BasicStmt):
 
         # ... case of class constructor
         if self.name == '__init__':
-            attr=[]
+            # first we construct the list of attributs
+            attr = []
             for i in self.body.stmts:
-                if isinstance(i,AssignStmt) and i.lhs=='self':
+                if isinstance(i, AssignStmt) and i.lhs == 'self':
 
-                    c={'lhs':i.trailer.expr,'rhs':i.rhs}
-                    Var=AssignStmt(**c).expr
-                    attr+=[Var.lhs]
+                    c = {'lhs':i.trailer.expr, 'rhs':i.rhs}
+                    Var = AssignStmt(**c).expr
+                    attr += [Var.lhs]
             # we first create and append an empty class to the namespace
             namespace[cls_instance] = ClassDef(cls_instance,attr,[],[])
         # ...
 
         body = self.body.expr
         if this:
-            arg_names+=['self']
+            arg_names += ['self']
 
         prelude = [declarations[a] for a in arg_names]
 

@@ -818,6 +818,8 @@ class FCodePrinter(CodePrinter):
         for arg in expr.arguments:
             if arg in list(expr.results) + list_lhs:
                 dec = Declare(arg.dtype, arg, intent='inout')
+            elif str(arg) == 'self':
+                dec = Declare(arg.dtype, arg, intent='inout')
             else:
                 dec = Declare(arg.dtype, arg, intent='in')
             decs[str(arg)] = dec

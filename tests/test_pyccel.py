@@ -93,6 +93,6 @@ if __name__ == '__main__':
     clean_tests()
     test_core()
     test_examples()
-#    test_oop()
+    test_oop()
     test_lambda()
     clean_tests()
