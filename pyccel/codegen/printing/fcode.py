@@ -293,8 +293,6 @@ class FCodePrinter(CodePrinter):
     def _print_ValuedVariable(self, expr):
         variable = self._print(expr.variable)
         return variable
-#        value    = self._print(expr.value)
-#        return '{0} = {1}'.format(variable, value)
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
@@ -756,12 +754,12 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
         out_args = []
-        decs = []
+        decs = {}
 
         # ... local variables declarations
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
-            decs.append(dec)
+            decs[str(i)] = dec
         # ...
 
         # ...
@@ -775,10 +773,7 @@ class FCodePrinter(CodePrinter):
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
-                    # TODO improve
-                    var = stmt.variables[0]
-                    if not(str(var.name) == str(result.name)):
-                        decs.append(stmt)
+                    pass
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
 
@@ -794,7 +789,7 @@ class FCodePrinter(CodePrinter):
                              shape=result.shape)
 
                 dec = Declare(result.dtype, var)
-                decs.append(dec)
+                decs[str(var)] = dec
             else:
                 sig = '{0} function {1}'.format(ret_type, name)
                 func_end  = ' result({0})'.format(result.name)
@@ -802,11 +797,11 @@ class FCodePrinter(CodePrinter):
             # TODO compute intent
             out_args = [result for result in expr.results]
             for result in expr.results:
-                if result in expr.arguments:
+                if not result in expr.arguments:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
-                decs.append(dec)
+                decs[str(result)] = dec
 
             sig = 'subroutine ' + name
             func_type = 'subroutine'
@@ -825,7 +820,9 @@ class FCodePrinter(CodePrinter):
                 dec = Declare(arg.dtype, arg, intent='inout')
             else:
                 dec = Declare(arg.dtype, arg, intent='in')
-            decs.append(dec)
+            decs[str(arg)] = dec
+
+        decs = [v for k,v in decs.items()]
 
 
         #remove parametres intent(inout) from out_args to prevent repetition

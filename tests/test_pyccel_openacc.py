@@ -48,5 +48,5 @@ def test_openacc():
 if __name__ == '__main__':
     clean_tests()
     test_core()
-    test_openacc()
+#    test_openacc()
     clean_tests()

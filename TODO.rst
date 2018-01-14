@@ -4,6 +4,12 @@ TODO
 Bugs
 ****
 
+- **oop** tests not working
+
+- **scatter.py** not working anymore
+
+- improve **ValuedVariable**
+
 - **Del** for a list of variables
 
 Commands

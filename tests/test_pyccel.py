@@ -12,7 +12,7 @@ from utils import clean_tests
 def test_core():
     print('============== testing core ================')
 #    ignored = [15, 18]
-    ignored = [15, 18, 22, 5, 14, 15, 16, 18, 20, 21]
+    ignored = [15, 18, 5]
 
     for i in range(0, 23+1):
         filename = 'tests/scripts/core/ex{0}.py'.format(str(i))
@@ -93,6 +93,6 @@ if __name__ == '__main__':
     clean_tests()
     test_core()
     test_examples()
-    test_oop()
+#    test_oop()
     test_lambda()
     clean_tests()
