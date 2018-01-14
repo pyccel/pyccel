@@ -2571,7 +2571,7 @@ class FunctionDefStmt(BasicStmt):
         global_vars = []
 
         cls_instance = None
-        args_0=None
+        this = None
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
@@ -2580,7 +2580,7 @@ class FunctionDefStmt(BasicStmt):
             name = '{0}.{1}'.format(cls_instance, name)
             # remove self from args
             if args[0]=='self':
-                args_0='self'
+                this='self'
                 args = args[1:]
 
             # insert self to namespace
@@ -2659,6 +2659,7 @@ class FunctionDefStmt(BasicStmt):
                 d_var['rank']        = rank
                 d_var['intent']      = 'in'
                 insert_variable(arg_name, **d_var)
+            args = [namespace[a] for a in arg_names]
         # ...............................
 
         # ... case of class constructor
@@ -2675,7 +2676,7 @@ class FunctionDefStmt(BasicStmt):
         # ...
 
         body = self.body.expr
-        if args_0:
+        if this:
             arg_names+=['self']
 
         prelude = [declarations[a] for a in arg_names]
@@ -2727,8 +2728,8 @@ class FunctionDefStmt(BasicStmt):
         # ...
 
         # ...
-        if args_0:
-            args = [args_0] + args
+        if this:
+            args = [this] + args
         # ...
 
         # ...
@@ -2758,8 +2759,13 @@ class FunctionDefStmt(BasicStmt):
         # ...
 
         # ... remove results from local_vars
+        #     and from declarations
         res_names = [str(i) for i in results]
-        local_vars = [i for i in local_vars if not(str(i) in res_names)]
+        arg_names = [str(i) for i in args]
+        local_vars = [i for i in local_vars if not(str(i) in res_names + arg_names)]
+        for i in res_names + arg_names:
+            if i in declarations:
+                del declarations[i]
         # ...
 
         # rename the method in the class case
@@ -2788,8 +2794,11 @@ class FunctionDefStmt(BasicStmt):
 
         # ... cleaning the namespace
         for a in arg_names:
-            del declarations[a]
-            del namespace[a]
+            if a in declarations:
+                del declarations[a]
+
+            if a in namespace:
+                del namespace[a]
 
         # ...
         for arg_name, var in list(scope_vars.items()):

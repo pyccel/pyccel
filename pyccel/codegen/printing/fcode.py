@@ -807,6 +807,7 @@ class FCodePrinter(CodePrinter):
                 else:
                     dec = Declare(result.dtype, result, intent='out')
                 decs.append(dec)
+
             sig = 'subroutine ' + name
             func_type = 'subroutine'
 
@@ -814,12 +815,19 @@ class FCodePrinter(CodePrinter):
             body = []
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
-                    # TODO improve
-                    nm = str(stmt.variables[0].name)
-                    if not(nm in names):
-                        decs.append(stmt)
+                    pass
                 elif not isinstance(stmt, list): # for list of Results
                     body.append(stmt)
+
+        list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
+        for arg in expr.arguments:
+            if arg in list(expr.results) + list_lhs:
+                dec = Declare(arg.dtype, arg, intent='inout')
+            else:
+                dec = Declare(arg.dtype, arg, intent='in')
+            decs.append(dec)
+
+
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
             if i in out_args:
