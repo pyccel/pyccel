@@ -1191,7 +1191,7 @@ def get_with_clauses(expr):
     if not(d['_async'] is None):
         if not isinstance(d['_async'], Nil):
             ls = d['_async']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1202,7 +1202,7 @@ def get_with_clauses(expr):
     if not(d['_copy'] is None):
         if not isinstance(d['_copy'], Nil):
             ls = d['_copy']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1213,7 +1213,7 @@ def get_with_clauses(expr):
     if not(d['_copyin'] is None):
         if not isinstance(d['_copyin'], Nil):
             ls = d['_copyin']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1224,7 +1224,7 @@ def get_with_clauses(expr):
     if not(d['_copyout'] is None):
         if not isinstance(d['_copyout'], Nil):
             ls = d['_copyout']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1235,7 +1235,7 @@ def get_with_clauses(expr):
     if not(d['_create'] is None):
         if not isinstance(d['_create'], Nil):
             ls = d['_create']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1246,7 +1246,7 @@ def get_with_clauses(expr):
     if not(d['_default'] is None):
         if not isinstance(d['_default'], Nil):
             ls = d['_default']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])
@@ -1257,7 +1257,7 @@ def get_with_clauses(expr):
     if not(d['_deviceptr'] is None):
         if not isinstance(d['_deviceptr'], Nil):
             ls = d['_deviceptr']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1268,7 +1268,7 @@ def get_with_clauses(expr):
     if not(d['_device_type'] is None):
         if not isinstance(d['_device_type'], Nil):
             ls = d['_device_type']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1279,7 +1279,7 @@ def get_with_clauses(expr):
     if not(d['_firstprivate'] is None):
         if not isinstance(d['_firstprivate'], Nil):
             ls = d['_firstprivate']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1320,7 +1320,7 @@ def get_with_clauses(expr):
     if not(d['_present'] is None):
         if not isinstance(d['_present'], Nil):
             ls = d['_present']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1331,7 +1331,7 @@ def get_with_clauses(expr):
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1342,7 +1342,7 @@ def get_with_clauses(expr):
     if not(d['_reduction'] is None):
         if not isinstance(d['_reduction'], Nil):
             ls = d['_reduction']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1361,7 +1361,7 @@ def get_with_clauses(expr):
     if not(d['_wait'] is None):
         if not isinstance(d['_wait'], Nil):
             ls = d['_wait']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1488,7 +1488,7 @@ def get_for_clauses(expr):
     if not(d['_device_type'] is None):
         if not isinstance(d['_device_type'], Nil):
             ls = d['_device_type']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1499,7 +1499,7 @@ def get_for_clauses(expr):
     if not(d['_gang'] is None):
         if not isinstance(d['_gang'], Nil):
             ls = d['_gang']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1516,7 +1516,7 @@ def get_for_clauses(expr):
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1527,7 +1527,7 @@ def get_for_clauses(expr):
     if not(d['_reduction'] is None):
         if not isinstance(d['_reduction'], Nil):
             ls = d['_reduction']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1544,7 +1544,7 @@ def get_for_clauses(expr):
     if not(d['_tile'] is None):
         if not isinstance(d['_tile'], Nil):
             ls = d['_tile']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1555,7 +1555,7 @@ def get_for_clauses(expr):
     if not(d['_vector'] is None):
         if not isinstance(d['_vector'], Nil):
             ls = d['_vector']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -1566,7 +1566,7 @@ def get_for_clauses(expr):
     if not(d['_worker'] is None):
         if not isinstance(d['_worker'], Nil):
             ls = d['_worker']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]

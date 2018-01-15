@@ -48,5 +48,5 @@ def test_openmp():
 if __name__ == '__main__':
     clean_tests()
     test_core()
-#    test_openmp()
+    test_openmp()
     clean_tests()

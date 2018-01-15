@@ -670,6 +670,7 @@ def get_with_clauses(expr):
     if isinstance(expr, Variable):
         if expr.cls_base:
             d_attributs = expr.cls_base.attributs_as_dict
+
     elif isinstance(expr, ConstructorCall):
         attrs = expr.attributs
         for i in attrs:
@@ -730,7 +731,7 @@ def get_with_clauses(expr):
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -741,7 +742,7 @@ def get_with_clauses(expr):
     if not(d['_firstprivate'] is None):
         if not isinstance(d['_firstprivate'], Nil):
             ls = d['_firstprivate']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -752,7 +753,7 @@ def get_with_clauses(expr):
     if not(d['_shared'] is None):
         if not isinstance(d['_shared'], Nil):
             ls = d['_shared']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -763,7 +764,7 @@ def get_with_clauses(expr):
     if not(d['_reduction'] is None):
         if not isinstance(d['_reduction'], Nil):
             ls = d['_reduction']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -774,7 +775,7 @@ def get_with_clauses(expr):
     if not(d['_copyin'] is None):
         if not isinstance(d['_copyin'], Nil):
             ls = d['_copyin']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -785,7 +786,7 @@ def get_with_clauses(expr):
     if not(d['_default'] is None):
         if not isinstance(d['_default'], Nil):
             ls = d['_default']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])
@@ -796,7 +797,7 @@ def get_with_clauses(expr):
     if not(d['_proc_bind'] is None):
         if not isinstance(d['_proc_bind'], Nil):
             ls = d['_proc_bind']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])
@@ -925,7 +926,7 @@ def get_for_clauses(expr):
     if not(d['_private'] is None):
         if not isinstance(d['_private'], Nil):
             ls = d['_private']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -936,7 +937,7 @@ def get_for_clauses(expr):
     if not(d['_firstprivate'] is None):
         if not isinstance(d['_firstprivate'], Nil):
             ls = d['_firstprivate']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -947,7 +948,7 @@ def get_for_clauses(expr):
     if not(d['_lastprivate'] is None):
         if not isinstance(d['_lastprivate'], Nil):
             ls = d['_lastprivate']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -958,7 +959,7 @@ def get_for_clauses(expr):
     if not(d['_reduction'] is None):
         if not isinstance(d['_reduction'], Nil):
             ls = d['_reduction']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls = [_format_str(a) for a in ls]
@@ -969,7 +970,7 @@ def get_for_clauses(expr):
     if not(d['_schedule'] is None):
         if not isinstance(d['_schedule'], Nil):
             ls = d['_schedule']
-            if isinstance(ls, str):
+            if not isinstance(ls, (list, tuple, Tuple)):
                 ls = [ls]
 
             ls[0] = _format_str(ls[0])

@@ -88,5 +88,5 @@ def test_examples(n_procs=2):
 if __name__ == '__main__':
     clean_tests()
     test_core()
-#    test_examples()
+    test_examples()
     clean_tests()
