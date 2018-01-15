@@ -4,8 +4,6 @@ TODO
 Bugs
 ****
 
-- **oop** tests not working
-
 - **zeros_like** is not copying attribut data
 
 - **scatter.py** not working anymore
