@@ -8,7 +8,7 @@ from pyccel.stdlib.parallel.mpi import MPI_INTEGER
 from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
 from pyccel.stdlib.parallel.mpi import MPI_SUM
 
-from pyccel.stdlib.parallel.mpi_new import Cart
+from pyccel.stdlib.parallel.mpi import Cart
 
 ierr = -1
 
