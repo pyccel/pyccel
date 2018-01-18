@@ -36,7 +36,6 @@ script:
 #  - pytest tests/pyccel/ast/test_parallel.py
   - pytest tests/pyccel/parser/test_imports.py
   - pytest tests/pyccel/parser/test_openmp.py
-  - python tests/f2py/test_load_module.py
   - pytest tests/pyccel/parser/test_openacc.py
   - python tests/test_pyccel.py --execute
   - python tests/test_pyccel_openmp.py --openmp --execute
