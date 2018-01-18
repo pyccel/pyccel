@@ -122,17 +122,30 @@ def construct_tree(filename, ignored_modules):
                                      '{0} or {1}'.format(filename_py, filename_pyh))
 
             if isinstance(f_name, str):
-                f_names.append(f_name)
+                if not(f_name in f_names):
+                    f_names.append(f_name)
             elif isinstance(f_name, (list, tuple)):
-                f_names += list(f_name)
+                for f in f_name:
+                    if not isinstance(f, str):
+                        raise TypeError('Expecting a string')
+
+                    if not(f in f_names):
+                        f_names.append(f)
             else:
                 raise TypeError('Expecting a str, tuple or list')
 
         # this is to avoid duplication in filenames,
         # we avoid using sets here, to respect the imports order
         imports_src[module] = []
-        for f_name in f_names:
+
+        # this is to prevent from self dependency
+        if filename in f_names:
+            f_names.remove(filename)
+
+        for f_name in f_names[::-1]:
             if not(f_name in imports_src[module]):
+                imports_src[module] += [f_name]
+
                 # we don't process header files
                 if f_name.endswith('.py'):
                     ims, ims_src = construct_tree(f_name, ignored_modules)
@@ -146,8 +159,6 @@ def construct_tree(filename, ignored_modules):
                             imports_src[m] += ims_src[m]
                         else:
                             imports_src[m]  = ims_src[m]
-
-                imports_src[module] += [f_name]
     #...
 
     # TODO must use ordered dictionaries from here
