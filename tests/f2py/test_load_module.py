@@ -17,7 +17,8 @@ def test_helloworld():
 
 def test_incr():
     # ...
-    module = load_module(filename="../../scripts/incr.py")
+    filename = os.path.join(scripts_path, "incrdecr.py")
+    module = load_module(filename=filename)
     module.incr(3)
     module.decr(4)
     # ...
@@ -25,4 +26,4 @@ def test_incr():
 ###################################
 if __name__ == '__main__':
     test_helloworld()
-#    test_incr()
+    test_incr()

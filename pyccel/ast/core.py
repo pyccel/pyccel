@@ -1805,6 +1805,9 @@ class FunctionDef(Basic):
             #if not cls_variable:
              #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
+        if kind is None:
+            kind = 'function'
+
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
@@ -1912,6 +1915,7 @@ class FunctionDef(Basic):
         flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
         flag = flag or (len(self.results) > 1)
         flag = flag or (len(self.results) == 0)
+        flag = flag or (self.kind == 'procedure')
 
         return flag
 
@@ -3322,7 +3326,6 @@ class FunctionHeader(Header):
             raise TypeError("Expecting a string for kind.")
 
         if not (kind in ['function', 'procedure']):
-            print( kind)
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         return Basic.__new__(cls, func, types, r_types, kind)
@@ -3419,6 +3422,9 @@ class MethodHeader(FunctionHeader):
         a list of datatypes. an element of this list can be str/DataType of a
         tuple (str/DataType, attr)
 
+    kind: str
+        'function' or 'procedure'. default value: 'function'
+
     Examples
 
     >>> from pyccel.ast.core import MethodHeader
@@ -3429,7 +3435,7 @@ class MethodHeader(FunctionHeader):
     'point.rotate'
     """
 
-    def __new__(cls, name, dtypes, results=None):
+    def __new__(cls, name, dtypes, results=None, kind='function'):
         if not isinstance(name, (list, tuple)):
             raise TypeError("Expecting a list/tuple of strings.")
 
@@ -3467,7 +3473,14 @@ class MethodHeader(FunctionHeader):
                 else:
                     raise TypeError("Wrong element in r_types.")
 
-        return Basic.__new__(cls, name, types, r_types)
+
+        if not isinstance(kind, str):
+            raise TypeError("Expecting a string for kind.")
+
+        if not (kind in ['function', 'procedure']):
+            raise ValueError("kind must be one among {'function', 'procedure'}")
+
+        return Basic.__new__(cls, name, types, r_types, kind)
 
     @property
     def name(self):
@@ -3484,6 +3497,10 @@ class MethodHeader(FunctionHeader):
     @property
     def results(self):
         return self._args[2]
+
+    @property
+    def kind(self):
+        return self._args[3]
 
 class ClassHeader(Header):
     """Represents class header in the code.

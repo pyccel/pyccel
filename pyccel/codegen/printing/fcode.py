@@ -797,7 +797,7 @@ class FCodePrinter(CodePrinter):
             # TODO compute intent
             out_args = [result for result in expr.results]
             for result in expr.results:
-                if not result in expr.arguments:
+                if result in expr.arguments:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')

@@ -13,6 +13,7 @@ doc/_build
 *.f90
 *.mod
 *.o
+*.log
 
 tests/*.pyccel
 tests/*.f90

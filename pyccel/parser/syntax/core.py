@@ -2663,6 +2663,13 @@ class FunctionDefStmt(BasicStmt):
             args = [namespace[a] for a in arg_names]
         # ...............................
 
+        # ... define functiondef kind
+        kind = None
+        if with_header:
+            h = headers[name]
+            kind = h.kind
+        # ...
+
         # ... case of class constructor
         if self.name == '__init__':
             # first we construct the list of attributs
@@ -2777,9 +2784,9 @@ class FunctionDefStmt(BasicStmt):
         if cls_instance:
             f_name   = name.split('.')[-1]
             cls_name = name.split('.')[0]
-        stmt = FunctionDef(f_name, args, results, body, \
-                           local_vars, global_vars, \
-                           cls_name=cls_name)
+        stmt = FunctionDef(f_name, args, results, body,
+                           local_vars, global_vars,
+                           cls_name=cls_name, kind=kind)
         namespace[name] = stmt
 
         # ...
@@ -3322,7 +3329,7 @@ class FunctionHeaderStmt(BasicStmt):
             list of output types
         """
         self.name    = kwargs.pop('name')
-        self.kind    = kwargs.pop('kind', None)
+        self.kind    = kwargs.pop('kind', 'function')
         self.decs    = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 

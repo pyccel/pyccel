@@ -421,13 +421,14 @@ class Compiler(object):
                 return
             os.makedirs(dir)
 
-        tmp_dir = '.pyccel'
-        mkdir_p(tmp_dir)
-        logfile = '{0}.log'.format(binary)
-        logfile = os.path.join(tmp_dir, logfile)
-        f = open(logfile, 'w')
-        f.write(output)
-        f.close()
+        if inline:
+            tmp_dir = '.pyccel'
+            mkdir_p(tmp_dir)
+            logfile = '{0}.log'.format(binary)
+            logfile = os.path.join(tmp_dir, logfile)
+            f = open(logfile, 'w')
+            f.write(output)
+            f.close()
         # ...
 
         self._binary = binary
