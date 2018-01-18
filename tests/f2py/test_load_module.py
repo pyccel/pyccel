@@ -19,8 +19,9 @@ def test_incr():
     # ...
     filename = os.path.join(scripts_path, "incrdecr.py")
     module = load_module(filename=filename)
-    module.incr(3)
-    module.decr(4)
+    y = module.incr(3)
+    y = module.decr(4)
+    print ('> y = {}'.format(y))
     # ...
 
 ###################################

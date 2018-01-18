@@ -533,14 +533,14 @@ def load_module(filename,
 
     # ...
     try:
-        import external
-        reload(external)
+        package = importlib.import_module(name)
+        # TODO ??
+        #reload(package)
     except:
-        pass
-    import external
+        raise ImportError('could not import {0}'.format(name))
     # ...
 
-    module = getattr(external, 'mod_{0}'.format(name))
+    module = getattr(package, 'mod_{0}'.format(name))
 
     return module
 # ...

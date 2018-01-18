@@ -388,7 +388,7 @@ class Compiler(object):
         else:
             o_code = '-m'
             flags  = '--quiet -c'
-            binary = 'external'
+            binary = self.codegen.name
             compiler = 'f2py'
 
         m_code = ' '.join('{}.o '.format(m) for m in modules)
