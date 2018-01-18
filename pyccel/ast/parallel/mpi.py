@@ -152,6 +152,7 @@ def mpify(stmt, **options):
         classes     = mpify(stmt.classes  ,   **options)
         imports     = mpify(stmt.imports  ,   **options)
         imports    += [Import('mpi')]
+        # TODO add stdlib_parallel_mpi module
 
         return Module(name, variables, funcs, classes,
                       imports=imports)
@@ -165,6 +166,9 @@ def mpify(stmt, **options):
         body        = mpify(stmt.body  ,   **options)
         modules     = mpify(stmt.modules  ,   **options)
         imports    += [Import('mpi')]
+        # TODO improve this import, without writing 'mod_...'
+        #      maybe we should create a new class for this import
+        imports    += [Import('mod_pyccel_stdlib_parallel_mpi')]
 
         return Program(name, variables, funcs, classes, body,
                        imports=imports, modules=modules)
