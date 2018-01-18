@@ -6,13 +6,13 @@ from pyccel.codegen import load_module
 import os
 
 dir_path     = os.path.dirname(os.path.realpath(__file__))
-scripts_path = os.path.join(dir_path, "../../scripts")
+scripts_path = os.path.join(dir_path, "scripts")
 
 def test_helloworld():
     # ...
     filename = os.path.join(scripts_path, "helloworld.py")
     module = load_module(filename=filename)
-    module.helloworld()
+    module.print_helloworld()
     # ...
 
 def test_incr():

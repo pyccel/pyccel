@@ -446,8 +446,6 @@ def build_file(filename, language, compiler, \
                                       libs=libs)
                 compiler_m.compile(verbose=verbose)
 
-        # TODO ARA : to remove
-        ignored_modules += ['pyccel.stdlib.parallel.mpi_new']
         c = Compiler(codegen,
                      compiler=compiler,
                      inline=inline,
@@ -474,7 +472,16 @@ def build_file(filename, language, compiler, \
 
 # ...
 # TODO improve args
-def load_module(filename, language="fortran", compiler="gfortran"):
+def load_module(filename,
+                language="fortran", compiler="gfortran",
+                accelerator=None,
+                debug=False, verbose=False, show=False,
+                inline=False, name=None,
+                output_dir=None,
+                ignored_modules=['numpy', 'scipy', 'sympy'],
+                pyccel_modules=[],
+                include=[], libdir=[], libs=[],
+                single_file=True):
     """
     Loads a given filename in a Python session.
     The file will be parsed, compiled and wrapped into python, using f2py.
@@ -508,14 +515,20 @@ def load_module(filename, language="fortran", compiler="gfortran"):
     x =          100
     """
     # ...
-    name = filename.split(".")[0]
-    name = 'pyccel_m_{0}'.format(name)
+    name = os.path.basename(filename).split('.py')[0]
     # ...
 
     # ...
-    build_file(filename=filename, language=language, compiler=compiler, \
-               execute=False, accelerator=None, \
-               debug=False, verbose=True, show=True, inline=True, name=name)
+    build_file(filename=filename,
+               language=language,
+               compiler=compiler,
+               execute=False,
+               accelerator=accelerator,
+               debug=debug,
+               verbose=verbose,
+               show=show,
+               inline=True,
+               name=name)
     # ...
 
     # ...
@@ -527,7 +540,7 @@ def load_module(filename, language="fortran", compiler="gfortran"):
     import external
     # ...
 
-    module = getattr(external, '{0}'.format(name))
+    module = getattr(external, 'mod_{0}'.format(name))
 
     return module
 # ...

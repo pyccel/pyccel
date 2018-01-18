@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os
+import subprocess
 
 from sympy.core import Tuple
 
@@ -388,7 +389,6 @@ class Compiler(object):
             o_code = '-m'
             flags  = '--quiet -c'
             binary = 'external'
-            # TODO improve
             compiler = 'f2py'
 
         m_code = ' '.join('{}.o '.format(m) for m in modules)
@@ -408,7 +408,27 @@ class Compiler(object):
         if verbose:
             print(cmd)
 
-        os.system(cmd)
+        output = subprocess.check_output(cmd, shell=True)
+
+        if verbose:
+            print output
+
+        # write and save a log file in .pyccel/'filename'.log
+        # ...
+        def mkdir_p(dir):
+            # type: (unicode) -> None
+            if os.path.isdir(dir):
+                return
+            os.makedirs(dir)
+
+        tmp_dir = '.pyccel'
+        mkdir_p(tmp_dir)
+        logfile = '{0}.log'.format(binary)
+        logfile = os.path.join(tmp_dir, logfile)
+        f = open(logfile, 'w')
+        f.write(output)
+        f.close()
+        # ...
 
         self._binary = binary
 # ...
