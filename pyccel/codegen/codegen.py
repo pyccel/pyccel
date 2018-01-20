@@ -166,8 +166,8 @@ def preprocess_as_str(lines):
         is_comment = False
         if not is_empty:
             is_comment = (line.lstrip()[0] == '#')
-        skipped = is_empty or is_comment
         is_annotated = (line.lstrip()[0:2] == '#$')
+        skipped = is_empty or is_comment
 
         if n == depth * tab + tab:
             depth += 1

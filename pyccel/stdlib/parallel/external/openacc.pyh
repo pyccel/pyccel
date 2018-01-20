@@ -23,7 +23,7 @@ __version__          = '2.5'
 # ............................................................
 #            Runtime Library Routines for Fortran
 # ............................................................
-#
+
 #$ header function acc_get_num_devices(int) results(int)
 
 #$ header function acc_set_device_type(int)
