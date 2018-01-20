@@ -8,7 +8,7 @@
 #    > export LIB_DIR=$PWD/poisson/usr/lib
 
 # Usage:
-#    > pyccel poisson_bs_1d.py --include='$INCLUDE_DIR' --libdir='$LIB_DIR' --libs=poisson --no-modules --execute
+#    > pyccel poisson_v2.py --include='$INCLUDE_DIR' --libdir='$LIB_DIR' --libs=poisson --no-modules --execute
 
 # Cleaning:
 #    > rm -f *.mod *.pyccel *.f90 *.o
@@ -76,9 +76,15 @@ spans_1 = spl_compute_spans(p1, n1, knots1)
 # ...
 
 # ...
-mass      = zeros((n1,n1), double)
-stiffness = zeros((n1,n1), double)
-rhs       = zeros(n1, double)
+start_1 = 0
+end_1   = n1-1
+pad_1   = p1
+# ...
+
+# ...
+mass      = stencil(start_1, end_1, pad_1)
+stiffness = stencil(start_1, end_1, pad_1)
+rhs       = vector(start_1-pad_1, end_1+pad_1)
 # ...
 
 # ... build matrix
@@ -103,9 +109,11 @@ for ie1 in range(0, n_elements_1):
                 v_m += bi_0 * bj_0 * wvol
                 v_s += bi_x * bj_x * wvol
 
-            mass[i1, j1] += v_m
-            stiffness[i1, j1] += v_s
+            mass[j1 - i1, i1] += v_m
+            stiffness[j1 - i1, i1] += v_s
 # ...
+
+print(mass)
 
 del knots1
 del grid_1
