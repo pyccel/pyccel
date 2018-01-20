@@ -113,8 +113,6 @@ for ie1 in range(0, n_elements_1):
             stiffness[j1 - i1, i1] += v_s
 # ...
 
-print(mass)
-
 del knots1
 del grid_1
 del points_1
