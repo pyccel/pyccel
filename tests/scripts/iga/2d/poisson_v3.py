@@ -302,7 +302,7 @@ y  = vector((start_1-pad_1, start_2-pad_2), (end_1+pad_1, end_2+pad_2))
 
 # ...
 n_maxiter = 100
-tol = 0.00000000001
+tol = 1.0e-7
 
 xn = 0.0
 cgl(mass, rhs, xn, n_maxiter, tol)

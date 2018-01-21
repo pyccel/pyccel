@@ -229,13 +229,16 @@ y  = vector(start_1-pad_1, end_1+pad_1)
 
 # ...
 n_maxiter = 100
-tol = 0.000000001
+tol = 1.0e-7
 
 xn = 0.0
 cgl(mass, rhs, xn, n_maxiter, tol)
 
 xn = 0.0
 crl(mass, rhs, xn, n_maxiter, tol)
+
+mv(mass, xn, x0)
+print ('> residual error = ', max(abs(x0-rhs)))
 # ...
 
 
