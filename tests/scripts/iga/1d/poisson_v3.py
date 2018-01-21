@@ -144,7 +144,6 @@ def mv(mat, x, y):
 
 # ... CGL performs maxit CG iterations on the linear system Ax = b
 #     starting from x = x0
-# TODO not working yet
 
 #$ header procedure cgl(double [:,:], double [:], double [:], int, double)
 def cgl(mat, b, x0, maxit, tol):
