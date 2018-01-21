@@ -4,6 +4,7 @@
 
 from pyccel.codegen import load_module
 import os
+import numpy as np
 
 dir_path     = os.path.dirname(os.path.realpath(__file__))
 scripts_path = os.path.join(dir_path, "scripts")
@@ -24,7 +25,17 @@ def test_incr():
     print ('> y = {}'.format(y))
     # ...
 
+def test_arrays():
+    # ...
+    filename = os.path.join(scripts_path, "arrays.py")
+    module = load_module(filename=filename)
+    x = np.array([0., 1., 2., 4.])
+    y = module.f_double(x)
+    print ('> y = {}'.format(y))
+    # ...
+
 ###################################
 if __name__ == '__main__':
     test_helloworld()
     test_incr()
+#    test_arrays()

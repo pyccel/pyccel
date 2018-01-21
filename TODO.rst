@@ -27,30 +27,20 @@ Imports
 
 * metavars: modules, module_name
 
-* openmp.pyh only if openmp is used
-
-* improve imports by using groupby to gather imported things by their module, and have to process the module only once
-
 Parser
 ******
 
 * improve assignable for value in AssignStmt
 
-* improve function headers (raise Exception NotImplemented when we have to type inference)
+* improve function headers 
 
 * improve AugAssign (improve it like what has been done for Assign)
 
-* improve precision, add double complex
-
-* **inout** arguments are not handled yet
-
-* OOP: inheritence
+* add precision, double complex
 
 * improve debug mode and verbosity in parser and syntax
 
 * check error messages (and exceptions in syntax) and improve their treatments
-
-* symbolic expressions (find a way to use directly *sympy* expressions)
 
 * *eval* statement
 
@@ -90,6 +80,12 @@ Codegen
 
 * improve print for strings (remove *"*)
 
+OOP
+***
+
+* inheritence
+
+
 Parallel
 ********
 
@@ -98,7 +94,7 @@ MPI
 
 * Cart 3d
 
-* ietrators
+* iterators
 
 * communication, reduction, etc
 
@@ -108,8 +104,6 @@ OpenMP
 * in get_with_clauses and get_for_clauses, we must be careful about args and kwargs for the __init__ call
 
 * check valid values for clause arguments
-
-* improve import
 
 Commands line
 *************
@@ -135,11 +129,3 @@ External
 
 Symbolic Computation
 ********************
-
-* treate **1d** and **3d** cases for **weak_formulation**
-
-* maybe we should add the *dim* as argument of **lambdify**
-
-* vector case for glt and weak formulation
-
-* algebra for differential operators (so that we can do *dx(u+v)*)
