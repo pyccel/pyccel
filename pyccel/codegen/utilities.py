@@ -400,10 +400,10 @@ def build_file(filename, language, compiler, \
         # ...
 
         # ...
-        if single_file:
-            ls = ms + [codegen]
-        else:
-            ls = [codegen]
+        if not single_file:
+            ms = [m for m in ms if m.name.startswith('pyccel_stdlib_')]
+
+        ls = ms + [codegen]
 
         codes = [m.code for m in ls]
         # ...
@@ -436,7 +436,6 @@ def build_file(filename, language, compiler, \
                 if str(codegen_m.name).startswith('m_pyccel_stdlib_'):
                     break
 
-#                print('>>>>>> {0}'.format(codegen_m.filename))
                 compiler_m = Compiler(codegen_m,
                                       compiler=compiler,
                                       accelerator=accelerator,
