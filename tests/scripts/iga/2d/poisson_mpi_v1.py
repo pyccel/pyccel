@@ -165,25 +165,34 @@ end_2   = ey
 pad_2   = p2
 # ...
 
+#print('> elm_1 : [', element_begin_1, ':', element_end_1, ']',
+#' proc = ', mesh.rank)
+#print('> elm_2 : [', element_begin_2, ':', element_end_2, ']',
+#' proc = ', mesh.rank)
+
+#print(sx, ex, sy, ey)
+
+#if mesh.rank == 0:
+#    print ('> n_elements : ', n_elements_1, n_elements_2)
+#    print ('> n          : ', n1, n2)
+#    print ('> p          : ', p1, p2)
+
 # ...
 mass      = stencil((start_1, start_2), (end_1, end_2), (pad_1, pad_2))
 stiffness = stencil((start_1, start_2), (end_1, end_2), (pad_1, pad_2))
 rhs       = vector((start_1-pad_1, start_2-pad_2), (end_1+pad_1, end_2+pad_2))
 # ...
 
+# ...
+u       = vector((sx-pad_1,sy-pad_2), (ex+pad_1, ey+pad_2))
+u_new   = vector((sx-pad_1,sy-pad_2), (ex+pad_1, ey+pad_2))
+u_exact = vector((sx-pad_1,sy-pad_2), (ex+pad_1, ey+pad_2))
+f       = vector((sx-pad_1,sy-pad_2), (ex+pad_1, ey+pad_2))
+# ...
 
 # ...
-#element_begin_1 = 0
-#if start_1-pad_1 >= 0:
-#    element_begin_1 = origins_1[start_1-pad_1]
-#
-#element_begin_2 = 0
-#if start_2-pad_2 >= 0:
-#    element_begin_2 = origins_2[start_2-pad_2]
-
 element_begin_1 = origins_1[start_1]
 element_begin_2 = origins_2[start_2]
-
 
 element_end_1 = n_elements_1 - 1
 if end_1+pad_1 < n_elements_1:
@@ -194,33 +203,87 @@ if end_2+pad_2 < n_elements_2:
     element_end_2 = origins_2[end_2+pad_2]
 # ...
 
-print('> elm_1 : [', element_begin_1, ':', element_end_1, ']',
-' proc = ', mesh.rank)
-print('> elm_2 : [', element_begin_2, ':', element_end_2, ']',
-' proc = ', mesh.rank)
+# ... build matrix
+for ie1 in range(element_begin_1, element_end_1+1):
+    for ie2 in range(element_begin_2, element_end_2+1):
+        i_span_1 = spans_1[ie1]
+        i_span_2 = spans_2[ie2]
+        for il_1 in range(0, p1+1):
+            for jl_1 in range(0, p1+1):
+                for il_2 in range(0, p2+1):
+                    for jl_2 in range(0, p2+1):
 
-#print(sx, ex, sy, ey)
+                        i1 = i_span_1 - p1  - 1 + il_1
+                        j1 = i_span_1 - p1  - 1 + jl_1
 
-#if mesh.rank == 0:
-#    print ('> n_elements : ', n_elements_1, n_elements_2)
-#    print ('> n          : ', n1, n2)
-#    print ('> p          : ', p1, p2)
+                        i2 = i_span_2 - p2  - 1 + il_2
+                        j2 = i_span_2 - p2  - 1 + jl_2
+
+                        v_m = 0.0
+                        v_s = 0.0
+                        for g1 in range(0, k1):
+                            for g2 in range(0, k2):
+                                bi_0 = basis_1[il_1, 0, g1, ie1] * basis_2[il_2, 0, g2, ie2]
+                                bi_x = basis_1[il_1, 1, g1, ie1] * basis_2[il_2, 0, g2, ie2]
+                                bi_y = basis_1[il_1, 0, g1, ie1] * basis_2[il_2, 1, g2, ie2]
+
+                                bj_0 = basis_1[jl_1, 0, g1, ie1] * basis_2[jl_2, 0, g2, ie2]
+                                bj_x = basis_1[jl_1, 1, g1, ie1] * basis_2[jl_2, 0, g2, ie2]
+                                bj_y = basis_1[jl_1, 0, g1, ie1] * basis_2[jl_2, 1, g2, ie2]
+
+                                wvol = weights_1[g1, ie1] * weights_2[g2, ie2]
+
+                                v_m += bi_0 * bj_0 * wvol
+                                v_s += (bi_x * bj_x + bi_y * bj_y) * wvol
+
+                        if (i1 >= sx) and (i1 <= ex) and (i2 >= sy) and (i2 <= ey):
+                            mass[j1 - i1, j2 - i2, i1, i2] += v_m
+                            stiffness[j1 - i1, j2 - i2, i1, i2] += v_s
+# ...
+
+# ... build rhs
+for ie1 in range(element_begin_1, element_end_1+1):
+    for ie2 in range(element_begin_2, element_end_2+1):
+        i_span_1 = spans_1[ie1]
+        i_span_2 = spans_2[ie2]
+        for il_1 in range(0, p1+1):
+            for il_2 in range(0, p2+1):
+                i1 = i_span_1 - p1  - 1 + il_1
+                i2 = i_span_2 - p2  - 1 + il_2
+
+                v = 0.0
+                for g1 in range(0, k1):
+                    for g2 in range(0, k2):
+                        bi_0 = basis_1[il_1, 0, g1, ie1] * basis_2[il_2, 0, g2, ie2]
+                        bi_x = basis_1[il_1, 1, g1, ie1] * basis_2[il_2, 0, g2, ie2]
+                        bi_y = basis_1[il_1, 0, g1, ie1] * basis_2[il_2, 1, g2, ie2]
+
+                        x1    = points_1[g1, ie1]
+                        x2    = points_2[g2, ie2]
+                        wvol = weights_1[g1, ie1] * weights_2[g2, ie2]
+
+                        v += bi_0 * x1 * (1.0 - x1) * x2 * (1.0 - x2) * wvol
+
+                rhs[i1, i2] += v
+# ...
 
 # ...
-u       = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
-u_new   = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
-u_exact = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
-f       = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
-# ...
 
-# ...
-# Initialization
-x = 0.0
-y = 0.0
-#for i,j in mesh.extended_indices:
-#    print(i,j)
-# ...
-
+del knots1
+del grid_1
+del points_1
+del weights_1
+del basis_1
+del spans_1
+del knots2
+del grid_2
+del points_2
+del weights_2
+del basis_2
+del spans_2
+del mass
+del stiffness
+del rhs
 del mesh
 
 mpi_finalize(ierr)
