@@ -1,7 +1,9 @@
 # coding: utf-8
 
 # usage:
-#   > pyccel poisson_mpi_v1.py  --include='$INCLUDE_DIR' --libdir='$LIB_DIR' --libs=poisson --compiler=mpif90 --no-modules
+#   pyccel poisson_mpi_v1.py  --include='$INCLUDE_DIR'
+#   --libdir='$LIB_DIR'
+#   --libs=poisson --compiler=mpif90 --no-modules
 
 from pyccel.stdlib.parallel.mpi import mpi_init
 from pyccel.stdlib.parallel.mpi import mpi_finalize
@@ -25,11 +27,11 @@ ierr = -1
 mpi_init(ierr)
 
 # ...
-p1 = 1
-p2 = 1
+p1 = 2
+p2 = 2
 
-n_elements_1 = 8
-n_elements_2 = 8
+n_elements_1 = 16
+n_elements_2 = 16
 
 n_elements_1 = n_elements_1 - p1
 n_elements_2 = n_elements_2 - p2
@@ -154,12 +156,12 @@ origins_2 = spl_compute_origins_element(p2, n2, knots2)
 # ...
 
 # ...
-start_1 = 0
-end_1   = n1-1
+start_1 = sx
+end_1   = ex
 pad_1   = p1
 
-start_2 = 0
-end_2   = n2-1
+start_2 = sy
+end_2   = ey
 pad_2   = p2
 # ...
 
@@ -169,16 +171,46 @@ stiffness = stencil((start_1, start_2), (end_1, end_2), (pad_1, pad_2))
 rhs       = vector((start_1-pad_1, start_2-pad_2), (end_1+pad_1, end_2+pad_2))
 # ...
 
-# ...
-print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
-print(origins_1(sx), origins_2(sy))
-# ...
 
 # ...
-u       = vector((sx-1,sy-1), (ex+1, ey+1))
-u_new   = vector((sx-1,sy-1), (ex+1, ey+1))
-u_exact = vector((sx-1,sy-1), (ex+1, ey+1))
-f       = vector((sx-1,sy-1), (ex+1, ey+1))
+#element_begin_1 = 0
+#if start_1-pad_1 >= 0:
+#    element_begin_1 = origins_1[start_1-pad_1]
+#
+#element_begin_2 = 0
+#if start_2-pad_2 >= 0:
+#    element_begin_2 = origins_2[start_2-pad_2]
+
+element_begin_1 = origins_1[start_1]
+element_begin_2 = origins_2[start_2]
+
+
+element_end_1 = n_elements_1 - 1
+if end_1+pad_1 < n_elements_1:
+    element_end_1 = origins_1[end_1+pad_1]
+
+element_end_2 = n_elements_2 - 1
+if end_2+pad_2 < n_elements_2:
+    element_end_2 = origins_2[end_2+pad_2]
+# ...
+
+print('> elm_1 : [', element_begin_1, ':', element_end_1, ']',
+' proc = ', mesh.rank)
+print('> elm_2 : [', element_begin_2, ':', element_end_2, ']',
+' proc = ', mesh.rank)
+
+#print(sx, ex, sy, ey)
+
+#if mesh.rank == 0:
+#    print ('> n_elements : ', n_elements_1, n_elements_2)
+#    print ('> n          : ', n1, n2)
+#    print ('> p          : ', p1, p2)
+
+# ...
+u       = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
+u_new   = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
+u_exact = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
+f       = vector((sx-p1,sy-p2), (ex+p1, ey+p2))
 # ...
 
 # ...
