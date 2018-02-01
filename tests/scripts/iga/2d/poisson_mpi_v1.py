@@ -30,8 +30,8 @@ mpi_init(ierr)
 p1 = 2
 p2 = 2
 
-n_elements_1 = 16
-n_elements_2 = 16
+n_elements_1 = 8
+n_elements_2 = 8
 
 n_elements_1 = n_elements_1 - p1
 n_elements_2 = n_elements_2 - p2
@@ -266,6 +266,13 @@ for ie1 in range(element_begin_1, element_end_1+1):
 
                 rhs[i1, i2] += v
 # ...
+
+if mesh.rank == 3:
+    for i1 in range(start_1, end_1+1):
+        for i2 in range(start_2, end_2+1):
+            for k1 in range(-p1, p1+1):
+                for k2 in range(-p2, p2+1):
+                    print (i1, i2, k1, k2, mass[k1,k2,i1,i2])
 
 # ...
 

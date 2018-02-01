@@ -36,6 +36,14 @@ pyccel\.ast\.parallel\.mpi module
     :undoc-members:
     :show-inheritance:
 
+pyccel\.ast\.parallel\.openacc module
+-------------------------------------
+
+.. automodule:: pyccel.ast.parallel.openacc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyccel\.ast\.parallel\.openmp module
 ------------------------------------
 

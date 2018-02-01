@@ -57,9 +57,6 @@ This is a high level that enables the use of *OpenMP* through simple instruction
    :special-members:
 
 
-from pyccel.stdlib.parallel.openmp import Range
-from pyccel.stdlib.parallel.openmp import Parallel
-
 Example: Hello world
 ____________________
 

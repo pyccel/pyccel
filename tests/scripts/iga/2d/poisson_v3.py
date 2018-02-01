@@ -23,10 +23,14 @@ from pyccelext.math.external.bsp import spl_eval_on_grid_splines_ders
 
 
 # ...
-n_elements_1 = 4
-n_elements_2 = 4
-p1 = 3
-p2 = 3
+p1 = 2
+p2 = 2
+
+n_elements_1 = 8
+n_elements_2 = 8
+
+n_elements_1 = n_elements_1 - p1
+n_elements_2 = n_elements_2 - p2
 
 # number of derivatives
 d1 = 1
@@ -162,6 +166,15 @@ for ie1 in range(0, n_elements_1):
                         mass[j1 - i1, j2 - i2, i1, i2] += v_m
                         stiffness[j1 - i1, j2 - i2, i1, i2] += v_s
 # ...
+
+for i1 in range(0, n1):
+    for i2 in range(0, n2):
+        for k1 in range(-p1, p1+1):
+            for k2 in range(-p2, p2+1):
+                print (i1, i2, k1, k2, mass[k1,k2,i1,i2])
+
+print ('done')
+pass
 
 # ... build rhs
 for ie1 in range(0, n_elements_1):
