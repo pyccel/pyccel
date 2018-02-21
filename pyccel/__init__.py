@@ -6,3 +6,4 @@ from .codegen    import *
 from .complexity import *
 from .parser     import *
 from .stdlib     import *
+from .symbolic   import *

@@ -8,7 +8,7 @@ from pyccel.stdlib.parallel.mpi import MPI_INTEGER
 from pyccel.stdlib.parallel.mpi import MPI_DOUBLE
 from pyccel.stdlib.parallel.mpi import MPI_SUM
 
-from pyccel.stdlib.parallel.mpi_new import Cart
+from pyccel.stdlib.parallel.mpi import Cart
 
 ierr = -1
 
@@ -16,20 +16,17 @@ mpi_init(ierr)
 
 # ...
 npts    = zeros(2, int)
-steps   = ones(2, int)
+pads    = ones(2, int)
 periods = zeros(2, bool)
 reorder = False
 # ...
 
 # ...
-npts[0] = 16
-npts[1] = 16
-
-periods[0] = False
-periods[1] = True
+npts[0] = 32
+npts[1] = 32
 # ...
 
-mesh = Cart(npts, steps, periods, reorder)
+mesh = Cart(npts, pads, periods, reorder)
 
 # ...
 sx = mesh.starts[0]
@@ -40,28 +37,14 @@ ey = mesh.ends[1]
 # ...
 
 # ...
-print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
-# ...
-
-# ... grid without ghost cells
-r_x  = range(sx, ex+1)
-r_y  = range(sy, ey+1)
-
-grid = tensor(r_x, r_y)
-# ...
-
-# ... extended grid with ghost cells
-r_ext_x = range(sx-1, ex+1+1)
-r_ext_y = range(sy-1, ey+1+1)
-
-grid_ext = tensor(r_ext_x, r_ext_y)
+#print('(', sx, ',', ex, ')  (', sy, ',', ey, ')')
 # ...
 
 # ...
-u       = zeros(grid_ext, double)
-u_new   = zeros(grid_ext, double)
-u_exact = zeros(grid_ext, double)
-f       = zeros(grid_ext, double)
+u       = vector((sx-1,sy-1), (ex+1, ey+1))
+u_new   = vector((sx-1,sy-1), (ex+1, ey+1))
+u_exact = vector((sx-1,sy-1), (ex+1, ey+1))
+f       = vector((sx-1,sy-1), (ex+1, ey+1))
 # ...
 
 # ...
@@ -81,7 +64,7 @@ c2 = 1.0/(hy*hy)
 # Initialization
 x = 0.0
 y = 0.0
-for i,j in grid:
+for i,j in mesh.extended_indices:
     x = i*hx
     y = j*hy
 
@@ -92,20 +75,20 @@ for i,j in grid:
 # Linear solver tolerance
 tol = 1.0e-10
 
-n_iterations = 1000
+n_iterations = 80000
 for it in range(0, n_iterations):
     u[sx:ex+1,sy:ey+1] = u_new[sx:ex+1,sy:ey+1]
 
     mesh.communicate(u)
 
     # ... Computation of u at the n+1 iteration
-    for i,j in grid:
+    for i,j in mesh.indices:
         u_new[i, j] = c0 * (c1*(u[i+1, j] + u[i-1, j]) + c2*(u[i, j+1] + u[i, j-1]) - f[i, j])
     # ...
 
     # ... Computation of the global error
     u_error = 0.0
-    for i,j in grid:
+    for i,j in mesh.indices:
         u_error += abs(u[i,j]-u_new[i,j])
     local_error = u_error/(ntx*nty)
 

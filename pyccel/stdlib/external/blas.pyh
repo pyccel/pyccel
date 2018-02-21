@@ -7,6 +7,7 @@ __libraries__        = '${BLAS_LIBRARIES}'
 # .......................................
 #             LEVEL-1
 # .......................................
+
 #$ header function srotg(float, float) results(float, float)
 #$ header function drotg(double, double) results(double, double)
 
@@ -45,6 +46,7 @@ __libraries__        = '${BLAS_LIBRARIES}'
 
 #$ header function snrm2(int, float [:], int)
 #$ header function dnrm2(int, double [:], int)
+
 # .......................................
 
 # .......................................

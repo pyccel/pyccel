@@ -38,7 +38,7 @@ def _which(program):
 
     return None
 
-def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
+def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfortran'):
     """
     pyccel console command.
     """
@@ -51,6 +51,8 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
                         help='Used compiler')
     parser.add_argument('--openmp', action='store_true', \
                         help='uses openmp')
+    parser.add_argument('--openacc', action='store_true', \
+                        help='uses openacc')
     parser.add_argument('--execute', action='store_true', \
                         help='executes the binary file')
     parser.add_argument('--show', action='store_true', \
@@ -62,6 +64,8 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
 
     parser.add_argument('--convert-only', action='store_true',
                         help='Converts pyccel files only without build')
+    parser.add_argument('--no-modules', action='store_true',
+                        help='adds used modules to the generated file')
     parser.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
     parser.add_argument('--analysis', action='store_true', \
@@ -95,6 +99,9 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
     if not openmp:
         openmp = args.openmp
 
+    if not openacc:
+        openacc = args.openacc
+
     if not output_dir:
         output_dir = args.output_dir
 
@@ -126,14 +133,16 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
     accelerator = None
     if openmp:
         accelerator = "openmp"
+    if openacc:
+        accelerator = "openacc"
 
-    debug      = args.debug
-    verbose    = args.verbose
-    show       = args.show
-    analysis   = args.analysis
-    include    = args.include
-    libdir     = args.libdir
-    libs       = args.libs
+    debug    = args.debug
+    verbose  = args.verbose
+    show     = args.show
+    analysis = args.analysis
+    include  = args.include
+    libdir   = args.libdir
+    libs     = args.libs
 
     if not include:
         include = []
@@ -141,16 +150,21 @@ def pyccel(files=None, openmp=None, output_dir=None, compiler='gfortran'):
         libdir = []
     if not libs:
         libs = []
+
+    no_modules = True
+    if not(args.no_modules is None):
+        no_modules = args.no_modules
     # ...
 
     # ...
     if not analysis:
-        build_file(filename, language, compiler, \
-                   execute=execute, accelerator=accelerator, \
-                   debug=debug, verbose=verbose, show=show, \
-                   name=None, include=include, \
-                   output_dir=output_dir, \
-                   libdir=libdir, libs=libs)
+        build_file(filename, language, compiler,
+                   execute=execute, accelerator=accelerator,
+                   debug=debug, verbose=verbose, show=show,
+                   name=None, include=include,
+                   output_dir=output_dir,
+                   libdir=libdir, libs=libs,
+                   single_file=not(no_modules))
     else:
         from pyccel.complexity.memory import MemComplexity
 

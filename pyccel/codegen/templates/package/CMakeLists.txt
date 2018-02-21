@@ -8,7 +8,7 @@ get_property( library_targets GLOBAL PROPERTY LIBRARY_TARGETS )
 
 # Distinguish between "internal" and "external" libraries
 foreach( lib ${library_targets} )
-  if( ${lib} MATCHES "plf_[a-zA-Z0-9]" )
+  if( ${lib} MATCHES "pyccelext_[a-zA-Z0-9]" )
     list( APPEND __SUFFIX___LIBS ${lib} )
   else()
     get_target_property( libpath ${lib} SOURCE_DIR )
@@ -96,7 +96,7 @@ set( __SUFFIX___DEPS ${__SUFFIX___DEPS} CACHE INTERNAL "List of external depende
 # Installation (library, headers, mod files)
 install( FILES ${__SUFFIX___LIB}    DESTINATION lib )
 install( DIRECTORY "${CMAKE_Fortran_MODULE_DIRECTORY}/"
-  DESTINATION "include/__LIBNAME__" FILES_MATCHING PATTERN "plf_*.mod" )
+  DESTINATION "include/__LIBNAME__" FILES_MATCHING PATTERN "*.mod" )
 
 #===============================================================================
 # Print PALFConfig.cmake for external use with cmake

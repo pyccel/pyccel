@@ -1,9 +1,11 @@
 # coding: utf-8
 
 
+import importlib
 
 from numpy import ndarray
 
+from sympy import Lambda
 from sympy.core.expr import Expr
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational,Ne,Eq
@@ -47,8 +49,7 @@ from sympy.core.compatibility import is_sequence
 #      - Zeros, Ones, Array cases
 #      - AnnotatedComment case
 #      - Slice case
-#      - Stencil case
-#      - FunctionHeader case
+#      - Vector case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
@@ -661,8 +662,12 @@ class Tensor(Basic):
 
     def __new__(cls, *args, **kwargs):
         for r in args:
-            if not isinstance(r, (Range, Tensor)):
-                raise TypeError("Expecting a Range or Tensor")
+            cond = (isinstance(r, Variable) and
+                    isinstance(r.dtype, (NativeRange, NativeTensor)))
+            cond = cond or isinstance(r, (Range, Tensor))
+
+            if not cond:
+                raise TypeError("non valid argument, given {0}".format(type(r)))
 
         try:
             name = kwargs['name']
@@ -785,7 +790,7 @@ class ParallelBlock(Block):
         return code
 
 class Module(Basic):
-    """Represents a block in the code. A block consists of the following inputs
+    """Represents a module in the code. A block consists of the following inputs
 
     variables: list
         list of the variables that appear in the block.
@@ -885,6 +890,132 @@ class Module(Basic):
     def body(self):
         return self.funcs + self.classes
 
+class Program(Basic):
+    """Represents a Program in the code. A block consists of the following inputs
+
+    variables: list
+        list of the variables that appear in the block.
+
+    declarations: list
+        list of declarations of the variables that appear in the block.
+
+    funcs: list
+        a list of FunctionDef instances
+
+    classes: list
+        a list of ClassDef instances
+
+    body: list
+        a list of statements
+
+    imports: list, tuple
+        list of needed imports
+
+    modules: list, tuple
+        list of needed modules
+
+    Examples
+
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> x = Variable('double', 'x')
+    >>> y = Variable('double', 'y')
+    >>> z = Variable('double', 'z')
+    >>> t = Variable('double', 't')
+    >>> a = Variable('double', 'a')
+    >>> b = Variable('double', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributs   = [x,y]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributs, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> Module('my_module', [], [incr, decr], [Point])
+    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
+    """
+
+    def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
+        if not isinstance(name, str):
+            raise TypeError('name must be a string')
+
+        if not iterable(variables):
+            raise TypeError("variables must be an iterable")
+        for i in variables:
+            if not isinstance(i, Variable):
+                raise TypeError("Only a Variable instance is allowed.")
+
+        if not iterable(funcs):
+            raise TypeError("funcs must be an iterable")
+        for i in funcs:
+            if not isinstance(i, FunctionDef):
+                raise TypeError("Only a FunctionDef instance is allowed.")
+
+        if not iterable(body):
+            raise TypeError("body must be an iterable")
+
+        if not iterable(classes):
+            raise TypeError("classes must be an iterable")
+        for i in classes:
+            if not isinstance(i, ClassDef):
+                raise TypeError("Only a ClassDef instance is allowed.")
+
+        if not iterable(imports):
+            raise TypeError("imports must be an iterable")
+
+        for i in funcs:
+            imports += i.imports
+        for i in classes:
+            imports += i.imports
+        imports = set(imports) # for unicity
+        imports = Tuple(*imports)
+
+        if not iterable(modules):
+            raise TypeError("modules must be an iterable")
+
+
+        #TODO
+#        elif isinstance(stmt, list):
+#            for s in stmt:
+#                body += printer(s) + "\n"
+
+
+        return Basic.__new__(cls, name, variables, funcs, classes, body, imports, modules)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def variables(self):
+        return self._args[1]
+
+    @property
+    def funcs(self):
+        return self._args[2]
+
+    @property
+    def classes(self):
+        return self._args[3]
+
+    @property
+    def body(self):
+        return self._args[4]
+
+    @property
+    def imports(self):
+        return self._args[5]
+
+    @property
+    def modules(self):
+        return self._args[6]
+
+    @property
+    def declarations(self):
+        return [Declare(i.dtype, i) for i in self.variables]
+
+
+
 class For(Basic):
     """Represents a 'for-loop' in the code.
 
@@ -956,6 +1087,12 @@ class ForIterator(For):
     def depth(self):
         it = self.iterable
         if isinstance(it, Variable):
+            if isinstance(it.dtype, NativeRange):
+                return 1
+            if isinstance(it.dtype, NativeTensor):
+                # TODO must be computed
+                return 2
+
             cls_base = it.cls_base
             if not cls_base:
                 raise TypeError('cls_base undefined')
@@ -1036,6 +1173,20 @@ class NativeParallelRange(NativeRange):
     _name = 'ParallelRange'
     pass
 
+# TODO remove later
+class NativeVector(DataType):
+    _name = 'Vector'
+    pass
+
+# TODO remove later
+class NativeStencil(DataType):
+    _name = 'Stencil'
+    pass
+
+class NativeSymbol(DataType):
+    _name = 'Symbol'
+    pass
+
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
     pass
@@ -1049,6 +1200,9 @@ Complex = NativeComplex()
 Void    = NativeVoid()
 Nil     = NativeNil()
 String  = NativeString()
+_Vector = NativeVector()
+_Stencil = NativeStencil()
+_Symbol = NativeSymbol()
 
 
 dtype_registry = {'bool': Bool,
@@ -1058,6 +1212,9 @@ dtype_registry = {'bool': Bool,
                   'complex': Complex,
                   'void': Void,
                   'nil': Nil,
+                  'vector': _Vector,
+                  'stencil': _Stencil,
+                  'symbol': _Symbol,
                   'str': String}
 
 
@@ -1106,6 +1263,8 @@ def is_iterable_datatype(dtype):
     try:
         if is_pyccel_datatype(dtype):
             return dtype.is_iterable
+        elif isinstance(dtype, (NativeRange, NativeTensor)):
+            return True
         else:
             return False
     except:
@@ -1509,10 +1668,15 @@ class Variable(Symbol):
 
     def clone(self, name):
         cls = eval(self.__class__.__name__)
-        return cls(self.dtype, name, \
-                   rank=self.rank, \
-                   allocatable=self.allocatable, \
-                   shape=self.shape)
+
+        return cls(self.dtype,
+                   name,
+                   rank=self.rank,
+                   allocatable=self.allocatable,
+                   shape=self.shape,
+                   cls_base=self.cls_base,
+                   cls_parameters=self.cls_parameters)
+
 
 class ValuedVariable(Basic):
     """Represents a valued variable in the code.
@@ -1641,6 +1805,9 @@ class FunctionDef(Basic):
             #if not cls_variable:
              #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
+        if kind is None:
+            kind = 'function'
+
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
@@ -1748,6 +1915,7 @@ class FunctionDef(Basic):
         flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
         flag = flag or (len(self.results) > 1)
         flag = flag or (len(self.results) == 0)
+        flag = flag or (self.kind == 'procedure')
 
         return flag
 
@@ -2036,6 +2204,99 @@ class Import(Basic):
     def funcs(self):
         return self._args[1]
 
+class Load(Basic):
+    """Similar to 'importlib' in python. In addition, we can also provide the
+    functions we want to import.
+
+    module: str, DottedName
+        name of the module to load.
+
+    funcs: str, list, tuple, Tuple
+        a string representing the function to load, or a list of strings.
+
+    as_lambda: bool
+        load as a Lambda expression, if True
+
+    nargs: int
+        number of arguments of the function to load. (default = 1)
+
+    Examples
+
+    >>> from pyccel.ast.core import Load
+    """
+
+    def __new__(cls, module, funcs=None, as_lambda=False, nargs=1):
+        if not isinstance(module, (str, DottedName, list, tuple, Tuple)):
+            raise TypeError('Expecting a string or DottedName, given'
+                            ' {0}'.format(type(module)))
+
+        # see syntax
+        if isinstance(module, str):
+            module = module.replace('__', '.')
+
+        if isinstance(module, (list, tuple, Tuple)):
+            module = DottedName(*module)
+
+        if funcs:
+            if not isinstance(funcs, (str, DottedName, list, tuple, Tuple)):
+                raise TypeError('Expecting a string or DottedName')
+
+            if isinstance(funcs, str):
+                funcs = [funcs]
+            elif not isinstance(funcs, (list, tuple, Tuple)):
+                raise TypeError('Expecting a string, list, tuple, Tuple')
+
+        if not isinstance(as_lambda, (BooleanTrue, BooleanFalse, bool)):
+            raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
+
+        return Basic.__new__(cls, module, funcs, as_lambda, nargs)
+
+    @property
+    def module(self):
+        return self._args[0]
+
+    @property
+    def funcs(self):
+        return self._args[1]
+
+    @property
+    def as_lambda(self):
+        return self._args[2]
+
+    @property
+    def nargs(self):
+        return self._args[3]
+
+    def execute(self):
+        module = str(self.module)
+        try:
+            package = importlib.import_module(module)
+        except:
+            raise ImportError('could not import {0}'.format(module))
+
+        ls = []
+        for f in self.funcs:
+            try:
+                m = getattr(package, '{0}'.format(str(f)))
+            except:
+                raise ImportError('could not import {0}'.format(f))
+
+            # TODO improve
+            if self.as_lambda:
+                args = []
+                for i in range(0, self.nargs):
+                    fi = Symbol('f{0}'.format(i))
+                    args.append(fi)
+                if len(args) == 1:
+                    arg = args[0]
+                    m = Lambda(arg, m(arg, evaluate=False))
+                else:
+                    m = Lambda(args, m(*args, evaluate=False))
+
+            ls.append(m)
+
+        return ls
+
 
 # TODO: Should Declare have an optional init value for each var?
 
@@ -2067,18 +2328,16 @@ class Declare(Basic):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
-        # the following is not working for other concept than Variable
-        # needed for example for MPI atoms
-        if isinstance(variables, Variable):
+
+        if not isinstance(variables, (list, tuple, Tuple)):
             variables = [variables]
-#        if not isinstance(variables, (list, tuple)):
-#            variables = [variables]
         for var in variables:
             if not isinstance(var, Variable):
-                raise TypeError("var must be of type Variable")
+                raise TypeError("var must be of type Variable, given {0}".format(var))
             if var.dtype != dtype:
                 raise ValueError("All variables must have the same dtype")
         variables = Tuple(*variables)
+
         if intent:
             if not(intent in ['in', 'out', 'inout']):
                 raise ValueError("intent must be one among {'in', 'out', 'inout'}")
@@ -2111,6 +2370,23 @@ class Continue(Basic):
 class Raise(Basic):
     """Represents a raise in the code."""
     pass
+
+# TODO: improve with __new__ from Function and add example
+class Random(Function):
+    """
+    Represents a 'random' number in the code.
+    """
+    # TODO : remove later
+    def __str__(self):
+        return "random"
+
+    def __new__(cls, seed):
+        return Basic.__new__(cls, seed)
+
+    @property
+    def seed(self):
+        return self._args[0]
+
 
 # TODO: improve with __new__ from Function and add example
 class Len(Function):
@@ -2639,6 +2915,13 @@ class IndexedVariable(IndexedBase):
     def name(self):
         return self._args[0]
 
+    # TODO what about kw_args in __new__?
+    def clone(self, name):
+        cls = eval(self.__class__.__name__)
+
+        return cls(name, shape=self.shape, dtype=self.dtype)
+
+
 class IndexedElement(Indexed):
     """
     Represents a mathematical object with indices.
@@ -2777,6 +3060,10 @@ class Assert(Basic):
     def test(self):
         return self._args[0]
 
+class Eval(Basic):
+    """Basic class for eval instruction."""
+    pass
+
 class Pass(Basic):
     """Basic class for pass instruction."""
     pass
@@ -2819,48 +3106,58 @@ class If(Basic):
 
         return Basic.__new__(cls, *newargs)
 
-class MultiAssign(Basic):
-    """Represents a multiple assignment statement in the code.
-    In Fortran, this will be interpreted as a subroutine call.
+# TODO: to improve
+class Vector(Basic):
+    """Represents variable assignment using a vector for code generation.
 
-    lhs : list Expr
-        list of assignable objects
-    rhs : Function
-        function call expression
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    starts : int or list of integers
+
+    stops : int or list of integers
 
     Examples
 
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import MultiAssign
-    >>> from pyccel.ast.core import Assign, Variable, FunctionDef
-    >>> x, y, z, t = symbols('x, y, z, t')
-    >>> args        = [Variable('float', x), Variable('float', y)]
-    >>> results     = [Variable('float', z), Variable('float', t)]
-    >>> body        = [Assign(z,x+y), Assign(t,x*y)]
-    >>> local_vars  = []
-    >>> global_vars = []
-    >>> f = FunctionDef('f', args, results, body, local_vars, global_vars)
-    >>> MultiAssign((z,t), f)
-    z, t := FunctionDef(f, (x, y), (z, t), [z := x + y, t := x*y], [], [])
+    >>> from pyccel.ast.core import Vector
     """
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+
+    def __new__(cls, lhs, starts, stops):
+        # ...
+        lhs = sympify(lhs)
+        # ...
+
+        # Tuple of things that can be on the lhs of an assignment
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
+        if not isinstance(lhs, assignable):
+            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+
+        return Basic.__new__(cls, lhs, starts, stops)
 
     @property
     def lhs(self):
         return self._args[0]
 
     @property
-    def rhs(self):
+    def starts(self):
         return self._args[1]
 
-    def _sympystr(self, printer):
-        sstr    = printer.doprint
-        rhs     = sstr(self.rhs)
-        outputs = ', '.join(sstr(i) for i in self.lhs)
-        return '{0} := {1}'.format(outputs, rhs)
+    @property
+    def stops(self):
+        return self._args[2]
 
-# TODO: remove Len from here
+    @property
+    def name(self):
+        return str(self.lhs)
+
+    @property
+    def dtype(self):
+        return NativeDouble()
+
+# TODO: to improve
 class Stencil(Basic):
     """Represents variable assignment using a stencil for code generation.
 
@@ -2870,69 +3167,58 @@ class Stencil(Basic):
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
-    shape : int or list of integers
+    starts : int or list of integers
 
-    step : int or list of integers
+    stops : int or list of integers
+
+    pads : int or list of integers
 
     Examples
 
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Stencil
-    >>> x, y, z = symbols('x, y, z')
-    >>> m, n, p, q = symbols('m n p q', integer=True)
-    >>> Stencil(x, n, p)
-    Stencil(x, n, p)
-    >>> Stencil(y, (n,m), (p,q))
-    Stencil(y, (n, m), (p, q))
+    >>> from pyccel.ast.core import Vector
     """
 
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape, step):
+    def __new__(cls, lhs, starts, stops, pads):
         # ...
-        def format_entry(s_in):
-            if isinstance(s_in, list):
-                # this is a correction. otherwise it is not working on LRZ
-                if isinstance(s_in[0], list):
-                    s_out = Tuple(*(sympify(i) for i in s_in[0]))
-                else:
-                    s_out = Tuple(*(sympify(i) for i in s_in))
-            elif isinstance(s_in, int):
-                s_out = Tuple(sympify(s_in))
-            elif isinstance(s_in, Basic) and not isinstance(s_in,Len):
-                s_out = str(s_in)
-            elif isinstance(s_in,Len):
-                s_our = s_in.str
-            else:
-                s_out = s_in
-            return s_out
-        # ...
-
-        # ...
-        lhs   = sympify(lhs)
-        shape = format_entry(shape)
-        step  = format_entry(step)
+        lhs = sympify(lhs)
         # ...
 
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        return Basic.__new__(cls, lhs, shape, step)
+
+        return Basic.__new__(cls, lhs, starts, stops, pads)
 
     @property
     def lhs(self):
         return self._args[0]
 
     @property
-    def shape(self):
+    def starts(self):
         return self._args[1]
 
     @property
-    def step(self):
+    def stops(self):
         return self._args[2]
 
+    @property
+    def pads(self):
+        return self._args[3]
+
+    @property
+    def name(self):
+        return str(self.lhs)
+
+    @property
+    def dtype(self):
+        return NativeDouble()
+
+class Header(Basic):
+    pass
+
 # TODO rename dtypes to arguments
-class VariableHeader(Basic):
+class VariableHeader(Header):
     """Represents a variable header in the code.
 
     name: str
@@ -2975,9 +3261,8 @@ class VariableHeader(Basic):
         """Returns a Variable."""
         raise NotImplementedError('TODO')
 
-
 # TODO rename dtypes to arguments
-class FunctionHeader(Basic):
+class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
     func: str
@@ -3041,7 +3326,6 @@ class FunctionHeader(Basic):
             raise TypeError("Expecting a string for kind.")
 
         if not (kind in ['function', 'procedure']):
-            print( kind)
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         return Basic.__new__(cls, func, types, r_types, kind)
@@ -3138,6 +3422,9 @@ class MethodHeader(FunctionHeader):
         a list of datatypes. an element of this list can be str/DataType of a
         tuple (str/DataType, attr)
 
+    kind: str
+        'function' or 'procedure'. default value: 'function'
+
     Examples
 
     >>> from pyccel.ast.core import MethodHeader
@@ -3148,7 +3435,7 @@ class MethodHeader(FunctionHeader):
     'point.rotate'
     """
 
-    def __new__(cls, name, dtypes, results=None):
+    def __new__(cls, name, dtypes, results=None, kind='function'):
         if not isinstance(name, (list, tuple)):
             raise TypeError("Expecting a list/tuple of strings.")
 
@@ -3186,7 +3473,14 @@ class MethodHeader(FunctionHeader):
                 else:
                     raise TypeError("Wrong element in r_types.")
 
-        return Basic.__new__(cls, name, types, r_types)
+
+        if not isinstance(kind, str):
+            raise TypeError("Expecting a string for kind.")
+
+        if not (kind in ['function', 'procedure']):
+            raise ValueError("kind must be one among {'function', 'procedure'}")
+
+        return Basic.__new__(cls, name, types, r_types, kind)
 
     @property
     def name(self):
@@ -3204,7 +3498,11 @@ class MethodHeader(FunctionHeader):
     def results(self):
         return self._args[2]
 
-class ClassHeader(Basic):
+    @property
+    def kind(self):
+        return self._args[3]
+
+class ClassHeader(Header):
     """Represents class header in the code.
 
     name: str
@@ -3283,39 +3581,51 @@ def get_initial_value(expr, var):
         return isinstance(expr, Nil) or (expr is None)
     # ...
 
+    # ...
     if isinstance(var, str):
         return get_initial_value(expr, [var])
+
     elif isinstance(var, DottedName):
         return get_initial_value(expr, [str(var)])
+
     elif isinstance(var, Variable):
         return get_initial_value(expr, [var.name])
+
     elif not isinstance(var, (list, tuple)):
         raise TypeError('Expecting var to be str, list, tuple or Variable, '
                         'given {0}'.format(type(var)))
+    # ...
 
+    # ...
     if isinstance(expr, ValuedVariable):
         if expr.variable.name in var:
             return expr.value
+
     elif isinstance(expr, Variable):
         # expr.cls_base if of type ClassDef
         if expr.cls_base:
             return get_initial_value(expr.cls_base, var)
+
     elif isinstance(expr, Assign):
         if str(expr.lhs) in var:
             return expr.rhs
+
     elif isinstance(expr, FunctionDef):
         value = get_initial_value(expr.body, var)
         if not is_None(value):
             r = get_initial_value(expr.arguments, value)
-#            if 'self._collapse' in var:
-#                print('>>>> ', var, value, r)
+            if 'self._linear' in var:
+                print('>>>> ', var, value, r)
             if not (r is None):
                 return r
         return value
+
     elif isinstance(expr, FunctionCall):
         return get_initial_value(expr.func, var)
+
     elif isinstance(expr, ConstructorCall):
         return get_initial_value(expr.func, var)
+
     elif isinstance(expr, (list, tuple, Tuple)):
         for i in expr:
             value = get_initial_value(i, var)
@@ -3323,22 +3633,70 @@ def get_initial_value(expr, var):
             # since the output of our function can be None
             if not (value is None):
                 return value
+
     elif isinstance(expr, ClassDef):
         methods     = expr.methods_as_dict
         init_method = methods['__init__']
         return get_initial_value(init_method, var)
+    # ...
 
-    return None
+    return Nil()
 # ...
 
-# ...
-def get_iterable_ranges(it):
+# ... TODO: improve and make it recursive
+def get_iterable_ranges(it, var_name=None):
     """Returns ranges of an iterable object."""
     if isinstance(it, Variable):
         if it.cls_base is None:
             raise TypeError('iterable must be an iterable Variable object')
 
+        # ...
+        def _construct_arg_Range(name):
+            if not isinstance(name, DottedName):
+                raise TypeError('Expecting a DottedName, given '
+                                ' {0}'.format(type(name)))
+
+            if not var_name:
+                return DottedName(it.name.name[0], name.name[1])
+            else:
+                return DottedName(var_name, name.name[1])
+        # ...
+
         cls_base = it.cls_base
+
+        if isinstance(cls_base, Range):
+            if not isinstance(it.name, DottedName):
+                raise TypeError('Expecting a DottedName, given '
+                                ' {0}'.format(type(it.name)))
+
+            args = []
+            for i in [cls_base.start, cls_base.stop, cls_base.step]:
+                if isinstance(i, (Variable, IndexedVariable)):
+                    arg_name = _construct_arg_Range(i.name)
+                    arg = i.clone(arg_name)
+                elif isinstance(i, IndexedElement):
+                    arg_name = _construct_arg_Range(i.base.name)
+                    base    = i.base.clone(arg_name)
+                    indices = i.indices
+                    arg = base[indices]
+                else:
+                    raise TypeError('Wrong type, given {0}'.format(type(i)))
+                args += [arg]
+
+            return [Range(*args)]
+
+        elif isinstance(cls_base, Tensor):
+            if not isinstance(it.name, DottedName):
+                raise TypeError('Expecting a DottedName, given '
+                                ' {0}'.format(type(it.name)))
+            # ...
+            ranges = []
+            for r in cls_base.ranges:
+                ranges += get_iterable_ranges(r, var_name=str(it.name.name[0]))
+            # ...
+
+            return ranges
+
         params   = [str(i) for i in it.cls_parameters]
     elif isinstance(it, ConstructorCall):
         cls_base = it.this.cls_base

@@ -122,17 +122,30 @@ def construct_tree(filename, ignored_modules):
                                      '{0} or {1}'.format(filename_py, filename_pyh))
 
             if isinstance(f_name, str):
-                f_names.append(f_name)
+                if not(f_name in f_names):
+                    f_names.append(f_name)
             elif isinstance(f_name, (list, tuple)):
-                f_names += list(f_name)
+                for f in f_name:
+                    if not isinstance(f, str):
+                        raise TypeError('Expecting a string')
+
+                    if not(f in f_names):
+                        f_names.append(f)
             else:
                 raise TypeError('Expecting a str, tuple or list')
 
         # this is to avoid duplication in filenames,
         # we avoid using sets here, to respect the imports order
         imports_src[module] = []
-        for f_name in f_names:
+
+        # this is to prevent from self dependency
+        if filename in f_names:
+            f_names.remove(filename)
+
+        for f_name in f_names[::-1]:
             if not(f_name in imports_src[module]):
+                imports_src[module] += [f_name]
+
                 # we don't process header files
                 if f_name.endswith('.py'):
                     ims, ims_src = construct_tree(f_name, ignored_modules)
@@ -146,8 +159,6 @@ def construct_tree(filename, ignored_modules):
                             imports_src[m] += ims_src[m]
                         else:
                             imports_src[m]  = ims_src[m]
-
-                imports_src[module] += [f_name]
     #...
 
     # TODO must use ordered dictionaries from here
@@ -178,7 +189,7 @@ def build_file(filename, language, compiler, \
         execute the generated code, after compiling if True.
     accelerator: str
         name of the selected accelerator.
-        For the moment, only 'openmp' is available
+        One among ('openmp', 'openacc')
     debug: bool
         add some useful prints that may help for debugging.
     verbose: bool
@@ -239,6 +250,12 @@ def build_file(filename, language, compiler, \
     ============================
     """
 #    print('>>>> calling build_file for {0}'.format(filename))
+
+    # ...
+    if not name:
+        name = os.path.basename(filename.split('.')[0])
+    # ...
+
     # ...
     with_mpi = False
     if compiler:
@@ -278,7 +295,7 @@ def build_file(filename, language, compiler, \
         if not(module in namespaces):
             namespaces[module] = {}
 
-#        print('>>> processing module:{0}, and names:{1}'.format(module, names))
+#        print('>>> processing module: {0}, and names: {1}'.format(module, names))
 
         f_names = imports_src[module]
         for f_name in f_names:
@@ -288,11 +305,9 @@ def build_file(filename, language, compiler, \
 #            print('> treating {0}'.format(f_name))
 
             module_name = str(module).replace('.', '_')
-            module_name = 'm_{0}'.format(module_name)
 
             codegen_m = FCodegen(filename=f_name,
                                  name=module_name,
-                                 is_module=True,
                                  output_dir=output_dir)
             codegen_m.doprint(language=language,
                               accelerator=accelerator,
@@ -330,11 +345,9 @@ def build_file(filename, language, compiler, \
 
             update_namespace(namespace_user)
             treated_files += [f_name]
-#            print_namespace()
 
             # TODO add aliases or what to import (names)
 #    import sys; sys.exit(0)
-
 
     codegen = FCodegen(filename=filename,
                        name=name,
@@ -364,49 +377,50 @@ def build_file(filename, language, compiler, \
     # ...
 
     # ... TODO improve and remove single_file
-    if single_file:
-        if not codegen.is_header:
-            # ... create a Module for pyccel extra definitions
-            pyccel_vars    = []
-            pyccel_funcs   = []
-            pyccel_classes = []
+    if not codegen.is_header:
+        # ... create a Module for pyccel extra definitions
+        pyccel_vars    = []
+        pyccel_funcs   = []
+        pyccel_classes = []
 
-            stmts = codegen.ast.extra_stmts
-            pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
-            pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
+        stmts = codegen.ast.extra_stmts
+        pyccel_funcs   = [i for i in stmts if isinstance(i, FunctionDef)]
+        pyccel_classes = [i for i in stmts if isinstance(i, ClassDef)]
 
-            pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
-            if pyccel_vars or pyccel_funcs or pyccel_classes:
-                pyccel_stmts += [Module('m_pyccel', \
-                                        pyccel_vars, \
-                                        pyccel_funcs, \
-                                        pyccel_classes)]
+        pyccel_stmts  = [i for i in stmts if isinstance(i, Module)]
+        if pyccel_vars or pyccel_funcs or pyccel_classes:
+            pyccel_stmts += [Module('m_pyccel', \
+                                    pyccel_vars, \
+                                    pyccel_funcs, \
+                                    pyccel_classes)]
 
-            pyccel_code = ''
-            for stmt in pyccel_stmts:
-                pyccel_code += codegen.printer(stmt) + "\n"
-            # ...
+        pyccel_code = ''
+        for stmt in pyccel_stmts:
+            pyccel_code += codegen.printer(stmt) + "\n"
+        # ...
 
-            # ...
-            f = open(codegen.filename_out, "w")
+        # ...
+        if not single_file:
+            ms = [m for m in ms if m.name.startswith('pyccel_stdlib_')]
 
-            for line in pyccel_code:
+        ls = ms + [codegen]
+
+        codes = [m.code for m in ls]
+        # ...
+
+        # ...
+        f = open(codegen.filename_out, "w")
+
+        for line in pyccel_code:
+            f.write(line)
+
+        for code in codes:
+            for line in code:
                 f.write(line)
+            f.write('\n')
 
-            # this commented line must be removed.
-            # otherwise, we will print all used modules in the current file
-            # TODO ARA : to remove
-            ls = ms + [codegen]
-            #ls = [codegen]
-            codes = [m.code for m in ls]
-            for code in codes:
-                for line in code:
-                    f.write(line)
-
-            f.close()
-            # ...
-    else:
-        raise NotImplementedError('single_file must be True')
+        f.close()
+        # ...
     # ...
 
     # ...
@@ -422,7 +436,6 @@ def build_file(filename, language, compiler, \
                 if str(codegen_m.name).startswith('m_pyccel_stdlib_'):
                     break
 
-#                print('>>>>>> {0}'.format(codegen_m.filename))
                 compiler_m = Compiler(codegen_m,
                                       compiler=compiler,
                                       accelerator=accelerator,
@@ -432,8 +445,6 @@ def build_file(filename, language, compiler, \
                                       libs=libs)
                 compiler_m.compile(verbose=verbose)
 
-        # TODO ARA : to remove
-        ignored_modules += ['pyccel.stdlib.parallel.mpi_new']
         c = Compiler(codegen,
                      compiler=compiler,
                      inline=inline,
@@ -451,7 +462,6 @@ def build_file(filename, language, compiler, \
 
     # ...
     info = {}
-    info['is_module']  = codegen.is_module
     info['namespaces'] = namespaces
     info['libs']   = d_libraries
     # ...
@@ -461,7 +471,16 @@ def build_file(filename, language, compiler, \
 
 # ...
 # TODO improve args
-def load_module(filename, language="fortran", compiler="gfortran"):
+def load_module(filename,
+                language="fortran", compiler="gfortran",
+                accelerator=None,
+                debug=False, verbose=False, show=False,
+                inline=False, name=None,
+                output_dir=None,
+                ignored_modules=['numpy', 'scipy', 'sympy'],
+                pyccel_modules=[],
+                include=[], libdir=[], libs=[],
+                single_file=True):
     """
     Loads a given filename in a Python session.
     The file will be parsed, compiled and wrapped into python, using f2py.
@@ -495,26 +514,32 @@ def load_module(filename, language="fortran", compiler="gfortran"):
     x =          100
     """
     # ...
-    name = filename.split(".")[0]
-    name = 'pyccel_m_{0}'.format(name)
+    name = os.path.basename(filename).split('.py')[0]
     # ...
 
     # ...
-    build_file(filename=filename, language=language, compiler=compiler, \
-               execute=False, accelerator=None, \
-               debug=False, verbose=True, show=True, inline=True, name=name)
+    build_file(filename=filename,
+               language=language,
+               compiler=compiler,
+               execute=False,
+               accelerator=accelerator,
+               debug=debug,
+               verbose=verbose,
+               show=show,
+               inline=True,
+               name=name)
     # ...
 
     # ...
     try:
-        import external
-        reload(external)
+        package = importlib.import_module(name)
+        # TODO ??
+        #reload(package)
     except:
-        pass
-    import external
+        raise ImportError('could not import {0}'.format(name))
     # ...
 
-    module = getattr(external, '{0}'.format(name))
+    module = getattr(package, 'mod_{0}'.format(name))
 
     return module
 # ...
@@ -864,14 +889,16 @@ def load_extension(ext, output_dir,
         filename = get_extension_path(ext, module=module)
         if not silent:
             f_name = os.path.basename(filename)
-            print ('> converting extensions/{0}/{1}'.format(ext, f_name))
+#            print ('> converting extensions/{0}/{1}'.format(ext, f_name))
 
-        module_name = 'm_pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
+        module_name = 'pyccelext_{0}_{1}'.format(ext, f_name.split('.py')[0])
+
         infos[module] = build_file(filename,
                                    language=language,
                                    compiler=None,
                                    output_dir=output_dir,
-                                   name=module_name)
+                                   name=module_name,
+                                   single_file=False)
     # ...
 
     # remove .pyccel temporary files
@@ -932,9 +959,10 @@ def load_extension(ext, output_dir,
             mkdir_p(output_testing_dir)
 
             infos[filename] = build_file(filename,
-                                       language=language,
-                                       compiler=None,
-                                       output_dir=output_testing_dir)
+                                         language=language,
+                                         compiler=None,
+                                         single_file=False,
+                                         output_dir=output_testing_dir)
 
         # ... construct external library dependencies
         libs = []
@@ -963,7 +991,7 @@ def load_extension(ext, output_dir,
 # ...
 
 # ... # default values of FC etc must be done in settings before
-def initialize_project(base_dir, project, libname, settings):
+def initialize_project(base_dir, project, libname, settings, verbose=False):
 
     # ...
     if not os.path.exists(base_dir):
@@ -975,7 +1003,7 @@ def initialize_project(base_dir, project, libname, settings):
     fflags = settings['fflags']
     flags  = settings['flags']
     fc     = settings['fc']
-    suffix = settings['suffix']
+    suffix = settings['suffix-library']
     # ...
 
     # ...
@@ -992,11 +1020,9 @@ def initialize_project(base_dir, project, libname, settings):
 
     cmake.initialize(base_dir, project, suffix, libname, force=True)
 
-    cmake.configure()
-    cmake.make()
-
-    # TODO uncomment install
-    #cmake.install()
+    cmake.configure(verbose=verbose)
+    cmake.make(verbose=verbose)
+    cmake.install()
     # ...
 # ...
 

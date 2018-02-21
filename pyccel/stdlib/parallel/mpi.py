@@ -11,6 +11,7 @@ from pyccel.stdlib.parallel.mpi import mpi_dims_create
 from pyccel.stdlib.parallel.mpi import mpi_cart_create
 from pyccel.stdlib.parallel.mpi import mpi_cart_coords
 from pyccel.stdlib.parallel.mpi import mpi_cart_shift
+from pyccel.stdlib.parallel.mpi import mpi_cart_sub
 from pyccel.stdlib.parallel.mpi import mpi_comm_free
 from pyccel.stdlib.parallel.mpi import mpi_type_contiguous
 from pyccel.stdlib.parallel.mpi import mpi_type_vector
@@ -29,7 +30,7 @@ from pyccel.stdlib.parallel.mpi import MPI_SUM
 #$ header method reduce(Cart, double)
 
 class Cart(object):
-    def __init__(self, npts, steps, periods, reorder):
+    def __init__(self, npts, pads, periods, reorder):
 
         ntx = npts[0]
         nty = npts[1]
@@ -46,14 +47,16 @@ class Cart(object):
         west  = 3
         # ...
 
-        # ... TODO : use steps, periods, reorder arguments
+        # ...
         self.neighbour = zeros(self.n_neighbour, int)
         self.coords    = zeros(self.ndims, int)
         self.dims      = zeros(self.ndims, int)
         self.starts    = zeros(self.ndims, int)
         self.ends      = zeros(self.ndims, int)
+        self.comm1d    = zeros(self.ndims, int)
 
-        self.steps   = steps
+        self.steps   = [1,1]
+        self.pads    = pads
         self.periods = periods
         self.reorder = reorder
         # ...
@@ -100,19 +103,55 @@ class Cart(object):
         self.ends[1]   = ey
         # ...
 
+        # ...
+        self.sx = sx
+        self.ex = ex + 1
+        self.sy = sy
+        self.ey = ey + 1
+        # ...
+
+        # ... grid without ghost cells
+        self.r_x  = range(self.sx, self.ex, self.steps[0])
+        self.r_y  = range(self.sy, self.ey, self.steps[1])
+
+        self.indices = tensor (self.r_x, self.r_y)
+        # ...
+
+        # ...
+        self.sx_ext = sx - self.pads[0]
+        self.ex_ext = ex + self.pads[0] + 1
+        self.sy_ext = sy - self.pads[1]
+        self.ey_ext = ey + self.pads[1] + 1
+        # ...
+
+        # ... extended grid with ghost cells
+        self.r_ext_x  = range(self.sx_ext, self.ex_ext, self.steps[0])
+        self.r_ext_y  = range(self.sy_ext, self.ey_ext, self.steps[1])
+
+        self.extended_indices = tensor (self.r_ext_x, self.r_ext_y)
+        # ...
+
         # ... Neighbours
         #     Search of my West and East neigbours
-        mpi_cart_shift (self.comm_cart, 0, self.steps[0], self.neighbour[west], self.neighbour[east], ierr)
+        mpi_cart_shift (self.comm_cart, 0, self.pads[0], self.neighbour[west], self.neighbour[east], ierr)
 
         #     Search of my South and North neighbours
-        mpi_cart_shift (self.comm_cart, 1, self.steps[1], self.neighbour[south], self.neighbour[north], ierr)
+        mpi_cart_shift (self.comm_cart, 1, self.pads[1], self.neighbour[south], self.neighbour[north], ierr)
+        # ...
+
+        # ... Create 1d communicator within the cart
+        flags = [True, False]
+        mpi_cart_sub (self.comm_cart, flags, self.comm1d[0], ierr)
+
+        flags = [False, True]
+        mpi_cart_sub (self.comm_cart, flags, self.comm1d[1], ierr)
         # ...
 
         # ... Derived Types
         #     Creation of the type_line derived datatype to exchange points
         #     with northern to southern neighbours
         self.type_line = -1
-        mpi_type_vector (ey-sy+1, 1, ex-sx+3, MPI_DOUBLE, self.type_line, ierr)
+        mpi_type_vector (ey-sy+1, 1, ex-sx+1+2*self.pads[0], MPI_DOUBLE, self.type_line, ierr)
         mpi_type_commit (self.type_line, ierr)
 
         #     Creation of the type_column derived datatype to exchange points

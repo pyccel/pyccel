@@ -1,157 +1,90 @@
+// TODO: - linear:   improve using lists. see specs
+//       - parallel: add if parallel
+
 Openmp:
   statements*=OpenmpStmt
 ;
 
 OpenmpStmt: 
-  '#$' 'omp' stmt=OpenmpConstruct
+  '#$' 'omp' stmt=OmpConstructOrDirective
 ;
 
-OpenmpConstruct:
-  ParallelStmt 
-  | 
-  LoopStmt
-  | 
-  SingleStmt
-  |
-  EndConstructClause
+////////////////////////////////////////////////////
+//         Constructs and Directives
+////////////////////////////////////////////////////
+OmpConstructOrDirective:
+    OmpParallelConstruct 
+  | OmpLoopConstruct
+  | OmpSingleConstruct
+  | OmpEndClause
+;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//     Constructs and Directives definitions
+////////////////////////////////////////////////////
+OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
+OmpLoopConstruct:     'do'       clauses*=OmpLoopClause;
+OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//      Clauses for Constructs and Directives
+////////////////////////////////////////////////////
+OmpParallelClause:
+    OmpNumThread
+  | OmpDefault
+  | OmpPrivate
+  | OmpShared
+  | OmpFirstPrivate
+  | OmpCopyin
+  | OmpReduction
+  | OmpProcBind
 ;
 
-// TODO: add if parallel
-ParallelStmt:
-  'parallel' clauses*=ParallelClause
+OmpLoopClause:
+    OmpPrivate
+  | OmpFirstPrivate
+  | OmpLastPrivate
+  | OmpLinear
+  | OmpReduction
+  | OmpSchedule
+  | OmpCollapse
+  | OmpOrdered
 ;
 
-LoopStmt:
-  'do' clauses*=LoopClause
+OmpSingleClause:
+    OmpPrivate
+  | OmpFirstPrivate
 ;
+////////////////////////////////////////////////////
 
-SingleStmt:
-  'single' clauses*=SingleClause
-;
+////////////////////////////////////////////////////
+//              Clauses definitions
+////////////////////////////////////////////////////
+OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
+OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
+OmpPrivate: 'private' '(' args+=ID[','] ')';
+OmpShared: 'shared' '(' args+=ID[','] ')';
+OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
+OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
+OmpCopyin: 'copyin' '(' args+=ID[','] ')';
+OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
+OmpCollapse: 'collapse' '(' n=INT ')';
+OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
+OmpOrdered: 'ordered' ('(' n=INT ')')?;
+OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
+OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+////////////////////////////////////////////////////
 
-ParallelClause:
-  ParallelNumThreadClause
-  |
-  ParallelDefaultClause
-  |
-  PrivateClause
-  |
-  SharedClause
-  |
-  FirstPrivateClause
-  |
-  CopyinClause
-  |
-  ReductionClause
-  |
-  ParallelProcBindClause
-;
+////////////////////////////////////////////////////
+OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
+OmpProcBindStatus: ('master' | 'close' | 'spread');
+OmpReductionOperator: ('+' | '-' | '*' | '/');
+OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
+OpenmpConstructs: ('single' | 'parallel' | 'do');
 
-LoopClause:
-  PrivateClause
-  |
-  FirstPrivateClause
-  |
-  LastPrivateClause
-  |
-  LinearClause
-  |
-  ReductionClause
-  |
-  ScheduleClause
-  |
-  CollapseClause
-  |
-  OrderedClause
-;
-
-SingleClause:
-  PrivateClause
-  |
-  FirstPrivateClause
-;
-
-ParallelNumThreadClause:
- 'num_threads' '(' thread=ThreadIndex ')'
-;
-
-ParallelDefaultClause:
- 'default' '(' status=Status ')'
-;
-
-ParallelProcBindClause:
- 'proc_bind' '(' status=ProcBind ')'
-;
-
-PrivateClause:
- 'private' '(' args+=ID[','] ')'
-;
-
-SharedClause:
- 'shared' '(' args+=ID[','] ')'
-;
-
-FirstPrivateClause:
- 'firstprivate' '(' args+=ID[','] ')'
-;
-
-LastPrivateClause:
- 'lastprivate' '(' args+=ID[','] ')'
-;
-
-CopyinClause:
- 'copyin' '(' args+=ID[','] ')'
-;
-
-ReductionClause:
- 'reduction' '('op=ReductionOperator ':' args+=ID[','] ')'
-;
-
-CollapseClause:
-  'collapse' '(' n=INT ')'
-;
-
-// TODO: improve using lists. see specs
-LinearClause:
-  'linear' '(' val=ID ':' step=INT ')'
-;
-
-OrderedClause:
-  'ordered' ('(' n=INT ')')?
-;
-
-ScheduleClause:
-  'schedule' '(' kind=Schedule (',' chunk_size=INT)? ')'
-;
-
-EndConstructClause:
-  'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?
-;
-
-Schedule:
-  ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' )
-;
-
-ProcBind:
-  ('master' | 'close' | 'spread')
-;
-
-ReductionOperator:
-  ('+' | '-' | '*' | '/')
-;
-
-Status:
-  ('private' | 'firstprivate' | 'shared' | 'none')
-;
-
-OpenmpConstructs:
-  ('single' | 'parallel' | 'do')
-;
-
-ThreadIndex:
-  (ID | INT)
-;
-
-NotaStmt:
-  /.*$/
-;
+ThreadIndex: (ID | INT);
+NotaStmt: /.*$/;
+////////////////////////////////////////////////////

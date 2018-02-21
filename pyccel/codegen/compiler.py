@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os
+import subprocess
 
 from sympy.core import Tuple
 
@@ -14,25 +15,18 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               FunctionHeader, ClassHeader, MethodHeader, \
                               datatype, While, NativeFloat, \
                               EqualityStmt, NotequalStmt, \
-                              MultiAssign, AugAssign, \
+                              AugAssign, \
                               FunctionDef, ClassDef, Del, Print, Import, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
-                              Stencil, Ceil, Break, \
+                              Vector, Ceil, Break, \
                               Zeros, Ones, Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
-
-from pyccel.ast.parallel.mpi import mpify
-from pyccel.ast.parallel.openmp import openmpfy
-
-from pyccel.parser.parser  import PyccelParser
-from pyccel.parser.syntax.openmp import OpenmpStmt
-
-from pyccel.parser.utilities import find_imports
 
 
 _module_stmt = (Comment, FunctionDef, ClassDef, \
                 FunctionHeader, ClassHeader, MethodHeader)
+
 
 # ...
 def clean(filename):
@@ -226,7 +220,7 @@ class Compiler(object):
             compiler flags
         accelerator: str
             name of the selected accelerator.
-            For the moment, only 'openmp' is available
+            One among ('openmp', 'openacc')
         binary: str
             name of the binary file to generate.
         debug: bool
@@ -342,8 +336,10 @@ class Compiler(object):
         if not (accelerator is None):
             if accelerator == "openmp":
                 flags += " -fopenmp "
+            elif accelerator == "openacc":
+                flags += " -ta=multicore -Minfo=accel "
             else:
-                raise ValueError("Only openmp is available")
+                raise ValueError("Only openmp and openacc are available")
 
         if isinstance(include, str):
             include = [include]
@@ -392,8 +388,7 @@ class Compiler(object):
         else:
             o_code = '-m'
             flags  = '--quiet -c'
-            binary = 'external'
-            # TODO improve
+            binary = self.codegen.name
             compiler = 'f2py'
 
         m_code = ' '.join('{}.o '.format(m) for m in modules)
@@ -413,7 +408,28 @@ class Compiler(object):
         if verbose:
             print(cmd)
 
-        os.system(cmd)
+        output = subprocess.check_output(cmd, shell=True)
+
+        if verbose:
+            print output
+
+        # write and save a log file in .pyccel/'filename'.log
+        # ...
+        def mkdir_p(dir):
+            # type: (unicode) -> None
+            if os.path.isdir(dir):
+                return
+            os.makedirs(dir)
+
+        if inline:
+            tmp_dir = '.pyccel'
+            mkdir_p(tmp_dir)
+            logfile = '{0}.log'.format(binary)
+            logfile = os.path.join(tmp_dir, logfile)
+            f = open(logfile, 'w')
+            f.write(output)
+            f.close()
+        # ...
 
         self._binary = binary
 # ...

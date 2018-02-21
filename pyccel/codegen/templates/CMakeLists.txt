@@ -78,7 +78,6 @@ if( NOT CLAPP_DIR )
   set( CLAPP_DIR ${CMAKE_INSTALL_PREFIX} )
 endif()
 
-find_package( CLAPPIO REQUIRED HINTS ${CLAPP_DIR}/cmake )
 
 IF(BUILD_AGMG)
   ADD_DEFINITIONS(-DAGMG_ENABLED)
@@ -236,4 +235,4 @@ MESSAGE(STATUS "############################################################")
 ##########################################################################
 
 # Create single library 
-#ADD_SUBDIRECTORY( package )
+ADD_SUBDIRECTORY( package )

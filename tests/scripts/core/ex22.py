@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 
-#$ header function matmat(*double [:,:], *double [:,:], *double [:,:]) results(*double [:,:], int)
-def matmat(a,b,d):
+#$ header function matmat(double [:,:], double [:,:], double [:,:])
+def matmat(a,b,c):
     nm = shape(a)
     mp = shape(b)
 
@@ -13,9 +13,7 @@ def matmat(a,b,d):
     for i in range(0, n):
         for j in range(0, m):
             for k in range(0, p):
-                c[i,j] = d[i,j] + a[i,k]*b[k,j]
-
-    return c, n
+                c[i,j] = c[i,j] + a[i,k]*b[k,j]
 
 n = 3
 m = 4
@@ -36,5 +34,5 @@ print(a)
 print(b)
 
 c = zeros((n,p), double)
-c, nn = matmat(a,b,c)
+matmat(a,b,c)
 print(c)

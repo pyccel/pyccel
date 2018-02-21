@@ -36,109 +36,109 @@ class OpenmpStmt(BasicStmt):
             print("> OpenmpStmt: expr")
 
         stmt = self.stmt
-        if isinstance(stmt, EndConstructClause):
+        if isinstance(stmt, OmpEndClause):
             return stmt.expr
-        elif isinstance(stmt, ParallelStmt):
+        elif isinstance(stmt, OmpParallelConstruct):
             return stmt.expr
-        elif isinstance(stmt, LoopStmt):
+        elif isinstance(stmt, OmpLoopConstruct):
             return stmt.expr
-        elif isinstance(stmt, SingleStmt):
+        elif isinstance(stmt, OmpSingleConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
-class ParallelStmt(BasicStmt):
+class OmpParallelConstruct(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.clauses = kwargs.pop('clauses')
 
-        super(ParallelStmt, self).__init__(**kwargs)
+        super(OmpParallelConstruct, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> ParallelStmt: expr")
+            print("> OmpParallelConstruct: expr")
 
-        _valid_clauses = (ParallelNumThreadClause, \
-                         ParallelDefaultClause, \
-                         PrivateClause, \
-                         SharedClause, \
-                         FirstPrivateClause, \
-                         CopyinClause, \
-                         ReductionClause, \
-                         ParallelProcBindClause)
+        _valid_clauses = (OmpNumThread, \
+                         OmpDefault, \
+                         OmpPrivate, \
+                         OmpShared, \
+                         OmpFirstPrivate, \
+                         OmpCopyin, \
+                         OmpReduction, \
+                         OmpProcBind)
 
         txt = 'parallel'
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for ParallelStmt')
+                raise TypeError('Wrong clause for OmpParallelConstruct')
 
         return AnnotatedComment('omp', txt)
 
-class LoopStmt(BasicStmt):
+class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.clauses = kwargs.pop('clauses')
 
-        super(LoopStmt, self).__init__(**kwargs)
+        super(OmpLoopConstruct, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> LoopStmt: expr")
+            print("> OmpLoopConstruct: expr")
 
-        _valid_clauses = (PrivateClause, \
-                         FirstPrivateClause, \
-                         LastPrivateClause, \
-                         ReductionClause, \
-                         ScheduleClause, \
-                         CollapseClause, \
-                         LinearClause, \
-                         OrderedClause)
+        _valid_clauses = (OmpPrivate, \
+                         OmpFirstPrivate, \
+                         OmpLastPrivate, \
+                         OmpReduction, \
+                         OmpSchedule, \
+                         OmpCollapse, \
+                         OmpLinear, \
+                         OmpOrdered)
 
         txt = 'do'
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for LoopStmt. Given : ', \
+                raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
                                 type(clause))
 
         return AnnotatedComment('omp', txt)
 
-class SingleStmt(BasicStmt):
+class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.clauses = kwargs.pop('clauses')
 
-        super(SingleStmt, self).__init__(**kwargs)
+        super(OmpSingleConstruct, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> SingleStmt: expr")
+            print("> OmpSingleConstruct: expr")
 
-        _valid_clauses = (PrivateClause, \
-                         FirstPrivateClause)
+        _valid_clauses = (OmpPrivate, \
+                         OmpFirstPrivate)
 
         txt = 'single'
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for SingleStmt')
+                raise TypeError('Wrong clause for OmpSingleConstruct')
 
         return AnnotatedComment('omp', txt)
 
-class EndConstructClause(BasicStmt):
+class OmpEndClause(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -147,157 +147,157 @@ class EndConstructClause(BasicStmt):
         self.simd      = kwargs.pop('simd', '')
         self.nowait    = kwargs.pop('nowait', '')
 
-        super(EndConstructClause, self).__init__(**kwargs)
+        super(OmpEndClause, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> EndConstructClause: expr")
+            print("> OmpEndClause: expr")
 
         txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
         return AnnotatedComment('omp', txt)
 
-class ParallelNumThreadClause(BasicStmt):
+class OmpNumThread(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.thread = kwargs.pop('thread')
 
-        super(ParallelNumThreadClause, self).__init__(**kwargs)
+        super(OmpNumThread, self).__init__(**kwargs)
 
     @property
     def expr(self):
         # TODO check if variable exist in namespace
         if DEBUG:
-            print("> ParallelNumThreadClause: expr")
+            print("> OmpNumThread: expr")
 
         thread = self.thread
         return 'num_threads({})'.format(thread)
 
-class ParallelDefaultClause(BasicStmt):
+class OmpDefault(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.status = kwargs.pop('status')
 
-        super(ParallelDefaultClause, self).__init__(**kwargs)
+        super(OmpDefault, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> ParallelDefaultClause: expr")
+            print("> OmpDefault: expr")
 
         return 'default({})'.format(self.status)
 
-class ParallelProcBindClause(BasicStmt):
+class OmpProcBind(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.status = kwargs.pop('status')
 
-        super(ParallelProcBindClause, self).__init__(**kwargs)
+        super(OmpProcBind, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> ParallelProcBindClause: expr")
+            print("> OmpProcBind: expr")
 
         return 'proc_bind({})'.format(self.status)
 
-class PrivateClause(BasicStmt):
+class OmpPrivate(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.args = kwargs.pop('args')
 
-        super(PrivateClause, self).__init__(**kwargs)
+        super(OmpPrivate, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> PrivateClause: expr")
+            print("> OmpPrivate: expr")
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'private({})'.format(args)
 
-class SharedClause(BasicStmt):
+class OmpShared(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.args = kwargs.pop('args')
 
-        super(SharedClause, self).__init__(**kwargs)
+        super(OmpShared, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> SharedClause: expr")
+            print("> OmpShared: expr")
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'shared({})'.format(args)
 
-class FirstPrivateClause(BasicStmt):
+class OmpFirstPrivate(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.args = kwargs.pop('args')
 
-        super(FirstPrivateClause, self).__init__(**kwargs)
+        super(OmpFirstPrivate, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> FirstPrivateClause: expr")
+            print("> OmpFirstPrivate: expr")
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'firstprivate({})'.format(args)
 
-class LastPrivateClause(BasicStmt):
+class OmpLastPrivate(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.args = kwargs.pop('args')
 
-        super(LastPrivateClause, self).__init__(**kwargs)
+        super(OmpLastPrivate, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> LastPrivateClause: expr")
+            print("> OmpLastPrivate: expr")
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'lastprivate({})'.format(args)
 
-class CopyinClause(BasicStmt):
+class OmpCopyin(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.args = kwargs.pop('args')
 
-        super(CopyinClause, self).__init__(**kwargs)
+        super(OmpCopyin, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> CopyinClause: expr")
+            print("> OmpCopyin: expr")
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'copyin({})'.format(args)
 
-class ReductionClause(BasicStmt):
+class OmpReduction(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -305,54 +305,54 @@ class ReductionClause(BasicStmt):
         self.op   = kwargs.pop('op')
         self.args = kwargs.pop('args')
 
-        super(ReductionClause, self).__init__(**kwargs)
+        super(OmpReduction, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> ReductionClause: expr")
+            print("> OmpReduction: expr")
 
         # TODO check if variable exist in namespace
         op   = self.op
         args = ', '.join(str(arg) for arg in self.args)
         return 'reduction({0}: {1})'.format(op, args)
 
-class CollapseClause(BasicStmt):
+class OmpCollapse(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.n = kwargs.pop('n')
 
-        super(CollapseClause, self).__init__(**kwargs)
+        super(OmpCollapse, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> CollapseClause: expr")
+            print("> OmpCollapse: expr")
 
         return 'collapse({})'.format(self.n)
 
-class OrderedClause(BasicStmt):
+class OmpOrdered(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
         """
         self.n = kwargs.pop('n', None)
 
-        super(OrderedClause, self).__init__(**kwargs)
+        super(OmpOrdered, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> OrderedClause: expr")
+            print("> OmpOrdered: expr")
 
         if self.n:
             return 'ordered({})'.format(self.n)
         else:
             return 'ordered'
 
-class LinearClause(BasicStmt):
+class OmpLinear(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -360,17 +360,16 @@ class LinearClause(BasicStmt):
         self.val  = kwargs.pop('val')
         self.step = kwargs.pop('step')
 
-        super(LinearClause, self).__init__(**kwargs)
+        super(OmpLinear, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> LinearClause: expr")
+            print("> OmpLinear: expr")
 
         return 'linear({0}:{1})'.format(self.val, self.step)
 
-
-class ScheduleClause(BasicStmt):
+class OmpSchedule(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -378,55 +377,61 @@ class ScheduleClause(BasicStmt):
         self.kind       = kwargs.pop('kind')
         self.chunk_size = kwargs.pop('chunk_size', None)
 
-        super(ScheduleClause, self).__init__(**kwargs)
+        super(OmpSchedule, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> ScheduleClause: expr")
+            print("> OmpSchedule: expr")
 
         if self.chunk_size:
             return 'schedule({0}, {1})'.format(self.kind, self.chunk_size)
         else:
             return 'schedule({0})'.format(self.kind)
+#################################################
 
+#################################################
+# whenever a new rule is added in the grammar, we must update the following
+# lists.
+omp_directives = [OmpParallelConstruct,
+                  OmpLoopConstruct,
+                  OmpSingleConstruct,
+                  OmpEndClause]
 
+omp_clauses = [OmpCollapse,
+               OmpCopyin,
+               OmpFirstPrivate,
+               OmpLastPrivate,
+               OmpLinear,
+               OmpOrdered,
+               OmpNumThread,
+               OmpDefault,
+               OmpPrivate,
+               OmpProcBind,
+               OmpPrivate,
+               OmpReduction,
+               OmpSchedule,
+               OmpShared]
 
+omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
-def parse(filename, debug=False):
+def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
 
     # Get meta-model from language description
-    grammar = join(this_folder, 'grammar.tx')
-    classes = [Openmp, OpenmpStmt, \
-               ParallelStmt, \
-               LoopStmt, \
-               SingleStmt, \
-               ParallelNumThreadClause, \
-               ParallelDefaultClause, \
-               ParallelProcBindClause, \
-               PrivateClause, \
-               SharedClause, \
-               FirstPrivateClause, \
-               LastPrivateClause, \
-               CopyinClause, \
-               ReductionClause, \
-               CollapseClause, \
-               LinearClause, \
-               ScheduleClause, \
-               OrderedClause \
-              ]
-    meta = metamodel_from_file(grammar, debug=debug, classes=classes)
+    grammar = join(this_folder, '../grammar/openmp.tx')
+
+    meta = metamodel_from_file(grammar, debug=debug, classes=omp_classes)
 
     # Instantiate model
-    model = meta.model_from_file(filename)
+    if filename:
+        model = meta.model_from_file(filename)
+    elif stmts:
+        model = meta.model_from_str(stmts)
+    else:
+        raise ValueError('Expecting a filename or a string')
 
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
             e = stmt.stmt.expr
             print(e)
-
-####################################
-if __name__ == '__main__':
-    filename = 'test.py'
-    parse(filename, debug=False)

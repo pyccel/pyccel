@@ -19,6 +19,7 @@
 //       -  
 //       -  
 
+import openacc
 import openmp
 import imports
 
@@ -37,13 +38,11 @@ SimpleStmt:
 
 SmallStmt:
     AnnotatedStmt 
-  | CommentStmt 
   | PassStmt 
   | FlowStmt 
   | DelStmt 
   | ImportStmt 
   | ConstructorStmt 
-  | DeclarationStmt 
   | ExprStmt 
   | AssertStmt
 ;
@@ -70,6 +69,7 @@ AnnotatedStmt:
   | MethodHeaderStmt
   | VariableHeaderStmt
   | OpenmpStmt
+  | CommentStmt 
 ;
 
 ExprStmt: 
@@ -86,54 +86,28 @@ SuiteStmt:
   DEDENT
 ;
 
-AssertStmt:
-  ASSERT '(' test=Test ')'
-;
+AssertStmt: 'assert' '(' test=Test ')';
 
 //DecoratorStmt: 
 //  '@' dotted_name ( '(' (arglist)? ')' )? NEWLINE
 //;
 
-DecoratedStmt: 
-  FunctionDefStmt | ClassDefStmt
-;
-
-FunctionDefStmt: 
-  DEF name=ID trailer=TrailerArgList ':'
-  body=SuiteStmt
-;
-
-ClassDefStmt:
-  CLASS name=ID '(' base=ID ')' ':'
-  body=SuiteStmt
-;
-
-CallStmt: 
-  name=ID trailer+=Trailer
-;
+CallStmt: name=ID trailer+=Trailer;
 
 
-PassStmt: label=PASS;
-BreakStmt: label=BREAK;
-ContinueStmt: label=CONTINUE;
-RaiseStmt: label=RAISE exception=Expression;
-YieldStmt: label=YIELD;
+PassStmt: label='pass';
+BreakStmt: label='break';
+ContinueStmt: label='continue';
+RaiseStmt: label='raise' exception=Expression;
+YieldStmt: label='yield';
 
-ReturnStmt: label=RETURN (variables*=Expression[',']);
-DelStmt: DEL variables*=AtomExpr[','];
+ReturnStmt: label='return' (variables*=Expression[',']);
+DelStmt: 'del' variables*=AtomExpr[','];
 
-CommentStmt:
-//  '#' text=/[^x].*$/  
-  '#' text=/.*$/
-;
+CommentStmt: '#' (text=/.*$/)?;
 
-VariableHeaderStmt: 
-  '#$' 'header' 'variable'  name=ID dec=DeclareAtom
-;
-
-ClassHeaderStmt: 
-  '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')'
-;
+VariableHeaderStmt: '#$' 'header' 'variable'  name=ID dec=DeclareAtom;
+ClassHeaderStmt: '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')';
 
 MethodHeaderStmt: 
   '#$' 'header' 'method' name=ID '(' decs*=DeclareAtom[','] ')'
@@ -155,12 +129,11 @@ ClassOptions:
   | 'with' 
   | 'hide' 
   | 'openmp'
+  | 'openacc'
 ;
 
 DeclareAtom: (star='*')? dtype=ID (trailer=TrailerSubscriptList)?;
 HeaderResults: 'results' '(' decs*=DeclareAtom[','] ')'; 
-
-DeclarationStmt: datatype=DataType variables+=ID[','];
 
 DataType:
     'double' 
@@ -181,15 +154,19 @@ IdentifierOrNumber: Number | ID;
 ArgList: '(' args+=Args[','] ')';
 Args: ArgList | DictElement | IdentifierOrNumber;
 
-AssignRHS: Expression | ExpressionDict | ExpressionTuple | ExpressionList;
+AssignRHS: ExpressionLambda | Expression | ExpressionDict | ExpressionTuple | ExpressionList;
 
-AssignStmt: lhs=Expression '=' rhs=AssignRHS;
+AssignStmt:    lhs=Expression '=' rhs=AssignRHS;
 AugAssignStmt: lhs=ID (trailer=Trailer)? op=OpAug rhs=Expression;
+//AugAssignStmt: lhs=Expression op=OpAug rhs=Expression;
 
-RangeStmt:
-  'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')'
-;
+ExpressionLambda: 'lambda' args*=ID[','] ':' rhs=Expression;
 
+RangeStmt: 'range' '(' start=Expression ',' end=Expression (',' step=Expression)? ')';
+
+//////////////////////////////////// 
+//     Compound Stmts
+//////////////////////////////////// 
 IterableRange: RangeStmt | Expression;
 ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':' 
                body=SuiteStmt
@@ -197,31 +174,45 @@ ForStmt: 'for' iterable+=ID[','] 'in' range=IterableRange ':'
 
 WithDomain: Expression;
 WithStmt:
-  WITH domain=Expression ':'
+  'with' domain=Expression ':'
   body=SuiteStmt
 ;
 
 WhileStmt:
-  WHILE test=OrTest ':'
+  'while' test=OrTest ':'
   body=SuiteStmt
 ;
 
 IfStmt: 
-  IF test=Test ':' body_true=SuiteStmt
+  'if' test=Test ':' body_true=SuiteStmt
   (body_elif*=ElifStmt)? 
-  (ELSE ':' body_false=SuiteStmt)? 
+  ('else' ':' body_false=SuiteStmt)? 
 ;
 
-ElifStmt:
-  (ELIF test=Test ':' body=SuiteStmt) 
+ElifStmt: ('elif' test=Test ':' body=SuiteStmt);
+
+DecoratedStmt: FunctionDefStmt | ClassDefStmt;
+
+FunctionDefStmt: 
+  'def' name=ID trailer=TrailerArgList ':'
+  body=SuiteStmt
 ;
 
+ClassDefStmt:
+  'class' name=ID '(' base=ID ')' ':'
+  body=SuiteStmt
+;
+//////////////////////////////////// 
 
-Test: op=OrTest (IF OrTest ELSE Test)?;
-OrTest: op=AndTest (OR op=AndTest)*;
-AndTest: op=Comparison (AND op=Comparison)*;
+
+Test: op=OrTest ('if' OrTest 'else' Test)?;
+OrTest: op=AndTest ('or' op=AndTest)*;
+AndTest: op=Comparison ('and' op=Comparison)*;
 Comparison: op=Expression (op=OpComp op=Expression)*;
 
+//////////////////////////////////// 
+//        Expressions
+//////////////////////////////////// 
 Expression: ArithmeticExpression;
 ArithmeticExpression: op=Term (op=OpPlusOrMinus op=Term)*;
 Term: op=Factor (op=OpFactor op=Factor)*;
@@ -246,6 +237,7 @@ Atom:
 ExpressionTuple: '(' args+=Expression[',']  ')';
 ExpressionList:  '[' args+=Expression[',']  ']';
 ExpressionDict:  '{' args+=DictElement[','] '}';
+//////////////////////////////////// 
 
 IDorSTRING: ID | STRING; 
 ArgValued: (key=IDorSTRING '=')? value=AssignRHS ;
@@ -271,6 +263,9 @@ OpComp:
   | 'is' 'not'
 ;
 
+//////////////////////////////////// 
+//         Trailers
+//////////////////////////////////// 
 Trailer: 
     (args=TrailerArgList)?
   | (args=TrailerSubscriptList)?
@@ -294,6 +289,7 @@ TrailerSliceLeft: (start=Expression ':');
 TrailerSliceRight: (':' end=Expression);
 TrailerSlice: (start=Expression ':' end=Expression);
 TrailerSliceEmpty: (dots=':');
+//////////////////////////////////// 
 
 Float: /[-+]?[0-9]*\.[0-9]+([eE][-+]?[0-9]+)?\b/;
 String: /"(?:[^"\\]|\\.)*"/ | /'(?:[^'\\]|\\.)*'/;
@@ -304,38 +300,6 @@ BOOLEAN: TRUE | FALSE;
 INDENT: 'indent';
 DEDENT: 'dedent';
 
-AND : 'and';
-AS : 'as';
-ASSERT : 'assert';
-ASYNC : 'async';
-AWAIT : 'await';
-BREAK : 'break';
-CLASS : 'class';
-CONTINUE : 'continue';
-DEL : 'del';
-DEF : 'def';
-ELIF : 'elif';
-ELSE : 'else';
-EXCEPT : 'except';
 FALSE : 'False';
-FINALLY : 'finally';
-FOR : 'for';
-FROM : 'from';
-GLOBAL : 'global';
-IF : 'if';
-IN : 'in';
-IS : 'is';
-IMPORT : 'import';
-LAMBDA : 'lambda';
 NONE : 'None';
-NONLOCAL : 'nonlocal';
-NOT : 'not';
-OR : 'or';
-PASS : 'pass';
-RETURN : 'return';
-RAISE : 'raise';
 TRUE : 'True';
-TRY : 'try';
-WHILE : 'while';
-WITH : 'with';
-YIELD : 'yield';

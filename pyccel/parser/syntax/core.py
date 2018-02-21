@@ -22,6 +22,9 @@ from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
                    csc,  cos,  sec,  tan,  cot,  asin, \
                    acsc, acos, asec, atan, acot, atan2)
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy import Lambda
+from sympy import sympify
+from sympy import symbols as sp_symbols
 
 
 from sympy.core.basic import Basic
@@ -38,7 +41,6 @@ from sympy.logic.boolalg import BooleanFunction
 from sympy.core.containers import Dict
 
 from pyccel.parser.syntax.basic   import BasicStmt
-from pyccel.parser.syntax.openmp  import OpenmpStmt
 
 from pyccel.ast.core import allocatable_like
 from pyccel.ast.core import FunctionCall,MethodCall
@@ -46,21 +48,24 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import is_pyccel_datatype, is_iterable_datatype
 from pyccel.ast.core import DataType, CustomDataType, DataTypeFactory
 from pyccel.ast.core import NativeBool, NativeFloat, NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeBool, NativeFloat, NativeNil
+from pyccel.ast.core import NativeBool, NativeFloat, NativeNil, NativeVector, NativeStencil
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import NativeRange, NativeTensor
+from pyccel.ast.core import NativeRange, NativeTensor, NativeSymbol
 from pyccel.ast.core import Import
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Nil
+from pyccel.ast.core import Random
+from pyccel.ast.core import Eval
+from pyccel.ast.core import Load
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import (Tile, Range, Tensor, \
                              For, ForIterator, Assign, \
-                             Declare, Variable, ValuedVariable, \
+                             Declare, Vector, Stencil, Variable, ValuedVariable, \
                              FunctionHeader, ClassHeader, MethodHeader, \
                              VariableHeader, \
                              datatype, While, With, NativeFloat, \
                              EqualityStmt, NotequalStmt, \
-                             MultiAssign, AugAssign, \
+                             AugAssign, \
                              FunctionDef, ClassDef, Del, Print, \
                              Comment, AnnotatedComment, \
                              IndexedVariable, Slice, Assert, If, \
@@ -108,6 +113,12 @@ known_functions = {
     "sin": "sin",
     "sinh": "sinh",
     "sqrt": "sqrt",
+    "vector": "Vector",
+    "stencil": "Stencil",
+    "eval": "Eval",
+    "load": "Load",
+    "random": "Random",
+    "lambdify": "lambdify",
     "tan": "tan",
     "tanh": "tanh"
 }
@@ -215,6 +226,7 @@ builtin_datatypes  = [datatype(i) for i in builtin_types]
 
 # ... builtin functions
 builtin_funcs_math_nores = ['print']
+builtin_funcs_math_noarg = []
 
 builtin_funcs_math_un = ['abs', \
 #                         'asin', 'acsc', 'acot', \
@@ -225,10 +237,15 @@ builtin_funcs_math_un = ['abs', \
                          'sec', 'sign', 'sin', 'sinh', \
                          'sqrt', 'tan', 'tanh']
 builtin_funcs_math_bin = ['dot', 'pow', 'mod']
-builtin_funcs_math = builtin_funcs_math_un + \
-                     builtin_funcs_math_bin
 
-builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like', 'len', 'shape']
+builtin_funcs_math  = builtin_funcs_math_noarg
+builtin_funcs_math += builtin_funcs_math_un
+builtin_funcs_math += builtin_funcs_math_bin
+builtin_funcs_math += ['random']
+
+builtin_funcs  = ['zeros', 'ones', 'array', 'zeros_like',
+                  'len', 'shape', 'vector', 'stencil',
+                  'eval', 'load', 'lambdify']
 builtin_funcs += builtin_funcs_math
 
 builtin_funcs_iter = ['range', 'tensor']
@@ -252,7 +269,7 @@ def print_declarations():
     print("---------------------------")
 # ...
 
-def get_attributs(expr):
+def infere_type(expr):
     """
     finds attributs of the expression
     """
@@ -269,7 +286,10 @@ def get_attributs(expr):
         d_var['rank']        = expr['rank']
         return d_var
     elif isinstance(expr, (list, tuple)):
-        ds = [get_attributs(a) for a in expr]
+        if not expr:
+            return d_var
+
+        ds = [infere_type(a) for a in expr]
 
         a = ds[0]
         d_var['datatype']    = a['datatype']
@@ -289,7 +309,7 @@ def get_attributs(expr):
                 d_var['rank'] = a['rank']
         return d_var
     elif isinstance(expr, Tuple):
-        a = get_attributs(expr[0])
+        a = infere_type(expr[0])
 
         d_var['datatype']    = a['datatype']
         d_var['allocatable'] = False
@@ -347,6 +367,11 @@ def get_attributs(expr):
         d_var['allocatable'] = False
         d_var['rank']        = 0
         return d_var
+    elif isinstance(expr, Random):
+        d_var['datatype']    = 'double'
+        d_var['allocatable'] = False
+        d_var['rank']        = 0
+        return d_var
     elif isinstance(expr, (Dot, Min, Max, Sign)):
         arg = expr.args[0]
         if isinstance(arg, Integer):
@@ -374,8 +399,6 @@ def get_attributs(expr):
         if name in namespace:
             var = namespace[name]
             d_var['datatype']    = var.dtype
-
-
 
             if iterable(var.shape):
                 shape = []
@@ -440,7 +463,7 @@ def get_attributs(expr):
         avail_funcs = builtin_funcs
         avail_funcs = []
         for n, F in list(namespace.items()):
-            if isinstance(F, FunctionDef):
+            if isinstance(F, (FunctionDef, Lambda)):
                 avail_funcs.append(str(n))
         avail_funcs += builtin_funcs
 
@@ -455,17 +478,24 @@ def get_attributs(expr):
 
         if name in namespace:
             F = namespace[name]
-            results = F.results
 
-            if not(len(results) == 1):
-                raise ValueError("Expecting a function with one return.")
+            if isinstance(F, FunctionDef):
+                results = F.results
 
-            var = results[0]
-            d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['rank']        = var.rank
-            if not(var.shape is None):
-                d_var['shape'] = var.shape
+                if not(len(results) == 1):
+                    raise ValueError("Expecting a function with one return.")
+
+                var = results[0]
+                d_var['datatype']    = var.dtype
+                d_var['allocatable'] = var.allocatable
+                d_var['rank']        = var.rank
+                if not(var.shape is None):
+                    d_var['shape'] = var.shape
+            elif isinstance(F, Lambda):
+                d_var['datatype'] = NativeSymbol()
+            else:
+                raise NotImplementedError('TODO')
+
         elif name in _known_functions:
             var = expr.args[0]
             if isinstance(var, Integer):
@@ -497,7 +527,7 @@ def get_attributs(expr):
                     name = arg.name
                     if not isinstance(name, DottedName):
                         var = namespace[name]
-                        return get_attributs(var)
+                        return infere_type(var)
                     else:
                         # see remark in expr_with_trailer (TrailerDots)
                         cls_base = namespace[name.name[0]]
@@ -512,12 +542,12 @@ def get_attributs(expr):
                                                  '{1}'.format(member, expr))
 
                             attribut = d_attributs[member]
-                            return get_attributs(attribut)
+                            return infere_type(attribut)
                 else:
-                    return get_attributs(arg)
-        return get_attributs(args)
+                    return infere_type(arg)
+        return infere_type(args)
     else:
-        raise TypeError("get_attributs is not available for {0}".format(type(expr)))
+        raise TypeError("infere_type is not available for {0}".format(type(expr)))
 
     return d_var
 
@@ -727,6 +757,23 @@ def builtin_function(name, args, lhs=None, op=None):
             lhs = namespace[lhs]
             expr = func(*args)
             return assign(lhs, expr, op)
+    elif name in ['random']:
+        # TODO add arguments
+#        if not(len(args) == 0):
+#            raise ValueError("function takes no arguments")
+
+        func = eval(known_functions[name])
+        _args = [None]
+        if lhs is None:
+            return func(*_args)
+        else:
+            d_var = {}
+            d_var['datatype'] = 'double'
+            d_var['rank']     = 0
+            insert_variable(lhs, **d_var)
+            lhs = namespace[lhs]
+            expr = func(*_args)
+            return assign(lhs, expr, op)
     elif name in builtin_funcs_math_bin:
         if not(len(args) == 2):
             raise ValueError("function takes exactly two arguments")
@@ -748,16 +795,23 @@ def builtin_function(name, args, lhs=None, op=None):
         if not(len(args) in [2, 3]):
             raise ValueError("Expecting exactly two or three arguments.")
 
+        expr = Range(*args)
+
         d_var = {}
         d_var['datatype']    = NativeRange()
         d_var['allocatable'] = False
         d_var['shape']       = None
         d_var['rank']        = 0
+        d_var['cls_base']    = expr
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
 
         insert_variable(lhs, **d_var)
-        namespace[lhs] = Range(*args)
+#        print_namespace()
         lhs = namespace[lhs]
-        expr = Range(*args)
         return assign(lhs, expr, op, strict=False)
     elif name == "tensor":
         if not lhs:
@@ -765,17 +819,179 @@ def builtin_function(name, args, lhs=None, op=None):
         if not(len(args) in [2, 3]):
             raise ValueError("Expecting exactly two or three arguments.")
 
+        expr = Tensor(*args)
+
         d_var = {}
         d_var['datatype']    = NativeTensor()
         d_var['allocatable'] = False
         d_var['shape']       = None
         d_var['rank']        = 0
+        d_var['cls_base']    = expr
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
 
         insert_variable(lhs, **d_var)
-        expr = Tensor(*args, name=lhs)
-        namespace[lhs] = expr
+#        print_namespace()
         lhs = namespace[lhs]
         return assign(lhs, expr, op, strict=False)
+    elif name == "vector":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        _args = []
+        for i in args:
+            if not isinstance(i, (list, tuple, Tuple)):
+                _args.append([i])
+            else:
+                _args.append(i)
+        args = _args
+
+        d_var = {}
+        d_var['datatype']    = NativeVector()
+        d_var['allocatable'] = True
+        d_var['shape']       = None
+        d_var['rank']        = len(args[0])
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
+
+        insert_variable(lhs, **d_var)
+        expr = Vector(lhs, *args)
+        return expr
+#        namespace[lhs] = expr
+#        return assign(lhs, expr, op, strict=False)
+    elif name == "stencil":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+        if not(len(args) in [2, 3]):
+            raise ValueError("Expecting exactly two or three arguments.")
+
+        _args = []
+        for i in args:
+            if not isinstance(i, (list, tuple, Tuple)):
+                _args.append([i])
+            else:
+                _args.append(i)
+        args = _args
+
+        d_var = {}
+        d_var['datatype']    = NativeStencil()
+        d_var['allocatable'] = True
+        d_var['shape']       = None
+        d_var['rank']        = len(args[0]) + len(args[-1])
+        # because 'args[0] = starts' and  'args[-1] = pads'
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
+
+        insert_variable(lhs, **d_var)
+        expr = Stencil(lhs, *args)
+        return expr
+#        namespace[lhs] = expr
+#        return assign(lhs, expr, op, strict=False)
+    elif name == "eval":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+#        if not(len(args) in [2, 3]):
+#            raise ValueError("Expecting exactly two or three arguments.")
+
+        _args = []
+        for i in args:
+            if not isinstance(i, (list, tuple, Tuple)):
+                _args.append([i])
+            else:
+                _args.append(i)
+        args = _args
+
+        d_var = {}
+        d_var['datatype'] = NativeSymbol()
+
+        # needed when lhs is a class member
+        if lhs in namespace:
+            if isinstance(namespace[lhs], Symbol):
+                namespace.pop(lhs)
+
+        insert_variable(lhs, **d_var)
+        expr = Eval(lhs, *args)
+        return expr
+    elif name == "load":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+
+        # right now args are all of type sympy Symbol
+        _args = []
+        for i in args:
+            a = None
+            if isinstance(i, Symbol):
+                a = str(i)
+            elif isinstance(i, (list, tuple, Tuple)):
+                a = [str(j) for j in i]
+            else:
+                a = i
+            _args.append(a)
+        args = _args
+
+        loader = Load(*args)
+        funcs  = loader.execute()
+        for f_name, f in zip(loader.funcs, funcs):
+            if str(f_name) in namespace:
+                raise ValueError('{0} already in defined.'.format(f))
+
+            namespace[str(f_name)] = f
+
+        # TODO keep it like this?
+        return None
+    elif name == "lambdify":
+        if not lhs:
+            raise ValueError("Expecting a lhs.")
+
+        func = args[0]
+        if not isinstance(func, Lambda):
+            raise TypeError('Expecting a Lambda function, given'
+                            ' {0}'.format(type(func)))
+
+        f_name = str(func)
+
+        arguments = []
+        for a in func.variables:
+            arg = Variable('double', str(a))
+            arguments.append(arg)
+
+
+        # since we allow Lambda expressions to return a Tuple,
+        # we have to use isinstance
+        if isinstance(func.expr, (Tuple, list, tuple)):
+            n = len(func.expr)
+            x_out   = Variable('double', 'x_out', rank=1, shape=n)
+            results = [x_out]
+
+            expressions = []
+            for i in func.expr:
+                expressions += [sympify(i).evalf()]
+            expr = Tuple(*expressions)
+        else:
+            # TODO to treat other cases
+            x_out   = Variable('double', 'x_out')
+            results = [x_out]
+
+            expr = sympify(func.expr).evalf()
+
+        body = [Assign(x_out, expr)]
+
+        # TODO local_vars must be updated inside FunctionDef
+        #      this is needed for _print_FunctionDef
+        F = FunctionDef(str(lhs), arguments, results, body, local_vars=arguments)
+        namespace[str(lhs)] = F
+        return F
     else:
         raise ValueError("Expecting a builtin function. given : ", name)
     # ...
@@ -1003,7 +1219,7 @@ def expr_with_trailer(expr, trailer):
         name = str(expr)
         if name in builtin_funcs_math + ['len']:
             expr = builtin_function(name, args)
-        elif isinstance(expr,ClassDef):
+        elif isinstance(expr, ClassDef):
             cls = namespace[str(expr.name)]
             methods = cls.methods
             for i in methods:
@@ -1023,22 +1239,39 @@ def expr_with_trailer(expr, trailer):
             insert_variable('self', **d_var)
             args = [namespace['self']] + list(args)
             expr = ConstructorCall(method, args, cls_variable=namespace['self'])
+        elif isinstance(expr, (FunctionDef, Lambda)):
+            expr = expr(*args)
+#            print('> expr = {0}'.format(expr))
         else:
             f_name = str(expr)
-            if isinstance(expr, FunctionDef):
-                expr = expr(*args)
-            elif f_name in builtin_funcs:
-                _args = []
-                for a in args:
-                    if str(a) in namespace:
-                        _args.append(namespace[str(a)])
-                    else:
-                        # TODO may be we should raise an error here
-                        _args.append(a)
-                expr = Function(f_name)(*_args)
+
+            # ... prepare args
+            _args = []
+            for a in args:
+                if str(a) in namespace:
+                    _args.append(namespace[str(a)])
+                else:
+                    # TODO may be we should raise an error here
+                    _args.append(a)
+            # ...
+
+            # ... we need to remove '.' from _args for 'load'
+            #     see Load in ast for more details
+            if f_name == 'load':
+                _args[0] = _args[0].replace('.', '__')
+            # ...
+
+            # ...
+            if f_name in builtin_funcs + namespace.keys():
+                if f_name in namespace:
+                    F = namespace[f_name]
+                    expr = F(*_args)
+                else:
+                    expr = Function(f_name)(*_args)
             else:
-                raise NotImplementedError('expr is not FunctionDef '
-                                         'and {0} is not a builtin function'.format(f_name))
+                raise TypeError('Wrong type for {0}, '
+                                'given {1}'.format(f_name, type(expr)))
+            # ...
     return expr
 # ...
 
@@ -1198,42 +1431,6 @@ class ConstructorStmt(BasicStmt):
         datatype = constructor
         insert_variable(var_name, datatype=datatype, rank=rank)
         return EmptyLine()
-
-class DeclarationStmt(BasicStmt):
-    """Class representing a declaration statement."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for the declaration statement.
-
-        variables_names: list of str
-            list of variable names.
-        datatype: str
-            datatype of the declared variables.
-        """
-        self.variables_name = kwargs.pop('variables')
-        self.datatype = kwargs.pop('datatype')
-
-        raise Exception("Need to be updated! not used anymore.")
-
-        super(DeclarationStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        """
-        Process the declaration statement. This property will return a list of
-        declarations statements.
-        """
-        datatype = str(self.datatype)
-        decs = []
-        # TODO depending on additional options from the grammar
-        for var in self.variables:
-            dec = Variable(datatype, var.expr)
-            decs.append(Declare(datatype, dec, intent='in'))
-
-        self.update()
-
-        return decs
 
 # TODO: improve by creating the corresponding object in pyccel.ast.core
 class DelStmt(BasicStmt):
@@ -1405,6 +1602,7 @@ class AssignStmt(BasicStmt):
     @property
     def stmt_vars(self):
         """Statement variables."""
+        # TODO must be improved in the case of Tuples
         return [self.lhs]
 
     @property
@@ -1413,6 +1611,7 @@ class AssignStmt(BasicStmt):
         Process the Assign statement by returning a pyccel.ast.core object
         """
         if not isinstance(self.rhs, (ArithmeticExpression, \
+                                     ExpressionLambda, \
                                      ExpressionTuple, \
                                      ExpressionList, \
                                      ExpressionDict)):
@@ -1426,6 +1625,7 @@ class AssignStmt(BasicStmt):
 #        print('{0} := {1}'.format(lhs, rhs))
 #        print_namespace()
 #        print('{0} :: {1}'.format(lhs, type(lhs)))
+#        print('{0} :: {1}'.format(rhs, type(rhs)))
 
         if isinstance(rhs, Function):
             name = str(type(rhs).__name__)
@@ -1441,12 +1641,34 @@ class AssignStmt(BasicStmt):
                 # we use str(lhs) to make it work for DottedName
                 return builtin_function(name.lower(), args, lhs=str(lhs))
 
+        elif isinstance(rhs, Lambda):
+            lhs = Symbol(str(lhs))
+            namespace[str(lhs)] = rhs
+            return rhs
+
+        # TODO results must be set as stmt_vars,
+        #      so they can be deleted by the next block
+        elif isinstance(rhs, FunctionCall):
+            func = rhs.func
+            results = func.results
+            if isinstance(results, Tuple) and isinstance(lhs, Tuple):
+                if not(len(results) == len(lhs)):
+                    raise ValueError('Wrong number of results')
+
+                for res,e in zip(results, lhs):
+                    d_var = infere_type(res)
+                    insert_variable(str(e), **d_var)
+
         if isinstance(lhs, str) and not(lhs in namespace):
-            d_var = get_attributs(rhs)
+            d_var = infere_type(rhs)
 
             if not isinstance(rhs, Tuple):
-                d_var['allocatable'] = not(d_var['shape'] is None)
-                if d_var['shape']:
+                # to be allocatable, the shape must not be None or empry list
+                if isinstance(d_var['shape'], (list, tuple, Tuple)):
+                    if len(d_var['shape']) > 0:
+                        d_var['allocatable'] = True
+
+                if d_var['allocatable']:
                     if DEBUG:
                         print(("> Found an unallocated variable: ", lhs))
                     status = 'unallocated'
@@ -1464,7 +1686,7 @@ class AssignStmt(BasicStmt):
         # change lhs from Symbol to Pyccel datatype (Variable, etc)
 #        print_namespace()
         if isinstance(lhs, DottedName) and (str(lhs) in namespace):
-            d_var = get_attributs(rhs)
+            d_var = infere_type(rhs)
 
             if not isinstance(rhs, Tuple):
                 if isinstance(namespace[str(lhs)], Symbol):
@@ -1552,7 +1774,7 @@ class AugAssignStmt(BasicStmt):
 
         found_var = (var_name in namespace)
         if not(found_var):
-            d_var = get_attributs(rhs)
+            d_var = infere_type(rhs)
 
 #            print ">>>> AugAssignStmt : ", var_name, d_var
 
@@ -1686,7 +1908,8 @@ class ForStmt(BasicStmt):
 
         if isinstance(r, Variable):
             if not is_iterable_datatype(r.dtype):
-                raise TypeError('Expecting an iterable variable')
+                raise TypeError('Expecting an iterable variable, given '
+                                '{0}'.format(r.dtype))
 
         self.update()
 
@@ -1972,13 +2195,9 @@ class Atom(ExpressionElement):
             else:
                 return e
         elif op in namespace:
-            if isinstance(namespace[op], FunctionDef):
-                F = namespace[op]
-                # function arguments are not known yet.
-                # they will be handled in expr_with_trailer
-                return F
-            else:
-                return namespace[op]
+            # function arguments are not known yet.
+            # they will be handled in expr_with_trailer
+            return namespace[op]
         elif op in builtin_funcs:
             return Function(op)
         elif op in builtin_types:
@@ -2090,6 +2309,46 @@ class Comparison(ExpressionElement):
                 raise NotImplementedError('operation {0} not yet available'.format(operation))
         return ret
 
+class ExpressionLambda(BasicStmt):
+    """Base class representing a lambda expression in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a Expression list statement
+
+        args: list, tuple
+            list of elements
+        """
+        self.args = kwargs.pop('args')
+        self.rhs  = kwargs.pop('rhs')
+
+        super(ExpressionLambda, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+
+        args = sp_symbols(self.args)
+
+        # ... we update the namespace
+        ls = args
+        if isinstance(args, Symbol):
+            ls = [args]
+
+        for i in ls:
+            namespace[str(i)] = i
+        # ...
+
+        # ... we do it here after the namespace has been updated
+        e = self.rhs.expr
+        # ...
+
+        # ... we clean the namespace
+        for i in ls:
+            namespace.pop(str(i))
+        # ...
+
+        return Lambda(args, e)
+
 class ExpressionTuple(BasicStmt):
     """Base class representing a list of elements statement in the grammar."""
 
@@ -2152,7 +2411,6 @@ class ExpressionDict(BasicStmt):
             key   = a.key # to treat
             value = a.value
             args[key] = value
-        print(args)
         return Dict(**args)
 
 class ArgValued(BasicStmt):
@@ -2306,22 +2564,20 @@ class FunctionDefStmt(BasicStmt):
         args = self.trailer.expr
 
 #        print (">>>>>>>>>>> FunctionDefStmt {0}: Begin".format(name))
+#        print_namespace()
+#        print_declarations()
 
         local_vars  = []
         global_vars = []
 
         cls_instance = None
-        args_0=None
+        this = None
         if isinstance(self.parent, SuiteStmt):
             if isinstance(self.parent.parent, ClassDefStmt):
                 cls_instance = self.parent.parent.name
 
         if cls_instance:
             name = '{0}.{1}'.format(cls_instance, name)
-            # remove self from args
-            if args[0]=='self':
-                args_0='self'
-                args = args[1:]
 
             # insert self to namespace
             d_var = {}
@@ -2333,6 +2589,11 @@ class FunctionDefStmt(BasicStmt):
             d_var['intent']      = 'inout'
             d_var['cls_base']    = cls_instance
             insert_variable('self', **d_var)
+
+            # remove self from args
+            if args[0] == 'self':
+                args = args[1:]
+                this = namespace['self']
 
         # ...
         results = []
@@ -2361,15 +2622,19 @@ class FunctionDefStmt(BasicStmt):
 
             with_header = True
 
+        # ...............................
+        #         Treating inputs
+        # ...............................
         if with_header and (len(args) > 0):
-            # old occurence of args will be stored in scope
             h = headers[name]
+
+            # old occurence of args will be stored in scope
             for a, d in zip(args, h.dtypes):
                 # case of arg with key
                 if isinstance(a, dict):
                     arg_name = a['key']
                 else:
-                    arg_name = a
+                    arg_name = str(a)
                 arg_names.append(arg_name)
 
                 if arg_name in namespace:
@@ -2395,21 +2660,33 @@ class FunctionDefStmt(BasicStmt):
                 d_var['rank']        = rank
                 d_var['intent']      = 'in'
                 insert_variable(arg_name, **d_var)
-                var = namespace[arg_name]
-        if self.name == '__init__':
-            attr=[]
-            for i in self.body.stmts:
-                if isinstance(i,AssignStmt) and i.lhs=='self':
+            args = [namespace[a] for a in arg_names]
+        # ...............................
 
-                    c={'lhs':i.trailer.expr,'rhs':i.rhs}
-                    Var=AssignStmt(**c).expr
-                    attr+=[Var.lhs]
+        # ... define functiondef kind
+        kind = None
+        if with_header:
+            h = headers[name]
+            kind = h.kind
+        # ...
+
+        # ... case of class constructor
+        if self.name == '__init__':
+            # first we construct the list of attributs
+            attr = []
+            for i in self.body.stmts:
+                if isinstance(i, AssignStmt) and i.lhs == 'self':
+
+                    c = {'lhs':i.trailer.expr, 'rhs':i.rhs}
+                    Var = AssignStmt(**c).expr
+                    attr += [Var.lhs]
             # we first create and append an empty class to the namespace
             namespace[cls_instance] = ClassDef(cls_instance,attr,[],[])
+        # ...
 
         body = self.body.expr
-        if args_0:
-            arg_names+=['self']
+        if this:
+            arg_names += ['self']
 
         prelude = [declarations[a] for a in arg_names]
 
@@ -2458,34 +2735,10 @@ class FunctionDefStmt(BasicStmt):
                 _args.append(a)
         args = _args
         # ...
-        if args_0:
-            args=[args_0]+args
-
-        # TODO improve this. it is not working right now
-        ls = self.local_vars + self.stmt_vars
-        ls = [e.expr for e in ls]
-#        ls = [str(e.expr) for e in ls]
-        for var_name in ls:
-            if var_name in namespace:
-#                prelude.append(declarations[var_name])
-
-                del namespace[var_name]
-                del declarations[var_name]
-        # ...
-
-        # ... cleaning the namespace
-        for a in arg_names:
-            del declarations[a]
-            del namespace[a]
 
         # ...
-        for arg_name, var in list(scope_vars.items()):
-            var = scope_vars.pop(arg_name)
-            namespace[arg_name] = var
-
-        for arg_name, dec in list(scope_decs.items()):
-            dec = scope_decs.pop(arg_name)
-            declarations[arg_name] = dec
+        if this:
+            args = [this] + args
         # ...
 
         # ...
@@ -2494,6 +2747,7 @@ class FunctionDefStmt(BasicStmt):
 
         # ... define local_vars as any lhs in Assign, if it is not global
         #     or class member 'self.member'
+        # TODO: to improve
         for stmt in body:
             if isinstance(stmt, (Assign, Zeros, ZerosLike, Ones)):
                 if (isinstance(stmt.lhs, Variable) and
@@ -2506,7 +2760,21 @@ class FunctionDefStmt(BasicStmt):
                             local_vars += [stmt.lhs]
                     else:
                         local_vars += [stmt.lhs]
+        # ...
+
+        # ...
+        local_vars += [i.expr for i in self.stmt_vars if isinstance(i, Variable)]
         local_vars = list(set(local_vars))
+        # ...
+
+        # ... remove results from local_vars
+        #     and from declarations
+        res_names = [str(i) for i in results]
+        arg_names = [str(i) for i in args]
+        local_vars = [i for i in local_vars if not(str(i) in res_names + arg_names)]
+        for i in res_names + arg_names:
+            if i in declarations:
+                del declarations[i]
         # ...
 
         # rename the method in the class case
@@ -2516,17 +2784,51 @@ class FunctionDefStmt(BasicStmt):
         if cls_instance:
             f_name   = name.split('.')[-1]
             cls_name = name.split('.')[0]
-        stmt = FunctionDef(f_name, args, results, body, \
-                           local_vars, global_vars, \
-                           cls_name=cls_name)
+        stmt = FunctionDef(f_name, args, results, body,
+                           local_vars, global_vars,
+                           cls_name=cls_name, kind=kind)
         namespace[name] = stmt
 
-#        print('======= name = {0}'.format(name))
+        # ...
+        # we keep 'self.*' in the stack
+        ls = [str(i) for i in local_vars+results if not str(i).startswith('self.')]
+
+        for var_name in ls:
+            if var_name in namespace:
+                del namespace[var_name]
+
+            if var_name in declarations:
+                del declarations[var_name]
+        # ...
+
+        # ... cleaning the namespace
+        for a in arg_names:
+            if a in declarations:
+                del declarations[a]
+
+            if a in namespace:
+                del namespace[a]
+
+        # ...
+        for arg_name, var in list(scope_vars.items()):
+            var = scope_vars.pop(arg_name)
+            namespace[arg_name] = var
+
+        for arg_name, dec in list(scope_decs.items()):
+            dec = scope_decs.pop(arg_name)
+            declarations[arg_name] = dec
+        # ...
+
+        # ... cleaning
+        #for k in local_vars:
+        #    if k.name in namespace.keys():
+        #        namespace.pop(k.name)
+        #    if k.name in declarations.keys():
+        #        declarations.pop(k.name)
+        # ...
 #        print_namespace()
-
-        # ... TODO add a call to is_compatible_header
-        #         the FunctionDef is created, and before the return
-
+#        print_declarations()
+#
 #        print "<<<<<<<<<<< FunctionDefStmt : End"
         return stmt
 
@@ -2589,8 +2891,8 @@ class ClassDefStmt(BasicStmt):
         attributs = []
         for stmt in init_method.body:
             if isinstance(stmt, (Assign, Zeros, Ones, ZerosLike)):
-                assignable = (Variable, IndexedVariable)
-                if (isinstance(stmt.lhs, assignable) and
+#                print(stmt.lhs, type(stmt.lhs))
+                if (isinstance(stmt.lhs, (Variable, IndexedVariable)) and
                     isinstance(stmt.lhs.name, DottedName)):
 
                     lhs = stmt.lhs.name
@@ -2628,8 +2930,15 @@ class ClassDefStmt(BasicStmt):
         namespace[name] = stmt
         # ...
 
+        # ... local variables
+        local_vars = []
+        for m in methods:
+            local_vars += m.local_vars
+        local_vars = list(set(local_vars))
+        # ...
+
         # ... cleaning
-        for k in attributs:
+        for k in attributs + local_vars:
             if k.name in namespace.keys():
                 namespace.pop(k.name)
             if k.name in declarations.keys():
@@ -2642,6 +2951,7 @@ class ClassDefStmt(BasicStmt):
 
 #        print('===== AFTER =====')
 #        print_namespace()
+#        print_declarations()
 
 #        print "<<<<<<<<<<< ClassDefStmt : End"
 
@@ -3019,7 +3329,7 @@ class FunctionHeaderStmt(BasicStmt):
             list of output types
         """
         self.name    = kwargs.pop('name')
-        self.kind    = kwargs.pop('kind', None)
+        self.kind    = kwargs.pop('kind', 'function')
         self.decs    = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 

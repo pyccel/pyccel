@@ -20,6 +20,14 @@ pyccel\.parser\.syntax\.core module
     :undoc-members:
     :show-inheritance:
 
+pyccel\.parser\.syntax\.openacc module
+--------------------------------------
+
+.. automodule:: pyccel.parser.syntax.openacc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyccel\.parser\.syntax\.openmp module
 -------------------------------------
 

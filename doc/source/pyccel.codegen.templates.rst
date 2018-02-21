@@ -1,6 +1,13 @@
 pyccel\.codegen\.templates package
 ==================================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    pyccel.codegen.templates.package
+
 Submodules
 ----------
 

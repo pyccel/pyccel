@@ -13,7 +13,8 @@ from utils import clean_tests
 
 # ...
 def test_core(n_procs=2):
-    ignored = ['poisson_fd_1d.py']
+    print('============== testing core ================')
+    ignored = ['poisson_fd_1d.py', 'scatter.py']
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/mpi/core')
@@ -33,7 +34,7 @@ def test_core(n_procs=2):
         f_name = os.path.join(path_dir, f)
 
         # we only convert and compile the generated code
-        pyccel(files=[f_name], openmp=True)
+        pyccel(files=[f_name], openmp=False)
 
         # then we use 'mpirun'
         binary = f_name.split('.py')[0]
@@ -51,7 +52,8 @@ def test_core(n_procs=2):
 
 # ...
 def test_examples(n_procs=2):
-    ignored = ['ex_mpi.py', 'cart_2d.py']
+    print('============== testing examples ================')
+    ignored = []
 
     base_dir = os.getcwd()
     path_dir = os.path.join(base_dir, 'tests/scripts/mpi/')
@@ -66,7 +68,7 @@ def test_examples(n_procs=2):
         f_name = os.path.join(path_dir, f)
 
         # we only convert and compile the generated code
-        pyccel(files=[f_name], openmp=True)
+        pyccel(files=[f_name], openmp=False)
 
         # then we use 'mpirun'
         binary = f_name.split('.py')[0]

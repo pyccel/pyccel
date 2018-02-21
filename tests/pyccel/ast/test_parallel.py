@@ -2,9 +2,9 @@
 
 from sympy import Symbol
 from sympy.sets.sets import FiniteSet
-from pyccel.parallel.communicator import Communicator, split
-from pyccel.parallel.group        import Group, Range, UniversalGroup, Split
-from pyccel.parallel.group        import Union, Intersection, Difference
+from pyccel.ast.parallel.communicator import Communicator, split
+from pyccel.ast.parallel.group        import Group, Range, UniversalGroup, Split
+from pyccel.ast.parallel.group        import Union, Intersection, Difference
 
 g1 = Group(1, 3, 6, 7, 8, 9)
 g2 = Group(0, 2, 4, 5, 8, 9)
