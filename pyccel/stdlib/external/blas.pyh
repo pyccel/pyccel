@@ -8,11 +8,11 @@ __libraries__        = '${BLAS_LIBRARIES}'
 #             LEVEL-1
 # .......................................
 
-#$ header function srotg(float, float) results(float, float)
-#$ header function drotg(double, double) results(double, double)
+#$ header function srotg(float, float,float,float)
+#$ header function drotg(double, double,double,double)
 
-#$ header function srotmg(float, float, float, float) results(float [:])
-#$ header function drotmg(double, double, double, double) results(double [:])
+#$ header function srotmg(float, float, float, float,float[:])
+#$ header function drotmg(double, double, double, double,double)
 
 #$ header function srot(int, float [:], int, float [:], int, float, float)
 #$ header function drot(int, double [:], int, double [:], int, double, double)
@@ -26,11 +26,11 @@ __libraries__        = '${BLAS_LIBRARIES}'
 #$ header function sscal(int, float, float [:], int)
 #$ header function dscal(int, double, double [:], int)
 
-#$ header function sasum(int, float [:], int) results(float)
-#$ header function dasum(int, double [:], int) results(double)
+#$ header function sasum(int, float [:], int,float)
+#$ header function dasum(int, double [:], int,double)
 
-#$ header function isamax(int, float [:], int) results(int)
-#$ header function idamax(int, double [:], int) results(int)
+#$ header function isamax(int, float [:], int,int)
+#$ header function idamax(int, double [:], int,int)
 
 #$ header function saxpy(int, float, float [:], int, float [:], float [:])
 #$ header function daxpy(int, double, double [:], int, double [:], double [:])
@@ -47,15 +47,83 @@ __libraries__        = '${BLAS_LIBRARIES}'
 #$ header function snrm2(int, float [:], int)
 #$ header function dnrm2(int, double [:], int)
 
+
 # .......................................
 
 # .......................................
 #             LEVEL-2
 # .......................................
+#$ header function sgemv (string,int,int,float,float[:,:],int,float[:],int,float,float[:],int)
+#$ header function dgemv (string,int,int,double,double[:,:],int,double[:],int,double,double[:],int)
+
+#$ header function sgbmv (string,int,int,int,int,float,float[:,:],int,float[:],int,float,float[:],int)
+#$ header function dgbmv (string,int,int,int,int,double,double[:,:],int,double[:],int,double,double[:],int)
+
+#$ header function ssymv (string,int,float,float[:,:],int,float[:],int,float,float[:],int)
+#$ header function dsymv (string,int,double,double[:,:],int,double[:],int,double,double[:],int)
+
+#$ header function ssbmv (string,int,int,float,float[:,:],int,float[:],int,float,float[:],int)
+#$ header function dsbmv (string,int,int,double,double[:,:],int,double[:],int,double,double[:],int)
+
+#$ header function sspmv (string,int,float,float[:,:],float[:],int,float,float[:],int)
+#$ header function dspmv (string,int,double,double[:,:],double[:],int,double,double[:],int)
+ 
+#$ header function strmv (string,string,string,int,float[:,:],int,float[:],int)
+#$ header function dtrmv (string,string,string,int,double[:,:],int,double[:],int)
+
+#$ header function stbmv (string,string,string,int,int,float[:,:],int,float[:],int)
+#$ header function dtbmv (string,string,string,int,int,double[:,:],int,double[:],int)
+
+#$ header function stpmv (string,string,string,int,float[:,:],float[:],int)
+#$ header function dtpmv (string,string,string,int,double[:,:],double[:],int)
+
+#$ header function strsv (string,string,string,int,float[:,:],int,float[:],int)
+#$ header function dtrsv (string,string,string,int,double[:,:],int,double[:],int)
+
+#$ header function stbsv (string,string,string,int,int,float[:,:],int,float[:],int)
+#$ header function dtbsv (string,string,string,int,int,double[:,:],int,double[:],int)
+
+#$ header function stpsv (string,string,string,int,float[:,:],float[:],int)
+#$ header function dtpsv (string,string,string,int,double[:,:],double[:],int)
+
+#$ header function sger (int,int,float,float[:],int,float[:],int,float[:,:],int)
+#$ header function dger (int,int,double,double[:],int,double[:],int,double[:,:],int)
+
+#$ header function ssyr (string,int,float,float[:],int,float[:,:],int)
+#$ header function dsyr (string,int,double,double[:],int,double[:,:],int)
+
+#$ header function sspr (string,int,float,float[:],int,float[:,:])
+#$ header function dspr (string,int,double,double[:],int,double[:,:])
+
+#$ header function ssyr2 (string,int,float,float[:],int,float[:],int,float[:],int)
+#$ header function dsyr2 (string,int,double,double[:],int,double[:],int,double[:],int)
+
+#$ header function sspr2 (string,int,float,float[:],int,float[:],int,float[:],int)
+#$ header function dspr2 (string,int,double,double[:],int,double[:],int,double[:],int)
+
+
 # .......................................
 
 # .......................................
 #             LEVEL-3
 # .......................................
+#$ header function sgemm (string,string,int,int,int,float,float[:,:],int,float[:,:],int,float,float[:,:],int)
+#$ header function dgemm (string,string,int,int,int,double,double[:,:],int,double[:,:],int,double,double[:,:],int)
+
+#$ header function ssymm (string,string,int,int,float,float[:,:],int,float[:,:],int,float,float[:,:],int)
+#$ header function dsymm (string,string,int,int,double,double[:,:],int,double[:,:],int,double,double[:,:],int)
+
+#$ header function ssyrk (string,string,int,int,float,float[:,:],int,float,float[:,:],int)
+#$ header function dsyrk (string,string,int,int,double,double[:,:],int,double,double[:,:],int)
+
+#$ header function ssyr2k (string,string,int,int,float,float[:,:],int,float[:,:],int,float,float[:,:],int)
+#$ header function dsyr2k (string,string,int,int,double,double[:,:],int,double[:,:],int,double,double[:,:],int)
+
+#$ header function strmm  (string,string,,string,string,int,int,float,float[:,:],int,float[:,:],int)
+#$ header function dtrmm  (string,string,,string,string,int,int,double,double[:,:],int,double[:,:],int)
+
+#$ header function strsm  (string,string,,string,string,int,int,float,float[:,:],int,float[:,:],int)
+#$ header function dtrsm  (string,string,,string,string,int,int,double,double[:,:],int,double[:,:],int)
+
 # .......................................
 
