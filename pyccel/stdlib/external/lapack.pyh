@@ -96,3 +96,91 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 #$ header function sgelsd(int,int,float[:,:],int,float[:,:],int,float[:],float,int,float[:],int,int[:],int)
 #$ header function dgelsd(int,int,double[:,:],int,double[:,:],int,double[:],double,int,double[:],int,int[:],int)
+
+#...........................................................
+
+#$ header function sgglse(int,int,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:],int,int)
+#$ header function dgglse(int,int,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:],int,int)
+
+#$ header function sggglm(int,int,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:],int,int)
+#$ header function dggglm(int,int,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:],int,int)
+
+#....................................................
+
+
+
+#$ header function ssyev(string,string,int,float[:,:],int,float[:],float[:],int,int)
+#$ header function dsyev(string,string,int,double[:,:],int,double[:],double[:],int,int)
+
+#$ header function ssyevd(string,string,int,float[:,:],int,float[:],float[:],int,float[:],int,int)
+#$ header function dsyevd(string,string,int,double[:,:],int,double[:],double[:],int,double[:],int,int)
+
+
+#$ header function ssyevx(string,string,string,int,float[:,:],int,float,float,int,int,float,int,float[:],float[:,:],int,float[:],int,int[:],int[:],int)
+#$ header function dsyevx(string,string,string,int,double[:,:],int,double,double,int,int,double,int,double[:],double[:,:],int,double[:],int,int[:],int[:],int)
+
+
+#$ header function ssyevr(string,string,string,int,float[:,:],int,float,float,int,int,float,int,float[:],float[:,:],int,int[:],float[:],int,int[:],int,int)
+#$ header function dsyevr(string,string,string,int,double[:,:],int,double,double,int,int,double,int,double[:],double[:,:],int,int[:],double[:],int,int[:],int,int)
+
+
+#$ header function sspev(string,string,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dspev(string,string,int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function sspevd(string,string,int,float[:],float[:],float[:,:],int,float[:],int,int[:],int,int)
+#$ header function dspevd(string,string,int,double[:],double[:],double[:,:],int,double[:],int,int[:],int,int)
+
+#$ header function sspevx(string,string,string,int,float[:],float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int)
+#$ header function dspevx(string,string,string,int,double[:],double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int)
+
+
+#$ header function ssbev(string,string,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int)
+#$ header function dsbev(string,string,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int)
+
+#$ header function ssbevd(string,string,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int[:],int,int)
+#$ header function dsbevd(string,string,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int[:],int,int)
+
+
+#$ header function ssbevx(string,string,string,int,int,float[:,:],int,float[:,:],int,float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int)
+#$ header function dsbevx(string,string,string,int,int,double[:,:],int,double[:,:],int,double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int)
+
+
+#$ header function sstringev(string,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dstringev(string,int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function sstringevd(string,int,float[:],float[:],float[:,:],int,float[:],int,int[:],int,int)
+#$ header function dstringevd(string,int,double[:],double[:],double[:,:],int,double[:],int,int[:],int,int)
+
+
+#$ header function sstringevx(string,string,int,float[:],float[:],float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int)
+#$ header function dstringevx(string,string,int,double[:],double[:],double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int)
+
+
+#$ header function sstringevr(string,string,int,float[:],float[:],float,float,int,int,float,int,float[:],float[:,:],int,int[:],float[:],int,int[:],int,int)
+#$ header function dstringevr(string,string,int,double[:],double[:],double,double,int,int,double,int,double[:],double[:,:],int,int[:],double[:],int,int[:],int,int)
+
+#$ header function sgees(string,string,exter,int,float[:,:],int,int,float[:],float[:],float[:,:],int,float[:],int,log[:],int)
+#$ header function dgees(string,string,exter,int,double[:,:],int,int,double[:],double[:],double[:,:],int,double[:],int,log[:],int)
+
+#$ header function sgeesx(string,string,exter,string,int,float[:,:],int,int,float[:],float[:],float[:,:],int,float,float,float[:],int,int[:],int,log[:],int)
+#$ header function dgeesx(string,string,exter,string,int,double[:,:],int,int,double[:],double[:],double[:,:],int,double,double,double[:],int,int[:],int,log[:],int)
+
+
+#$ header function sgeev(string,string,int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,int)
+#$ header function dgeev(string,string,int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,int)
+
+
+#$ header function sgeevx(string,string,string,string,int,float[:,:],int,float[:],float[:],float[:,:],int,int,int,float[:],float,float[:],float[:],float[:],int,int[:],int)
+#$ header function dgeevx(string,string,string,string,int,double[:,:],int,double[:],double[:],double[:,:],int,int,int,double[:],double,double[:],double[:],double[:],int,int[:],int)
+
+
+#$ header function sgesvd(string,string,int,int,float[:,:],int,float[:],float[:,:],int,float[:,:],int,float[:],int,int)
+#$ header function dgesvd(string,string,int,int,double[:,:],int,double[:],double[:,:],int,double[:,:],int,double[:],int,int)
+
+#$ header function sgesdd(string,int,int,float[:,:],int,float[:],float[:,:],int,float[:,:],int,float[:],int,int[:],int)
+#$ header function dgesdd(string,int,int,double[:,:],int,double[:],double[:,:],int,double[:,:],int,double[:],int,int[:],int)
+
+
+
+
+
