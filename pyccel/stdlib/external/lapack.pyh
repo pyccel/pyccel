@@ -20,3 +20,57 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 #$ header function dgesv(int, int, double [:,:], int, int [:], double [:,:], int, int)
 
 # .......................................
+#$ header function sgesv(int,int,float[:,:],int,int[:],float[:,:],int,int)
+#$ header function dgesv(int,int,double[:,:],int,int[:],double[:,:],int,int)
+
+#$ header function sgesvx(string,string,string,int,int,float[:,:],int,float,float,int,int,int,float[:],float[:,:],int,float[:,:],int,float[:],int,int[:],int,)
+#$ header function dgesvx(string,string,string,int,int,double[:,:],int,double,double,int,int,int,double[:],double[:,:],int,double[:,:],int,double[:],int,int[:],int,)
+
+#$ header function sgbsv(int,int,int,int,float[:,:],int,int[:],float[:,:],int,int)
+#$ header function dgbsv(int,int,int,int,double[:,:],int,int[:],double[:,:],int,int)
+
+#$ header function sgbsvx(string,string,int,int,int,int,float[:,:],int,float[:,:],int,int[:],string,float[:],float[:],float[:,:])
+#$ header function dgbsvx(string,string,int,int,int,int,double[:,:],int,double[:,:],int,int[:],string,double[:],double[:],double[:,:])
+
+#$ header function sgtsv(int,int,float[:],float[:],float[:],float[:,:],int,int)
+#$ header function dgtsv(int,int,double[:],double[:],double[:],double[:,:],int,int)
+
+#$ header function sgtsvx(string,string,int,int,float[:],float[:],float[:],float[:],float[:],float[:],float[:],int[:],float[:,:],int,float[:,:],int,float,float[:],float[:],float[:],int[:],int)
+#$ header function dgtsvx(string,string,int,int,double[:],double[:],double[:],double[:],double[:],double[:],double[:],int[:],double[:,:],int,double[:,:],int,double,double[:],double[:],double[:],int[:],int)
+
+
+#$ header function sposv(string,int,int,float[:,:],int,float[:,:],int,int)
+#$ header function dposv(string,int,int,double[:,:],int,double[:,:],int,int)
+
+#$ header function sposvx(string,string,int,int,float[:,:],int,float[:,:],int,string,float[:],float[:,:],int,float[:,:],int,float,float[:],float[:],float[:],int[:],int)
+#$ header function dposvx(string,string,int,int,double[:,:],int,double[:,:],int,string,double[:],double[:,:],int,double[:,:],int,double,double[:],double[:],double[:],int[:],int)
+
+#$ header function sppsv(string,int,int,float[:],float[:,:],int,int)
+#$ header function dppsv(string,int,int,double[:],double[:,:],int,int)
+
+#$ header function sppsvx(string,string,int,int,float[:],float[:],string,float[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dppsvx(string,string,int,int,double[:],double[:],string,double[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function spbsv(string,int,int,int,float[:,:],int,float[:,:],int,int)
+#$ header function dpbsv(string,int,int,int,double[:,:],int,double[:,:],int,int)
+
+#$ header function spbsvx(string,string,int,int,int,float[:,:],int,float[:,:],int,string,float[:],float[:,:],int,float[:,:],int,float,float[:],float[:],float[:],int[:],int)
+#$ header function dpbsvx(string,string,int,int,int,double[:,:],int,double[:,:],int,string,double[:],double[:,:],int,double[:,:],int,double,double[:],double[:],double[:],int[:],int)
+
+#$ header function sptsv(int,int,float[:],float[:],float[:,:],int,int)
+#$ header function dptsv(int,int,double[:],double[:],double[:,:],int,int)
+
+#$ header function sptsvx(string,int,int,float[:],float[:],float[:],float[:],float[:,:],int,float[:,:],int,float,float[:],float[:],float[:],int)
+#$ header function dptsvx(string,int,int,double[:],double[:],double[:],double[:],double[:,:],int,double[:,:],int,double,double[:],double[:],double[:],int)
+
+#$ header function ssysv(string,int,int,float[:,:],int,int[:],float[:,:],int,float[:],int,int)
+#$ header function dsysv(string,int,int,double[:,:],int,int[:],double[:,:],int,double[:],int,int)
+
+#$ header function ssysvx(string,string,int,int,float[:,:],int,float[:,:],int,int[:],float[:,:],int,float,float[:],float[:],float[:],int,int[:],int)
+#$ header function dsysvx(string,string,int,int,double[:,:],int,double[:,:],int,int[:],double[:,:],int,double,double[:],double[:],double[:],int,int[:],int)
+
+#$ header function sspsv(string,int,int,float[:],int[:],float[:,:],int,int)
+#$ header function dspsv(string,int,int,double[:],int[:],double[:,:],int,int)
+
+#$ header function sspsvx(string,string,int,int,float[:],float[:],int[:],float[:,:],int,float[:,:],int,float,float[:],float[:],float[:],float[:],int)
+#$ header function dspsvx(string,string,int,int,double[:],double[:],int[:],double[:,:],int,double[:,:],int,double,double[:],double[:],double[:],double[:],int)
