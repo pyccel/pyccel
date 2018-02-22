@@ -14,12 +14,16 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 #$ header function dgetrf(int, int, double [:,:], int, int [:], int)
 #$ header function dgetri(int, double [:,:], int, int [:], double [:], int, int)
+
 #$ header function dgetrs(str, int, int, double [:,:], int, int [:], double [:,:], int, int)
 #$ header function dgecon(str, int, double [:,:], int, double, double, double [:], int [:], int)
 
 #$ header function dgesv(int, int, double [:,:], int, int [:], double [:,:], int, int)
 
-# .......................................
+
+#...............................................................
+
+
 #$ header function sgesv(int,int,float[:,:],int,int[:],float[:,:],int,int)
 #$ header function dgesv(int,int,double[:,:],int,int[:],double[:,:],int,int)
 
@@ -74,3 +78,21 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 #$ header function sspsvx(string,string,int,int,float[:],float[:],int[:],float[:,:],int,float[:,:],int,float,float[:],float[:],float[:],float[:],int)
 #$ header function dspsvx(string,string,int,int,double[:],double[:],int[:],double[:,:],int,double[:,:],int,double,double[:],double[:],double[:],double[:],int)
+
+
+
+#....................................................................
+
+
+
+#$ header function sgels(string,int,int,int,float[:,:],int,float[:,:],int,float[:],int,int)
+#$ header function dgels(string,int,int,int,double[:,:],int,double[:,:],int,double[:],int,int)
+
+#$ header function sgelsy(int,int,int,float[:,:],int,float[:,:],int,int[:],float,int,float[:],int,int)
+#$ header function dgelsy(int,int,int,double[:,:],int,double[:,:],int,int[:],double,int,double[:],int,int)
+
+#$ header function sgelss(int,int,int,float[:,:],int,float[:,:],int,float[:],float,int,float[:],int,int,)
+#$ header function dgelss(int,int,int,double[:,:],int,double[:,:],int,double[:],double,int,double[:],int,int,)
+
+#$ header function sgelsd(int,int,float[:,:],int,float[:,:],int,float[:],float,int,float[:],int,int[:],int)
+#$ header function dgelsd(int,int,double[:,:],int,double[:,:],int,double[:],double,int,double[:],int,int[:],int)
