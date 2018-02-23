@@ -573,5 +573,80 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 #...................................................................
 
+#Invariant Subspaces and Condition Numbers
+
+#$ header function dgehrd(int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sgehrd(int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+
+
+
+#$ header function dgebal(string,int,double[:,:],int,int,int,double[:],int)
+#$ header function sgebal(string,int,float[:,:],int,int,int,float[:],int)
+
+
+
+
+#$ header function dgebak(string,string,int,int,int,double[:],int,double[:,:],int,int)
+#$ header function sgebak(string,string,int,int,int,float[:],int,float[:,:],int,int)
+
+
+
+
+#$ header function dorghr(int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sorghr(int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+
+
+
+#$ header function dormhr(string,string,int,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormhr(string,string,int,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+
+
+
+#$ header function dhseqr(string,string,int,int,int,double[:,:],int,double[:],double[:],double[:,:],int,double[:],int,int)
+#$ header function shseqr(string,string,int,int,int,float[:,:],int,float[:],float[:],float[:,:],int,float[:],int,int)
+
+
+
+
+#$ header function dhsein(string,string,string,log[:],int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,int,int,double[:],int[:],int[:],int)
+#$ header function shsein(string,string,string,log[:],int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,int,int,float[:],int[:],int[:],int)
+
+
+
+
+#$ header function dtrevc(string,string,log[:],int,double[:,:],int,double[:,:],int,double[:,:],int,int,int,double[:],int)
+#$ header function strevc(string,string,log[:],int,float[:,:],int,float[:,:],int,float[:,:],int,int,int,float[:],int)
+
+
+
+
+#$ header function dtrexc(string,int,double[:,:],int,double[:,:],int,int,int,double[:],int)
+#$ header function strexc(string,int,float[:,:],int,float[:,:],int,int,int,float[:],int)
+
+
+
+
+#$ header function dtrsyl(string,string,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double,int)
+#$ header function strsyl(string,string,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float,int)
+
+
+
+
+#$ header function dtrsna(string,string,log[:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,int,double[:,:],int,int[:],int)
+#$ header function strsna(string,string,log[:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,int,float[:,:],int,int[:],int)
+
+
+
+
+#$ header function dtrsen(string,string,log[:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,double,double,double[:],int,int[:],int,int)
+#$ header function strsen(string,string,log[:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,float,float,float[:],int,int[:],int,int)
+
+#.................................
+
+
+
 
 
