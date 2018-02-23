@@ -241,6 +241,55 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 
 
+#......................................................
+
+
+
+#$ header function dsygv(int,string,string,int,double[:,:],int,double[:,:],int,double[:],double[:],int,int)
+#$ header function ssygv(int,string,string,int,float[:,:],int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dsygvd(int,string,string,int,double[:,:],int,double[:,:],int,double[:],double[:],int,int[:],int,int)
+#$ header function ssygvd(int,string,string,int,float[:,:],int,float[:,:],int,float[:],float[:],int,int[:],int,int)
+
+#$ header function dsygvx(int,string,string,string,int,double[:,:],int,double[:,:],int,double,double,int,int,double,int,double[:],double[:,:],int,double[:],int,int[:],int[:],int)
+#$ header function ssygvx(int,string,string,string,int,float[:,:],int,float[:,:],int,float,float,int,int,float,int,float[:],float[:,:],int,float[:],int,int[:],int[:],int)
+
+#$ header function dspgv(int,string,string,int,double[:],double[:],double[:],double[:,:],int,double[:],int)
+#$ header function sspgv(int,string,string,int,float[:],float[:],float[:],float[:,:],int,float[:],int)
+
+#$ header function dspgvd(int,string,string,int,double[:],double[:],double[:],double[:,:],int,double[:],int,int[:],int,int)
+#$ header function sspgvd(int,string,string,int,float[:],float[:],float[:],float[:,:],int,float[:],int,int[:],int,int)
+
+#$ header function dspgvx(int,string,string,string,int,double[:],double[:],double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int)
+#$ header function sspgvx(int,string,string,string,int,float[:],float[:],float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int)
+
+#$ header function dsbgv(string,string,int,int,int,double[:,:],int,double[:,:],int,double[:],double[:,:],int,double[:],int)
+#$ header function ssbgv(string,string,int,int,int,float[:,:],int,float[:,:],int,float[:],float[:,:],int,float[:],int)
+
+#$ header function dsbgvd(string,string,int,int,int,double[:,:],int,double[:,:],int,double[:],double[:,:],int,double[:],int,int[:],int,int)
+#$ header function ssbgvd(string,string,int,int,int,float[:,:],int,float[:,:],int,float[:],float[:,:],int,float[:],int,int[:],int,int)
+
+#$ header function dsbgvx(string,string,string,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int)
+#$ header function ssbgvx(string,string,string,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int)
+
+#$ header function dgges(string,string,string,exter,int,double[:,:],int,double[:,:],int,int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,log[:],int)
+#$ header function sgges(string,string,string,exter,int,float[:,:],int,float[:,:],int,int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,log[:],int)
+
+#$ header function dggesx(string,string,string,exter,string,int,double[:,:],int,double[:,:],int,int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[2],double[2],double[:],int,int[:],int,log[:],int)
+#$ header function sggesx(string,string,string,exter,string,int,float[:,:],int,float[:,:],int,int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[2],float[2],float[:],int,int[:],int,log[:],int)
+
+
+#$ header function dggev(string,string,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,int)
+#$ header function sggev(string,string,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,int)
+
+
+#$ header function dggevx(string,string,string,string,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,int,int,double[:],double[:],double,double,double[:],double[:],double[:],int,int[:],log[:],int)
+#$ header function sggevx(string,string,string,string,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,int,int,float[:],float[:],float,float,float[:],float[:],float[:],int,int[:],log[:],int)
+
+
+#$ header function dggsvd(string,string,string,int,int,int,int,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,double[:,:],int,double[:],int[:],int)
+#$ header function sggsvd(string,string,string,int,int,int,int,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,float[:,:],int,float[:],int[:],int)
+
 
 
 
