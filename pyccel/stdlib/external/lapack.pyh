@@ -645,6 +645,84 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 #$ header function strsen(str,str,bool[:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,float,float,float[:],int,int[:],int,int)
 
 #.................................
+#Generalized Eigenvalue and Singular Value Problems
+
+
+#$ header function ssygst(int,char,int,float[:,:],int,float[:,:],int,int)
+#$ header function dsygst(int,char,int,double[:,:],int,double[:,:],int,int)
+
+
+
+
+#$ header function sspgst(int,str,int,float[:],float[:],int)
+#$ header function dspgst(int,str,int,double[:],double[:],int)
+
+
+
+
+#$ header function spbstf(str,int,int,float[:,:],int,int)
+#$ header function dpbstf(str,int,int,double[:,:],int,int)
+
+
+
+
+#$ header function ssbgst(str,str,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],int)
+#$ header function dsbgst(str,str,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],int)
+
+
+
+
+#$ header function sgghrd(str,str,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,int)
+#$ header function dgghrd(str,str,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,int)
+
+
+
+
+#$ header function sggbal(str,int,float[:,:],int,float[:,:],int,int,int,float[:],float[:],float[:],int)
+#$ header function dggbal(str,int,double[:,:],int,double[:,:],int,int,int,double[:],double[:],double[:],int)
+
+
+
+
+#$ header function sggbak(str,str,int,int,int,float[:],float[:],int,float[:,:],int,int)
+#$ header function dggbak(str,str,int,int,int,double[:],double[:],int,double[:,:],int,int)
+
+
+
+
+#$ header function shgeqz(str,str,str,int,int,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,int)
+#$ header function dhgeqz(str,str,str,int,int,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,int)
+
+
+
+
+#$ header function stgevc(str,str,bool[:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,int,int,float[:],int)
+#$ header function dtgevc(str,str,bool[:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,int,int,double[:],int)
+
+
+
+
+#$ header function stgexc(bool,bool,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,int,int,float[:],int,int)
+#$ header function dtgexc(bool,bool,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,int,int,double[:],int,int)
+
+
+
+
+#$ header function stgsyl(str,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,float,float,float[:],int,int[:],int)
+#$ header function dtgsyl(str,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,double,double,double[:],int,int[:],int)
+
+
+
+
+#$ header function stgsna(str,str,bool[:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,int,float[:],int,float[:],int)
+#$ header function dtgsna(str,str,bool[:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,int,double[:],int,double[:],int)
+
+
+
+
+#$ header function stgsen(int,bool,bool,bool[:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,int,float,float,float[:],float[:],int,int[:],int,int)
+#$ header function dtgsen(int,bool,bool,bool[:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,int,double,double,double[:],double[:],int,int[:],int,int)
+
 
 
 
