@@ -159,11 +159,11 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 #$ header function sstrevr(str,str,int,float[:],float[:],float,float,int,int,float,int,float[:],float[:,:],int,int[:],float[:],int,int[:],int,int)
 #$ header function dstrevr(str,str,int,double[:],double[:],double,double,int,int,double,int,double[:],double[:,:],int,int[:],double[:],int,int[:],int,int)
 
-#$ header function sgees(str,str,exter,int,float[:,:],int,int,float[:],float[:],float[:,:],int,float[:],int,log[:],int)
-#$ header function dgees(str,str,exter,int,double[:,:],int,int,double[:],double[:],double[:,:],int,double[:],int,log[:],int)
+#$ header function sgees(str,str,exter,int,float[:,:],int,int,float[:],float[:],float[:,:],int,float[:],int,bool[:],int)
+#$ header function dgees(str,str,exter,int,double[:,:],int,int,double[:],double[:],double[:,:],int,double[:],int,bool[:],int)
 
-#$ header function sgeesx(str,str,exter,str,int,float[:,:],int,int,float[:],float[:],float[:,:],int,float,float,float[:],int,int[:],int,log[:],int)
-#$ header function dgeesx(str,str,exter,str,int,double[:,:],int,int,double[:],double[:],double[:,:],int,double,double,double[:],int,int[:],int,log[:],int)
+#$ header function sgeesx(str,str,exter,str,int,float[:,:],int,int,float[:],float[:],float[:,:],int,float,float,float[:],int,int[:],int,bool[:],int)
+#$ header function dgeesx(str,str,exter,str,int,double[:,:],int,int,double[:],double[:],double[:,:],int,double,double,double[:],int,int[:],int,bool[:],int)
 
 
 #$ header function sgeev(str,str,int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,int)
@@ -272,19 +272,19 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 #$ header function dsbgvx(str,str,str,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int)
 #$ header function ssbgvx(str,str,str,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int)
 
-#$ header function dgges(str,str,str,exter,int,double[:,:],int,double[:,:],int,int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,log[:],int)
-#$ header function sgges(str,str,str,exter,int,float[:,:],int,float[:,:],int,int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,log[:],int)
+#$ header function dgges(str,str,str,exter,int,double[:,:],int,double[:,:],int,int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,bool[:],int)
+#$ header function sgges(str,str,str,exter,int,float[:,:],int,float[:,:],int,int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,bool[:],int)
 
-#$ header function dggesx(str,str,str,exter,str,int,double[:,:],int,double[:,:],int,int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[2],double[2],double[:],int,int[:],int,log[:],int)
-#$ header function sggesx(str,str,str,exter,str,int,float[:,:],int,float[:,:],int,int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[2],float[2],float[:],int,int[:],int,log[:],int)
+#$ header function dggesx(str,str,str,exter,str,int,double[:,:],int,double[:,:],int,int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[2],double[2],double[:],int,int[:],int,bool[:],int)
+#$ header function sggesx(str,str,str,exter,str,int,float[:,:],int,float[:,:],int,int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[2],float[2],float[:],int,int[:],int,bool[:],int)
 
 
 #$ header function dggev(str,str,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],int,int)
 #$ header function sggev(str,str,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],int,int)
 
 
-#$ header function dggevx(str,str,str,str,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,int,int,double[:],double[:],double,double,double[:],double[:],double[:],int,int[:],log[:],int)
-#$ header function sggevx(str,str,str,str,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,int,int,float[:],float[:],float,float,float[:],float[:],float[:],int,int[:],log[:],int)
+#$ header function dggevx(str,str,str,str,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],double[:,:],int,double[:,:],int,int,int,double[:],double[:],double,double,double[:],double[:],double[:],int,int[:],bool[:],int)
+#$ header function sggevx(str,str,str,str,int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],float[:,:],int,float[:,:],int,int,int,float[:],float[:],float,float,float[:],float[:],float[:],int,int[:],bool[:],int)
 
 
 #$ header function dggsvd(str,str,str,int,int,int,int,int,double[:,:],int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,double[:,:],int,double[:],int[:],int)
@@ -611,14 +611,14 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 
 
-#$ header function dhsein(str,str,str,log[:],int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,int,int,double[:],int[:],int[:],int)
-#$ header function shsein(str,str,str,log[:],int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,int,int,float[:],int[:],int[:],int)
+#$ header function dhsein(str,str,str,bool[:],int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,int,int,double[:],int[:],int[:],int)
+#$ header function shsein(str,str,str,bool[:],int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,int,int,float[:],int[:],int[:],int)
 
 
 
 
-#$ header function dtrevc(str,str,log[:],int,double[:,:],int,double[:,:],int,double[:,:],int,int,int,double[:],int)
-#$ header function strevc(str,str,log[:],int,float[:,:],int,float[:,:],int,float[:,:],int,int,int,float[:],int)
+#$ header function dtrevc(str,str,bool[:],int,double[:,:],int,double[:,:],int,double[:,:],int,int,int,double[:],int)
+#$ header function strevc(str,str,bool[:],int,float[:,:],int,float[:,:],int,float[:,:],int,int,int,float[:],int)
 
 
 
@@ -635,14 +635,14 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 
 
-#$ header function dtrsna(str,str,log[:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,int,double[:,:],int,int[:],int)
-#$ header function strsna(str,str,log[:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,int,float[:,:],int,int[:],int)
+#$ header function dtrsna(str,str,bool[:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,int,double[:,:],int,int[:],int)
+#$ header function strsna(str,str,bool[:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,int,float[:,:],int,int[:],int)
 
 
 
 
-#$ header function dtrsen(str,str,log[:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,double,double,double[:],int,int[:],int,int)
-#$ header function strsen(str,str,log[:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,float,float,float[:],int,int[:],int,int)
+#$ header function dtrsen(str,str,bool[:],int,double[:,:],int,double[:,:],int,double[:],double[:],int,double,double,double[:],int,int[:],int,int)
+#$ header function strsen(str,str,bool[:],int,float[:,:],int,float[:,:],int,float[:],float[:],int,float,float,float[:],int,int[:],int,int)
 
 #.................................
 
