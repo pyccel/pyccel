@@ -500,4 +500,78 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 #$ header function dtbrfs(string,string,string,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
 
 
+#..............................................
+#Orthogonal Factorizations and Linear Least Squares Problems
+
+#$ header function dgebrd(int,int,double[:,:],int,double[:],double[:],double[:],double[:],double[:],int,int)
+#$ header function sgebrd(int,int,float[:,:],int,float[:],float[:],float[:],float[:],float[:],int,int)
+
+
+#$ header function dgeqp3(int,int,double[:,:],int,int[:],double[:],double[:],int,int)
+#$ header function sgeqp3(int,int,float[:,:],int,int[:],float[:],float[:],int,int)
+
+
+#$ header function dgeqrf(int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sgeqrf(int,int,float[:,:],int,float[:],float[:],int,int)
+
+
+#$ header function dgelqf(int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sgelqf(int,int,float[:,:],int,float[:],float[:],int,int)
+
+
+#$ header function dgeqlf(int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sgeqlf(int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dgerqf(int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sgerqf(int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dorgbr(string,int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sorgbr(string,int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dormbr(string,string,string,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormbr(string,string,string,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+#$ header function dorgqr(int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sorgqr(int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dormqr(string,string,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormqr(string,string,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+#$ header function dormlq(string,string,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormlq(string,string,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+#$ header function dorgql(int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sorgql(int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dormql(string,string,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormql(string,string,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+#$ header function dormrq(string,string,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormrq(string,string,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+#$ header function dormrz(string,string,int,int,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+#$ header function sormrz(string,string,int,int,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+
+#$ header function dorgrq(int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sorgrq(int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dorglq(int,int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function sorglq(int,int,int,float[:,:],int,float[:],float[:],int,int)
+
+#$ header function dbdsqr(string,int,int,int,int,double[:],double[:],double[:,:],int,double[:,:],int,double[:,:],int,double[:],int)
+#$ header function sbdsqr(string,int,int,int,int,float[:],float[:],float[:,:],int,float[:,:],int,float[:,:],int,float[:],int)
+
+#$ header function dbdsdc(string,string,int,double[:],double[:],double[:,:],int,double[:,:],int,double[:],int[:],double[:],int[:],int,)
+#$ header function sbdsdc(string,string,int,float[:],float[:],float[:,:],int,float[:,:],int,float[:],int[:],float[:],int[:],int,)
+
+#$ header function dgbbrd(string,int,int,int,int,int,double[:,:],int,double[:],double[:],double[:,:],int,double[:,:],int,double[:,:],int,double[:],int)
+#$ header function sgbbrd(string,int,int,int,int,int,float[:,:],int,float[:],float[:],float[:,:],int,float[:,:],int,float[:,:],int,float[:],int)
+
+#$ header function dtzrzf(int,int,double[:,:],int,double[:],double[:],int,int)
+#$ header function stzrzf(int,int,float[:,:],int,float[:],float[:],int,int)
+
+
+#...................................................................
+
+
 
