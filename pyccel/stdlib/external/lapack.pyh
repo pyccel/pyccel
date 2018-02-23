@@ -180,6 +180,66 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 #$ header function sgesdd(string,int,int,float[:,:],int,float[:],float[:,:],int,float[:,:],int,float[:],int,int[:],int)
 #$ header function dgesdd(string,int,int,double[:,:],int,double[:],double[:,:],int,double[:,:],int,double[:],int,int[:],int)
 
+#$ header function sstev(string,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dstev(string,int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function sstevd(string,int,float[:],float[:],float[:,:],int,float[:],int,int[:],int,int)
+#$ header function dstevd(string,int,double[:],double[:],double[:,:],int,double[:],int,int[:],int,int)
+
+#$ header function sstevx(string,string,int,float[:],float[:],float,float,int,int,float,int,float[:],float[:,:],int,float[:],int[:],int[:],int,)
+#$ header function dstevx(string,string,int,double[:],double[:],double,double,int,int,double,int,double[:],double[:,:],int,double[:],int[:],int[:],int,)
+
+
+#$ header function sstevr(string,string,int,float[:],float[:],float,float,int,int,float,int,float[:],float[:,:],int,int[:],float[:],int,int[:],int,int)
+#$ header function dstevr(string,string,int,double[:],double[:],double,double,int,int,double,int,double[:],double[:,:],int,int[:],double[:],int,int[:],int,int)
+
+#$ header function ssytrd(string,int,float[:,:],int,float[:],float[:],float[:],float[:],int,int)
+#$ header function dsytrd(string,int,double[:,:],int,double[:],double[:],double[:],double[:],int,int)
+
+#$ header function ssptrd(string,int,float[:],float[:],float[:],float[:],int)
+#$ header function dsptrd(string,int,double[:],double[:],double[:],double[:],int)
+
+#$ header function ssbtrd(string,string,int,int,float[:,:],int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dsbtrd(string,string,int,int,double[:,:],int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function sorgtr(string,int,float[:,:],int,float[:],float[:],int,int)
+#$ header function dorgtr(string,int,double[:,:],int,double[:],double[:],int,int)
+
+#$ header function sormtr(string,string,string,int,int,float[:,:],int,float[:],float[:,:],int,float[:],int,int)
+#$ header function dormtr(string,string,string,int,int,double[:,:],int,double[:],double[:,:],int,double[:],int,int)
+
+#$ header function sopgtr(string,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dopgtr(string,int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function sopmtr(string,string,string,int,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dopmtr(string,string,string,int,int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function ssteqr(string,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dsteqr(string,int,double[:],double[:],double[:,:],int,double[:],int)
+
+#$ header function ssterf(int,float[:],float[:],int)
+#$ header function dsterf(int,double[:],double[:],int)
+
+#$ header function sstedc(string,int,float[:],float[:],float[:,:],int,float[:],int,int[:],int,int)
+#$ header function dstedc(string,int,double[:],double[:],double[:,:],int,double[:],int,int[:],int,int)
+
+
+#$ header function sstegr(string,string,int,float[:],float[:],float,float,int,int,float,int,float[:]float[:,:],int,int[:],float[:],int,int[:],int,int)
+#$ header function dstegr(string,string,int,double[:],double[:],double,double,int,int,double,int,double[:]double[:,:],int,int[:],double[:],int,int[:],int,int)
+
+
+#$ header function sstebz(string,string,int,float,float,int,int,float,float[:],float[:],int,intfloat[:],int[:],int[:],float[:],int[:],int)
+#$ header function dstebz(string,string,int,double,double,int,int,double,double[:],double[:],int,intdouble[:],int[:],int[:],double[:],int[:],int)
+
+#$ header function sstein(int,float[:],float[:],int,float[:],float[:],float[:],float[:,:],intfloat[:],int[:],int[:],int)
+#$ header function dstein(int,double[:],double[:],int,double[:],double[:],double[:],double[:,:],intdouble[:],int[:],int[:],int)
+
+#$ header function spteqr(string,int,float[:],float[:],float[:,:],int,float[:],int)
+#$ header function dpteqr(string,int,double[:],double[:],double[:,:],int,double[:],int)
+
+
+
+
 
 
 
