@@ -292,4 +292,212 @@ __libraries__        = '${LAPACK_LIBRARIES}'
 
 
 
+#............................................................
+#Lineaire equation
+#............................................................
+#$ header function sgetrf(int,int,float[:,:],int,float[:],int)
+#$ header function dgetrf(int,int,double[:,:],int,double[:],int)
+
+#$ header function sgetrs(string,int,int,float[:,:],int,float[:],float[:,:],int,int)
+#$ header function dgetrs(string,int,int,double[:,:],int,double[:],double[:,:],int,int)
+
+
+#$ header function sgecon(string,int,float[:,:],int,float,float,float[:],int[:],int)
+#$ header function dgecon(string,int,double[:,:],int,double,double,double[:],int[:],int)
+
+#$ header function sgerfs(string,int,int,float[:,:],int,float[:,:],int,int[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int,)
+#$ header function dgerfs(string,int,int,double[:,:],int,double[:,:],int,int[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int,)
+
+
+#$ header function sgetri(int,float[:,:],int,int[:],float[:],int,int)
+#$ header function dgetri(int,double[:,:],int,int[:],double[:],int,int)
+
+
+#$ header function sgeequ(int,int,float[:,:],int,float[:],float[:],float,float,float,int)
+#$ header function dgeequ(int,int,double[:,:],int,double[:],double[:],double,double,double,int)
+
+
+#$ header function sgbtrf(int,int,int,int,float[:,:],int,int[:],int)
+#$ header function dgbtrf(int,int,int,int,double[:,:],int,int[:],int)
+
+
+#$ header function sgbtrs(string,int,int,int,int,float[:,:],int,int[:],float[:,:],int,int)
+#$ header function dgbtrs(string,int,int,int,int,double[:,:],int,int[:],double[:,:],int,int)
+
+#$ header function sgbcon(string,int,int,int,float[:,:],int,int[:],float,float,float[:],int[:],int)
+#$ header function dgbcon(string,int,int,int,double[:,:],int,int[:],double,double,double[:],int[:],int)
+
+#$ header function sgbrfs(string,int,int,int,int,float[:,:],int,float[:,:],int,int[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dgbrfs(string,int,int,int,int,double[:,:],int,double[:,:],int,int[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function sgbequ(int,int,int,int,float[:,:],int,float[:],float[:],float,float,float,int)
+#$ header function dgbequ(int,int,int,int,double[:,:],int,double[:],double[:],double,double,double,int)
+
+
+#$ header function sgttrf(int,float[:],float[:],float[:],float[:],int[:],int)
+#$ header function dgttrf(int,double[:],double[:],double[:],double[:],int[:],int)
+
+#$ header function sgttrs(string,int,int,float[:],float[:],float[:],float[:],int[:],float[:,:],int,int)
+#$ header function dgttrs(string,int,int,double[:],double[:],double[:],double[:],int[:],double[:,:],int,int)
+
+
+#$ header function sgtcon(string,float[:],float[:],float[:],float[:],int[:],float,float,float[:],int[:],int)
+#$ header function dgtcon(string,double[:],double[:],double[:],double[:],int[:],double,double,double[:],int[:],int)
+
+
+#$ header function sgtrfs(string,int,int,float[:],float[:],float[:],float[:],float[:],float[:],float[:],int[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dgtrfs(string,int,int,double[:],double[:],double[:],double[:],double[:],double[:],double[:],int[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+
+
+
+
+
+#$ header function spotrf(string,int,float[:,:],int,int)
+#$ header function dpotrf(string,int,double[:,:],int,int)
+
+#$ header function spotrs(string,int,int,float[:,:],int,float[:,:],int,int)
+#$ header function dpotrs(string,int,int,double[:,:],int,double[:,:],int,int)
+
+
+#$ header function spocon(string,int,float[:,:],int,float,float,float[:],int[:],int)
+#$ header function dpocon(string,int,double[:,:],int,double,double,double[:],int[:],int)
+
+
+#$ header function sporfs(string,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dporfs(string,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function spotri(string,int,float[:,:],int,int)
+#$ header function dpotri(string,int,double[:,:],int,int)
+
+
+#$ header function spoequ(int,float[:,:],int,float[:],float,float,int)
+#$ header function dpoequ(int,double[:,:],int,double[:],double,double,int)
+
+
+
+#$ header function spptrf(string,int,float[:],int)
+#$ header function dpptrf(string,int,double[:],int)
+
+
+#$ header function spptrs(string,int,int,float[:],float[:,:],int,int)
+#$ header function dpptrs(string,int,int,double[:],double[:,:],int,int)
+
+#$ header function sppcon(string,int,float[:],float,float,float[:],int[:],int)
+#$ header function dppcon(string,int,double[:],double,double,double[:],int[:],int)
+
+
+
+#$ header function spprfs(string,int,int,float[:],float[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dpprfs(string,int,int,double[:],double[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+
+#$ header function spptri(string,int,float[:],int)
+#$ header function dpptri(string,int,double[:],int)
+
+
+#$ header function sppequ(string,int,float[:],float[:],float,float,int)
+#$ header function dppequ(string,int,double[:],double[:],double,double,int)
+
+
+#$ header function spbtrf(string,int,int,float[:,:],int,int)
+#$ header function dpbtrf(string,int,int,double[:,:],int,int)
+
+
+#$ header function spbtrs(string,int,int,int,float[:,:],int,float[:,:],int,int)
+#$ header function dpbtrs(string,int,int,int,double[:,:],int,double[:,:],int,int)
+
+#$ header function spbcon(string,int,int,float[:,:],int,float,float,float[:],int[:],int)
+#$ header function dpbcon(string,int,int,double[:,:],int,double,double,double[:],int[:],int)
+
+#$ header function spbrfs(string,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dpbrfs(string,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function spbequ(string,int,int,float[:,:],int,float[:],float,float,int)
+#$ header function dpbequ(string,int,int,double[:,:],int,double[:],double,double,int)
+
+
+#$ header function spttrf(int,float[:],float[:],int)
+#$ header function dpttrf(int,double[:],double[:],int)
+
+#$ header function spttrs(int,int,float[:],float[:],float[:,:],int,int)
+#$ header function dpttrs(int,int,double[:],double[:],double[:,:],int,int)
+
+#$ header function sptcon(int,float[:],float[:],float,float,float[:],int)
+#$ header function dptcon(int,double[:],double[:],double,double,double[:],int)
+
+
+#$ header function sptrfs(int,int,float[:],float[:],float[:],float[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int)
+#$ header function dptrfs(int,int,double[:],double[:],double[:],double[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int)
+
+#$ header function ssytrf(string,int,float[:,:],int,int[:],float[:],int,int)
+#$ header function dsytrf(string,int,double[:,:],int,int[:],double[:],int,int)
+
+#$ header function ssytrs(string,int,int,float[:,:],int,int[:],float[:,:],int,int)
+#$ header function dsytrs(string,int,int,double[:,:],int,int[:],double[:,:],int,int)
+
+
+#$ header function ssycon(string,int,float[:,:],int,int[:],float,float,float[:],int[:],int)
+#$ header function dsycon(string,int,double[:,:],int,int[:],double,double,double[:],int[:],int)
+
+#$ header function ssyrfs(string,int,int,float[:,:],int,float[:,:],int,float[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dsyrfs(string,int,int,double[:,:],int,double[:,:],int,double[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function ssytri(string,int,float[:,:],int,int[:],float[:],int)
+#$ header function dsytri(string,int,double[:,:],int,int[:],double[:],int)
+
+
+#$ header function ssptrf(string,int,float[:],int[:],int)
+#$ header function dsptrf(string,int,double[:],int[:],int)
+
+
+#$ header function ssptrs(string,int,int,float[:],int[:],float[:,:],int,int)
+#$ header function dsptrs(string,int,int,double[:],int[:],double[:,:],int,int)
+
+
+#$ header function sspcon(string,int,float[:],int[:],float,float,float[:],int[:],int)
+#$ header function dspcon(string,int,double[:],int[:],double,double,double[:],int[:],int)
+
+#$ header function ssprfs(string,int,int,float[:],float[:],int[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dsprfs(string,int,int,double[:],double[:],int[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+
+#$ header function ssptri(string,int,float[:],int[:],float[:],int)
+#$ header function dsptri(string,int,double[:],int[:],double[:],int)
+
+#$ header function strtrs(string,string,string,int,int,float[:,:],int,float[:,:],int,int)
+#$ header function dtrtrs(string,string,string,int,int,double[:,:],int,double[:,:],int,int)
+
+#$ header function strcon(string,string,string,int,float[:,:],int,float,float[:],int[:],int)
+#$ header function dtrcon(string,string,string,int,double[:,:],int,double,double[:],int[:],int)
+
+#$ header function strrfs(string,string,string,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dtrrfs(string,string,string,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function strtri(string,string,int,float[:,:],int,int)
+#$ header function dtrtri(string,string,int,double[:,:],int,int)
+
+#$ header function stptrs(string,string,string,int,int,float[:],float[:,:],int,int)
+#$ header function dtptrs(string,string,string,int,int,double[:],double[:,:],int,int)
+
+#$ header function stpcon(string,string,string,int,float[:],float,float[:],int[:],int)
+#$ header function dtpcon(string,string,string,int,double[:],double,double[:],int[:],int)
+
+
+#$ header function stprfs(string,string,string,int,int,float[:],float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dtprfs(string,string,string,int,int,double[:],double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+#$ header function stptri(string,string,int,float[:],int)
+#$ header function dtptri(string,string,int,double[:],int)
+
+#$ header function stbtrs(string,string,string,int,int,int,float[:,:],int,float[:,:],int)
+#$ header function dtbtrs(string,string,string,int,int,int,double[:,:],int,double[:,:],int)
+
+#$ header function stbcon(string,string,string,int,int,float[:,:],int,float,float[:],int[:],int)
+#$ header function dtbcon(string,string,string,int,int,double[:,:],int,double,double[:],int[:],int)
+
+#$ header function stbrfs(string,string,string,int,int,int,float[:,:],int,float[:,:],int,float[:,:],int,float[:],float[:],float[:],int[:],int)
+#$ header function dtbrfs(string,string,string,int,int,int,double[:,:],int,double[:,:],int,double[:,:],int,double[:],double[:],double[:],int[:],int)
+
+
 
