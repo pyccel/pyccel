@@ -8,9 +8,12 @@ Welcome to Pyccel's documentation!
 
 .. include:: abstract.rst
 
+
+Pyccel documentation contents
+=============================
+
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
    tutorial
    dive/index
@@ -19,8 +22,19 @@ Welcome to Pyccel's documentation!
    extensions
    analysis
 
-   devguide
+API
+===
+
+.. toctree::
+   :maxdepth: 1
+
    source/modules
+
+Technical contents
+==================
+
+.. toctree::
+   :maxdepth: 1
 
    faq
    glossary
