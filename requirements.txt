@@ -1,3 +1,5 @@
 textx==1.6.1
 sympy==1.1.1
 sphinxcontrib-tikz==0.4.4
+pylint==1.8.2
+parse==1.8.2

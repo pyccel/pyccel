@@ -31,7 +31,7 @@ packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # ...
 
 # ...
-install_requires = ['numpy', 'sympy']
+install_requires = ['numpy', 'sympy', 'pylint', 'parse']
 
 try:
     import textx

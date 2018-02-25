@@ -87,7 +87,7 @@ def construct_tree(filename, ignored_modules):
                     elif is_external_submodule(module, submodule):
                         f_name = get_extension_path(ext, module=submodule, is_external=True)
                     else:
-                        raise ValueError('non valid import for pyccel extensions.')
+                        raise ImportError('non valid import for pyccel extensions.')
             elif module.startswith('pyccel.stdlib.parallel'):
                 ext_full  = module.split('pyccel.stdlib.parallel.')[-1]
                 ext       = ext_full.split('.')[0] # to remove submodule
@@ -98,7 +98,7 @@ def construct_tree(filename, ignored_modules):
                 if is_parallel_submodule(module, submodule):
                     f_name = get_parallel_path(ext, module=submodule)
                 else:
-                    raise ValueError('non valid import for parallel pyccel package.')
+                    raise ImportError('non valid import for parallel pyccel package.')
             elif module.startswith('pyccel.stdlib.external'):
                 ext_full  = module.split('pyccel.stdlib.external.')[-1]
                 ext       = ext_full.split('.')[0] # to remove submodule
@@ -108,7 +108,9 @@ def construct_tree(filename, ignored_modules):
                 if is_stdlib_external_submodule(module, submodule):
                     f_name = get_stdlib_external_path(ext, module=submodule)
                 else:
-                    raise ValueError('non valid import for pyccel stdlib external package.')
+                    raise ImportError('non valid import for pyccel stdlib external package.')
+            elif module == 'pyccel.stdlib':
+                f_name = []
             else:
                 filename_py  = '{0}.py'.format(module)
                 filename_pyh = '{0}.pyh'.format(module)
@@ -118,8 +120,8 @@ def construct_tree(filename, ignored_modules):
                 elif os.path.isfile(filename_pyh):
                     f_name = filename_pyh
                 else:
-                    raise ValueError('Could not find '
-                                     '{0} or {1}'.format(filename_py, filename_pyh))
+                    raise OSError('Could not find '
+                                  '{0} or {1}'.format(filename_py, filename_pyh))
 
             if isinstance(f_name, str):
                 if not(f_name in f_names):
@@ -167,14 +169,14 @@ def construct_tree(filename, ignored_modules):
 # ...
 
 # ...
-def build_file(filename, language, compiler, \
-               execute=False, accelerator=None, \
-               debug=False, verbose=False, show=False, \
-               inline=False, name=None, \
-               output_dir=None, \
-               ignored_modules=['numpy', 'scipy', 'sympy'], \
-               pyccel_modules=[], \
-               include=[], libdir=[], libs=[], \
+def build_file(filename, language, compiler,
+               execute=False, accelerator=None,
+               debug=False, lint=False, verbose=False, show=False,
+               inline=False, name=None,
+               output_dir=None,
+               ignored_modules=['numpy', 'scipy', 'sympy'],
+               pyccel_modules=[],
+               include=[], libdir=[], libs=[],
                single_file=True):
     """
     User friendly interface for code generation.
@@ -192,6 +194,8 @@ def build_file(filename, language, compiler, \
         One among ('openmp', 'openacc')
     debug: bool
         add some useful prints that may help for debugging.
+    lint: bool
+        uses PyLint for static verification, if True.
     verbose: bool
         talk more
     show: bool
@@ -254,6 +258,45 @@ def build_file(filename, language, compiler, \
     # ...
     if not name:
         name = os.path.basename(filename.split('.')[0])
+    # ...
+
+    # ...
+    if lint:
+        from pylint import epylint
+        cmd = filename
+        pattern = "'{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'"
+        options = ['--errors-only',
+                   "--msg-template=" + pattern]
+        for i in options:
+            cmd += ' ' + i
+
+        (pylint_stdout, pylint_stderr) = epylint.py_run(cmd, return_std=True)
+
+        # we remove {obj} here if not present => no oop
+        pattern = '{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}'
+        pattern_proc = '{path}:{line}: [{msg_id}({symbol}), ] {msg}'
+
+        from parse import compile
+        p      = compile(pattern)
+        p_proc = compile(pattern_proc)
+
+        errors = []
+        for i in pylint_stdout:
+            r = p_proc.parse(i)
+            if not r:
+                r = p.parse(i)
+            if r:
+                errors.append(r)
+        if errors:
+            for e in errors:
+                print pattern_proc.format(path=e.named['path'],
+                                          line=e.named['line'],
+                                          msg_id=e.named['msg_id'],
+                                          msg=e.named['msg'],
+                                          symbol=e.named['symbol'])
+
+#            raise NotImplementedError('Add lint err message')
+            import sys; sys.exit(0)
     # ...
 
     # ...

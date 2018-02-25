@@ -57,6 +57,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                         help='executes the binary file')
     parser.add_argument('--show', action='store_true', \
                         help='prints the generated file.')
+    parser.add_argument('--lint', action='store_true', \
+                        help='Uses PyLint for static checking.')
     parser.add_argument('--debug', action='store_true', \
                         help='compiles the code in a debug mode.')
     parser.add_argument('--output-dir', type=str, \
@@ -136,6 +138,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if openacc:
         accelerator = "openacc"
 
+    lint    =  args.lint
     debug    = args.debug
     verbose  = args.verbose
     show     = args.show
@@ -160,7 +163,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if not analysis:
         build_file(filename, language, compiler,
                    execute=execute, accelerator=accelerator,
-                   debug=debug, verbose=verbose, show=show,
+                   debug=debug, lint=lint, verbose=verbose, show=show,
                    name=None, include=include,
                    output_dir=output_dir,
                    libdir=libdir, libs=libs,

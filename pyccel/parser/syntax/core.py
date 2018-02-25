@@ -77,7 +77,6 @@ from pyccel.ast.core import (Tile, Range, Tensor, \
 
 from pyccel.ast.parallel.mpi import MPI
 
-from pyccel.stdlib.stdlib import stdlib_definitions
 
 DEBUG = False
 #DEBUG = True
