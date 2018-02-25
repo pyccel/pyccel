@@ -878,12 +878,11 @@ def load_extension(ext, output_dir,
     Load module(s) from a given pyccel extension.
 
     ext: str
-        a pyccel extension is always of the form pyccelext-xxx where 'xxx' is
-        the extension name.
+        a pyccel extension is always of the form pyccelext-xxx where 'xxx' is the extension name.
     output_dir: str
         directory where to store the generated files
     clean: Bool
-        remove all tempororay files (of extension *.pyccel)
+        remove all tempororay files of extension *pyccel*
     modules: list, str
         a list of modules or a module. every module must be a string.
     silent: bool
@@ -893,7 +892,7 @@ def load_extension(ext, output_dir,
     testing: bool
         enable unit tests
 
-    Examples
+    **Examples**
 
     >>> load_extension('math', 'extensions', silent=False)
     >>> load_extension('math', 'extensions', modules=['bsplines'])

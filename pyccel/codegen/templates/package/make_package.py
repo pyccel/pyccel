@@ -1,12 +1,4 @@
 # coding: utf8
-"""
-Repackage contents of multiple static libraries into a single archive.
-
-Modules required
-----------------
-  * Built-in  : os, shutil, argparse, sys
-
-"""
 #
 # Author: Yaman Güçlü, Jan 2016 - IPP Garching
 #
@@ -17,6 +9,15 @@ Modules required
 #===============================================================================
 
 def make_package( input_libraries, output_package ):
+    """
+    Repackage contents of multiple static libraries into a single archive.
+
+    input_libraries: list
+        list of input files
+
+    output_package: string
+        path to the contructed library
+    """
 
     import os, shutil
 

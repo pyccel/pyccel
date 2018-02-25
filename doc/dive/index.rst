@@ -15,12 +15,16 @@ Typical processing using **Pyccel** can be splitted into 3 main stages:
 
   \node[draw=black, rectangle, fill=red!40] (py)  
   at (0,0)  {Python};
+
+  \node[draw=black, rectangle, fill=red!20, font=\fontsize{10}{10.2}] (lint)  
+  at (0,2)  {Pylint};
+
   \node at (0.9,0) [color=gray,above=3mm,right=0mm] {Parser};
 
   \draw[black, thick, fill=blue!10] (3,0) circle [radius=0.5cm];
   \node at (3,0) [color=black] {\textsc{IR}};
-  \node at (3.8,0) [color=gray,above=3mm,right=0mm,font=\fontsize{10}{10.2}] {\texttt{expr}};
-  \node at (3.6,0) [color=gray,below=3mm,right=0mm,font=\fontsize{10}{10.2}] {\textit{property}};
+  \node at (3.8,0) [color=gray, above=3mm, right=0mm, font=\fontsize{10}{10.2}] {\texttt{expr}};
+  \node at (3.6,0) [color=gray, below=3mm, right=0mm, font=\fontsize{10}{10.2}] {\textit{property}};
 
   \draw[black, thick, fill=blue!30] (6,0) circle [radius=0.7cm];
   \node at (6,0) [color=black] {\textsc{AST}};
@@ -32,6 +36,7 @@ Typical processing using **Pyccel** can be splitted into 3 main stages:
   \draw[->,very thick] (py) --(2.5,0) ;
   \draw[->,very thick] (3.5,0)--(5.3,0) ;
   \draw[->,very thick] (6.7,0)--(f90) ;
+  \draw[->,very thick] (py) --(lint) ;
 
 Contents
 ********

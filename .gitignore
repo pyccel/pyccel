@@ -1,12 +1,14 @@
 *.pyc
 *.pyo
 .ipynb_checkpoints/
+.cache
 
 build
 *egg*
 *dist*
 
 doc/_build
+doc/source
 
 
 *.pyccel

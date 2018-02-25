@@ -22,9 +22,30 @@ Welcome to Pyccel's documentation!
    devguide
    source/modules
 
+   faq
+   glossary
+   devguide
+   changes
+   authors
+
+.. Indices and tables
+.. ==================
+.. 
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
+
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. only:: builder_html
+
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
+   * :ref:`glossary`
+
+.. only:: not builder_html
+
+   * :ref:`modindex`
+   * :ref:`glossary`
