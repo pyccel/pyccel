@@ -1,8 +1,14 @@
 TODO
 ====
 
+- add appropriates imports from stdlib in all scripts
+
+- make sure that every script is python valide: run python .. --lint for all scripts 
+
 Bugs
 ****
+
+- **lapack** run_tests is not working anymore
 
 - **zeros_like** is not copying attribut data
 
