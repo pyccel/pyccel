@@ -37,7 +37,8 @@ SimpleStmt:
 ;
 
 SmallStmt:
-    AnnotatedStmt 
+    DocstringsCommentStmt
+  | AnnotatedStmt 
   | PassStmt 
   | FlowStmt 
   | DelStmt 
@@ -105,6 +106,7 @@ ReturnStmt: label='return' (variables*=Expression[',']);
 DelStmt: 'del' variables*=AtomExpr[','];
 
 CommentStmt: '#' (text=/.*$/)?;
+DocstringsCommentStmt: '"""' text=/.*$/ '"""';
 
 VariableHeaderStmt: '#$' 'header' 'variable'  name=ID dec=DeclareAtom;
 ClassHeaderStmt: '#$' 'header' 'class'  name=ID '(' options+=ClassOptions[','] ')';

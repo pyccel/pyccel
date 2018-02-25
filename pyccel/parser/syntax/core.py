@@ -2987,6 +2987,10 @@ class CommentStmt(BasicStmt):
         else:
             return EmptyLine()
 
+class DocstringsCommentStmt(CommentStmt):
+    """Class representing a Docstrings Comment in the grammar."""
+    pass
+
 class SuiteStmt(BasicStmt):
     """Class representing a Suite statement in the grammar."""
     def __init__(self, **kwargs):
