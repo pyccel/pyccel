@@ -9,5 +9,6 @@ Specifications
 
    python
    highlevel
+   lowlevel
    openmp
    openacc
