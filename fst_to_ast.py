@@ -3,23 +3,49 @@ from redbaron import RedBaron
 from redbaron import IntNode, FloatNode, ComplexNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
-from redbaron import CommentNode
+from redbaron import CommentNode, EndlNode
 from redbaron import BinaryOperatorNode
+from redbaron import AssociativeParenthesisNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Variable
 from pyccel.ast import Assign
-from pyccel.ast import Comment
+from pyccel.ast import Comment, EmptyLine
+
 
 from sympy import Symbol
-from sympy import Add
+from sympy import Tuple
+from sympy import Add, Mul, Pow
 from sympy import Integer, Float
+
+# ... utilities
+from sympy import srepr
+from sympy.printing.dot import dotprint
+
+import os
 
 def view_tree(expr):
     """Views a sympy expression tree."""
-    from sympy import srepr
+
     print srepr(expr)
+
+def export_ast(expr, filename):
+    """Exports sympy AST using graphviz then convert it to an image."""
+
+    graph_str = dotprint(expr)
+
+    f = file(filename, 'w')
+    f.write(graph_str)
+    f.close()
+
+    # name without path
+    name = os.path.basename(filename)
+    # name without extension
+    name = os.path.splitext(name)[0]
+    cmd = "dot -Tps {name}.gv -o {name}.ps".format(name=name)
+    os.system(cmd)
+# ...
 
 
 # TODO use Double instead of Float? or add precision
@@ -37,7 +63,8 @@ def datatype_from_redbaron(node):
 def fst_to_ast(stmt):
     """Creates AST from FST."""
     if isinstance(stmt, RedBaron):
-        return [fst_to_ast(i) for i in stmt]
+        ls = [fst_to_ast(i) for i in stmt]
+        return Tuple(*ls)
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
@@ -55,9 +82,21 @@ def fst_to_ast(stmt):
         second = fst_to_ast(stmt.second)
         if stmt.value == '+':
             return Add(first, second)
+        elif stmt.value == '*':
+            return Mul(first, second)
+        elif stmt.value == '-':
+            second = Mul(-1, second)
+            return Add(first, second)
+        elif stmt.value == '/':
+            second = Mul(-1, second)
+            return Mul(first, second)
         else:
             raise ValueError('unknown/unavailable operator '
                              '{node}'.format(node=type(stmt.value)))
+    elif isinstance(stmt, AssociativeParenthesisNode):
+        raise NotImplementedError('TODO')
+    elif isinstance(stmt, EndlNode):
+        return EmptyLine()
     elif isinstance(stmt, CommentNode):
         # TODO must check if it is a header or not
         return Comment(stmt.value)
@@ -93,21 +132,6 @@ for expr in ast:
 #    print '\t', type(expr.rhs)
 print('---------------')
 
-view_tree(ast)
+#view_tree(ast)
 
-
-
-#stmt = red[0]
-
-#type(stmt)
-#stmt.target
-#type(stmt.target)
-#stmt.value
-#type(stmt.value)
-
-#
-#
-#dtype = datatype_from_redbaron(stmt.value)
-#var   = Variable(dtype, str(stmt.target))
-#
-#expr = Assign(var, stmt.value)
+export_ast(ast, filename='ast.gv')
