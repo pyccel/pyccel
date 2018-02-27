@@ -44,6 +44,30 @@ Among the very nice tools for *Python* developpers, Pylint_ is used for **static
 
 .. _Pylint: https://www.pylint.org/
 
+Refactoring Pyccel
+******************
+
+- use RedBaron_ instead of **textX** for parsing the *Python* code.
+
+.. _RedBaron: https://github.com/PyCQA/redbaron
+
+- keep **textX** for the *headers*, *OpenMP* and *OpenAcc*.
+
+.. todo:: add the new diagram
+
+
+
+.. tikz:: Constructing the AST for pure python code (no OpenMP/OpenACC). 
+
+  \node[draw=black, rectangle, fill=red!40] (fst)  
+  at (0,0)  {FST};
+
+  \node[draw=black, rectangle, fill=red!20, font=\fontsize{10}{10.2}] (ast)  
+  at (0,2)  {AST};
+
+  \draw[->,very thick] (fst) --(ast) ;
+
+
 
 .. toctree::
    :maxdepth: 1 
