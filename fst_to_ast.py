@@ -6,11 +6,18 @@ from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
 from redbaron import BinaryOperatorNode
 from redbaron import AssociativeParenthesisNode
+from redbaron import DefNode
+from redbaron import CommaProxyList
+from redbaron import LineProxyList
+from redbaron import ReturnNode
+from redbaron import DefArgumentNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Variable
 from pyccel.ast import Assign
+from pyccel.ast import Return
+from pyccel.ast import FunctionDef
 from pyccel.ast import Comment, EmptyLine
 
 
@@ -62,9 +69,11 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, RedBaron):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
+    elif isinstance(stmt, str):
+        return stmt
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
@@ -88,13 +97,33 @@ def fst_to_ast(stmt):
             second = Mul(-1, second)
             return Add(first, second)
         elif stmt.value == '/':
-            second = Mul(-1, second)
+            second = Pow(second, -1)
             return Mul(first, second)
         else:
             raise ValueError('unknown/unavailable operator '
                              '{node}'.format(node=type(stmt.value)))
     elif isinstance(stmt, AssociativeParenthesisNode):
-        raise NotImplementedError('TODO')
+        return fst_to_ast(stmt.value)
+    elif isinstance(stmt, DefArgumentNode):
+        return fst_to_ast(stmt.name)
+    elif isinstance(stmt, ReturnNode):
+        return Return(fst_to_ast(stmt.value))
+    elif isinstance(stmt, DefNode):
+        # TODO results must be computed at the decoration stage
+        name        = fst_to_ast(stmt.name)
+        arguments   = fst_to_ast(stmt.arguments)
+        results     = []
+        body        = fst_to_ast(stmt.value)
+        local_vars  = []
+        global_vars = []
+        cls_name    = None
+        hide        = False
+        kind        = 'function'
+        imports     = []
+        return FunctionDef(name, arguments, results, body,
+                           local_vars=local_vars, global_vars=global_vars,
+                           cls_name=cls_name, hide=hide,
+                           kind=kind, imports=imports)
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
@@ -114,7 +143,8 @@ def read_file(filename):
     f.close()
     return code
 
-code = read_file('ex_redbaron.py')
+#code = read_file('ex_redbaron.py')
+code = read_file('ex_function.py')
 red  = RedBaron(code)
 
 print('----- FST -----')

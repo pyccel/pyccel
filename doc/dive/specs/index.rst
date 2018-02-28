@@ -10,5 +10,6 @@ Specifications
    python
    highlevel
    lowlevel
+   rules
    openmp
    openacc

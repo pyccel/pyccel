@@ -1729,6 +1729,23 @@ class ValuedVariable(Basic):
         value    = sstr(self.value)
         return '{0} := {1}'.format(variable, value)
 
+# TODO keep sympify?
+class Return(Basic):
+    """Represents a function return in the code.
+    Parameters
+    ----------
+    expr : sympy expr
+        The expression to return.
+    """
+
+    def __new__(cls, expr):
+#        expr = _sympify(expr)
+        return Basic.__new__(cls, expr)
+
+    @property
+    def expr(self):
+        return self._args[0]
+
 class FunctionDef(Basic):
     """Represents a function definition.
 
