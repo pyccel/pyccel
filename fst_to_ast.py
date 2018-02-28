@@ -7,10 +7,12 @@ from redbaron import CommentNode, EndlNode
 from redbaron import BinaryOperatorNode
 from redbaron import AssociativeParenthesisNode
 from redbaron import DefNode
+from redbaron import ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode
+from redbaron import ForNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -19,6 +21,7 @@ from pyccel.ast import Variable
 from pyccel.ast import Assign
 from pyccel.ast import Return
 from pyccel.ast import FunctionDef
+from pyccel.ast import For
 from pyccel.ast import Comment, EmptyLine
 
 
@@ -101,7 +104,7 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif stmt is None:
@@ -166,6 +169,12 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+    elif isinstance(stmt, ForNode):
+        target = fst_to_ast(stmt.iterator)
+        iter   = fst_to_ast(stmt.target)
+        body   = fst_to_ast(stmt.value)
+        strict = True
+        return For(target, iter, body, strict=strict)
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
@@ -186,7 +195,8 @@ def read_file(filename):
     return code
 
 #code = read_file('ex_redbaron.py')
-code = read_file('ex_function.py')
+#code = read_file('ex_function.py')
+code = read_file('ex_for.py')
 red  = RedBaron(code)
 
 print('----- FST -----')
