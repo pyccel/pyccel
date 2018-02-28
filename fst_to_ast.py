@@ -14,6 +14,7 @@ from redbaron import DefArgumentNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
+from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import Assign
 from pyccel.ast import Return
@@ -25,6 +26,37 @@ from sympy import Symbol
 from sympy import Tuple
 from sympy import Add, Mul, Pow
 from sympy import Integer, Float
+
+# ... TODO should be moved to pyccel.ast
+from sympy.core.basic import Basic
+
+class Argument(Symbol):
+    """An abstract Argument data structure."""
+    pass
+
+class ValuedArgument(Basic):
+    """Represents a valued argument in the code."""
+
+    def __new__(cls, expr, value):
+        if not isinstance(expr, Argument):
+            raise TypeError('Expecting an argument')
+        return Basic.__new__(cls, expr, value)
+
+    @property
+    def argument(self):
+        return self._args[0]
+
+    @property
+    def value(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        argument = sstr(self.argument)
+        value    = sstr(self.value)
+        return '{0}={1}'.format(argument, value)
+# ...
 
 # ... utilities
 from sympy import srepr
@@ -72,20 +104,25 @@ def fst_to_ast(stmt):
     if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
+    elif stmt is None:
+        return Nil()
     elif isinstance(stmt, str):
         return stmt
-    elif isinstance(stmt, AssignmentNode):
-        lhs = fst_to_ast(stmt.target)
-        rhs = fst_to_ast(stmt.value)
-        return Assign(lhs, rhs)
-    elif isinstance(stmt, NameNode):
-        return Symbol(str(stmt))
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
     elif isinstance(stmt, FloatNode):
         return Float(stmt.value)
     elif isinstance(stmt, ComplexNode):
         raise NotImplementedError('ComplexNode not yet available')
+    elif isinstance(stmt, AssignmentNode):
+        lhs = fst_to_ast(stmt.target)
+        rhs = fst_to_ast(stmt.value)
+        return Assign(lhs, rhs)
+    elif isinstance(stmt, NameNode):
+        if stmt.value == 'None':
+            return Nil()
+        else:
+            return Symbol(stmt.value)
     elif isinstance(stmt, BinaryOperatorNode):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -105,8 +142,12 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
-        print '>>>> ', stmt.target, stmt.value
-        return fst_to_ast(stmt.target)
+        arg = Argument(str(stmt.target))
+        if stmt.value is None:
+            return arg
+        else:
+            value = fst_to_ast(stmt.value)
+            return ValuedArgument(arg, value)
     elif isinstance(stmt, ReturnNode):
         return Return(fst_to_ast(stmt.value))
     elif isinstance(stmt, DefNode):

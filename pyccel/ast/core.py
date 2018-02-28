@@ -1558,7 +1558,10 @@ class Nil(Basic):
     """
     class for None object in the code.
     """
-    pass
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return sstr('None')
 
 
 class Variable(Symbol):
