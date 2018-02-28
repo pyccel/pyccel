@@ -105,7 +105,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
-        return fst_to_ast(stmt.name)
+        print '>>>> ', stmt.target, stmt.value
+        return fst_to_ast(stmt.target)
     elif isinstance(stmt, ReturnNode):
         return Return(fst_to_ast(stmt.value))
     elif isinstance(stmt, DefNode):
