@@ -17,6 +17,7 @@ from redbaron import DotNode,AtomtrailersNode,PrintNode
 from redbaron import ComparisonNode,ComparisonOperatorNode
 
 
+
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Nil
 from pyccel.ast import Variable,DottedName
@@ -26,6 +27,7 @@ from pyccel.ast import For,Range,If,While
 from pyccel.ast import Comment, EmptyLine,Print
 from pyccel import fcode
 from pyccel.ast.core import Return
+from pyccel.parser import PyccelParser
 
 
 
@@ -208,8 +210,10 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
-        # TODO must check if it is a header or not
-        return Comment(stmt.value)
+        pyccel = PyccelParser()
+        comment = pyccel.parse(stmt.value)
+        comment=comment.statements[0]
+        return comment.expr
     else:
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
 
