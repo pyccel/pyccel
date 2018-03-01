@@ -1390,6 +1390,9 @@ class FunctionCall(AtomicExpr):
 
         if isinstance(func, FunctionDef):
             kind = func.kind
+            f_name = func.name
+        else:
+            f_name = func
 
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
@@ -1398,8 +1401,6 @@ class FunctionCall(AtomicExpr):
             raise ValueError("kind must be one among {'function', 'procedure'}")
         if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
             raise TypeError("Expecting a cls_variable.")
-
-        f_name = func.name
 
         obj = Basic.__new__(cls, f_name)
 
