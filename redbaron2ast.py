@@ -14,6 +14,7 @@ from redbaron import ReturnNode
 from redbaron import DefArgumentNode,CallNode,CallArgumentNode
 from redbaron import ForNode
 from redbaron import DotNode,AtomtrailersNode,PrintNode
+from redbaron import ComparisonNode,ComparisonOperatorNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -32,6 +33,8 @@ from sympy import Tuple
 from sympy import Add, Mul, Pow
 from sympy import Integer, Float
 from sympy import sympify
+from sympy import And,Or
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
 
@@ -115,6 +118,8 @@ def fst_to_ast(stmt):
         return stmt.value
     elif isinstance(stmt,str):
         return stmt
+    elif isinstance(stmt,ComparisonOperatorNode):
+        return str(stmt)
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
@@ -135,8 +140,8 @@ def fst_to_ast(stmt):
         return sympify(stmt.value)
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
-    elif isinstance(stmt,(BooleanOperatorNode,BinaryOperatorNode)) :
-            return op(fst_to_ast(stmt.first),fst_to_ast(stmt.second),stmt.value)
+    elif isinstance(stmt,(BooleanOperatorNode,BinaryOperatorNode,ComparisonNode)) :
+            return op(fst_to_ast(stmt.first),fst_to_ast(stmt.second),fst_to_ast(stmt.value))
     elif isinstance(stmt, DefArgumentNode):
         arg = Argument(str(stmt.target))
         if stmt.value is None:
@@ -196,17 +201,30 @@ def fst_to_ast(stmt):
 
 def op(x,y,operator):
     if operator=='*':
-        return x*y
+        return Mul(x,y)
     elif operator=='+':
-        return x+y
+        return Add(x,y)
     elif operator=='and':
-        return x and y
+        return And(x,y)
     elif operator=='or':
-        return x or y
+        return Or(x,y)
     elif operator=='**':
         return Pow(x,y)
+    elif operator=='==':
+        return Eq(x,y)
+    elif operator=='!=' or operator=='<>':
+        return Ne(x,y)
+    elif operator=='>':
+        return Gt(x,y)
+    elif operator=='>=':
+        return Ge(x,y)
+    elif operator=='<':
+        return Lt(x,y)
+    elif operator=='<=':
+        return Le(x,y)
     else:
         raise ValueError('unknown/unavailable operator {node}'.format())
+
 
 def read_file(filename):
     """Returns the source code from a filename."""
