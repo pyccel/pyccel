@@ -41,6 +41,7 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
 from sympy.functions import *
+from sympy import Sum
 Built_in_Functions={'abs':Abs,'dict':'','help':'','min':Min,
 'setattr':'','all':'','dir':'',
 'hex':'','next':'','slice':'','any':'',
@@ -48,7 +49,7 @@ Built_in_Functions={'abs':Abs,'dict':'','help':'','min':Min,
 'ascii':'','enumerate':'','input':'','oct':'',
 'staticmethod':'','bin':'','eval':'','int':Integer,
 'open':'','str':'','bool':'','exec':'',
-'isinstance':'','ord':'','sum':'','bytearray':'',
+'isinstance':'','ord':'','sum':Sum,'bytearray':'',
 'filter':'','issubclass':'','pow':'','super':'',
 'bytes':'','float':Float,'iter':'','tuple':'','callable':'',
 'format':'','len':Len,'property':'','type':'',
