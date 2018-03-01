@@ -6,25 +6,28 @@ from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
 from redbaron import BinaryOperatorNode,BooleanOperatorNode
 from redbaron import AssociativeParenthesisNode
-from redbaron import DefNode
+from redbaron import DefNode,ClassNode
 from redbaron import ListNode,TupleNode
 from redbaron import CommaProxyList,CommaNode
-from redbaron import LineProxyList,DotProxyList
+from redbaron import LineProxyList,DotProxyList,NodeList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode,CallNode,CallArgumentNode
-from redbaron import ForNode
+from redbaron import ForNode,IfelseblockNode,WhileNode,IfNode,ElseNode,ElifNode
 from redbaron import DotNode,AtomtrailersNode,PrintNode
 from redbaron import ComparisonNode,ComparisonOperatorNode
+
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Nil
 from pyccel.ast import Variable,DottedName
 from pyccel.ast import Assign
-from pyccel.ast import FunctionDef,FunctionCall
-from pyccel.ast import For,Range
+from pyccel.ast import FunctionDef,FunctionCall,ClassDef
+from pyccel.ast import For,Range,If,While
 from pyccel.ast import Comment, EmptyLine,Print
 from pyccel import fcode
+from pyccel.ast.core import Return
+from pyccel.parser import PyccelParser
 
 
 
@@ -109,7 +112,7 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode,TupleNode)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode,TupleNode,NodeList)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif stmt is None:
@@ -184,17 +187,33 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+    elif isinstance(stmt,ClassNode):
+        name=fst_to_ast(stmt.name)
+        methods=fst_to_ast(stmt.value)
+        attributes=methods[0].arguments
+        return ClassDef(name,attributes,methods)
     elif isinstance(stmt, ForNode):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
         strict = True
         return For(target, iter, body, strict=strict)
+    elif isinstance(stmt,IfelseblockNode):
+        return If(*fst_to_ast(stmt.value))
+    elif isinstance(stmt,(IfNode,ElifNode)):
+        return Tuple(fst_to_ast(stmt.test),list(fst_to_ast(stmt.value)))
+    elif isinstance(stmt,ElseNode):
+        return Tuple(True,list(fst_to_ast(stmt.value)))
+    elif isinstance(stmt,WhileNode):
+        return While(fst_to_ast(stmt.test),fst_to_ast(stmt.value))
+
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
-        # TODO must check if it is a header or not
-        return Comment(stmt.value)
+        pyccel = PyccelParser()
+        comment = pyccel.parse(stmt.value)
+        comment=comment.statements[0]
+        return comment.expr
     else:
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
 
@@ -204,6 +223,8 @@ def op(x,y,operator):
         return Mul(x,y)
     elif operator=='+':
         return Add(x,y)
+    elif operator=='-':
+        return Add(x,-y)
     elif operator=='and':
         return And(x,y)
     elif operator=='or':
@@ -223,6 +244,7 @@ def op(x,y,operator):
     elif operator=='<=':
         return Le(x,y)
     else:
+        print(x,y,operator,'####')
         raise ValueError('unknown/unavailable operator {node}'.format())
 
 
