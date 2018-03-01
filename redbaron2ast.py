@@ -9,10 +9,10 @@ from redbaron import AssociativeParenthesisNode
 from redbaron import DefNode
 from redbaron import ListNode,TupleNode
 from redbaron import CommaProxyList,CommaNode
-from redbaron import LineProxyList,DotProxyList
+from redbaron import LineProxyList,DotProxyList,NodeList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode,CallNode,CallArgumentNode
-from redbaron import ForNode
+from redbaron import ForNode,IfelseblockNode,WhileNode,IfNode,ElseNode,ElifNode
 from redbaron import DotNode,AtomtrailersNode,PrintNode
 from redbaron import ComparisonNode,ComparisonOperatorNode
 
@@ -22,7 +22,7 @@ from pyccel.ast import Nil
 from pyccel.ast import Variable,DottedName
 from pyccel.ast import Assign
 from pyccel.ast import FunctionDef,FunctionCall
-from pyccel.ast import For,Range
+from pyccel.ast import For,Range,If,While
 from pyccel.ast import Comment, EmptyLine,Print
 from pyccel import fcode
 
@@ -109,7 +109,7 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode,TupleNode)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode,TupleNode,NodeList)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif stmt is None:
@@ -190,6 +190,15 @@ def fst_to_ast(stmt):
         body   = fst_to_ast(stmt.value)
         strict = True
         return For(target, iter, body, strict=strict)
+    elif isinstance(stmt,IfelseblockNode):
+        return If(*fst_to_ast(stmt.value))
+    elif isinstance(stmt,(IfNode,ElifNode)):
+        return Tuple(fst_to_ast(stmt.test),list(fst_to_ast(stmt.value)))
+    elif isinstance(stmt,ElseNode):
+        return Tuple(True,list(fst_to_ast(stmt.value)))
+    elif isinstance(stmt,WhileNode):
+        return While(fst_to_ast(stmt.test),fst_to_ast(stmt.value))
+
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
