@@ -1,6 +1,6 @@
 # coding: utf-8
 from redbaron import RedBaron
-from redbaron import IntNode, FloatNode, ComplexNode
+from redbaron import StringNode, IntNode, FloatNode, ComplexNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
@@ -16,6 +16,9 @@ from redbaron import LineProxyList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode
 from redbaron import ForNode
+from redbaron import PrintNode
+from redbaron import DelNode
+from redbaron import DictNode, DictitemNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -25,6 +28,8 @@ from pyccel.ast import Assign
 from pyccel.ast import Return
 from pyccel.ast import FunctionDef
 from pyccel.ast import For
+from pyccel.ast import Print
+from pyccel.ast import Del
 from pyccel.ast import Comment, EmptyLine
 
 
@@ -37,6 +42,7 @@ from sympy.logic.boolalg import Not
 #from sympy.logic.boolalg import Boolean,
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
+from sympy.core.containers import Dict
 
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
@@ -117,10 +123,24 @@ def fst_to_ast(stmt):
                          TupleNode, ListNode)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
+    elif isinstance(stmt, DictNode):
+        d = {}
+        for i in stmt.value:
+            if not isinstance(i, DictitemNode):
+                raise TypeError('Expecting a DictitemNode')
+            key   = fst_to_ast(i.key)
+            value = fst_to_ast(i.value)
+            # sympy does not allow keys to be strings
+            if isinstance(key, str):
+                raise TypeError('sympy does not allow keys to be strings')
+            d[key] = value
+        return Dict(d)
     elif stmt is None:
         return Nil()
     elif isinstance(stmt, str):
-        return stmt
+        return repr(stmt.value)
+    elif isinstance(stmt, StringNode):
+        return repr(stmt.value)
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
     elif isinstance(stmt, FloatNode):
@@ -140,6 +160,9 @@ def fst_to_ast(stmt):
             return false
         else:
             return Symbol(stmt.value)
+    elif isinstance(stmt, DelNode):
+        arg = fst_to_ast(stmt.value)
+        return Del(arg)
     elif isinstance(stmt, UnitaryOperatorNode):
         target = fst_to_ast(stmt.target)
         if stmt.value == 'not':
@@ -207,6 +230,9 @@ def fst_to_ast(stmt):
         else:
             raise ValueError('unknown/unavailable binary operator '
                              '{node}'.format(node=type(op)))
+    elif isinstance(stmt, PrintNode):
+        expr = fst_to_ast(stmt.value)
+        return Print(expr)
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
