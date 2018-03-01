@@ -1,19 +1,19 @@
 # coding: utf-8
 from redbaron import RedBaron
-from redbaron import IntNode, FloatNode, ComplexNode
+from redbaron import IntNode, FloatNode, ComplexNode,StringNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
 from redbaron import BinaryOperatorNode,BooleanOperatorNode
 from redbaron import AssociativeParenthesisNode
 from redbaron import DefNode
-from redbaron import ListNode
-from redbaron import CommaProxyList
+from redbaron import ListNode,TupleNode
+from redbaron import CommaProxyList,CommaNode
 from redbaron import LineProxyList,DotProxyList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode,CallNode,CallArgumentNode
 from redbaron import ForNode
-from redbaron import DotNode,AtomtrailersNode
+from redbaron import DotNode,AtomtrailersNode,PrintNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -21,8 +21,10 @@ from pyccel.ast import Nil
 from pyccel.ast import Variable,DottedName
 from pyccel.ast import Assign
 from pyccel.ast import FunctionDef,FunctionCall
-from pyccel.ast import For
-from pyccel.ast import Comment, EmptyLine
+from pyccel.ast import For,Range
+from pyccel.ast import Comment, EmptyLine,Print
+from pyccel import fcode
+
 
 
 from sympy import Symbol
@@ -104,24 +106,29 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode,TupleNode)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif stmt is None:
         return Nil()
-    elif isinstance(stmt, str):
+    elif isinstance(stmt,StringNode):
+        return stmt.value
+    elif isinstance(stmt,str):
         return stmt
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
         return Assign(lhs, rhs)
     elif isinstance(stmt, NameNode):
-        if stmt.previous:
+        if stmt.previous and not isinstance(stmt.previous,CommaNode):
             return fst_to_ast(stmt.previous)
         if stmt.value == 'None':
             return Nil()
         else:
             return Symbol(stmt.value)
+    elif isinstance(stmt,PrintNode):
+         ls=fst_to_ast(stmt.value)
+         return Print(ls)
     elif isinstance(stmt,AtomtrailersNode):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt,(IntNode, FloatNode, ComplexNode)):
@@ -148,8 +155,10 @@ def fst_to_ast(stmt):
         suf=stmt.next
         stmt.parent.value.remove(stmt.previous)
         return DottedName(str(pre),str(fst_to_ast(suf)))
-    elif isinstance(stmt,CallNode):
-        return FunctionCall(str(stmt.previous.name),stmt.value)
+    elif isinstance(stmt,CallNode) and stmt.previous.name.value=='range':
+        return Range(*fst_to_ast(stmt.value))
+    elif isinstance(stmt,CallNode) and not stmt.previous.name.value=='range':
+        return FunctionCall(str(fst_to_ast(stmt.previous.name)),fst_to_ast(stmt.value)) 
     elif isinstance(stmt,CallArgumentNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, ReturnNode):
