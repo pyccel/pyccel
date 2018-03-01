@@ -1,3 +1,21 @@
+class Point(object):
+    def __init__(self,x,y):
+        self.x=x
+        self.y=y
+    def translate(self,x,y,a,b):
+        t=x+a
+        z=y+b
+        return t,z
+
+def incr(x):
+    y=x+1
+    return y
+def decr(x):
+    y=x-1
+    return y
+x=1
+
+
 if a==b:
     x=y
 elif a>b:
@@ -13,4 +31,4 @@ dot(x,y)
 x.y.dot(x,y)
 x.r(0,1)
 for i in range(10):
-    print i
+    print(i,j)
