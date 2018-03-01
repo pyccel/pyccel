@@ -4,10 +4,13 @@ from redbaron import IntNode, FloatNode, ComplexNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
-from redbaron import BinaryOperatorNode
+from redbaron import ComparisonNode
+from redbaron import ComparisonOperatorNode
+from redbaron import UnitaryOperatorNode
+from redbaron import BinaryOperatorNode, BooleanOperatorNode
 from redbaron import AssociativeParenthesisNode
 from redbaron import DefNode
-from redbaron import ListNode
+from redbaron import TupleNode, ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
 from redbaron import ReturnNode
@@ -28,6 +31,11 @@ from pyccel.ast import Comment, EmptyLine
 from sympy import Symbol
 from sympy import Tuple
 from sympy import Add, Mul, Pow
+from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import true, false
+from sympy.logic.boolalg import Not
+#from sympy.logic.boolalg import Boolean,
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
 
 # ... TODO should be moved to pyccel.ast
@@ -104,7 +112,9 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode)):
+    if isinstance(stmt, (RedBaron,
+                         CommaProxyList, LineProxyList,
+                         TupleNode, ListNode)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif stmt is None:
@@ -124,9 +134,26 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, NameNode):
         if stmt.value == 'None':
             return Nil()
+        elif stmt.value == 'True':
+            return true
+        elif stmt.value == 'False':
+            return false
         else:
             return Symbol(stmt.value)
-    elif isinstance(stmt, BinaryOperatorNode):
+    elif isinstance(stmt, UnitaryOperatorNode):
+        target = fst_to_ast(stmt.target)
+        if stmt.value == 'not':
+            return Not(target)
+        elif stmt.value == '+':
+            return target
+        elif stmt.value == '-':
+            return -target
+        elif stmt.value == '~':
+            raise ValueError('Invert unary operator is not covered by Pyccel.')
+        else:
+            raise ValueError('unknown/unavailable unary operator '
+                             '{node}'.format(node=type(stmt.value)))
+    elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
         if stmt.value == '+':
@@ -139,9 +166,47 @@ def fst_to_ast(stmt):
         elif stmt.value == '/':
             second = Pow(second, -1)
             return Mul(first, second)
+        elif stmt.value == 'and':
+            return And(first, second)
+        elif stmt.value == 'or':
+            return Or(first, second)
         else:
-            raise ValueError('unknown/unavailable operator '
+            raise ValueError('unknown/unavailable binary operator '
                              '{node}'.format(node=type(stmt.value)))
+    elif isinstance(stmt, ComparisonOperatorNode):
+        if stmt.first == '==':
+            return '=='
+        elif stmt.first == '!=':
+            return '!='
+        elif stmt.first == '<':
+            return '<'
+        elif stmt.first == '>':
+            return '>'
+        elif stmt.first == '<=':
+            return '<='
+        elif stmt.first == '>=':
+            return '>='
+        else:
+            raise ValueError('unknown comparison operator {}'.format(stmt.first))
+    elif isinstance(stmt, ComparisonNode):
+        first  = fst_to_ast(stmt.first)
+        second = fst_to_ast(stmt.second)
+        op     = fst_to_ast(stmt.value)
+        if op == '==':
+            return Eq(first, second)
+        elif op == '!=':
+            return Ne(first, second)
+        elif op == '<':
+            return Lt(first, second)
+        elif op == '>':
+            return Gt(first, second)
+        elif op == '<=':
+            return Le(first, second)
+        elif op == '>=':
+            return Ge(first, second)
+        else:
+            raise ValueError('unknown/unavailable binary operator '
+                             '{node}'.format(node=type(op)))
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
@@ -194,9 +259,11 @@ def read_file(filename):
     f.close()
     return code
 
-#code = read_file('ex_redbaron.py')
-#code = read_file('ex_function.py')
-code = read_file('ex_for.py')
+#filename = 'scripts/expressions.py'
+#filename = 'scripts/functions.py'
+#filename = 'scripts/loops.py'
+filename = 'test.py'
+code = read_file(filename)
 red  = RedBaron(code)
 
 print('----- FST -----')

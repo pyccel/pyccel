@@ -50,3 +50,73 @@ In the *semantic analysis* process, we *decorate* our *AST* and
 
 
 .. note:: since our target language is *Fortran*, we only convert variables that have a *type*. 
+
+Full Syntax Tree (FST)
+^^^^^^^^^^^^^^^^^^^^^^
+
+===================================   =============  =========  =========  
+         RedBaron Nodes                Sympy Nodes    phase 1    phase 2
+===================================   =============  =========  =========
+ArgumentGeneratorComprehensionNode
+AssertNode
+AssignmentNode                                            +
+AssociativeParenthesisNode                                +
+AtomtrailersNode
+BinaryNode
+BinaryOperatorNode                                        + 
+BooleanOperatorNode                                       +
+CallNode
+CallArgumentNode
+ClassNode
+CommaNode
+ComparisonNode                                            +
+ComprehensionIfNode
+ComprehensionLoopNode
+DecoratorNode
+DefArgumentNode                                           +
+DelNode
+DictArgumentNode
+DictNode
+DictComprehensionNode
+DottedAsNameNode
+DotNode
+ElifNode
+ElseNode
+EndlNode                                                  +
+ExceptNode
+ExecNode
+FinallyNode
+ForNode                                                   +
+FromImportNode
+FuncdefNode
+GeneratorComprehensionNode
+GetitemNode
+GlobalNode
+IfNode
+IfelseblockNode
+ImportNode
+IntNode                                                   +
+LambdaNode
+ListArgumentNode
+ListComprehensionNode
+ListNode                                                  +
+NameAsNameNode
+PrintNode
+RaiseNode
+ReprNode
+ReturnNode                                                +
+SetNode
+SetComprehensionNode
+SliceNode
+SpaceNode
+StringChainNode
+TernaryOperatorNode
+TryNode
+TupleNode                                                 +
+UnitaryOperatorNode
+YieldNode
+YieldAtomNode
+WhileNode
+WithContextItemNode
+WithNode
+===================================   =============  =========  =========  
