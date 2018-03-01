@@ -15,6 +15,7 @@ def decr(x):
     return y
 x=1
 
+#$ header function dgbtrf(int, int, int, int, double [:,:], int, int [:], int)
 
 if a==b:
     x=y
