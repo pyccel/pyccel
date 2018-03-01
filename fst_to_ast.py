@@ -1,6 +1,6 @@
 # coding: utf-8
 from redbaron import RedBaron
-from redbaron import StringNode, IntNode, FloatNode, ComplexNode
+from redbaron import IntNode, FloatNode, ComplexNode,StringNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
@@ -9,28 +9,32 @@ from redbaron import ComparisonOperatorNode
 from redbaron import UnitaryOperatorNode
 from redbaron import BinaryOperatorNode, BooleanOperatorNode
 from redbaron import AssociativeParenthesisNode
-from redbaron import DefNode
-from redbaron import TupleNode, ListNode
-from redbaron import CommaProxyList
-from redbaron import LineProxyList
+from redbaron import DefNode,ClassNode
+from redbaron import ListNode,TupleNode
+from redbaron import CommaProxyList,CommaNode
+from redbaron import LineProxyList,DotProxyList,NodeList
 from redbaron import ReturnNode
-from redbaron import DefArgumentNode
-from redbaron import ForNode
-from redbaron import PrintNode
+from redbaron import DefArgumentNode,CallNode,CallArgumentNode
+from redbaron import ForNode,IfelseblockNode,WhileNode,IfNode,ElseNode,ElifNode
+from redbaron import DotNode,AtomtrailersNode,PrintNode
+from redbaron import ComparisonNode,ComparisonOperatorNode
 from redbaron import DelNode
 from redbaron import DictNode, DictitemNode
 
 
+
+
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
-from pyccel.ast import Nil
-from pyccel.ast import Variable
+from pyccel.ast import Nil,Len,Del
+from pyccel.ast import Variable,DottedName
 from pyccel.ast import Assign
-from pyccel.ast import Return
-from pyccel.ast import FunctionDef
-from pyccel.ast import For
-from pyccel.ast import Print
-from pyccel.ast import Del
-from pyccel.ast import Comment, EmptyLine
+from pyccel.ast import FunctionDef,FunctionCall,ClassDef
+from pyccel.ast import For,Range,If,While
+from pyccel.ast import Comment, EmptyLine,Print
+from pyccel import fcode
+from pyccel.ast.core import Return
+from pyccel.parser import PyccelParser
+
 
 
 from sympy import Symbol
@@ -42,10 +46,30 @@ from sympy.logic.boolalg import Not
 #from sympy.logic.boolalg import Boolean,
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
-from sympy.core.containers import Dict
-
-# ... TODO should be moved to pyccel.ast
+from sympy import sympify
+from sympy import And,Or
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+# ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
+from sympy.functions import *
+from sympy import Sum
+Built_in_Functions={'abs':Abs,'dict':'','help':'','min':Min,
+'setattr':'','all':'','dir':'',
+'hex':'','next':'','slice':'','any':'',
+'divmod':'','id':'','object':'','sorted':'',
+'ascii':'','enumerate':'','input':'','oct':'',
+'staticmethod':'','bin':'','eval':'','int':Integer,
+'open':'','str':'','bool':'','exec':'',
+'isinstance':'','ord':'','sum':Sum,'bytearray':'',
+'filter':'','issubclass':'','pow':'','super':'',
+'bytes':'','float':Float,'iter':'','tuple':'','callable':'',
+'format':'','len':Len,'property':'','type':'',
+'chr':'','frozenset':'','list':'','range':Range,
+'vars':'','classmethod':'','getattr':'','locals':'',
+'repr':'','zip':'','compile':'','globals':'',
+'map':'','reversed':'','__import__':'','complex':'',
+'hasattr':'','max':Max,'round':'','delattr':'','hash':'',
+'memoryview':'','set':''}
 
 class Argument(Symbol):
     """An abstract Argument data structure."""
@@ -73,9 +97,9 @@ class ValuedArgument(Basic):
         argument = sstr(self.argument)
         value    = sstr(self.value)
         return '{0}={1}'.format(argument, value)
-# ...
+# ...
 
-# ... utilities
+# ... utilities
 from sympy import srepr
 from sympy.printing.dot import dotprint
 
@@ -101,7 +125,7 @@ def export_ast(expr, filename):
     name = os.path.splitext(name)[0]
     cmd = "dot -Tps {name}.gv -o {name}.ps".format(name=name)
     os.system(cmd)
-# ...
+# ...
 
 
 # TODO use Double instead of Float? or add precision
@@ -118,9 +142,7 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron,
-                         CommaProxyList, LineProxyList,
-                         TupleNode, ListNode)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList, ListNode,TupleNode,NodeList)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif isinstance(stmt, DictNode):
@@ -138,28 +160,17 @@ def fst_to_ast(stmt):
     elif stmt is None:
         return Nil()
     elif isinstance(stmt, str):
-        return repr(stmt.value)
+        return repr(stmt)
     elif isinstance(stmt, StringNode):
         return repr(stmt.value)
+    elif isinstance(stmt,ComparisonOperatorNode):
+        return str(stmt)
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
     elif isinstance(stmt, FloatNode):
         return Float(stmt.value)
     elif isinstance(stmt, ComplexNode):
         raise NotImplementedError('ComplexNode not yet available')
-    elif isinstance(stmt, AssignmentNode):
-        lhs = fst_to_ast(stmt.target)
-        rhs = fst_to_ast(stmt.value)
-        return Assign(lhs, rhs)
-    elif isinstance(stmt, NameNode):
-        if stmt.value == 'None':
-            return Nil()
-        elif stmt.value == 'True':
-            return true
-        elif stmt.value == 'False':
-            return false
-        else:
-            return Symbol(stmt.value)
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)
         return Del(arg)
@@ -176,65 +187,28 @@ def fst_to_ast(stmt):
         else:
             raise ValueError('unknown/unavailable unary operator '
                              '{node}'.format(node=type(stmt.value)))
-    elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
-        first  = fst_to_ast(stmt.first)
-        second = fst_to_ast(stmt.second)
-        if stmt.value == '+':
-            return Add(first, second)
-        elif stmt.value == '*':
-            return Mul(first, second)
-        elif stmt.value == '-':
-            second = Mul(-1, second)
-            return Add(first, second)
-        elif stmt.value == '/':
-            second = Pow(second, -1)
-            return Mul(first, second)
-        elif stmt.value == 'and':
-            return And(first, second)
-        elif stmt.value == 'or':
-            return Or(first, second)
+    elif isinstance(stmt, AssignmentNode):
+        lhs = fst_to_ast(stmt.target)
+        rhs = fst_to_ast(stmt.value)
+        return Assign(lhs, rhs)
+    elif isinstance(stmt, NameNode):
+        if stmt.previous and not isinstance(stmt.previous,CommaNode):
+            return fst_to_ast(stmt.previous)
+        if stmt.value == 'None':
+            return Nil()
         else:
-            raise ValueError('unknown/unavailable binary operator '
-                             '{node}'.format(node=type(stmt.value)))
-    elif isinstance(stmt, ComparisonOperatorNode):
-        if stmt.first == '==':
-            return '=='
-        elif stmt.first == '!=':
-            return '!='
-        elif stmt.first == '<':
-            return '<'
-        elif stmt.first == '>':
-            return '>'
-        elif stmt.first == '<=':
-            return '<='
-        elif stmt.first == '>=':
-            return '>='
-        else:
-            raise ValueError('unknown comparison operator {}'.format(stmt.first))
-    elif isinstance(stmt, ComparisonNode):
-        first  = fst_to_ast(stmt.first)
-        second = fst_to_ast(stmt.second)
-        op     = fst_to_ast(stmt.value)
-        if op == '==':
-            return Eq(first, second)
-        elif op == '!=':
-            return Ne(first, second)
-        elif op == '<':
-            return Lt(first, second)
-        elif op == '>':
-            return Gt(first, second)
-        elif op == '<=':
-            return Le(first, second)
-        elif op == '>=':
-            return Ge(first, second)
-        else:
-            raise ValueError('unknown/unavailable binary operator '
-                             '{node}'.format(node=type(op)))
-    elif isinstance(stmt, PrintNode):
-        expr = fst_to_ast(stmt.value)
-        return Print(expr)
+            return Symbol(stmt.value)
+    elif isinstance(stmt,PrintNode):
+         ls=fst_to_ast(stmt.value)
+         return Print(ls)
+    elif isinstance(stmt,AtomtrailersNode):
+         return fst_to_ast(stmt.value)
+    elif isinstance(stmt,(IntNode, FloatNode, ComplexNode)):
+        return sympify(stmt.value)
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
+    elif isinstance(stmt,(BooleanOperatorNode,BinaryOperatorNode,ComparisonNode)) :
+            return op(fst_to_ast(stmt.first),fst_to_ast(stmt.second),str(stmt.value))
     elif isinstance(stmt, DefArgumentNode):
         arg = Argument(str(stmt.target))
         if stmt.value is None:
@@ -242,6 +216,25 @@ def fst_to_ast(stmt):
         else:
             value = fst_to_ast(stmt.value)
             return ValuedArgument(arg, value)
+    elif isinstance(stmt,DotProxyList):
+        node=fst_to_ast(stmt[-1])
+        if len(stmt)>1:
+            stmt.pop()
+            stmt.pop()
+        return node
+    elif isinstance(stmt,DotNode):
+        pre=fst_to_ast(stmt.previous)
+        suf=stmt.next
+        stmt.parent.value.remove(stmt.previous)
+        return DottedName(str(pre),str(fst_to_ast(suf)))
+    elif isinstance(stmt,CallNode):
+        name=stmt.previous.name.value
+        if  name in Built_in_Functions and not Built_in_Functions[name]=='':
+            return Built_in_Functions[name](*fst_to_ast(stmt.value))
+        else:
+            return FunctionCall(str(fst_to_ast(stmt.previous.name)),fst_to_ast(stmt.value)) 
+    elif isinstance(stmt,CallArgumentNode):
+        return fst_to_ast(stmt.value)
     elif isinstance(stmt, ReturnNode):
         return Return(fst_to_ast(stmt.value))
     elif isinstance(stmt, DefNode):
@@ -260,22 +253,68 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+    elif isinstance(stmt,ClassNode):
+        name=fst_to_ast(stmt.name)
+        methods=fst_to_ast(stmt.value)
+        attributes=methods[0].arguments
+        return ClassDef(name,attributes,methods)
     elif isinstance(stmt, ForNode):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
         strict = True
         return For(target, iter, body, strict=strict)
+    elif isinstance(stmt,IfelseblockNode):
+        return If(*fst_to_ast(stmt.value))
+    elif isinstance(stmt,(IfNode,ElifNode)):
+        return Tuple(fst_to_ast(stmt.test),list(fst_to_ast(stmt.value)))
+    elif isinstance(stmt,ElseNode):
+        return Tuple(True,list(fst_to_ast(stmt.value)))
+    elif isinstance(stmt,WhileNode):
+        return While(fst_to_ast(stmt.test),fst_to_ast(stmt.value))
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
-        # TODO must check if it is a header or not
-        return Comment(stmt.value)
+        pyccel = PyccelParser()
+        comment=str(stmt.value).encode()
+        comment = pyccel.parse(comment)
+        comment=comment.statements[0]
+        return comment.expr
     else:
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
 
 
-
+def op(x,y,operator):
+    if operator=='*':
+        return Mul(x,y)
+    if operator=='/':
+        y = Pow(y, -1)
+        return Mul(x,y)
+    elif operator=='+':
+        return Add(x,y)
+    elif operator=='-':
+        return Add(x,-y)
+    elif operator=='and':
+        return And(x,y)
+    elif operator=='or':
+        return Or(x,y)
+    elif operator=='**':
+        return Pow(x,y)
+    elif operator=='==':
+        return Eq(x,y)
+    elif operator=='!=' or operator=='<>':
+        return Ne(x,y)
+    elif operator=='>':
+        return Gt(x,y)
+    elif operator=='>=':
+        return Ge(x,y)
+    elif operator=='<':
+        return Lt(x,y)
+    elif operator=='<=':
+        return Le(x,y)
+    else:
+        print(operator,type(operator))
+        raise ValueError('unknown/unavailable operator {node}'.format())
 
 
 def read_file(filename):
@@ -285,10 +324,10 @@ def read_file(filename):
     f.close()
     return code
 
-#filename = 'scripts/expressions.py'
+filename = 'scripts/expressions.py'
 #filename = 'scripts/functions.py'
 #filename = 'scripts/loops.py'
-filename = 'test.py'
+#filename = 'scripts/dels.py'
 code = read_file(filename)
 red  = RedBaron(code)
 
