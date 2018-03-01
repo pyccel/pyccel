@@ -16,6 +16,8 @@ from redbaron import LineProxyList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode
 from redbaron import ForNode
+from redbaron import PrintNode
+from redbaron import DictNode, DictitemNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -25,6 +27,7 @@ from pyccel.ast import Assign
 from pyccel.ast import Return
 from pyccel.ast import FunctionDef
 from pyccel.ast import For
+from pyccel.ast import Print
 from pyccel.ast import Comment, EmptyLine
 
 
@@ -117,6 +120,11 @@ def fst_to_ast(stmt):
                          TupleNode, ListNode)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
+    elif isinstance(stmt, DictNode):
+        ls = [fst_to_ast(i) for i in stmt.value]
+        raise NotImplementedError('TODO')
+    elif isinstance(stmt, DictitemNode):
+        raise NotImplementedError('TODO')
     elif stmt is None:
         return Nil()
     elif isinstance(stmt, str):
@@ -207,6 +215,9 @@ def fst_to_ast(stmt):
         else:
             raise ValueError('unknown/unavailable binary operator '
                              '{node}'.format(node=type(op)))
+    elif isinstance(stmt, PrintNode):
+        expr = fst_to_ast(stmt.value)
+        return Print(expr)
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
