@@ -19,7 +19,7 @@ from redbaron import ComparisonNode,ComparisonOperatorNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
-from pyccel.ast import Nil
+from pyccel.ast import Nil,Len
 from pyccel.ast import Variable,DottedName
 from pyccel.ast import Assign
 from pyccel.ast import FunctionDef,FunctionCall,ClassDef
@@ -40,22 +40,23 @@ from sympy import And,Or
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
-Built_in_Functions={'abs':'','dict':'','help':'','min':'',
+from sympy.functions import *
+Built_in_Functions={'abs':Abs,'dict':'','help':'','min':Min,
 'setattr':'','all':'','dir':'',
 'hex':'','next':'','slice':'','any':'',
 'divmod':'','id':'','object':'','sorted':'',
 'ascii':'','enumerate':'','input':'','oct':'',
-'staticmethod':'','bin':'','eval':'','int':'',
+'staticmethod':'','bin':'','eval':'','int':Integer,
 'open':'','str':'','bool':'','exec':'',
 'isinstance':'','ord':'','sum':'','bytearray':'',
 'filter':'','issubclass':'','pow':'','super':'',
-'bytes':'','float':'','iter':'','tuple':'','callable':'',
-'format':'','len':'','property':'','type':'',
+'bytes':'','float':Float,'iter':'','tuple':'','callable':'',
+'format':'','len':Len,'property':'','type':'',
 'chr':'','frozenset':'','list':'','range':Range,
 'vars':'','classmethod':'','getattr':'','locals':'',
 'repr':'','zip':'','compile':'','globals':'',
 'map':'','reversed':'','__import__':'','complex':'',
-'hasattr':'','max':'','round':'','delattr':'','hash':'',
+'hasattr':'','max':Max,'round':'','delattr':'','hash':'',
 'memoryview':'','set':''}
 
 class Argument(Symbol):
@@ -182,7 +183,7 @@ def fst_to_ast(stmt):
         return DottedName(str(pre),str(fst_to_ast(suf)))
     elif isinstance(stmt,CallNode):
         name=stmt.previous.name.value
-        if  name in Built_in_Functions:
+        if  name in Built_in_Functions and not Built_in_Functions[name]=='':
             return Built_in_Functions[name](*fst_to_ast(stmt.value))
         else:
             return FunctionCall(str(fst_to_ast(stmt.previous.name)),fst_to_ast(stmt.value)) 
