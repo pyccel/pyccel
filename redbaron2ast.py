@@ -40,6 +40,23 @@ from sympy import And,Or
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
+Built_in_Functions={'abs':'','dict':'','help':'','min':'',
+'setattr':'','all':'','dir':'',
+'hex':'','next':'','slice':'','any':'',
+'divmod':'','id':'','object':'','sorted':'',
+'ascii':'','enumerate':'','input':'','oct':'',
+'staticmethod':'','bin':'','eval':'','int':'',
+'open':'','str':'','bool':'','exec':'',
+'isinstance':'','ord':'','sum':'','bytearray':'',
+'filter':'','issubclass':'','pow':'','super':'',
+'bytes':'','float':'','iter':'','tuple':'','callable':'',
+'format':'','len':'','property':'','type':'',
+'chr':'','frozenset':'','list':'','range':Range,
+'vars':'','classmethod':'','getattr':'','locals':'',
+'repr':'','zip':'','compile':'','globals':'',
+'map':'','reversed':'','__import__':'','complex':'',
+'hasattr':'','max':'','round':'','delattr':'','hash':'',
+'memoryview':'','set':''}
 
 class Argument(Symbol):
     """An abstract Argument data structure."""
@@ -163,10 +180,12 @@ def fst_to_ast(stmt):
         suf=stmt.next
         stmt.parent.value.remove(stmt.previous)
         return DottedName(str(pre),str(fst_to_ast(suf)))
-    elif isinstance(stmt,CallNode) and stmt.previous.name.value=='range':
-        return Range(*fst_to_ast(stmt.value))
-    elif isinstance(stmt,CallNode) and not stmt.previous.name.value=='range':
-        return FunctionCall(str(fst_to_ast(stmt.previous.name)),fst_to_ast(stmt.value)) 
+    elif isinstance(stmt,CallNode):
+        name=stmt.previous.name.value
+        if  name in Built_in_Functions:
+            return Built_in_Functions[name](*fst_to_ast(stmt.value))
+        else:
+            return FunctionCall(str(fst_to_ast(stmt.previous.name)),fst_to_ast(stmt.value)) 
     elif isinstance(stmt,CallArgumentNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, ReturnNode):
