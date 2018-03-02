@@ -13,12 +13,18 @@ from redbaron import DefNode
 from redbaron import TupleNode, ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
+from redbaron import NodeList
+from redbaron import DotProxyList
 from redbaron import ReturnNode
 from redbaron import DefArgumentNode
 from redbaron import ForNode
 from redbaron import PrintNode
 from redbaron import DelNode
 from redbaron import DictNode, DictitemNode
+from redbaron import ForNode, WhileNode
+from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
+from redbaron import DotNode, AtomtrailersNode
+from redbaron import CallNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -28,6 +34,8 @@ from pyccel.ast import Assign
 from pyccel.ast import Return
 from pyccel.ast import FunctionDef
 from pyccel.ast import For
+from pyccel.ast import If
+from pyccel.ast import While
 from pyccel.ast import Print
 from pyccel.ast import Del
 from pyccel.ast import Comment, EmptyLine
@@ -43,6 +51,7 @@ from sympy.logic.boolalg import Not
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
 from sympy.core.containers import Dict
+from sympy.core.function import Function
 
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
@@ -119,7 +128,7 @@ def datatype_from_redbaron(node):
 def fst_to_ast(stmt):
     """Creates AST from FST."""
     if isinstance(stmt, (RedBaron,
-                         CommaProxyList, LineProxyList,
+                         CommaProxyList, LineProxyList, NodeList,
                          TupleNode, ListNode)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
@@ -260,12 +269,45 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+    elif isinstance(stmt, AtomtrailersNode):
+         return fst_to_ast(stmt.value)
+    elif isinstance(stmt, DotProxyList):
+        # we first get the index of the call node
+        call = None
+        for i, s in enumerate(stmt):
+            if isinstance(s, CallNode):
+                call = stmt[i]
+                break
+            i += 1
+        if call is None:
+            raise ValueError('Can not find the call node')
+
+        # the function name (without trailer) is the previous node to the call
+        name = call.previous
+        name = fst_to_ast(name)
+        # TODO handle dot trailers
+
     elif isinstance(stmt, ForNode):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
         strict = True
         return For(target, iter, body, strict=strict)
+    elif isinstance(stmt, IfelseblockNode):
+        args = fst_to_ast(stmt.value)
+        return If(*args)
+    elif isinstance(stmt,(IfNode, ElifNode)):
+        test = fst_to_ast(stmt.test)
+        body = fst_to_ast(stmt.value)
+        return Tuple(test, body)
+    elif isinstance(stmt, ElseNode):
+        test = True
+        body = fst_to_ast(stmt.value)
+        return Tuple(test, body)
+    elif isinstance(stmt, WhileNode):
+        test = fst_to_ast(stmt.test)
+        body = fst_to_ast(stmt.value)
+        return While(test, body)
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):

@@ -38,7 +38,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.imgmath',
     'sphinx.ext.inheritance_diagram',
     'sphinxcontrib.tikz',
-    'sphinx.ext.viewcode']
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.bibtex']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -152,6 +153,51 @@ latex_documents = [
      u'A. Ratnani', 'manual'),
 ]
 
+# The name of an image file (relative to this directory) to place at the top of
+# the title page.
+#latex_logo = None
+
+# For "manual" documents, if this is true, then toplevel headings are parts,
+# not chapters.
+#latex_use_parts = False
+
+# If true, show page references after internal links.
+#latex_show_pagerefs = False
+
+# If true, show URL addresses after external links.
+#latex_show_urls = False
+
+# Documents to append as an appendix to all manuals.
+#latex_appendices = []
+
+# If false, no module index is generated.
+#latex_domain_indices = True
+
+latex_engine='pdflatex'
+
+latex_additional_files = ['latex_macros.sty']
+latex_elements = {
+    'printmodindex': '',
+    'printindex': '',
+    'preamble' : r'\usepackage{amsmath} \usepackage{amssymb} \usepackage{latex_macros}',
+    'docclass':'report',
+    }
+
+#####################################################
+# add LaTeX macros
+
+f = file('latex_macros.sty')
+
+try:
+    imgmath_latex_preamble  # check whether this is already defined
+except NameError:
+    imgmath_latex_preamble = ""
+
+for macro in f:
+    # used when building html version
+    imgmath_latex_preamble += macro + '\n'
+
+#####################################################
 
 # -- Options for manual page output ---------------------------------------
 

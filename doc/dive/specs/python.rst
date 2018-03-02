@@ -61,12 +61,12 @@ ArgumentGeneratorComprehensionNode
 AssertNode
 AssignmentNode                                            +
 AssociativeParenthesisNode                                +
-AtomtrailersNode
+AtomtrailersNode                                          *
 BinaryNode
 BinaryOperatorNode                                        + 
 BooleanOperatorNode                                       +
-CallNode
-CallArgumentNode
+CallNode                                                  * 
+CallArgumentNode                                          *
 ClassNode
 CommaNode
 ComparisonNode                                            +
@@ -74,26 +74,26 @@ ComprehensionIfNode
 ComprehensionLoopNode
 DecoratorNode
 DefArgumentNode                                           +
-DelNode
-DictArgumentNode
-DictNode
+DelNode                                                   +
+DictArgumentNode                                          +
+DictNode                                                  +
 DictComprehensionNode
 DottedAsNameNode
-DotNode
-ElifNode
-ElseNode
+DotNode                                                   +
+ElifNode                                                  +
+ElseNode                                                  +
 EndlNode                                                  +
-ExceptNode
+ExceptNode                                                x
 ExecNode
-FinallyNode
+FinallyNode                                               x
 ForNode                                                   +
 FromImportNode
 FuncdefNode
 GeneratorComprehensionNode
 GetitemNode
 GlobalNode
-IfNode
-IfelseblockNode
+IfNode                                                    +
+IfelseblockNode                                           +
 ImportNode
 IntNode                                                   +
 LambdaNode
@@ -101,8 +101,8 @@ ListArgumentNode
 ListComprehensionNode
 ListNode                                                  +
 NameAsNameNode
-PrintNode
-RaiseNode
+PrintNode                                                 +
+RaiseNode                                                 x
 ReprNode
 ReturnNode                                                +
 SetNode
@@ -111,12 +111,12 @@ SliceNode
 SpaceNode
 StringChainNode
 TernaryOperatorNode
-TryNode
+TryNode                                                   x
 TupleNode                                                 +
-UnitaryOperatorNode
-YieldNode
-YieldAtomNode
-WhileNode
+UnitaryOperatorNode                                       +
+YieldNode                                                 x
+YieldAtomNode                                             x
+WhileNode                                                 +
 WithContextItemNode
 WithNode
 ===================================   =============  =========  =========  

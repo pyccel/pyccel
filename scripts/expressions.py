@@ -33,4 +33,5 @@ a < b
 a > b
 a <= b
 a >= b
+a == b and (a > e or b < a and a < c )and (b != y or c >= a) or b <= t
 # ...
