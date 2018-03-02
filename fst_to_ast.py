@@ -370,6 +370,63 @@ def fst_to_ast(stmt):
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
 
 
+def infere_type(expr):
+    """
+    type inference for expressions
+    """
+    d_var = {}
+    d_var['datatype'] = None
+    d_var['allocatable'] = None
+    d_var['shape'] = None
+    d_var['rank'] = None
+
+    if isinstance(expr, Integer):
+        d_var['datatype'] = 'int'
+        d_var['allocatable'] = False
+        d_var['rank'] = 0
+        return d_var
+#    elif isinstance(expr, Float):
+#        # TODO choose precision
+#        d_var['datatype']    = DEFAULT_TYPE
+#        d_var['allocatable'] = False
+#        d_var['rank']        = 0
+#        return d_var
+#    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+#        d_var['datatype']    = NativeBool()
+#        d_var['allocatable'] = False
+#        d_var['rank']        = 0
+#        return d_var
+    else:
+        raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
+
+
+def annotate(expr, **settings):
+    """Annotates the AST."""
+    if isinstance(expr, (list, tuple, Tuple)):
+        ls = [annotate(i, **settings) for i in expr]
+        return Tuple(*ls)
+    elif isinstance(expr, (Integer, Float)):
+        return expr
+    elif isinstance(expr, Symbol):
+        d_var = settings.pop('d_var', None)
+        if d_var is None:
+            raise NotImplementedError('TODO')
+        name = expr.name
+        dtype = d_var.pop('datatype')
+        var = Variable(dtype, name, **d_var)
+        return var
+    elif isinstance(expr, Assign):
+        d_var = infere_type(expr.rhs)
+        settings['d_var'] = d_var
+        rhs = annotate(expr.rhs, **settings)
+        lhs = annotate(expr.lhs, **settings)
+        return Assign(lhs, rhs, strict=False)
+    else:
+        raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
+
+
 def read_file(filename):
     """Returns the source code from a filename."""
     f = open(filename)
@@ -406,4 +463,9 @@ if __name__ == '__main__':
 
     #view_tree(ast)
 
-    export_ast(ast, filename='ast.gv')
+    export_ast(ast, filename='ast_stage_1.gv')
+
+    settings = {}
+    ast = annotate(ast, **settings)
+
+    export_ast(ast, filename='ast_stage_2.gv')
