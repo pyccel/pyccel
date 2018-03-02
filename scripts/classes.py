@@ -4,6 +4,6 @@ class Point(object):
         self.x = x
         self.y = y
 
-    def translate(self, x, y, a, b):
+    def translate(self, a, b):
         self.x = self.x + a
         self.y = self.y + b

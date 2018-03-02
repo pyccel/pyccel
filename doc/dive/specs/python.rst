@@ -55,11 +55,11 @@ Full Syntax Tree (FST)
 ^^^^^^^^^^^^^^^^^^^^^^
 
 ===================================   =============  =========  =========  
-         RedBaron Nodes                Sympy Nodes    phase 1    phase 2
+         RedBaron Nodes                  AST Nodes    phase 1    phase 2
 ===================================   =============  =========  =========
 ArgumentGeneratorComprehensionNode
-AssertNode
-AssignmentNode                                            +
+AssertNode                             Assert             +
+AssignmentNode                         Assign             +
 AssociativeParenthesisNode                                +
 AtomtrailersNode                                          +
 BinaryNode

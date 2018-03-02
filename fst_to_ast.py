@@ -28,6 +28,13 @@ from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
 from redbaron import DotNode, AtomtrailersNode
 from redbaron import CallNode
 from redbaron import CallArgumentNode
+from redbaron import AssertNode
+from redbaron import ExceptNode
+from redbaron import FinallyNode
+from redbaron import RaiseNode
+from redbaron import TryNode
+from redbaron import YieldNode
+from redbaron import YieldAtomNode
 
 
 
@@ -46,6 +53,7 @@ from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
 from pyccel.ast import Del
+from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine
 
 
@@ -347,16 +355,19 @@ def fst_to_ast(stmt):
         test = fst_to_ast(stmt.test)
         body = fst_to_ast(stmt.value)
         return While(test, body)
+    elif isinstance(stmt, AssertNode):
+        expr = fst_to_ast(stmt.value)
+        return Assert(expr)
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
         # TODO must check if it is a header or not
         return Comment(stmt.value)
+    elif isinstance(stmt, (ExceptNode, FinallyNode, RaiseNode, TryNode, YieldNode, YieldAtomNode)):
+        # TODO add appropriate message errors and refeer to Pyccel rules
+        raise NotImplementedError('{node} is not covered by pyccel'.format(node=type(stmt)))
     else:
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
-
-
-
 
 
 def read_file(filename):
@@ -387,11 +398,11 @@ if __name__ == '__main__':
     # converts redbaron fst to sympy ast
     ast = fst_to_ast(red)
 
-    print('----- AST -----')
-    for expr in ast:
-        print expr
-    #    print '\t', type(expr.rhs)
-    print('---------------')
+#    print('----- AST -----')
+#    for expr in ast:
+#        print expr
+#    #    print '\t', type(expr.rhs)
+#    print('---------------')
 
     #view_tree(ast)
 
