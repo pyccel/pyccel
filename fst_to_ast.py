@@ -10,12 +10,14 @@ from redbaron import UnitaryOperatorNode
 from redbaron import BinaryOperatorNode, BooleanOperatorNode
 from redbaron import AssociativeParenthesisNode
 from redbaron import DefNode
+from redbaron import ClassNode
 from redbaron import TupleNode, ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
 from redbaron import NodeList
 from redbaron import DotProxyList
 from redbaron import ReturnNode
+from redbaron import PassNode
 from redbaron import DefArgumentNode
 from redbaron import ForNode
 from redbaron import PrintNode
@@ -36,7 +38,9 @@ from pyccel.ast import Variable
 from pyccel.ast import DottedName
 from pyccel.ast import Assign
 from pyccel.ast import Return
+from pyccel.ast import Pass
 from pyccel.ast import FunctionDef
+from pyccel.ast import ClassDef
 from pyccel.ast import For
 from pyccel.ast import If
 from pyccel.ast import While
@@ -133,7 +137,8 @@ def fst_to_ast(stmt):
     """Creates AST from FST."""
     if isinstance(stmt, (RedBaron,
                          CommaProxyList, LineProxyList, NodeList,
-                         TupleNode, ListNode)):
+                         TupleNode, ListNode,
+                         list, tuple)):
         ls = [fst_to_ast(i) for i in stmt]
         return Tuple(*ls)
     elif isinstance(stmt, DictNode):
@@ -257,8 +262,11 @@ def fst_to_ast(stmt):
             return ValuedArgument(arg, value)
     elif isinstance(stmt, ReturnNode):
         return Return(fst_to_ast(stmt.value))
+    elif isinstance(stmt, PassNode):
+        return Pass()
     elif isinstance(stmt, DefNode):
         # TODO results must be computed at the decoration stage
+        # TODO check all inputs and which ones would be treated in stage 1 or 2
         name        = fst_to_ast(stmt.name)
         arguments   = fst_to_ast(stmt.arguments)
         results     = []
@@ -273,6 +281,13 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+    elif isinstance(stmt, ClassNode):
+        name = fst_to_ast(stmt.name)
+        methods = [i for i in stmt.value if isinstance(i, DefNode)]
+        methods = fst_to_ast(methods)
+        attributes = methods[0].arguments
+        return ClassDef(name, attributes, methods)
+
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt, DotProxyList):

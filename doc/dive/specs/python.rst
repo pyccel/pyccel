@@ -61,12 +61,12 @@ ArgumentGeneratorComprehensionNode
 AssertNode
 AssignmentNode                                            +
 AssociativeParenthesisNode                                +
-AtomtrailersNode                                          *
+AtomtrailersNode                                          +
 BinaryNode
 BinaryOperatorNode                                        + 
 BooleanOperatorNode                                       +
-CallNode                                                  * 
-CallArgumentNode                                          *
+CallNode                                                  + 
+CallArgumentNode                                          +
 ClassNode
 CommaNode
 ComparisonNode                                            +
