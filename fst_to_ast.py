@@ -33,6 +33,7 @@ from redbaron import CallArgumentNode
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Nil
 from pyccel.ast import Variable
+from pyccel.ast import DottedName
 from pyccel.ast import Assign
 from pyccel.ast import Return
 from pyccel.ast import FunctionDef
@@ -278,25 +279,33 @@ def fst_to_ast(stmt):
         # TODO handle dot trailers
         # we first get the index of the call node
         call = None
+        ls = []
         for i, s in enumerate(stmt):
             if isinstance(s, CallNode):
                 call = stmt[i]
                 break
+            # we only take the string representation
+            # since we will use DottedName later
+            #ls.append(fst_to_ast(s))
+            ls.append(repr(s))
             i += 1
-        if call is None:
-            raise ValueError('Can not find the call node')
 
         # the function name (without trailer) is the previous node to the call
-        name = call.previous
+        if len(ls) == 1:
+            name = ls[0]
+        else:
+            name = DottedName(*ls)
 
-        if isinstance(call, CallNode):
+        # dots may lead to a dotted name or a call to a method
+        if call is None:
+            return name
+        elif isinstance(call, CallNode):
             # in this case, name must be a string
             args   = fst_to_ast(call)
             f_name = str(name)
             return Function(f_name)(*args)
         else:
-            name = fst_to_ast(name)
-            raise NotImplementedError('TODO')
+            raise ValueError('Expecting a method call or a dotted name')
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
         return args
