@@ -1564,7 +1564,14 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_IndexedElement(self, expr):
-        inds = [ self._print(i) for i in expr.indices ]
+        inds = [i for i in expr.indices]
+        #indices of indexedElement of len==1 shouldn't be a Tuple
+        for i,ind in enumerate(inds):
+            if isinstance(ind,Tuple) and len(ind)==1:
+                inds[i]=ind[0]
+
+        inds = [ self._print(i) for i in inds ]
+        
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
