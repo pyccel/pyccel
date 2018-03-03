@@ -320,11 +320,14 @@ def fst_to_ast(stmt):
         if not any(s):
             # case of no DotNode
             # TODO fix bug of case IndexedVariable before DottedNode
-            ls=[fst_to_ast(i) for i in stmt]
+            ls = [fst_to_ast(i) for i in stmt]
             name = str(ls[0])
             args = ls[1:]
-            
-            return IndexedVariable(name)[args]
+            args = args[0]
+            if not hasattr(args, '__iter__'):
+                args = [args]
+             
+            return IndexedVariable(name).__getitem__(*args)
         call = None
         ls = []
         for i, s in enumerate(stmt):
@@ -481,11 +484,11 @@ if __name__ == '__main__':
     # converts redbaron fst to sympy ast
     ast = fst_to_ast(red)
 
-    #print('----- AST -----')
-    #for expr in ast:
-    #    print expr
-#    #    print '\t', type(expr.rhs)
-    #print('---------------')
+#    print('----- AST -----')
+#    for expr in ast:
+#        print expr
+#        print '\t', type(expr.rhs)
+#    print('---------------')
 
     view_tree(ast)
 
