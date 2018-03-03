@@ -2917,16 +2917,11 @@ class IndexedVariable(IndexedBase):
         obj._dtype = dtype
         return obj
 
-    def __getitem__(self, indices, **kw_args):
-        if is_sequence(indices):
-            # Special case needed because M[*my_tuple] is a syntax error.
-            if self.shape and len(self.shape) != len(indices):
-                raise IndexException("Rank mismatch.")
-            return IndexedElement(self, *indices, **kw_args)
-        else:
-            if self.shape and len(self.shape) != 1:
-                raise IndexException("Rank mismatch.")
-            return IndexedElement(self, indices, **kw_args)
+    def __getitem__(self,*args):
+            
+        if self.shape and len(self.shape) != len(args):
+            raise IndexException("Rank mismatch.")
+        return IndexedElement(self,*args)
 
     @property
     def dtype(self):
