@@ -35,6 +35,8 @@ from redbaron import RaiseNode
 from redbaron import TryNode
 from redbaron import YieldNode
 from redbaron import YieldAtomNode
+from redbaron import BreakNode
+from redbaron import GetitemNode,SliceNode
 
 
 
@@ -55,6 +57,8 @@ from pyccel.ast import Print
 from pyccel.ast import Del
 from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine
+from pyccel.ast import Break
+from pyccel.ast import Slice, IndexedVariable
 
 
 from sympy import Symbol
@@ -298,9 +302,30 @@ def fst_to_ast(stmt):
 
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
+    elif isinstance(stmt, GetitemNode):
+         return fst_to_ast(stmt.value)
+    elif isinstance(stmt,SliceNode):
+         upper = fst_to_ast(stmt.upper)
+         lower = fst_to_ast(stmt.lower)
+         if upper and lower:
+             return Slice(lower,upper)
+         elif lower:
+             return Slice(lower,None)
+         elif upper:
+             return Slice(None,upper)
     elif isinstance(stmt, DotProxyList):
         # TODO handle dot trailers
         # we first get the index of the call node
+        s=[isinstance(i.next, DotNode) for i in stmt]
+        if not any(s):
+            # case of no DotNode
+            # TODO fix bug of case IndexedVariable before DottedNode
+            ls=[fst_to_ast(i) for i in stmt]
+            print(ls)
+            name = str(ls[0])
+            args = ls[1:]
+            
+            return IndexedVariable(name)[args]
         call = None
         ls = []
         for i, s in enumerate(stmt):
@@ -363,6 +388,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, CommentNode):
         # TODO must check if it is a header or not
         return Comment(stmt.value)
+    elif isinstance(stmt, BreakNode):
+        return Break()
     elif isinstance(stmt, (ExceptNode, FinallyNode, RaiseNode, TryNode, YieldNode, YieldAtomNode)):
         # TODO add appropriate message errors and refeer to Pyccel rules
         raise NotImplementedError('{node} is not covered by pyccel'.format(node=type(stmt)))
@@ -455,17 +482,17 @@ if __name__ == '__main__':
     # converts redbaron fst to sympy ast
     ast = fst_to_ast(red)
 
-#    print('----- AST -----')
-#    for expr in ast:
-#        print expr
+    print('----- AST -----')
+    for expr in ast:
+        print expr
 #    #    print '\t', type(expr.rhs)
-#    print('---------------')
+    print('---------------')
 
     #view_tree(ast)
 
-    export_ast(ast, filename='ast_stage_1.gv')
+    #export_ast(ast, filename='ast_stage_1.gv')
 
-    settings = {}
-    ast = annotate(ast, **settings)
+    #settings = {}
+    #ast = annotate(ast, **settings)
 
-    export_ast(ast, filename='ast_stage_2.gv')
+    #export_ast(ast, filename='ast_stage_2.gv')
