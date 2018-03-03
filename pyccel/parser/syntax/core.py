@@ -1153,8 +1153,11 @@ def expr_with_trailer(expr, trailer):
 
     if isinstance(trailer, TrailerSubscriptList):
         args = trailer.expr
+        if not hasattr(args, '__iter__'):
+            args = [args]
+             
 
-        expr = IndexedVariable(expr.name, dtype=expr.dtype)[args]
+        expr = IndexedVariable(expr.name, dtype=expr.dtype).__getitems(*args)
 
     elif isinstance(trailer, TrailerDots):
 
@@ -1790,7 +1793,10 @@ class AugAssignStmt(BasicStmt):
         else:
             if isinstance(trailer, TrailerSubscriptList):
                 v = namespace[str(self.lhs)]
-                l = IndexedVariable(v.name, dtype=v.dtype)[args]
+                if not hasattr(args, '__iter__'):
+                    args = [args]
+                
+                l = IndexedVariable(v.name, dtype=v.dtype).__getitem__(*args)
             elif isinstance(trailer, TrailerDots):
                 # class attribut
                 l = namespace[var_name]
