@@ -1157,7 +1157,7 @@ def expr_with_trailer(expr, trailer):
             args = [args]
              
 
-        expr = IndexedVariable(expr.name, dtype=expr.dtype).__getitems(*args)
+        expr = IndexedVariable(expr.name, dtype=expr.dtype).__getitem__(*args)
 
     elif isinstance(trailer, TrailerDots):
 
