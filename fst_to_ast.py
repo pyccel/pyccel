@@ -64,6 +64,7 @@ from pyccel.ast import Slice, IndexedVariable
 from sympy import Symbol
 from sympy import Tuple
 from sympy import Add, Mul, Pow
+from sympy.core.expr import Expr
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
@@ -399,7 +400,9 @@ def fst_to_ast(stmt):
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
 
 
-def infere_type(expr):
+namespace = {}
+
+def infere_type(expr, **settings):
     """
     type inference for expressions
     """
@@ -414,46 +417,76 @@ def infere_type(expr):
         d_var['allocatable'] = False
         d_var['rank'] = 0
         return d_var
-#    elif isinstance(expr, Float):
-#        # TODO choose precision
-#        d_var['datatype']    = DEFAULT_TYPE
-#        d_var['allocatable'] = False
-#        d_var['rank']        = 0
-#        return d_var
-#    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
-#        d_var['datatype']    = NativeBool()
-#        d_var['allocatable'] = False
-#        d_var['rank']        = 0
-#        return d_var
+    elif isinstance(expr, Variable):
+        d_var['datatype'] = expr.dtype
+        d_var['allocatable'] = expr.allocatable
+        d_var['shape'] = expr.shape
+        d_var['rank'] = expr.rank
+        return d_var
+    elif isinstance(expr, Expr):
+        ds = [infere_type(i, **settings) for i in expr.args]
+
+        dtypes = [d['datatype'] for d in ds]
+        allocatables = [d['allocatable'] for d in ds]
+        ranks = [d['rank'] for d in ds]
+
+        # TODO improve
+        d_var['datatype'] = dtypes[0]
+        d_var['allocatable'] = allocatables[0]
+        d_var['rank'] = ranks[0]
+        return d_var
     else:
         raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
-
 
 
 def annotate(expr, **settings):
     """Annotates the AST."""
-    if isinstance(expr, (list, tuple, Tuple)):
-        ls = [annotate(i, **settings) for i in expr]
+    if str(expr) in namespace:
+        return namespace[str(expr)]
+    elif isinstance(expr, (list, tuple, Tuple)):
+        ls = []
+        for i in expr:
+            a = annotate(i, **settings)
+            ls.append(a)
         return Tuple(*ls)
     elif isinstance(expr, (Integer, Float)):
         return expr
-    elif isinstance(expr, Symbol):
-        d_var = settings.pop('d_var', None)
-        if d_var is None:
-            raise NotImplementedError('TODO')
-        name = expr.name
-        dtype = d_var.pop('datatype')
-        var = Variable(dtype, name, **d_var)
-        return var
+    elif isinstance(expr, Variable):
+        return expr
     elif isinstance(expr, Assign):
-        d_var = infere_type(expr.rhs)
-        settings['d_var'] = d_var
         rhs = annotate(expr.rhs, **settings)
-        lhs = annotate(expr.lhs, **settings)
+        d_var = infere_type(rhs, **settings)
+
+        lhs = expr.lhs
+        name = lhs.name
+        dtype = d_var.pop('datatype')
+        lhs = Variable(dtype, name, **d_var)
+        if not lhs.name in namespace:
+            namespace[lhs.name] = lhs
+
         return Assign(lhs, rhs, strict=False)
+    elif isinstance(expr, Expr):
+        args = expr.args
+        symbols = expr.free_symbols
+        names = [a.name for a in symbols]
+
+        args = list(symbols)
+        args = annotate(args, **settings)
+        d_args = {}
+        for a in args:
+            d_args[a.name] = a
+        for name in names:
+            expr = expr.subs(Symbol(name), d_args[name])
+        return expr
     else:
         raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
+
+def print_namespace():
+    print '>>>> Namespace '
+    for k,v in namespace.items():
+        print k, ' :: ', type(v)
+    print '<<<<'
 
 
 def read_file(filename):
@@ -496,5 +529,6 @@ if __name__ == '__main__':
 
     settings = {}
     ast = annotate(ast, **settings)
+    print_namespace()
 
     export_ast(ast, filename='ast_stage_2.gv')
