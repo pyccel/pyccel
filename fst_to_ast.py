@@ -321,7 +321,6 @@ def fst_to_ast(stmt):
             # case of no DotNode
             # TODO fix bug of case IndexedVariable before DottedNode
             ls=[fst_to_ast(i) for i in stmt]
-            print(ls)
             name = str(ls[0])
             args = ls[1:]
             
@@ -482,17 +481,17 @@ if __name__ == '__main__':
     # converts redbaron fst to sympy ast
     ast = fst_to_ast(red)
 
-    print('----- AST -----')
-    for expr in ast:
-        print expr
+    #print('----- AST -----')
+    #for expr in ast:
+    #    print expr
 #    #    print '\t', type(expr.rhs)
-    print('---------------')
+    #print('---------------')
 
-    #view_tree(ast)
+    view_tree(ast)
 
-    #export_ast(ast, filename='ast_stage_1.gv')
+    export_ast(ast, filename='ast_stage_1.gv')
 
-    #settings = {}
-    #ast = annotate(ast, **settings)
+    settings = {}
+    ast = annotate(ast, **settings)
 
-    #export_ast(ast, filename='ast_stage_2.gv')
+    export_ast(ast, filename='ast_stage_2.gv')
