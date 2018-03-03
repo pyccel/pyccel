@@ -2960,7 +2960,6 @@ class IndexedElement(Indexed):
     **todo:** fix bug. the last result must be : True
     """
     def __new__(cls, base, *args, **kw_args):
-        print('###########')
         from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
         from sympy.matrices.matrices import MatrixBase

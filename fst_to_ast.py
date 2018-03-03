@@ -320,7 +320,7 @@ def fst_to_ast(stmt):
         if not any(s):
             # case of no DotNode
             # TODO fix bug of case IndexedVariable before DottedNode
-            ls=[fst_to_ast(i) for i in stmt]
+            ls = [fst_to_ast(i) for i in stmt]
             name = str(ls[0])
             args = ls[1:]
             args = args[0]
