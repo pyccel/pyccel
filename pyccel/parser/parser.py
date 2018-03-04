@@ -573,6 +573,9 @@ class Parser(object):
         cmd = "dot -Tps {name}.gv -o {name}.ps".format(name=name)
         os.system(cmd)
 
+class PyccelParser(Parser):
+    pass
+
 ######################################################
 if __name__ == '__main__':
     import sys
