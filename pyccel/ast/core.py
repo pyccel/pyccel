@@ -2918,7 +2918,7 @@ class IndexedVariable(IndexedBase):
         return obj
 
     def __getitem__(self,*args):
-            
+
         if self.shape and len(self.shape) != len(args):
             raise IndexException("Rank mismatch.")
         return IndexedElement(self,*args)
@@ -3465,8 +3465,11 @@ class MethodHeader(FunctionHeader):
             elif isinstance(d, DataType):
                 types.append((d, []))
             elif isinstance(d, (tuple, list)):
-                if not(len(d) == 2):
-                    raise ValueError("Expecting exactly two entries.")
+                # commented because of 'star' attribut
+                # TODO clean this later
+#                if not(len(d) == 2):
+#                    print '>> d = ', d
+#                    raise ValueError("Expecting exactly two entries.")
                 types.append(d)
             else:
                 raise TypeError("Wrong element in dtypes.")
