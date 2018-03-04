@@ -542,8 +542,8 @@ if __name__ == '__main__':
 
     export_ast(ast, filename='ast_stage_1.gv')
 
-#    settings = {}
-#    ast = annotate(ast, **settings)
-#    print_namespace()
-#
-#    export_ast(ast, filename='ast_stage_2.gv')
+    settings = {}
+    ast = annotate(ast, **settings)
+    print_namespace()
+
+    export_ast(ast, filename='ast_stage_2.gv')
