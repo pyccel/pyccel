@@ -431,7 +431,13 @@ def parse(filename=None, stmts=None, debug=False):
     else:
         raise ValueError('Expecting a filename or a string')
 
+    stmts = []
     for stmt in model.statements:
         if isinstance(stmt, OpenmpStmt):
             e = stmt.stmt.expr
-            print(e)
+            stmts.append(e)
+
+    if len(stmts) == 1:
+        return stmts[0]
+    else:
+        return stmts

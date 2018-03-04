@@ -189,7 +189,7 @@ def parse(filename=None, stmts=None, debug=False):
 ######################
 if __name__ == '__main__':
     print parse(stmts='#$ header variable x :: int')
-    print parse(stmts='#$ header variable x :: float [:, :]')
+    print parse(stmts='#$ header variable x float [:, :]')
     print parse(stmts='#$ header function f(float [:], int [:]) results(int)')
     print parse(stmts='#$ header class Square(public)')
     print parse(stmts='#$ header method translate(Point, double, double)')
