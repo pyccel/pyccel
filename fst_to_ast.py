@@ -60,6 +60,10 @@ from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable
 
+from pyccel.parser.syntax.headers import parse as hdr_parse
+from pyccel.parser.syntax.openmp  import parse as omp_parse
+from pyccel.parser.syntax.openacc import parse as acc_parse
+
 
 from sympy import Symbol
 from sympy import Tuple
@@ -327,7 +331,7 @@ def fst_to_ast(stmt):
             args = args[0]
             if not hasattr(args, '__iter__'):
                 args = [args]
-             
+
             return IndexedVariable(name).__getitem__(*args)
         call = None
         ls = []
@@ -389,8 +393,19 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
     elif isinstance(stmt, CommentNode):
-        # TODO must check if it is a header or not
-        return Comment(stmt.value)
+        # if annotated comment
+        if stmt.value.startswith('#$'):
+            env = stmt.value[2:].lstrip()
+            if env.startswith('omp'):
+                return omp_parse(stmts=stmt.value)
+            elif env.startswith('acc'):
+                return acc_parse(stmts=stmt.value)
+            elif env.startswith('header'):
+                return hdr_parse(stmts=stmt.value)
+            else:
+                raise ValueError('Annotated comments must start with omp, acc or header.')
+        else:
+            return Comment(stmt.value)
     elif isinstance(stmt, BreakNode):
         return Break()
     elif isinstance(stmt, (ExceptNode, FinallyNode, RaiseNode, TryNode, YieldNode, YieldAtomNode)):
@@ -527,8 +542,8 @@ if __name__ == '__main__':
 
     export_ast(ast, filename='ast_stage_1.gv')
 
-    settings = {}
-    ast = annotate(ast, **settings)
-    print_namespace()
-
-    export_ast(ast, filename='ast_stage_2.gv')
+#    settings = {}
+#    ast = annotate(ast, **settings)
+#    print_namespace()
+#
+#    export_ast(ast, filename='ast_stage_2.gv')
