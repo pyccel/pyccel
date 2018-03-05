@@ -226,7 +226,7 @@ class FCodePrinter(CodePrinter):
                 'program {name}\n'
                 '{imports}\n'
                 'implicit none\n'
-                '{decs}\n'
+                '{decs}\n\n'
                 '{body}\n'
                 '{funcs}\n'
                 'end program {name}\n').format(name=name,
@@ -1571,7 +1571,7 @@ class FCodePrinter(CodePrinter):
                 inds[i]=ind[0]
 
         inds = [ self._print(i) for i in inds ]
-        
+
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):

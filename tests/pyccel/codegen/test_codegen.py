@@ -7,6 +7,8 @@ from pyccel.codegen.printing import fcode
 
 from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import
 from pyccel.ast.core import Header, EmptyLine, Comment
+from pyccel.ast.core import Assign
+from pyccel.ast.core import Variable
 
 
 class Codegen(object):
@@ -93,37 +95,6 @@ class Codegen(object):
         """Returns the AST after Module/Program treatment."""
         return self._expr
 
-    # TODO improve to have a kind = None
-    #      => must have a condition to be aprogram
-    def _set_kind(self):
-        """Finds the source code kind."""
-        # ...
-        _stmts = (Header, EmptyLine, Comment)
-        body = self.body
-
-        ls = [i for i in body if not isinstance(i, _stmts)]
-        is_module = (len(ls) == 0)
-        if is_module:
-            self._kind = 'module'
-        else:
-            self._kind = 'program'
-        # ...
-
-        # ...
-        expr = None
-        if self.is_module:
-            expr = Module(self.name, self.variables, self.routines, self.classes,
-                          imports=self.imports)
-        elif self.is_program:
-            expr = Program(self.name, self.variables, self.routines, self.classes, self.body,
-                           imports=self.imports, modules=self.modules)
-        else:
-            raise NotImplementedError('TODO')
-
-        self._expr = expr
-        # ...
-
-
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
         variables = []
@@ -144,7 +115,11 @@ class Codegen(object):
             elif isinstance(stmt, Module):
                 modules += [stmt]
             else:
+                # TODO improve later, as in the old codegen
                 body += [stmt]
+                if isinstance(stmt, Assign):
+                    if isinstance(stmt.lhs, Variable):
+                        variables += [stmt.lhs]
 
         self._stmts['imports'] = imports
         self._stmts['variables'] = variables
@@ -152,6 +127,45 @@ class Codegen(object):
         self._stmts['routines'] = routines
         self._stmts['classes'] = classes
         self._stmts['modules'] = modules
+
+    # TODO improve to have a kind = None
+    #      => must have a condition to be aprogram
+    def _set_kind(self):
+        """Finds the source code kind."""
+        # ...
+        _stmts = (Header, EmptyLine, Comment)
+        body = self.body
+
+        ls = [i for i in body if not isinstance(i, _stmts)]
+        is_module = (len(ls) == 0)
+        if is_module:
+            self._kind = 'module'
+        else:
+            self._kind = 'program'
+        # ...
+
+        # ...
+        expr = None
+        if self.is_module:
+            expr = Module(self.name,
+                          self.variables,
+                          self.routines,
+                          self.classes,
+                          imports=self.imports)
+        elif self.is_program:
+            expr = Program(self.name,
+                           self.variables,
+                           self.routines,
+                           self.classes,
+                           self.body,
+                           imports=self.imports,
+                           modules=self.modules)
+        else:
+            raise NotImplementedError('TODO')
+
+        self._expr = expr
+        # ...
+
 
     def doprint(self, **settings):
         """Prints the code in the target language."""
@@ -185,6 +199,9 @@ def test_codegen():
 
         pyccel = Parser(f_name)
         ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
 
         codegen = Codegen(ast, 'mytest')
         codegen.doprint()
