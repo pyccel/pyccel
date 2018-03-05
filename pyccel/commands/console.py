@@ -57,15 +57,20 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                         help='executes the binary file')
     parser.add_argument('--show', action='store_true', \
                         help='prints the generated file.')
-    parser.add_argument('--lint', action='store_true', \
-                        help='Uses PyLint for static checking.')
     parser.add_argument('--debug', action='store_true', \
                         help='compiles the code in a debug mode.')
     parser.add_argument('--output-dir', type=str, \
                         help='Output directory.')
 
+    parser.add_argument('--syntax-only', action='store_true',
+                        help='Using pyccel for Syntax Checking')
+    parser.add_argument('--semantic-only', action='store_true',
+                        help='Using pyccel for Semantic Checking')
     parser.add_argument('--convert-only', action='store_true',
                         help='Converts pyccel files only without build')
+    parser.add_argument('--lint', action='store_true', \
+                        help='Uses PyLint for static checking.')
+
     parser.add_argument('--no-modules', action='store_true',
                         help='adds used modules to the generated file')
     parser.add_argument('--verbose', action='store_true', \
@@ -107,7 +112,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if not output_dir:
         output_dir = args.output_dir
 
-    if args.convert_only:
+    if args.convert_only or args.syntax_only or args.semantic_only:
         compiler = None
     # ...
 
@@ -160,7 +165,17 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ...
 
     # ...
-    if not analysis:
+    from pyccel.parser import Parser
+    if args.syntax_only:
+        pyccel = Parser(filename)
+        ast = pyccel.parse()
+    elif args.semantic_only:
+        pyccel = Parser(filename)
+        ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
+    elif not analysis:
         build_file(filename, language, compiler,
                    execute=execute, accelerator=accelerator,
                    debug=debug, lint=lint, verbose=verbose, show=show,
