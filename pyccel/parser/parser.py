@@ -59,6 +59,7 @@ from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable
+from pyccel.ast import FunctionHeader
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
@@ -271,8 +272,7 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, PassNode):
         return Pass()
     elif isinstance(stmt, DefNode):
-        # TODO results must be computed at the decoration stage
-        # TODO check all inputs and which ones would be treated in stage 1 or 2
+        # TODO check all inputs and which ones should be treated in stage 1 or 2
         name        = fst_to_ast(stmt.name)
         arguments   = fst_to_ast(stmt.arguments)
         results     = []
@@ -405,6 +405,9 @@ def fst_to_ast(stmt):
 
 
 namespace = {}
+# TODO use another name for headers
+#      => reserved keyword, or use __
+namespace['headers'] = {}
 
 def infere_type(expr, **settings):
     """
@@ -445,9 +448,7 @@ def infere_type(expr, **settings):
 
 def _annotate(expr, **settings):
     """Annotates the AST."""
-    if str(expr) in namespace:
-        return namespace[str(expr)]
-    elif isinstance(expr, (list, tuple, Tuple)):
+    if isinstance(expr, (list, tuple, Tuple)):
         ls = []
         for i in expr:
             a = _annotate(i, **settings)
@@ -456,6 +457,24 @@ def _annotate(expr, **settings):
     elif isinstance(expr, (Integer, Float)):
         return expr
     elif isinstance(expr, Variable):
+        return expr
+    elif isinstance(expr, Symbol):
+        name = str(expr.name)
+        if name in namespace:
+            return namespace[name]
+        else:
+            # TODO improve this when using symbolic extension
+            raise NotImplementedError('No Symbolic variable are allowed')
+    elif isinstance(expr, Expr):
+        args = expr.args
+        symbols = expr.free_symbols
+        names = [a.name for a in symbols]
+
+        args = list(symbols)
+        for a in args:
+            name = a.name
+            a_new = _annotate(a, **settings)
+            expr = expr.subs(a, a_new)
         return expr
     elif isinstance(expr, Assign):
         rhs = _annotate(expr.rhs, **settings)
@@ -469,20 +488,87 @@ def _annotate(expr, **settings):
             namespace[lhs.name] = lhs
 
         return Assign(lhs, rhs, strict=False)
-    elif isinstance(expr, Expr):
-        args = expr.args
-        symbols = expr.free_symbols
-        names = [a.name for a in symbols]
-
-        args = list(symbols)
-        args = _annotate(args, **settings)
-        d_args = {}
-        for a in args:
-            d_args[a.name] = a
-        for name in names:
-            expr = expr.subs(Symbol(name), d_args[name])
+    elif isinstance(expr, FunctionHeader):
+        # TODO should we return it and keep it in the AST?
+        namespace['headers'][str(expr.func)] = expr
         return expr
+    elif isinstance(expr, Return):
+        results = expr.expr
+        if isinstance(results, Symbol):
+            return expr
+        elif isinstance(results, (list, tuple, Tuple)):
+            for i in results:
+                if not isinstance(i, Symbol):
+                    raise NotImplementedError('only symbol or iterable are allowed for returns')
+            return expr
+        else:
+            raise NotImplementedError('only symbol or iterable are allowed for returns')
+    elif isinstance(expr, FunctionDef):
+        name = str(expr.name)
+        name = name.replace('\'', '') # remove quotes for str representation
+        args = []
+        results = []
+        local_vars  = []
+        global_vars = []
+        cls_name    = None
+        hide        = False
+        kind        = 'function'
+        imports     = []
+
+        if expr.arguments or results:
+            header = namespace['headers'].pop(name, None)
+            if not header:
+                raise ValueError('Expecting a header function for {func} '
+                                 'but could not find it.'.format(func=name))
+
+            # we construct a FunctionDef from its header
+            interface = header.create_definition()
+
+        # then use it to decorate our arguments
+        if expr.arguments:
+            for a, ah in zip(expr.arguments, interface.arguments):
+                d_var = infere_type(ah, **settings)
+                dtype = d_var.pop('datatype')
+                a_new = Variable(dtype, a.name, **d_var)
+                args.append(a_new)
+
+                # TODO add scope and store already declared variables there,
+                #      then retrieve them
+                namespace[str(a_new.name)] = a_new
+
+        # we annotate the body
+        body = _annotate(expr.body, **settings)
+
+        # find return stmt and results
+        # we keep the return stmt, in case of handling multi returns later
+        for stmt in body:
+            # TODO case of multiple calls to return
+            if isinstance(stmt, Return):
+                results = stmt.expr
+                if isinstance(results, Symbol):
+                    results = [results]
+
+        if results:
+            _results = []
+            for a, ah in zip(results, interface.results):
+                d_var = infere_type(ah, **settings)
+                dtype = d_var.pop('datatype')
+                a_new = Variable(dtype, a.name, **d_var)
+                _results.append(a_new)
+
+                # results must be variable that were already declared
+                if not(str(a_new.name) in namespace):
+                    raise ValueError('can not return undeclared variables')
+            results = _results
+
+        return FunctionDef(name, args, results, body,
+                           local_vars=local_vars, global_vars=global_vars,
+                           cls_name=cls_name, hide=hide,
+                           kind=kind, imports=imports)
     elif isinstance(expr, EmptyLine):
+        return expr
+    elif isinstance(expr, Print):
+        # TODO improve
         return expr
     elif isinstance(expr, Comment):
         return expr
@@ -585,14 +671,9 @@ if __name__ == '__main__':
     except:
         raise ValueError('Expecting an argument for filename')
 
-    parser = Parser(filename)
+    pyccel = Parser(filename)
 
-    parser.dot('ast_stage_1.gv')
+    pyccel.parse()
 
     settings = {}
-    parser.annotate(**settings)
-
-    parser.dot('ast_stage_2.gv')
-
-
-
+    pyccel.annotate(**settings)

@@ -740,7 +740,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        name = str(expr.name)
+        name = self._print(expr.name)
         if expr.cls_name:
             for k,m in list(_default_methods.items()):
                 name = name.replace(k,m)

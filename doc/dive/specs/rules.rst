@@ -54,3 +54,16 @@ Semantic
 
 Type inference
 ______________
+
+Functions
+_________
+
+- a function that has no argument and no result does not need a header.
+
+- Functions with no parameterized arguments must have a header 
+
+- Functions with only parameterized arguments does not need a header 
+
+- all returned arguments must be in general atoms, no expression is allowed 
+
+- results are computed at the decoration stage

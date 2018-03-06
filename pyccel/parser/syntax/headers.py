@@ -34,7 +34,7 @@ class TypeHeader(BasicStmt):
             variable type
         """
         self.dtype = kwargs.pop('dtype')
-        self.trailer = kwargs.pop('trailer', None)
+        self.trailer = kwargs.pop('trailer', [])
 
         super(TypeHeader, self).__init__(**kwargs)
 
@@ -44,6 +44,8 @@ class TypeHeader(BasicStmt):
         trailer = self.trailer
         if trailer:
             trailer = [str(i) for i in trailer.args]
+        else:
+            trailer = []
         return dtype, trailer
 
 class VariableHeaderStmt(BasicStmt):

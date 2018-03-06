@@ -3304,6 +3304,8 @@ class FunctionHeader(Header):
 
     # TODO dtypes should be a dictionary (useful in syntax)
     def __new__(cls, func, dtypes, results=None, kind='function'):
+        func = str(func)
+
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
