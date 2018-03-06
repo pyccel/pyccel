@@ -321,7 +321,8 @@ def fst_to_ast(stmt):
             if not hasattr(args, '__iter__'):
                 args = [args]
 
-            return IndexedVariable(name).__getitem__(*args)
+            args = tuple(args)
+            return IndexedVariable(name)[args]
         call = None
         ls = []
         for i, s in enumerate(stmt):
@@ -441,6 +442,14 @@ def infere_type(expr, **settings):
         d_var['datatype'] = dtypes[0]
         d_var['allocatable'] = allocatables[0]
         d_var['rank'] = ranks[0]
+        return d_var
+    elif isinstance(expr, (tuple, list, Tuple)):
+        d = infere_type(expr[0], **settings)
+        # TODO must check that it is consistent with pyccel's rules
+        d_var['datatype']    = d['datatype']
+        d_var['allocatable'] = d['allocatable']
+        d_var['rank']        = d['rank'] + 1
+        d_var['shape']       = len(expr) # TODO improve
         return d_var
     else:
         raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
