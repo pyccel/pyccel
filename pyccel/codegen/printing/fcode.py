@@ -502,7 +502,7 @@ class FCodePrinter(CodePrinter):
         if (rank == 1) and (isinstance(shape, int)):   # TODO improve
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
-        elif allocatable or is_pointer:
+        elif (rank > 0) or allocatable or is_pointer:
             rankstr = ', '.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
@@ -1590,7 +1590,7 @@ class FCodePrinter(CodePrinter):
             start = ''
         else:
             start = self._print(expr.start)
-        if expr.end is None:
+        if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
             end = expr.end - 1

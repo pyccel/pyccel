@@ -3394,7 +3394,7 @@ class FunctionHeader(Header):
 
             rank = 0
             for i in d[1]:
-                if isinstance(i, Slice):
+                if isinstance(i, Slice) or i == ':':
                     rank += 1
 
             shape  = None
