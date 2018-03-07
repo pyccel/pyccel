@@ -1,0 +1,36 @@
+Header:
+  statements*=HeaderStmt
+;
+
+HeaderStmt: '#$' 'header' stmt=Statement;
+
+Statement:
+    VariableHeaderStmt
+  | FunctionHeaderStmt 
+  | ClassHeaderStmt
+;
+
+TrailerSubscriptList: '[' args*=':' [','] ']';
+
+TypeHeader: dtype=ID (trailer=TrailerSubscriptList)?;
+VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
+
+FunctionHeaderStmt: 
+  (kind=FunctionKind)? name=ID '(' decs*=TypeHeader[','] ')' (results=HeaderResults)?
+;
+
+FunctionKind: 'function' | 'procedure' | 'method';
+HeaderResults: 'results' '(' decs*=TypeHeader[','] ')'; 
+
+ClassHeaderStmt: 'class'  name=ID '(' options+=ClassOptions[','] ')';
+
+ClassOptions: 
+    'abstract' 
+  | 'private' 
+  | 'public' 
+  | 'iterable' 
+  | 'with' 
+  | 'hide' 
+  | 'openmp'
+  | 'openacc'
+;

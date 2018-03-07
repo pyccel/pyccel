@@ -277,6 +277,7 @@ def infere_type(expr):
     d_var['allocatable'] = None
     d_var['shape']       = None
     d_var['rank']        = None
+    d_var['is_pointer']  = None
 
     if isinstance(expr, dict):
         d_var['datatype']    = expr['datatype']
@@ -1155,7 +1156,7 @@ def expr_with_trailer(expr, trailer):
         args = trailer.expr
         if not hasattr(args, '__iter__'):
             args = [args]
-             
+
 
         expr = IndexedVariable(expr.name, dtype=expr.dtype).__getitem__(*args)
 
@@ -1795,7 +1796,7 @@ class AugAssignStmt(BasicStmt):
                 v = namespace[str(self.lhs)]
                 if not hasattr(args, '__iter__'):
                     args = [args]
-                
+
                 l = IndexedVariable(v.name, dtype=v.dtype).__getitem__(*args)
             elif isinstance(trailer, TrailerDots):
                 # class attribut

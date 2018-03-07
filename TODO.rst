@@ -5,6 +5,8 @@ TODO
 
 - make sure that every script is python valide: run python .. --lint for all scripts 
 
+- add tests/pyccel/ast/test_parallel.py to travis
+
 Bugs
 ****
 

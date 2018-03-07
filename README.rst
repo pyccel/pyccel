@@ -3,6 +3,8 @@ Welcome to Pyccel
 
 |build-status| |docs|
 
+>>>>> Attention: We are refactoring Pyccel for the moment in order to make it more robust and easy to maintain <<<<<<
+
 **Pyccel** stands for Python extension language using accelerators.
 
 The aim of **Pyccel** is to provide a simple way to generate automatically, parallel low level code. The main uses would be:

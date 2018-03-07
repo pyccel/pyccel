@@ -16,6 +16,8 @@ doc/source
 *.mod
 *.o
 *.log
+*.ps
+*.gv
 
 tests/*.pyccel
 tests/*.f90
