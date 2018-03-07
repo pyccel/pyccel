@@ -124,7 +124,7 @@ import os
 def view_tree(expr):
     """Views a sympy expression tree."""
 
-    print srepr(expr)
+    print(srepr(expr))
 # ...
 
 
@@ -604,10 +604,10 @@ def _annotate(expr, **settings):
 
 
 def print_namespace():
-    print '>>>> Namespace '
+    print('>>>> Namespace ')
     for k,v in namespace.items():
-        print k, ' :: ', type(v)
-    print '<<<<'
+        print(k, ' :: ', type(v))
+    print('<<<<')
 
 
 def _read_file(filename):
