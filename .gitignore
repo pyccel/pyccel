@@ -10,7 +10,6 @@ build
 doc/_build
 doc/source
 
-
 *.pyccel
 *.f90
 *.mod
@@ -18,6 +17,8 @@ doc/source
 *.log
 *.ps
 *.gv
+
+*.swp
 
 tests/*.pyccel
 tests/*.f90
@@ -40,4 +41,3 @@ tests/examples/openmp/*.pyccel
 tests/examples/openmp/*.f90
 tests/examples/openmp/*.mod
 tests/examples/openmp/*.o
-
