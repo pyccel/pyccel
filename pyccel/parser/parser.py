@@ -58,7 +58,7 @@ from pyccel.ast import Del
 from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
-from pyccel.ast import Slice, IndexedVariable
+from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
@@ -490,11 +490,23 @@ def _annotate(expr, **settings):
         d_var = infere_type(rhs, **settings)
 
         lhs = expr.lhs
-        name = lhs.name
-        dtype = d_var.pop('datatype')
-        lhs = Variable(dtype, name, **d_var)
-        if not lhs.name in namespace:
-            namespace[lhs.name] = lhs
+        if isinstance(lhs, Symbol):
+            name = lhs.name
+            dtype = d_var.pop('datatype')
+            lhs = Variable(dtype, name, **d_var)
+            if not name in namespace:
+                namespace[lhs.name] = lhs
+        elif isinstance(lhs, IndexedElement):
+            name = str(lhs.base.name)
+            if not name in namespace:
+                raise ValueError('Undefined indexed variable {}'.format(name))
+            # TODO check consistency of indices with shape/rank
+            args = tuple(lhs.indices)
+            var = namespace[name]
+            dtype = var.dtype
+            lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
+        else:
+            raise NotImplementedError('TODO')
 
         return Assign(lhs, rhs, strict=False)
     elif isinstance(expr, FunctionHeader):
