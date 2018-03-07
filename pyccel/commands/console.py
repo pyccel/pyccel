@@ -166,6 +166,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     # ...
     from pyccel.parser import Parser
+    from pyccel.codegen import Codegen
+
     if args.syntax_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
@@ -175,6 +177,21 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
         settings = {}
         ast = pyccel.annotate(**settings)
+    elif args.convert_only:
+        pyccel = Parser(filename)
+        ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
+
+        name = os.path.basename(filename)
+        name = os.path.splitext(name)[0]
+        codegen = Codegen(ast, name)
+        code = codegen.doprint()
+        if show:
+            print(code)
+        else:
+            codegen.export()
     elif not analysis:
         build_file(filename, language, compiler,
                    execute=execute, accelerator=accelerator,

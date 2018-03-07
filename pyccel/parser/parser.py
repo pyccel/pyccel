@@ -73,11 +73,12 @@ from sympy.core.expr import Expr
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
-#from sympy.logic.boolalg import Boolean,
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
 from sympy.core.containers import Dict
 from sympy.core.function import Function
+from sympy.utilities.iterables import iterable
 
 
 import os
@@ -419,6 +420,7 @@ def infere_type(expr, **settings):
     d_var['allocatable'] = None
     d_var['shape'] = None
     d_var['rank'] = None
+    d_var['is_pointer'] = None
     # TODO - IndexedVariable
     #      - IndexedElement
 
@@ -433,8 +435,47 @@ def infere_type(expr, **settings):
         d_var['shape'] = expr.shape
         d_var['rank'] = expr.rank
         return d_var
+    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+        d_var['datatype'] = NativeBool()
+        d_var['allocatable'] = False
+        d_var['is_pointer'] = False
+        d_var['rank'] = 0
+        return d_var
+    elif isinstance(expr, IndexedElement):
+        d_var['datatype'] = expr.dtype
+        name = str(expr.base)
+        if name in namespace:
+            var = namespace[name]
+            d_var['datatype'] = var.dtype
+
+            if iterable(var.shape):
+                shape = []
+                for s,i in zip(var.shape, expr.indices):
+                    if isinstance(i, Slice):
+                        shape.append(i)
+            else:
+                shape = None
+
+            rank = var.rank - expr.rank
+            if rank > 0:
+                d_var['allocatable'] = var.allocatable
+
+            d_var['shape'] = shape
+            d_var['rank'] = rank
+#            # TODO pointer case
+#            d_var['is_pointer'] = var.is_pointer
+            return d_var
+    elif isinstance(expr, IndexedVariable):
+        name = str(expr)
+        if name in namespace:
+            var = namespace[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
+            return d_var
     elif isinstance(expr, Expr):
-        print('***** ', type(expr))
         ds = [infere_type(i, **settings) for i in expr.args]
 
         dtypes = [d['datatype'] for d in ds]
