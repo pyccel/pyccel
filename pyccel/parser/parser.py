@@ -459,7 +459,10 @@ def infere_type(expr, **settings):
 
 
 def _annotate(expr, **settings):
-    """Annotates the AST."""
+    """Annotates the AST.
+
+    IndexedVariable atoms are only used to manipulate expressions, we then,
+    always have a Variable in the namespace."""
     if isinstance(expr, (list, tuple, Tuple)):
         ls = []
         for i in expr:
@@ -701,3 +704,4 @@ if __name__ == '__main__':
 
     settings = {}
     pyccel.annotate(**settings)
+    print_namespace()
