@@ -478,6 +478,7 @@ class FCodePrinter(CodePrinter):
         arg_ranks        = [v.rank for v in expr.variables]
         arg_allocatables = [v.allocatable for v in expr.variables]
         arg_shapes       = [v.shape for v in expr.variables]
+        arg_is_pointers = [v.is_pointer for v in expr.variables]
 
         decs = []
         intent = expr.intent
@@ -487,6 +488,7 @@ class FCodePrinter(CodePrinter):
         rank        = arg_ranks[0]
         allocatable = arg_allocatables[0]
         shape       = arg_shapes[0]
+        is_pointer = arg_is_pointers[0]
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
@@ -495,23 +497,29 @@ class FCodePrinter(CodePrinter):
         enable_alloc = True
         if allocatable or (var.shape is None):
             s = ''
-        if rank == 0:
-            rankstr =  ''
-        elif (rank == 1) and (isinstance(shape, int)):   # TODO improve
+
+        rankstr =  ''
+        if (rank == 1) and (isinstance(shape, int)):   # TODO improve
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
-        else:
+        elif allocatable or is_pointer:
             rankstr = ', '.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
-        # TODO: it would be great to use allocatable but then we have to pay
-        #       attention to the starting index (in the case of 0 for example).
-        #       this is the reason why we print 'pointer' instead of 'allocatable'
-        if enable_alloc and (allocatable or rank > 0):
-#            allocatablestr = ', allocatable'
+#        # TODO: it would be great to use allocatable but then we have to pay
+#        #       attention to the starting index (in the case of 0 for example).
+#        #       this is the reason why we print 'pointer' instead of 'allocatable'
+#        if enable_alloc and (allocatable or rank > 0):
+##            allocatablestr = ', allocatable'
+#            allocatablestr = ', pointer'
+#        else:
+#            allocatablestr = ''
+
+        allocatablestr = ''
+        if is_pointer:
             allocatablestr = ', pointer'
-        else:
-            allocatablestr = ''
+        elif allocatable:
+            allocatablestr = ', allocatable'
 
         if intent:
             decs.append('{0}, intent({1}) {2} :: {3} {4}'.

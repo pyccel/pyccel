@@ -1599,14 +1599,19 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
-    def __new__(cls, dtype, name, \
-                rank=0, allocatable=False, \
+    def __new__(cls, dtype, name,
+                rank=0, allocatable=False, is_pointer=False,
                 shape=None, cls_base=None, cls_parameters=None):
 
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
+
+        if is_pointer is None:
+            is_pointer = False
+        elif not isinstance(is_pointer, bool):
+            raise TypeError("is_pointer must be a boolean.")
 
         # if class attribut
         if isinstance(name, str):
@@ -1626,8 +1631,9 @@ class Variable(Symbol):
 #            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
 #                raise TypeError("shape must be an instance of int or tuple of int")
 
+        # TODO improve order of arguments
         return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
-                             cls_base, cls_parameters)
+                             cls_base, cls_parameters, is_pointer)
 
     @property
     def dtype(self):
@@ -1656,6 +1662,10 @@ class Variable(Symbol):
     @property
     def cls_parameters(self):
         return self._args[6]
+
+    @property
+    def is_pointer(self):
+        return self._args[7]
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):

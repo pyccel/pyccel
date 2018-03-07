@@ -419,6 +419,8 @@ def infere_type(expr, **settings):
     d_var['allocatable'] = None
     d_var['shape'] = None
     d_var['rank'] = None
+    # TODO - IndexedVariable
+    #      - IndexedElement
 
     if isinstance(expr, Integer):
         d_var['datatype'] = 'int'
@@ -432,6 +434,7 @@ def infere_type(expr, **settings):
         d_var['rank'] = expr.rank
         return d_var
     elif isinstance(expr, Expr):
+        print('***** ', type(expr))
         ds = [infere_type(i, **settings) for i in expr.args]
 
         dtypes = [d['datatype'] for d in ds]
