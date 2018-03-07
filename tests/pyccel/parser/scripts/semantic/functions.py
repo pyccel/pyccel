@@ -14,3 +14,7 @@ def decr(x):
 def incr_array(x):
     x = x + 1
 
+#$ header function decr_array(int [:]) results(int [:])
+def decr_array(x):
+    y = x - 1
+    return y

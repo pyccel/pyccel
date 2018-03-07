@@ -38,6 +38,7 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ZerosLike
+from pyccel.ast.core import Return
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
@@ -819,8 +820,10 @@ class FCodePrinter(CodePrinter):
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
                     pass
-                elif not isinstance(stmt, list): # for list of Results
+                elif not isinstance(stmt, Return): # for list of Results
                     body.append(stmt)
+#                elif not isinstance(stmt, list): # for list of Results
+#                    body.append(stmt)
 
         list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
         for arg in expr.arguments:

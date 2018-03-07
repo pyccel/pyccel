@@ -7,6 +7,8 @@ In this section, we provide a set of rules that were used to ensure the **one-to
 
 .. note:: the second letter describes the related section (F: function, E: expression, ...)
 
+.. todo:: bounds check
+
 
 .. Errors
 .. ^^^^^^
@@ -26,7 +28,7 @@ In this section, we provide a set of rules that were used to ensure the **one-to
 
 - **WF001**: all returned arguments must be atoms, no expression is allowed
 
-- **WF002**:   
+- **WF002**: a returned variable should appear in the function header. Otherwise, *Type Inference* is used.
 
 
 - **WC001**: class defined without **__del__** method. It will be added automatically  

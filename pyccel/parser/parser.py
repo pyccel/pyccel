@@ -482,10 +482,19 @@ def infere_type(expr, **settings):
         allocatables = [d['allocatable'] for d in ds]
         ranks = [d['rank'] for d in ds]
 
+        # ... only scalars and variables of rank 0 can be handled
+        r_min = min(ranks)
+        r_max = max(ranks)
+        if not(r_min == r_max):
+            if not(r_min == 0):
+                raise ValueError('cannot process arrays of different ranks.')
+        rank = r_max
+        # ...
+
         # TODO improve
         d_var['datatype'] = dtypes[0]
         d_var['allocatable'] = allocatables[0]
-        d_var['rank'] = ranks[0]
+        d_var['rank'] = rank
         return d_var
     elif isinstance(expr, (tuple, list, Tuple)):
         d = infere_type(expr[0], **settings)
@@ -563,12 +572,22 @@ def _annotate(expr, **settings):
     elif isinstance(expr, Return):
         results = expr.expr
         if isinstance(results, Symbol):
-            return expr
+            name = results.name
+            if not name in namespace:
+                raise ValueError('Undefined returned variable {name}'.format(name=name))
+            var = namespace[name]
+            return Return([var])
         elif isinstance(results, (list, tuple, Tuple)):
+            ls = []
             for i in results:
                 if not isinstance(i, Symbol):
                     raise NotImplementedError('only symbol or iterable are allowed for returns')
-            return expr
+                name = i.name
+                if not name in namespace:
+                    raise ValueError('Undefined returned variable {name}'.format(name=name))
+                var = namespace[name]
+                ls += [var]
+            return Return(ls)
         else:
             raise NotImplementedError('only symbol or iterable are allowed for returns')
     elif isinstance(expr, FunctionDef):
@@ -613,12 +632,14 @@ def _annotate(expr, **settings):
             # TODO case of multiple calls to return
             if isinstance(stmt, Return):
                 results = stmt.expr
-                if isinstance(results, Symbol):
+                if isinstance(results, (Symbol, Variable)):
                     results = [results]
 
         if results:
             _results = []
             for a, ah in zip(results, interface.results):
+#                a.inspect()
+#                ah.inspect()
                 d_var = infere_type(ah, **settings)
                 dtype = d_var.pop('datatype')
                 a_new = Variable(dtype, a.name, **d_var)
