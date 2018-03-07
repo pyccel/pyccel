@@ -63,4 +63,3 @@ Among the very nice tools for *Python* developpers, Pylint_ is used for **static
    io
    stdlib
    fp
-   specs/index

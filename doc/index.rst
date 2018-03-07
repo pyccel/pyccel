@@ -18,6 +18,8 @@ Pyccel documentation contents
    tutorial
    dive/index
    parallel/index
+   overview
+   specs/index
    man/index
    extensions
    analysis
