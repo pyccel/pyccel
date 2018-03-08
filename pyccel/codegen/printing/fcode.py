@@ -532,6 +532,18 @@ class FCodePrinter(CodePrinter):
 
         return '\n'.join(decs)
 
+    def _print_AliasAssign(self, expr):
+        code = ''
+        stmt = ZerosLike(expr.lhs, expr.rhs)
+        code += self._print(stmt)
+        code += '\n'
+
+        lhs_code = self._print(expr.lhs)
+        rhs_code = self._print(expr.rhs)
+        code += '{0} = {1}'.format(lhs_code, rhs_code)
+
+        return self._get_statement(code)
+
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
