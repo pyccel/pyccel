@@ -3101,6 +3101,56 @@ class IndexedElement(Indexed):
     def dtype(self):
         return self.base.dtype
 
+
+class Concatinate(Basic):
+    """Represents the String concatination operation.
+
+    left : Symbol or string
+      
+    right : Symbol or string
+
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Concatinate
+    >>> x = symbols('x')
+    >>> Concatinate('some_string',x)
+    some_string+x
+    >>> Concatinate(None,x)
+    x
+    >>> Concatinate(x,None)
+    x
+    >>> Concatinate('some_string','another_string')
+    'some_string' + 'another_string'
+    """
+    # TODO add step
+
+    def __new__(cls, left, right):
+        return Basic.__new__(cls, left, right)
+
+    @property
+    def left(self):
+        return self._args[0]
+
+    @property
+    def right(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        if self.left is None:
+            return self.right
+        else:
+            left = self.left
+        
+        if self.right is None:
+            return self.left
+        else:
+            right = self.right
+        
+        return '{0} + {1}'.format(left, right)
+
 # TODO check that args are integers
 class Slice(Basic):
     """Represents a slice in the code.
