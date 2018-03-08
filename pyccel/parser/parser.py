@@ -810,8 +810,8 @@ if __name__ == '__main__':
 
     pyccel = Parser(filename)
 
-    print pyccel.parse()
+    pyccel.parse()
     
-    #settings = {}
-    #pyccel.annotate(**settings)
-    #print_namespace()
+    settings = {}
+    pyccel.annotate(**settings)
+    print_namespace()
