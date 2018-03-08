@@ -45,7 +45,7 @@ from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName
-from pyccel.ast import Assign
+from pyccel.ast import Assign, AliasAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionDef
@@ -79,6 +79,7 @@ from sympy import Integer, Float
 from sympy.core.containers import Dict
 from sympy.core.function import Function
 from sympy.utilities.iterables import iterable
+from sympy.tensor import Idx, Indexed, IndexedBase
 
 
 import os
@@ -323,7 +324,7 @@ def fst_to_ast(stmt):
                 args = [args]
 
             args = tuple(args)
-            return IndexedVariable(name)[args]
+            return IndexedBase(name)[args]
         call = None
         ls = []
         for i, s in enumerate(stmt):
@@ -456,7 +457,7 @@ def infere_type(expr, **settings):
             else:
                 shape = None
 
-            rank = var.rank - expr.rank
+            rank = max(0, var.rank - expr.rank)
             if rank > 0:
                 d_var['allocatable'] = var.allocatable
 
@@ -523,6 +524,25 @@ def _annotate(expr, **settings):
         return expr
     elif isinstance(expr, Variable):
         return expr
+    elif isinstance(expr, (IndexedVariable, IndexedBase)):
+        # an indexed variable is only defined if the associated variable is in
+        # the namespace
+        name = str(expr.name)
+        if not name in namespace:
+            raise ValueError('Undefined indexed variable {}'.format(name))
+        var = namespace[name]
+        dtype = var.dtype
+        # TODO add shape
+        return IndexedVariable(name, dtype=dtype)
+    elif isinstance(expr, (IndexedElement, Indexed)):
+        name = str(expr.base)
+        if not name in namespace:
+            raise ValueError('Undefined indexed variable {}'.format(name))
+        # TODO check consistency of indices with shape/rank
+        args = tuple(expr.indices)
+        var = namespace[name]
+        dtype = var.dtype
+        return IndexedVariable(name, dtype=dtype).__getitem__(*args)
     elif isinstance(expr, Symbol):
         name = str(expr.name)
         if name in namespace:
@@ -552,8 +572,16 @@ def _annotate(expr, **settings):
             lhs = Variable(dtype, name, **d_var)
             if not name in namespace:
                 namespace[lhs.name] = lhs
-        elif isinstance(lhs, IndexedElement):
-            name = str(lhs.base.name)
+        elif isinstance(lhs, (IndexedVariable, IndexedBase)):
+            name = str(lhs.name)
+            if not name in namespace:
+                raise ValueError('Undefined indexed variable {}'.format(name))
+            # TODO check consistency of indices with shape/rank
+            var = namespace[name]
+            dtype = var.dtype
+            lhs = IndexedVariable(name, dtype=dtype)
+        elif isinstance(lhs, (IndexedElement, Indexed)):
+            name = str(lhs.base)
             if not name in namespace:
                 raise ValueError('Undefined indexed variable {}'.format(name))
             # TODO check consistency of indices with shape/rank
@@ -562,9 +590,18 @@ def _annotate(expr, **settings):
             dtype = var.dtype
             lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
         else:
-            raise NotImplementedError('TODO')
+            raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(lhs)))
 
-        return Assign(lhs, rhs, strict=False)
+        expr = Assign(lhs, rhs, strict=False)
+        # we check here, if it is an alias assignment
+        if expr.is_alias:
+#            print '------'
+#            print expr
+#            print expr.is_alias
+#            print '------'
+            return AliasAssign(expr.lhs, expr.rhs)
+        else:
+            return expr
     elif isinstance(expr, FunctionHeader):
         # TODO should we return it and keep it in the AST?
         namespace['headers'][str(expr.func)] = expr
@@ -694,6 +731,7 @@ class Parser(object):
         """
         self._fst = None
         self._ast = None
+        namespace = {}
 
         # check if inputs is a file
         code = inputs

@@ -7,6 +7,8 @@ TODO
 
 - add tests/pyccel/ast/test_parallel.py to travis
 
+- in Variable, rank should be a property that uses *shape*?
+
 Bugs
 ****
 

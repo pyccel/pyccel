@@ -340,6 +340,58 @@ class Assign(Basic):
     def strict(self):
         return self._strict
 
+    @property
+    def is_alias(self):
+        """Returns True if the assignment is an alias."""
+        # TODO to be improved when handling classes
+        lhs = self.lhs
+        rhs = self.rhs
+        cond = isinstance(rhs, Variable) and (rhs.rank > 0)
+        cond = cond or isinstance(rhs, IndexedElement)
+        cond = cond or isinstance(rhs, IndexedVariable)
+        cond = cond and isinstance(lhs, Symbol)
+        return cond
+
+
+class AliasAssign(Basic):
+    """Represents aliasing for code generation. An alias is any statement of the
+    form `lhs := rhs` where
+
+    lhs : Symbol
+        at this point we don't know yet all information about lhs, this is why a
+        Symbol is the appropriate type.
+
+    rhs : Variable, IndexedVariable, IndexedElement
+        an assignable variable can be of any rank and any datatype, however its
+        shape must be known (not None)
+
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import AliasAssign
+    >>> from pyccel.ast.core import Variable
+    >>> n = Variable('int', 'n')
+    >>> x = Variable('int', 'x', rank=1, shape=[n])
+    >>> y = Symbol('y')
+    >>> AliasAssign(y, x)
+
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
 
 # The following are defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
@@ -2746,20 +2798,32 @@ class ZerosLike(Basic):
 
     @property
     def init_value(self):
-        dtype = self.rhs.dtype
-        if isinstance(dtype, NativeInteger):
-            value = 0
-        elif isinstance(dtype, NativeFloat):
-            value = 0.0
-        elif isinstance(dtype, NativeDouble):
-            value = 0.0
-        elif isinstance(dtype, NativeComplex):
-            value = 0.0
-        elif isinstance(dtype, NativeBool):
-            value = BooleanFalse()
+        def _native_init_value(dtype):
+            if isinstance(dtype, NativeInteger):
+                return 0
+            elif isinstance(dtype, NativeFloat):
+                return 0.0
+            elif isinstance(dtype, NativeDouble):
+                return 0.0
+            elif isinstance(dtype, NativeComplex):
+                return 0.0
+            elif isinstance(dtype, NativeBool):
+                return BooleanFalse()
+            raise TypeError('Expecting a Native type, given {}'.format(dtype))
+
+        _native_types = (NativeInteger, NativeFloat, NativeDouble,
+                         NativeComplex, NativeBool)
+
+        rhs = self.rhs
+        if isinstance(rhs.dtype, _native_types):
+            return _native_init_value(rhs.dtype)
+        elif isinstance(rhs, (Variable, IndexedVariable)):
+            return _native_init_value(rhs.dtype)
+        elif isinstance(rhs, IndexedElement):
+            return _native_init_value(rhs.base.dtype)
         else:
-            raise TypeError('Unknown type')
-        return value
+            raise TypeError('Unknown type for {name}, given '
+                            '{dtype}'.format(dtype=type(rhs), name=rhs))
 
 # TODO: treat as a function
 class Print(Basic):
@@ -2936,6 +3000,12 @@ class IndexedVariable(IndexedBase):
     """
 
     def __new__(cls, label, shape=None, dtype=None, **kw_args):
+        if dtype:
+            if isinstance(dtype, str):
+                dtype = datatype(dtype)
+            elif not isinstance(dtype, DataType):
+                raise TypeError("datatype must be an instance of DataType.")
+
         obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
         obj._dtype = dtype
         return obj
