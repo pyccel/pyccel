@@ -3,6 +3,34 @@
 Specifications
 ==============
 
+Native types
+************
+
+======== ===============
+ Python   Fortran
+======== ===============
+int       int
+float     real(4)
+float64   real(8)
+complex   complex(16)
+tuple     static array
+list      dynamic array
+======== ===============
+
+- Default type for floating numbers is **double precision**. Hence, the following stamtement 
+
+  .. code-block:: python
+
+    x = 1.
+
+  will be converted to 
+
+  .. code-block:: fortran
+
+    real(8) :: x
+
+    x = 1.0d0
+
 Python Restrictions
 *******************
 

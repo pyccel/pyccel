@@ -289,11 +289,11 @@ def build_file(filename, language, compiler,
                 errors.append(r)
         if errors:
             for e in errors:
-                print pattern_proc.format(path=e.named['path'],
+                print(pattern_proc.format(path=e.named['path'],
                                           line=e.named['line'],
                                           msg_id=e.named['msg_id'],
                                           msg=e.named['msg'],
-                                          symbol=e.named['symbol'])
+                                          symbol=e.named['symbol']))
 
 #            raise NotImplementedError('Add lint err message')
             import sys; sys.exit(0)

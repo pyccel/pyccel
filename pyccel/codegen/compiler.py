@@ -411,7 +411,7 @@ class Compiler(object):
         output = subprocess.check_output(cmd, shell=True)
 
         if verbose:
-            print output
+            print(output)
 
         # write and save a log file in .pyccel/'filename'.log
         # ...

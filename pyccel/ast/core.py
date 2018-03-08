@@ -1680,6 +1680,19 @@ class Variable(Symbol):
         else:
             return '.'.join(sstr(n) for n in self.name)
 
+    def inspect(self):
+        """inspects the variable."""
+        print('>>> Variable')
+        print('  name           = {}'.format(self.name))
+        print('  dtype          = {}'.format(self.dtype))
+        print('  rank           = {}'.format(self.rank))
+        print('  allocatable    = {}'.format(self.allocatable))
+        print('  shape          = {}'.format(self.shape))
+        print('  cls_base       = {}'.format(self.cls_base))
+        print('  cls_parameters = {}'.format(self.cls_parameters))
+        print('  is_pointer     = {}'.format(self.is_pointer))
+        print('<<<')
+
     def clone(self, name):
         cls = eval(self.__class__.__name__)
 
@@ -3376,6 +3389,7 @@ class FunctionHeader(Header):
 
     def create_definition(self):
         """Returns a FunctionDef with empy body."""
+        # TODO factorize what can be factorized
 
         name = str(self.func)
 
@@ -3393,12 +3407,11 @@ class FunctionHeader(Header):
             allocatable = d[2]
 
             rank = 0
-            for i in d[1]:
-                if isinstance(i, Slice):
+            for a in d[1]:
+                if isinstance(a, Slice) or a == ':':
                     rank += 1
 
             shape  = None
-            intent = 'out'
 
             arg_name = 'arg_{0}'.format(str(i))
             arg = Variable(datatype, arg_name,
@@ -3413,12 +3426,11 @@ class FunctionHeader(Header):
             allocatable = d[2]
 
             rank = 0
-            for i in d[1]:
-                if isinstance(i, Slice):
+            for a in d[1]:
+                if isinstance(a, Slice) or a == ':':
                     rank += 1
 
             shape  = None
-            intent = 'out'
 
             result_name = 'result_{0}'.format(str(i))
             result = Variable(datatype, result_name,

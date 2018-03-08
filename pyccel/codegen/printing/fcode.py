@@ -38,6 +38,7 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ZerosLike
+from pyccel.ast.core import Return
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
@@ -502,7 +503,7 @@ class FCodePrinter(CodePrinter):
         if (rank == 1) and (isinstance(shape, int)):   # TODO improve
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
-        elif allocatable or is_pointer:
+        elif (rank > 0) or allocatable or is_pointer:
             rankstr = ', '.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
@@ -819,8 +820,10 @@ class FCodePrinter(CodePrinter):
             for stmt in expr.body:
                 if isinstance(stmt, Declare):
                     pass
-                elif not isinstance(stmt, list): # for list of Results
+                elif not isinstance(stmt, Return): # for list of Results
                     body.append(stmt)
+#                elif not isinstance(stmt, list): # for list of Results
+#                    body.append(stmt)
 
         list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
         for arg in expr.arguments:
@@ -1590,7 +1593,7 @@ class FCodePrinter(CodePrinter):
             start = ''
         else:
             start = self._print(expr.start)
-        if expr.end is None:
+        if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
             end = expr.end - 1

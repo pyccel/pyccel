@@ -73,11 +73,12 @@ from sympy.core.expr import Expr
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
-#from sympy.logic.boolalg import Boolean,
+from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
 from sympy.core.containers import Dict
 from sympy.core.function import Function
+from sympy.utilities.iterables import iterable
 
 
 import os
@@ -124,7 +125,7 @@ import os
 def view_tree(expr):
     """Views a sympy expression tree."""
 
-    print srepr(expr)
+    print(srepr(expr))
 # ...
 
 
@@ -419,6 +420,7 @@ def infere_type(expr, **settings):
     d_var['allocatable'] = None
     d_var['shape'] = None
     d_var['rank'] = None
+    d_var['is_pointer'] = None
     # TODO - IndexedVariable
     #      - IndexedElement
 
@@ -433,18 +435,66 @@ def infere_type(expr, **settings):
         d_var['shape'] = expr.shape
         d_var['rank'] = expr.rank
         return d_var
+    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+        d_var['datatype'] = NativeBool()
+        d_var['allocatable'] = False
+        d_var['is_pointer'] = False
+        d_var['rank'] = 0
+        return d_var
+    elif isinstance(expr, IndexedElement):
+        d_var['datatype'] = expr.dtype
+        name = str(expr.base)
+        if name in namespace:
+            var = namespace[name]
+            d_var['datatype'] = var.dtype
+
+            if iterable(var.shape):
+                shape = []
+                for s,i in zip(var.shape, expr.indices):
+                    if isinstance(i, Slice):
+                        shape.append(i)
+            else:
+                shape = None
+
+            rank = var.rank - expr.rank
+            if rank > 0:
+                d_var['allocatable'] = var.allocatable
+
+            d_var['shape'] = shape
+            d_var['rank'] = rank
+#            # TODO pointer case
+#            d_var['is_pointer'] = var.is_pointer
+            return d_var
+    elif isinstance(expr, IndexedVariable):
+        name = str(expr)
+        if name in namespace:
+            var = namespace[name]
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
+            return d_var
     elif isinstance(expr, Expr):
-        print('***** ', type(expr))
         ds = [infere_type(i, **settings) for i in expr.args]
 
         dtypes = [d['datatype'] for d in ds]
         allocatables = [d['allocatable'] for d in ds]
         ranks = [d['rank'] for d in ds]
 
+        # ... only scalars and variables of rank 0 can be handled
+        r_min = min(ranks)
+        r_max = max(ranks)
+        if not(r_min == r_max):
+            if not(r_min == 0):
+                raise ValueError('cannot process arrays of different ranks.')
+        rank = r_max
+        # ...
+
         # TODO improve
         d_var['datatype'] = dtypes[0]
         d_var['allocatable'] = allocatables[0]
-        d_var['rank'] = ranks[0]
+        d_var['rank'] = rank
         return d_var
     elif isinstance(expr, (tuple, list, Tuple)):
         d = infere_type(expr[0], **settings)
@@ -522,12 +572,22 @@ def _annotate(expr, **settings):
     elif isinstance(expr, Return):
         results = expr.expr
         if isinstance(results, Symbol):
-            return expr
+            name = results.name
+            if not name in namespace:
+                raise ValueError('Undefined returned variable {name}'.format(name=name))
+            var = namespace[name]
+            return Return([var])
         elif isinstance(results, (list, tuple, Tuple)):
+            ls = []
             for i in results:
                 if not isinstance(i, Symbol):
                     raise NotImplementedError('only symbol or iterable are allowed for returns')
-            return expr
+                name = i.name
+                if not name in namespace:
+                    raise ValueError('Undefined returned variable {name}'.format(name=name))
+                var = namespace[name]
+                ls += [var]
+            return Return(ls)
         else:
             raise NotImplementedError('only symbol or iterable are allowed for returns')
     elif isinstance(expr, FunctionDef):
@@ -572,12 +632,14 @@ def _annotate(expr, **settings):
             # TODO case of multiple calls to return
             if isinstance(stmt, Return):
                 results = stmt.expr
-                if isinstance(results, Symbol):
+                if isinstance(results, (Symbol, Variable)):
                     results = [results]
 
         if results:
             _results = []
             for a, ah in zip(results, interface.results):
+#                a.inspect()
+#                ah.inspect()
                 d_var = infere_type(ah, **settings)
                 dtype = d_var.pop('datatype')
                 a_new = Variable(dtype, a.name, **d_var)
@@ -604,10 +666,10 @@ def _annotate(expr, **settings):
 
 
 def print_namespace():
-    print '>>>> Namespace '
+    print('>>>> Namespace ')
     for k,v in namespace.items():
-        print k, ' :: ', type(v)
-    print '<<<<'
+        print(k, ' :: ', type(v))
+    print('<<<<')
 
 
 def _read_file(filename):
