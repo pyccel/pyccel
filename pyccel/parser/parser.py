@@ -60,6 +60,7 @@ from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader
+from pyccel.ast import Concatinate
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
@@ -167,7 +168,7 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, str):
         return repr(stmt)
     elif isinstance(stmt, StringNode):
-        return repr(stmt.value)
+        return stmt.value
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
     elif isinstance(stmt, FloatNode):
@@ -207,6 +208,8 @@ def fst_to_ast(stmt):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
         if stmt.value == '+':
+            if isinstance(first,str) or isinstance(second,str):
+                return Concatinate(first,second)
             return Add(first, second)
         elif stmt.value == '*':
             return Mul(first, second)
@@ -807,8 +810,8 @@ if __name__ == '__main__':
 
     pyccel = Parser(filename)
 
-    pyccel.parse()
+    print pyccel.parse()
     
-    settings = {}
-    pyccel.annotate(**settings)
-    print_namespace()
+    #settings = {}
+    #pyccel.annotate(**settings)
+    #print_namespace()
