@@ -68,7 +68,7 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from sympy import Symbol
 from sympy import Tuple
-from sympy import Add, Mul, Pow,floor
+from sympy import Add, Mul, Pow,floor,Mod
 from sympy.core.expr import Expr
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
@@ -225,6 +225,8 @@ def fst_to_ast(stmt):
         elif stmt.value== '//':
             second = Pow(second, -1)
             return floor(Mul(first, second))
+        elif stmt.value== '%':
+            return Mod(first,second)
         else:
             raise ValueError('unknown/unavailable binary operator '
                              '{node}'.format(node=type(stmt.value)))
