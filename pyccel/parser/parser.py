@@ -456,7 +456,7 @@ def infere_type(expr, **settings):
             else:
                 shape = None
 
-            rank = var.rank - expr.rank
+            rank = max(0, var.rank - expr.rank)
             if rank > 0:
                 d_var['allocatable'] = var.allocatable
 
@@ -694,6 +694,7 @@ class Parser(object):
         """
         self._fst = None
         self._ast = None
+        namespace = {}
 
         # check if inputs is a file
         code = inputs
