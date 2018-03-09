@@ -44,7 +44,7 @@ from redbaron import GetitemNode,SliceNode
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Nil
 from pyccel.ast import Variable
-from pyccel.ast import DottedName
+from pyccel.ast import DottedName,DottedVariable
 from pyccel.ast import Assign, AliasAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
@@ -180,6 +180,8 @@ def fst_to_ast(stmt):
         rhs = fst_to_ast(stmt.value)
         return Assign(lhs, rhs)
     elif isinstance(stmt, NameNode):
+        if isinstance(stmt.previous,DotNode):
+            return fst_to_ast(stmt.previous)
         if stmt.value == 'None':
             return Nil()
         elif stmt.value == 'True':
@@ -319,53 +321,29 @@ def fst_to_ast(stmt):
              return Slice(lower,None)
          elif upper:
              return Slice(None,upper)
-    elif isinstance(stmt, DotProxyList):
-        # TODO handle dot trailers
-        # we first get the index of the call node
-        s=[isinstance(i.next, DotNode) for i in stmt]
-        if not any(s):
-            # case of no DotNode
-            # TODO fix bug of case IndexedVariable before DottedNode
-            ls = [fst_to_ast(i) for i in stmt]
-            name = str(ls[0])
-            args = ls[1:]
-            args = args[0]
-            if not hasattr(args, '__iter__'):
-                args = [args]
-
-            args = tuple(args)
-            return IndexedBase(name)[args]
-        call = None
-        ls = []
-        for i, s in enumerate(stmt):
-            if isinstance(s, CallNode):
-                call = stmt[i]
-                break
-            # we only take the string representation
-            # since we will use DottedName later
-            #ls.append(fst_to_ast(s))
-            ls.append(repr(s))
-            i += 1
-
-        # the function name (without trailer) is the previous node to the call
-        if len(ls) == 1:
-            name = ls[0]
-        else:
-            name = DottedName(*ls)
-
-        # dots may lead to a dotted name or a call to a method
-        if call is None:
-            return name
-        elif isinstance(call, CallNode):
-            # in this case, name must be a string
-            args   = fst_to_ast(call)
-            f_name = str(name)
-            return Function(f_name)(*args)
-        else:
-            raise ValueError('Expecting a method call or a dotted name')
+    elif isinstance(stmt,DotProxyList):
+        node=fst_to_ast(stmt[-1])
+        if len(stmt)>1:
+            stmt.pop()
+            stmt.pop()
+        return node
+    elif isinstance(stmt,DotNode):
+        pre=fst_to_ast(stmt.previous)
+        suf=stmt.next
+        stmt.parent.value.remove(stmt.previous)
+        return DottedVariable(pre,fst_to_ast(suf))
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
-        return args
+        f_name=str(stmt.previous)
+        func=Function(f_name)(*args)
+        parent=stmt.parent
+        if stmt.previous.previous and isinstance(stmt.previous.previous,DotNode):
+            parent.value.remove(stmt.previous) 
+            parent.value.remove(stmt)
+            pre=fst_to_ast(stmt.parent)
+            return DottedVariable(pre,func)
+        else:
+            return func
     elif isinstance(stmt, CallArgumentNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, ForNode):
