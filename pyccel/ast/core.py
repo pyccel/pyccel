@@ -243,6 +243,36 @@ class DottedName(Basic):
         sstr = printer.doprint
         return '.'.join(sstr(n) for n in self.name)
 
+class DottedVariable(Basic):
+    """
+    Represents a dotted variable.
+
+    Examples
+
+    >>> from pyccel.ast.core import DottedName
+    >>> DottedName('matrix', 'n_rows')
+    matrix.n_rows
+    >>> DottedName('pyccel', 'stdlib', 'parallel')
+    pyccel.stdlib.parallel
+    """
+    def __new__(cls, *args):
+        for i in args:
+            if  not isinstance(i,(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function,DottedVariable)):
+                raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(i),type(i)))
+        return Basic.__new__(cls, *args)
+
+    @property
+    def args(self):
+        return self._args
+
+    def __str__(self):
+        return '.'.join(str(n) for n in self.args)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '.'.join(sstr(n) for n in self.args)
+
+
 class Assign(Basic):
     """Represents variable assignment for code generation.
 
