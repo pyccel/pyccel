@@ -311,7 +311,15 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt, GetitemNode):
-         return fst_to_ast(stmt.value)
+         args=fst_to_ast(stmt.value)
+         name=str(stmt.previous)
+         stmt.parent.remove(stmt.previous)
+         stmt.parent.remove(stmt)
+         if not hasattr(args, '__iter__'):
+             args = [args]   
+         args = tuple(args)
+         return IndexedBase(name)[args]
+
     elif isinstance(stmt,SliceNode):
          upper = fst_to_ast(stmt.upper)
          lower = fst_to_ast(stmt.lower)
@@ -328,10 +336,12 @@ def fst_to_ast(stmt):
             stmt.pop()
         return node
     elif isinstance(stmt,DotNode):
-        pre=fst_to_ast(stmt.previous)
         suf=stmt.next
-        stmt.parent.value.remove(stmt.previous)
-        return DottedVariable(pre,fst_to_ast(suf))
+        pre=fst_to_ast(stmt.previous)
+        if stmt.previous:
+            stmt.parent.value.remove(stmt.previous)
+        suf=fst_to_ast(suf)
+        return DottedVariable(pre,suf)
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
         f_name=str(stmt.previous)

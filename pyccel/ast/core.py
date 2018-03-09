@@ -257,7 +257,7 @@ class DottedVariable(Basic):
     """
     def __new__(cls, *args):
         for i in args:
-            if not isinstance(i,(Variable,Symbol,IndexedVariable,Function,DottedVariable)):
+            if  not isinstance(i,(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function,DottedVariable)):
                 raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(i),type(i)))
         return Basic.__new__(cls, *args)
 
