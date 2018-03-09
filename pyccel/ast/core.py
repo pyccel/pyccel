@@ -3127,6 +3127,10 @@ class Concatinate(Basic):
     # TODO add step
 
     def __new__(cls, left, right):
+        if isinstance(left,str):
+           left = repr(left)
+        if isinstance(right,str):
+           right = repr(right)
         return Basic.__new__(cls, left, right)
 
     @property
@@ -3139,17 +3143,15 @@ class Concatinate(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        if self.left is None:
-            return self.right
-        else:
-            left = self.left
+        left = self.left
+        right = self.right
+        if left is None:
+            return right
         
-        if self.right is None:
-            return self.left
-        else:
-            right = self.right
+        if right is None:
+            return left
         
-        return '{0} + {1}'.format(left, right)
+        return '{0}+{1}'.format(left, right)
 
 # TODO check that args are integers
 class Slice(Basic):
