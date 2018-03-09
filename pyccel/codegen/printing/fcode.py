@@ -534,9 +534,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_AliasAssign(self, expr):
         code = ''
-        stmt = ZerosLike(expr.lhs, expr.rhs)
-        code += self._print(stmt)
-        code += '\n'
+
+        lhs = expr.lhs
+        if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None):
+            stmt = ZerosLike(expr.lhs, expr.rhs)
+            code += self._print(stmt)
+            code += '\n'
 
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)

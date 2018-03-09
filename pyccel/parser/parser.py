@@ -560,17 +560,49 @@ def _annotate(expr, **settings):
         else:
             # TODO improve this when using symbolic extension
             raise NotImplementedError('No Symbolic variable are allowed')
-    elif isinstance(expr, Expr):
+    elif isinstance(expr, Mul):
+        # we reconstruct the arithmetic expressions using the annotated
+        # arguments
         args = expr.args
-        symbols = expr.free_symbols
-        names = [a.name for a in symbols]
 
-        args = list(symbols)
-        for a in args:
-            name = a.name
+        # we treat the first element
+        a = args[0]
+        a_new = _annotate(a, **settings)
+        expr = a_new
+
+        # then we treat the rest
+        for a in args[1:]:
             a_new = _annotate(a, **settings)
-            expr = expr.subs(a, a_new)
+            expr = Mul(expr, a_new)
         return expr
+    elif isinstance(expr, Add):
+        # we reconstruct the arithmetic expressions using the annotated
+        # arguments
+        args = expr.args
+
+        # we treat the first element
+        a = args[0]
+        a_new = _annotate(a, **settings)
+        expr = a_new
+
+        # then we treat the rest
+        for a in args[1:]:
+            a_new = _annotate(a, **settings)
+            expr = Add(expr, a_new)
+        return expr
+    elif isinstance(expr, Expr):
+        raise NotImplementedError('TODO')
+#        args = expr.args
+#        symbols = expr.free_symbols
+#        names = [a.name for a in symbols]
+#
+#        args = list(symbols)
+#        for a in args:
+#            name = a.name
+#            a_new = _annotate(a, **settings)
+#            # subs is not working for Indexed
+#            expr = expr.subs(a, a_new)
+#        return expr
     elif isinstance(expr, Assign):
         rhs = _annotate(expr.rhs, **settings)
         d_var = infere_type(rhs, **settings)
@@ -811,7 +843,9 @@ if __name__ == '__main__':
     pyccel = Parser(filename)
 
     pyccel.parse()
-    
+
     settings = {}
     pyccel.annotate(**settings)
     print_namespace()
+
+    pyccel.dot('ast.gv')
