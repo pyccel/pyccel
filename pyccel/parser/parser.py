@@ -417,338 +417,6 @@ def fst_to_ast(stmt):
         raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
 
 
-namespace = {}
-# TODO use another name for headers
-#      => reserved keyword, or use __
-namespace['headers'] = {}
-
-def infere_type(expr, **settings):
-    """
-    type inference for expressions
-    """
-    d_var = {}
-    d_var['datatype'] = None
-    d_var['allocatable'] = None
-    d_var['shape'] = None
-    d_var['rank'] = None
-    d_var['is_pointer'] = None
-    # TODO - IndexedVariable
-    #      - IndexedElement
-
-    if isinstance(expr, Integer):
-        d_var['datatype'] = 'int'
-        d_var['allocatable'] = False
-        d_var['rank'] = 0
-        return d_var
-    elif isinstance(expr, Variable):
-        d_var['datatype'] = expr.dtype
-        d_var['allocatable'] = expr.allocatable
-        d_var['shape'] = expr.shape
-        d_var['rank'] = expr.rank
-        return d_var
-    elif isinstance(expr, (BooleanTrue, BooleanFalse)):
-        d_var['datatype'] = NativeBool()
-        d_var['allocatable'] = False
-        d_var['is_pointer'] = False
-        d_var['rank'] = 0
-        return d_var
-    elif isinstance(expr, IndexedElement):
-        d_var['datatype'] = expr.dtype
-        name = str(expr.base)
-        if name in namespace:
-            var = namespace[name]
-            d_var['datatype'] = var.dtype
-
-            if iterable(var.shape):
-                shape = []
-                for s,i in zip(var.shape, expr.indices):
-                    if isinstance(i, Slice):
-                        shape.append(i)
-            else:
-                shape = None
-
-            rank = max(0, var.rank - expr.rank)
-            if rank > 0:
-                d_var['allocatable'] = var.allocatable
-
-            d_var['shape'] = shape
-            d_var['rank'] = rank
-#            # TODO pointer case
-#            d_var['is_pointer'] = var.is_pointer
-            return d_var
-    elif isinstance(expr, IndexedVariable):
-        name = str(expr)
-        if name in namespace:
-            var = namespace[name]
-
-            d_var['datatype']    = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape']       = var.shape
-            d_var['rank']        = var.rank
-            return d_var
-    elif isinstance(expr, Expr):
-        ds = [infere_type(i, **settings) for i in expr.args]
-
-        dtypes = [d['datatype'] for d in ds]
-        allocatables = [d['allocatable'] for d in ds]
-        ranks = [d['rank'] for d in ds]
-
-        # ... only scalars and variables of rank 0 can be handled
-        r_min = min(ranks)
-        r_max = max(ranks)
-        if not(r_min == r_max):
-            if not(r_min == 0):
-                raise ValueError('cannot process arrays of different ranks.')
-        rank = r_max
-        # ...
-
-        # TODO improve
-        d_var['datatype'] = dtypes[0]
-        d_var['allocatable'] = allocatables[0]
-        d_var['rank'] = rank
-        return d_var
-    elif isinstance(expr, (tuple, list, Tuple)):
-        d = infere_type(expr[0], **settings)
-        # TODO must check that it is consistent with pyccel's rules
-        d_var['datatype']    = d['datatype']
-        d_var['allocatable'] = d['allocatable']
-        d_var['rank']        = d['rank'] + 1
-        d_var['shape']       = len(expr) # TODO improve
-        return d_var
-    else:
-        raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
-
-
-def _annotate(expr, **settings):
-    """Annotates the AST.
-
-    IndexedVariable atoms are only used to manipulate expressions, we then,
-    always have a Variable in the namespace."""
-    if isinstance(expr, (list, tuple, Tuple)):
-        ls = []
-        for i in expr:
-            a = _annotate(i, **settings)
-            ls.append(a)
-        return Tuple(*ls)
-    elif isinstance(expr, (Integer, Float)):
-        return expr
-    elif isinstance(expr, Variable):
-        return expr
-    elif isinstance(expr, (IndexedVariable, IndexedBase)):
-        # an indexed variable is only defined if the associated variable is in
-        # the namespace
-        name = str(expr.name)
-        if not name in namespace:
-            raise ValueError('Undefined indexed variable {}'.format(name))
-        var = namespace[name]
-        dtype = var.dtype
-        # TODO add shape
-        return IndexedVariable(name, dtype=dtype)
-    elif isinstance(expr, (IndexedElement, Indexed)):
-        name = str(expr.base)
-        if not name in namespace:
-            raise ValueError('Undefined indexed variable {}'.format(name))
-        # TODO check consistency of indices with shape/rank
-        args = tuple(expr.indices)
-        var = namespace[name]
-        dtype = var.dtype
-        return IndexedVariable(name, dtype=dtype).__getitem__(*args)
-    elif isinstance(expr, Symbol):
-        name = str(expr.name)
-        if name in namespace:
-            return namespace[name]
-        else:
-            # TODO improve this when using symbolic extension
-            raise NotImplementedError('No Symbolic variable are allowed')
-    elif isinstance(expr, Mul):
-        # we reconstruct the arithmetic expressions using the annotated
-        # arguments
-        args = expr.args
-
-        # we treat the first element
-        a = args[0]
-        a_new = _annotate(a, **settings)
-        expr = a_new
-
-        # then we treat the rest
-        for a in args[1:]:
-            a_new = _annotate(a, **settings)
-            expr = Mul(expr, a_new)
-        return expr
-    elif isinstance(expr, Add):
-        # we reconstruct the arithmetic expressions using the annotated
-        # arguments
-        args = expr.args
-
-        # we treat the first element
-        a = args[0]
-        a_new = _annotate(a, **settings)
-        expr = a_new
-
-        # then we treat the rest
-        for a in args[1:]:
-            a_new = _annotate(a, **settings)
-            expr = Add(expr, a_new)
-        return expr
-    elif isinstance(expr, Expr):
-        raise NotImplementedError('TODO')
-#        args = expr.args
-#        symbols = expr.free_symbols
-#        names = [a.name for a in symbols]
-#
-#        args = list(symbols)
-#        for a in args:
-#            name = a.name
-#            a_new = _annotate(a, **settings)
-#            # subs is not working for Indexed
-#            expr = expr.subs(a, a_new)
-#        return expr
-    elif isinstance(expr, Assign):
-        rhs = _annotate(expr.rhs, **settings)
-        d_var = infere_type(rhs, **settings)
-
-        lhs = expr.lhs
-        if isinstance(lhs, Symbol):
-            name = lhs.name
-            dtype = d_var.pop('datatype')
-            lhs = Variable(dtype, name, **d_var)
-            if not name in namespace:
-                namespace[lhs.name] = lhs
-        elif isinstance(lhs, (IndexedVariable, IndexedBase)):
-            name = str(lhs.name)
-            if not name in namespace:
-                raise ValueError('Undefined indexed variable {}'.format(name))
-            # TODO check consistency of indices with shape/rank
-            var = namespace[name]
-            dtype = var.dtype
-            lhs = IndexedVariable(name, dtype=dtype)
-        elif isinstance(lhs, (IndexedElement, Indexed)):
-            name = str(lhs.base)
-            if not name in namespace:
-                raise ValueError('Undefined indexed variable {}'.format(name))
-            # TODO check consistency of indices with shape/rank
-            args = tuple(lhs.indices)
-            var = namespace[name]
-            dtype = var.dtype
-            lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
-        else:
-            raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(lhs)))
-
-        expr = Assign(lhs, rhs, strict=False)
-        # we check here, if it is an alias assignment
-        if expr.is_alias:
-#            print '------'
-#            print expr
-#            print expr.is_alias
-#            print '------'
-            return AliasAssign(expr.lhs, expr.rhs)
-        else:
-            return expr
-    elif isinstance(expr, FunctionHeader):
-        # TODO should we return it and keep it in the AST?
-        namespace['headers'][str(expr.func)] = expr
-        return expr
-    elif isinstance(expr, Return):
-        results = expr.expr
-        if isinstance(results, Symbol):
-            name = results.name
-            if not name in namespace:
-                raise ValueError('Undefined returned variable {name}'.format(name=name))
-            var = namespace[name]
-            return Return([var])
-        elif isinstance(results, (list, tuple, Tuple)):
-            ls = []
-            for i in results:
-                if not isinstance(i, Symbol):
-                    raise NotImplementedError('only symbol or iterable are allowed for returns')
-                name = i.name
-                if not name in namespace:
-                    raise ValueError('Undefined returned variable {name}'.format(name=name))
-                var = namespace[name]
-                ls += [var]
-            return Return(ls)
-        else:
-            raise NotImplementedError('only symbol or iterable are allowed for returns')
-    elif isinstance(expr, FunctionDef):
-        name = str(expr.name)
-        name = name.replace('\'', '') # remove quotes for str representation
-        args = []
-        results = []
-        local_vars  = []
-        global_vars = []
-        cls_name    = None
-        hide        = False
-        kind        = 'function'
-        imports     = []
-
-        if expr.arguments or results:
-            header = namespace['headers'].pop(name, None)
-            if not header:
-                raise ValueError('Expecting a header function for {func} '
-                                 'but could not find it.'.format(func=name))
-
-            # we construct a FunctionDef from its header
-            interface = header.create_definition()
-
-        # then use it to decorate our arguments
-        if expr.arguments:
-            for a, ah in zip(expr.arguments, interface.arguments):
-                d_var = infere_type(ah, **settings)
-                dtype = d_var.pop('datatype')
-                a_new = Variable(dtype, a.name, **d_var)
-                args.append(a_new)
-
-                # TODO add scope and store already declared variables there,
-                #      then retrieve them
-                namespace[str(a_new.name)] = a_new
-
-        # we annotate the body
-        body = _annotate(expr.body, **settings)
-
-        # find return stmt and results
-        # we keep the return stmt, in case of handling multi returns later
-        for stmt in body:
-            # TODO case of multiple calls to return
-            if isinstance(stmt, Return):
-                results = stmt.expr
-                if isinstance(results, (Symbol, Variable)):
-                    results = [results]
-
-        if results:
-            _results = []
-            for a, ah in zip(results, interface.results):
-#                a.inspect()
-#                ah.inspect()
-                d_var = infere_type(ah, **settings)
-                dtype = d_var.pop('datatype')
-                a_new = Variable(dtype, a.name, **d_var)
-                _results.append(a_new)
-
-                # results must be variable that were already declared
-                if not(str(a_new.name) in namespace):
-                    raise ValueError('can not return undeclared variables')
-            results = _results
-
-        return FunctionDef(name, args, results, body,
-                           local_vars=local_vars, global_vars=global_vars,
-                           cls_name=cls_name, hide=hide,
-                           kind=kind, imports=imports)
-    elif isinstance(expr, EmptyLine):
-        return expr
-    elif isinstance(expr, Print):
-        # TODO improve
-        return expr
-    elif isinstance(expr, Comment):
-        return expr
-    else:
-        raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
-
-
-def print_namespace():
-    print('>>>> Namespace ')
-    for k,v in namespace.items():
-        print(k, ' :: ', type(v))
-    print('<<<<')
 
 
 def _read_file(filename):
@@ -773,7 +441,11 @@ class Parser(object):
         """
         self._fst = None
         self._ast = None
-        namespace = {}
+        self._namespace = {}
+
+        # TODO use another name for headers
+        #      => reserved keyword, or use __
+        self._namespace['headers'] = {}
 
         # check if inputs is a file
         code = inputs
@@ -784,6 +456,14 @@ class Parser(object):
 
         red = RedBaron(code)
         self._fst = red
+
+    @property
+    def namespace(self):
+        return self._namespace
+
+    @property
+    def headers(self):
+        return self.namespace['headers']
 
     @property
     def code(self):
@@ -808,9 +488,15 @@ class Parser(object):
     def annotate(self, **settings):
         """."""
         ast = self.ast
-        ast = _annotate(ast, **settings)
+        ast = self._annotate(ast, **settings)
         self._ast = ast
         return ast
+
+    def print_namespace(self):
+        print('------- Namespace -------')
+        for k,v in self.namespace.items():
+            print(k, ' :: ', type(v))
+        print('-------------------------')
 
     def dot(self, filename):
         """Exports sympy AST using graphviz then convert it to an image."""
@@ -827,6 +513,350 @@ class Parser(object):
         name = os.path.splitext(name)[0]
         cmd = "dot -Tps {name}.gv -o {name}.ps".format(name=name)
         os.system(cmd)
+
+    def get_variable(self, name):
+        """."""
+        if name in self.namespace:
+            return self.namespace[name]
+        return None
+
+    def insert_variable(self, expr, name=None):
+        """."""
+        # TODO add some checks before
+        if name is None:
+            name = str(expr)
+        self._namespace[name] = expr
+
+    def get_header(self, name):
+        """."""
+        if name in self.headers:
+            return self.headers[name]
+        return None
+
+    def insert_header(self, expr):
+        """."""
+        self._namespace['headers'][str(expr.func)] = expr
+
+    def _infere_type(self, expr, **settings):
+        """
+        type inference for expressions
+        """
+        d_var = {}
+        d_var['datatype'] = None
+        d_var['allocatable'] = None
+        d_var['shape'] = None
+        d_var['rank'] = None
+        d_var['is_pointer'] = None
+        # TODO - IndexedVariable
+        #      - IndexedElement
+
+        if isinstance(expr, Integer):
+            d_var['datatype'] = 'int'
+            d_var['allocatable'] = False
+            d_var['rank'] = 0
+            return d_var
+        elif isinstance(expr, Variable):
+            d_var['datatype'] = expr.dtype
+            d_var['allocatable'] = expr.allocatable
+            d_var['shape'] = expr.shape
+            d_var['rank'] = expr.rank
+            return d_var
+        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+            d_var['datatype'] = NativeBool()
+            d_var['allocatable'] = False
+            d_var['is_pointer'] = False
+            d_var['rank'] = 0
+            return d_var
+        elif isinstance(expr, IndexedElement):
+            d_var['datatype'] = expr.dtype
+            name = str(expr.base)
+            var = self.get_variable(name)
+            if var is None:
+                raise ValueError('Undefined variable {name}'.format(name=name))
+
+            d_var['datatype'] = var.dtype
+
+            if iterable(var.shape):
+                shape = []
+                for s,i in zip(var.shape, expr.indices):
+                    if isinstance(i, Slice):
+                        shape.append(i)
+            else:
+                shape = None
+
+            rank = max(0, var.rank - expr.rank)
+            if rank > 0:
+                d_var['allocatable'] = var.allocatable
+
+            d_var['shape'] = shape
+            d_var['rank'] = rank
+#            # TODO pointer case
+#            d_var['is_pointer'] = var.is_pointer
+            return d_var
+        elif isinstance(expr, IndexedVariable):
+            name = str(expr)
+            var = self.get_variable(name)
+            if var is None:
+                raise ValueError('Undefined variable {name}'.format(name=name))
+
+            d_var['datatype']    = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape']       = var.shape
+            d_var['rank']        = var.rank
+            return d_var
+        elif isinstance(expr, Expr):
+            ds = [self._infere_type(i, **settings) for i in expr.args]
+
+            dtypes = [d['datatype'] for d in ds]
+            allocatables = [d['allocatable'] for d in ds]
+            ranks = [d['rank'] for d in ds]
+
+            # ... only scalars and variables of rank 0 can be handled
+            r_min = min(ranks)
+            r_max = max(ranks)
+            if not(r_min == r_max):
+                if not(r_min == 0):
+                    raise ValueError('cannot process arrays of different ranks.')
+            rank = r_max
+            # ...
+
+            # TODO improve
+            d_var['datatype'] = dtypes[0]
+            d_var['allocatable'] = allocatables[0]
+            d_var['rank'] = rank
+            return d_var
+        elif isinstance(expr, (tuple, list, Tuple)):
+            d = self._infere_type(expr[0], **settings)
+            # TODO must check that it is consistent with pyccel's rules
+            d_var['datatype']    = d['datatype']
+            d_var['allocatable'] = d['allocatable']
+            d_var['rank']        = d['rank'] + 1
+            d_var['shape']       = len(expr) # TODO improve
+            return d_var
+        else:
+            raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
+    def _annotate(self, expr, **settings):
+        """Annotates the AST.
+
+        IndexedVariable atoms are only used to manipulate expressions, we then,
+        always have a Variable in the namespace."""
+        if isinstance(expr, (list, tuple, Tuple)):
+            ls = []
+            for i in expr:
+                a = self._annotate(i, **settings)
+                ls.append(a)
+            return Tuple(*ls)
+        elif isinstance(expr, (Integer, Float)):
+            return expr
+        elif isinstance(expr, Variable):
+            return expr
+        elif isinstance(expr, (IndexedVariable, IndexedBase)):
+            # an indexed variable is only defined if the associated variable is in
+            # the namespace
+            name = str(expr.name)
+            var = self.get_variable(name)
+            if var is None:
+                raise ValueError('Undefined variable {name}'.format(name=name))
+
+            dtype = var.dtype
+            # TODO add shape
+            return IndexedVariable(name, dtype=dtype)
+        elif isinstance(expr, (IndexedElement, Indexed)):
+            name = str(expr.base)
+            var = self.get_variable(name)
+            if var is None:
+                raise ValueError('Undefined variable {name}'.format(name=name))
+
+            # TODO check consistency of indices with shape/rank
+            args = tuple(expr.indices)
+            dtype = var.dtype
+            return IndexedVariable(name, dtype=dtype).__getitem__(*args)
+        elif isinstance(expr, Symbol):
+            name = str(expr.name)
+            var = self.get_variable(name)
+            if var is None:
+                raise NotImplementedError('Symbolic {name} variable '
+                                          'is not allowed'.format(name=name))
+
+            return var
+        elif isinstance(expr, Mul):
+            # we reconstruct the arithmetic expressions using the annotated
+            # arguments
+            args = expr.args
+
+            # we treat the first element
+            a = args[0]
+            a_new = self._annotate(a, **settings)
+            expr = a_new
+
+            # then we treat the rest
+            for a in args[1:]:
+                a_new = self._annotate(a, **settings)
+                expr = Mul(expr, a_new)
+            return expr
+        elif isinstance(expr, Add):
+            # we reconstruct the arithmetic expressions using the annotated
+            # arguments
+            args = expr.args
+
+            # we treat the first element
+            a = args[0]
+            a_new = self._annotate(a, **settings)
+            expr = a_new
+
+            # then we treat the rest
+            for a in args[1:]:
+                a_new = self._annotate(a, **settings)
+                expr = Add(expr, a_new)
+            return expr
+        elif isinstance(expr, Expr):
+            raise NotImplementedError('TODO')
+        elif isinstance(expr, Assign):
+            rhs = self._annotate(expr.rhs, **settings)
+            d_var = self._infere_type(rhs, **settings)
+
+            lhs = expr.lhs
+            if isinstance(lhs, Symbol):
+                name = lhs.name
+                dtype = d_var.pop('datatype')
+                lhs = Variable(dtype, name, **d_var)
+                var = self.get_variable(name)
+                if var is None:
+                    self.insert_variable(lhs, name=lhs.name)
+            elif isinstance(lhs, (IndexedVariable, IndexedBase)):
+                # TODO check consistency of indices with shape/rank
+                name = str(lhs.name)
+                var = self.get_variable(name)
+                if var is None:
+                    raise ValueError('Undefined variable {name}'.format(name=name))
+
+                dtype = var.dtype
+                lhs = IndexedVariable(name, dtype=dtype)
+            elif isinstance(lhs, (IndexedElement, Indexed)):
+                # TODO check consistency of indices with shape/rank
+                name = str(lhs.base)
+                var = self.get_variable(name)
+                if var is None:
+                    raise ValueError('Undefined variable {name}'.format(name=name))
+
+                args = tuple(lhs.indices)
+                dtype = var.dtype
+                lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
+            else:
+                raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(lhs)))
+
+            expr = Assign(lhs, rhs, strict=False)
+            # we check here, if it is an alias assignment
+            if expr.is_alias:
+    #            print '------'
+    #            print expr
+    #            print expr.is_alias
+    #            print '------'
+                return AliasAssign(expr.lhs, expr.rhs)
+            else:
+                return expr
+        elif isinstance(expr, FunctionHeader):
+            # TODO should we return it and keep it in the AST?
+            self.insert_header(expr)
+            return expr
+        elif isinstance(expr, Return):
+            results = expr.expr
+            if isinstance(results, Symbol):
+                name = results.name
+                var = self.get_variable(name)
+                if var is None:
+                    raise ValueError('Undefined returned variable {name}'.format(name=name))
+
+                return Return([var])
+            elif isinstance(results, (list, tuple, Tuple)):
+                ls = []
+                for i in results:
+                    if not isinstance(i, Symbol):
+                        raise NotImplementedError('only symbol or iterable are allowed for returns')
+                    name = i.name
+                    var = self.get_variable(name)
+                    if var is None:
+                        raise ValueError('Undefined returned variable {name}'.format(name=name))
+
+                    ls += [var]
+                return Return(ls)
+            else:
+                raise NotImplementedError('only symbol or iterable are allowed for returns')
+        elif isinstance(expr, FunctionDef):
+            name = str(expr.name)
+            name = name.replace('\'', '') # remove quotes for str representation
+            args = []
+            results = []
+            local_vars  = []
+            global_vars = []
+            cls_name    = None
+            hide        = False
+            kind        = 'function'
+            imports     = []
+
+            if expr.arguments or results:
+                header = self.get_header(name)
+                if not header:
+                    raise ValueError('Expecting a header function for {func} '
+                                     'but could not find it.'.format(func=name))
+
+                # we construct a FunctionDef from its header
+                interface = header.create_definition()
+
+            # then use it to decorate our arguments
+            if expr.arguments:
+                for a, ah in zip(expr.arguments, interface.arguments):
+                    d_var = self._infere_type(ah, **settings)
+                    dtype = d_var.pop('datatype')
+                    a_new = Variable(dtype, a.name, **d_var)
+                    args.append(a_new)
+
+                    # TODO add scope and store already declared variables there,
+                    #      then retrieve them
+                    self.insert_variable(a_new, name=str(a_new.name))
+
+            # we annotate the body
+            body = self._annotate(expr.body, **settings)
+
+            # find return stmt and results
+            # we keep the return stmt, in case of handling multi returns later
+            for stmt in body:
+                # TODO case of multiple calls to return
+                if isinstance(stmt, Return):
+                    results = stmt.expr
+                    if isinstance(results, (Symbol, Variable)):
+                        results = [results]
+
+            if results:
+                _results = []
+                for a, ah in zip(results, interface.results):
+    #                a.inspect()
+    #                ah.inspect()
+                    d_var = self._infere_type(ah, **settings)
+                    dtype = d_var.pop('datatype')
+                    a_new = Variable(dtype, a.name, **d_var)
+                    _results.append(a_new)
+
+                    # results must be variable that were already declared
+                    var = self.get_variable(str(a_new.name))
+                    if var is None:
+                        raise ValueError('Undefined variable {name}'.format(name=str(a_new.name)))
+                results = _results
+
+            return FunctionDef(name, args, results, body,
+                               local_vars=local_vars, global_vars=global_vars,
+                               cls_name=cls_name, hide=hide,
+                               kind=kind, imports=imports)
+        elif isinstance(expr, EmptyLine):
+            return expr
+        elif isinstance(expr, Print):
+            # TODO improve
+            return expr
+        elif isinstance(expr, Comment):
+            return expr
+        else:
+            raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
 class PyccelParser(Parser):
     pass
@@ -846,6 +876,6 @@ if __name__ == '__main__':
 
     settings = {}
     pyccel.annotate(**settings)
-    print_namespace()
+    pyccel.print_namespace()
 
     pyccel.dot('ast.gv')
