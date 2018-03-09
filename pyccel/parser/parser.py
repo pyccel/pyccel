@@ -311,8 +311,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt, GetitemNode):
-         args=fst_to_ast(stmt.value)
-         name=str(stmt.previous)
+         args = fst_to_ast(stmt.value)
+         name = str(stmt.previous)
          stmt.parent.remove(stmt.previous)
          stmt.parent.remove(stmt)
          if not hasattr(args, '__iter__'):
@@ -336,21 +336,21 @@ def fst_to_ast(stmt):
             stmt.pop()
         return node
     elif isinstance(stmt,DotNode):
-        suf=stmt.next
-        pre=fst_to_ast(stmt.previous)
+        suf = stmt.next
+        pre = fst_to_ast(stmt.previous)
         if stmt.previous:
             stmt.parent.value.remove(stmt.previous)
-        suf=fst_to_ast(suf)
+        suf = fst_to_ast(suf)
         return DottedVariable(pre,suf)
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
-        f_name=str(stmt.previous)
-        func=Function(f_name)(*args)
-        parent=stmt.parent
+        f_name = str(stmt.previous)
+        func = Function(f_name)(*args)
+        parent = stmt.parent
         if stmt.previous.previous and isinstance(stmt.previous.previous,DotNode):
             parent.value.remove(stmt.previous) 
             parent.value.remove(stmt)
-            pre=fst_to_ast(stmt.parent)
+            pre = fst_to_ast(stmt.parent)
             return DottedVariable(pre,func)
         else:
             return func

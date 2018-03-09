@@ -264,13 +264,13 @@ class DottedVariable(Basic):
     @property
     def args(self):
         return self._args
+    #TODO fix for later
+    #def __str__(self):
+    #    return '.'.join(str(n) for n in self.args)
 
-    def __str__(self):
-        return '.'.join(str(n) for n in self.args)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '.'.join(sstr(n) for n in self.args)
+   # def _sympystr(self, printer):
+   #     sstr = printer.doprint
+   #     return '.'.join(sstr(n) for n in self.args)
 
 
 class Assign(Basic):
