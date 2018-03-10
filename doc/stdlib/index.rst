@@ -37,9 +37,9 @@ away platform-specifics into platform-neutral APIs.
    :numbered:
 
    functions.rst
-..    constants.rst
+   constants.rst
 ..    stdtypes.rst
-.. 
+ 
 ..    strings.rst
 ..    datatypes.rst
 ..    numeric.rst

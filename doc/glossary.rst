@@ -55,10 +55,16 @@ Glossary
    build directory
       The build directory as you may specify it for cmake.
 
+   Pyccel alpha 
+      Pyccel alpha version
+
    Pyccel beta 
       Pyccel beta release version
 
-   Pyccel Functional Programming 
+   Pyccel omicron 
+      Pyccel release version for OOP
+
+   Pyccel lambda 
       Pyccel release version for Functional Programming
 
    Pyccel restriction
