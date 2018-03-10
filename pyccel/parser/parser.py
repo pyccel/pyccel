@@ -1,4 +1,5 @@
-# coding: utf-8
+
+#coding: utf-8
 from redbaron import RedBaron
 from redbaron import StringNode, IntNode, FloatNode, ComplexNode
 from redbaron import NameNode
@@ -37,10 +38,7 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode
 from redbaron import GetitemNode,SliceNode
-
-
-
-
+###################
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import Nil
 from pyccel.ast import Variable
@@ -61,11 +59,9 @@ from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader
 from pyccel.ast import Concatinate
-
-from pyccel.parser.syntax.headers import parse as hdr_parse
-from pyccel.parser.syntax.openmp  import parse as omp_parse
-from pyccel.parser.syntax.openacc import parse as acc_parse
-
+########################
+# ... TODO should be moved to pyccel.ast
+from sympy.core.basic import Basic
 
 from sympy import Symbol
 from sympy import Tuple
@@ -81,14 +77,13 @@ from sympy.core.containers import Dict
 from sympy.core.function import Function
 from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
-
+#########################
+from pyccel.parser.syntax.headers import parse as hdr_parse
+from pyccel.parser.syntax.openmp  import parse as omp_parse
+from pyccel.parser.syntax.openacc import parse as acc_parse
 
 import os
 
-
-
-# ... TODO should be moved to pyccel.ast
-from sympy.core.basic import Basic
 
 class Argument(Symbol):
     """An abstract Argument data structure."""
@@ -342,11 +337,7 @@ def fst_to_ast(stmt):
          elif upper:
              return Slice(None,upper)
     elif isinstance(stmt,DotProxyList):
-        node = fst_to_ast(stmt[-1])
-        if len(stmt)>1:
-            stmt.pop()
-            stmt.pop()
-        return node
+        return fst_to_ast(stmt[-1])
     elif isinstance(stmt,DotNode):
         suf = stmt.next
         pre = fst_to_ast(stmt.previous)
