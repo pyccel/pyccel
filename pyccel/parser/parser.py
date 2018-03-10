@@ -705,7 +705,7 @@ class Parser(object):
                                           'is not allowed'.format(name=name))
 
             return var
-        elif isinstance(expr, Mul):
+        elif isinstance(expr, (Add, Mul, And, Or, Eq, Ne, Lt, Gt, Le, Ge)):
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
             args = expr.args
@@ -713,28 +713,32 @@ class Parser(object):
             # we treat the first element
             a = args[0]
             a_new = self._annotate(a, **settings)
-            expr = a_new
+            expr_new = a_new
 
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                expr = Mul(expr, a_new)
-            return expr
-        elif isinstance(expr, Add):
-            # we reconstruct the arithmetic expressions using the annotated
-            # arguments
-            args = expr.args
-
-            # we treat the first element
-            a = args[0]
-            a_new = self._annotate(a, **settings)
-            expr = a_new
-
-            # then we treat the rest
-            for a in args[1:]:
-                a_new = self._annotate(a, **settings)
-                expr = Add(expr, a_new)
-            return expr
+                if isinstance(expr, Add):
+                    expr_new = Add(expr_new, a_new)
+                elif isinstance(expr, Mul):
+                    expr_new = Mul(expr_new, a_new)
+                elif isinstance(expr, And):
+                    expr_new = And(expr_new, a_new)
+                elif isinstance(expr, Or):
+                    expr_new = Or(expr_new, a_new)
+                elif isinstance(expr, Eq):
+                    expr_new = Eq(expr_new, a_new)
+                elif isinstance(expr, Ne):
+                    expr_new = Ne(expr_new, a_new)
+                elif isinstance(expr, Lt):
+                    expr_new = Lt(expr_new, a_new)
+                elif isinstance(expr, Le):
+                    expr_new = Le(expr_new, a_new)
+                elif isinstance(expr, Gt):
+                    expr_new = Gt(expr_new, a_new)
+                elif isinstance(expr, Ge):
+                    expr_new = Ge(expr_new, a_new)
+            return expr_new
         elif isinstance(expr, Function):
             args = expr.args
             F = pyccel_builtin_function(expr, args)
@@ -809,6 +813,11 @@ class Parser(object):
             body = self._annotate(expr.body, **settings)
 
             return For(target, itr, body)
+        elif isinstance(expr, While):
+            test = self._annotate(expr.test, **settings)
+            body = self._annotate(expr.body, **settings)
+
+            return While(test, body)
         elif isinstance(expr, FunctionHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
