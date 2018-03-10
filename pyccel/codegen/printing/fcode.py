@@ -1432,7 +1432,7 @@ class FCodePrinter(CodePrinter):
                 lines.append("else")
             else:
                 lines.append("else if (%s) then" % _iprint(c))
-            if isinstance(e, list):
+            if isinstance(e, (list, tuple, Tuple)):
                 for ee in e:
                     lines.append(_iprint(ee))
             else:
