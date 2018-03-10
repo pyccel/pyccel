@@ -131,6 +131,18 @@ def view_tree(expr):
 # ...
 
 
+# ...
+def _get_variable_name(var):
+    """."""
+    if isinstance(var, (Variable, IndexedVariable)):
+        return str(var)
+    elif isinstance(var, IndexedElement):
+        return str(var.base)
+
+    raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
+# ...
+
+
 # TODO use Double instead of Float? or add precision
 def datatype_from_redbaron(node):
     """Returns the pyccel datatype of a RedBaron Node."""
@@ -316,7 +328,7 @@ def fst_to_ast(stmt):
          stmt.parent.remove(stmt.previous)
          stmt.parent.remove(stmt)
          if not hasattr(args, '__iter__'):
-             args = [args]   
+             args = [args]
          args = tuple(args)
          return IndexedBase(name)[args]
 
@@ -330,7 +342,7 @@ def fst_to_ast(stmt):
          elif upper:
              return Slice(None,upper)
     elif isinstance(stmt,DotProxyList):
-        node=fst_to_ast(stmt[-1])
+        node = fst_to_ast(stmt[-1])
         if len(stmt)>1:
             stmt.pop()
             stmt.pop()
@@ -348,7 +360,7 @@ def fst_to_ast(stmt):
         func = Function(f_name)(*args)
         parent = stmt.parent
         if stmt.previous.previous and isinstance(stmt.previous.previous,DotNode):
-            parent.value.remove(stmt.previous) 
+            parent.value.remove(stmt.previous)
             parent.value.remove(stmt)
             pre = fst_to_ast(stmt.parent)
             return DottedVariable(pre,func)
@@ -514,6 +526,22 @@ class Parser(object):
         if name is None:
             name = str(expr)
         self._namespace[name] = expr
+
+    def update_variable(self, var, **options):
+        """."""
+        name = _get_variable_name(var)
+        var = self._namespace.pop(name, None)
+        if var is None:
+            raise ValueError('Undefined variable {name}'.format(name=name))
+
+        # TODO implement a method inside Variable
+        d_var = self._infere_type(var)
+        for key, value in options.items():
+            d_var[key] = value
+        dtype = d_var.pop('datatype')
+        var = Variable(dtype, name, **d_var)
+        self._namespace[name] = var
+        return var
 
     def get_header(self, name):
         """."""
@@ -737,11 +765,19 @@ class Parser(object):
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
             if expr.is_alias:
-    #            print '------'
-    #            print expr
-    #            print expr.is_alias
-    #            print '------'
-                return AliasAssign(expr.lhs, expr.rhs)
+#                print '------'
+#                print expr
+#                print expr.is_alias
+#                expr.lhs.inspect()
+#                print '------'
+                # here we need to know if lhs is allocatable or a pointer
+                # TODO improve
+                allocatable = False
+                if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
+                    allocatable = True
+                lhs = self.update_variable(expr.lhs,
+                                           allocatable=allocatable)
+                return AliasAssign(lhs, expr.rhs)
             else:
                 return expr
         elif isinstance(expr, FunctionHeader):
