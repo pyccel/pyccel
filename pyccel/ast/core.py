@@ -1841,8 +1841,7 @@ class ValuedVariable(Basic):
 # TODO keep sympify?
 class Return(Basic):
     """Represents a function return in the code.
-    Parameters
-    ----------
+
     expr : sympy expr
         The expression to return.
     """
@@ -3136,7 +3135,7 @@ class Concatinate(Basic):
     """Represents the String concatination operation.
 
     left : Symbol or string
-      
+
     right : Symbol or string
 
 
@@ -3177,10 +3176,10 @@ class Concatinate(Basic):
         right = self.right
         if left is None:
             return right
-        
+
         if right is None:
             return left
-        
+
         return '{0}+{1}'.format(left, right)
 
 # TODO check that args are integers

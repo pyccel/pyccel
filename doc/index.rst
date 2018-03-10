@@ -16,12 +16,12 @@ Pyccel documentation contents
    :maxdepth: 1
 
    tutorial
-   dive/index
-   parallel/index
+   language/index
+   stdlib/index
+   pyccelext/index
+   compiler/index
    overview
-   specs/index
    man/index
-   extensions
    analysis
 
 API

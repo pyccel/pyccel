@@ -1,5 +1,5 @@
-Dive into Pyccel
-================
+The Python Language
+===================
 
 Typical processing using **Pyccel** can be splitted into 3 main stages:
 
@@ -51,7 +51,8 @@ Among the very nice tools for *Python* developpers, Pylint_ is used for **static
    :caption: Contents:
   
    introduction
-   lexsyn
+   datatypes
+   restrictions
    expressions
    flow
    domains

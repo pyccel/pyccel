@@ -5,6 +5,16 @@ We follow `OpenMP 4.5`_ specifications.
 
 .. _OpenMP 4.5: http://www.openmp.org/wp-content/uploads/openmp-4.5.pdf
 
+Grammar
+^^^^^^^
+
+In this section, we give the **BNF** used grammar for parsing *openmp*.
+
+.. literalinclude:: ../../pyccel/parser/grammar/openmp.tx 
+
+See :download:`script <../../pyccel/parser/grammar/openmp.tx>`.
+
+
 Directives
 ^^^^^^^^^^
 
