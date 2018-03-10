@@ -1024,7 +1024,7 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError(msg)
 
         if isinstance(expr.iterable, Range):
-            prolog, epilog = _do_range(expr.target[0], expr.iterable, \
+            prolog, epilog = _do_range(expr.target, expr.iterable, \
                                        prolog, epilog)
         elif isinstance(expr.iterable, Tensor):
             for i,a in zip(expr.target, expr.iterable.ranges):

@@ -9,6 +9,7 @@ from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import
 from pyccel.ast.core import Header, EmptyLine, Comment
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import Variable
+from pyccel.ast.core import For
 
 _extension_registry = {'fortran': 'f90'}
 
@@ -135,6 +136,9 @@ class Codegen(object):
                 if isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
                         variables += [stmt.lhs]
+                if isinstance(stmt, For):
+                    if isinstance(stmt.target, Variable):
+                        variables += [stmt.target]
 
         self._stmts['imports'] = imports
         self._stmts['variables'] = variables

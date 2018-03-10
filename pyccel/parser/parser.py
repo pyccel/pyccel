@@ -375,8 +375,7 @@ def fst_to_ast(stmt):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
-        strict = True
-        return For(target, iter, body, strict=strict)
+        return For(target, iter, body, strict=False)
     elif isinstance(stmt, IfelseblockNode):
         args = fst_to_ast(stmt.value)
         return If(*args)
@@ -794,6 +793,22 @@ class Parser(object):
                 return AliasAssign(lhs, expr.rhs)
             else:
                 return expr
+        elif isinstance(expr, For):
+            # treatment of the index/indices
+            if isinstance(expr.target, Symbol):
+                name = str(expr.target.name)
+                var = self.get_variable(name)
+                if var is None:
+                    target = Variable('int', name, rank=0)
+                    self.insert_variable(target)
+            else:
+                dtype = type(expr.target)
+                raise NotImplementedError('Uncovered type {dtype}'.format(dtype=dtype))
+
+            itr = self._annotate(expr.iterable, **settings)
+            body = self._annotate(expr.body, **settings)
+
+            return For(target, itr, body)
         elif isinstance(expr, FunctionHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
