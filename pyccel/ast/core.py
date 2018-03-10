@@ -19,7 +19,7 @@ from sympy import Integer as sp_Integer
 from sympy import Float   as sp_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
-from sympy.sets.fancysets import Range as sm_Range
+#from sympy.sets.fancysets import Range as sm_Range
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
@@ -382,6 +382,17 @@ class Assign(Basic):
         cond = cond and isinstance(lhs, Symbol)
         return cond
 
+    @property
+    def is_symbolic_alias(self):
+        """Returns True if the assignment is a symbolic alias."""
+        # TODO to be improved when handling classes
+        lhs = self.lhs
+        rhs = self.rhs
+        cond = isinstance(rhs, Range)
+        cond = cond or isinstance(rhs, Symbol)
+        cond = cond and isinstance(lhs, Symbol)
+        return cond
+
 
 class AliasAssign(Basic):
     """Represents aliasing for code generation. An alias is any statement of the
@@ -404,6 +415,40 @@ class AliasAssign(Basic):
     >>> x = Variable('int', 'x', rank=1, shape=[n])
     >>> y = Symbol('y')
     >>> AliasAssign(y, x)
+
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+class SymbolicAssign(Basic):
+    """Represents symbolic aliasing for code generation. An alias is any statement of the
+    form `lhs := rhs` where
+
+    lhs : Symbol
+
+    rhs : Range
+
+    Examples
+
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import SymbolicAssign
+    >>> from pyccel.ast.core import Range
+    >>> r = Range(0, 3)
+    >>> y = Symbol('y')
+    >>> SymbolicAssign(y, r)
 
     """
 
@@ -640,9 +685,9 @@ class With(Basic):
     def settings(self):
         return self._args[2]
 
-class Range(sm_Range):
+class Range(Basic):
     """
-    Representes a range.
+    Represents a range.
 
     Examples
 
@@ -656,13 +701,30 @@ class Range(sm_Range):
     """
 
     def __new__(cls, *args):
-        _args = [0, 10, 1]
-        r = sm_Range.__new__(cls, *_args)
-        n = len(args)
-        args += r._args[n:]
-        r._args = args
+        start = 0
+        stop  = None
+        step  = 1
 
-        return r
+        _valid_args = (Integer, Symbol, Indexed, Variable, IndexedElement)
+
+        if isinstance(args, (tuple, list, Tuple)):
+            if len(args) == 1:
+                stop = args[0]
+            elif len(args) == 2:
+                start = args[0]
+                stop = args[1]
+            elif len(args) == 3:
+                start = args[0]
+                stop = args[1]
+                step = args[2]
+            else:
+                raise ValueError('Range has at most 3 arguments')
+        elif isinstance(args, _valid_args):
+            stop = args
+        else:
+            raise TypeError('expecting a list or valid stop')
+
+        return Basic.__new__(cls, start, stop, step)
 
     @property
     def start(self):
@@ -4051,3 +4113,19 @@ def get_iterable_ranges(it, var_name=None):
 
     return [Range(s, e, 1) for s,e in zip(starts, ends)]
 # ...
+
+def builtin_function(expr, args=None):
+    """Returns a builtin-function call applied to given arguments."""
+    if not(isinstance(expr, Function) or isinstance(expr, str)):
+        raise TypeError('Expecting a string or a Function class')
+
+    if isinstance(expr, Function):
+        name = str(type(expr).__name__)
+
+    if isinstance(expr, str):
+        name = expr
+
+    if name == 'range':
+        return Range(*args)
+
+    return None

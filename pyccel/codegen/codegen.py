@@ -7,7 +7,7 @@ from pyccel.codegen.printing import fcode
 
 from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import
 from pyccel.ast.core import Header, EmptyLine, Comment
-from pyccel.ast.core import Assign, AliasAssign
+from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import Variable
 
 _extension_registry = {'fortran': 'f90'}
@@ -129,7 +129,9 @@ class Codegen(object):
                 modules += [stmt]
             else:
                 # TODO improve later, as in the old codegen
-                body += [stmt]
+                # we don't generate code for symbolic assignments
+                if not isinstance(stmt, SymbolicAssign):
+                    body += [stmt]
                 if isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
                         variables += [stmt.lhs]
