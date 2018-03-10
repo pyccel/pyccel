@@ -28,13 +28,6 @@ Glossary
       ``reference/datamodel/types``.  Note that there is no leading or trailing
       slash.
 
-   domain
-      Having domains means that there are no naming problems when one set of
-      documentation wants to refer to e.g. C++ and Python classes.  It also
-      means that extensions that support the documentation of whole new
-      languages are much easier to write.  For more information about domains,
-      see the chapter :ref:`domains`.
-
    environment
       A structure where information about all documents under the root is saved,
       and used for cross-referencing.  The environment is pickled after the
@@ -61,3 +54,18 @@ Glossary
 
    build directory
       The build directory as you may specify it for cmake.
+
+   Pyccel alpha 
+      Pyccel alpha version
+
+   Pyccel beta 
+      Pyccel beta release version
+
+   Pyccel omicron 
+      Pyccel release version for OOP
+
+   Pyccel lambda 
+      Pyccel release version for Functional Programming
+
+   Pyccel restriction
+      Denotes a restriction of Python by Pyccel

@@ -1,4 +1,3 @@
-
 #coding: utf-8
 from redbaron import RedBaron
 from redbaron import StringNode, IntNode, FloatNode, ComplexNode
@@ -38,12 +37,14 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode
 from redbaron import GetitemNode,SliceNode
-###################
+
+
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
+from pyccel.ast import NativeRange
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName,DottedVariable
-from pyccel.ast import Assign, AliasAssign
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionDef
@@ -59,9 +60,19 @@ from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader
 from pyccel.ast import Concatinate
+
 ########################
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
+
+from pyccel.ast import Range
+from pyccel.ast import builtin_function as pyccel_builtin_function
+
+from pyccel.parser.syntax.headers import parse as hdr_parse
+from pyccel.parser.syntax.openmp  import parse as omp_parse
+from pyccel.parser.syntax.openacc import parse as acc_parse
+
+
 
 from sympy import Symbol
 from sympy import Tuple
@@ -77,7 +88,8 @@ from sympy.core.containers import Dict
 from sympy.core.function import Function
 from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
-#########################
+
+
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
@@ -363,8 +375,7 @@ def fst_to_ast(stmt):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
-        strict = True
-        return For(target, iter, body, strict=strict)
+        return For(target, iter, body, strict=False)
     elif isinstance(stmt, IfelseblockNode):
         args = fst_to_ast(stmt.value)
         return If(*args)
@@ -611,6 +622,13 @@ class Parser(object):
             d_var['shape']       = var.shape
             d_var['rank']        = var.rank
             return d_var
+        elif isinstance(expr, Range):
+            d_var['datatype']    = NativeRange()
+            d_var['allocatable'] = False
+            d_var['shape']       = None
+            d_var['rank']        = 0
+            d_var['cls_base']    = expr # TODO: shall we keep it?
+            return d_var
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i in expr.args]
 
@@ -717,8 +735,15 @@ class Parser(object):
                 a_new = self._annotate(a, **settings)
                 expr = Add(expr, a_new)
             return expr
+        elif isinstance(expr, Function):
+            args = expr.args
+            F = pyccel_builtin_function(expr, args)
+            if not(F is None):
+                return F
+            else:
+                raise NotImplementedError('Unknown function {expr}'.format(expr=expr))
         elif isinstance(expr, Expr):
-            raise NotImplementedError('TODO')
+            raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             d_var = self._infere_type(rhs, **settings)
@@ -755,12 +780,9 @@ class Parser(object):
 
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
-            if expr.is_alias:
-#                print '------'
-#                print expr
-#                print expr.is_alias
-#                expr.lhs.inspect()
-#                print '------'
+            if expr.is_symbolic_alias:
+                return SymbolicAssign(lhs, expr.rhs)
+            elif expr.is_alias:
                 # here we need to know if lhs is allocatable or a pointer
                 # TODO improve
                 allocatable = False
@@ -771,6 +793,22 @@ class Parser(object):
                 return AliasAssign(lhs, expr.rhs)
             else:
                 return expr
+        elif isinstance(expr, For):
+            # treatment of the index/indices
+            if isinstance(expr.target, Symbol):
+                name = str(expr.target.name)
+                var = self.get_variable(name)
+                if var is None:
+                    target = Variable('int', name, rank=0)
+                    self.insert_variable(target)
+            else:
+                dtype = type(expr.target)
+                raise NotImplementedError('Uncovered type {dtype}'.format(dtype=dtype))
+
+            itr = self._annotate(expr.iterable, **settings)
+            body = self._annotate(expr.body, **settings)
+
+            return For(target, itr, body)
         elif isinstance(expr, FunctionHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)

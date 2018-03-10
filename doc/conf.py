@@ -85,9 +85,12 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-# -- Doxygen ----------------------------------------------
+# -- APIDOC ----------------------------------------------
 import subprocess
 subprocess.call('rm -rf source; sphinx-apidoc -o source/ ../pyccel', shell=True)
+
+# create _static directory
+subprocess.call('mkdir -p _static', shell=True)
 
 # -- Options for HTML output ----------------------------------------------
 

@@ -1,3 +1,0 @@
-Standard Library
-****************
-
