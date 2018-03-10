@@ -674,6 +674,8 @@ class Parser(object):
             return Tuple(*ls)
         elif isinstance(expr, (Integer, Float)):
             return expr
+        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
+            return expr
         elif isinstance(expr, Variable):
             return expr
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
@@ -818,6 +820,9 @@ class Parser(object):
             body = self._annotate(expr.body, **settings)
 
             return While(test, body)
+        elif isinstance(expr, If):
+            args = self._annotate(expr.args, **settings)
+            return If(*args)
         elif isinstance(expr, FunctionHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
