@@ -23,6 +23,7 @@ Pyccel documentation contents
    overview
    man/index
    analysis
+   roadmap
 
 API
 ===

@@ -56,3 +56,43 @@ Slicing
 
 .. todo:: memory allocation within the scope of definition
 
+
+Dynamic *vs* Static typing
+__________________________
+
+Since our aim is to generate code in a low-level language, which is in most cases of static typed, we will have to devise an alternative way to construct/find the appropriate type of a given variable. 
+This can be done by including the concept of *constructors* or use specific *headers* to assist *Pyccel* in finding/infering the appropriate type.
+
+Let's explain this more precisely; we consider the following code
+
+.. code-block:: python
+
+  n = 5
+  x = 2.0 * n
+
+In this example, **n** will be interprated as an **integer** while **x** will be a **double** number, so everything is fine.
+
+The problem arises when using a function, like in the following example
+
+.. code-block:: python
+
+  def f(n):
+    x = 2.0 * n
+    return x
+
+  n = 5
+  x = f(n)
+
+Now the question is what would be the signature of **f** if there was no call to it in the previous script?
+
+To overcome this ambiguity, we rewrite our function as
+
+.. code-block:: python
+
+  #$ header f(int)
+  def f(n):
+    x = 2.0 * n
+    return x
+
+Such an implementation still makes sens inside *Python*. As you can see, the type of *x* is infered by analysing our *expressions*.
+

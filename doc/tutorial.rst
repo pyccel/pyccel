@@ -231,6 +231,21 @@ Matrix multiplication using OpenMP
 
 .. note:: **Openmp** is activated using the flag **--openmp** in the command line.
 
+The following plot shows the scalability of the generated code on **LRZ** using :math:`(n,m,p) = (5000,7000,5000)`.
+
+.. figure:: include/openmp/matrix_product_scalability.png 
+   :align: center
+   :scale: 25% 
+
+   Weak scalability on LRZ. CPU time is given in seconds.
+
+.. figure:: include/openmp/matrix_product_speedup.png 
+   :align: center
+   :scale: 25% 
+
+   Speedup on LRZ
+
+
 Poisson solver using MPI
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
