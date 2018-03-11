@@ -243,34 +243,7 @@ class DottedName(Basic):
         sstr = printer.doprint
         return '.'.join(sstr(n) for n in self.name)
 
-class DottedVariable(Basic):
-    """
-    Represents a dotted variable.
 
-    Examples
-
-    >>> from pyccel.ast.core import DottedName
-    >>> DottedName('matrix', 'n_rows')
-    matrix.n_rows
-    >>> DottedName('pyccel', 'stdlib', 'parallel')
-    pyccel.stdlib.parallel
-    """
-    def __new__(cls, *args):
-        for i in args:
-            if  not isinstance(i,(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function,DottedVariable)):
-                raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(i),type(i)))
-        return Basic.__new__(cls, *args)
-
-    @property
-    def args(self):
-        return self._args
-    #TODO fix for later
-    #def __str__(self):
-    #    return '.'.join(str(n) for n in self.args)
-
-   # def _sympystr(self, printer):
-   #     sstr = printer.doprint
-   #     return '.'.join(sstr(n) for n in self.args)
 
 
 class Assign(Basic):
@@ -388,6 +361,8 @@ class Assign(Basic):
         # TODO to be improved when handling classes
         lhs = self.lhs
         rhs = self.rhs
+        if isinstance(lhs,Variable) and isinstance(rhs,Variable):
+            return False
         cond = isinstance(rhs, Range)
         cond = cond or isinstance(rhs, Symbol)
         cond = cond and isinstance(lhs, Symbol)
@@ -1814,14 +1789,15 @@ class Variable(Symbol):
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
             return str(self.name)
-        else:
+        elif self.name is iterable:
             return '.'.join(str(n) for n in self.name)
 
     def _sympystr(self, printer):
+        print self.name
         sstr = printer.doprint
         if isinstance(self.name, (str, DottedName)):
             return '{}'.format(sstr(self.name))
-        else:
+        elif self.name is iterable:
             return '.'.join(sstr(n) for n in self.name)
 
     def inspect(self):
@@ -1849,6 +1825,26 @@ class Variable(Symbol):
                    cls_parameters=self.cls_parameters)
 
 
+
+class DottedVariable(Basic):
+    """
+    Represents a dotted variable.
+    """
+    def __new__(cls, *args):
+        
+        if  not isinstance(args[0],(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function)):
+            raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(args[0]),type(args[0])))
+            
+        if  not isinstance(args[1],(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function,DottedVariable)):
+            raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(args[1]),type(args[1])))
+        return Basic.__new__(cls,args[0],args[1])
+
+    @property
+    def args(self):
+        return [self._args[0],self._args[1]]
+    @ property
+    def name(self):
+        return self.args[0].name+'.'+self.args[1].name
 class ValuedVariable(Basic):
     """Represents a valued variable in the code.
 
@@ -1967,7 +1963,17 @@ class FunctionDef(Basic):
         # name
         if isinstance(name, str):
             name = Symbol(name)
+        elif isinstance(name,(tuple,list)):
+            name_ = []
+            for i in name:
+                if isinstance(i,str):
+                    name = name +Symbol(i)
+                elif not isinstance(i, Symbol):
+                    raise TypeError("Function name must be Symbol or string")
+            name=tuple(name_)
+                
         elif not isinstance(name, Symbol):
+            print name,'###'
             raise TypeError("Function name must be Symbol or string")
         # arguments
         if not iterable(arguments):
@@ -2055,9 +2061,9 @@ class FunctionDef(Basic):
         for s in self.body:
             print (s)
 
-    #def set_name(self,new_name):
-     #       self.__new__(new_name, self.arguments, self.results, self.body, self.local_vars,
-      #                self.global_vars, self.cls_name, self.hide, self.kind, self.imports)
+  #  def set_name(self,new_name):
+   #         return FunctionDef(new_name, self.arguments, self.results, self.body, self.local_vars,
+    #                  self.global_vars, self.cls_name, self.hide, self.kind, self.imports)
 
 #    @property
 #    def declarations(self):

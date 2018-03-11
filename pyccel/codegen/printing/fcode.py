@@ -47,7 +47,7 @@ from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
                              Len, Shape, Dot, Sign, subs, Random,
-                             IndexedElement, Slice, DottedName, Print, If)
+                             IndexedElement, Slice, DottedName, DottedVariable,Print, If)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -135,9 +135,10 @@ class FCodePrinter(CodePrinter):
         return ((i, j) for j in range(cols) for i in range(rows))
 
     # ============ Elements ============ #
-
+    
+    
     def _print_Module(self, expr):
-
+        
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_'):
@@ -897,8 +898,11 @@ class FCodePrinter(CodePrinter):
                 msg += ' Given {0}'.format(type(var))
                 raise NotImplementedError(msg)
         return code
-
+    def _print_DottedVariable(self,expr):
+        args=expr.args
+        '.'.join(self._print(i) for i in args)
     def _print_ClassDef(self, expr):
+        print expr
         # ... we don't print 'hidden' classes
         if expr.hide:
             return '', ''

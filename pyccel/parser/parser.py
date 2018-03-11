@@ -58,7 +58,7 @@ from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
-from pyccel.ast import FunctionHeader
+from pyccel.ast import FunctionHeader,ClassHeader
 from pyccel.ast import Concatinate
 
 ########################
@@ -306,13 +306,17 @@ def fst_to_ast(stmt):
         return Pass()
     elif isinstance(stmt, DefNode):
         # TODO check all inputs and which ones should be treated in stage 1 or 2
+        if isinstance(stmt.parent,ClassNode):
+            cls_name    = stmt.parent.name
+        else:
+            cls_name    = None
+            
         name        = fst_to_ast(stmt.name)
         arguments   = fst_to_ast(stmt.arguments)
         results     = []
         body        = fst_to_ast(stmt.value)
         local_vars  = []
         global_vars = []
-        cls_name    = None
         hide        = False
         kind        = 'function'
         imports     = []
@@ -553,7 +557,17 @@ class Parser(object):
 
     def insert_header(self, expr):
         """."""
-        self._namespace['headers'][str(expr.func)] = expr
+        if isinstance(expr,FunctionHeader):
+            if isinstance(expr.func,(tuple,list)) and len(expr.func)==2:
+                self._namespace['headers'][expr.func[1]] = expr
+            else:
+                self._namespace['headers'][str(expr.func)] = expr
+        elif isinstance(expr,ClassHeader):
+            self._namespace['headers'][str(expr.name)] = expr
+        else:
+            raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
+             
+            
 
     def _infere_type(self, expr, **settings):
         """
@@ -658,6 +672,8 @@ class Parser(object):
             d_var['rank']        = d['rank'] + 1
             d_var['shape']       = len(expr) # TODO improve
             return d_var
+        elif isinstance(expr,DottedVariable):
+            return self._infere_type(expr.args[1])
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -750,6 +766,40 @@ class Parser(object):
                 raise NotImplementedError('Unknown function {expr}'.format(expr=expr))
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+        elif isinstance(expr,DottedVariable):
+            args=expr.args
+            name = str(args[0].name)
+            obj = self.get_variable(name)
+            var_name=args[1].name
+            if isinstance(args[1],DottedVariable):
+                attr=args[1].name
+            else:
+                attr=args[1].name
+            if not obj.cls_base:
+                raise AttributeError(' {0} object has no attribute {1}'.format(name,attr)) 
+            else:
+                ls=[str(i) for i in obj.cls_base.attributs]
+                if not attr in ls:
+                    raise AttributeError(' {0} object has no attribute {1}'.format(name,attr))
+                else:
+                    next=None
+                    for i in obj.cls_base.attributs:
+                        if str(i) == attr:
+                            next = i
+                    if next:
+                        self._namespace[attr] = next
+                        
+                       # self._namespace[var_name] = Variable(next.dtype,var_name)
+                        #add the next variable temporarily to namespace
+                    var = DottedVariable(obj,self._annotate(args[1]))
+                    #remove the variable from namespace
+                    self._namespace.pop(attr)
+                    
+                    return var
+
+                    
+                     
+                
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             d_var = self._infere_type(rhs, **settings)
@@ -781,8 +831,31 @@ class Parser(object):
                 args = tuple(lhs.indices)
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
-            else:
-                raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(lhs)))
+            elif isinstance(lhs,DottedVariable):
+                dtype = d_var.pop('datatype')
+                # case of dottedvariable in the __init__ that starts with self method
+                if str(lhs.args[0]) == 'self' and 'self.__init__' in self._namespace.keys():
+                     cls_name=str(self._namespace['self'].cls_base.name)
+                     attributs = self._namespace[cls_name].attributs
+                     attributs = list(attributs)
+                     name = str(lhs.args[1])
+                     attributs += [Variable(dtype,name, **d_var)]
+                     #update the attributs of the class
+                     self._namespace[cls_name]=ClassDef(cls_name,attributs,[])
+                     #update the self variable with the new attributs
+                     var=Variable('nil','self',cls_base = self._namespace[cls_name])
+                     self._namespace['self']=var
+                else :
+                    
+                    cls_name = str(self._namespace[str(lhs.args[0])].cls_base.name)
+                    attributs = self._namespace[cls_name].attributs
+                    attributs = list(attributs)
+                    name = str(lhs.args[1])
+                    if name not in [i.name for i in attributs]:
+                        raise AttributeError(' the class {0}  has no attribut'.format(cls_base.name,name))
+                lhs=Variable(dtype,lhs.name)
+            #else:
+             #   raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(lhs)))
 
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
@@ -827,6 +900,9 @@ class Parser(object):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
             return expr
+        elif isinstance(expr,ClassHeader):
+            self.insert_header(expr)
+            return
         elif isinstance(expr, Return):
             results = expr.expr
             if isinstance(results, Symbol):
@@ -853,11 +929,12 @@ class Parser(object):
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace('\'', '') # remove quotes for str representation
+            
             args = []
             results = []
             local_vars  = []
             global_vars = []
-            cls_name    = None
+            cls_name    = expr.cls_name
             hide        = False
             kind        = 'function'
             imports     = []
@@ -869,11 +946,17 @@ class Parser(object):
                                      'but could not find it.'.format(func=name))
 
                 # we construct a FunctionDef from its header
+                
                 interface = header.create_definition()
-
+            
             # then use it to decorate our arguments
-            if expr.arguments:
-                for a, ah in zip(expr.arguments, interface.arguments):
+            arguments = expr.arguments
+            if cls_name and str(expr.arguments[0])=='self':
+                arguments = arguments[1:]
+                var=Variable('nil','self',cls_base = self._namespace[cls_name])
+                self._namespace['self']=var
+            if arguments:
+                for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
@@ -882,8 +965,11 @@ class Parser(object):
                     # TODO add scope and store already declared variables there,
                     #      then retrieve them
                     self.insert_variable(a_new, name=str(a_new.name))
-
             # we annotate the body
+            if cls_name and name=='__init__':
+                var=Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
+                self._namespace['self.__init__']=var
+                           
             body = self._annotate(expr.body, **settings)
 
             # find return stmt and results
@@ -910,11 +996,19 @@ class Parser(object):
                     if var is None:
                         raise ValueError('Undefined variable {name}'.format(name=str(a_new.name)))
                 results = _results
-
-            return FunctionDef(name, args, results, body,
+            for i in args:
+                if str(i) in self._namespace:
+                    self._namespace.pop(str(i)) #clean namespace
+            func=FunctionDef(name, args, results, body,
                                local_vars=local_vars, global_vars=global_vars,
                                cls_name=cls_name, hide=hide,
                                kind=kind, imports=imports)
+            if cls_name:
+                cls = self._namespace[cls_name]
+                methods = list(cls.methods)+[func]
+                #update the class  methods
+                self._namespace[cls_name] = ClassDef(cls_name,cls.attributs,methods)
+            return func
         elif isinstance(expr, EmptyLine):
             return expr
         elif isinstance(expr, Print):
@@ -922,6 +1016,49 @@ class Parser(object):
             return expr
         elif isinstance(expr, Comment):
             return expr
+        elif isinstance(expr,ClassDef):
+             name = str(expr.name)
+             name = name.replace('\'', '') # remove quotes for str representation
+             attributs = []
+             self._namespace[name] = ClassDef(name,[],[])
+             header = self.get_header(name)
+             methods = list(expr.methods[:-1])
+             const = None
+             for i,method in enumerate(methods):
+                 m_name = str(method.name).replace('\'', '') 
+                 if m_name == '__init__':
+                     const = self._annotate(method)
+                     methods.pop(i)
+                     self._namespace.pop('self.__init__')
+             #attributs=self._namespace[name].attributs
+                     
+               
+             
+             
+             methods = [self._annotate(i) for i in methods]
+             self._namespace.pop('self') #remove the self object
+             
+             if not const:
+                 raise SystemExit('missing contuctor in the class {0}'.format(name))
+             else:
+                 methods = [const]+methods
+             if not header:
+                 raise ValueError('Expecting a header class for {classe} '
+                                     'but could not find it.'.format(classe=name))
+
+             # we construct a ClassDef from its header
+             
+             options = header.options
+
+             # then use it to decorate our arguments
+             attributs = self._namespace[name].attributs
+             #for i in methods:
+                 #for j in i.body:
+                     #if isinstance(j,Assign):
+                         #print type(j.lhs),type(j.rhs)
+                         #if isinstance(j.rhs,Add):
+                            # print j.rhs.args,'##'
+             return ClassDef(name,attributs,methods)
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
