@@ -38,8 +38,9 @@ away platform-specifics into platform-neutral APIs.
 
    functions.rst
    constants.rst
-..    stdtypes.rst
  
+   magic.rst
+
 ..    strings.rst
 ..    datatypes.rst
 ..    numeric.rst
