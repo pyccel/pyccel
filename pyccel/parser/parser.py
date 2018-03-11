@@ -42,7 +42,11 @@ from redbaron import GetitemNode,SliceNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
-from pyccel.ast import NativeRange, NativeIntegerList
+from pyccel.ast import NativeRange
+from pyccel.ast import NativeIntegerList
+from pyccel.ast import NativeFloatList
+from pyccel.ast import NativeDoubleList
+from pyccel.ast import NativeComplexList
 from pyccel.ast import datatype
 from pyccel.ast import Nil
 from pyccel.ast import Variable
@@ -661,9 +665,16 @@ class Parser(object):
             d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
                 d_var['is_target'] = True
+
                 dtype = datatype(d['datatype'])
                 if isinstance(dtype, NativeInteger):
                     d_var['datatype'] = NativeIntegerList()
+                elif isinstance(dtype, NativeFloat):
+                    d_var['datatype'] = NativeFloatList()
+                elif isinstance(dtype, NativeDouble):
+                    d_var['datatype'] = NativeDoubleList()
+                elif isinstance(dtype, NativeComplex):
+                    d_var['datatype'] = NativeComplexList()
                 else:
                     raise NotImplementedError('TODO')
             return d_var

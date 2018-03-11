@@ -1314,6 +1314,18 @@ class NativeIntegerList(NativeInteger):
     _name = 'IntegerList'
     pass
 
+class NativeFloatList(NativeFloat):
+    _name = 'FloatList'
+    pass
+
+class NativeDoubleList(NativeDouble):
+    _name = 'DoubleList'
+    pass
+
+class NativeComplexList(NativeComplex):
+    _name = 'ComplexList'
+    pass
+
 class NativeRange(DataType):
     _name = 'Range'
     pass
@@ -1357,6 +1369,9 @@ _Vector = NativeVector()
 _Stencil = NativeStencil()
 _Symbol = NativeSymbol()
 IntegerList = NativeIntegerList()
+FloatList = NativeFloatList()
+DoubleList = NativeDoubleList()
+ComplexList = NativeComplexList()
 
 
 dtype_registry = {'bool': Bool,
@@ -1370,6 +1385,9 @@ dtype_registry = {'bool': Bool,
                   'stencil': _Stencil,
                   'symbol': _Symbol,
                   '*int': IntegerList,
+                  '*float': FloatList,
+                  '*double': DoubleList,
+                  '*complex': ComplexList,
                   'str': String}
 
 
