@@ -12,7 +12,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence
 
-from pyccel.ast.core import Assign
+from pyccel.ast.core import Assign,DottedVariable
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ZerosLike
@@ -85,7 +85,9 @@ class CodePrinter(StrPrinter):
         This may include indenting, wrapping long lines, etc..."""
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
-
+    def _print_DottedVariable(self,expr):
+        return expr.name
+    
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -144,7 +146,9 @@ class CodePrinter(StrPrinter):
         # dummies must be printed as unique symbols
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
-
+    def _print_DottedVariable(self,expr):
+        args=expr.args
+        '.'.join(self._print(i) for i in args)
     def _print_And(self, expr):
         PREC = precedence(expr)
         return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
