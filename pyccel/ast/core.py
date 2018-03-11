@@ -272,38 +272,10 @@ class DottedVariable(Basic):
    #     sstr = printer.doprint
    #     return '.'.join(sstr(n) for n in self.args)
 
+
 class List(Tuple):
     """Represent lists in the code with dynamic memory management."""
     pass
-
-class Pointer(Basic):
-    """Represent a pointer in the code.
-
-    name: str, Variable, IndexedBase, Indexed, Symbol
-
-    target: Variable, IndexedBase, Indexed
-
-    >>> from sympy.abc import x
-    >>> from pyccel.ast.core import Pointer
-    >>> Pointer('ptr_x', x)
-    ptr_x :=> x
-    """
-    def __new__(cls, name, target):
-        # TODO add verification
-#        if isinstance(target, Variable):
-        return Basic.__new__(cls, name, target)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def target(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{name} :=> {target}'.format(name=sstr(self.name),target=sstr(self.target))
 
 
 class Assign(Basic):
@@ -1338,6 +1310,10 @@ class NativeNil(DataType):
     _name = 'Nil'
     pass
 
+class NativeIntegerList(NativeInteger):
+    _name = 'IntegerList'
+    pass
+
 class NativeRange(DataType):
     _name = 'Range'
     pass
@@ -1380,6 +1356,7 @@ String  = NativeString()
 _Vector = NativeVector()
 _Stencil = NativeStencil()
 _Symbol = NativeSymbol()
+IntegerList = NativeIntegerList()
 
 
 dtype_registry = {'bool': Bool,
@@ -1392,6 +1369,7 @@ dtype_registry = {'bool': Bool,
                   'vector': _Vector,
                   'stencil': _Stencil,
                   'symbol': _Symbol,
+                  '*int': IntegerList,
                   'str': String}
 
 
@@ -1777,7 +1755,7 @@ class Variable(Symbol):
     matrix.n_rows
     """
     def __new__(cls, dtype, name,
-                rank=0, allocatable=False, is_pointer=False,
+                rank=0, allocatable=False, is_pointer=False, is_target=False,
                 shape=None, cls_base=None, cls_parameters=None):
 
         if isinstance(dtype, str):
@@ -1789,6 +1767,11 @@ class Variable(Symbol):
             is_pointer = False
         elif not isinstance(is_pointer, bool):
             raise TypeError("is_pointer must be a boolean.")
+
+        if is_target is None:
+            is_target = False
+        elif not isinstance(is_target, bool):
+            raise TypeError("is_target must be a boolean.")
 
         # if class attribut
         if isinstance(name, str):
@@ -1810,7 +1793,7 @@ class Variable(Symbol):
 
         # TODO improve order of arguments
         return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
-                             cls_base, cls_parameters, is_pointer)
+                             cls_base, cls_parameters, is_pointer, is_target)
 
     @property
     def dtype(self):
@@ -1844,6 +1827,10 @@ class Variable(Symbol):
     def is_pointer(self):
         return self._args[7]
 
+    @property
+    def is_target(self):
+        return self._args[8]
+
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
             return str(self.name)
@@ -1868,9 +1855,11 @@ class Variable(Symbol):
         print('  cls_base       = {}'.format(self.cls_base))
         print('  cls_parameters = {}'.format(self.cls_parameters))
         print('  is_pointer     = {}'.format(self.is_pointer))
+        print('  is_target      = {}'.format(self.is_target))
         print('<<<')
 
     def clone(self, name):
+        # TODO check it is up to date
         cls = eval(self.__class__.__name__)
 
         return cls(self.dtype,
@@ -1878,6 +1867,8 @@ class Variable(Symbol):
                    rank=self.rank,
                    allocatable=self.allocatable,
                    shape=self.shape,
+                   is_pointer=self.is_pointer,
+                   is_target=self.is_target,
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 

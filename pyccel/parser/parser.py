@@ -42,7 +42,8 @@ from redbaron import GetitemNode,SliceNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
-from pyccel.ast import NativeRange
+from pyccel.ast import NativeRange, NativeIntegerList
+from pyccel.ast import datatype
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName,DottedVariable
@@ -567,8 +568,7 @@ class Parser(object):
         d_var['shape'] = None
         d_var['rank'] = None
         d_var['is_pointer'] = None
-        # TODO - IndexedVariable
-        #      - IndexedElement
+        d_var['is_target'] = None
 
         if isinstance(expr, Integer):
             d_var['datatype'] = 'int'
@@ -658,10 +658,14 @@ class Parser(object):
             d_var['datatype']    = d['datatype']
             d_var['rank']        = d['rank'] + 1
             d_var['shape']       = len(expr) # TODO improve
+            d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
-                d_var['allocatable'] = True
-            else:
-                d_var['allocatable'] = d['allocatable']
+                d_var['is_target'] = True
+                dtype = datatype(d['datatype'])
+                if isinstance(dtype, NativeInteger):
+                    d_var['datatype'] = NativeIntegerList()
+                else:
+                    raise NotImplementedError('TODO')
             return d_var
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
@@ -794,23 +798,27 @@ class Parser(object):
 
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
-            if expr.is_symbolic_alias:
-                return SymbolicAssign(lhs, expr.rhs)
-            elif expr.is_alias:
+#            lhs.inspect()
+#            if isinstance(expr.rhs, Variable):
+#                expr.rhs.inspect()
+
+            if expr.is_alias:
                 # here we need to know if lhs is allocatable or a pointer
                 # TODO improve
                 allocatable = False
                 is_pointer  = False
                 if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
                     allocatable = True
-                elif isinstance(expr.rhs, List):
+                elif (isinstance(expr.rhs, Variable) and
+                      isinstance(expr.rhs.dtype, NativeIntegerList)):
                     is_pointer = True
 
                 lhs = self.update_variable(expr.lhs,
                                            allocatable=allocatable,
                                            is_pointer=is_pointer)
-                lhs.inspect()
                 return AliasAssign(lhs, expr.rhs)
+            elif expr.is_symbolic_alias:
+                return SymbolicAssign(lhs, expr.rhs)
             else:
                 return expr
         elif isinstance(expr, For):
