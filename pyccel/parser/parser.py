@@ -702,7 +702,17 @@ class Parser(object):
                     raise NotImplementedError('TODO')
             return d_var
         elif isinstance(expr,DottedVariable):
-            return self._infere_type(expr.args[1])
+            var=self._namespace[expr.args[0].name]
+            attributs = var.cls_base.attributs
+            n_name = expr.args[1].name.split('.')[0] 
+            
+            for i in attributs:
+                if str(i)==n_name:
+                    var=i
+            self._namespace[var]
+            s=self._infere_type(expr.args[1])
+             
+            return s
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -767,6 +777,7 @@ class Parser(object):
             a_new = self._annotate(a, **settings)
             expr_new = a_new
             if isinstance(a_new,DottedVariable):
+                    #TODO be able to print the DottedVariable directly
                     #converte the DottedVariable to a variable
                     d_var=self._infere_type(a_new.args[1])
                     dtype=d_var.pop('datatype')
@@ -778,11 +789,11 @@ class Parser(object):
                 a_new = self._annotate(a, **settings)
                 if isinstance(a_new,DottedVariable):
                     #converte the DottedVariable to a variable
+                    #TODO be able to print the DottedVariable directly
                     d_var=self._infere_type(a_new.args[1])
                     dtype=d_var.pop('datatype')
                     var_name=a_new.name
                     a_new=Variable(dtype,var_name,**d_var)
-                    #a_new=Variable(dtype,var_name)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
@@ -818,6 +829,7 @@ class Parser(object):
             name = str(args[0].name)
             obj = self.get_variable(name)
             var_name=args[1].name
+            print self._infere_type(expr),'infertype'
             if isinstance(args[1],DottedVariable):
                 attr=args[1].name
             else:
