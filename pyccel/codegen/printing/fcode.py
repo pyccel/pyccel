@@ -263,9 +263,9 @@ class FCodePrinter(CodePrinter):
         args = []
         for f in expr.expr:
             if isinstance(f, str):
-                args.append("{0}".format(f))
+                args.append("'{}'".format(f))
             else:
-                args.append("{0}".format(self._print(f)))
+                args.append("{}".format(self._print(f)))
 
         fs = ', '.join(i for i in args)
 
@@ -875,7 +875,7 @@ class FCodePrinter(CodePrinter):
         return ('{0}({1}) {2}\n'
                 'implicit none\n'
 #                'integer, parameter:: dp=kind(0.d0)\n'
-                '{3}\n\n'
+                '{3}\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
     def _print_Pass(self, expr):

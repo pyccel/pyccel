@@ -710,6 +710,8 @@ class Parser(object):
             return expr
         elif isinstance(expr, Variable):
             return expr
+        elif isinstance(expr, str):
+            return repr(expr)
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
             # an indexed variable is only defined if the associated variable is in
             # the namespace
@@ -960,8 +962,8 @@ class Parser(object):
         elif isinstance(expr, EmptyLine):
             return expr
         elif isinstance(expr, Print):
-            # TODO improve
-            return expr
+            args = self._annotate(expr.expr, **settings)
+            return Print(args)
         elif isinstance(expr, Comment):
             return expr
         else:
