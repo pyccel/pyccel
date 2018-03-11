@@ -264,9 +264,9 @@ class FCodePrinter(CodePrinter):
         args = []
         for f in expr.expr:
             if isinstance(f, str):
-                args.append("{0}".format(f))
+                args.append("'{}'".format(f))
             else:
-                args.append("{0}".format(self._print(f)))
+                args.append("{}".format(self._print(f)))
 
         fs = ', '.join(i for i in args)
 
@@ -481,6 +481,7 @@ class FCodePrinter(CodePrinter):
         arg_allocatables = [v.allocatable for v in expr.variables]
         arg_shapes       = [v.shape for v in expr.variables]
         arg_is_pointers = [v.is_pointer for v in expr.variables]
+        arg_is_targets = [v.is_target for v in expr.variables]
 
         decs = []
         intent = expr.intent
@@ -491,6 +492,7 @@ class FCodePrinter(CodePrinter):
         allocatable = arg_allocatables[0]
         shape       = arg_shapes[0]
         is_pointer = arg_is_pointers[0]
+        is_target = arg_is_targets[0]
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
@@ -501,25 +503,20 @@ class FCodePrinter(CodePrinter):
             s = ''
 
         rankstr =  ''
-        if (rank == 1) and (isinstance(shape, int)):   # TODO improve
+        # TODO improve
+        if ((rank == 1) and (isinstance(shape, int)) and
+            not(allocatable) and not(is_pointer)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
         elif (rank > 0) or allocatable or is_pointer:
             rankstr = ', '.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
-#        # TODO: it would be great to use allocatable but then we have to pay
-#        #       attention to the starting index (in the case of 0 for example).
-#        #       this is the reason why we print 'pointer' instead of 'allocatable'
-#        if enable_alloc and (allocatable or rank > 0):
-##            allocatablestr = ', allocatable'
-#            allocatablestr = ', pointer'
-#        else:
-#            allocatablestr = ''
-
         allocatablestr = ''
         if is_pointer:
             allocatablestr = ', pointer'
+        elif is_target:
+            allocatablestr = ', target'
         elif allocatable:
             allocatablestr = ', allocatable'
 
@@ -537,14 +534,19 @@ class FCodePrinter(CodePrinter):
         code = ''
 
         lhs = expr.lhs
+        # TODO improve
         if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None):
             stmt = ZerosLike(expr.lhs, expr.rhs)
             code += self._print(stmt)
             code += '\n'
 
-        lhs_code = self._print(expr.lhs)
-        rhs_code = self._print(expr.rhs)
-        code += '{0} = {1}'.format(lhs_code, rhs_code)
+        op = '='
+        if isinstance(lhs, Variable) and (lhs.is_pointer):
+            op = '=>'
+
+        code += '{lhs} {op} {rhs}'.format(lhs=self._print(expr.lhs),
+                                          op=op,
+                                          rhs=self._print(expr.rhs))
 
         return self._get_statement(code)
 
@@ -874,7 +876,7 @@ class FCodePrinter(CodePrinter):
         return ('{0}({1}) {2}\n'
                 'implicit none\n'
 #                'integer, parameter:: dp=kind(0.d0)\n'
-                '{3}\n\n'
+                '{3}\n'
                 'end {4}').format(sig, arg_code, func_end, body_code, func_type)
 
     def _print_Pass(self, expr):
@@ -1617,7 +1619,7 @@ class FCodePrinter(CodePrinter):
         else:
             end = expr.end - 1
             end = self._print(end)
-        return '{0} : {1}'.format(start, end)
+        return '{0}:{1}'.format(start, end)
 
     def _pad_leading_columns(self, lines):
         result = []
