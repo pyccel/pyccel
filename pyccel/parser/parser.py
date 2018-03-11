@@ -732,10 +732,23 @@ class Parser(object):
             a = args[0]
             a_new = self._annotate(a, **settings)
             expr_new = a_new
+            if isinstance(a_new,DottedVariable):
+                    #converte the DottedVariable to a variable
+                    d_var=self._infere_type(a_new.args[1])
+                    dtype=d_var.pop('datatype')
+                    var_name=a_new.name
+                    expr_new=Variable(dtype,var_name,**d_var)
 
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
+                if isinstance(a_new,DottedVariable):
+                    #converte the DottedVariable to a variable
+                    d_var=self._infere_type(a_new.args[1])
+                    dtype=d_var.pop('datatype')
+                    var_name=a_new.name
+                    a_new=Variable(dtype,var_name,**d_var)
+                    #a_new=Variable(dtype,var_name)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
@@ -788,8 +801,7 @@ class Parser(object):
                             next = i
                     if next:
                         self._namespace[attr] = next
-                        
-                       # self._namespace[var_name] = Variable(next.dtype,var_name)
+                        self._namespace[var_name] = Variable(next.dtype,var_name)
                         #add the next variable temporarily to namespace
                     var = DottedVariable(obj,self._annotate(args[1]))
                     #remove the variable from namespace
@@ -803,6 +815,12 @@ class Parser(object):
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             d_var = self._infere_type(rhs, **settings)
+            if isinstance(rhs,DottedVariable):
+                dvar=self._infere_type(rhs, **settings)
+                dt=dvar.pop('datatype')
+                v_name=rhs.name
+                rhs=Variable(dt,v_name,**dvar)
+       
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
