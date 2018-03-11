@@ -272,6 +272,39 @@ class DottedVariable(Basic):
    #     sstr = printer.doprint
    #     return '.'.join(sstr(n) for n in self.args)
 
+class List(Tuple):
+    """Represent lists in the code with dynamic memory management."""
+    pass
+
+class Pointer(Basic):
+    """Represent a pointer in the code.
+
+    name: str, Variable, IndexedBase, Indexed, Symbol
+
+    target: Variable, IndexedBase, Indexed
+
+    >>> from sympy.abc import x
+    >>> from pyccel.ast.core import Pointer
+    >>> Pointer('ptr_x', x)
+    ptr_x :=> x
+    """
+    def __new__(cls, name, target):
+        # TODO add verification
+#        if isinstance(target, Variable):
+        return Basic.__new__(cls, name, target)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def target(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{name} :=> {target}'.format(name=sstr(self.name),target=sstr(self.target))
+
 
 class Assign(Basic):
     """Represents variable assignment for code generation.

@@ -63,6 +63,7 @@ from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader
 from pyccel.ast import Concatinate
 from pyccel.ast import Range
+from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
@@ -160,12 +161,13 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron,
-                         CommaProxyList, LineProxyList, NodeList,
-                         TupleNode, ListNode,
-                         list, tuple)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList,
+                         NodeList, TupleNode, ListNode, tuple, list)):
         ls = [fst_to_ast(i) for i in stmt]
-        return Tuple(*ls)
+        if isinstance(stmt, (list, ListNode)):
+            return List(*ls)
+        else:
+            return Tuple(*ls)
     elif isinstance(stmt, DictNode):
         d = {}
         for i in stmt.value:
@@ -650,13 +652,16 @@ class Parser(object):
             d_var['allocatable'] = allocatables[0]
             d_var['rank'] = rank
             return d_var
-        elif isinstance(expr, (tuple, list, Tuple)):
+        elif isinstance(expr, (tuple, list, List, Tuple)):
             d = self._infere_type(expr[0], **settings)
             # TODO must check that it is consistent with pyccel's rules
             d_var['datatype']    = d['datatype']
-            d_var['allocatable'] = d['allocatable']
             d_var['rank']        = d['rank'] + 1
             d_var['shape']       = len(expr) # TODO improve
+            if isinstance(expr, List):
+                d_var['allocatable'] = True
+            else:
+                d_var['allocatable'] = d['allocatable']
             return d_var
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
@@ -671,7 +676,10 @@ class Parser(object):
             for i in expr:
                 a = self._annotate(i, **settings)
                 ls.append(a)
-            return Tuple(*ls)
+            if isinstance(expr, List):
+                return List(*ls)
+            else:
+                return Tuple(*ls)
         elif isinstance(expr, (Integer, Float)):
             return expr
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
@@ -792,10 +800,16 @@ class Parser(object):
                 # here we need to know if lhs is allocatable or a pointer
                 # TODO improve
                 allocatable = False
+                is_pointer  = False
                 if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
                     allocatable = True
+                elif isinstance(expr.rhs, List):
+                    is_pointer = True
+
                 lhs = self.update_variable(expr.lhs,
-                                           allocatable=allocatable)
+                                           allocatable=allocatable,
+                                           is_pointer=is_pointer)
+                lhs.inspect()
                 return AliasAssign(lhs, expr.rhs)
             else:
                 return expr
