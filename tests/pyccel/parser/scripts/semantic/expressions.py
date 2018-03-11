@@ -1,4 +1,9 @@
-a = 1
-b = a
-c = a + 1
-d = c * 2 + 3 * b + a
+ai = 1
+bi = ai
+ci = ai + 1
+di = ci * 2 + 3 * bi + ai
+
+ad = 1.
+bd = ad
+cd = ad + 1.
+dd = cd * 2. + 3. * bd + ad

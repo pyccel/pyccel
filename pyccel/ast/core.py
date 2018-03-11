@@ -393,10 +393,17 @@ class Assign(Basic):
         # TODO to be improved when handling classes
         lhs = self.lhs
         rhs = self.rhs
-        cond = isinstance(rhs, Range)
-        cond = cond or isinstance(rhs, Symbol)
-        cond = cond and isinstance(lhs, Symbol)
-        return cond
+        if isinstance(lhs, Variable):
+            return isinstance(lhs.dtype, NativeSymbol)
+        elif isinstance(lhs, Symbol):
+            if isinstance(rhs, Range):
+                return True
+            elif isinstance(rhs, Variable):
+                return isinstance(rhs.dtype, NativeSymbol)
+            elif isinstance(rhs, Symbol):
+                return True
+
+        return False
 
 
 class AliasAssign(Basic):
@@ -1310,19 +1317,23 @@ class NativeNil(DataType):
     _name = 'Nil'
     pass
 
-class NativeIntegerList(NativeInteger):
+class NativeList(DataType):
+    _name = 'List'
+    pass
+
+class NativeIntegerList(NativeInteger, NativeList):
     _name = 'IntegerList'
     pass
 
-class NativeFloatList(NativeFloat):
+class NativeFloatList(NativeFloat, NativeList):
     _name = 'FloatList'
     pass
 
-class NativeDoubleList(NativeDouble):
+class NativeDoubleList(NativeDouble, NativeList):
     _name = 'DoubleList'
     pass
 
-class NativeComplexList(NativeComplex):
+class NativeComplexList(NativeComplex, NativeList):
     _name = 'ComplexList'
     pass
 

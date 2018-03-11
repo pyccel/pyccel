@@ -47,6 +47,7 @@ from pyccel.ast import NativeIntegerList
 from pyccel.ast import NativeFloatList
 from pyccel.ast import NativeDoubleList
 from pyccel.ast import NativeComplexList
+from pyccel.ast import NativeList
 from pyccel.ast import datatype
 from pyccel.ast import Nil
 from pyccel.ast import Variable
@@ -574,8 +575,16 @@ class Parser(object):
         d_var['is_pointer'] = None
         d_var['is_target'] = None
 
+        # TODO improve => put settings as attribut of Parser
+        DEFAULT_FLOAT = settings.pop('default_float', 'double')
+
         if isinstance(expr, Integer):
             d_var['datatype'] = 'int'
+            d_var['allocatable'] = False
+            d_var['rank'] = 0
+            return d_var
+        elif isinstance(expr, Float):
+            d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
@@ -821,7 +830,7 @@ class Parser(object):
                 if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
                     allocatable = True
                 elif (isinstance(expr.rhs, Variable) and
-                      isinstance(expr.rhs.dtype, NativeIntegerList)):
+                      isinstance(expr.rhs.dtype, NativeList)):
                     is_pointer = True
 
                 lhs = self.update_variable(expr.lhs,

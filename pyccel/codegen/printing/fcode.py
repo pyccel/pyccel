@@ -1615,7 +1615,7 @@ class FCodePrinter(CodePrinter):
         else:
             end = expr.end - 1
             end = self._print(end)
-        return '{0} : {1}'.format(start, end)
+        return '{0}:{1}'.format(start, end)
 
     def _pad_leading_columns(self, lines):
         result = []
