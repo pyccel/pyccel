@@ -9,6 +9,8 @@ TODO
 
 - in Variable, rank should be a property that uses *shape*?
 
+- improve dotprint for our ast objects
+
 Bugs
 ****
 

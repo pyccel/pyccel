@@ -246,6 +246,11 @@ class DottedName(Basic):
 
 
 
+class List(Tuple):
+    """Represent lists in the code with dynamic memory management."""
+    pass
+
+
 class Assign(Basic):
     """Represents variable assignment for code generation.
 
@@ -361,13 +366,17 @@ class Assign(Basic):
         # TODO to be improved when handling classes
         lhs = self.lhs
         rhs = self.rhs
-        if isinstance(lhs,Variable) and isinstance(rhs,Variable):
-            return False
-        cond = isinstance(rhs, Range)
-        cond = cond or isinstance(rhs, Symbol)
-        cond = cond and isinstance(lhs, Symbol)
-        return cond
+        if isinstance(lhs, Variable):
+            return isinstance(lhs.dtype, NativeSymbol)
+        elif isinstance(lhs, Symbol):
+            if isinstance(rhs, Range):
+                return True
+            elif isinstance(rhs, Variable):
+                return isinstance(rhs.dtype, NativeSymbol)
+            elif isinstance(rhs, Symbol):
+                return True
 
+        return False
 
 class AliasAssign(Basic):
     """Represents aliasing for code generation. An alias is any statement of the
@@ -1280,6 +1289,26 @@ class NativeNil(DataType):
     _name = 'Nil'
     pass
 
+class NativeList(DataType):
+    _name = 'List'
+    pass
+
+class NativeIntegerList(NativeInteger, NativeList):
+    _name = 'IntegerList'
+    pass
+
+class NativeFloatList(NativeFloat, NativeList):
+    _name = 'FloatList'
+    pass
+
+class NativeDoubleList(NativeDouble, NativeList):
+    _name = 'DoubleList'
+    pass
+
+class NativeComplexList(NativeComplex, NativeList):
+    _name = 'ComplexList'
+    pass
+
 class NativeRange(DataType):
     _name = 'Range'
     pass
@@ -1322,6 +1351,10 @@ String  = NativeString()
 _Vector = NativeVector()
 _Stencil = NativeStencil()
 _Symbol = NativeSymbol()
+IntegerList = NativeIntegerList()
+FloatList = NativeFloatList()
+DoubleList = NativeDoubleList()
+ComplexList = NativeComplexList()
 
 
 dtype_registry = {'bool': Bool,
@@ -1334,6 +1367,10 @@ dtype_registry = {'bool': Bool,
                   'vector': _Vector,
                   'stencil': _Stencil,
                   'symbol': _Symbol,
+                  '*int': IntegerList,
+                  '*float': FloatList,
+                  '*double': DoubleList,
+                  '*complex': ComplexList,
                   'str': String}
 
 
@@ -1719,7 +1756,7 @@ class Variable(Symbol):
     matrix.n_rows
     """
     def __new__(cls, dtype, name,
-                rank=0, allocatable=False, is_pointer=False,
+                rank=0, allocatable=False, is_pointer=False, is_target=False,
                 shape=None, cls_base=None, cls_parameters=None):
 
         if isinstance(dtype, str):
@@ -1731,6 +1768,11 @@ class Variable(Symbol):
             is_pointer = False
         elif not isinstance(is_pointer, bool):
             raise TypeError("is_pointer must be a boolean.")
+
+        if is_target is None:
+            is_target = False
+        elif not isinstance(is_target, bool):
+            raise TypeError("is_target must be a boolean.")
 
         # if class attribut
         if isinstance(name, str):
@@ -1752,7 +1794,7 @@ class Variable(Symbol):
 
         # TODO improve order of arguments
         return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
-                             cls_base, cls_parameters, is_pointer)
+                             cls_base, cls_parameters, is_pointer, is_target)
 
     @property
     def dtype(self):
@@ -1786,6 +1828,10 @@ class Variable(Symbol):
     def is_pointer(self):
         return self._args[7]
 
+    @property
+    def is_target(self):
+        return self._args[8]
+
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
             return str(self.name)
@@ -1811,9 +1857,11 @@ class Variable(Symbol):
         print('  cls_base       = {}'.format(self.cls_base))
         print('  cls_parameters = {}'.format(self.cls_parameters))
         print('  is_pointer     = {}'.format(self.is_pointer))
+        print('  is_target      = {}'.format(self.is_target))
         print('<<<')
 
     def clone(self, name):
+        # TODO check it is up to date
         cls = eval(self.__class__.__name__)
 
         return cls(self.dtype,
@@ -1821,6 +1869,8 @@ class Variable(Symbol):
                    rank=self.rank,
                    allocatable=self.allocatable,
                    shape=self.shape,
+                   is_pointer=self.is_pointer,
+                   is_target=self.is_target,
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 

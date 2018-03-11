@@ -62,13 +62,13 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     parser.add_argument('--output-dir', type=str, \
                         help='Output directory.')
 
-    parser.add_argument('--syntax-only', action='store_true',
+    parser.add_argument('-x', '--syntax-only', action='store_true',
                         help='Using pyccel for Syntax Checking')
-    parser.add_argument('--semantic-only', action='store_true',
+    parser.add_argument('-e', '--semantic-only', action='store_true',
                         help='Using pyccel for Semantic Checking')
-    parser.add_argument('--convert-only', action='store_true',
+    parser.add_argument('-t', '--convert-only', action='store_true',
                         help='Converts pyccel files only without build')
-    parser.add_argument('--lint', action='store_true', \
+    parser.add_argument('-s', '--lint', action='store_true', \
                         help='Uses PyLint for static checking.')
 
     parser.add_argument('--no-modules', action='store_true',

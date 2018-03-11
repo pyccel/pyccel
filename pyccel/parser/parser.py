@@ -41,6 +41,12 @@ from redbaron import GetitemNode,SliceNode
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import NativeRange
+from pyccel.ast import NativeIntegerList
+from pyccel.ast import NativeFloatList
+from pyccel.ast import NativeDoubleList
+from pyccel.ast import NativeComplexList
+from pyccel.ast import NativeList
+from pyccel.ast import datatype
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName,DottedVariable
@@ -66,6 +72,7 @@ from pyccel.ast import Concatinate
 from sympy.core.basic import Basic
 
 from pyccel.ast import Range
+from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
@@ -164,12 +171,13 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
-    if isinstance(stmt, (RedBaron,
-                         CommaProxyList, LineProxyList, NodeList,
-                         TupleNode, ListNode,
-                         list, tuple)):
+    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList,
+                         NodeList, TupleNode, ListNode, tuple, list)):
         ls = [fst_to_ast(i) for i in stmt]
-        return Tuple(*ls)
+        if isinstance(stmt, (list, ListNode)):
+            return List(*ls)
+        else:
+            return Tuple(*ls)
     elif isinstance(stmt, DictNode):
         d = {}
         for i in stmt.value:
@@ -579,11 +587,18 @@ class Parser(object):
         d_var['shape'] = None
         d_var['rank'] = None
         d_var['is_pointer'] = None
-        # TODO - IndexedVariable
-        #      - IndexedElement
+        d_var['is_target'] = None
+
+        # TODO improve => put settings as attribut of Parser
+        DEFAULT_FLOAT = settings.pop('default_float', 'double')
 
         if isinstance(expr, Integer):
             d_var['datatype'] = 'int'
+            d_var['allocatable'] = False
+            d_var['rank'] = 0
+            return d_var
+        elif isinstance(expr, Float):
+            d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
@@ -664,13 +679,27 @@ class Parser(object):
             d_var['allocatable'] = allocatables[0]
             d_var['rank'] = rank
             return d_var
-        elif isinstance(expr, (tuple, list, Tuple)):
+        elif isinstance(expr, (tuple, list, List, Tuple)):
             d = self._infere_type(expr[0], **settings)
             # TODO must check that it is consistent with pyccel's rules
             d_var['datatype']    = d['datatype']
-            d_var['allocatable'] = d['allocatable']
             d_var['rank']        = d['rank'] + 1
             d_var['shape']       = len(expr) # TODO improve
+            d_var['allocatable'] = d['allocatable']
+            if isinstance(expr, List):
+                d_var['is_target'] = True
+
+                dtype = datatype(d['datatype'])
+                if isinstance(dtype, NativeInteger):
+                    d_var['datatype'] = NativeIntegerList()
+                elif isinstance(dtype, NativeFloat):
+                    d_var['datatype'] = NativeFloatList()
+                elif isinstance(dtype, NativeDouble):
+                    d_var['datatype'] = NativeDoubleList()
+                elif isinstance(dtype, NativeComplex):
+                    d_var['datatype'] = NativeComplexList()
+                else:
+                    raise NotImplementedError('TODO')
             return d_var
         elif isinstance(expr,DottedVariable):
             return self._infere_type(expr.args[1])
@@ -687,13 +716,18 @@ class Parser(object):
             for i in expr:
                 a = self._annotate(i, **settings)
                 ls.append(a)
-            return Tuple(*ls)
+            if isinstance(expr, List):
+                return List(*ls)
+            else:
+                return Tuple(*ls)
         elif isinstance(expr, (Integer, Float)):
             return expr
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             return expr
         elif isinstance(expr, Variable):
             return expr
+        elif isinstance(expr, str):
+            return repr(expr)
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
             # an indexed variable is only defined if the associated variable is in
             # the namespace
@@ -877,17 +911,27 @@ class Parser(object):
 
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
-            if expr.is_symbolic_alias:
-                return SymbolicAssign(lhs, expr.rhs)
-            elif expr.is_alias:
+#            lhs.inspect()
+#            if isinstance(expr.rhs, Variable):
+#                expr.rhs.inspect()
+
+            if expr.is_alias:
                 # here we need to know if lhs is allocatable or a pointer
                 # TODO improve
                 allocatable = False
+                is_pointer  = False
                 if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
                     allocatable = True
+                elif (isinstance(expr.rhs, Variable) and
+                      isinstance(expr.rhs.dtype, NativeList)):
+                    is_pointer = True
+
                 lhs = self.update_variable(expr.lhs,
-                                           allocatable=allocatable)
+                                           allocatable=allocatable,
+                                           is_pointer=is_pointer)
                 return AliasAssign(lhs, expr.rhs)
+            elif expr.is_symbolic_alias:
+                return SymbolicAssign(lhs, expr.rhs)
             else:
                 return expr
         elif isinstance(expr, For):
@@ -1030,8 +1074,8 @@ class Parser(object):
         elif isinstance(expr, EmptyLine):
             return expr
         elif isinstance(expr, Print):
-            # TODO improve
-            return expr
+            args = self._annotate(expr.expr, **settings)
+            return Print(args)
         elif isinstance(expr, Comment):
             return expr
         elif isinstance(expr,ClassDef):
