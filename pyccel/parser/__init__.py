@@ -2,4 +2,5 @@
 
 from .syntax    import *
 from .parser    import *
+from .errors    import *
 from .utilities import *
