@@ -1126,7 +1126,7 @@ class Parser(object):
                      const = self._annotate(method)
                      methods.pop(i)
                      self._namespace.pop('self.__init__')
-             #attributs=self._namespace[name].attributs
+       
                      
                
              
@@ -1148,13 +1148,10 @@ class Parser(object):
 
              # then use it to decorate our arguments
              attributs = self._namespace[name].attributs
-             #for i in methods:
-                 #for j in i.body:
-                     #if isinstance(j,Assign):
-                         #print type(j.lhs),type(j.rhs)
-                         #if isinstance(j.rhs,Add):
-                            # print j.rhs.args,'##'
+       
              return ClassDef(name,attributs,methods)
+        elif isinstance(expr,Pass):
+            return Pass()
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 

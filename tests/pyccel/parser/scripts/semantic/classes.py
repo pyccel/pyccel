@@ -7,8 +7,13 @@ class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.z = self.y
+
+    def __del__(self):
+        pass
 
     def translate(self, a, b):
         self.x = self.x + a
         self.y = self.y + b
+
+#p = Point(0.0, 0.0)
+
