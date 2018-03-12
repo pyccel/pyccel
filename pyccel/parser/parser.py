@@ -781,7 +781,7 @@ class Parser(object):
                 raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
 
             attributs = d_var['cls_base'].attributs
-            var=None
+            var = None
 
             for i in attributs:
                 if str(i) == n_name:
@@ -790,7 +790,7 @@ class Parser(object):
                 raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
             s = self._infere_type(var)
             #create this varibale that represent the expr.args[0]
-            dtype=s.pop('datatype')
+            dtype = s.pop('datatype')
 
             return Variable(dtype,n_name,**s)
         else:
@@ -1002,9 +1002,9 @@ class Parser(object):
                     attributs = list(attributs)
                     name = lhs.name.split('.')[0]
 
-                    args=lhs.args
+                    args = lhs.args
                     obj = self.get_variable(name)
-                    var=DottedVariable(obj,args[1])
+                    var = DottedVariable(obj,args[1])
                     #we contrcut new DottedVariable so that we can infer the type
                     d_var = self._infere_type(var)
                     lhs = d_var.clone(lhs.name)
@@ -1063,8 +1063,9 @@ class Parser(object):
             self.insert_header(expr)
             return expr
         elif isinstance(expr,ClassHeader):
+            # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
-            return
+            return expr
         elif isinstance(expr, Return):
             results = expr.expr
             if isinstance(results, Symbol):
@@ -1169,9 +1170,9 @@ class Parser(object):
                 if str(i) in self._namespace:
                     self._namespace.pop(str(i)) #clean namespace
             if arg and cls_name:
-                dt=self.get_class_construct(cls_name)()
-                var=Variable(dt,'self',cls_base = self._namespace[cls_name])
-                args=[var]+args
+                dt = self.get_class_construct(cls_name)()
+                var = Variable(dt,'self',cls_base = self._namespace[cls_name])
+                args = [var]+args
 
             func=FunctionDef(name, args, results, body,
                                local_vars=local_vars, global_vars=global_vars,
