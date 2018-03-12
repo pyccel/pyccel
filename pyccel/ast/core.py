@@ -1839,7 +1839,6 @@ class Variable(Symbol):
             return '.'.join(str(n) for n in self.name)
 
     def _sympystr(self, printer):
-        print self.name
         sstr = printer.doprint
         if isinstance(self.name, (str, DottedName)):
             return '{}'.format(sstr(self.name))
