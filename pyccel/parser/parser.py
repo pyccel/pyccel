@@ -46,7 +46,7 @@ from pyccel.ast import NativeFloatList
 from pyccel.ast import NativeDoubleList
 from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
-from pyccel.ast import datatype
+from pyccel.ast import datatype,DataTypeFactory
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName,DottedVariable
@@ -456,6 +456,7 @@ class Parser(object):
         self._fst = None
         self._ast = None
         self._namespace = {}
+        self._namespace['cls_constructs'] = {}
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -562,6 +563,25 @@ class Parser(object):
         if name in self.headers:
             return self.headers[name]
         return None
+    
+    
+    
+    
+    def get_class_construct(self,name):
+        """Returns the class datatype for name."""
+        
+        
+        
+        return self._namespace['cls_constructs'][name]
+# ...
+
+# ...
+    def set_class_construct(self,name, value):
+        """Sets the class datatype for name."""
+        
+        
+        self._namespace['cls_constructs'][name] = value
+
 
     def insert_header(self, expr):
         """."""
@@ -572,6 +592,12 @@ class Parser(object):
                 self._namespace['headers'][str(expr.func)] = expr
         elif isinstance(expr,ClassHeader):
             self._namespace['headers'][str(expr.name)] = expr
+            # create a new Datatype for the current class
+            iterable       = ('iterable' in expr.options)
+            with_construct = ('with' in expr.options)
+            dtype = DataTypeFactory(str(expr.name), ("_name"),is_iterable=iterable,\
+                                    is_with_construct=with_construct)
+            self.set_class_construct(str(expr.name), dtype)
         else:
             raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
              
@@ -878,12 +904,18 @@ class Parser(object):
                      cls_name = str(self._namespace['self'].cls_base.name)
                      attributs = self._namespace[cls_name].attributs
                      attributs = list(attributs)
-                     n_name = str(lhs.args[1])
+                     n_name = str(lhs.args[1]).split('.')
+                     #there must one level of depth in __init__ for the new attributs
+                     if len(n_name)>1:
+                         raise SystemExit('Invalide operation')
+                     else:
+                         n_name=n_name[0]
                      attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
                      self._namespace[cls_name]=ClassDef(cls_name,attributs,[])
                      #update the self variable with the new attributs
-                     var = Variable('nil','self',cls_base = self._namespace[cls_name])
+                     dt=self.get_class_construct(cls_name)()
+                     var = Variable(dt,'self',cls_base = self._namespace[cls_name])
                      self._namespace['self'] = var
                      args=lhs.args
                      obj = self.get_variable('self')
@@ -901,10 +933,6 @@ class Parser(object):
                     #we contrcut new DottedVariable so that we can infer the type
                     d_var=self._infere_type(var)
                     lhs=d_var.clone(lhs.name)
-                        
-                
-            
-
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
 #            lhs.inspect()
@@ -1009,10 +1037,14 @@ class Parser(object):
             
             # then use it to decorate our arguments
             arguments = expr.arguments
+            arg=None
             if cls_name and str(expr.arguments[0])=='self':
+                arg=arguments[0]
                 arguments = arguments[1:]
-                var=Variable('nil','self',cls_base = self._namespace[cls_name])
+                dt=self.get_class_construct(cls_name)()
+                var=Variable(dt,'self',cls_base = self._namespace[cls_name])
                 self._namespace['self']=var
+                
             if arguments:
                 for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
@@ -1025,6 +1057,7 @@ class Parser(object):
                     self.insert_variable(a_new, name=str(a_new.name))
             # we annotate the body
             if cls_name and name=='__init__':
+                #we push a variable self.__init__ just to check if we still in the __init__ method or no
                 var=Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
                 self._namespace['self.__init__']=var
                            
@@ -1057,6 +1090,11 @@ class Parser(object):
             for i in args:
                 if str(i) in self._namespace:
                     self._namespace.pop(str(i)) #clean namespace
+            if arg and cls_name:
+                dt=self.get_class_construct(cls_name)()
+                var=Variable(dt,'self',cls_base = self._namespace[cls_name])
+                args=[var]+args
+            
             func=FunctionDef(name, args, results, body,
                                local_vars=local_vars, global_vars=global_vars,
                                cls_name=cls_name, hide=hide,
