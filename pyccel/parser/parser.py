@@ -1165,7 +1165,7 @@ class Parser(object):
 
              # then use it to decorate our arguments
              attributs = self._namespace[name].attributs
-       
+            # print self._namespace
              return ClassDef(name,attributs,methods)
         elif isinstance(expr,Pass):
             return Pass()
