@@ -607,6 +607,7 @@ class Parser(object):
             d_var['allocatable'] = expr.allocatable
             d_var['shape'] = expr.shape
             d_var['rank'] = expr.rank
+            d_var['cls_base'] = expr.cls_base
             return d_var
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             d_var['datatype'] = NativeBool()
@@ -702,17 +703,24 @@ class Parser(object):
                     raise NotImplementedError('TODO')
             return d_var
         elif isinstance(expr,DottedVariable):
-            var=self._namespace[expr.args[0].name]
-            attributs = var.cls_base.attributs
-            n_name = expr.args[1].name.split('.')[0] 
-            
+            d_var=self._infere_type(expr.args[0])
+            n_name = expr.args[1].name.split('.')[0]
+            if not d_var['cls_base']:
+                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
+            attributs = d_var['cls_base'].attributs 
+            var=None
             for i in attributs:
                 if str(i)==n_name:
                     var=i
-            self._namespace[var]
-            s=self._infere_type(expr.args[1])
+            if not var:
+                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
+            s=self._infere_type(var)
+            #create this varibale that represent the expr.args[0]
+            
+            dtype=s.pop('datatype')
+            
              
-            return s
+            return Variable(dtype,n_name,**s)
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -826,48 +834,30 @@ class Parser(object):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
         elif isinstance(expr,DottedVariable):
             args=expr.args
-            name = str(args[0].name)
-            obj = self.get_variable(name)
-            var_name=args[1].name
-            print self._infere_type(expr),'infertype'
-            if isinstance(args[1],DottedVariable):
-                attr=args[1].name
-            else:
-                attr=args[1].name
-            if not obj.cls_base:
-                raise AttributeError(' {0} object has no attribute {1}'.format(name,attr)) 
-            else:
-                ls=[str(i) for i in obj.cls_base.attributs]
-                if not attr in ls:
-                    raise AttributeError(' {0} object has no attribute {1}'.format(name,attr))
-                else:
-                    next=None
-                    for i in obj.cls_base.attributs:
-                        if str(i) == attr:
-                            next = i
-                    if next:
-                        self._namespace[attr] = next
-                        self._namespace[var_name] = Variable(next.dtype,var_name)
-                        #add the next variable temporarily to namespace
-                    var = DottedVariable(obj,self._annotate(args[1]))
-                    #remove the variable from namespace
-                    self._namespace.pop(attr)
-                    
-                    return var
-
-                    
-                     
-                
+            name = expr.name.split('.')[0]
+            obj = self.get_variable(name) 
+            var=DottedVariable(obj,args[1])
+            #we contrcut new DottedVariable so that we can infer the type
+            d_var=self._infere_type(var)
+            new_var=d_var.clone(expr.name)
+                            
+            return new_var       
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             d_var = self._infere_type(rhs, **settings)
             if isinstance(rhs,DottedVariable):
-                dvar=self._infere_type(rhs, **settings)
-                dt=dvar.pop('datatype')
-                v_name=rhs.name
-                rhs=Variable(dt,v_name,**dvar)
-       
-
+                #dvar=self._infere_type(rhs, **settings)
+                #dt=dvar.pop('datatype')
+                #v_name=rhs.name
+                #rhs=Variable(dt,v_name,**dvar)
+                args=rhs.args
+                name = rhs.name.split('.')[0]
+                obj = self.get_variable(name) 
+                var=DottedVariable(obj,args[1])
+                #we contrcut new DottedVariable so that we can infer the type
+                d_var=self._infere_type(var)
+                new_var=d_var.clone(rhs.name)
+                rhs=new_var
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
@@ -891,13 +881,12 @@ class Parser(object):
                 var = self.get_variable(name)
                 if var is None:
                     raise ValueError('Undefined variable {name}'.format(name=name))
-
                 args = tuple(lhs.indices)
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
             elif isinstance(lhs,DottedVariable):
                 dtype = d_var.pop('datatype')
-                # case of dottedvariable in the __init__ that starts with self method
+                # case of lhs=dottedvariable in the __init__ method that starts with self
                 if str(lhs.args[0]) == 'self' and 'self.__init__' in self._namespace.keys():
                      cls_name=str(self._namespace['self'].cls_base.name)
                      attributs = self._namespace[cls_name].attributs
@@ -910,16 +899,19 @@ class Parser(object):
                      var=Variable('nil','self',cls_base = self._namespace[cls_name])
                      self._namespace['self']=var
                 else :
-                    
                     cls_name = str(self._namespace[str(lhs.args[0])].cls_base.name)
                     attributs = self._namespace[cls_name].attributs
                     attributs = list(attributs)
-                    name = str(lhs.args[1])
-                    if name not in [i.name for i in attributs]:
-                        raise AttributeError(' the class {0}  has no attribut'.format(cls_base.name,name))
-                lhs=Variable(dtype,lhs.name)
-            #else:
-             #   raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(lhs)))
+                    name = lhs.name.split('.')[0]
+                    args=lhs.args
+                    obj = self.get_variable(name) 
+                    var=DottedVariable(obj,args[1])
+                    #we contrcut new DottedVariable so that we can infer the type
+                    d_var=self._infere_type(var)
+                    lhs=d_var.clone(lhs.name)
+                        
+                
+            
 
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
