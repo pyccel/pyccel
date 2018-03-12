@@ -533,9 +533,19 @@ class Parser(object):
 
     def annotate(self, **settings):
         """."""
+        # TODO - add settings to Errors
+        #      - filename
+        errors = Errors()
+        if self.filename:
+            errors.set_target(self.filename, 'file')
+        errors.set_parser_stage('semantic')
+
         ast = self.ast
         ast = self._annotate(ast, **settings)
         self._ast = ast
+
+        errors.check()
+
         return ast
 
     def print_namespace(self):
@@ -638,6 +648,11 @@ class Parser(object):
         """
         type inference for expressions
         """
+        # TODO - add settings to Errors
+        #      - line and column
+        #      - blocking errors
+        errors = Errors()
+
         d_var = {}
         d_var['datatype'] = None
         d_var['allocatable'] = None
@@ -786,6 +801,11 @@ class Parser(object):
 
         IndexedVariable atoms are only used to manipulate expressions, we then,
         always have a Variable in the namespace."""
+        # TODO - add settings to Errors
+        #      - line and column
+        #      - blocking errors
+        errors = Errors()
+
         if isinstance(expr, (list, tuple, Tuple)):
             ls = []
             for i in expr:
@@ -809,7 +829,8 @@ class Parser(object):
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
-                raise ValueError('Undefined variable {name}'.format(name=name))
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              severity='error', blocker=True)
 
             dtype = var.dtype
             # TODO add shape
@@ -818,7 +839,8 @@ class Parser(object):
             name = str(expr.base)
             var = self.get_variable(name)
             if var is None:
-                raise ValueError('Undefined variable {name}'.format(name=name))
+                errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
+                              severity='error', blocker=True)
 
             # TODO check consistency of indices with shape/rank
             args = tuple(expr.indices)
@@ -828,7 +850,7 @@ class Parser(object):
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
-                raise NotImplementedError('Symbolic {name} variable '
+                raise PyccelSemanticError('Symbolic {name} variable '
                                           'is not allowed'.format(name=name))
 
             return var
@@ -902,7 +924,8 @@ class Parser(object):
                     raise SystemExit('missing contructor method from the class {0}'.format(name))
                 return func(valued_args)
             else:
-                raise NotImplementedError('Unknown function {expr}'.format(expr=expr))
+                errors.report(UNDEFINED_FUNCTION, symbol=name,
+                              severity='error', blocker=True)
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
         elif isinstance(expr,DottedVariable):
@@ -931,7 +954,8 @@ class Parser(object):
                 name = str(lhs.name)
                 var = self.get_variable(name)
                 if var is None:
-                    raise ValueError('Undefined variable {name}'.format(name=name))
+                    errors.report(UNDEFINED_VARIABLE, symbol=name,
+                                  severity='error', blocker=True)
 
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype)
@@ -940,11 +964,13 @@ class Parser(object):
                 name = str(lhs.base)
                 var = self.get_variable(name)
                 if var is None:
-                    raise ValueError('Undefined variable {name}'.format(name=name))
+                    errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
+                                  severity='error', blocker=True)
                 args = tuple(lhs.indices)
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
             elif isinstance(lhs,DottedVariable):
+                # TODO fix indentation
                 dtype = d_var.pop('datatype')
                 name = lhs.name.split('.')[0]
                 # case of lhs=dottedvariable in the __init__ method that starts with self
@@ -1017,7 +1043,8 @@ class Parser(object):
                     self.insert_variable(target)
             else:
                 dtype = type(expr.target)
-                raise NotImplementedError('Uncovered type {dtype}'.format(dtype=dtype))
+                errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
+                              severity='error')
 
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
@@ -1045,7 +1072,8 @@ class Parser(object):
                 name = results.name
                 var = self.get_variable(name)
                 if var is None:
-                    raise ValueError('Undefined returned variable {name}'.format(name=name))
+                    errors.report(UNDEFINED_VARIABLE, symbol=name,
+                                  severity='error', blocker=True)
 
                 return Return([var])
             elif isinstance(results, (list, tuple, Tuple)):
@@ -1056,7 +1084,8 @@ class Parser(object):
                     name = i.name
                     var = self.get_variable(name)
                     if var is None:
-                        raise ValueError('Undefined returned variable {name}'.format(name=name))
+                        errors.report(RETURN_VALUE_EXPECTED, symbol=name,
+                                      severity='error', blocker=True)
 
                     ls += [var]
                 return Return(ls)
@@ -1078,11 +1107,10 @@ class Parser(object):
             if expr.arguments or results:
                 header = self.get_header(name)
                 if not header:
-                    raise ValueError('Expecting a header function for {func} '
-                                     'but could not find it.'.format(func=name))
+                    errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
+                                  severity='error', blocker=True)
 
                 # we construct a FunctionDef from its header
-
                 interface = header.create_definition()
 
             # then use it to decorate our arguments
@@ -1135,7 +1163,8 @@ class Parser(object):
                     # results must be variable that were already declared
                     var = self.get_variable(str(a_new.name))
                     if var is None:
-                        raise ValueError('Undefined variable {name}'.format(name=str(a_new.name)))
+                        errors.report(UNDEFINED_VARIABLE, symbol=str(a_new.name),
+                                      severity='error', blocker=True)
                 results = _results
             for i in args:
                 if str(i) in self._namespace:
@@ -1202,7 +1231,7 @@ class Parser(object):
         elif isinstance(expr,Pass):
             return Pass()
         else:
-            raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+            raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
 class PyccelParser(Parser):
     pass
@@ -1220,8 +1249,8 @@ if __name__ == '__main__':
 
     pyccel.parse()
 
-#    settings = {}
-#    pyccel.annotate(**settings)
-#    pyccel.print_namespace()
-#
-#    pyccel.dot('ast.gv')
+    settings = {}
+    pyccel.annotate(**settings)
+    pyccel.print_namespace()
+
+    pyccel.dot('ast.gv')

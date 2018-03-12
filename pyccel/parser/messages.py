@@ -3,8 +3,6 @@ from collections import OrderedDict
 # Constants that represent simple type checker error message, i.e. messages
 # that do not have any parameters.
 
-UNDEFINED_VARIABLE = 'Undefined variable'
-
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
 INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
@@ -67,3 +65,9 @@ PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header.'
+
+UNDEFINED_FUNCTION = 'Undefined function'
+UNDEFINED_VARIABLE = 'Undefined variable'
+UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
+
+INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
