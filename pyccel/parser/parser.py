@@ -706,7 +706,7 @@ class Parser(object):
             d_var=self._infere_type(expr.args[0])
             n_name = expr.args[1].name.split('.')[0]
             if not d_var['cls_base']:
-                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
+                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
             attributs = d_var['cls_base'].attributs 
             var=None
             for i in attributs:
@@ -839,25 +839,11 @@ class Parser(object):
             var=DottedVariable(obj,args[1])
             #we contrcut new DottedVariable so that we can infer the type
             d_var=self._infere_type(var)
-            new_var=d_var.clone(expr.name)
-                            
+            new_var=d_var.clone(expr.name)           
             return new_var       
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             d_var = self._infere_type(rhs, **settings)
-            if isinstance(rhs,DottedVariable):
-                #dvar=self._infere_type(rhs, **settings)
-                #dt=dvar.pop('datatype')
-                #v_name=rhs.name
-                #rhs=Variable(dt,v_name,**dvar)
-                args=rhs.args
-                name = rhs.name.split('.')[0]
-                obj = self.get_variable(name) 
-                var=DottedVariable(obj,args[1])
-                #we contrcut new DottedVariable so that we can infer the type
-                d_var=self._infere_type(var)
-                new_var=d_var.clone(rhs.name)
-                rhs=new_var
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
@@ -886,18 +872,24 @@ class Parser(object):
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
             elif isinstance(lhs,DottedVariable):
                 dtype = d_var.pop('datatype')
+                name = lhs.name.split('.')[0]
                 # case of lhs=dottedvariable in the __init__ method that starts with self
-                if str(lhs.args[0]) == 'self' and 'self.__init__' in self._namespace.keys():
-                     cls_name=str(self._namespace['self'].cls_base.name)
+                if name == 'self' and 'self.__init__' in self._namespace.keys():
+                     cls_name = str(self._namespace['self'].cls_base.name)
                      attributs = self._namespace[cls_name].attributs
                      attributs = list(attributs)
-                     name = str(lhs.args[1])
-                     attributs += [Variable(dtype,name, **d_var)]
-                     #update the attributs of the class
+                     n_name = str(lhs.args[1])
+                     attributs += [Variable(dtype, n_name, **d_var)]
+                     #update the attributs of the class and push it to the namespace
                      self._namespace[cls_name]=ClassDef(cls_name,attributs,[])
                      #update the self variable with the new attributs
-                     var=Variable('nil','self',cls_base = self._namespace[cls_name])
-                     self._namespace['self']=var
+                     var = Variable('nil','self',cls_base = self._namespace[cls_name])
+                     self._namespace['self'] = var
+                     args=lhs.args
+                     obj = self.get_variable('self')
+                     var=DottedVariable(obj,args[1])
+                     d_var=self._infere_type(var)
+                     lhs=d_var.clone(lhs.name)
                 else :
                     cls_name = str(self._namespace[str(lhs.args[0])].cls_base.name)
                     attributs = self._namespace[cls_name].attributs
