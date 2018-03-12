@@ -71,3 +71,7 @@ UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
+
+# warnings
+UNDEFINED_INIT_METHOD = 'Undefined __init__ method'
+

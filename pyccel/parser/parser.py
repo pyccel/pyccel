@@ -53,7 +53,7 @@ from pyccel.ast import DottedName,DottedVariable
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
-from pyccel.ast import FunctionCall, MethodCall
+from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
 from pyccel.ast import FunctionDef
 from pyccel.ast import ClassDef
 from pyccel.ast import For
@@ -606,24 +606,13 @@ class Parser(object):
             return self.headers[name]
         return None
 
-
-
-
     def get_class_construct(self,name):
         """Returns the class datatype for name."""
-
-
-
         return self._namespace['cls_constructs'][name]
-# ...
 
-# ...
     def set_class_construct(self,name, value):
         """Sets the class datatype for name."""
-
-
         self._namespace['cls_constructs'][name] = value
-
 
     def insert_header(self, expr):
         """."""
@@ -643,8 +632,6 @@ class Parser(object):
         else:
             raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
 
-
-
     def _infere_type(self, expr, **settings):
         """
         type inference for expressions
@@ -661,6 +648,7 @@ class Parser(object):
         d_var['rank'] = None
         d_var['is_pointer'] = None
         d_var['is_target'] = None
+        d_var['is_polymorphic'] = None
 
         # TODO improve => put settings as attribut of Parser
         DEFAULT_FLOAT = settings.pop('default_float', 'double')
@@ -905,32 +893,41 @@ class Parser(object):
             return expr_new
         elif isinstance(expr, Function):
             args = expr.args
+            name = str(type(expr).__name__)
             F = pyccel_builtin_function(expr, args)
             if not(F is None):
                 return F
-            elif str(expr).split('(')[0] in self._namespace['cls_constructs'].keys():
-                name = str(expr).split('(')[0]
+            elif name in self._namespace['cls_constructs'].keys():
+                # TODO improve the test
+                #      we must not invoke the namespace like this, only through
+                #      appropriate methods like get_variable ...
                 cls = self._namespace[name]
-                func = None
-                for i in cls.methods:
-                    if str(i.name) == '__init__':
-                        func = i
-                args_ = expr.args
-                args = func.arguments[1:] #we delete the self arg
+                d_methods = cls.methods_as_dict
+                method = d_methods.pop('__init__', None)
+
+                if method is None:
+                    # TODO improve
+                    #      we should not stop here, there will be cases where we
+                    #      want to instantiate a class that has no __init__
+                    #      construct
+                    errors.report(UNDEFINED_INIT_METHOD, symbol=name,
+                                  severity='warning', blocker=True)
+
+                args = expr.args
+                m_args = method.arguments[1:] #we delete the self arg
+                # TODO check compatibility
 
                 # TODO treat parametrized arguments.
                 #      this will be done later, once it is validated for FunctionCall
 
-                if not func:
-                    raise SystemExit('missing contructor method from the class {0}'.format(name))
-
-                # TODO must return MethodCall
-                #      see line 3594 in syntax/core.py
-                return func(*args)
+                # the only thing we can do here, is to return a MethodCall,
+                # without the class Variable, then we will treat it during the
+                # Assign annotation
+#                return MethodCall(method, args, cls_variable=None, kind=None)
+                return ConstructorCall(method, args, cls_variable=None)
             else:
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
-                name = str(type(expr).__name__)
                 func = self.get_variable(name)
                 if not(func is None):
                     return FunctionCall(func, args)
@@ -939,7 +936,7 @@ class Parser(object):
                               severity='error', blocker=True)
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
-        elif isinstance(expr,DottedVariable):
+        elif isinstance(expr, DottedVariable):
             args = expr.args
             name = expr.name.split('.')[0]
 
@@ -958,6 +955,22 @@ class Parser(object):
                 # if there is only one result, we don't consider d_var as a list
                 if len(d_var) == 1:
                     d_var = d_var[0]
+            elif isinstance(rhs, ConstructorCall):
+                cls = rhs.func.cls_name
+                # create a new Datatype for the current class
+                dtype = self.get_class_construct(cls)()
+
+                # to be moved to infere_type?
+                d_var = {}
+                d_var['datatype']    = dtype
+                d_var['allocatable'] = False
+                d_var['shape']       = None
+                d_var['rank']        = 0
+                d_var['is_target']   = True
+                d_var['is_polymorphic'] = False
+                d_var['cls_base']    = cls
+            elif isinstance(rhs, MethodCall):
+                raise NotImplementedError('TODO')
             else:
                 d_var = self._infere_type(rhs, **settings)
 

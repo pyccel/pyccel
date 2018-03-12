@@ -15,4 +15,4 @@ class Point(object):
         self.x = self.x + a
         self.y = self.y + b
 
-#p = Point(0.0, 0.0)
+p = Point(0.0, 0.0)

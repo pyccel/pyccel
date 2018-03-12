@@ -1540,6 +1540,7 @@ class FunctionCall(AtomicExpr):
     """
     is_commutative = True
 
+    # TODO improve
     def __new__(cls, func, arguments, cls_variable=None, kind='function'):
         if not isinstance(func, (FunctionDef, str)):
             raise TypeError("Expecting func to be a FunctionDef or str")
@@ -1550,13 +1551,13 @@ class FunctionCall(AtomicExpr):
         else:
             f_name = func
 
-        if not isinstance(kind, str):
-            raise TypeError("Expecting a string for kind.")
-
-        if not (kind in ['function', 'procedure']):
-            raise ValueError("kind must be one among {'function', 'procedure'}")
-        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
-            raise TypeError("Expecting a cls_variable.")
+#        if not isinstance(kind, str):
+#            raise TypeError("Expecting a string for kind.")
+#
+#        if not (kind in ['function', 'procedure']):
+#            raise ValueError("kind must be one among {'function', 'procedure'}")
+#        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
+#            raise TypeError("Expecting a cls_variable.")
 
         obj = Basic.__new__(cls, f_name)
 
@@ -1592,23 +1593,6 @@ class FunctionCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
-
-class ConstructorCall(FunctionCall):
-    """
-    class for a call to class constructor in the code.
-    """
-    @property
-    def this(self):
-        return self.arguments[0]
-
-    @property
-    def attributs(self):
-        """Returns all attributs of the __init__ function."""
-        attr = []
-        for i in self.func.body:
-            if isinstance(i, Assign) and (str(i.lhs).startswith('self.')):
-                attr += [i.lhs]
-        return attr
 
 
 class MethodCall(AtomicExpr):
@@ -1653,6 +1637,7 @@ class MethodCall(AtomicExpr):
 
     is_commutative = True
 
+    # TODO improve
     def __new__(cls, func, arguments,cls_variable=None, kind='function'):
         if not isinstance(func, (FunctionDef, str)):
             raise TypeError("Expecting func to be a FunctionDef or str")
@@ -1660,15 +1645,14 @@ class MethodCall(AtomicExpr):
         if isinstance(func, FunctionDef):
             kind = func.kind
 
-        if not isinstance(kind, str):
-            raise TypeError("Expecting a string for kind.")
-
-        if not (kind in ['function', 'procedure']):
-            raise ValueError("kind must be one among {'function', 'procedure'}")
-        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
-            raise TypeError("Expecting a cls_variable.")
-
-
+#        if not isinstance(kind, str):
+#            raise TypeError("Expecting a string for kind.")
+#
+#        if not (kind in ['function', 'procedure']):
+#            raise ValueError("kind must be one among {'function', 'procedure'}")
+#
+#        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
+#            raise TypeError("Expecting a cls_variable.")
 
         f_name = func.name
 
@@ -1710,6 +1694,25 @@ class MethodCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
+
+
+class ConstructorCall(MethodCall):
+    """
+    class for a call to class constructor in the code.
+    """
+    @property
+    def this(self):
+        return self.arguments[0]
+
+    @property
+    def attributs(self):
+        """Returns all attributs of the __init__ function."""
+        attr = []
+        for i in self.func.body:
+            if isinstance(i, Assign) and (str(i.lhs).startswith('self.')):
+                attr += [i.lhs]
+        return attr
+
 
 class Nil(Basic):
     """
@@ -1756,7 +1759,11 @@ class Variable(Symbol):
     matrix.n_rows
     """
     def __new__(cls, dtype, name,
-                rank=0, allocatable=False, is_pointer=False, is_target=False,
+                rank=0,
+                allocatable=False,
+                is_pointer=False,
+                is_target=False,
+                is_polymorphic=None,
                 shape=None, cls_base=None, cls_parameters=None):
 
         if isinstance(dtype, str):
@@ -1773,6 +1780,14 @@ class Variable(Symbol):
             is_target = False
         elif not isinstance(is_target, bool):
             raise TypeError("is_target must be a boolean.")
+
+        if is_polymorphic is None:
+            if isinstance(dtype, CustomDataType):
+                is_polymorphic = dtype.is_polymorphic
+            else:
+                is_polymorphic = False
+        elif not isinstance(is_polymorphic, bool):
+            raise TypeError("is_polymorphic must be a boolean.")
 
         # if class attribut
         if isinstance(name, str):
@@ -1794,7 +1809,8 @@ class Variable(Symbol):
 
         # TODO improve order of arguments
         return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
-                             cls_base, cls_parameters, is_pointer, is_target)
+                             cls_base, cls_parameters,
+                             is_pointer, is_target, is_polymorphic)
 
     @property
     def dtype(self):
@@ -1832,6 +1848,10 @@ class Variable(Symbol):
     def is_target(self):
         return self._args[8]
 
+    @property
+    def is_polymorphic(self):
+        return self._args[9]
+
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
             return str(self.name)
@@ -1857,6 +1877,7 @@ class Variable(Symbol):
         print('  cls_parameters = {}'.format(self.cls_parameters))
         print('  is_pointer     = {}'.format(self.is_pointer))
         print('  is_target      = {}'.format(self.is_target))
+        print('  is_polymorphic = {}'.format(self.is_polymorphic))
         print('<<<')
 
     def clone(self, name):
@@ -1870,6 +1891,7 @@ class Variable(Symbol):
                    shape=self.shape,
                    is_pointer=self.is_pointer,
                    is_target=self.is_target,
+                   is_polymorphic=self.is_polymorphic,
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 
