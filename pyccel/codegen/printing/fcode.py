@@ -900,9 +900,7 @@ class FCodePrinter(CodePrinter):
                 msg += ' Given {0}'.format(type(var))
                 raise NotImplementedError(msg)
         return code
-    
     def _print_ClassDef(self, expr):
-        print expr
         # ... we don't print 'hidden' classes
         if expr.hide:
             return '', ''
