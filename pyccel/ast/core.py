@@ -2023,7 +2023,6 @@ class FunctionDef(Basic):
             name=tuple(name_)
                 
         elif not isinstance(name, Symbol):
-            print name,'###'
             raise TypeError("Function name must be Symbol or string")
         # arguments
         if not iterable(arguments):
@@ -2147,7 +2146,6 @@ class FunctionDef(Basic):
             for i in f_args[n:]:
                 if not isinstance(i, ValuedVariable):
                     raise TypeError('Expecting a valued variable')
-
                 args.append(i.value)
         return FunctionCall(self, args)
 
