@@ -68,6 +68,11 @@ from pyccel.ast import FunctionHeader,ClassHeader
 from pyccel.ast import Concatinate
 from pyccel.ast.core import ValuedVariable
 
+from pyccel.parser.errors import Errors, PyccelSyntaxError, PyccelSemanticError
+# TODO remove import * and only import what we need
+from pyccel.parser.messages import *
+
+
 ########################
 # ... TODO should be moved to pyccel.ast
 from sympy.core.basic import Basic
@@ -172,6 +177,11 @@ def datatype_from_redbaron(node):
 
 def fst_to_ast(stmt):
     """Creates AST from FST."""
+    # TODO - add settings to Errors
+    #      - line and column
+    #      - blocking errors
+    errors = Errors()
+
     if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList,
                          NodeList, TupleNode, ListNode, tuple, list)):
         ls = [fst_to_ast(i) for i in stmt]
@@ -183,12 +193,14 @@ def fst_to_ast(stmt):
         d = {}
         for i in stmt.value:
             if not isinstance(i, DictitemNode):
-                raise TypeError('Expecting a DictitemNode')
+                raise PyccelSyntaxError('Expecting a DictitemNode')
+
             key   = fst_to_ast(i.key)
             value = fst_to_ast(i.value)
+
             # sympy does not allow keys to be strings
-            if isinstance(key, str):
-                raise TypeError('sympy does not allow keys to be strings')
+            if isinstance(key, str): errors.report(SYMPY_RESTRICTION_DICT_KEYS, severity='error')
+
             d[key] = value
         return Dict(d)
     elif stmt is None:
@@ -230,10 +242,10 @@ def fst_to_ast(stmt):
         elif stmt.value == '-':
             return -target
         elif stmt.value == '~':
-            raise ValueError('Invert unary operator is not covered by Pyccel.')
+            errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR, severity='error')
         else:
-            raise ValueError('unknown/unavailable unary operator '
-                             '{node}'.format(node=type(stmt.value)))
+            raise PyccelSyntaxError('unknown/unavailable unary operator '
+                                    '{node}'.format(node=type(stmt.value)))
     elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -261,8 +273,8 @@ def fst_to_ast(stmt):
         elif stmt.value== '%':
             return Mod(first,second)
         else:
-            raise ValueError('unknown/unavailable binary operator '
-                             '{node}'.format(node=type(stmt.value)))
+            raise PyccelSyntaxError('unknown/unavailable binary operator '
+                                    '{node}'.format(node=type(stmt.value)))
     elif isinstance(stmt, ComparisonOperatorNode):
         if stmt.first == '==':
             return '=='
@@ -277,7 +289,7 @@ def fst_to_ast(stmt):
         elif stmt.first == '>=':
             return '>='
         else:
-            raise ValueError('unknown comparison operator {}'.format(stmt.first))
+            raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
     elif isinstance(stmt, ComparisonNode):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -295,8 +307,8 @@ def fst_to_ast(stmt):
         elif op == '>=':
             return Ge(first, second)
         else:
-            raise ValueError('unknown/unavailable binary operator '
-                             '{node}'.format(node=type(op)))
+            raise PyccelSyntaxError('unknown/unavailable binary operator '
+                                    '{node}'.format(node=type(op)))
     elif isinstance(stmt, PrintNode):
         expr = fst_to_ast(stmt.value)
         return Print(expr)
@@ -319,7 +331,7 @@ def fst_to_ast(stmt):
             cls_name    = stmt.parent.name
         else:
             cls_name    = None
-            
+
         name        = fst_to_ast(stmt.name)
         arguments   = fst_to_ast(stmt.arguments)
         results     = []
@@ -420,18 +432,20 @@ def fst_to_ast(stmt):
             elif env.startswith('header'):
                 return hdr_parse(stmts=stmt.value)
             else:
-                raise ValueError('Annotated comments must start with omp, acc or header.')
+                errors.report(PYCCEL_INVALID_HEADER, severity='error')
         else:
             return Comment(stmt.value)
     elif isinstance(stmt, BreakNode):
         return Break()
-    elif isinstance(stmt, (ExceptNode, FinallyNode, RaiseNode, TryNode, YieldNode, YieldAtomNode)):
-        # TODO add appropriate message errors and refeer to Pyccel rules
-        raise NotImplementedError('{node} is not covered by pyccel'.format(node=type(stmt)))
+    elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
+        # this is a blocking error, since we don't want to convert the try body
+        errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY, severity='critical', blocker=True)
+    elif isinstance(stmt, RaiseNode):
+        errors.report(PYCCEL_RESTRICTION_RAISE, severity='error')
+    elif isinstance(stmt, (YieldNode, YieldAtomNode)):
+        errors.report(PYCCEL_RESTRICTION_YIELD, severity='error')
     else:
-        raise NotImplementedError('{node} not yet available'.format(node=type(stmt)))
-
-
+        raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
 
 
 def _read_file(filename):
@@ -456,6 +470,7 @@ class Parser(object):
         """
         self._fst = None
         self._ast = None
+        self._filename = None
         self._namespace = {}
         self._namespace['cls_constructs'] = {}
 
@@ -467,6 +482,7 @@ class Parser(object):
         code = inputs
         if os.path.isfile(inputs):
             code = _read_file(inputs)
+            self._filename = inputs
 
         self._code = code
 
@@ -480,6 +496,10 @@ class Parser(object):
     @property
     def headers(self):
         return self.namespace['headers']
+
+    @property
+    def filename(self):
+        return self._filename
 
     @property
     def code(self):
@@ -497,8 +517,18 @@ class Parser(object):
 
     def parse(self):
         """converts redbaron fst to sympy ast."""
+        # TODO - add settings to Errors
+        #      - filename
+        errors = Errors()
+        if self.filename:
+            errors.set_target(self.filename, 'file')
+        errors.set_parser_stage('syntax')
+
         ast = fst_to_ast(self.fst)
         self._ast = ast
+
+        errors.check()
+
         return ast
 
     def annotate(self, **settings):
@@ -564,23 +594,23 @@ class Parser(object):
         if name in self.headers:
             return self.headers[name]
         return None
-    
-    
-    
-    
+
+
+
+
     def get_class_construct(self,name):
         """Returns the class datatype for name."""
-        
-        
-        
+
+
+
         return self._namespace['cls_constructs'][name]
 # ...
 
 # ...
     def set_class_construct(self,name, value):
         """Sets the class datatype for name."""
-        
-        
+
+
         self._namespace['cls_constructs'][name] = value
 
 
@@ -601,8 +631,8 @@ class Parser(object):
             self.set_class_construct(str(expr.name), dtype)
         else:
             raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
-             
-            
+
+
 
     def _infere_type(self, expr, **settings):
         """
@@ -734,7 +764,7 @@ class Parser(object):
             n_name = expr.args[1].name.split('.')[0]
             if not d_var['cls_base']:
                 raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
-            attributs = d_var['cls_base'].attributs 
+            attributs = d_var['cls_base'].attributs
             var=None
             for i in attributs:
                 if str(i)==n_name:
@@ -743,10 +773,10 @@ class Parser(object):
                 raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
             s=self._infere_type(var)
             #create this varibale that represent the expr.args[0]
-            
+
             dtype=s.pop('datatype')
-            
-             
+
+
             return Variable(dtype,n_name,**s)
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
@@ -878,12 +908,12 @@ class Parser(object):
         elif isinstance(expr,DottedVariable):
             args=expr.args
             name = expr.name.split('.')[0]
-            obj = self.get_variable(name) 
+            obj = self.get_variable(name)
             var=DottedVariable(obj,args[1])
             #we contrcut new DottedVariable so that we can infer the type
             d_var=self._infere_type(var)
-            new_var=d_var.clone(expr.name)           
-            return new_var       
+            new_var=d_var.clone(expr.name)
+            return new_var
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             d_var = self._infere_type(rhs, **settings)
@@ -945,7 +975,7 @@ class Parser(object):
                     attributs = list(attributs)
                     name = lhs.name.split('.')[0]
                     args=lhs.args
-                    obj = self.get_variable(name) 
+                    obj = self.get_variable(name)
                     var=DottedVariable(obj,args[1])
                     #we contrcut new DottedVariable so that we can infer the type
                     d_var=self._infere_type(var)
@@ -1032,7 +1062,7 @@ class Parser(object):
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace('\'', '') # remove quotes for str representation
-            
+
             args = []
             results = []
             local_vars  = []
@@ -1049,9 +1079,9 @@ class Parser(object):
                                      'but could not find it.'.format(func=name))
 
                 # we construct a FunctionDef from its header
-                
+
                 interface = header.create_definition()
-            
+
             # then use it to decorate our arguments
             arguments = expr.arguments
             arg=None
@@ -1061,7 +1091,7 @@ class Parser(object):
                 dt=self.get_class_construct(cls_name)()
                 var=Variable(dt,'self',cls_base = self._namespace[cls_name])
                 self._namespace['self']=var
-                
+
             if arguments:
                 for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
@@ -1077,7 +1107,7 @@ class Parser(object):
                 #we push a variable self.__init__ just to check if we still in the __init__ method or no
                 var=Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
                 self._namespace['self.__init__']=var
-                           
+
             body = self._annotate(expr.body, **settings)
 
             # find return stmt and results
@@ -1111,7 +1141,7 @@ class Parser(object):
                 dt=self.get_class_construct(cls_name)()
                 var=Variable(dt,'self',cls_base = self._namespace[cls_name])
                 args=[var]+args
-            
+
             func=FunctionDef(name, args, results, body,
                                local_vars=local_vars, global_vars=global_vars,
                                cls_name=cls_name, hide=hide,
@@ -1138,19 +1168,19 @@ class Parser(object):
              methods = list(expr.methods[:-1])
              const = None
              for i,method in enumerate(methods):
-                 m_name = str(method.name).replace('\'', '') 
+                 m_name = str(method.name).replace('\'', '')
                  if m_name == '__init__':
                      const = self._annotate(method)
                      methods.pop(i)
                      self._namespace.pop('self.__init__')
-       
-                     
-               
-             
-             
+
+
+
+
+
              methods = [self._annotate(i) for i in methods]
              self._namespace.pop('self') #remove the self object
-             
+
              if not const:
                  raise SystemExit('missing contuctor in the class {0}'.format(name))
              else:
@@ -1160,12 +1190,12 @@ class Parser(object):
                                      'but could not find it.'.format(classe=name))
 
              # we construct a ClassDef from its header
-             
+
              options = header.options
 
              # then use it to decorate our arguments
              attributs = self._namespace[name].attributs
-       
+
              return ClassDef(name,attributs,methods)
         elif isinstance(expr,Pass):
             return Pass()
@@ -1188,8 +1218,8 @@ if __name__ == '__main__':
 
     pyccel.parse()
 
-    settings = {}
-    pyccel.annotate(**settings)
-    pyccel.print_namespace()
-
-    pyccel.dot('ast.gv')
+#    settings = {}
+#    pyccel.annotate(**settings)
+#    pyccel.print_namespace()
+#
+#    pyccel.dot('ast.gv')

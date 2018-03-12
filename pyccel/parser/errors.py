@@ -1,68 +1,14 @@
 from collections import OrderedDict
 
-# Constants that represent simple type checker error message, i.e. messages
-# that do not have any parameters.
+DEFAULT_ERRORS_MODE = 'developer'
+#DEFAULT_ERRORS_MODE = 'user'
 
-UNDEFINED_VARIABLE = 'Undefined variable'
-
-NO_RETURN_VALUE_EXPECTED = 'No return value expected'
-MISSING_RETURN_STATEMENT = 'Missing return statement'
-INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
-INCOMPATIBLE_RETURN_VALUE_TYPE = 'Incompatible return value type'
-RETURN_VALUE_EXPECTED = 'Return value expected'
-NO_RETURN_EXPECTED = 'Return statement in function which does not return'
-INCOMPATIBLE_TYPES = 'Incompatible types'
-INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
-INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
-
-INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
-MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'
-INVALID_TUPLE_INDEX_TYPE = 'Invalid tuple index type'
-TUPLE_INDEX_OUT_OF_RANGE = 'Tuple index out of range'
-ITERABLE_EXPECTED = 'Iterable expected'
-INVALID_SLICE_INDEX = 'Slice index must be an integer or None'
-CANNOT_INFER_LAMBDA_TYPE = 'Cannot infer type of lambda'
-CANNOT_INFER_ITEM_TYPE = 'Cannot infer iterable item type'
-CANNOT_ACCESS_INIT = 'Cannot access "__init__" directly'
-CANNOT_ASSIGN_TO_METHOD = 'Cannot assign to a method'
-CANNOT_ASSIGN_TO_TYPE = 'Cannot assign to a type'
-INCONSISTENT_ABSTRACT_OVERLOAD = \
-    'Overloaded method has both abstract and non-abstract variants'
-READ_ONLY_PROPERTY_OVERRIDES_READ_WRITE = \
-    'Read-only property cannot override read-write property'
-FORMAT_REQUIRES_MAPPING = 'Format requires a mapping'
-RETURN_TYPE_CANNOT_BE_CONTRAVARIANT = "Cannot use a contravariant type variable as return type"
-FUNCTION_PARAMETER_CANNOT_BE_COVARIANT = "Cannot use a covariant type variable as a parameter"
-INCOMPATIBLE_IMPORT_OF = "Incompatible import of"
-FUNCTION_TYPE_EXPECTED = "Function is missing a type annotation"
-ONLY_CLASS_APPLICATION = "Type application is only supported for generic classes"
-RETURN_TYPE_EXPECTED = "Function is missing a return type annotation"
-ARGUMENT_TYPE_EXPECTED = "Function is missing a type annotation for one or more arguments"
-KEYWORD_ARGUMENT_REQUIRES_STR_KEY_TYPE = \
-    'Keyword argument only valid with "str" key type in call to "dict"'
-ALL_MUST_BE_SEQ_STR = 'Type of __all__ must be {}, not {}'
-INVALID_TYPEDDICT_ARGS = \
-    'Expected keyword arguments, {...}, or dict(...) in TypedDict constructor'
-TYPEDDICT_KEY_MUST_BE_STRING_LITERAL = \
-    'Expected TypedDict key to be string literal'
-MALFORMED_ASSERT = 'Assertion is always true, perhaps remove parentheses?'
-NON_BOOLEAN_IN_CONDITIONAL = 'Condition must be a boolean'
-DUPLICATE_TYPE_SIGNATURES = 'Function has duplicate type signatures'
-GENERIC_INSTANCE_VAR_CLASS_ACCESS = 'Access to generic instance variables via class is ambiguous'
-CANNOT_ISINSTANCE_TYPEDDICT = 'Cannot use isinstance() with a TypedDict type'
-CANNOT_ISINSTANCE_NEWTYPE = 'Cannot use isinstance() with a NewType type'
-BARE_GENERIC = 'Missing type parameters for generic type'
-IMPLICIT_GENERIC_ANY_BUILTIN = 'Implicit generic "Any". Use \'{}\' and specify generic parameters'
-INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
-UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
-
-
-
-
+_cost_mode_register = {'developer': 0, 'user':30}
+_cost_register = {'warning': 10, 'error': 20, 'critical': 30}
 
 
 class PyccelError(Exception):
-    def __init__(self, message, errors):
+    def __init__(self, message, errors=''):
 
         # Call the base class constructor with the parameters it needs
         super(PyccelException, self).__init__(message)
@@ -133,7 +79,22 @@ class ErrorInfo:
 
         return text
 
+    def stop_here(self, mode):
+        """Returns True or False meaning depending on the Errors mode"""
+        return _cost_register[self.severity] >= _cost_mode_register[mode]
 
+def _singleton(cls):
+    """
+    A Class representing a singleton. Python does not offer this pattern.
+    """
+    instances = {}
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls() # Line 5
+        return instances[cls]
+    return getinstance
+
+@_singleton
 class Errors:
     """Container for compile errors.
     """
@@ -142,8 +103,21 @@ class Errors:
         self.error_info_map = None
         self._target = None
         self._parser_stage = None
+        self._mode = DEFAULT_ERRORS_MODE
 
         self.initialize()
+
+    @property
+    def parser_stage(self):
+        return self._parser_stage
+
+    @property
+    def target(self):
+        return self._target
+
+    @property
+    def mode(self):
+        return self._mode
 
     def initialize(self):
         self.error_info_map = OrderedDict()
@@ -157,17 +131,9 @@ class Errors:
     def reset(self):
         self.initialize()
 
-    @property
-    def parser_stage(self):
-        return self._parser_stage
-
     def set_parser_stage(self, stage):
         assert(stage in ['syntax', 'semantic'])
         self._parser_stage = stage
-
-    @property
-    def target(self):
-        return self._target
 
     def set_target(self, target, kind):
         assert(kind in ['file', 'module', 'function', 'class'])
@@ -207,11 +173,14 @@ class Errors:
                          symbol=symbol,
                          blocker=blocker)
         if blocker:
-            if self.parser_stage == 'syntax':
-                raise PyccelSyntaxError(str(info), '')
-            elif self.parser_stage == 'semantic':
-                raise PyccelSemanticError(str(info), '')
-            # TODO what shall we do here?
+            if info.stop_here(self.mode):
+                # we first print all messages
+                self.check()
+                if self.parser_stage == 'syntax':
+                    raise PyccelSyntaxError(str(info))
+                elif self.parser_stage == 'semantic':
+                    raise PyccelSemanticError(str(info))
+                # TODO what shall we do here?
 
         self.add_error_info(info)
 
@@ -249,6 +218,11 @@ class Errors:
         """
         pass
 
+    def check(self):
+        """."""
+        if self.num_messages() > 0:
+            print(self.__str__())
+
     def __str__(self):
         text = ''
         for path in self.error_info_map.keys():
@@ -259,6 +233,10 @@ class Errors:
         return text
 
 if __name__ == '__main__':
+    from pyccel.parser.messages import NO_RETURN_VALUE_EXPECTED
+    from pyccel.parser.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
+    from pyccel.parser.messages import UNDEFINED_VARIABLE
+
     errors = Errors()
     errors.set_parser_stage('semantic')
 
@@ -271,7 +249,7 @@ if __name__ == '__main__':
                  line=34, column=17)
     errors.unset_target('function')
 
-    print(errors)
+    errors.check()
 
     errors.set_target('eval_bsplines', 'function')
     errors.report(UNDEFINED_VARIABLE, symbol='x', severity='error', blocker=True)
