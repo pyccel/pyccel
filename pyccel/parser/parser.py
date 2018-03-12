@@ -53,6 +53,7 @@ from pyccel.ast import DottedName,DottedVariable
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
+from pyccel.ast import FunctionCall
 from pyccel.ast import FunctionDef
 from pyccel.ast import ClassDef
 from pyccel.ast import For
@@ -924,6 +925,13 @@ class Parser(object):
                     raise SystemExit('missing contructor method from the class {0}'.format(name))
                 return func(valued_args)
             else:
+                # if it is a user-defined function, we return a FunctionCall
+                # TODO shall we keep it, or do this only in the Assign?
+                name = str(type(expr).__name__)
+                func = self.get_variable(name)
+                if not(func is None):
+                    return FunctionCall(func, args)
+
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
         elif isinstance(expr, Expr):
@@ -940,7 +948,16 @@ class Parser(object):
             return new_var
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
-            d_var = self._infere_type(rhs, **settings)
+            # d_var can be a list of dictionaries
+            if isinstance(rhs, FunctionCall):
+                results = rhs.func.results
+                d_var = [self._infere_type(i, **settings) for i in results]
+                # if there is only one result, we don't consider d_var as a list
+                if len(d_var) == 1:
+                    d_var = d_var[0]
+            else:
+                d_var = self._infere_type(rhs, **settings)
+
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
@@ -1183,6 +1200,13 @@ class Parser(object):
                 methods = list(cls.methods)+[func]
                 #update the class  methods
                 self._namespace[cls_name] = ClassDef(cls_name,cls.attributs,methods)
+
+            # insert function def into namespace
+            # TODO checking
+            F = self.get_variable(name)
+            if F is None:
+                self.insert_variable(func, name=name)
+
             return func
         elif isinstance(expr, EmptyLine):
             return expr

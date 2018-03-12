@@ -20,3 +20,5 @@ def decr_array(x):
     return y
 
 print('Improve this test')
+
+y = decr(2)
