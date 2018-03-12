@@ -1880,10 +1880,10 @@ class DottedVariable(Basic):
     Represents a dotted variable.
     """
     def __new__(cls, *args):
-        
+
         if  not isinstance(args[0],(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function,DottedVariable)):
             raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(args[0]),type(args[0])))
-            
+
         if  not isinstance(args[1],(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function)):
             raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(args[1]),type(args[1])))
         return Basic.__new__(cls,args[0],args[1])
@@ -2020,7 +2020,7 @@ class FunctionDef(Basic):
                 elif not isinstance(i, Symbol):
                     raise TypeError("Function name must be Symbol or string")
             name=tuple(name_)
-                
+
         elif not isinstance(name, Symbol):
             raise TypeError("Function name must be Symbol or string")
         # arguments
@@ -2135,17 +2135,16 @@ class FunctionDef(Basic):
 
     def __call__(self, *args, **kwargs):
         """Represents a call to the function."""
-        # TODO add kwargs too
-        f_args = self.arguments
-        if len(args) > len(f_args):
-            raise ValueError('Wrong number of arguments for ', self.name)
-        elif len(args) < len(f_args):
-            n = len(args)
-            args = list(args)
-            for i in f_args[n:]:
-                if not isinstance(i, ValuedVariable):
-                    raise TypeError('Expecting a valued variable')
-                args.append(i.value)
+        # TODO treat parametrized arguments.
+        #      this will be done later, once it is validated for FunctionCall
+
+        # we remove 'self' from arguments
+        f_args = self.arguments[1:]
+        args = list(args)
+        print args
+        print f_args
+        assert(len(args) == len(f_args))
+
         return FunctionCall(self, args)
 
     @property

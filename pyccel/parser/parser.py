@@ -53,7 +53,7 @@ from pyccel.ast import DottedName,DottedVariable
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
-from pyccel.ast import FunctionCall
+from pyccel.ast import FunctionCall, MethodCall
 from pyccel.ast import FunctionDef
 from pyccel.ast import ClassDef
 from pyccel.ast import For
@@ -917,13 +917,16 @@ class Parser(object):
                         func = i
                 args_ = expr.args
                 args = func.arguments[1:] #we delete the self arg
-                valued_args = []
-                for i,j in zip(args,args_):
-                    valued_args += [ValuedVariable(i,j)]
+
+                # TODO treat parametrized arguments.
+                #      this will be done later, once it is validated for FunctionCall
 
                 if not func:
                     raise SystemExit('missing contructor method from the class {0}'.format(name))
-                return func(valued_args)
+
+                # TODO must return MethodCall
+                #      see line 3594 in syntax/core.py
+                return func(*args)
             else:
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
