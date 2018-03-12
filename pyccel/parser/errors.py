@@ -176,11 +176,13 @@ class Errors:
             if info.stop_here(self.mode):
                 # we first print all messages
                 self.check()
-                if self.parser_stage == 'syntax':
-                    raise PyccelSyntaxError(str(info))
-                elif self.parser_stage == 'semantic':
-                    raise PyccelSemanticError(str(info))
+#                if self.parser_stage == 'syntax':
+#                    raise PyccelSyntaxError(str(info))
+#                elif self.parser_stage == 'semantic':
+#                    raise PyccelSemanticError(str(info))
                 # TODO what shall we do here?
+                print(info)
+                raise SystemExit(0)
 
         self.add_error_info(info)
 
