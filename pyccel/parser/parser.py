@@ -760,22 +760,22 @@ class Parser(object):
                     raise NotImplementedError('TODO')
             return d_var
         elif isinstance(expr,DottedVariable):
-            d_var=self._infere_type(expr.args[0])
+            d_var = self._infere_type(expr.args[0])
             n_name = expr.args[1].name.split('.')[0]
             if not d_var['cls_base']:
                 raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
+
             attributs = d_var['cls_base'].attributs
             var=None
+
             for i in attributs:
-                if str(i)==n_name:
-                    var=i
+                if str(i) == n_name:
+                    var = i
             if not var:
                 raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
-            s=self._infere_type(var)
+            s = self._infere_type(var)
             #create this varibale that represent the expr.args[0]
-
             dtype=s.pop('datatype')
-
 
             return Variable(dtype,n_name,**s)
         else:
@@ -844,10 +844,10 @@ class Parser(object):
             if isinstance(a_new,DottedVariable):
                     #TODO be able to print the DottedVariable directly
                     #converte the DottedVariable to a variable
-                    d_var=self._infere_type(a_new.args[1])
-                    dtype=d_var.pop('datatype')
-                    var_name=a_new.name
-                    expr_new=Variable(dtype,var_name,**d_var)
+                    d_var = self._infere_type(a_new.args[1])
+                    dtype = d_var.pop('datatype')
+                    var_name = a_new.name
+                    expr_new = Variable(dtype,var_name,**d_var)
 
             # then we treat the rest
             for a in args[1:]:
@@ -855,10 +855,10 @@ class Parser(object):
                 if isinstance(a_new,DottedVariable):
                     #converte the DottedVariable to a variable
                     #TODO be able to print the DottedVariable directly
-                    d_var=self._infere_type(a_new.args[1])
-                    dtype=d_var.pop('datatype')
-                    var_name=a_new.name
-                    a_new=Variable(dtype,var_name,**d_var)
+                    d_var = self._infere_type(a_new.args[1])
+                    dtype = d_var.pop('datatype')
+                    var_name = a_new.name
+                    a_new = Variable(dtype,var_name,**d_var)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
@@ -887,16 +887,16 @@ class Parser(object):
                 return F
             elif str(expr).split('(')[0] in self._namespace['cls_constructs'].keys():
                 name = str(expr).split('(')[0]
-                cls=self._namespace[name]
+                cls = self._namespace[name]
                 func = None
                 for i in cls.methods:
                     if str(i.name) == '__init__':
                         func = i
-                args_= expr.args
-                args=func.arguments[1:] #we delete the self arg
-                valued_args=[]
+                args_ = expr.args
+                args = func.arguments[1:] #we delete the self arg
+                valued_args = []
                 for i,j in zip(args,args_):
-                    valued_args +=[ValuedVariable(i,j)]
+                    valued_args += [ValuedVariable(i,j)]
 
                 if not func:
                     raise SystemExit('missing contructor method from the class {0}'.format(name))
@@ -906,8 +906,9 @@ class Parser(object):
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
         elif isinstance(expr,DottedVariable):
-            args=expr.args
+            args = expr.args
             name = expr.name.split('.')[0]
+
             obj = self.get_variable(name)
             var=DottedVariable(obj,args[1])
             #we contrcut new DottedVariable so that we can infer the type
@@ -956,7 +957,7 @@ class Parser(object):
                      if len(n_name)>1:
                          raise SystemExit('Invalide operation')
                      else:
-                         n_name=n_name[0]
+                         n_name = n_name[0]
                      attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
                      self._namespace[cls_name]=ClassDef(cls_name,attributs,[])
@@ -964,22 +965,23 @@ class Parser(object):
                      dt=self.get_class_construct(cls_name)()
                      var = Variable(dt,'self',cls_base = self._namespace[cls_name])
                      self._namespace['self'] = var
-                     args=lhs.args
+                     args = lhs.args
                      obj = self.get_variable('self')
-                     var=DottedVariable(obj,args[1])
-                     d_var=self._infere_type(var)
-                     lhs=d_var.clone(lhs.name)
+                     var = DottedVariable(obj,args[1])
+                     d_var = self._infere_type(var)
+                     lhs = d_var.clone(lhs.name)
                 else :
                     cls_name = str(self._namespace[str(lhs.args[0])].cls_base.name)
                     attributs = self._namespace[cls_name].attributs
                     attributs = list(attributs)
                     name = lhs.name.split('.')[0]
+
                     args=lhs.args
                     obj = self.get_variable(name)
                     var=DottedVariable(obj,args[1])
                     #we contrcut new DottedVariable so that we can infer the type
-                    d_var=self._infere_type(var)
-                    lhs=d_var.clone(lhs.name)
+                    d_var = self._infere_type(var)
+                    lhs = d_var.clone(lhs.name)
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
 #            lhs.inspect()
@@ -1084,12 +1086,12 @@ class Parser(object):
 
             # then use it to decorate our arguments
             arguments = expr.arguments
-            arg=None
-            if cls_name and str(expr.arguments[0])=='self':
-                arg=arguments[0]
+            arg = None
+            if cls_name and str(expr.arguments[0]) == 'self':
+                arg = arguments[0]
                 arguments = arguments[1:]
-                dt=self.get_class_construct(cls_name)()
-                var=Variable(dt,'self',cls_base = self._namespace[cls_name])
+                dt = self.get_class_construct(cls_name)()
+                var = Variable(dt,'self',cls_base = self._namespace[cls_name])
                 self._namespace['self']=var
 
             if arguments:
@@ -1103,9 +1105,9 @@ class Parser(object):
                     #      then retrieve them
                     self.insert_variable(a_new, name=str(a_new.name))
             # we annotate the body
-            if cls_name and name=='__init__':
+            if cls_name and name == '__init__':
                 #we push a variable self.__init__ just to check if we still in the __init__ method or no
-                var=Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
+                var = Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
                 self._namespace['self.__init__']=var
 
             body = self._annotate(expr.body, **settings)
@@ -1195,7 +1197,6 @@ class Parser(object):
 
              # then use it to decorate our arguments
              attributs = self._namespace[name].attributs
-
              return ClassDef(name,attributs,methods)
         elif isinstance(expr,Pass):
             return Pass()
