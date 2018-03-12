@@ -66,6 +66,7 @@ from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader,ClassHeader
 from pyccel.ast import Concatinate
+from pyccel.ast.core import ValuedVariable
 
 ########################
 # ... TODO should be moved to pyccel.ast
@@ -854,6 +855,22 @@ class Parser(object):
             F = pyccel_builtin_function(expr, args)
             if not(F is None):
                 return F
+            elif str(expr).split('(')[0] in self._namespace['cls_constructs'].keys():
+                name = str(expr).split('(')[0]
+                cls=self._namespace[name]
+                func = None
+                for i in cls.methods:
+                    if str(i.name) == '__init__':
+                        func = i
+                args_= expr.args
+                args=func.arguments[1:] #we delete the self arg
+                valued_args=[]
+                for i,j in zip(args,args_):
+                    valued_args +=[ValuedVariable(i,j)]
+
+                if not func:
+                    raise SystemExit('missing contructor method from the class {0}'.format(name))
+                return func(valued_args)
             else:
                 raise NotImplementedError('Unknown function {expr}'.format(expr=expr))
         elif isinstance(expr, Expr):
