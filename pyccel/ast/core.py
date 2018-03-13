@@ -1992,16 +1992,36 @@ class ValuedVariable(Basic):
 
 
 class Argument(Symbol):
-    """An abstract Argument data structure."""
+    """An abstract Argument data structure.
+
+    Examples
+
+    >>> from pyccel.ast.core import Argument
+    >>> n = Argument('n')
+    >>> n
+    n
+    """
     pass
 
 
 class ValuedArgument(Basic):
-    """Represents a valued argument in the code."""
+    """Represents a valued argument in the code.
+
+    Examples
+
+    >>> from pyccel.ast.core import ValuedArgument
+    >>> n = ValuedArgument('n', 4)
+    >>> n
+    n=4
+    """
 
     def __new__(cls, expr, value):
+        if isinstance(expr, str):
+            expr = Argument(expr)
+
         if not isinstance(expr, Argument):
             raise TypeError('Expecting an argument')
+
         return Basic.__new__(cls, expr, value)
 
     @property
@@ -2083,6 +2103,22 @@ class FunctionDef(Basic):
     >>> body        = [Assign(y,x+1)]
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
+
+    One can also use parametrized argument, using ValuedArgument
+
+    >>> from pyccel.ast.core import Variable
+    >>> from pyccel.ast.core import Assign
+    >>> from pyccel.ast.core import FunctionDef
+    >>> from pyccel.ast.core import ValuedArgument
+    >>> from pyccel.ast.core import GetDefaultFunctionArg
+    >>> n = ValuedArgument('n', 4)
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> args        = [x, n]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+n)]
+    >>> FunctionDef('incr', args, results, body)
+    FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
 
     def __new__(cls, name, arguments, results, \
@@ -2256,6 +2292,69 @@ class FunctionDef(Basic):
             return False
 
         return True
+
+
+class GetDefaultFunctionArg(Basic):
+    """Creates a FunctionDef for handling optional arguments in the code.
+
+    arg: ValuedArgument
+        argument for which we want to create the function returning the default
+        value
+
+    func: FunctionDef
+        the function/subroutine in which the optional arg is used
+
+    Examples
+
+    >>> from pyccel.ast.core import Variable
+    >>> from pyccel.ast.core import Assign
+    >>> from pyccel.ast.core import FunctionDef
+    >>> from pyccel.ast.core import ValuedArgument
+    >>> from pyccel.ast.core import GetDefaultFunctionArg
+    >>> n = ValuedArgument('n', 4)
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> args        = [x, n]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+n)]
+    >>> incr = FunctionDef('incr', args, results, body)
+    >>> get_n = GetDefaultFunctionArg(n, incr)
+    >>> get_n.name
+    get_default_incr_n
+    >>> get_n
+    get_default_incr_n(n=4)
+    """
+
+    def __new__(cls, arg, func):
+
+        if not isinstance(arg, ValuedArgument):
+            raise TypeError('Expecting a ValuedArgument')
+
+        if not isinstance(func, FunctionDef):
+            raise TypeError('Expecting a FunctionDef')
+
+        return Basic.__new__(cls, arg, func)
+
+    @property
+    def argument(self):
+        return self._args[0]
+
+    @property
+    def func(self):
+        return self._args[1]
+
+    @property
+    def name(self):
+        text = 'get_default_{func}_{arg}'.format(arg=self.argument.name,
+                                                 func=self.func.name)
+        return text
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        name = sstr(self.name)
+        argument = sstr(self.argument)
+        return '{0}({1})'.format(name, argument)
 
 
 class ClassDef(Basic):
