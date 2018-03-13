@@ -20,11 +20,12 @@ def decr_array(x):
     return y
 
 #$ header function f1(int, int, int) results(int)
-def f1(x, n=2, m=3):
-    y = x - n*m
+def f1(x, n=2, m=None):
+    y = x - n
     return y
 
 print('Improve this test')
+
 y = decr(2)
-y = f1(1)
+z = f1(1)
 

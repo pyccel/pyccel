@@ -1122,9 +1122,10 @@ class Parser(object):
                     if not isinstance(a, ValuedArgument):
                         a_new = Variable(dtype, a.name, **d_var)
                     else:
-                        d_var['is_optional'] = True
-                        value = a.value
-                        a_new = ValuedVariable(dtype, a.name, value=value, **d_var)
+                        # optional argument only if the value is None
+                        if isinstance(a.value, Nil):
+                            d_var['is_optional'] = True
+                        a_new = ValuedVariable(dtype, a.name, value=a.value, **d_var)
 
                     args.append(a_new)
 

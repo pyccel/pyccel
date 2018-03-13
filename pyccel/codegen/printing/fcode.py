@@ -686,7 +686,8 @@ class FCodePrinter(CodePrinter):
                     if not isinstance(i, ValuedVariable):
                         raise TypeError('Expecting a valued variable')
 
-                    args.append(ValuedArgument(i.name, i.value))
+                    if not isinstance(i.value, Nil):
+                        args.append(ValuedArgument(i.name, i.value))
 
             code_args = ', '.join(self._print(i) for i in args)
 
