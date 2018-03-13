@@ -1939,7 +1939,7 @@ class DottedVariable(Basic):
         return self.args[0].name+'.'+self.args[1].name
 
 
-class ValuedVariable(Basic):
+class ValuedVariable(Variable):
     """Represents a valued variable in the code.
 
     variable: Variable
@@ -1949,46 +1949,35 @@ class ValuedVariable(Basic):
 
     Examples
 
-    >>> from pyccel.ast.core import ValuedVariable, Variable
-    >>> n  = Variable('int', 'n')
-    >>> ValuedVariable(n, 3)
-    n := 3
-    >>> x  = Variable('double', 'x')
-    >>> y  = Variable('double', 'y')
-    >>> ValuedVariable(x, y)
-    x := y
+    >>> from pyccel.ast.core import ValuedVariable
+    >>> n  = ValuedVariable('int', 'n', value=4)
+    >>> n
+    n := 4
     """
 
-    def __new__(cls, variable, value):
-        if not isinstance(variable, Variable):
-            raise TypeError("variable must be of type Variable")
+    def __new__(cls, *args, **kwargs):
 
-        _valid_instances = (Nil, Variable,
-                            IndexedVariable, IndexedElement,
-                            Tuple,
-                            int, float, bool, complex, str,
-                            Boolean, sp_Integer, sp_Float)
+        # if value is not given, we set it to Nil
+        # we also remove value from kwargs,
+        # since it is not a valid argument for Variable
+        value = kwargs.pop('value', Nil())
 
-        if not isinstance(value, _valid_instances):
-            raise TypeError('non-valid instance for value, '
-                            'given {0}'.format(type(value)))
+        obj = Variable.__new__(cls, *args, **kwargs)
 
-        return Basic.__new__(cls, variable, value)
+        obj._value = value
 
-    @property
-    def variable(self):
-        return self._args[0]
+        return obj
 
     @property
     def value(self):
-        return self._args[1]
+        return self._value
 
     def _sympystr(self, printer):
         sstr = printer.doprint
 
-        variable = sstr(self.variable)
+        name = sstr(self.name)
         value    = sstr(self.value)
-        return '{0} := {1}'.format(variable, value)
+        return '{0}={1}'.format(name, value)
 
 
 class Argument(Symbol):

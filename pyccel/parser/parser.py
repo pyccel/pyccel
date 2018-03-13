@@ -925,11 +925,20 @@ class Parser(object):
             rhs = self._annotate(expr.rhs, **settings)
             # d_var can be a list of dictionaries
             if isinstance(rhs, FunctionCall):
-                results = rhs.func.results
+                func = rhs.func
+
+                # treating results
+                results = func.results
                 d_var = [self._infere_type(i, **settings) for i in results]
                 # if there is only one result, we don't consider d_var as a list
                 if len(d_var) == 1:
                     d_var = d_var[0]
+
+                # we treat here the case of optional arguments
+                print '>>> ', func.arguments
+                for i in func.arguments:
+                    print i, type(i)
+
             elif isinstance(rhs, ConstructorCall):
                 cls = rhs.func.cls_name
                 # create a new Datatype for the current class
@@ -1135,9 +1144,14 @@ class Parser(object):
                 for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
-                    if isinstance(a, ValuedArgument):
+
+                    if not isinstance(a, ValuedArgument):
+                        a_new = Variable(dtype, a.name, **d_var)
+                    else:
                         d_var['is_optional'] = True
-                    a_new = Variable(dtype, a.name, **d_var)
+                        value = a.value
+                        a_new = ValuedVariable(dtype, a.name, value=value, **d_var)
+
                     args.append(a_new)
 
                     # TODO add scope and store already declared variables there,

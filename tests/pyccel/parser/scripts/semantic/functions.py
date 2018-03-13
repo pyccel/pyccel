@@ -4,4 +4,5 @@ def f1(x, n=2, m=None):
     return y
 
 print('Improve this test')
+y = f1(1)
 
