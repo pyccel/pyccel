@@ -67,7 +67,8 @@ from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader,ClassHeader
 from pyccel.ast import Concatinate
-from pyccel.ast.core import ValuedVariable
+from pyccel.ast import ValuedVariable
+from pyccel.ast import Argument, ValuedArgument
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, PyccelSemanticError
 # TODO remove import * and only import what we need
@@ -110,33 +111,6 @@ from pyccel.parser.syntax.openacc import parse as acc_parse
 
 import os
 
-
-class Argument(Symbol):
-    """An abstract Argument data structure."""
-    pass
-
-class ValuedArgument(Basic):
-    """Represents a valued argument in the code."""
-
-    def __new__(cls, expr, value):
-        if not isinstance(expr, Argument):
-            raise TypeError('Expecting an argument')
-        return Basic.__new__(cls, expr, value)
-
-    @property
-    def argument(self):
-        return self._args[0]
-
-    @property
-    def value(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        argument = sstr(self.argument)
-        value    = sstr(self.value)
-        return '{0}={1}'.format(argument, value)
 # ...
 
 # ... utilities
@@ -649,6 +623,7 @@ class Parser(object):
         d_var['is_pointer'] = None
         d_var['is_target'] = None
         d_var['is_polymorphic'] = None
+        d_var['is_optional'] = None
 
         # TODO improve => put settings as attribut of Parser
         DEFAULT_FLOAT = settings.pop('default_float', 'double')
@@ -1160,6 +1135,8 @@ class Parser(object):
                 for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
+                    if isinstance(a, ValuedArgument):
+                        d_var['is_optional'] = True
                     a_new = Variable(dtype, a.name, **d_var)
                     args.append(a_new)
 
@@ -1186,8 +1163,6 @@ class Parser(object):
             if results:
                 _results = []
                 for a, ah in zip(results, interface.results):
-    #                a.inspect()
-    #                ah.inspect()
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)

@@ -479,6 +479,7 @@ class FCodePrinter(CodePrinter):
         arg_is_pointers = [v.is_pointer for v in expr.variables]
         arg_is_targets = [v.is_target for v in expr.variables]
         arg_is_polymorphics = [v.is_polymorphic for v in expr.variables]
+        arg_is_optionals = [v.is_optional for v in expr.variables]
 
         var = expr.variables[0]
         rank        = arg_ranks[0]
@@ -487,6 +488,7 @@ class FCodePrinter(CodePrinter):
         is_pointer = arg_is_pointers[0]
         is_target = arg_is_targets[0]
         is_polymorphic = arg_is_polymorphics[0]
+        is_optional = arg_is_optionals[0]
         # ...
 
         # ... print datatype
@@ -545,6 +547,12 @@ class FCodePrinter(CodePrinter):
             allocatablestr = ', target'
         elif allocatable:
             allocatablestr = ', allocatable'
+
+        optionalstr = ''
+        if is_optional:
+            optionalstr = ', optional'
+
+        allocatablestr = allocatablestr + optionalstr
 
         if intent:
             decs.append('{0}, intent({1}) {2} :: {3} {4}'.

@@ -1764,6 +1764,7 @@ class Variable(Symbol):
                 is_pointer=False,
                 is_target=False,
                 is_polymorphic=None,
+                is_optional=None,
                 shape=None, cls_base=None, cls_parameters=None):
 
         if isinstance(dtype, str):
@@ -1789,6 +1790,11 @@ class Variable(Symbol):
         elif not isinstance(is_polymorphic, bool):
             raise TypeError("is_polymorphic must be a boolean.")
 
+        if is_optional is None:
+            is_optional = False
+        elif not isinstance(is_optional, bool):
+            raise TypeError("is_optional must be a boolean.")
+
         # if class attribut
         if isinstance(name, str):
             name = name.split('.')
@@ -1810,7 +1816,7 @@ class Variable(Symbol):
         # TODO improve order of arguments
         return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
                              cls_base, cls_parameters,
-                             is_pointer, is_target, is_polymorphic)
+                             is_pointer, is_target, is_polymorphic, is_optional)
 
     @property
     def dtype(self):
@@ -1852,6 +1858,10 @@ class Variable(Symbol):
     def is_polymorphic(self):
         return self._args[9]
 
+    @property
+    def is_optional(self):
+        return self._args[10]
+
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
             return str(self.name)
@@ -1878,6 +1888,7 @@ class Variable(Symbol):
         print('  is_pointer     = {}'.format(self.is_pointer))
         print('  is_target      = {}'.format(self.is_target))
         print('  is_polymorphic = {}'.format(self.is_polymorphic))
+        print('  is_optional    = {}'.format(self.is_optional))
         print('<<<')
 
     def clone(self, name):
@@ -1892,6 +1903,7 @@ class Variable(Symbol):
                    is_pointer=self.is_pointer,
                    is_target=self.is_target,
                    is_polymorphic=self.is_polymorphic,
+                   is_optional=self.is_optional,
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 
@@ -1903,19 +1915,30 @@ class DottedVariable(Basic):
     """
     def __new__(cls, *args):
 
-        if  not isinstance(args[0],(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function,DottedVariable)):
-            raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(args[0]),type(args[0])))
+        if  not isinstance(args[0],(Variable, Symbol, IndexedVariable,
+                                    IndexedBase, Indexed, Function,
+                                    DottedVariable)):
+            raise TypeError('Expecting a Variable or a function call, '
+                            'got instead {0} of type {1}'.format(str(args[0]),
+                                                                  type(args[0])))
 
-        if  not isinstance(args[1],(Variable,Symbol,IndexedVariable,IndexedBase,Indexed,Function)):
-            raise TypeError('Expecting a Variable or a function call ,got instead {0} of type {1} '.format(str(args[1]),type(args[1])))
+        if  not isinstance(args[1],(Variable, Symbol, IndexedVariable,
+                                    IndexedBase, Indexed, Function)):
+            raise TypeError('Expecting a Variable or a function call,'
+                            ' got instead {0} of type {1}'.format(str(args[1]),
+                                                                  type(args[1])))
+
         return Basic.__new__(cls,args[0],args[1])
 
     @property
     def args(self):
         return [self._args[0],self._args[1]]
+
     @ property
     def name(self):
         return self.args[0].name+'.'+self.args[1].name
+
+
 class ValuedVariable(Basic):
     """Represents a valued variable in the code.
 
@@ -1966,6 +1989,40 @@ class ValuedVariable(Basic):
         variable = sstr(self.variable)
         value    = sstr(self.value)
         return '{0} := {1}'.format(variable, value)
+
+
+class Argument(Symbol):
+    """An abstract Argument data structure."""
+    pass
+
+
+class ValuedArgument(Basic):
+    """Represents a valued argument in the code."""
+
+    def __new__(cls, expr, value):
+        if not isinstance(expr, Argument):
+            raise TypeError('Expecting an argument')
+        return Basic.__new__(cls, expr, value)
+
+    @property
+    def argument(self):
+        return self._args[0]
+
+    @property
+    def value(self):
+        return self._args[1]
+
+    @property
+    def name(self):
+        return self.argument.name
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+
+        argument = sstr(self.argument)
+        value    = sstr(self.value)
+        return '{0}={1}'.format(argument, value)
+
 
 # TODO keep sympify?
 class Return(Basic):
