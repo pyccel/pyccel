@@ -9,3 +9,6 @@ bd = ad
 cd = ad + 1.
 dd = cd * 2. + 3. * bd + ad
 td = ad + bd * (cd + dd)
+
+# this statement will be ignored at the codegen
+x = ad is None

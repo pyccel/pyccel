@@ -40,6 +40,7 @@ from redbaron import GetitemNode,SliceNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
+from pyccel.ast import NativeBool
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeIntegerList
 from pyccel.ast import NativeFloatList
@@ -70,6 +71,7 @@ from pyccel.ast import FunctionHeader,ClassHeader
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
+from pyccel.ast import Is
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, PyccelSemanticError
 # TODO remove import * and only import what we need
@@ -264,6 +266,8 @@ def fst_to_ast(stmt):
             return '<='
         elif stmt.first == '>=':
             return '>='
+        elif stmt.first == 'is':
+            return 'is'
         else:
             raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
     elif isinstance(stmt, ComparisonNode):
@@ -282,6 +286,8 @@ def fst_to_ast(stmt):
             return Le(first, second)
         elif op == '>=':
             return Ge(first, second)
+        elif op == 'is':
+            return Is(first, second)
         else:
             raise PyccelSyntaxError('unknown/unavailable binary operator '
                                     '{node}'.format(node=type(op)))
@@ -410,7 +416,9 @@ def fst_to_ast(stmt):
             else:
                 errors.report(PYCCEL_INVALID_HEADER, severity='error')
         else:
-            return Comment(stmt.value)
+            # TODO improve
+            txt = stmt.value[1:].lstrip()
+            return Comment(txt)
     elif isinstance(stmt, BreakNode):
         return Break()
     elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
@@ -696,6 +704,12 @@ class Parser(object):
             d_var['shape']       = None
             d_var['rank']        = 0
             d_var['cls_base']    = expr # TODO: shall we keep it?
+            return d_var
+        elif isinstance(expr, Is):
+            d_var['datatype'] = NativeBool()
+            d_var['allocatable'] = False
+            d_var['is_pointer'] = False
+            d_var['rank'] = 0
             return d_var
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i in expr.args]
@@ -1123,9 +1137,10 @@ class Parser(object):
                     if not isinstance(a, ValuedArgument):
                         a_new = Variable(dtype, a.name, **d_var)
                     else:
-                        d_var['is_optional'] = True
-                        value = a.value
-                        a_new = ValuedVariable(dtype, a.name, value=value, **d_var)
+                        # optional argument only if the value is None
+                        if isinstance(a.value, Nil):
+                            d_var['is_optional'] = True
+                        a_new = ValuedVariable(dtype, a.name, value=a.value, **d_var)
 
                     args.append(a_new)
 
@@ -1240,6 +1255,17 @@ class Parser(object):
         elif isinstance(expr,Del):
             ls =  self._annotate(expr.variables)
             return Del(ls)
+        elif isinstance(expr, Is):
+            if not isinstance(expr.rhs, Nil):
+                errors.report(PYCCEL_RESTRICTION_IS_RHS, severity='error', blocker=True)
+
+            name = expr.lhs
+            var = self.get_variable(str(name))
+            if var is None:
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              severity='error', blocker=True)
+
+            return Is(var, expr.rhs)
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 

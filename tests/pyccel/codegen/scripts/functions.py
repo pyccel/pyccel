@@ -24,7 +24,20 @@ def f1(x, n=2, m=3):
     y = x - n*m
     return y
 
-print('Improve this test')
-y = decr(2)
-y = f1(1)
+#$ header function f2(int, int) results(int)
+def f2(x, m=None):
+    if m is None:
+        y = x + 1
+    else:
+        y = x - 1
+    return y
 
+y = decr(2)
+z = f1(1)
+
+z1 = f2(1)
+z2 = f2(1, m=0)
+
+# TODO add messages. for the moment there's a bug in Print
+print(z1)
+print(z2)

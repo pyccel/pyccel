@@ -686,7 +686,8 @@ class FCodePrinter(CodePrinter):
                     if not isinstance(i, ValuedVariable):
                         raise TypeError('Expecting a valued variable')
 
-                    args.append(ValuedArgument(i.name, i.value))
+                    if not isinstance(i.value, Nil):
+                        args.append(ValuedArgument(i.name, i.value))
 
             code_args = ', '.join(self._print(i) for i in args)
 
@@ -1443,6 +1444,13 @@ class FCodePrinter(CodePrinter):
         stmt = If(*args)
         code = self._print(stmt)
         return self._get_statement(code)
+
+    def _print_Is(self, expr):
+        if not isinstance(expr.rhs, Nil):
+            raise NotImplementedError('Only None rhs is allowed in Is statement')
+
+        lhs = self._print(expr.lhs)
+        return 'present({})'.format(lhs)
 
     def _print_If(self, expr):
         # ...
