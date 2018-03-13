@@ -3607,10 +3607,10 @@ class If(Basic):
         newargs = []
         for ce in args:
             cond = ce[0]
-            if not isinstance(cond, (bool, Relational, Boolean)):
+            if not isinstance(cond, (bool, Relational, Boolean, Is)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a Relational,"
-                    " Boolean, or a built-in bool." % (cond, type(cond)))
+                    " Boolean, Is, or a built-in bool." % (cond, type(cond)))
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
