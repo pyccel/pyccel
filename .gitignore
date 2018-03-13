@@ -13,6 +13,7 @@ doc/source
 *.pyccel
 *.f90
 *.mod
+*.out
 *.o
 *.log
 *.ps
