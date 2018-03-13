@@ -936,11 +936,6 @@ class Parser(object):
                 if len(d_var) == 1:
                     d_var = d_var[0]
 
-                # we treat here the case of optional arguments
-                print '>>> ', func.arguments
-                for i in func.arguments:
-                    print i, type(i)
-
             elif isinstance(rhs, ConstructorCall):
                 cls = rhs.func.cls_name
                 # create a new Datatype for the current class
@@ -1214,13 +1209,15 @@ class Parser(object):
             if F is None:
                 self.insert_variable(func, name=name)
 
-                # for every parameterized argument, we need to create the
-                # get_default associated function
-                kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
-                for a in kw_args:
-                    get_func = GetDefaultFunctionArg(a, func)
-                    # TODO shall we check first that it is not in the namespace?
-                    self.insert_variable(get_func, name=get_func.name)
+#                # TODO uncomment and improve this part later.
+#                #      it will allow for handling parameters of different dtypes
+#                # for every parameterized argument, we need to create the
+#                # get_default associated function
+#                kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
+#                for a in kw_args:
+#                    get_func = GetDefaultFunctionArg(a, func)
+#                    # TODO shall we check first that it is not in the namespace?
+#                    self.insert_variable(get_func, name=get_func.name)
 
             return func
         elif isinstance(expr, EmptyLine):

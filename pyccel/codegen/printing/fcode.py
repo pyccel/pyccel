@@ -40,6 +40,7 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall,MethodCall
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
+from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
@@ -293,9 +294,12 @@ class FCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
-    def _print_ValuedVariable(self, expr):
-        variable = self._print(expr.variable)
-        return variable
+    def _print_ValuedArgument(self, expr):
+        name = self._print(expr.name)
+        value = self._print(expr.value)
+
+        code = '{0}={1}'.format(name, value)
+        return code
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
@@ -671,13 +675,18 @@ class FCodePrinter(CodePrinter):
             is_procedure = func.is_procedure
             args = expr.rhs.arguments
             f_args = func.arguments
+
+            # convert args to list, to avoid the tuple case
+            args = list(args)
+
+            # TODO improve this
             if not(len(args) == len(f_args)):
                 n = len(args)
                 for i in f_args[n:]:
                     if not isinstance(i, ValuedVariable):
                         raise TypeError('Expecting a valued variable')
 
-                    args.append(i.value)
+                    args.append(ValuedArgument(i.name, i.value))
 
             code_args = ', '.join(self._print(i) for i in args)
 

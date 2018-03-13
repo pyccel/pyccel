@@ -1976,7 +1976,7 @@ class ValuedVariable(Variable):
         sstr = printer.doprint
 
         name = sstr(self.name)
-        value    = sstr(self.value)
+        value = sstr(self.value)
         return '{0}={1}'.format(name, value)
 
 
