@@ -820,7 +820,6 @@ class Parser(object):
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               severity='error', blocker=True)
-
             dtype = var.dtype
             # TODO add shape
             return IndexedVariable(name, dtype=dtype)
@@ -830,7 +829,6 @@ class Parser(object):
             if var is None:
                 errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
                               severity='error', blocker=True)
-
             # TODO check consistency of indices with shape/rank
             args = tuple(expr.indices)
             dtype = var.dtype
@@ -841,13 +839,11 @@ class Parser(object):
             if var is None:
                 raise PyccelSemanticError('Symbolic {name} variable '
                                           'is not allowed'.format(name=name))
-
             return var
         elif isinstance(expr, (Add, Mul, And, Or, Eq, Ne, Lt, Gt, Le, Ge)):
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
             args = expr.args
-
             # we treat the first element
             a = args[0]
             a_new = self._annotate(a, **settings)
@@ -859,7 +855,6 @@ class Parser(object):
                     dtype = d_var.pop('datatype')
                     var_name = a_new.name
                     expr_new = Variable(dtype,var_name,**d_var)
-
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
@@ -912,11 +907,9 @@ class Parser(object):
                     #      construct
                     errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                                   severity='warning', blocker=True)
-
                 args = expr.args
                 m_args = method.arguments[1:] #we delete the self arg
                 # TODO check compatibility
-
                 # TODO treat parametrized arguments.
                 #      this will be done later, once it is validated for FunctionCall
 
@@ -931,7 +924,6 @@ class Parser(object):
                 func = self.get_variable(name)
                 if not(func is None):
                     return FunctionCall(func, args)
-
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
         elif isinstance(expr, Expr):
@@ -939,7 +931,6 @@ class Parser(object):
         elif isinstance(expr, DottedVariable):
             args = expr.args
             name = expr.name.split('.')[0]
-
             obj = self.get_variable(name)
             var=DottedVariable(obj,args[1])
             #we contrcut new DottedVariable so that we can infer the type
@@ -959,7 +950,6 @@ class Parser(object):
                 cls = rhs.func.cls_name
                 # create a new Datatype for the current class
                 dtype = self.get_class_construct(cls)()
-
                 # to be moved to infere_type?
                 d_var = {}
                 d_var['datatype']    = dtype
@@ -973,7 +963,6 @@ class Parser(object):
                 raise NotImplementedError('TODO')
             else:
                 d_var = self._infere_type(rhs, **settings)
-
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
@@ -1012,11 +1001,7 @@ class Parser(object):
                      attributs = self._namespace[cls_name].attributs
                      attributs = list(attributs)
                      n_name = str(lhs.args[1]).split('.')
-                     #there must one level of depth in __init__ for the new attributs
-                     if len(n_name)>1:
-                         raise SystemExit('Invalide operation')
-                     else:
-                         n_name = n_name[0]
+                     n_name = n_name[0]
                      attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
                      self._namespace[cls_name]=ClassDef(cls_name,attributs,[])
@@ -1034,7 +1019,6 @@ class Parser(object):
                     attributs = self._namespace[cls_name].attributs
                     attributs = list(attributs)
                     name = lhs.name.split('.')[0]
-
                     args = lhs.args
                     obj = self.get_variable(name)
                     var = DottedVariable(obj,args[1])
@@ -1046,7 +1030,6 @@ class Parser(object):
 #            lhs.inspect()
 #            if isinstance(expr.rhs, Variable):
 #                expr.rhs.inspect()
-
             if expr.is_alias:
                 # here we need to know if lhs is allocatable or a pointer
                 # TODO improve
@@ -1057,7 +1040,6 @@ class Parser(object):
                 elif (isinstance(expr.rhs, Variable) and
                       isinstance(expr.rhs.dtype, NativeList)):
                     is_pointer = True
-
                 lhs = self.update_variable(expr.lhs,
                                            allocatable=allocatable,
                                            is_pointer=is_pointer)
@@ -1107,7 +1089,6 @@ class Parser(object):
                 if var is None:
                     errors.report(UNDEFINED_VARIABLE, symbol=name,
                                   severity='error', blocker=True)
-
                 return Return([var])
             elif isinstance(results, (list, tuple, Tuple)):
                 ls = []
@@ -1119,7 +1100,6 @@ class Parser(object):
                     if var is None:
                         errors.report(RETURN_VALUE_EXPECTED, symbol=name,
                                       severity='error', blocker=True)
-
                     ls += [var]
                 return Return(ls)
             else:
@@ -1127,7 +1107,6 @@ class Parser(object):
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace('\'', '') # remove quotes for str representation
-
             args = []
             results = []
             local_vars  = []
@@ -1142,10 +1121,8 @@ class Parser(object):
                 if not header:
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
-
                 # we construct a FunctionDef from its header
                 interface = header.create_definition()
-
             # then use it to decorate our arguments
             arguments = expr.arguments
             arg = None
@@ -1168,12 +1145,11 @@ class Parser(object):
                     self.insert_variable(a_new, name=str(a_new.name))
             # we annotate the body
             if cls_name and name == '__init__':
+                #TODO improve find another way to detect the __init__ method
                 #we push a variable self.__init__ just to check if we still in the __init__ method or no
                 var = Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
                 self._namespace['self.__init__']=var
-
             body = self._annotate(expr.body, **settings)
-
             # find return stmt and results
             # we keep the return stmt, in case of handling multi returns later
             for stmt in body:
@@ -1182,7 +1158,6 @@ class Parser(object):
                     results = stmt.expr
                     if isinstance(results, (Symbol, Variable)):
                         results = [results]
-
             if results:
                 _results = []
                 for a, ah in zip(results, interface.results):
@@ -1192,7 +1167,6 @@ class Parser(object):
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
                     _results.append(a_new)
-
                     # results must be variable that were already declared
                     var = self.get_variable(str(a_new.name))
                     if var is None:
@@ -1216,13 +1190,11 @@ class Parser(object):
                 methods = list(cls.methods)+[func]
                 #update the class  methods
                 self._namespace[cls_name] = ClassDef(cls_name,cls.attributs,methods)
-
             # insert function def into namespace
             # TODO checking
             F = self.get_variable(name)
             if F is None:
                 self.insert_variable(func, name=name)
-
             return func
         elif isinstance(expr, EmptyLine):
             return expr
@@ -1240,19 +1212,14 @@ class Parser(object):
              methods = list(expr.methods[:-1])
              const = None
              for i,method in enumerate(methods):
-                 m_name = str(method.name).replace('\'', '')
+                 m_name = str(method.name).replace('\'', '')# remove quotes for str representation
                  if m_name == '__init__':
                      const = self._annotate(method)
                      methods.pop(i)
                      self._namespace.pop('self.__init__')
 
-
-
-
-
              methods = [self._annotate(i) for i in methods]
              self._namespace.pop('self') #remove the self object
-
              if not const:
                  raise SystemExit('missing contuctor in the class {0}'.format(name))
              else:
@@ -1260,16 +1227,19 @@ class Parser(object):
              if not header:
                  raise ValueError('Expecting a header class for {classe} '
                                      'but could not find it.'.format(classe=name))
-
              # we construct a ClassDef from its header
-
+             #clen namespace
+             for i in methods:
+                 self._namespace.pop(str(i.name))
              options = header.options
-
              # then use it to decorate our arguments
              attributs = self._namespace[name].attributs
              return ClassDef(name,attributs,methods)
         elif isinstance(expr,Pass):
             return Pass()
+        elif isinstance(expr,Del):
+            ls =  self._annotate(expr.variables)
+            return Del(ls)
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
