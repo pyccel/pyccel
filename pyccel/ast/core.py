@@ -2426,7 +2426,7 @@ class ClassDef(Basic):
         # look if the class has the method __del__
         d_methods = {}
         for i in methods:
-            d_methods[str(i.name)] = i
+            d_methods[str(i.name).replace('\'','')] = i
         if not ('__del__' in d_methods):
             dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
             this  = Variable(dtype(), 'self')

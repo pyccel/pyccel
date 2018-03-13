@@ -928,9 +928,10 @@ class Parser(object):
                     d_var = d_var[0]
 
             elif isinstance(rhs, ConstructorCall):
-                cls = rhs.func.cls_name
-                # create a new Datatype for the current class
-                dtype = self.get_class_construct(cls)()
+                cls_name = rhs.func.cls_name # create a new Datatype for the current class
+                cls = self.get_variable(cls_name)
+
+                dtype = self.get_class_construct(cls_name)()
                 # to be moved to infere_type?
                 d_var = {}
                 d_var['datatype']    = dtype
@@ -1206,15 +1207,17 @@ class Parser(object):
              attributs = []
              self._namespace[name] = ClassDef(name,[],[])
              header = self.get_header(name)
-             methods = list(expr.methods[:-1])
+             methods = list(expr.methods)
              const = None
              for i,method in enumerate(methods):
                  m_name = str(method.name).replace('\'', '')# remove quotes for str representation
+                 if str(method.name).replace('\'','')=='__del__':#remove the__del__method
+                     methods.pop(i)
+
                  if m_name == '__init__':
                      const = self._annotate(method)
                      methods.pop(i)
                      self._namespace.pop('self.__init__')
-
              methods = [self._annotate(i) for i in methods]
              self._namespace.pop('self') #remove the self object
              if not const:
