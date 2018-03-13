@@ -207,7 +207,7 @@ def fst_to_ast(stmt):
         elif stmt.value == 'False':
             return false
         else:
-            return Symbol(stmt.value)
+            return Symbol(str(stmt.value))
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)
         return Del(arg)
@@ -297,7 +297,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
-        arg = Argument(str(stmt.target))
+        name =  fst_to_ast(stmt.target)
+        arg = Argument(str(name))
         if stmt.value is None:
             return arg
         else:
@@ -1134,12 +1135,12 @@ class Parser(object):
                     dtype = d_var.pop('datatype')
 
                     if not isinstance(a, ValuedArgument):
-                        a_new = Variable(dtype, a.name, **d_var)
+                        a_new = Variable(dtype, str(a.name), **d_var)
                     else:
                         # optional argument only if the value is None
                         if isinstance(a.value, Nil):
                             d_var['is_optional'] = True
-                        a_new = ValuedVariable(dtype, a.name, value=a.value, **d_var)
+                        a_new = ValuedVariable(dtype, str(a.name), value=a.value, **d_var)
 
                     args.append(a_new)
 
