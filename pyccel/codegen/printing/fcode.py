@@ -29,6 +29,7 @@ from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype
 from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
+from pyccel.ast.core import CustomDataType
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
@@ -135,10 +136,10 @@ class FCodePrinter(CodePrinter):
         return ((i, j) for j in range(cols) for i in range(rows))
 
     # ============ Elements ============ #
-    
-    
+
+
     def _print_Module(self, expr):
-        
+
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_'):
@@ -228,7 +229,7 @@ class FCodePrinter(CodePrinter):
                 'program {name}\n'
                 '{imports}\n'
                 'implicit none\n'
-                '{decs}\n\n'
+                '{decs}\n'
                 '{body}\n'
                 '{funcs}\n'
                 'end program {name}\n').format(name=name,
@@ -469,12 +470,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        dtype = self._print(expr.dtype)
-
-        code_value = ''
-        if expr.value:
-            code_value = ' = {0}'.format(expr.value)
-
+        # ... TODO improve
         # Group the variables by intent
         arg_types        = [type(v) for v in expr.variables]
         arg_ranks        = [v.rank for v in expr.variables]
@@ -482,22 +478,52 @@ class FCodePrinter(CodePrinter):
         arg_shapes       = [v.shape for v in expr.variables]
         arg_is_pointers = [v.is_pointer for v in expr.variables]
         arg_is_targets = [v.is_target for v in expr.variables]
+        arg_is_polymorphics = [v.is_polymorphic for v in expr.variables]
 
-        decs = []
-        intent = expr.intent
-        vstr = ', '.join(self._print(i.name) for i in expr.variables)
-
-        # TODO ARA improve
+        var = expr.variables[0]
         rank        = arg_ranks[0]
         allocatable = arg_allocatables[0]
         shape       = arg_shapes[0]
         is_pointer = arg_is_pointers[0]
         is_target = arg_is_targets[0]
+        is_polymorphic = arg_is_polymorphics[0]
+        # ...
+
+        # ... print datatype
+        if isinstance(expr.dtype, CustomDataType):
+            dtype = expr.dtype
+
+            name   = dtype.__class__.__name__
+            prefix = dtype.prefix
+            alias  = dtype.alias
+
+            if not var.is_polymorphic:
+                sig = 'type'
+            elif dtype.is_polymorphic:
+                sig = 'class'
+            else:
+                sig = 'type'
+
+            if alias is None:
+                name = name.replace(prefix, '')
+            else:
+                name = alias
+            dtype = '{0}({1})'.format(sig, name)
+        else:
+            dtype = self._print(expr.dtype)
+        # ...
+
+        code_value = ''
+        if expr.value:
+            code_value = ' = {0}'.format(expr.value)
+
+        decs = []
+        intent = expr.intent
+        vstr = ', '.join(self._print(i.name) for i in expr.variables)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
         e = ''
-        var = expr.variables[0]
         enable_alloc = True
         if allocatable or (var.shape is None):
             s = ''
@@ -602,13 +628,15 @@ class FCodePrinter(CodePrinter):
             name = str(func.name)
             this = expr.rhs.this
 
-            # we don't print the constructor call if iterable object
-            if this.dtype.is_iterable:
-                return ''
+            # TODO uncomment later
 
-            # we don't print the constructor call if with construct object
-            if this.dtype.is_with_construct:
-                return ''
+#            # we don't print the constructor call if iterable object
+#            if this.dtype.is_iterable:
+#                return ''
+#
+#            # we don't print the constructor call if with construct object
+#            if this.dtype.is_with_construct:
+#                return ''
 
             if name == "__init__":
                 name = "create"
@@ -617,7 +645,7 @@ class FCodePrinter(CodePrinter):
             #TODO use is_procedure property
             is_procedure = (expr.rhs.kind == 'procedure')
 
-            code_args = ', '.join(self._print(i) for i in expr.rhs.arguments[1:])
+            code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
         elif isinstance(expr.rhs, FunctionCall):
             # in the case of a function that returns a list,
@@ -731,23 +759,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
-
-    def _print_CustomDataType(self, expr):
-        name   = expr.__class__.__name__
-        prefix = expr.prefix
-        alias  = expr.alias
-
-        if expr.is_polymorphic:
-            sig = 'class'
-        else:
-            sig = 'type'
-
-        if alias is None:
-            name = name.replace(prefix, '')
-        else:
-            name = alias
-        code = '{0}({1})'.format(sig, name)
-        return self._get_statement(code)
 
     def _print_Equality(self, expr):
         return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
