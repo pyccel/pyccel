@@ -2286,7 +2286,7 @@ class FunctionDef(Basic):
 class GetDefaultFunctionArg(Basic):
     """Creates a FunctionDef for handling optional arguments in the code.
 
-    arg: ValuedArgument
+    arg: ValuedArgument, ValuedVariable
         argument for which we want to create the function returning the default
         value
 
@@ -2312,12 +2312,26 @@ class GetDefaultFunctionArg(Basic):
     get_default_incr_n
     >>> get_n
     get_default_incr_n(n=4)
+
+    You can also use **ValuedVariable** as in the following example
+
+    >>> from pyccel.ast.core import ValuedVariable
+    >>> n = ValuedVariable('int', 'n', value=4)
+    >>> x = Variable('float', 'x')
+    >>> y = Variable('float', 'y')
+    >>> args        = [x, n]
+    >>> results     = [y]
+    >>> body        = [Assign(y,x+n)]
+    >>> incr = FunctionDef('incr', args, results, body)
+    >>> get_n = GetDefaultFunctionArg(n, incr)
+    >>> get_n
+    get_default_incr_n(n=4)
     """
 
     def __new__(cls, arg, func):
 
-        if not isinstance(arg, ValuedArgument):
-            raise TypeError('Expecting a ValuedArgument')
+        if not isinstance(arg, (ValuedArgument, ValuedVariable)):
+            raise TypeError('Expecting a ValuedArgument or ValuedVariable')
 
         if not isinstance(func, FunctionDef):
             raise TypeError('Expecting a FunctionDef')

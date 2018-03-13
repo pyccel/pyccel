@@ -56,6 +56,7 @@ from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
 from pyccel.ast import FunctionDef
 from pyccel.ast import ClassDef
+from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For
 from pyccel.ast import If
 from pyccel.ast import While
@@ -524,9 +525,10 @@ class Parser(object):
         return ast
 
     def print_namespace(self):
+        # TODO improve spacing
         print('------- Namespace -------')
         for k,v in self.namespace.items():
-            print(k, ' :: ', type(v))
+            print('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
         print('-------------------------')
 
     def dot(self, filename):
@@ -1211,6 +1213,14 @@ class Parser(object):
             F = self.get_variable(name)
             if F is None:
                 self.insert_variable(func, name=name)
+
+                # for every parameterized argument, we need to create the
+                # get_default associated function
+                kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
+                for a in kw_args:
+                    get_func = GetDefaultFunctionArg(a, func)
+                    # TODO shall we check first that it is not in the namespace?
+                    self.insert_variable(get_func, name=get_func.name)
 
             return func
         elif isinstance(expr, EmptyLine):
