@@ -22,6 +22,9 @@ class PyccelSyntaxError(Exception):
 class PyccelSemanticError(Exception):
     pass
 
+class PyccelCodegenError(Exception):
+    pass
+
 
 class ErrorInfo:
     """Representation of a single error message."""
@@ -132,7 +135,7 @@ class Errors:
         self.initialize()
 
     def set_parser_stage(self, stage):
-        assert(stage in ['syntax', 'semantic'])
+        assert(stage in ['syntax', 'semantic', 'codegen'])
         self._parser_stage = stage
 
     def set_target(self, target, kind):
@@ -160,7 +163,7 @@ class Errors:
                symbol = None,
                filename = None):
         """Report message at the given line using the current error context.
-        stage: 'syntax' or 'semantic'
+        stage: 'syntax', 'semantic' or 'codegen'
         """
         if filename is None:
             filename = self.target['file']

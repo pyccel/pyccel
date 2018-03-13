@@ -1498,6 +1498,30 @@ class NotequalStmt(Relational):
         rhs = sympify(rhs)
         return Relational.__new__(cls,lhs,rhs)
 
+
+class Is(Basic):
+    """Represents a is expression in the code.
+
+    Examples
+
+    >>> from pyccel.ast import Is
+    >>> from pyccel.ast import Nil
+    >>> from sympy.abc import x
+    >>> Is(x, Nil())
+    Is(x, None)
+    """
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+
 # TODO remove kind from here and put it in FunctionDef
 class FunctionCall(AtomicExpr):
     """

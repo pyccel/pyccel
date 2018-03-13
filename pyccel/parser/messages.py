@@ -62,6 +62,7 @@ PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyc
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
+PYCCEL_RESTRICTION_IS_RHS = 'Only None is allowed as rhs for is statement'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header.'
@@ -73,5 +74,7 @@ UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
 
 # warnings
-UNDEFINED_INIT_METHOD = 'Undefined __init__ method'
+UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
+FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
+FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
 

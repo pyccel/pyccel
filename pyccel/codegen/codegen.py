@@ -10,6 +10,11 @@ from pyccel.ast.core import Header, EmptyLine, Comment
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import Variable
 from pyccel.ast.core import For
+from pyccel.ast.core import Is
+
+from pyccel.parser.errors import Errors, PyccelCodegenError
+# TODO improve this import
+from pyccel.parser.messages import *
 
 _extension_registry = {'fortran': 'f90'}
 
@@ -111,6 +116,10 @@ class Codegen(object):
 
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
+
+        errors = Errors()
+        errors.set_parser_stage('codegen')
+
         variables = []
         routines = []
         classes = []
@@ -131,8 +140,15 @@ class Codegen(object):
             else:
                 # TODO improve later, as in the old codegen
                 # we don't generate code for symbolic assignments
-                if not isinstance(stmt, SymbolicAssign):
+                if isinstance(stmt, SymbolicAssign):
+                    errors.report(FOUND_SYMBOLIC_ASSIGN, symbol=stmt.lhs, severity='warning')
+                    body += [Comment(str(stmt))]
+                elif isinstance(stmt, Assign) and isinstance(stmt.rhs, Is):
+                    errors.report(FOUND_IS_IN_ASSIGN, symbol=stmt.lhs, severity='warning')
+                    body += [Comment(str(stmt))]
+                else:
                     body += [stmt]
+
                 if isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
                         variables += [stmt.lhs]
@@ -146,6 +162,9 @@ class Codegen(object):
         self._stmts['routines'] = routines
         self._stmts['classes'] = classes
         self._stmts['modules'] = modules
+
+        errors.check()
+
 
     # TODO improve to have a kind = None
     #      => must have a condition to be aprogram
