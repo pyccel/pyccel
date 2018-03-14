@@ -1112,13 +1112,19 @@ class Parser(object):
             kind        = 'function'
             imports     = []
 
+            is_static = False
             if expr.arguments or results:
                 header = self.get_header(name)
                 if not header:
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
+
                 # we construct a FunctionDef from its header
                 interface = header.create_definition()
+
+                # is_static will be used for f2py
+                is_static = header.is_static
+
             # then use it to decorate our arguments
             arguments = expr.arguments
             arg = None
@@ -1134,19 +1140,47 @@ class Parser(object):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
 
-                    if not isinstance(a, ValuedArgument):
-                        a_new = Variable(dtype, str(a.name), **d_var)
-                    else:
+                    # this is needed for the static case
+                    additional_args = []
+
+                    if isinstance(a, ValuedArgument):
                         # optional argument only if the value is None
                         if isinstance(a.value, Nil):
                             d_var['is_optional'] = True
                         a_new = ValuedVariable(dtype, str(a.name), value=a.value, **d_var)
+                    else:
+                        # add shape as arguments if is_static and arg is array
+                        rank = d_var['rank']
+                        if is_static and (rank > 0):
+                            for i in range(0, rank):
+                                n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
+                                n_arg = Variable('int', n_name)
+                                # TODO clean namespace later
+                                var = self.get_variable(n_name)
+                                if not(var is None):
+                                    # TODO report appropriate message
+                                    errors.report('variable already defined', symbol=n_name,
+                                                  severity='error', blocker=True)
+
+                                self.insert_variable(n_arg)
+
+                                additional_args += [n_arg]
+
+                            # update shape
+                            # TODO can this be improved? add some check
+                            d_var['shape'] = Tuple(*additional_args)
+
+                        a_new = Variable(dtype, str(a.name), **d_var)
+
+                    if additional_args:
+                        args += additional_args
 
                     args.append(a_new)
 
                     # TODO add scope and store already declared variables there,
                     #      then retrieve them
                     self.insert_variable(a_new, name=str(a_new.name))
+
             # we annotate the body
             if cls_name and name == '__init__':
                 #TODO improve find another way to detect the __init__ method
