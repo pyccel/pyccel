@@ -6,7 +6,7 @@ import importlib
 from numpy import ndarray
 
 from sympy import Lambda
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, AtomicExpr
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational,Ne,Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
@@ -26,7 +26,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
@@ -1066,7 +1066,7 @@ class Program(Basic):
     def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
-
+            
         if not iterable(variables):
             raise TypeError("variables must be an iterable")
         for i in variables:
@@ -1937,7 +1937,7 @@ class Variable(Symbol):
 
 
 
-class DottedVariable(Basic):
+class DottedVariable(AtomicExpr, Boolean):
     """
     Represents a dotted variable.
     """
@@ -2454,7 +2454,7 @@ class ClassDef(Basic):
         # look if the class has the method __del__
         d_methods = {}
         for i in methods:
-            d_methods[str(i.name)] = i
+            d_methods[str(i.name).replace('\'','')] = i
         if not ('__del__' in d_methods):
             dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
             this  = Variable(dtype(), 'self')

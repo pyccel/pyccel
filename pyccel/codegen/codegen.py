@@ -8,7 +8,7 @@ from pyccel.codegen.printing import fcode
 from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import
 from pyccel.ast.core import Header, EmptyLine, Comment
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
-from pyccel.ast.core import Variable
+from pyccel.ast.core import Variable,DottedName
 from pyccel.ast.core import For
 from pyccel.ast.core import Is
 
@@ -121,6 +121,7 @@ class Codegen(object):
         errors.set_parser_stage('codegen')
 
         variables = []
+        variables_name=[]
         routines = []
         classes = []
         imports = []
@@ -151,7 +152,10 @@ class Codegen(object):
 
                 if isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
-                        variables += [stmt.lhs]
+                        if not isinstance(stmt.lhs.name,DottedName) and stmt.lhs.name not in variables_name:
+                            variables += [stmt.lhs]
+                            variables_name += [stmt.lhs.name]
+                            #we only add the variables which are not DottedName
                 if isinstance(stmt, For):
                     if isinstance(stmt.target, Variable):
                         variables += [stmt.target]
