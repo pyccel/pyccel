@@ -1796,6 +1796,12 @@ class Variable(Symbol):
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
+        if allocatable is None:
+            allocatable = False
+        elif not isinstance(allocatable, bool):
+            print '$$$$$$$$$$ ', type(allocatable)
+            raise TypeError("allocatable must be a boolean.")
+
         if is_pointer is None:
             is_pointer = False
         elif not isinstance(is_pointer, bool):
@@ -3895,6 +3901,9 @@ class FunctionHeader(Header):
         for i,d in enumerate(self.dtypes):
             datatype    = d[0]
             allocatable = d[2]
+            # '' is converted to None
+            if isinstance(allocatable, str):
+                allocatable = None
 
             rank = 0
             for a in d[1]:
@@ -3914,6 +3923,9 @@ class FunctionHeader(Header):
         for i,d in enumerate(self.results):
             datatype    = d[0]
             allocatable = d[2]
+            # '' is converted to None
+            if isinstance(allocatable, str):
+                allocatable = None
 
             rank = 0
             for a in d[1]:
