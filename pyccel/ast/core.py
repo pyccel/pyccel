@@ -1066,7 +1066,7 @@ class Program(Basic):
     def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
-        print 'var'
+            
         if not iterable(variables):
             raise TypeError("variables must be an iterable")
         for i in variables:
