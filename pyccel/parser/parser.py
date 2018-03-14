@@ -733,13 +733,10 @@ class Parser(object):
 
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i in expr.args]
-            print expr ,'expr',type(expr)
 
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
             ranks = [d['rank'] for d in ds]
-            print dtypes
-            print ds
 
             # ... only scalars and variables of rank 0 can be handled
             r_min = min(ranks)
