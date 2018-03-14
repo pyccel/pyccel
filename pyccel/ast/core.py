@@ -3788,6 +3788,11 @@ class FunctionHeader(Header):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_static: bool
+        True if we want to pass arrays in f2py mode. every argument of type
+        array will be preceeded by its shape, the later will appear in the
+        argument declaration. default value: False
+
     Examples
 
     >>> from pyccel.ast.core import FunctionHeader
@@ -3796,7 +3801,11 @@ class FunctionHeader(Header):
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, func, dtypes, results=None, kind='function'):
+    def __new__(cls, func, dtypes,
+                results=None,
+                kind='function',
+                is_static=False):
+
         func = str(func)
 
         if not(iterable(dtypes)):
@@ -3839,7 +3848,10 @@ class FunctionHeader(Header):
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
-        return Basic.__new__(cls, func, types, r_types, kind)
+        if not isinstance(is_static, bool):
+            raise TypeError('is_static must be a boolean')
+
+        return Basic.__new__(cls, func, types, r_types, kind, is_static)
 
     @property
     def func(self):
@@ -3856,6 +3868,10 @@ class FunctionHeader(Header):
     @property
     def kind(self):
         return self._args[3]
+
+    @property
+    def is_static(self):
+        return self._args[4]
 
     def create_definition(self):
         """Returns a FunctionDef with empy body."""

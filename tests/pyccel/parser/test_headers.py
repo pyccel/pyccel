@@ -9,6 +9,9 @@ def test_variable():
 def test_function():
     print parse(stmts='#$ header function f(float [:], int [:]) results(int)')
 
+def test_function_static():
+    print parse(stmts='#$ header function static f(float [:], int [:]) results(int)')
+
 def test_class():
     print parse(stmts='#$ header class Square(public)')
 
@@ -19,5 +22,6 @@ def test_method():
 if __name__ == '__main__':
     test_variable()
     test_function()
+    test_function_static()
     test_class()
     test_method()
