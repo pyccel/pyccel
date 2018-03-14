@@ -30,6 +30,11 @@ The High level support for *FFT* will follow the `scipy fft`_ interface.
 
 .. _numpy fft: https://docs.scipy.org/doc/numpy-1.13.0/reference/routines.fft.html
 
+**Itertools**
+
+Following module `itertools`_ from the Python3 standard library: Functions creating iterators for efficient looping.
+
+.. _itertools: https://docs.python.org/3/library/itertools.html#module-itertools
 
 High level interfaces
 *********************
@@ -42,6 +47,7 @@ High level interfaces
    mpi4py
    numpy
    scipy
+   itertools
    openacc_hl
    openmp_hl
    tbp
