@@ -6,7 +6,7 @@ import importlib
 from numpy import ndarray
 
 from sympy import Lambda
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, AtomicExpr
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational,Ne,Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
@@ -1933,7 +1933,7 @@ class Variable(Symbol):
 
 
 
-class DottedVariable(Atom):
+class DottedVariable(AtomicExpr, Boolean):
     """
     Represents a dotted variable.
     """

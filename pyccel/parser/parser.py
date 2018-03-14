@@ -711,12 +711,35 @@ class Parser(object):
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
+        elif isinstance(expr,DottedVariable):
+            d_var = self._infere_type(expr.args[0])
+            n_name = expr.args[1].name.split('.')[0]
+            if not d_var['cls_base']:
+                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
+
+            attributs = d_var['cls_base'].attributs
+            var = None
+
+            for i in attributs:
+                if str(i) == n_name:
+                    var = i
+            if not var:
+                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
+            s = self._infere_type(var)
+            #create this varibale that represent the expr.args[0]
+            dtype = s.pop('datatype')
+
+            return Variable(dtype,n_name,**s)
+
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i in expr.args]
+            print expr ,'expr',type(expr)
 
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
             ranks = [d['rank'] for d in ds]
+            print dtypes
+            print ds
 
             # ... only scalars and variables of rank 0 can be handled
             r_min = min(ranks)
@@ -754,25 +777,6 @@ class Parser(object):
                 else:
                     raise NotImplementedError('TODO')
             return d_var
-        elif isinstance(expr,DottedVariable):
-            d_var = self._infere_type(expr.args[0])
-            n_name = expr.args[1].name.split('.')[0]
-            if not d_var['cls_base']:
-                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
-
-            attributs = d_var['cls_base'].attributs
-            var = None
-
-            for i in attributs:
-                if str(i) == n_name:
-                    var = i
-            if not var:
-                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
-            s = self._infere_type(var)
-            #create this varibale that represent the expr.args[0]
-            dtype = s.pop('datatype')
-
-            return Variable(dtype,n_name,**s)
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -831,6 +835,16 @@ class Parser(object):
                 raise PyccelSemanticError('Symbolic {name} variable '
                                           'is not allowed'.format(name=name))
             return var
+        elif isinstance(expr, DottedVariable):
+            args = expr.args
+            name = expr.name.split('.')[0]
+            obj = self.get_variable(name)
+            var=DottedVariable(obj,args[1])
+            #we contrcut new DottedVariable so that we can infer the type
+            d_var=self._infere_type(var)
+            new_var=d_var.clone(expr.name)
+            return new_var
+
         elif isinstance(expr, (Add, Mul, And, Or, Eq, Ne, Lt, Gt, Le, Ge)):
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
@@ -919,15 +933,6 @@ class Parser(object):
                               severity='error', blocker=True)
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
-        elif isinstance(expr, DottedVariable):
-            args = expr.args
-            name = expr.name.split('.')[0]
-            obj = self.get_variable(name)
-            var=DottedVariable(obj,args[1])
-            #we contrcut new DottedVariable so that we can infer the type
-            d_var=self._infere_type(var)
-            new_var=d_var.clone(expr.name)
-            return new_var
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             # d_var can be a list of dictionaries
