@@ -339,7 +339,7 @@ def fst_to_ast(stmt):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt, GetitemNode):
          args = fst_to_ast(stmt.value)
-         name = str(stmt.previous)
+         name = fst_to_ast(stmt.previous)
          stmt.parent.remove(stmt.previous)
          stmt.parent.remove(stmt)
          if not hasattr(args, '__iter__'):
@@ -1124,6 +1124,9 @@ class Parser(object):
 
                 # is_static will be used for f2py
                 is_static = header.is_static
+
+                # get function kind from the header
+                kind = header.kind
 
             # then use it to decorate our arguments
             arguments = expr.arguments
