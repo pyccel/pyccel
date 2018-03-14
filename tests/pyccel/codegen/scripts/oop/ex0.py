@@ -27,7 +27,7 @@ a = 2 * (p.x + 6) - 2
 p.y = a + 5
 p.y = p.x + 5
 
-#p.translate(1.0, 2.0)
+p.translate(1.0, 2.0)
 
 print(p.x, p.y)
 print(a)

@@ -713,19 +713,25 @@ class Parser(object):
             return d_var
         elif isinstance(expr,DottedVariable):
             d_var = self._infere_type(expr.args[0])
-            n_name = expr.args[1].name.split('.')[0]
+            if isinstance(expr.args[1],Function):
+                attributs = d_var['cls_base'].methods
+                n_name = str(type(expr.args[1]).__name__)
+            else:
+                attributs = d_var['cls_base'].attributs
+                n_name = expr.args[1].name.split('.')[0]
             if not d_var['cls_base']:
                 raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
 
-            attributs = d_var['cls_base'].attributs
             var = None
-
             for i in attributs:
-                if str(i) == n_name:
+                if str(i.name) == n_name:
                     var = i
             if not var:
-                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
-            s = self._infere_type(var)
+                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
+            if isinstance(var,FunctionDef):
+                return FunctionCall(var, expr.args[1].args)
+            else:
+                s = self._infere_type(var)
             #create this varibale that represent the expr.args[0]
             dtype = s.pop('datatype')
 
@@ -839,6 +845,8 @@ class Parser(object):
             var=DottedVariable(obj,args[1])
             #we contrcut new DottedVariable so that we can infer the type
             d_var=self._infere_type(var)
+            if isinstance(d_var,FunctionCall):
+                return
             new_var=d_var.clone(expr.name)
             return new_var
 
