@@ -718,6 +718,9 @@ class Parser(object):
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
             ranks = [d['rank'] for d in ds]
+            shapes = [d['shape'] for d in ds]
+
+            # TODO improve
 
             # ... only scalars and variables of rank 0 can be handled
             r_min = min(ranks)
@@ -728,11 +731,19 @@ class Parser(object):
             rank = r_max
             # ...
 
-            # TODO improve
+            # ...
+            shape = None
+            for s in shapes:
+                if s:
+                    shape = s
+            # ...
+
             d_var['datatype'] = dtypes[0]
             d_var['allocatable'] = allocatables[0]
+            d_var['shape'] = shape
             d_var['rank'] = rank
             return d_var
+
         elif isinstance(expr, (tuple, list, List, Tuple)):
             d = self._infere_type(expr[0], **settings)
             # TODO must check that it is consistent with pyccel's rules
@@ -929,6 +940,7 @@ class Parser(object):
             d_var=self._infere_type(var)
             new_var=d_var.clone(expr.name)
             return new_var
+
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             # d_var can be a list of dictionaries
@@ -955,10 +967,13 @@ class Parser(object):
                 d_var['is_target']   = True
                 d_var['is_polymorphic'] = False
                 d_var['cls_base']    = cls
+
             elif isinstance(rhs, MethodCall):
                 raise NotImplementedError('TODO')
+
             else:
                 d_var = self._infere_type(rhs, **settings)
+
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
@@ -967,6 +982,7 @@ class Parser(object):
                 var = self.get_variable(name)
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
+
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
                 # TODO check consistency of indices with shape/rank
                 name = str(lhs.name)
@@ -977,6 +993,7 @@ class Parser(object):
 
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype)
+
             elif isinstance(lhs, (IndexedElement, Indexed)):
                 # TODO check consistency of indices with shape/rank
                 name = str(lhs.base)
@@ -987,6 +1004,7 @@ class Parser(object):
                 args = tuple(lhs.indices)
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
+
             elif isinstance(lhs,DottedVariable):
                 # TODO fix indentation
                 dtype = d_var.pop('datatype')
@@ -1021,6 +1039,7 @@ class Parser(object):
                     #we contrcut new DottedVariable so that we can infer the type
                     d_var = self._infere_type(var)
                     lhs = d_var.clone(lhs.name)
+
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
 #            lhs.inspect()
