@@ -1243,7 +1243,7 @@ class Parser(object):
                  raise ValueError('Expecting a header class for {classe} '
                                      'but could not find it.'.format(classe=name))
              # we construct a ClassDef from its header
-             #clen namespace
+             #clean namespace
              for i in methods:
                  self._namespace.pop(str(i.name))
              options = header.options

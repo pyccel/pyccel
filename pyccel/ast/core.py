@@ -26,7 +26,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, Atom
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
@@ -1066,7 +1066,7 @@ class Program(Basic):
     def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
-
+        print 'var'
         if not iterable(variables):
             raise TypeError("variables must be an iterable")
         for i in variables:
@@ -1933,7 +1933,7 @@ class Variable(Symbol):
 
 
 
-class DottedVariable(Basic):
+class DottedVariable(Atom):
     """
     Represents a dotted variable.
     """
