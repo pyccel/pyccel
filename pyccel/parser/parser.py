@@ -1218,22 +1218,28 @@ class Parser(object):
                     results = stmt.expr
                     if isinstance(results, (Symbol, Variable)):
                         results = [results]
+
             if results:
                 _results = []
                 for a, ah in zip(results, interface.results):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
-                    _results.append(a_new)
+
                     # results must be variable that were already declared
                     var = self.get_variable(str(a_new.name))
+                    _results.append(var)
+
                     if var is None:
                         errors.report(UNDEFINED_VARIABLE, symbol=str(a_new.name),
                                       severity='error', blocker=True)
                 results = _results
-            for i in args:
+
+            # TODO improve
+            for i in args + results:
                 if str(i) in self._namespace:
                     self._namespace.pop(str(i)) #clean namespace
+
             if arg and cls_name:
                 dt = self.get_class_construct(cls_name)()
                 var = Variable(dt,'self',cls_base = self._namespace[cls_name])
