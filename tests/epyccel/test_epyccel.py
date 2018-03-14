@@ -29,7 +29,20 @@ def test_array_1():
     y = f([3, 4, 5, 6])
     assert(y == 2)
 
+def test_array_2():
+    header = '#$ header procedure static g(int [:]) results(int [:])'
+    def g(x):
+        y = x - 1
+        return y
+
+    f = epyccel(g, header)
+
+    x = np.array([3, 4, 5, 6], dtype=int)
+    y = f(x)
+    assert(np.allclose(y, np.array([2, 3, 4, 5])))
+
 
 if __name__ == '__main__':
     test_simple()
     test_array_1()
+    test_array_2()
