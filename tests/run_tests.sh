@@ -8,6 +8,7 @@ pytest tests/pyccel/parser/test_openacc.py
 pytest tests/pyccel/parser/test_syntax.py
 pytest tests/pyccel/parser/test_semantic.py
 pytest tests/pyccel/codegen/test_codegen.py  
+pytest tests/epyccel/test_epyccel.py  
 
 #python tests/test_pyccel.py --execute
 #python tests/test_pyccel_openmp.py --openmp --execute
