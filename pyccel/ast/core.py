@@ -1067,7 +1067,7 @@ class Program(Basic):
 
         if not isinstance(name, str):
             raise TypeError('name must be a string')
-        
+
         if not iterable(variables):
             raise TypeError("variables must be an iterable")
         
@@ -3955,6 +3955,14 @@ class FunctionHeader(Header):
                            hide=hide,
                            kind=kind,
                            imports=imports)
+
+    def to_static(self):
+        """returns a static function header. needed for f2py"""
+        return FunctionHeader(self.func,
+                              self.dtypes,
+                              self.results,
+                              self.kind,
+                              True)
 
 # TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):

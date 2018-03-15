@@ -453,7 +453,7 @@ def _read_file(filename):
 
 class Parser(object):
     """ Class for a Parser."""
-    def __init__(self, inputs, debug=False):
+    def __init__(self, inputs, debug=False, headers=None):
         """Parser constructor.
 
         inputs: str
@@ -461,6 +461,9 @@ class Parser(object):
 
         debug: bool
             True if in debug mode.
+
+        headers: list, tuple
+            list of headers to append to the namespace
         """
         self._fst = None
         self._ast = None
@@ -471,6 +474,12 @@ class Parser(object):
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self._namespace['headers'] = {}
+        if headers:
+            if not isinstance(headers, dict):
+                raise TypeError('Expecting a dict of headers')
+
+            for key,value in headers.items():
+                self._namespace['headers'][key] = value
 
         # check if inputs is a file
         code = inputs

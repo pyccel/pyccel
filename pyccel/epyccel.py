@@ -2,6 +2,7 @@
 from pyccel.parser.syntax.headers import parse
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
+from pyccel.ast.core import FunctionHeader
 
 import inspect
 import subprocess
@@ -84,14 +85,34 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
         lines = [str(i) for i in inputs if i.lstrip().startswith('#$ header')]
         # TODO take the last occurence for f => use zip
         headers = "\n".join([str(i) for i in lines])
+
+    # we parse all headers then convert them to static function
+    hdr = parse(stmts=headers)
+    if isinstance(hdr, FunctionHeader):
+        header = hdr.to_static()
+    elif isinstance(hdr, (tuple, list)):
+        hs = [h.to_static() for h in hdr]
+        hs = [h for h in hs if hs.func == name]
+        # TODO improve
+        header = hs[0]
+    else:
+        raise NotImplementedError('TODO')
     # ...
 
     # ...
     # get the function source code
     lines = inspect.getsourcelines(func)
-    func_str = "".join(lines[0])
-
-    code = '{headers}\n{func}'.format(headers=headers, func=func_str)
+    lines = lines[0]
+    # remove indentation if the first line is indented
+    a = lines[0]
+    leading_spaces = len(a) - len(a.lstrip())
+    code = ''
+    for a in lines:
+        if leading_spaces > 0:
+            line = a[leading_spaces:]
+        else:
+            line = a
+        code = '{code}{line}'.format(code=code, line=line)
     # ...
 
     if verbose:
@@ -100,7 +121,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
         print ('------')
 
     # ...
-    pyccel = Parser(code)
+    pyccel = Parser(code, headers={str(name): header})
     ast = pyccel.parse()
 
     settings = {}
