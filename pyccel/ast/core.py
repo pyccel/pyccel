@@ -1334,7 +1334,9 @@ class NativeSymbol(DataType):
 
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
-    pass
+
+    def __init__(self, name='__UNDEFINED__'):
+        self._name = name
 
 
 Bool    = NativeBool()
@@ -1386,7 +1388,7 @@ def DataTypeFactory(name, argnames=["_name"], \
                 raise TypeError("Argument %s not valid for %s"
                     % (key, self.__class__.__name__))
             setattr(self, key, value)
-        BaseClass.__init__(self, name[:-len("Class")])
+        BaseClass.__init__(self, name=name[:-len("Class")])
 
     if prefix is None:
         prefix = 'Pyccel'
