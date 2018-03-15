@@ -301,6 +301,9 @@ class FCodePrinter(CodePrinter):
         code = '{0}={1}'.format(name, value)
         return code
 
+    def _print_DottedVariable(self, expr):
+        return expr.name
+
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
 

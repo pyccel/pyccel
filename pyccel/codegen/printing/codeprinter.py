@@ -87,7 +87,7 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
     def _print_DottedVariable(self,expr):
         return expr.name
-    
+
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -147,8 +147,8 @@ class CodePrinter(StrPrinter):
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     def _print_DottedVariable(self,expr):
-        args=expr.args
-        '.'.join(self._print(i) for i in args)
+        return expr.name
+
     def _print_And(self, expr):
         PREC = precedence(expr)
         return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
