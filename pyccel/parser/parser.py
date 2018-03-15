@@ -140,16 +140,6 @@ def _get_variable_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 # ...
 
-def create_variable(var):
-    """creat a variable from a DottedVariable Node"""
-    if isinstance(var, DottedVariable):
-        d_var = self._infere_type(var.args[1])
-        dtype = d_var.pop('datatype')
-        var_name = var.name
-        return Variable(dtype, var_name, **d_var)
-    else :
-        return var
-
 # TODO use Double instead of Float? or add precision
 def datatype_from_redbaron(node):
     """Returns the pyccel datatype of a RedBaron Node."""
@@ -517,6 +507,21 @@ class Parser(object):
         if self._ast is None:
             self._ast = self.parse()
         return self._ast
+
+
+
+
+    def create_variable(self,var):
+        """creat a variable from a DottedVariable Node"""
+        if isinstance(var, DottedVariable):
+            d_var = self._infere_type(var.args[1])
+            dtype = d_var.pop('datatype')
+            var_name = var.name
+            return Variable(dtype, var_name, **d_var)
+        else :
+            return var
+
+
 
     def parse(self):
         """converts redbaron fst to sympy ast."""
@@ -917,11 +922,11 @@ class Parser(object):
             # we treat the first element
             a = args[0]
             a_new = self._annotate(a, **settings)
-            expr_new = create_variable(a_new)
+            expr_new =self.create_variable(a_new)
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                a_new = create_variable(a_new)
+                a_new = self.create_variable(a_new)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
@@ -1336,39 +1341,43 @@ class Parser(object):
         elif isinstance(expr, Comment):
             return expr
         elif isinstance(expr, ClassDef):
-             name = str(expr.name)
-             name = name.replace('\'', '') # remove quotes for str representation
-             attributs = []
-             self.insert_variable(ClassDef(name,[],[]), name)
-             header = self.get_header(name)
-             methods = list(expr.methods)
-             const = None
-             for i,method in enumerate(methods):
-                 m_name = str(method.name).replace('\'', '')# remove quotes for str representation
-                 if str(method.name).replace('\'','')=='__del__':#remove the__del__method
-                     methods.pop(i)
+            name = str(expr.name)
+            name = name.replace('\'', '')
+            # remove quotes for str representation
+            attributs = []
+            self.insert_variable(ClassDef(name,[],[]), name)
+            header = self.get_header(name)
+            methods = list(expr.methods)
+            const = None
+            for i,method in enumerate(methods):
+                m_name = str(method.name).replace('\'', '')
+                # remove quotes for str representation
+                if str(method.name).replace('\'','')=='__del__':
+                    methods.pop(i)
+                    #remove the__del__method
+                if m_name == '__init__':
+                    const = self._annotate(method)
+                    methods.pop(i)
+                    self._namespace.pop('self.__init__')
 
-                 if m_name == '__init__':
-                     const = self._annotate(method)
-                     methods.pop(i)
-                     self._namespace.pop('self.__init__')
-             methods = [self._annotate(i) for i in methods]
-             self._namespace.pop('self') #remove the self object
-             if not const:
-                 raise SystemExit('missing contuctor in the class {0}'.format(name))
-             else:
-                 methods = [const]+methods
-             if not header:
-                 raise ValueError('Expecting a header class for {classe} '
+            methods = [self._annotate(i) for i in methods]
+            self._namespace.pop('self')
+            #remove the self object
+            if not const:
+                raise SystemExit('missing contuctor in the class {0}'.format(name))
+            else:
+                methods = [const]+methods
+            if not header:
+                raise ValueError('Expecting a header class for {classe} '
                                      'but could not find it.'.format(classe=name))
              # we construct a ClassDef from its header
              #clean namespace
-             for i in methods:
-                 self._namespace.pop(str(i.name))
-             options = header.options
+            for i in methods:
+                self._namespace.pop(str(i.name))
+            options = header.options
              # then use it to decorate our arguments
-             attributs = self.get_variable(name).attributs
-             return ClassDef(name,attributs,methods)
+            attributs = self.get_variable(name).attributs
+            return ClassDef(name,attributs,methods)
         elif isinstance(expr, Pass):
             return Pass()
         elif isinstance(expr, Del):
