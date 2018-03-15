@@ -1,3 +1,9 @@
+# After changing this file, check it on:
+#   http://lint.travis-ci.org/
+
+# to test different versions of python, check the numpy travis file on:
+#   https://github.com/numpy/numpy/blob/master/.travis.yml
+
 sudo: required
 language: python
 
