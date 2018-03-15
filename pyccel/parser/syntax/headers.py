@@ -91,6 +91,7 @@ class FunctionHeaderStmt(BasicStmt):
         """
         self.name = kwargs.pop('name')
         self.kind = kwargs.pop('kind', None)
+        self.static = kwargs.pop('static', None)
         self.decs = kwargs.pop('decs')
         self.results = kwargs.pop('results', None)
 
@@ -123,13 +124,21 @@ class FunctionHeaderStmt(BasicStmt):
         else:
             kind = str(self.kind)
 
+        is_static = False
+        if self.static == 'static':
+            is_static = True
+
         if kind == 'method':
             cls_instance = self.dtypes[0]
             cls_instance = cls_instance[0] # remove the attribut
             dtypes = self.dtypes[1:]
             return MethodHeader((cls_instance, self.name), dtypes, self.results)
         else:
-            return FunctionHeader(self.name, self.dtypes, results=self.results, kind=kind)
+            return FunctionHeader(self.name,
+                                  self.dtypes,
+                                  results=self.results,
+                                  kind=kind,
+                                  is_static=is_static)
 
 class ClassHeaderStmt(BasicStmt):
     """Base class representing a class header statement in the grammar."""

@@ -15,6 +15,7 @@ doc/source
 *.mod
 *.out
 *.o
+*.so
 *.log
 *.ps
 *.gv

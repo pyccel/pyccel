@@ -7,3 +7,4 @@ from .complexity import *
 from .parser     import *
 from .stdlib     import *
 from .symbolic   import *
+from .epyccel    import *

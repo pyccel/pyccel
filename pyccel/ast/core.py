@@ -1795,6 +1795,12 @@ class Variable(Symbol):
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
+        if allocatable is None:
+            allocatable = False
+        elif not isinstance(allocatable, bool):
+            print '$$$$$$$$$$ ', type(allocatable)
+            raise TypeError("allocatable must be a boolean.")
+
         if is_pointer is None:
             is_pointer = False
         elif not isinstance(is_pointer, bool):
@@ -1832,6 +1838,10 @@ class Variable(Symbol):
 
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
+
+        if isinstance(shape, Tuple) and len(shape) == 1:
+            shape = shape[0]
+
 #        if not shape==None:
 #            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
 #                raise TypeError("shape must be an instance of int or tuple of int")
@@ -3792,6 +3802,11 @@ class FunctionHeader(Header):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_static: bool
+        True if we want to pass arrays in f2py mode. every argument of type
+        array will be preceeded by its shape, the later will appear in the
+        argument declaration. default value: False
+
     Examples
 
     >>> from pyccel.ast.core import FunctionHeader
@@ -3800,7 +3815,11 @@ class FunctionHeader(Header):
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, func, dtypes, results=None, kind='function'):
+    def __new__(cls, func, dtypes,
+                results=None,
+                kind='function',
+                is_static=False):
+
         func = str(func)
 
         if not(iterable(dtypes)):
@@ -3843,7 +3862,10 @@ class FunctionHeader(Header):
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
-        return Basic.__new__(cls, func, types, r_types, kind)
+        if not isinstance(is_static, bool):
+            raise TypeError('is_static must be a boolean')
+
+        return Basic.__new__(cls, func, types, r_types, kind, is_static)
 
     @property
     def func(self):
@@ -3860,6 +3882,10 @@ class FunctionHeader(Header):
     @property
     def kind(self):
         return self._args[3]
+
+    @property
+    def is_static(self):
+        return self._args[4]
 
     def create_definition(self):
         """Returns a FunctionDef with empy body."""
@@ -3879,6 +3905,9 @@ class FunctionHeader(Header):
         for i,d in enumerate(self.dtypes):
             datatype    = d[0]
             allocatable = d[2]
+            # '' is converted to None
+            if isinstance(allocatable, str):
+                allocatable = None
 
             rank = 0
             for a in d[1]:
@@ -3898,6 +3927,9 @@ class FunctionHeader(Header):
         for i,d in enumerate(self.results):
             datatype    = d[0]
             allocatable = d[2]
+            # '' is converted to None
+            if isinstance(allocatable, str):
+                allocatable = None
 
             rank = 0
             for a in d[1]:
@@ -3922,6 +3954,7 @@ class FunctionHeader(Header):
                            kind=kind,
                            imports=imports)
 
+# TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):
     """Represents method header in the code.
 
@@ -3939,6 +3972,11 @@ class MethodHeader(FunctionHeader):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_static: bool
+        True if we want to pass arrays in f2py mode. every argument of type
+        array will be preceeded by its shape, the later will appear in the
+        argument declaration. default value: False
+
     Examples
 
     >>> from pyccel.ast.core import MethodHeader
@@ -3949,7 +3987,7 @@ class MethodHeader(FunctionHeader):
     'point.rotate'
     """
 
-    def __new__(cls, name, dtypes, results=None, kind='function'):
+    def __new__(cls, name, dtypes, results=None, kind='function', is_static=False):
         if not isinstance(name, (list, tuple)):
             raise TypeError("Expecting a list/tuple of strings.")
 
@@ -3997,7 +4035,10 @@ class MethodHeader(FunctionHeader):
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
-        return Basic.__new__(cls, name, types, r_types, kind)
+        if not isinstance(is_static, bool):
+            raise TypeError('is_static must be a boolean')
+
+        return Basic.__new__(cls, name, types, r_types, kind, is_static)
 
     @property
     def name(self):
@@ -4018,6 +4059,10 @@ class MethodHeader(FunctionHeader):
     @property
     def kind(self):
         return self._args[3]
+
+    @property
+    def is_static(self):
+        return self._args[4]
 
 class ClassHeader(Header):
     """Represents class header in the code.

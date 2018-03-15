@@ -207,7 +207,7 @@ def fst_to_ast(stmt):
         elif stmt.value == 'False':
             return false
         else:
-            return Symbol(stmt.value)
+            return Symbol(str(stmt.value))
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)
         return Del(arg)
@@ -297,7 +297,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
     elif isinstance(stmt, DefArgumentNode):
-        arg = Argument(str(stmt.target))
+        name =  fst_to_ast(stmt.target)
+        arg = Argument(str(name))
         if stmt.value is None:
             return arg
         else:
@@ -338,7 +339,7 @@ def fst_to_ast(stmt):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt, GetitemNode):
          args = fst_to_ast(stmt.value)
-         name = str(stmt.previous)
+         name = fst_to_ast(stmt.previous)
          stmt.parent.remove(stmt.previous)
          stmt.parent.remove(stmt)
          if not hasattr(args, '__iter__'):
@@ -625,6 +626,10 @@ class Parser(object):
         #      - blocking errors
         errors = Errors()
 
+        verbose = settings.pop('verbose', False)
+        if verbose:
+            print '*** type inference for : ', type(expr)
+
         d_var = {}
         d_var['datatype'] = None
         d_var['allocatable'] = None
@@ -643,24 +648,33 @@ class Parser(object):
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
+
         elif isinstance(expr, Float):
             d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
+
         elif isinstance(expr, Variable):
-            d_var['datatype'] = expr.dtype
-            d_var['allocatable'] = expr.allocatable
-            d_var['shape'] = expr.shape
-            d_var['rank'] = expr.rank
-            d_var['cls_base'] = expr.cls_base
+            name = expr.name
+            var = self.get_variable(name)
+            if var is None:
+                var = expr
+
+            d_var['datatype'] = var.dtype
+            d_var['allocatable'] = var.allocatable
+            d_var['shape'] = var.shape
+            d_var['rank'] = var.rank
+            d_var['cls_base'] = var.cls_base
             return d_var
+
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             d_var['datatype'] = NativeBool()
             d_var['allocatable'] = False
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
+
         elif isinstance(expr, IndexedElement):
             d_var['datatype'] = expr.dtype
             name = str(expr.base)
@@ -687,6 +701,7 @@ class Parser(object):
 #            # TODO pointer case
 #            d_var['is_pointer'] = var.is_pointer
             return d_var
+
         elif isinstance(expr, IndexedVariable):
             name = str(expr)
             var = self.get_variable(name)
@@ -698,6 +713,7 @@ class Parser(object):
             d_var['shape']       = var.shape
             d_var['rank']        = var.rank
             return d_var
+
         elif isinstance(expr, Range):
             d_var['datatype']    = NativeRange()
             d_var['allocatable'] = False
@@ -705,12 +721,14 @@ class Parser(object):
             d_var['rank']        = 0
             d_var['cls_base']    = expr # TODO: shall we keep it?
             return d_var
+
         elif isinstance(expr, Is):
             d_var['datatype'] = NativeBool()
             d_var['allocatable'] = False
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
+
         elif isinstance(expr,DottedVariable):
             d_var = self._infere_type(expr.args[0])
             if isinstance(expr.args[1],Function):
@@ -743,6 +761,9 @@ class Parser(object):
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
             ranks = [d['rank'] for d in ds]
+            shapes = [d['shape'] for d in ds]
+
+            # TODO improve
 
             # ... only scalars and variables of rank 0 can be handled
             r_min = min(ranks)
@@ -753,11 +774,19 @@ class Parser(object):
             rank = r_max
             # ...
 
-            # TODO improve
+            # ...
+            shape = None
+            for s in shapes:
+                if s:
+                    shape = s
+            # ...
+
             d_var['datatype'] = dtypes[0]
             d_var['allocatable'] = allocatables[0]
+            d_var['shape'] = shape
             d_var['rank'] = rank
             return d_var
+
         elif isinstance(expr, (tuple, list, List, Tuple)):
             d = self._infere_type(expr[0], **settings)
             # TODO must check that it is consistent with pyccel's rules
@@ -780,6 +809,27 @@ class Parser(object):
                 else:
                     raise NotImplementedError('TODO')
             return d_var
+
+        elif isinstance(expr,DottedVariable):
+            d_var = self._infere_type(expr.args[0])
+            n_name = expr.args[1].name.split('.')[0]
+            if not d_var['cls_base']:
+                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
+
+            attributs = d_var['cls_base'].attributs
+            var = None
+
+            for i in attributs:
+                if str(i) == n_name:
+                    var = i
+            if not var:
+                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
+            s = self._infere_type(var)
+            #create this varibale that represent the expr.args[0]
+            dtype = s.pop('datatype')
+
+            return Variable(dtype,n_name,**s)
+
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -807,7 +857,12 @@ class Parser(object):
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             return expr
         elif isinstance(expr, Variable):
-            return expr
+            name = expr.name
+            var = self.get_variable(name)
+            if var is None:
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              severity='error', blocker=True)
+            return var
         elif isinstance(expr, str):
             return repr(expr)
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
@@ -938,6 +993,17 @@ class Parser(object):
                               severity='error', blocker=True)
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
+        elif isinstance(expr, DottedVariable):
+            args = expr.args
+            name = expr.name.split('.')[0]
+            obj = self.get_variable(name)
+            var=DottedVariable(obj,args[1])
+            #we contrcut new DottedVariable so that we can infer the type
+            d_var=self._infere_type(var)
+            new_var=d_var.clone(expr.name)
+            return new_var
+
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
             # d_var can be a list of dictionaries
@@ -965,10 +1031,13 @@ class Parser(object):
                 d_var['is_target']   = True
                 d_var['is_polymorphic'] = False
                 d_var['cls_base']    = cls
+
             elif isinstance(rhs, MethodCall):
                 raise NotImplementedError('TODO')
+
             else:
                 d_var = self._infere_type(rhs, **settings)
+
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
@@ -977,6 +1046,7 @@ class Parser(object):
                 var = self.get_variable(name)
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
+
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
                 # TODO check consistency of indices with shape/rank
                 name = str(lhs.name)
@@ -987,6 +1057,7 @@ class Parser(object):
 
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype)
+
             elif isinstance(lhs, (IndexedElement, Indexed)):
                 # TODO check consistency of indices with shape/rank
                 name = str(lhs.base)
@@ -997,6 +1068,7 @@ class Parser(object):
                 args = tuple(lhs.indices)
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
+
             elif isinstance(lhs,DottedVariable):
                 # TODO fix indentation
                 dtype = d_var.pop('datatype')
@@ -1031,6 +1103,7 @@ class Parser(object):
                     #we contrcut new DottedVariable so that we can infer the type
                     d_var = self._infere_type(var)
                     lhs = d_var.clone(lhs.name)
+
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
 #            lhs.inspect()
@@ -1122,13 +1195,22 @@ class Parser(object):
             kind        = 'function'
             imports     = []
 
+            is_static = False
             if expr.arguments or results:
                 header = self.get_header(name)
                 if not header:
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
+
                 # we construct a FunctionDef from its header
                 interface = header.create_definition()
+
+                # is_static will be used for f2py
+                is_static = header.is_static
+
+                # get function kind from the header
+                kind = header.kind
+
             # then use it to decorate our arguments
             arguments = expr.arguments
             arg = None
@@ -1144,26 +1226,58 @@ class Parser(object):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
 
-                    if not isinstance(a, ValuedArgument):
-                        a_new = Variable(dtype, a.name, **d_var)
-                    else:
+                    # this is needed for the static case
+                    additional_args = []
+
+                    if isinstance(a, ValuedArgument):
                         # optional argument only if the value is None
                         if isinstance(a.value, Nil):
                             d_var['is_optional'] = True
-                        a_new = ValuedVariable(dtype, a.name, value=a.value, **d_var)
+                        a_new = ValuedVariable(dtype, str(a.name),
+                                               value=a.value, **d_var)
+                    else:
+                        # add shape as arguments if is_static and arg is array
+                        rank = d_var['rank']
+                        if is_static and (rank > 0):
+                            for i in range(0, rank):
+                                n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
+                                n_arg = Variable('int', n_name)
+                                # TODO clean namespace later
+                                var = self.get_variable(n_name)
+                                if not(var is None):
+                                    # TODO report appropriate message
+                                    errors.report('variable already defined',
+                                                  symbol=n_name,
+                                                  severity='error', blocker=True)
+
+                                self.insert_variable(n_arg)
+
+                                additional_args += [n_arg]
+
+                            # update shape
+                            # TODO can this be improved? add some check
+                            d_var['shape'] = Tuple(*additional_args)
+
+                        a_new = Variable(dtype, str(a.name), **d_var)
+
+                    if additional_args:
+                        args += additional_args
 
                     args.append(a_new)
 
                     # TODO add scope and store already declared variables there,
                     #      then retrieve them
                     self.insert_variable(a_new, name=str(a_new.name))
+
             # we annotate the body
             if cls_name and name == '__init__':
                 #TODO improve find another way to detect the __init__ method
                 #we push a variable self.__init__ just to check if we still in the __init__ method or no
                 var = Variable('nil','self.__init__',cls_base = self._namespace[cls_name])
                 self._namespace['self.__init__']=var
+
             body = self._annotate(expr.body, **settings)
+
             # find return stmt and results
             # we keep the return stmt, in case of handling multi returns later
             for stmt in body:
@@ -1172,22 +1286,28 @@ class Parser(object):
                     results = stmt.expr
                     if isinstance(results, (Symbol, Variable)):
                         results = [results]
+
             if results:
                 _results = []
                 for a, ah in zip(results, interface.results):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
-                    _results.append(a_new)
+
                     # results must be variable that were already declared
                     var = self.get_variable(str(a_new.name))
+                    _results.append(var)
+
                     if var is None:
                         errors.report(UNDEFINED_VARIABLE, symbol=str(a_new.name),
                                       severity='error', blocker=True)
                 results = _results
-            for i in args:
+
+            # TODO improve
+            for i in args + results:
                 if str(i) in self._namespace:
                     self._namespace.pop(str(i)) #clean namespace
+
             if arg and cls_name:
                 dt = self.get_class_construct(cls_name)()
                 var = Variable(dt,'self',cls_base = self._namespace[cls_name])
