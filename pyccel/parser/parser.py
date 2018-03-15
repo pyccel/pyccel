@@ -140,6 +140,15 @@ def _get_variable_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 # ...
 
+def create_variable(var):
+    """creat a variable from a DottedVariable Node"""
+    if isinstance(var,DottedVariable):
+        d_var = self._infere_type(var.args[1])
+        dtype = d_var.pop('datatype')
+        var_name = var.name
+        return Variable(dtype,var_name,**d_var)
+    else :
+        return var
 
 # TODO use Double instead of Float? or add precision
 def datatype_from_redbaron(node):
@@ -809,27 +818,6 @@ class Parser(object):
                 else:
                     raise NotImplementedError('TODO')
             return d_var
-
-        elif isinstance(expr,DottedVariable):
-            d_var = self._infere_type(expr.args[0])
-            n_name = expr.args[1].name.split('.')[0]
-            if not d_var['cls_base']:
-                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
-
-            attributs = d_var['cls_base'].attributs
-            var = None
-
-            for i in attributs:
-                if str(i) == n_name:
-                    var = i
-            if not var:
-                raise AttributeError('{0} object has not attribut {}'.format(str(type(args[0])),n_name))
-            s = self._infere_type(var)
-            #create this varibale that represent the expr.args[0]
-            dtype = s.pop('datatype')
-
-            return Variable(dtype,n_name,**s)
-
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -901,7 +889,7 @@ class Parser(object):
             #we contrcut new DottedVariable so that we can infer the type
             d_var=self._infere_type(var)
             if isinstance(d_var,FunctionCall):
-                return
+                return FunctionCall(d_var.func.rename(expr.name),d_var.arguments,kind=d_var.kind)
             new_var=d_var.clone(expr.name)
             return new_var
 
@@ -912,24 +900,11 @@ class Parser(object):
             # we treat the first element
             a = args[0]
             a_new = self._annotate(a, **settings)
-            expr_new = a_new
-            if isinstance(a_new,DottedVariable):
-                    #TODO be able to print the DottedVariable directly
-                    #converte the DottedVariable to a variable
-                    d_var = self._infere_type(a_new.args[1])
-                    dtype = d_var.pop('datatype')
-                    var_name = a_new.name
-                    expr_new = Variable(dtype,var_name,**d_var)
+            expr_new = create_variable(a_new)
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                if isinstance(a_new,DottedVariable):
-                    #converte the DottedVariable to a variable
-                    #TODO be able to print the DottedVariable directly
-                    d_var = self._infere_type(a_new.args[1])
-                    dtype = d_var.pop('datatype')
-                    var_name = a_new.name
-                    a_new = Variable(dtype,var_name,**d_var)
+                a_new = create_variable(a_new)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):

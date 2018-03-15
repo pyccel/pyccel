@@ -1574,7 +1574,6 @@ class FunctionCall(AtomicExpr):
             f_name = func.name
         else:
             f_name = func
-        print func.cls_base ,'########'
 
 #        if not isinstance(kind, str):
 #            raise TypeError("Expecting a string for kind.")
@@ -1969,9 +1968,9 @@ class DottedVariable(AtomicExpr, Boolean):
 
     @ property
     def name(self):
-        name_0 = self.args[0].name
+        name_0 = self.args[0].name 
         if isinstance(self.args[1],Function):
-            name_1 = str(type(self.args[0]).__name__)
+            name_1 = str(type(self.args[1]).__name__)
         else:
             name_1 = self.args[1].name
         return name_0+'.'+name_1
