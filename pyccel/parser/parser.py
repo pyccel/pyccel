@@ -1336,39 +1336,43 @@ class Parser(object):
         elif isinstance(expr, Comment):
             return expr
         elif isinstance(expr, ClassDef):
-             name = str(expr.name)
-             name = name.replace('\'', '') # remove quotes for str representation
-             attributs = []
-             self.insert_variable(ClassDef(name,[],[]), name)
-             header = self.get_header(name)
-             methods = list(expr.methods)
-             const = None
-             for i,method in enumerate(methods):
-                 m_name = str(method.name).replace('\'', '')# remove quotes for str representation
-                 if str(method.name).replace('\'','')=='__del__':#remove the__del__method
-                     methods.pop(i)
+            name = str(expr.name)
+            name = name.replace('\'', '') 
+            # remove quotes for str representation
+            attributs = []
+            self.insert_variable(ClassDef(name,[],[]), name)
+            header = self.get_header(name)
+            methods = list(expr.methods)
+            const = None
+            for i,method in enumerate(methods):
+                m_name = str(method.name).replace('\'', '')
+                # remove quotes for str representation
+                if str(method.name).replace('\'','')=='__del__': 
+                    methods.pop(i)
+                    #remove the__del__method
+                if m_name == '__init__':
+                    const = self._annotate(method)
+                    methods.pop(i)
+                    self._namespace.pop('self.__init__')
 
-                 if m_name == '__init__':
-                     const = self._annotate(method)
-                     methods.pop(i)
-                     self._namespace.pop('self.__init__')
-             methods = [self._annotate(i) for i in methods]
-             self._namespace.pop('self') #remove the self object
-             if not const:
-                 raise SystemExit('missing contuctor in the class {0}'.format(name))
-             else:
-                 methods = [const]+methods
-             if not header:
-                 raise ValueError('Expecting a header class for {classe} '
+            methods = [self._annotate(i) for i in methods]
+            self._namespace.pop('self') 
+            #remove the self object
+            if not const:
+                raise SystemExit('missing contuctor in the class {0}'.format(name))
+            else:
+                methods = [const]+methods
+            if not header:
+                raise ValueError('Expecting a header class for {classe} '
                                      'but could not find it.'.format(classe=name))
              # we construct a ClassDef from its header
              #clean namespace
-             for i in methods:
-                 self._namespace.pop(str(i.name))
-             options = header.options
+            for i in methods:
+                self._namespace.pop(str(i.name))
+            options = header.options
              # then use it to decorate our arguments
-             attributs = self.get_variable(name).attributs
-             return ClassDef(name,attributs,methods)
+            attributs = self.get_variable(name).attributs
+            return ClassDef(name,attributs,methods)
         elif isinstance(expr, Pass):
             return Pass()
         elif isinstance(expr, Del):
