@@ -580,8 +580,14 @@ class Parser(object):
 
     def update_variable(self, var, **options):
         """."""
-        name = _get_variable_name(var)
-        var = self._namespace.pop(name, None)
+        name = _get_variable_name(var).split('.')
+        var = self._namespace.pop(name[0], None)
+        if len(name)>1:
+            name_ = _get_variable_name(var)
+            for i in var.cls_base.attributs:
+                if str(i.name)==name[1]:
+                    var=i
+            name = name_
         if var is None:
             raise ValueError('Undefined variable {name}'.format(name=name))
 
@@ -1179,7 +1185,6 @@ class Parser(object):
 
                 # we construct a FunctionDef from its header
                 interface = header.create_definition()
-
                 # is_static will be used for f2py
                 is_static = header.is_static
 
@@ -1189,7 +1194,7 @@ class Parser(object):
             # then use it to decorate our arguments
             arguments = expr.arguments
             arg = None
-            if cls_name and str(expr.arguments[0]) == 'self':
+            if cls_name and str(expr.arguments[0].name) == 'self':
                 arg = arguments[0]
                 arguments = arguments[1:]
                 dt = self.get_class_construct(cls_name)()
