@@ -1061,11 +1061,13 @@ class Program(Basic):
     """
 
     def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
+
         if not isinstance(name, str):
             raise TypeError('name must be a string')
 
         if not iterable(variables):
             raise TypeError("variables must be an iterable")
+        
         for i in variables:
             if not isinstance(i, Variable):
                 raise TypeError("Only a Variable instance is allowed.")
@@ -1617,7 +1619,6 @@ class FunctionCall(AtomicExpr):
         else:
             return self.func
 
-
 class MethodCall(AtomicExpr):
     """
     Base class for applied mathematical functions.
@@ -1968,7 +1969,12 @@ class DottedVariable(AtomicExpr, Boolean):
 
     @ property
     def name(self):
-        return self.args[0].name+'.'+self.args[1].name
+        name_0 = self.args[0].name 
+        if isinstance(self.args[1], Function):
+            name_1 = str(type(self.args[1]).__name__)
+        else:
+            name_1 = self.args[1].name
+        return name_0 + '.' + name_1
 
 
 class ValuedVariable(Variable):

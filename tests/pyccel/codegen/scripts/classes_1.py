@@ -15,20 +15,21 @@ class Point(object):
     def translate(self, a):
         self.x = self.x + a
 
-x = ones(3, double)
+x = [1.,1.,1.]
 p = Point (x)
 
-a = zeros(3, double)
+a = [0.,0.,0.]
 a[0] = 3
 p.translate(a)
-print(p.x)
+#print(p.x)
 
-b = p.x[0]
-b = p.x[0] + 1.0
-b = 2 * p.x[0] + 1.0
-b = 2 * ( p.x[0] + 1.0 )
-print(b)
+#b = p.x[0]
+#b = p.x[0] + 1.0
+#b = 2 * p.x[0] + 1.0
+#b = 2 * ( p.x[0] + 1.0 )
+#print(b)
 
-p.x[1] = 2.0
+
+#p.x[1] = 2.0
 
 del p
