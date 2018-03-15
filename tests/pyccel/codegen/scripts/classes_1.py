@@ -29,7 +29,7 @@ p.translate(a)
 #b = 2 * ( p.x[0] + 1.0 )
 #print(b)
 
-#
-p.x[1] = 2.0
+
+#p.x[1] = 2.0
 
 del p

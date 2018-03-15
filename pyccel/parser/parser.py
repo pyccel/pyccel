@@ -588,6 +588,8 @@ class Parser(object):
                 if str(i.name)==name[1]:
                     var=i
             name = name_
+        else:
+            name = name[0]
         if var is None:
             raise ValueError('Undefined variable {name}'.format(name=name))
 
