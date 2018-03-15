@@ -117,7 +117,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
 
     if verbose:
         print ('------')
-        print code
+        print (code)
         print ('------')
 
     # ...

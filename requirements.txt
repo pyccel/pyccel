@@ -3,5 +3,3 @@ sympy==1.1.1
 pylint==1.8.2
 parse==1.8.2
 redbaron==0.6.3
-sphinxcontrib-tikz==0.4.4
-sphinxcontrib-bibtex==0.3.6

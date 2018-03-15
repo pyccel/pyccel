@@ -151,8 +151,6 @@ def allocatable_like(expr, verbose=False):
     verbose: bool
         talk more
     """
-#    print ('>>>>> expr = ', expr)
-#    print ('>>>>> type = ', type(expr))
 
     if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
         return expr
@@ -162,7 +160,6 @@ def allocatable_like(expr, verbose=False):
         args = [expr]
         while args:
             a = args.pop()
-#            print (">>>> ", a, type(a))
 
             # XXX: This is a hack to support non-Basic args
             if isinstance(a, string_types):
@@ -1799,7 +1796,6 @@ class Variable(Symbol):
         if allocatable is None:
             allocatable = False
         elif not isinstance(allocatable, bool):
-            print '$$$$$$$$$$ ', type(allocatable)
             raise TypeError("allocatable must be a boolean.")
 
         if is_pointer is None:
@@ -2279,8 +2275,6 @@ class FunctionDef(Basic):
         # we remove 'self' from arguments
         f_args = self.arguments[1:]
         args = list(args)
-        print args
-        print f_args
         assert(len(args) == len(f_args))
 
         return FunctionCall(self, args)
