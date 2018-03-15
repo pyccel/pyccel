@@ -654,7 +654,7 @@ class Parser(object):
 
         verbose = settings.pop('verbose', False)
         if verbose:
-            print '*** type inference for : ', type(expr)
+            print ('*** type inference for : ', type(expr))
 
         d_var = {}
         d_var['datatype'] = None
