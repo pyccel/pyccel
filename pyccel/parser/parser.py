@@ -944,7 +944,7 @@ class Parser(object):
                 # TODO improve the test
                 #      we must not invoke the namespace like this, only through
                 #      appropriate methods like get_variable ...
-                cls = self._namespace[name]
+                cls = self.get_variable(name)
                 d_methods = cls.methods_as_dict
                 method = d_methods.pop('__init__', None)
 
@@ -1058,14 +1058,14 @@ class Parser(object):
                 name = lhs.name.split('.')[0]
                 # case of lhs=dottedvariable in the __init__ method that starts with self
                 if name == 'self' and 'self.__init__' in self._namespace.keys():
-                     cls_name = str(self._namespace['self'].cls_base.name)
-                     attributs = self._namespace[cls_name].attributs
+                     cls_name = str(self.get_variable('self').cls_base.name)
+                     attributs = self.get_variable(cls_name).attributs
                      attributs = list(attributs)
                      n_name = str(lhs.args[1]).split('.')
                      n_name = n_name[0]
                      attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
-                     self._namespace[cls_name] = ClassDef(cls_name,attributs,[])
+                     self.insert_variable(ClassDef(cls_name,attributs,[]), cls_name)
                      #update the self variable with the new attributs
                      dt=self.get_class_construct(cls_name)()
                      var = Variable(dt,'self',cls_base = self._namespace[cls_name])
@@ -1076,8 +1076,8 @@ class Parser(object):
                      d_var = self._infere_type(var)
                      lhs = d_var.clone(lhs.name)
                 else :
-                    cls_name = str(self._namespace[str(lhs.args[0])].cls_base.name)
-                    attributs = self._namespace[cls_name].attributs
+                    cls_name = str(self.get_variable(str(lhs.args[0])).cls_base.name)
+                    attributs = self.get_variable(cls_name).attributs
                     attributs = list(attributs)
                     name = lhs.name.split('.')[0]
                     args = lhs.args
@@ -1255,8 +1255,8 @@ class Parser(object):
             if cls_name and name == '__init__':
                 #TODO improve find another way to detect the __init__ method
                 #we push a variable self.__init__ just to check if we still in the __init__ method or no
-                var = Variable('nil', 'self.__init__', cls_base = self._namespace[cls_name])
-                self._namespace['self.__init__'] = var
+                var = Variable('nil', 'self.__init__', cls_base = self.get_variable(cls_name))
+                self.insert_variable(var, 'self.__init__')
 
             body = self._annotate(expr.body, **settings)
 
@@ -1292,7 +1292,7 @@ class Parser(object):
 
             if arg and cls_name:
                 dt = self.get_class_construct(cls_name)()
-                var = Variable(dt, 'self', cls_base = self._namespace[cls_name])
+                var = Variable(dt, 'self', cls_base = self.get_variable(cls_name))
                 args = [var] + args
 
             func=FunctionDef(name, args, results, body,
@@ -1300,16 +1300,15 @@ class Parser(object):
                                cls_name=cls_name, hide=hide,
                                kind=kind, imports=imports)
             if cls_name:
-                cls = self._namespace[cls_name]
+                cls = self.get_variable(cls_name)
                 methods = list(cls.methods) + [func]
                 #update the class  methods
-                self._namespace[cls_name] = ClassDef(cls_name, cls.attributs, methods)
+                self.insert_variable(ClassDef(cls_name, cls.attributs,methods), cls_name)
             # insert function def into namespace
             # TODO checking
             F = self.get_variable(name)
             if F is None:
                 self.insert_variable(func, name=name)
-
 #                # TODO uncomment and improve this part later.
 #                #      it will allow for handling parameters of different dtypes
 #                # for every parameterized argument, we need to create the
@@ -1319,7 +1318,6 @@ class Parser(object):
 #                    get_func = GetDefaultFunctionArg(a, func)
 #                    # TODO shall we check first that it is not in the namespace?
 #                    self.insert_variable(get_func, name=get_func.name)
-
             return func
         elif isinstance(expr, EmptyLine):
             return expr
@@ -1332,7 +1330,7 @@ class Parser(object):
              name = str(expr.name)
              name = name.replace('\'', '') # remove quotes for str representation
              attributs = []
-             self._namespace[name] = ClassDef(name,[],[])
+             self.insert_variable(ClassDef(name,[],[]), name)
              header = self.get_header(name)
              methods = list(expr.methods)
              const = None
@@ -1360,7 +1358,7 @@ class Parser(object):
                  self._namespace.pop(str(i.name))
              options = header.options
              # then use it to decorate our arguments
-             attributs = self._namespace[name].attributs
+             attributs = self.get_variable(name).attributs
              return ClassDef(name,attributs,methods)
         elif isinstance(expr, Pass):
             return Pass()
