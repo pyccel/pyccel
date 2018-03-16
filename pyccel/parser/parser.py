@@ -1395,7 +1395,7 @@ if __name__ == '__main__':
     pyccel = Parser(filename)
 
     pyccel.parse()
-    print pyccel.ast
+    
 
     settings = {}
     pyccel.annotate(**settings)
