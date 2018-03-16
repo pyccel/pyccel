@@ -900,7 +900,7 @@ class Parser(object):
                 if isinstance(expr.args[1],(Symbol,Variable)):
                     second = self.get_variable(expr.args[1].name, parent = first)
                 elif isinstance(expr.args[1], (Indexed, IndexedElement)):
-                    #TODO find away to treat it outside the DottedVariable
+                    #TODO find away to treat this cases by calling self._annotate
                     name = str(expr.args[1].base)
                     var = self.get_variable(name,parent = first)
                     args = [self._annotate(i) for i in expr.args[1].indices]
@@ -930,11 +930,9 @@ class Parser(object):
             a = args[0]
             a_new = self._annotate(a, **settings)
             expr_new = a_new
-            #expr_new =self.create_variable(a_new)
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                #a_new = self.create_variable(a_new)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
