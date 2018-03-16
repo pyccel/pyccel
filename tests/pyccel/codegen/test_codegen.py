@@ -18,7 +18,7 @@ def test_codegen():
 
     if PY3:
         # not working with python3
-        _ignored = ['classes.py', 'classes_1.py']
+        _ignored = ['']
         files = [f for f in files if not (f in _ignored)]
 
     for f in files:
