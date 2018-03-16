@@ -1948,32 +1948,37 @@ class DottedVariable(AtomicExpr, Boolean):
     """
     def __new__(cls, *args):
 
-        if  not isinstance(args[0],(Variable, Symbol, IndexedVariable,
+        if  not isinstance(args[0],(Variable, Symbol, IndexedVariable, IndexedElement,
                                     IndexedBase, Indexed, Function,
                                     DottedVariable)):
             raise TypeError('Expecting a Variable or a function call, '
                             'got instead {0} of type {1}'.format(str(args[0]),
                                                                   type(args[0])))
 
-        if  not isinstance(args[1],(Variable, Symbol, IndexedVariable,
-                                    IndexedBase, Indexed, Function)):
+        if  not isinstance(args[1],(Variable, Symbol, IndexedVariable, IndexedElement,
+                                    IndexedBase, Indexed, Function,FunctionCall)):
             raise TypeError('Expecting a Variable or a function call,'
                             ' got instead {0} of type {1}'.format(str(args[1]),
                                                                   type(args[1])))
 
-        return Basic.__new__(cls,args[0],args[1])
+        return Basic.__new__(cls, args[0], args[1])
 
     @property
     def args(self):
-        return [self._args[0],self._args[1]]
+        return [self._args[0], self._args[1]]
 
-    @ property
+    @property
     def name(self):
-        name_0 = self.args[0].name
+        if isinstance(self.args[0], DottedVariable):
+            name_0 = self.args[0].name
+        else:
+            name_0 = str(self.args[0])
         if isinstance(self.args[1], Function):
             name_1 = str(type(self.args[1]).__name__)
-        else:
+        elif isinstance(self.args[1], (Symbol,Variable)):
             name_1 = self.args[1].name
+        else:
+            name_1 = str(self.args[1])
         return name_0 + '.' + name_1
 
     def __str__(self):
@@ -1981,6 +1986,10 @@ class DottedVariable(AtomicExpr, Boolean):
 
     def _sympystr(self, Printer):
         return self.name
+    
+    @property
+    def cls_base(self):
+        return self._args[1].cls_base
 
 
 class ValuedVariable(Variable):
