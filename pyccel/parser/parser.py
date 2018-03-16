@@ -199,6 +199,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, NameNode):
         if isinstance(stmt.previous,DotNode):
             return fst_to_ast(stmt.previous)
+        if isinstance(stmt.next, GetitemNode):
+            return fst_to_ast(stmt.next)
         if stmt.value == 'None':
             return Nil()
         elif stmt.value == 'True':
@@ -337,8 +339,13 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
     elif isinstance(stmt, GetitemNode):
+         parent = stmt.parent
          args = fst_to_ast(stmt.value)
-         name = fst_to_ast(stmt.previous)
+         if isinstance(stmt.previous.previous,DotNode):
+             return fst_to_ast(stmt.previous.previous)
+         #elif isinstance(stmt.previous,GetitemNode):
+         #    return fst_to_ast(stmt.previous.previous)
+         name = Symbol(str(stmt.previous.value))
          stmt.parent.remove(stmt.previous)
          stmt.parent.remove(stmt)
          if not hasattr(args, '__iter__'):
@@ -579,8 +586,12 @@ class Parser(object):
         cmd = "dot -Tps {name}.gv -o {name}.ps".format(name=name)
         os.system(cmd)
 
-    def get_variable(self, name):
+    def get_variable(self, name, parent = None):
         """."""
+        if parent is not None :
+            for i in parent.cls_base.attributs:
+                if str(i.name) == name:
+                    return i
         if name in self.namespace:
             return self.namespace[name]
         return None
@@ -761,34 +772,14 @@ class Parser(object):
             return d_var
 
         elif isinstance(expr, DottedVariable):
-            d_var = self._infere_type(expr.args[0])
-            if isinstance(expr.args[1], Function):
-                attributs = d_var['cls_base'].methods
-                n_name = str(type(expr.args[1]).__name__)
-            else:
-                attributs = d_var['cls_base'].attributs
-                n_name = expr.args[1].name.split('.')[0]
-            if not d_var['cls_base']:
-                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
-
-            var = None
-            for i in attributs:
-                if str(i.name) == n_name:
-                    var = i
-            if not var:
-                raise AttributeError('{0} object has not attribut {1}'.format(str(type(expr.args[0])),n_name))
-            if isinstance(var, FunctionDef):
-                return FunctionCall(var, expr.args[1].args)
-            else:
-                s = self._infere_type(var)
-            #create this varibale that represent the expr.args[0]
-            dtype = s.pop('datatype')
-
-            return Variable(dtype, n_name, **s)
+            if isinstance(expr.args[1],Symbol):
+                for i in expr.args[0].cls_base.attributs:
+                    if str(i.name) == str(expr.args[1].name):
+                        return self._infere_type(i)
+            return self._infere_type(expr.args[1])
 
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i in expr.args]
-
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
             ranks = [d['rank'] for d in ds]
@@ -904,16 +895,32 @@ class Parser(object):
                                           'is not allowed'.format(name=name))
             return var
         elif isinstance(expr, DottedVariable):
-            args = expr.args
-            name = expr.name.split('.')[0]
-            obj = self.get_variable(name)
-            var = DottedVariable(obj, args[1])
-            #we contrcut new DottedVariable so that we can infer the type
-            d_var = self._infere_type(var)
-            if isinstance(d_var, FunctionCall):
-                return FunctionCall(d_var.func.rename(expr.name),d_var.arguments,kind=d_var.kind)
-            new_var = d_var.clone(expr.name)
-            return new_var
+            first = self._annotate(expr.args[0])
+            if not isinstance(expr.args[1],Function):
+                if isinstance(expr.args[1],(Symbol,Variable)):
+                    second = self.get_variable(expr.args[1].name, parent = first)
+                elif isinstance(expr.args[1], (Indexed, IndexedElement)):
+                    #TODO find away to treat it outside the DottedVariable
+                    name = str(expr.args[1].base)
+                    var = self.get_variable(name,parent = first)
+                    args = [self._annotate(i) for i in expr.args[1].indices]
+                    args = tuple(args)
+                    dtype = var.dtype
+                    second = IndexedVariable(name ,dtype = dtype).__getitem__(*args)
+                elif isinstance (expr.args[1], (IndexedVariable, IndexedBase)):
+                    name = str(expr.args[1].name)
+                    var = self.get_variable(name, parent = first)
+                    if var is None:
+                        errors.report(UNDEFINED_VARIABLE, symbol=name, severity='error', blocker=True)
+                    dtype = var.dtype
+                    # TODO add shape
+                    second = IndexedVariable(name, dtype=dtype)
+            else:
+                for i in first.cls_base.methods:
+                    if str(i.name) == str(type(expr.args[1]).__name__):
+                        args = [self._annotate(arg) for arg in expr.args[1].args]
+                        second = FunctionCall(i,args,kind =i.kind)
+            return DottedVariable(first, second)
 
         elif isinstance(expr, (Add, Mul, And, Or, Eq, Ne, Lt, Gt, Le, Ge)):
             # we reconstruct the arithmetic expressions using the annotated
@@ -922,11 +929,12 @@ class Parser(object):
             # we treat the first element
             a = args[0]
             a_new = self._annotate(a, **settings)
-            expr_new =self.create_variable(a_new)
+            expr_new = a_new
+            #expr_new =self.create_variable(a_new)
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                a_new = self.create_variable(a_new)
+                #a_new = self.create_variable(a_new)
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
@@ -990,16 +998,6 @@ class Parser(object):
                               severity='error', blocker=True)
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
-
-        elif isinstance(expr, DottedVariable):
-            args = expr.args
-            name = expr.name.split('.')[0]
-            obj = self.get_variable(name)
-            var = DottedVariable(obj, args[1])
-            #we contrcut new DottedVariable so that we can infer the type
-            d_var = self._infere_type(var)
-            new_var = d_var.clone(expr.name)
-            return new_var
 
         elif isinstance(expr, Assign):
             rhs = self._annotate(expr.rhs, **settings)
@@ -1069,14 +1067,13 @@ class Parser(object):
             elif isinstance(lhs, DottedVariable):
                 # TODO fix indentation
                 dtype = d_var.pop('datatype')
-                name = lhs.name.split('.')[0]
+                name = lhs.args[0].name
                 # case of lhs=dottedvariable in the __init__ method that starts with self
                 if name == 'self' and 'self.__init__' in self._namespace.keys():
                      cls_name = str(self.get_variable('self').cls_base.name)
                      attributs = self.get_variable(cls_name).attributs
                      attributs = list(attributs)
-                     n_name = str(lhs.args[1]).split('.')
-                     n_name = n_name[0]
+                     n_name = str(lhs.args[1].name)
                      attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
                      self.insert_variable(ClassDef(cls_name,attributs,[]), cls_name)
@@ -1084,22 +1081,10 @@ class Parser(object):
                      dt=self.get_class_construct(cls_name)()
                      var = Variable(dt,'self',cls_base = self._namespace[cls_name])
                      self._namespace['self'] = var
-                     args = lhs.args
                      obj = self.get_variable('self')
-                     var = DottedVariable(obj, args[1])
-                     d_var = self._infere_type(var)
-                     lhs = d_var.clone(lhs.name)
+                     lhs = DottedVariable(obj, Variable(dtype, n_name, **d_var))
                 else :
-                    cls_name = str(self.get_variable(str(lhs.args[0])).cls_base.name)
-                    attributs = self.get_variable(cls_name).attributs
-                    attributs = list(attributs)
-                    name = lhs.name.split('.')[0]
-                    args = lhs.args
-                    obj = self.get_variable(name)
-                    var = DottedVariable(obj,args[1])
-                    #we contrcut new DottedVariable so that we can infer the type
-                    d_var = self._infere_type(var)
-                    lhs = d_var.clone(lhs.name)
+                    lhs =  self._annotate(lhs, **settings)
 
             expr = Assign(lhs, rhs, strict=False)
             # we check here, if it is an alias assignment
@@ -1412,6 +1397,7 @@ if __name__ == '__main__':
     pyccel = Parser(filename)
 
     pyccel.parse()
+    print pyccel.ast
 
     settings = {}
     pyccel.annotate(**settings)

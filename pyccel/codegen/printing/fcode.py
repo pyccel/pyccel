@@ -302,7 +302,23 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_DottedVariable(self, expr):
-        return expr.name
+        if isinstance(expr.args[1],FunctionCall):
+            func = expr.args[1].func
+            name = func.name
+            name = self._print(name)
+            # ...
+            code_args = ''
+            if not(expr.args[1].arguments) is None:
+                code_args = ', '.join(self._print(i) for i in expr.args[1].arguments)
+                code = '{0}({1})'.format(name, code_args)
+                # ...
+                # ...
+                if func.is_procedure:
+                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)
+                else:
+                    raise NotImplemented('FunctionCall of kind function not implemented yet')
+                return code
+        return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
