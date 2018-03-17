@@ -67,7 +67,7 @@ from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
-from pyccel.ast import FunctionHeader,ClassHeader
+from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
@@ -643,8 +643,10 @@ class Parser(object):
 
     def insert_header(self, expr):
         """."""
-        if isinstance(expr, FunctionHeader):
+        if isinstance(expr,MethodHeader):
             self._namespace['headers'][str(expr.name)] = expr
+        if isinstance(expr, FunctionHeader):
+            self._namespace['headers'][str(expr.func)] = expr
         elif isinstance(expr, ClassHeader):
             self._namespace['headers'][str(expr.name)] = expr
             # create a new Datatype for the current class
