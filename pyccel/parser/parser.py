@@ -467,7 +467,7 @@ class Parser(object):
         self._filename = None
         self._namespace = {}
         self._namespace['cls_constructs'] = {}
-
+        self._parent = None
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self._namespace['headers'] = {}
@@ -586,10 +586,10 @@ class Parser(object):
         cmd = "dot -Tps {name}.gv -o {name}.ps".format(name=name)
         os.system(cmd)
 
-    def get_variable(self, name, parent = None):
+    def get_variable(self, name):
         """."""
-        if parent is not None :
-            for i in parent.cls_base.attributs:
+        if self._parent is not None :
+            for i in self._parent.attributs:
                 if str(i.name) == name:
                     return i
         if name in self.namespace:
@@ -644,10 +644,7 @@ class Parser(object):
     def insert_header(self, expr):
         """."""
         if isinstance(expr, FunctionHeader):
-            if isinstance(expr.func, (tuple, list)) and len(expr.func)==2:
-                self._namespace['headers'][expr.func[1]] = expr
-            else:
-                self._namespace['headers'][str(expr.func)] = expr
+            self._namespace['headers'][str(expr.name)] = expr
         elif isinstance(expr, ClassHeader):
             self._namespace['headers'][str(expr.name)] = expr
             # create a new Datatype for the current class
@@ -772,11 +769,13 @@ class Parser(object):
             return d_var
 
         elif isinstance(expr, DottedVariable):
-            if isinstance(expr.args[1],Symbol):
-                for i in expr.args[0].cls_base.attributs:
-                    if str(i.name) == str(expr.args[1].name):
-                        return self._infere_type(i)
-            return self._infere_type(expr.args[1])
+            if isinstance(expr.args[0],DottedVariable):
+                self._parent = expr.args[0].args[1].cls_base
+            else:
+                self._parent = expr.args[0].cls_base
+            d_var = self._infere_type(expr.args[1])
+            self._parent = None
+            return d_var
 
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i in expr.args]
@@ -897,24 +896,9 @@ class Parser(object):
         elif isinstance(expr, DottedVariable):
             first = self._annotate(expr.args[0])
             if not isinstance(expr.args[1],Function):
-                if isinstance(expr.args[1],(Symbol,Variable)):
-                    second = self.get_variable(expr.args[1].name, parent = first)
-                elif isinstance(expr.args[1], (Indexed, IndexedElement)):
-                    #TODO find away to treat this cases by calling self._annotate
-                    name = str(expr.args[1].base)
-                    var = self.get_variable(name,parent = first)
-                    args = [self._annotate(i) for i in expr.args[1].indices]
-                    args = tuple(args)
-                    dtype = var.dtype
-                    second = IndexedVariable(name ,dtype = dtype).__getitem__(*args)
-                elif isinstance (expr.args[1], (IndexedVariable, IndexedBase)):
-                    name = str(expr.args[1].name)
-                    var = self.get_variable(name, parent = first)
-                    if var is None:
-                        errors.report(UNDEFINED_VARIABLE, symbol=name, severity='error', blocker=True)
-                    dtype = var.dtype
-                    # TODO add shape
-                    second = IndexedVariable(name, dtype=dtype)
+                self._parent =first.cls_base
+                second = self._annotate(expr.args[1])
+                self._parent = None
             else:
                 for i in first.cls_base.methods:
                     if str(i.name) == str(type(expr.args[1]).__name__):
@@ -1063,8 +1047,14 @@ class Parser(object):
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
 
             elif isinstance(lhs, DottedVariable):
-                # TODO fix indentation
                 dtype = d_var.pop('datatype')
+
+                if 'cls_base'in d_var.keys():
+                    cls_b = d_var.pop('cls_base')
+                else:
+                    cls_b = None
+                if dtype.__class__.__name__.startswith('Pyccel'):
+                    cls_b = self.get_variable(dtype.__class__.__name__[6:])
                 name = lhs.args[0].name
                 # case of lhs=dottedvariable in the __init__ method that starts with self
                 if name == 'self' and 'self.__init__' in self._namespace.keys():
@@ -1072,7 +1062,7 @@ class Parser(object):
                      attributs = self.get_variable(cls_name).attributs
                      attributs = list(attributs)
                      n_name = str(lhs.args[1].name)
-                     attributs += [Variable(dtype, n_name, **d_var)]
+                     attributs += [Variable(dtype, n_name,cls_base=cls_b ,**d_var)]
                      #update the attributs of the class and push it to the namespace
                      self.insert_variable(ClassDef(cls_name,attributs,[]), cls_name)
                      #update the self variable with the new attributs
@@ -1177,7 +1167,10 @@ class Parser(object):
 
             is_static = False
             if expr.arguments or results:
-                header = self.get_header(name)
+                if cls_name:
+                    header = self.get_header(cls_name+'.'+name)
+                else:
+                    header = self.get_header(name)
                 if not header:
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
@@ -1395,7 +1388,7 @@ if __name__ == '__main__':
     pyccel = Parser(filename)
 
     pyccel.parse()
-    
+
 
     settings = {}
     pyccel.annotate(**settings)

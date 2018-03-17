@@ -1986,7 +1986,7 @@ class DottedVariable(AtomicExpr, Boolean):
 
     def _sympystr(self, Printer):
         return self.name
-    
+
     @property
     def cls_base(self):
         return self._args[1].cls_base
@@ -3834,7 +3834,6 @@ class FunctionHeader(Header):
                 is_static=False):
 
         func = str(func)
-
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -3877,7 +3876,7 @@ class FunctionHeader(Header):
 
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
-
+      
         return Basic.__new__(cls, func, types, r_types, kind, is_static)
 
     @property
@@ -3916,7 +3915,7 @@ class FunctionHeader(Header):
         # ... factorize the following 2 blocks
         args = []
         for i,d in enumerate(self.dtypes):
-            datatype    = d[0]
+            dtype    = d[0]
             allocatable = d[2]
             # '' is converted to None
             if isinstance(allocatable, str):
@@ -3928,9 +3927,14 @@ class FunctionHeader(Header):
                     rank += 1
 
             shape  = None
-
+            if isinstance(dtype,str):
+                try:
+                    dtype = datatype(dtype)
+                except:
+                    #TODO check if it's a class type before
+                    dtype =  DataTypeFactory(str(dtype), ("_name"))()
             arg_name = 'arg_{0}'.format(str(i))
-            arg = Variable(datatype, arg_name,
+            arg = Variable(dtype, arg_name,
                            allocatable=allocatable,
                            rank=rank,
                            shape=shape)
@@ -3938,7 +3942,7 @@ class FunctionHeader(Header):
 
         results = []
         for i,d in enumerate(self.results):
-            datatype    = d[0]
+            dtype    = d[0]
             allocatable = d[2]
             # '' is converted to None
             if isinstance(allocatable, str):
@@ -3952,7 +3956,7 @@ class FunctionHeader(Header):
             shape  = None
 
             result_name = 'result_{0}'.format(str(i))
-            result = Variable(datatype, result_name,
+            result = Variable(dtype, result_name,
                            allocatable=allocatable,
                            rank=rank,
                            shape=shape)
