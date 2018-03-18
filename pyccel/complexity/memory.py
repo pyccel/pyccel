@@ -7,8 +7,6 @@ from sympy.core.singleton import S
 from sympy.tensor.indexed import Idx
 
 from pyccel.parser.parser  import PyccelParser
-from pyccel.parser.syntax.core import (AssignStmt, \
-                                       IfStmt, ForStmt,WhileStmt)
 
 from pyccel.ast.core import (For, Assign, Declare, Variable, \
                              datatype, While, NativeFloat, \
