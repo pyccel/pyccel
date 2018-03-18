@@ -193,6 +193,11 @@ def fst_to_ast(stmt):
 
         old = fst_to_ast(stmt.value)
         new = fst_to_ast(stmt.target)
+        # TODO improve
+        if isinstance(old, str):
+            old = old.replace("\'", "")
+        if isinstance(new, str):
+            new = new.replace("\'", "")
         return AsName(new, old)
 
     elif isinstance(stmt, DictNode):
@@ -255,25 +260,15 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, FromImportNode):
         source  = fst_to_ast(stmt.value)
         targets = fst_to_ast(stmt.targets)
-        ls = []
-        for i in targets:
-            if isinstance(i, AsName):
-                raise NotImplementedError('TODO')
-            else:
-                ls.append(i)
-
-#        print(ls)
-#        print(source)
-#        print imports
-#        import sys; sys.exit(0)
+#        print (targets)
 
         imports = []
-        imports.append(Import(ls, source=source))
+        imports.append(Import(targets, source=source))
 
         if len(imports) == 1:
             return imports[0]
         else:
-            return TupleImport(*ls)
+            return TupleImport(*targets)
 
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)

@@ -2684,7 +2684,7 @@ class Import(Basic):
     def __new__(cls, target, source=None):
 
         def _format(i):
-            if isinstance(i, (str, DottedName)):
+            if isinstance(i, (str, DottedName, AsName)):
                 return i
             elif isinstance(i, Symbol):
                 return str(i.name)
@@ -2693,7 +2693,7 @@ class Import(Basic):
                                 "given {}".format(type(i)))
 
         _target = []
-        if isinstance(target, (str, Symbol, DottedName)):
+        if isinstance(target, (str, Symbol, DottedName, AsName)):
             _target = [_format(target)]
         elif iterable(target):
             for i in target:

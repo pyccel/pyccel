@@ -6,6 +6,7 @@ www.fortran90.org as much as possible."""
 
 import string
 from itertools import groupby
+
 import numpy as np
 
 from sympy import Lambda
@@ -49,7 +50,9 @@ from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
                              Len, Shape, Dot, Sign, subs, Random,
-                             IndexedElement, Slice, DottedName, DottedVariable,Print, If)
+                             IndexedElement, Slice,
+                             DottedName, AsName, DottedVariable,
+                             Print, If)
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -146,7 +149,8 @@ class FCodePrinter(CodePrinter):
         if not name.startswith('mod_'):
             name = 'mod_{0}'.format(name)
 
-        imports = '\n'.join(self._print(i) for i in expr.imports)
+
+        imports = ''.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -241,23 +245,43 @@ class FCodePrinter(CodePrinter):
                                                modules=modules)
 
     def _print_Import(self, expr):
-        # ...
-        def _doit(e):
-            if isinstance(e, DottedName):
-                return '_'.join(self._print(i) for i in e.name)
-            elif (e, str):
-                return e
-            raise TypeError('Expecting str or DottedName')
-        # ...
 
+        prefix_as = ''
         if expr.source is None:
             prefix = 'use'
         else:
             source = self._print(expr.source)
             prefix = 'use {}, only:'.format(source)
+            prefix_as = 'use {},'.format(source)
 
-        target = ['{0} {1}'.format(prefix, _doit(i)) for i in expr.target]
-        code = '\n'.join(target)
+        code = ''
+        for i in expr.target:
+            if isinstance(i, AsName):
+                target = '{name} => {target}'.format(name=self._print(i.name),
+                                                     target=self._print(i.target))
+                line = '{prefix} {target}'.format(prefix=prefix_as,
+                                                  target=target)
+
+            elif isinstance(i, DottedName):
+                target = '_'.join(self._print(j) for j in i.name)
+                line = '{prefix} {target}'.format(prefix=prefix,
+                                                  target=target)
+
+            elif isinstance(i, str):
+                line = '{prefix} {target}'.format(prefix=prefix,
+                                                  target=str(i))
+
+            elif isinstance(i, Symbol):
+                line = '{prefix} {target}'.format(prefix=prefix,
+                                                  target=str(i.name))
+
+            else:
+                raise TypeError('Expecting str, Symbol, DottedName or AsName, '
+                                'given {}'.format(type(i)))
+
+            # TODO keep `\n` ?
+#            code = '{code}{line}'.format(code=code, line=line)
+            code = '{code}\n{line}'.format(code=code, line=line)
 
         return self._get_statement(code)
 
