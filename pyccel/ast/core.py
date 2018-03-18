@@ -2655,14 +2655,21 @@ class Import(Basic):
 
     def __new__(cls, target):
 
+        def _format(i):
+            if isinstance(i, (str, DottedName)):
+                return i
+            elif isinstance(i, Symbol):
+                return str(i.name)
+            else:
+                raise TypeError("Expecting a string, Symbol DottedName, "
+                                "given {}".format(type(i)))
+
         _target = []
-        if isinstance(target, (str, DottedName)):
-            _target = [target]
+        if isinstance(target, (str, Symbol, DottedName)):
+            _target = [_format(target)]
         elif iterable(target):
             for i in target:
-                if not isinstance(i, (str, DottedName)):
-                    raise TypeError("Expecting a string or DottedName")
-                _target.append(i)
+                _target.append(_format(i))
         target = Tuple(*_target)
 
         return Basic.__new__(cls, target)

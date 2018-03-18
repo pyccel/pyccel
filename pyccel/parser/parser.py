@@ -180,7 +180,10 @@ def fst_to_ast(stmt):
         names = []
         for a in stmt.value:
             names.append(str(a.value))
-        return DottedName(*names)
+        if len(names) == 1:
+            return names[0]
+        else:
+            return DottedName(*names)
 
     elif isinstance(stmt, DictNode):
         d = {}
@@ -237,6 +240,7 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, ImportNode):
         # in an import statement, we can have seperate target by commas
         ls = fst_to_ast(stmt.value)
+
         return Import(ls)
 
     elif isinstance(stmt, DelNode):
@@ -913,10 +917,13 @@ class Parser(object):
                 return List(*ls)
             else:
                 return Tuple(*ls)
+
         elif isinstance(expr, (Integer, Float)):
             return expr
+
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             return expr
+
         elif isinstance(expr, Variable):
             name = expr.name
             var = self.get_variable(name)
@@ -924,8 +931,10 @@ class Parser(object):
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               severity='error', blocker=True)
             return var
+
         elif isinstance(expr, str):
             return repr(expr)
+
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
             # an indexed variable is only defined if the associated variable is in
             # the namespace
@@ -937,6 +946,7 @@ class Parser(object):
             dtype = var.dtype
             # TODO add shape
             return IndexedVariable(name, dtype=dtype)
+
         elif isinstance(expr, (IndexedElement, Indexed)):
             name = str(expr.base)
             var = self.get_variable(name)
@@ -947,6 +957,7 @@ class Parser(object):
             args = tuple(expr.indices)
             dtype = var.dtype
             return IndexedVariable(name, dtype=dtype).__getitem__(*args)
+
         elif isinstance(expr, Symbol):
             name = str(expr.name)
             var = self.get_variable(name)
@@ -954,6 +965,7 @@ class Parser(object):
                 raise PyccelSemanticError('Symbolic {name} variable '
                                           'is not allowed'.format(name=name))
             return var
+
         elif isinstance(expr, DottedVariable):
             first = self._annotate(expr.args[0])
             if not isinstance(expr.args[1],Function):
@@ -999,6 +1011,7 @@ class Parser(object):
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new)
             return expr_new
+
         elif isinstance(expr, Function):
             args = expr.args
             name = str(type(expr).__name__)
@@ -1039,6 +1052,7 @@ class Parser(object):
                     return FunctionCall(func, args)
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
+
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1158,6 +1172,7 @@ class Parser(object):
                 return SymbolicAssign(lhs, expr.rhs)
             else:
                 return expr
+
         elif isinstance(expr, For):
             # treatment of the index/indices
             if isinstance(expr.target, Symbol):
@@ -1175,22 +1190,27 @@ class Parser(object):
             body = self._annotate(expr.body, **settings)
 
             return For(target, itr, body)
+
         elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
 
             return While(test, body)
+
         elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return If(*args)
+
         elif isinstance(expr, FunctionHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
             return expr
+
         elif isinstance(expr,ClassHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
             return expr
+
         elif isinstance(expr, Return):
             results = expr.expr
             if isinstance(results, Symbol):
@@ -1214,6 +1234,7 @@ class Parser(object):
                 return Return(ls)
             else:
                 raise NotImplementedError('only symbol or iterable are allowed for returns')
+
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace('\'', '') # remove quotes for str representation
@@ -1370,13 +1391,17 @@ class Parser(object):
 #                    # TODO shall we check first that it is not in the namespace?
 #                    self.insert_variable(get_func, name=get_func.name)
             return func
+
         elif isinstance(expr, EmptyLine):
             return expr
+
         elif isinstance(expr, Print):
             args = self._annotate(expr.expr, **settings)
             return Print(args)
+
         elif isinstance(expr, Comment):
             return expr
+
         elif isinstance(expr, ClassDef):
             name = str(expr.name)
             name = name.replace('\'', '')
@@ -1415,11 +1440,14 @@ class Parser(object):
              # then use it to decorate our arguments
             attributs = self.get_variable(name).attributs
             return ClassDef(name,attributs,methods)
+
         elif isinstance(expr, Pass):
             return Pass()
+
         elif isinstance(expr, Del):
             ls =  self._annotate(expr.variables)
             return Del(ls)
+
         elif isinstance(expr, Is):
             if not isinstance(expr.rhs, Nil):
                 errors.report(PYCCEL_RESTRICTION_IS_RHS, severity='error', blocker=True)
@@ -1431,6 +1459,13 @@ class Parser(object):
                               severity='error', blocker=True)
 
             return Is(var, expr.rhs)
+
+        elif isinstance(expr, Import):
+            # TODO treat properly
+#            target = expr.target
+#            return Import(target)
+            return expr
+
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 

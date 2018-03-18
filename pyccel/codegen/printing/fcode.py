@@ -241,6 +241,20 @@ class FCodePrinter(CodePrinter):
                                                modules=modules)
 
     def _print_Import(self, expr):
+        # ...
+        def _doit(e):
+            if isinstance(e, DottedName):
+                return '_'.join(self._print(i) for i in e.name)
+            elif (e, str):
+                return e
+            raise TypeError('Expecting str or DottedName')
+        # ...
+
+        code = '\n'.join('use {}'.format(_doit(i)) for i in expr.target)
+        return self._get_statement(code)
+
+    # TODO
+    def _print_FromImport(self, expr):
         fil = self._print(expr.fil)
         if isinstance(expr.fil, DottedName):
             # pyccel-extension case
