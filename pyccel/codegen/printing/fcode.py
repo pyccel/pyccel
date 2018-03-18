@@ -250,7 +250,10 @@ class FCodePrinter(CodePrinter):
         if expr.source is None:
             prefix = 'use'
         else:
-            source = self._print(expr.source)
+            if isinstance(expr.source, DottedName):
+                source = '_'.join(self._print(j) for j in expr.source.name)
+            else:
+                source = self._print(expr.source)
             prefix = 'use {}, only:'.format(source)
             prefix_as = 'use {},'.format(source)
 

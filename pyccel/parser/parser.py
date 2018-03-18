@@ -260,7 +260,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, FromImportNode):
         source  = fst_to_ast(stmt.value)
         targets = fst_to_ast(stmt.targets)
-#        print (targets)
+        if isinstance(source, DottedVariable):
+            source = DottedName(*source.names)
 
         imports = []
         imports.append(Import(targets, source=source))

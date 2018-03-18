@@ -1968,7 +1968,6 @@ class Variable(Symbol):
                    cls_parameters=self.cls_parameters)
 
 
-
 class DottedVariable(AtomicExpr, Boolean):
     """
     Represents a dotted variable.
@@ -2017,6 +2016,17 @@ class DottedVariable(AtomicExpr, Boolean):
     @property
     def cls_base(self):
         return self._args[1].cls_base
+
+    @property
+    def names(self):
+        """Return list of names as strings."""
+        ls = []
+        for i in self.args:
+            if not isinstance(i, DottedVariable):
+                ls.append(str(i))
+            else:
+                ls += i.names
+        return ls
 
 
 class ValuedVariable(Variable):
