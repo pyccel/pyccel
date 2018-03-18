@@ -116,46 +116,46 @@ Linear algebra (numpy.linalg)
 Matrix and vector products
 __________________________
 
-dot
-vdot
-inner
-outer
-matmul
-tensordot
-linalg.matrix_power
-kron
+- dot
+- vdot
+- inner
+- outer
+- matmul
+- tensordot
+- linalg.matrix_power
+- kron
 
 Decompositions
 ______________
 
-linalg.cholesky
-linalg.qr
-linalg.svd
+- linalg.cholesky
+- linalg.qr
+- linalg.svd
 
 Matrix eigenvalues
 __________________
 
-linalg.eig
-linalg.eigh
-linalg.eigvals
-linalg.eigvalsh
+- linalg.eig
+- linalg.eigh
+- linalg.eigvals
+- linalg.eigvalsh
 
 Norms and other numbers
 _______________________
 
-linalg.norm
-linalg.cond
-linalg.det
-linalg.matrix_rank
-trace
+- linalg.norm
+- linalg.cond
+- linalg.det
+- linalg.matrix_rank
+- trace
 
 Solving equations and inverting matrices
 ________________________________________
 
-linalg.solve
-linalg.tensorsolve
-linalg.lstsq
-linalg.inv
-linalg.pinv
-linalg.tensorinv
+- linalg.solve
+- linalg.tensorsolve
+- linalg.lstsq
+- linalg.inv
+- linalg.pinv
+- linalg.tensorinv
 
