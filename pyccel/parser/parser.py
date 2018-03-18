@@ -37,6 +37,8 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode
 from redbaron import GetitemNode,SliceNode
+from redbaron import ImportNode
+from redbaron import DottedAsNameNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -72,6 +74,7 @@ from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is
+from pyccel.ast import Import
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, PyccelSemanticError
 # TODO remove import * and only import what we need
@@ -159,13 +162,26 @@ def fst_to_ast(stmt):
     #      - blocking errors
     errors = Errors()
 
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList,
-                         NodeList, TupleNode, ListNode, tuple, list)):
+    # ...
+    def _treat_iterable(stmt):
         ls = [fst_to_ast(i) for i in stmt]
         if isinstance(stmt, (list, ListNode)):
             return List(*ls)
         else:
             return Tuple(*ls)
+    # ...
+
+    if isinstance(stmt, (RedBaron, LineProxyList, CommaProxyList,
+                         NodeList, TupleNode, ListNode,
+                         tuple, list)):
+        return _treat_iterable(stmt)
+
+    elif isinstance(stmt, DottedAsNameNode):
+        names = []
+        for a in stmt.value:
+            names.append(str(a.value))
+        return DottedName(*names)
+
     elif isinstance(stmt, DictNode):
         d = {}
         for i in stmt.value:
@@ -180,22 +196,30 @@ def fst_to_ast(stmt):
 
             d[key] = value
         return Dict(d)
+
     elif stmt is None:
         return Nil()
+
     elif isinstance(stmt, str):
         return repr(stmt)
+
     elif isinstance(stmt, StringNode):
         return stmt.value
+
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
+
     elif isinstance(stmt, FloatNode):
         return Float(stmt.value)
+
     elif isinstance(stmt, ComplexNode):
         raise NotImplementedError('ComplexNode not yet available')
+
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
         return Assign(lhs, rhs)
+
     elif isinstance(stmt, NameNode):
         if isinstance(stmt.previous,DotNode):
             return fst_to_ast(stmt.previous)
@@ -209,9 +233,16 @@ def fst_to_ast(stmt):
             return false
         else:
             return Symbol(str(stmt.value))
+
+    elif isinstance(stmt, ImportNode):
+        # in an import statement, we can have seperate target by commas
+        ls = fst_to_ast(stmt.value)
+        return Import(ls)
+
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)
         return Del(arg)
+
     elif isinstance(stmt, UnitaryOperatorNode):
         target = fst_to_ast(stmt.target)
         if stmt.value == 'not':
@@ -225,6 +256,7 @@ def fst_to_ast(stmt):
         else:
             raise PyccelSyntaxError('unknown/unavailable unary operator '
                                     '{node}'.format(node=type(stmt.value)))
+
     elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -254,6 +286,7 @@ def fst_to_ast(stmt):
         else:
             raise PyccelSyntaxError('unknown/unavailable binary operator '
                                     '{node}'.format(node=type(stmt.value)))
+
     elif isinstance(stmt, ComparisonOperatorNode):
         if stmt.first == '==':
             return '=='
@@ -271,6 +304,7 @@ def fst_to_ast(stmt):
             return 'is'
         else:
             raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
+
     elif isinstance(stmt, ComparisonNode):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -292,11 +326,14 @@ def fst_to_ast(stmt):
         else:
             raise PyccelSyntaxError('unknown/unavailable binary operator '
                                     '{node}'.format(node=type(op)))
+
     elif isinstance(stmt, PrintNode):
         expr = fst_to_ast(stmt.value)
         return Print(expr)
+
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
+
     elif isinstance(stmt, DefArgumentNode):
         name =  fst_to_ast(stmt.target)
         arg = Argument(str(name))
@@ -305,10 +342,13 @@ def fst_to_ast(stmt):
         else:
             value = fst_to_ast(stmt.value)
             return ValuedArgument(arg, value)
+
     elif isinstance(stmt, ReturnNode):
         return Return(fst_to_ast(stmt.value))
+
     elif isinstance(stmt, PassNode):
         return Pass()
+
     elif isinstance(stmt, DefNode):
         # TODO check all inputs and which ones should be treated in stage 1 or 2
         if isinstance(stmt.parent,ClassNode):
@@ -329,6 +369,7 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+
     elif isinstance(stmt, ClassNode):
         name = fst_to_ast(stmt.name)
         methods = [i for i in stmt.value if isinstance(i, DefNode)]
@@ -338,6 +379,7 @@ def fst_to_ast(stmt):
 
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
+
     elif isinstance(stmt, GetitemNode):
          parent = stmt.parent
          args = fst_to_ast(stmt.value)
@@ -362,8 +404,10 @@ def fst_to_ast(stmt):
              return Slice(lower, None)
          elif upper:
              return Slice(None, upper)
+
     elif isinstance(stmt, DotProxyList):
         return fst_to_ast(stmt[-1])
+
     elif isinstance(stmt, DotNode):
         suf = stmt.next
         pre = fst_to_ast(stmt.previous)
@@ -371,6 +415,7 @@ def fst_to_ast(stmt):
             stmt.parent.value.remove(stmt.previous)
         suf = fst_to_ast(suf)
         return DottedVariable(pre, suf)
+
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
         f_name = str(stmt.previous)
@@ -383,33 +428,42 @@ def fst_to_ast(stmt):
             return DottedVariable(pre, func)
         else:
             return func
+
     elif isinstance(stmt, CallArgumentNode):
         return fst_to_ast(stmt.value)
+
     elif isinstance(stmt, ForNode):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
         return For(target, iter, body, strict=False)
+
     elif isinstance(stmt, IfelseblockNode):
         args = fst_to_ast(stmt.value)
         return If(*args)
+
     elif isinstance(stmt,(IfNode, ElifNode)):
         test = fst_to_ast(stmt.test)
         body = fst_to_ast(stmt.value)
         return Tuple(test, body)
+
     elif isinstance(stmt, ElseNode):
         test = True
         body = fst_to_ast(stmt.value)
         return Tuple(test, body)
+
     elif isinstance(stmt, WhileNode):
         test = fst_to_ast(stmt.test)
         body = fst_to_ast(stmt.value)
         return While(test, body)
+
     elif isinstance(stmt, AssertNode):
         expr = fst_to_ast(stmt.value)
         return Assert(expr)
+
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
+
     elif isinstance(stmt, CommentNode):
         # if annotated comment
         if stmt.value.startswith('#$'):
@@ -426,15 +480,20 @@ def fst_to_ast(stmt):
             # TODO improve
             txt = stmt.value[1:].lstrip()
             return Comment(txt)
+
     elif isinstance(stmt, BreakNode):
         return Break()
+
     elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
         # this is a blocking error, since we don't want to convert the try body
         errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY, severity='critical', blocker=True)
+
     elif isinstance(stmt, RaiseNode):
         errors.report(PYCCEL_RESTRICTION_RAISE, severity='error')
+
     elif isinstance(stmt, (YieldNode, YieldAtomNode)):
         errors.report(PYCCEL_RESTRICTION_YIELD, severity='error')
+
     else:
         raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
 

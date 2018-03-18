@@ -2635,10 +2635,56 @@ class Ceil(Function):
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 
-    fil : str
-        The filepath of the module (i.e. header in C).
-    funcs
-        The name of the function (or an iterable of names) to be imported.
+    target : str, list, tuple, Tuple
+        targets to import
+
+    Examples
+
+    >>> from pyccel.ast.core import Import
+    >>> from pyccel.ast.core import DottedName
+    >>> Import('foo')
+    import foo
+
+    >>> abc = DottedName('foo', 'bar', 'baz')
+    >>> Import(abc)
+    import foo.bar.baz
+
+    >>> Import(['foo', abc])
+    import foo, foo.bar.baz
+    """
+
+    def __new__(cls, target):
+
+        _target = []
+        if isinstance(target, (str, DottedName)):
+            _target = [target]
+        elif iterable(target):
+            for i in target:
+                if not isinstance(i, (str, DottedName)):
+                    raise TypeError("Expecting a string or DottedName")
+                _target.append(i)
+        target = Tuple(*_target)
+
+        return Basic.__new__(cls, target)
+
+    @property
+    def target(self):
+        return self._args[0]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        target = ", ".join([sstr(i) for i in self.target])
+        return 'import {}'.format(target)
+
+
+# TODO
+class FromImport(Basic):
+    """Represents inclusion of dependencies in the code.
+
+    target : str, list, tuple, Tuple
+        targets to import
+    source: str, DottedName
+        import source
 
     Examples
 
@@ -2655,24 +2701,25 @@ class Import(Basic):
     Import(pyccel.stdlib.parallel.mpi, (*,))
     """
 
-    def __new__(cls, fil, funcs=None):
-        if not isinstance(fil, (str, DottedName)):
-            raise TypeError('Expecting a string or DottedName')
+    def __new__(cls, targets, source=None):
 
-        if funcs:
-            if iterable(funcs):
-                funcs = Tuple(*[Symbol(f) for f in funcs])
-            elif not isinstance(funcs, (str, DottedName)):
-                raise TypeError("Unrecognized funcs type: ", funcs)
+        if not(source is None):
+            if not isinstance(source, (str, DottedName)):
+                raise TypeError('Expecting a string or DottedName')
 
-        return Basic.__new__(cls, fil, funcs)
+        if iterable(target):
+            target = Tuple(*[Symbol(f) for f in target])
+        elif not isinstance(target, (str, DottedName)):
+            raise TypeError("Unrecognized target type: ", target)
+
+        return Basic.__new__(cls, target, source)
 
     @property
-    def fil(self):
+    def target(self):
         return self._args[0]
 
     @property
-    def funcs(self):
+    def source(self):
         return self._args[1]
 
 class Load(Basic):
@@ -3876,7 +3923,7 @@ class FunctionHeader(Header):
 
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
-      
+
         return Basic.__new__(cls, func, types, r_types, kind, is_static)
 
     @property

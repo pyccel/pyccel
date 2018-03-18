@@ -127,13 +127,3 @@ def test_Variable():
 ##    r = Return(x + y)
 ##    assert r.func(*r.args) == r
 
-def test_Import():
-    from pyccel.ast.core import DottedName
-    from pyccel.ast.core import Import
-
-    Import('numpy', 'linspace')
-
-    mpi = DottedName('pyccel', 'mpi')
-    Import(mpi, 'mpi_init')
-    Import(mpi, '*')
-
