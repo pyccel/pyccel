@@ -47,6 +47,7 @@ from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
+from pyccel.ast.core import Zeros
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
                              Len, Shape, Dot, Sign, subs, Random,
@@ -247,6 +248,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         prefix_as = ''
+        source = None
         if expr.source is None:
             prefix = 'use'
         else:
@@ -256,6 +258,11 @@ class FCodePrinter(CodePrinter):
                 source = self._print(expr.source)
             prefix = 'use {}, only:'.format(source)
             prefix_as = 'use {},'.format(source)
+
+        # TODO - improve
+        # importing of pyccel extensions is not printed
+        if source == 'numpy':
+            return ''
 
         code = ''
         for i in expr.target:
@@ -403,44 +410,6 @@ class FCodePrinter(CodePrinter):
         code = ('allocate({lhs}({pads}, {bounds}))\n'
                 '{lhs} = 0.0d0').format(lhs=lhs, bounds=bounds, pads=pads)
 
-        return self._get_statement(code)
-
-    def _print_Zeros(self, expr):
-        lhs_code   = self._print(expr.lhs)
-
-        if expr.grid is None:
-            if isinstance(expr.shape, Tuple):
-                # this is a correction. problem on LRZ
-                shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-            else:
-                shape_code = '0:' + self._print(expr.shape) + '-1'
-
-            if not isinstance(expr.lhs, Variable):
-                raise TypeError('Expecting lhs to be a Variable')
-        else:
-            # TODO check tensor type
-            #      this only works with steps = 1
-            tensor = expr.grid
-            if isinstance(tensor, Tensor):
-                starts = [r.start for r in tensor.ranges]
-                ends   = [r.stop  for r in tensor.ranges]
-                steps  = [r.step  for r in tensor.ranges]
-            elif isinstance(tensor, Range):
-                starts = [tensor.start]
-                ends   = [tensor.stop ]
-                steps  = [tensor.step ]
-
-            pads = np.zeros(len(starts), dtype=int)
-
-            shape_code = ', '.join('{0}:{1}'.format(self._print(s-p),  \
-                                                    self._print(e+p)) \
-                                   for (s,e, p) in zip(starts, ends, pads))
-
-        init_value = self._print(expr.init_value)
-
-        code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
-        code_init = "{0} = {1}".format(lhs_code, init_value)
-        code = "{0}\n{1}".format(code_alloc, code_init)
         return self._get_statement(code)
 
     def _print_Array(self,expr):
@@ -616,7 +585,7 @@ class FCodePrinter(CodePrinter):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
         elif (rank > 0) or allocatable or is_pointer:
-            rankstr = ', '.join(':' for f in range(0, rank))
+            rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
         allocatablestr = ''
@@ -671,6 +640,9 @@ class FCodePrinter(CodePrinter):
         # TODO treat the case of iterable classes
         if isinstance(expr.rhs, (Range, Tensor)):
             return ''
+
+        if isinstance(expr.rhs, Zeros):
+            return expr.rhs.fprint(self._print, expr.lhs)
 
         elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a

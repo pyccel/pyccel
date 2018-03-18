@@ -1454,6 +1454,24 @@ def is_iterable_datatype(dtype):
     except:
         return False
 
+
+def get_default_value(dtype):
+    """Returns the default value of a native datatype."""
+    if isinstance(dtype, NativeInteger):
+        value = 0
+    elif isinstance(dtype, NativeFloat):
+        value = 0.0
+    elif isinstance(dtype, NativeDouble):
+        value = 0.0
+    elif isinstance(dtype, NativeComplex):
+        value = 0.0
+    elif isinstance(dtype, NativeBool):
+        value = BooleanFalse()
+    else:
+        raise TypeError('Unknown type')
+    return value
+
+
 # TODO improve and remove try/except
 def is_with_construct_datatype(dtype):
     """Returns True if dtype is an with_construct class."""
@@ -2694,7 +2712,10 @@ class Import(Basic):
     def __new__(cls, target, source=None):
 
         def _format(i):
-            if isinstance(i, (str, DottedName, AsName)):
+            if isinstance(i, str):
+                # otherwise, sympy will treat `zeros` as function
+                return repr(i)
+            if isinstance(i, (DottedName, AsName)):
                 return i
             elif isinstance(i, Symbol):
                 return str(i.name)
@@ -3017,7 +3038,7 @@ class Sign(Basic):
     def rhs(self):
         return self.args[0]
 
-class Zeros(Basic):
+class Zeros(Function):
     """Represents variable assignment using numpy.zeros for code generation.
 
     lhs : Expr
@@ -3044,72 +3065,64 @@ class Zeros(Basic):
     >>> Zeros(y, (n,m))
     y := False
     """
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape=None, grid=None):
-        lhs   = sympify(lhs)
+    # TODO improve
+    def __new__(cls, shape, dtype=None):
 
-        if shape:
-            if isinstance(shape, list):
-                # this is a correction. otherwise it is not working on LRZ
-                if isinstance(shape[0], list):
-                    shape = Tuple(*(sympify(i) for i in shape[0]))
-                else:
-                    shape = Tuple(*(sympify(i) for i in shape))
-            elif isinstance(shape, int):
-                shape = Tuple(sympify(shape))
-            elif isinstance(shape,Len):
-                shape = shape.str
+        if isinstance(shape, list):
+            # this is a correction. otherwise it is not working on LRZ
+            if isinstance(shape[0], list):
+                shape = Tuple(*(sympify(i) for i in shape[0]))
             else:
-                shape = shape
+                shape = Tuple(*(sympify(i) for i in shape))
+        elif isinstance(shape, int):
+            shape = Tuple(sympify(shape))
+        elif isinstance(shape,Len):
+            shape = shape.str
+        else:
+            shape = shape
 
-        if grid:
-            if not isinstance(grid, (Range, Tensor, Variable)):
-                raise TypeError('Expecting a Range, Tensor or a Variable object.')
+        if dtype is None:
+            dtype = 'double'
 
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        if isinstance(dtype, str):
+            dtype = datatype(dtype)
+        elif not isinstance(dtype, DataType):
+            raise TypeError("datatype must be an instance of DataType.")
 
-        return Basic.__new__(cls, lhs, shape, grid)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.init_value))
-
-    @property
-    def lhs(self):
-        return self._args[0]
+        return Basic.__new__(cls, shape, dtype)
 
     @property
     def shape(self):
-        if self._args[1]:
-            return self._args[1]
-        else:
-            ranges = self.grid.ranges
-            sh = [r.size for r in ranges]
-            return Tuple(*(i for i in sh))
+        return self._args[0]
 
     @property
-    def grid(self):
-        return self._args[2]
+    def rank(self):
+        if iterable(self.shape):
+            return len(self.shape)
+        else:
+            return 1
 
     @property
-    def init_value(self):
-        dtype = self.lhs.dtype
-        if isinstance(dtype, NativeInteger):
-            value = 0
-        elif isinstance(dtype, NativeFloat):
-            value = 0.0
-        elif isinstance(dtype, NativeDouble):
-            value = 0.0
-        elif isinstance(dtype, NativeComplex):
-            value = 0.0
-        elif isinstance(dtype, NativeBool):
-            value = BooleanFalse()
+    def dtype(self):
+        return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+        if isinstance(self.shape, Tuple):
+            # this is a correction. problem on LRZ
+            shape_code = ', '.join('0:' + printer(i-1) for i in self.shape)
         else:
-            raise TypeError('Unknown type')
-        return value
+            shape_code = '0:' + printer(self.shape-1)
+
+        init_value = printer(get_default_value(self.dtype))
+
+        lhs_code = printer(lhs)
+
+        code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
+        code_init = "{0} = {1}".format(lhs_code, init_value)
+        code = "{0}\n{1}".format(code_alloc, code_init)
+        return code
+
 
 class Ones(Zeros):
     """
@@ -4536,3 +4549,21 @@ def builtin_function(expr, args=None):
         return Range(*args)
 
     return None
+
+def builtin_import(expr):
+    """Returns a builtin pyccel-extension function/object from an import."""
+    if not isinstance(expr, Import):
+        raise TypeError('Expecting an Import expression')
+
+    if expr.source is None:
+        return None, None
+
+    source = expr.source
+    if source == 'numpy':
+        # TODO improve
+        target = str(expr.target[0])
+        if target == 'zeros':
+            # TODO return as_name and not name
+            return target, Zeros
+
+    return None, None

@@ -90,6 +90,7 @@ from sympy.core.basic import Basic
 from pyccel.ast import Range
 from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
+from pyccel.ast import builtin_import as pyccel_builtin_import
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
@@ -188,10 +189,14 @@ def fst_to_ast(stmt):
             return DottedName(*names)
 
     elif isinstance(stmt, NameAsNameNode):
-        if not stmt.target:
-            return fst_to_ast(stmt.value)
+        if not isinstance(stmt.value, str):
+            raise TypeError('Expecting a string')
 
-        old = fst_to_ast(stmt.value)
+        value = str(stmt.value)
+        if not stmt.target:
+            return value
+
+        old = value
         new = fst_to_ast(stmt.target)
         # TODO improve
         if isinstance(old, str):
@@ -259,15 +264,16 @@ def fst_to_ast(stmt):
 
     elif isinstance(stmt, FromImportNode):
         source  = fst_to_ast(stmt.value)
-        targets = fst_to_ast(stmt.targets)
         if isinstance(source, DottedVariable):
             source = DottedName(*source.names)
 
-        imports = []
-        imports.append(Import(targets, source=source))
+        targets = []
+        for i in stmt.targets:
+            s = fst_to_ast(i)
+            targets.append(s)
 
-        if len(imports) == 1:
-            return imports[0]
+        if len(targets) == 1:
+            return Import(targets, source=source)
         else:
             return TupleImport(*targets)
 
@@ -1077,7 +1083,11 @@ class Parser(object):
                 # TODO shall we keep it, or do this only in the Assign?
                 func = self.get_variable(name)
                 if not(func is None):
-                    return FunctionCall(func, args)
+                    if isinstance(func, FunctionDef):
+                        return FunctionCall(func, args)
+                    else:
+                        return func(*args)
+                        #return Function(name)(*args)
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
 
@@ -1111,6 +1121,18 @@ class Parser(object):
                 d_var['is_target']   = True
                 d_var['is_polymorphic'] = False
                 d_var['cls_base']    = cls
+
+            elif isinstance(rhs, Function):
+                name = str(type(rhs).__name__)
+                if name == 'Zeros':
+                    # TODO improve
+                    d_var = {}
+                    d_var['datatype']    = rhs.dtype
+                    d_var['allocatable'] = True
+                    d_var['shape']       = rhs.shape
+                    d_var['rank']        = rhs.rank
+                else:
+                    raise NotImplementedError('TODO')
 
             elif isinstance(rhs, MethodCall):
                 raise NotImplementedError('TODO')
@@ -1489,9 +1511,17 @@ class Parser(object):
             return Is(var, expr.rhs)
 
         elif isinstance(expr, Import):
-            # TODO treat properly
-#            target = expr.target
-#            return Import(target)
+            # TODO - must have a dict where to store things that have been
+            #        imported
+            #      - should not use namespace
+            name, atom = pyccel_builtin_import(expr)
+            if not(name is None):
+                F = self.get_variable(name)
+                if F is None:
+                    self.insert_variable(atom, name=name)
+                else:
+                    raise NotImplementedError('must report error')
+
             return expr
 
         else:
