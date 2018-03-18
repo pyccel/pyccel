@@ -250,8 +250,21 @@ class FCodePrinter(CodePrinter):
             raise TypeError('Expecting str or DottedName')
         # ...
 
-        code = '\n'.join('use {}'.format(_doit(i)) for i in expr.target)
+        if expr.source is None:
+            prefix = 'use'
+        else:
+            source = self._print(expr.source)
+            prefix = 'use {}, only:'.format(source)
+
+        target = ['{0} {1}'.format(prefix, _doit(i)) for i in expr.target]
+        code = '\n'.join(target)
+
         return self._get_statement(code)
+
+    def _print_TupleImport(self, expr):
+        code = '\n'.join(self._print(i) for i in expr.imports)
+        return self._get_statement(code)
+
 
     # TODO
     def _print_FromImport(self, expr):

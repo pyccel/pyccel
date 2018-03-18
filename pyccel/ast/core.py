@@ -214,6 +214,7 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError("Unexpected type {0}".format(type(expr)))
 
+
 class DottedName(Basic):
     """
     Represents a dotted variable.
@@ -240,6 +241,32 @@ class DottedName(Basic):
         sstr = printer.doprint
         return '.'.join(sstr(n) for n in self.name)
 
+
+class AsName(Basic):
+    """
+    Represents a renaming of a variable, used with Import.
+
+    Examples
+
+    >>> from pyccel.ast.core import AsName
+    >>> AsName('new', 'old')
+    new as old
+    """
+    def __new__(cls, name, target):
+        # TODO check
+        return Basic.__new__(cls, name, target)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def target(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
 
 
@@ -2632,6 +2659,7 @@ class Ceil(Function):
     def rhs(self):
         return self._args[0]
 
+
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 
@@ -2653,7 +2681,7 @@ class Import(Basic):
     import foo, foo.bar.baz
     """
 
-    def __new__(cls, target):
+    def __new__(cls, target, source=None):
 
         def _format(i):
             if isinstance(i, (str, DottedName)):
@@ -2672,52 +2700,8 @@ class Import(Basic):
                 _target.append(_format(i))
         target = Tuple(*_target)
 
-        return Basic.__new__(cls, target)
-
-    @property
-    def target(self):
-        return self._args[0]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        target = ", ".join([sstr(i) for i in self.target])
-        return 'import {}'.format(target)
-
-
-# TODO
-class FromImport(Basic):
-    """Represents inclusion of dependencies in the code.
-
-    target : str, list, tuple, Tuple
-        targets to import
-    source: str, DottedName
-        import source
-
-    Examples
-
-    >>> from pyccel.ast.core import Import
-    >>> Import('numpy', 'linspace')
-    Import(numpy, (linspace,))
-
-    >>> from pyccel.ast.core import DottedName
-    >>> from pyccel.ast.core import Import
-    >>> mpi = DottedName('pyccel', 'stdlib', 'parallel', 'mpi')
-    >>> Import(mpi, 'mpi_init')
-    Import(pyccel.stdlib.parallel.mpi, (mpi_init,))
-    >>> Import(mpi, '*')
-    Import(pyccel.stdlib.parallel.mpi, (*,))
-    """
-
-    def __new__(cls, targets, source=None):
-
         if not(source is None):
-            if not isinstance(source, (str, DottedName)):
-                raise TypeError('Expecting a string or DottedName')
-
-        if iterable(target):
-            target = Tuple(*[Symbol(f) for f in target])
-        elif not isinstance(target, (str, DottedName)):
-            raise TypeError("Unrecognized target type: ", target)
+            source = _format(source)
 
         return Basic.__new__(cls, target, source)
 
@@ -2728,6 +2712,34 @@ class FromImport(Basic):
     @property
     def source(self):
         return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        target = ", ".join([sstr(i) for i in self.target])
+        if self.source is None:
+            return 'import {target}'.format(target=target)
+        else:
+            source = sstr(self.source)
+            return 'from {source} import {target}'.format(source=source,
+                                                          target=target)
+
+class TupleImport(Basic):
+
+    def __new__(cls, *args):
+        for a in args:
+            if not isinstance(a, Import):
+                raise TypeError('Expecting an Import statement')
+
+        return Basic.__new__(cls, *args)
+
+    @property
+    def imports(self):
+        return self._args
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '\n'.join(sstr(n) for n in self.imports)
+
 
 class Load(Basic):
     """Similar to 'importlib' in python. In addition, we can also provide the

@@ -37,8 +37,9 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode
 from redbaron import GetitemNode,SliceNode
-from redbaron import ImportNode
+from redbaron import ImportNode, FromImportNode
 from redbaron import DottedAsNameNode
+from redbaron import NameAsNameNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -74,7 +75,8 @@ from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is
-from pyccel.ast import Import
+from pyccel.ast import Import, TupleImport
+from pyccel.ast import AsName
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, PyccelSemanticError
 # TODO remove import * and only import what we need
@@ -185,6 +187,14 @@ def fst_to_ast(stmt):
         else:
             return DottedName(*names)
 
+    elif isinstance(stmt, NameAsNameNode):
+        if not stmt.target:
+            return fst_to_ast(stmt.value)
+
+        old = fst_to_ast(stmt.value)
+        new = fst_to_ast(stmt.target)
+        return AsName(new, old)
+
     elif isinstance(stmt, DictNode):
         d = {}
         for i in stmt.value:
@@ -240,8 +250,30 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, ImportNode):
         # in an import statement, we can have seperate target by commas
         ls = fst_to_ast(stmt.value)
-
         return Import(ls)
+
+    elif isinstance(stmt, FromImportNode):
+        source  = fst_to_ast(stmt.value)
+        targets = fst_to_ast(stmt.targets)
+        ls = []
+        for i in targets:
+            if isinstance(i, AsName):
+                raise NotImplementedError('TODO')
+            else:
+                ls.append(i)
+
+#        print(ls)
+#        print(source)
+#        print imports
+#        import sys; sys.exit(0)
+
+        imports = []
+        imports.append(Import(ls, source=source))
+
+        if len(imports) == 1:
+            return imports[0]
+        else:
+            return TupleImport(*ls)
 
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)
