@@ -3039,31 +3039,16 @@ class Sign(Basic):
         return self.args[0]
 
 class Zeros(Function):
-    """Represents variable assignment using numpy.zeros for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+    """Represents a call to numpy.zeros for code generation.
 
     shape : int, list, tuple
         int or list of integers
 
-    grid : Range, Tensor
-        ensures a one-to-one representation of the array.
+    dtype: str, DataType
+        datatype for the constructed array
 
     Examples
 
-    >>> from pyccel.ast.core import Variable, Zeros
-    >>> n = Variable('int', 'n')
-    >>> m = Variable('int', 'm')
-    >>> x = Variable('int', 'x')
-    >>> Zeros(x, (n,m))
-    x := 0
-    >>> y = Variable('bool', 'y')
-    >>> Zeros(y, (n,m))
-    y := False
     """
     # TODO improve
     def __new__(cls, shape, dtype=None):
@@ -3106,6 +3091,23 @@ class Zeros(Function):
     def dtype(self):
         return self._args[1]
 
+    @property
+    def init_value(self):
+        dtype = self.dtype
+        if isinstance(dtype, NativeInteger):
+            value = 0
+        elif isinstance(dtype, NativeFloat):
+            value = 0.0
+        elif isinstance(dtype, NativeDouble):
+            value = 0.0
+        elif isinstance(dtype, NativeComplex):
+            value = 0.0
+        elif isinstance(dtype, NativeBool):
+            value = BooleanFalse()
+        else:
+            raise TypeError('Unknown type')
+        return value
+
     def fprint(self, printer, lhs):
         """Fortran print."""
         if isinstance(self.shape, Tuple):
@@ -3114,7 +3116,7 @@ class Zeros(Function):
         else:
             shape_code = '0:' + printer(self.shape-1)
 
-        init_value = printer(get_default_value(self.dtype))
+        init_value = printer(self.init_value)
 
         lhs_code = printer(lhs)
 
@@ -3125,8 +3127,7 @@ class Zeros(Function):
 
 
 class Ones(Zeros):
-    """
-    Represents variable assignment using numpy.ones for code generation.
+    """Represents a call to numpy.ones for code generation.
 
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
@@ -3138,19 +3139,10 @@ class Ones(Zeros):
 
     Examples
 
-    >>> from pyccel.ast.core import Variable, Ones
-    >>> n = Variable('int', 'n')
-    >>> m = Variable('int', 'm')
-    >>> x = Variable('int', 'x')
-    >>> Ones(x, (n,m))
-    x := 1
-    >>> y = Variable('bool', 'y')
-    >>> Ones(y, (n,m))
-    y := True
     """
     @property
     def init_value(self):
-        dtype = self.lhs.dtype
+        dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 1
         elif isinstance(dtype, NativeFloat):
@@ -4565,5 +4557,9 @@ def builtin_import(expr):
         if target == 'zeros':
             # TODO return as_name and not name
             return target, Zeros
+
+        if target == 'ones':
+            # TODO return as_name and not name
+            return target, Ones
 
     return None, None

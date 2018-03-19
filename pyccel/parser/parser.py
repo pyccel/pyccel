@@ -1124,7 +1124,7 @@ class Parser(object):
 
             elif isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
-                if name == 'Zeros':
+                if name in ['Zeros', 'Ones']:
                     # TODO improve
                     d_var = {}
                     d_var['datatype']    = rhs.dtype
