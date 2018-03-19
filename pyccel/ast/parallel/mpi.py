@@ -23,8 +23,6 @@ from pyccel.ast.core import DataType
 from pyccel.ast.core import DataTypeFactory
 from pyccel.ast.core import Block
 from pyccel.ast.core import Range, Tile, Tensor
-from pyccel.ast.core import Zeros
-from pyccel.ast.core import Ones
 from pyccel.ast.core import Comment
 from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Print
@@ -33,6 +31,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall
+from pyccel.ast.numpyext import Zeros, Ones
 
 from pyccel.ast.parallel.basic        import Basic
 from pyccel.ast.parallel.communicator import UniversalCommunicator

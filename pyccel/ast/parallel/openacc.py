@@ -16,8 +16,6 @@ from pyccel.ast.core import DataType
 from pyccel.ast.core import DataTypeFactory
 from pyccel.ast.core import Block, ParallelBlock
 from pyccel.ast.core import Range, Tile, Tensor
-from pyccel.ast.core import Zeros
-from pyccel.ast.core import Ones
 from pyccel.ast.core import Comment
 from pyccel.ast.core import AnnotatedComment
 from pyccel.ast.core import EmptyLine

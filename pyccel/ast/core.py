@@ -53,93 +53,93 @@ from sympy.core.compatibility import is_sequence
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
-def subs(expr, a_old, a_new):
-    """
-    Substitutes old for new in an expression after sympifying args.
-
-    a_old: str, Symbol, Variable
-        name of the symbol to replace
-    a_new: str, Symbol, Variable
-        name of the new symbol
-
-    Examples
-    """
-    a_new = a_old.clone(str(a_new))
-
-    if iterable(expr):
-        return [subs(i, a_old, a_new) for i in expr]
-    elif isinstance(expr, Variable):
-        if expr.name == str(a_old):
-            return a_new
-        else:
-            return expr
-    elif isinstance(expr, IndexedVariable):
-        if str(expr) == str(a_old):
-            return IndexedVariable(str(a_new))
-        else:
-            return expr
-    elif isinstance(expr, IndexedElement):
-        base    = subs(expr.base   , a_old, a_new)
-        indices = subs(expr.indices, a_old, a_new)
-        return base[indices]
-    elif isinstance(expr, Expr):
-        return expr.subs({a_old: a_new})
-    elif isinstance(expr, Zeros):
-        e_lhs   = subs(expr.lhs, a_old, a_new)
-        e_shape = subs(expr.shape, a_old, a_new)
-        return Zeros(e_lhs, e_shape)
-    elif isinstance(expr, Ones):
-        e_lhs   = subs(expr.lhs, a_old, a_new)
-        e_shape = subs(expr.shape, a_old, a_new)
-        return Ones(e_lhs, e_shape)
-    elif isinstance(expr, ZerosLike):
-        e_rhs = subs(expr.rhs, a_old, a_new)
-        e_lhs = subs(expr.lhs, a_old, a_new)
-        return ZerosLike(e_lhs, e_rhs)
-    elif isinstance(expr, Assign):
-        e_rhs = subs(expr.rhs, a_old, a_new)
-        e_lhs = subs(expr.lhs, a_old, a_new)
-        return Assign(e_lhs, e_rhs, strict=False)
-    elif isinstance(expr, MultiAssign):
-        e_rhs   = subs(expr.rhs, a_old, a_new)
-        e_lhs   = subs(expr.lhs, a_old, a_new)
-        return MultiAssign(e_lhs, e_rhs)
-    elif isinstance(expr, While):
-        test = subs(expr.test, a_old, a_new)
-        body = subs(expr.body, a_old, a_new)
-        return While(test, body)
-    elif isinstance(expr, For):
-        # TODO treat iter correctly
-#        target   = subs(expr.target, a_old, a_new)
-#        it       = subs(expr.iterable, a_old, a_new)
-        target   = expr.target
-        it       = expr.iterable
-        body     = subs(expr.body, a_old, a_new)
-        return For(target, it, body)
-    elif isinstance(expr, If):
-        args = []
-        for block in expr.args:
-            test  = block[0]
-            stmts = block[1]
-            t = subs(test,  a_old, a_new)
-            s = subs(stmts, a_old, a_new)
-            args.append((t,s))
-        return If(*args)
-    elif isinstance(expr, FunctionDef):
-        name        = subs(expr.name, a_old, a_new)
-        arguments   = subs(expr.arguments, a_old, a_new)
-        results     = subs(expr.results, a_old, a_new)
-        body        = subs(expr.body, a_old, a_new)
-        local_vars  = subs(expr.local_vars, a_old, a_new)
-        global_vars = subs(expr.global_vars, a_old, a_new)
-        return FunctionDef(name, arguments, results, \
-                           body, local_vars, global_vars)
-    elif isinstance(expr, Declare):
-        dtype     = subs(expr.dtype, a_old, a_new)
-        variables = subs(expr.variables, a_old, a_new)
-        return Declare(dtype, variables)
-    else:
-        return expr
+#def subs(expr, a_old, a_new):
+#    """
+#    Substitutes old for new in an expression after sympifying args.
+#
+#    a_old: str, Symbol, Variable
+#        name of the symbol to replace
+#    a_new: str, Symbol, Variable
+#        name of the new symbol
+#
+#    Examples
+#    """
+#    a_new = a_old.clone(str(a_new))
+#
+#    if iterable(expr):
+#        return [subs(i, a_old, a_new) for i in expr]
+#    elif isinstance(expr, Variable):
+#        if expr.name == str(a_old):
+#            return a_new
+#        else:
+#            return expr
+#    elif isinstance(expr, IndexedVariable):
+#        if str(expr) == str(a_old):
+#            return IndexedVariable(str(a_new))
+#        else:
+#            return expr
+#    elif isinstance(expr, IndexedElement):
+#        base    = subs(expr.base   , a_old, a_new)
+#        indices = subs(expr.indices, a_old, a_new)
+#        return base[indices]
+#    elif isinstance(expr, Expr):
+#        return expr.subs({a_old: a_new})
+#    elif isinstance(expr, Zeros):
+#        e_lhs   = subs(expr.lhs, a_old, a_new)
+#        e_shape = subs(expr.shape, a_old, a_new)
+#        return Zeros(e_lhs, e_shape)
+#    elif isinstance(expr, Ones):
+#        e_lhs   = subs(expr.lhs, a_old, a_new)
+#        e_shape = subs(expr.shape, a_old, a_new)
+#        return Ones(e_lhs, e_shape)
+#    elif isinstance(expr, ZerosLike):
+#        e_rhs = subs(expr.rhs, a_old, a_new)
+#        e_lhs = subs(expr.lhs, a_old, a_new)
+#        return ZerosLike(e_lhs, e_rhs)
+#    elif isinstance(expr, Assign):
+#        e_rhs = subs(expr.rhs, a_old, a_new)
+#        e_lhs = subs(expr.lhs, a_old, a_new)
+#        return Assign(e_lhs, e_rhs, strict=False)
+#    elif isinstance(expr, MultiAssign):
+#        e_rhs   = subs(expr.rhs, a_old, a_new)
+#        e_lhs   = subs(expr.lhs, a_old, a_new)
+#        return MultiAssign(e_lhs, e_rhs)
+#    elif isinstance(expr, While):
+#        test = subs(expr.test, a_old, a_new)
+#        body = subs(expr.body, a_old, a_new)
+#        return While(test, body)
+#    elif isinstance(expr, For):
+#        # TODO treat iter correctly
+##        target   = subs(expr.target, a_old, a_new)
+##        it       = subs(expr.iterable, a_old, a_new)
+#        target   = expr.target
+#        it       = expr.iterable
+#        body     = subs(expr.body, a_old, a_new)
+#        return For(target, it, body)
+#    elif isinstance(expr, If):
+#        args = []
+#        for block in expr.args:
+#            test  = block[0]
+#            stmts = block[1]
+#            t = subs(test,  a_old, a_new)
+#            s = subs(stmts, a_old, a_new)
+#            args.append((t,s))
+#        return If(*args)
+#    elif isinstance(expr, FunctionDef):
+#        name        = subs(expr.name, a_old, a_new)
+#        arguments   = subs(expr.arguments, a_old, a_new)
+#        results     = subs(expr.results, a_old, a_new)
+#        body        = subs(expr.body, a_old, a_new)
+#        local_vars  = subs(expr.local_vars, a_old, a_new)
+#        global_vars = subs(expr.global_vars, a_old, a_new)
+#        return FunctionDef(name, arguments, results, \
+#                           body, local_vars, global_vars)
+#    elif isinstance(expr, Declare):
+#        dtype     = subs(expr.dtype, a_old, a_new)
+#        variables = subs(expr.variables, a_old, a_new)
+#        return Declare(dtype, variables)
+#    else:
+#        return expr
 
 def allocatable_like(expr, verbose=False):
     """
@@ -3038,124 +3038,6 @@ class Sign(Basic):
     def rhs(self):
         return self.args[0]
 
-class Zeros(Function):
-    """Represents a call to numpy.zeros for code generation.
-
-    shape : int, list, tuple
-        int or list of integers
-
-    dtype: str, DataType
-        datatype for the constructed array
-
-    Examples
-
-    """
-    # TODO improve
-    def __new__(cls, shape, dtype=None):
-
-        if isinstance(shape, list):
-            # this is a correction. otherwise it is not working on LRZ
-            if isinstance(shape[0], list):
-                shape = Tuple(*(sympify(i) for i in shape[0]))
-            else:
-                shape = Tuple(*(sympify(i) for i in shape))
-        elif isinstance(shape, int):
-            shape = Tuple(sympify(shape))
-        elif isinstance(shape,Len):
-            shape = shape.str
-        else:
-            shape = shape
-
-        if dtype is None:
-            dtype = 'double'
-
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError("datatype must be an instance of DataType.")
-
-        return Basic.__new__(cls, shape, dtype)
-
-    @property
-    def shape(self):
-        return self._args[0]
-
-    @property
-    def rank(self):
-        if iterable(self.shape):
-            return len(self.shape)
-        else:
-            return 1
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def init_value(self):
-        dtype = self.dtype
-        if isinstance(dtype, NativeInteger):
-            value = 0
-        elif isinstance(dtype, NativeFloat):
-            value = 0.0
-        elif isinstance(dtype, NativeDouble):
-            value = 0.0
-        elif isinstance(dtype, NativeComplex):
-            value = 0.0
-        elif isinstance(dtype, NativeBool):
-            value = BooleanFalse()
-        else:
-            raise TypeError('Unknown type')
-        return value
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-        if isinstance(self.shape, Tuple):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(i-1) for i in self.shape)
-        else:
-            shape_code = '0:' + printer(self.shape-1)
-
-        init_value = printer(self.init_value)
-
-        lhs_code = printer(lhs)
-
-        code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
-        code_init = "{0} = {1}".format(lhs_code, init_value)
-        code = "{0}\n{1}".format(code_alloc, code_init)
-        return code
-
-
-class Ones(Zeros):
-    """Represents a call to numpy.ones for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    shape : int or list of integers
-
-    Examples
-
-    """
-    @property
-    def init_value(self):
-        dtype = self.dtype
-        if isinstance(dtype, NativeInteger):
-            value = 1
-        elif isinstance(dtype, NativeFloat):
-            value = 1.0
-        elif isinstance(dtype, NativeDouble):
-            value = 1.0
-        elif isinstance(dtype, NativeComplex):
-            value = 1.0
-        elif isinstance(dtype, NativeBool):
-            value = BooleanTrue()
-        else:
-            raise TypeError('Unknown type')
-        return value
 
 # TODO: add example
 class Array(Basic):
@@ -4525,41 +4407,3 @@ def get_iterable_ranges(it, var_name=None):
 
     return [Range(s, e, 1) for s,e in zip(starts, ends)]
 # ...
-
-def builtin_function(expr, args=None):
-    """Returns a builtin-function call applied to given arguments."""
-    if not(isinstance(expr, Function) or isinstance(expr, str)):
-        raise TypeError('Expecting a string or a Function class')
-
-    if isinstance(expr, Function):
-        name = str(type(expr).__name__)
-
-    if isinstance(expr, str):
-        name = expr
-
-    if name == 'range':
-        return Range(*args)
-
-    return None
-
-def builtin_import(expr):
-    """Returns a builtin pyccel-extension function/object from an import."""
-    if not isinstance(expr, Import):
-        raise TypeError('Expecting an Import expression')
-
-    if expr.source is None:
-        return None, None
-
-    source = expr.source
-    if source == 'numpy':
-        # TODO improve
-        target = str(expr.target[0])
-        if target == 'zeros':
-            # TODO return as_name and not name
-            return target, Zeros
-
-        if target == 'ones':
-            # TODO return as_name and not name
-            return target, Ones
-
-    return None, None

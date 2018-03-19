@@ -7,7 +7,6 @@ from sympy.core import Tuple
 
 from pyccel.codegen.printing import fcode
 
-from pyccel.ast.core import subs
 from pyccel.ast.core import DataType, DataTypeFactory
 from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               For, Assign, Declare, Variable, \
@@ -20,7 +19,7 @@ from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
                               Comment, AnnotatedComment, \
                               IndexedVariable, Slice, If, \
                               Vector, Ceil, Break, \
-                              Zeros, Ones, Array, ZerosLike, Shape, Len, \
+                              Array, ZerosLike, Shape, Len, \
                               Dot, Sign, IndexedElement, Module, DottedName)
 
 

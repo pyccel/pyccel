@@ -13,14 +13,14 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy.utilities.iterables import iterable
 
-from pyccel.ast.core import (For, Assign, Declare, Variable, \
-                             datatype, While, NativeFloat, \
-                             EqualityStmt, NotequalStmt, \
-                             FunctionDef, Import, Print, \
-                             Comment, AnnotatedComment, \
-                             IndexedVariable, Slice, If, \
-                             Vector, \
-                             Zeros, Ones, Array, Len, Dot, IndexedElement)
+from pyccel.ast import (For, Assign, Declare, Variable, \
+                        datatype, While, NativeFloat, \
+                        EqualityStmt, NotequalStmt, \
+                        FunctionDef, Import, Print, \
+                        Comment, AnnotatedComment, \
+                        IndexedVariable, Slice, If, \
+                        Vector, \
+                        Zeros, Ones, Array, Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic import Complexity
 
