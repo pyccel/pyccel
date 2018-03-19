@@ -584,7 +584,7 @@ class FCodePrinter(CodePrinter):
             not(is_pointer)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
-        elif (rank > 0) or allocatable or is_pointer:
+        elif (rank > 0) or allocatable:
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
