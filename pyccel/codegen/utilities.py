@@ -10,7 +10,6 @@ from shutil import copyfile
 
 
 from pyccel.ast.core import DottedName
-from pyccel.parser.utilities import find_imports
 from pyccel.codegen.codegen  import FCodegen
 from pyccel.codegen.compiler import Compiler
 
@@ -55,7 +54,7 @@ def construct_tree(filename, ignored_modules):
     # ...
 
     # ... parse imports within the current file
-    d = find_imports(filename=filename)
+    d = {} #find_imports(filename=filename)
 
     imports = {}
     for key, value in list(d.items()):

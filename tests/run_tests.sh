@@ -1,7 +1,6 @@
 # this file can be used by developers to run all tests localy before travis
 
 pytest tests/pyccel/ast/test_ast.py
-pytest tests/pyccel/parser/test_imports.py
 pytest tests/pyccel/parser/test_headers.py
 pytest tests/pyccel/parser/test_openmp.py
 pytest tests/pyccel/parser/test_openacc.py

@@ -13,9 +13,6 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy.utilities.iterables import iterable
 
-from pyccel.parser.syntax.core import (AssignStmt, \
-                                       IfStmt, ForStmt,WhileStmt)
-
 from pyccel.ast.core import (For, Assign, Declare, Variable, \
                              datatype, While, NativeFloat, \
                              EqualityStmt, NotequalStmt, \

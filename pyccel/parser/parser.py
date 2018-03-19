@@ -37,6 +37,9 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode
 from redbaron import GetitemNode,SliceNode
+from redbaron import ImportNode, FromImportNode
+from redbaron import DottedAsNameNode
+from redbaron import NameAsNameNode
 
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
@@ -72,6 +75,8 @@ from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is
+from pyccel.ast import Import, TupleImport
+from pyccel.ast import AsName
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, PyccelSemanticError
 # TODO remove import * and only import what we need
@@ -85,6 +90,7 @@ from sympy.core.basic import Basic
 from pyccel.ast import Range
 from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
+from pyccel.ast import builtin_import as pyccel_builtin_import
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
@@ -159,13 +165,46 @@ def fst_to_ast(stmt):
     #      - blocking errors
     errors = Errors()
 
-    if isinstance(stmt, (RedBaron, CommaProxyList, LineProxyList,
-                         NodeList, TupleNode, ListNode, tuple, list)):
+    # ...
+    def _treat_iterable(stmt):
         ls = [fst_to_ast(i) for i in stmt]
         if isinstance(stmt, (list, ListNode)):
             return List(*ls)
         else:
             return Tuple(*ls)
+    # ...
+
+    if isinstance(stmt, (RedBaron, LineProxyList, CommaProxyList,
+                         NodeList, TupleNode, ListNode,
+                         tuple, list)):
+        return _treat_iterable(stmt)
+
+    elif isinstance(stmt, DottedAsNameNode):
+        names = []
+        for a in stmt.value:
+            names.append(str(a.value))
+        if len(names) == 1:
+            return names[0]
+        else:
+            return DottedName(*names)
+
+    elif isinstance(stmt, NameAsNameNode):
+        if not isinstance(stmt.value, str):
+            raise TypeError('Expecting a string')
+
+        value = str(stmt.value)
+        if not stmt.target:
+            return value
+
+        old = value
+        new = fst_to_ast(stmt.target)
+        # TODO improve
+        if isinstance(old, str):
+            old = old.replace("\'", "")
+        if isinstance(new, str):
+            new = new.replace("\'", "")
+        return AsName(new, old)
+
     elif isinstance(stmt, DictNode):
         d = {}
         for i in stmt.value:
@@ -180,22 +219,30 @@ def fst_to_ast(stmt):
 
             d[key] = value
         return Dict(d)
+
     elif stmt is None:
         return Nil()
+
     elif isinstance(stmt, str):
         return repr(stmt)
+
     elif isinstance(stmt, StringNode):
         return stmt.value
+
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
+
     elif isinstance(stmt, FloatNode):
         return Float(stmt.value)
+
     elif isinstance(stmt, ComplexNode):
         raise NotImplementedError('ComplexNode not yet available')
+
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
         return Assign(lhs, rhs)
+
     elif isinstance(stmt, NameNode):
         if isinstance(stmt.previous,DotNode):
             return fst_to_ast(stmt.previous)
@@ -209,9 +256,31 @@ def fst_to_ast(stmt):
             return false
         else:
             return Symbol(str(stmt.value))
+
+    elif isinstance(stmt, ImportNode):
+        # in an import statement, we can have seperate target by commas
+        ls = fst_to_ast(stmt.value)
+        return Import(ls)
+
+    elif isinstance(stmt, FromImportNode):
+        source  = fst_to_ast(stmt.value)
+        if isinstance(source, DottedVariable):
+            source = DottedName(*source.names)
+
+        targets = []
+        for i in stmt.targets:
+            s = fst_to_ast(i)
+            targets.append(s)
+
+        if len(targets) == 1:
+            return Import(targets, source=source)
+        else:
+            return TupleImport(*targets)
+
     elif isinstance(stmt, DelNode):
         arg = fst_to_ast(stmt.value)
         return Del(arg)
+
     elif isinstance(stmt, UnitaryOperatorNode):
         target = fst_to_ast(stmt.target)
         if stmt.value == 'not':
@@ -225,6 +294,7 @@ def fst_to_ast(stmt):
         else:
             raise PyccelSyntaxError('unknown/unavailable unary operator '
                                     '{node}'.format(node=type(stmt.value)))
+
     elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -254,6 +324,7 @@ def fst_to_ast(stmt):
         else:
             raise PyccelSyntaxError('unknown/unavailable binary operator '
                                     '{node}'.format(node=type(stmt.value)))
+
     elif isinstance(stmt, ComparisonOperatorNode):
         if stmt.first == '==':
             return '=='
@@ -271,6 +342,7 @@ def fst_to_ast(stmt):
             return 'is'
         else:
             raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
+
     elif isinstance(stmt, ComparisonNode):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
@@ -292,11 +364,14 @@ def fst_to_ast(stmt):
         else:
             raise PyccelSyntaxError('unknown/unavailable binary operator '
                                     '{node}'.format(node=type(op)))
+
     elif isinstance(stmt, PrintNode):
         expr = fst_to_ast(stmt.value)
         return Print(expr)
+
     elif isinstance(stmt, AssociativeParenthesisNode):
         return fst_to_ast(stmt.value)
+
     elif isinstance(stmt, DefArgumentNode):
         name =  fst_to_ast(stmt.target)
         arg = Argument(str(name))
@@ -305,10 +380,13 @@ def fst_to_ast(stmt):
         else:
             value = fst_to_ast(stmt.value)
             return ValuedArgument(arg, value)
+
     elif isinstance(stmt, ReturnNode):
         return Return(fst_to_ast(stmt.value))
+
     elif isinstance(stmt, PassNode):
         return Pass()
+
     elif isinstance(stmt, DefNode):
         # TODO check all inputs and which ones should be treated in stage 1 or 2
         if isinstance(stmt.parent,ClassNode):
@@ -329,6 +407,7 @@ def fst_to_ast(stmt):
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
                            kind=kind, imports=imports)
+
     elif isinstance(stmt, ClassNode):
         name = fst_to_ast(stmt.name)
         methods = [i for i in stmt.value if isinstance(i, DefNode)]
@@ -338,6 +417,7 @@ def fst_to_ast(stmt):
 
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
+
     elif isinstance(stmt, GetitemNode):
          parent = stmt.parent
          args = fst_to_ast(stmt.value)
@@ -362,8 +442,10 @@ def fst_to_ast(stmt):
              return Slice(lower, None)
          elif upper:
              return Slice(None, upper)
+
     elif isinstance(stmt, DotProxyList):
         return fst_to_ast(stmt[-1])
+
     elif isinstance(stmt, DotNode):
         suf = stmt.next
         pre = fst_to_ast(stmt.previous)
@@ -371,6 +453,7 @@ def fst_to_ast(stmt):
             stmt.parent.value.remove(stmt.previous)
         suf = fst_to_ast(suf)
         return DottedVariable(pre, suf)
+
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
         f_name = str(stmt.previous)
@@ -383,33 +466,42 @@ def fst_to_ast(stmt):
             return DottedVariable(pre, func)
         else:
             return func
+
     elif isinstance(stmt, CallArgumentNode):
         return fst_to_ast(stmt.value)
+
     elif isinstance(stmt, ForNode):
         target = fst_to_ast(stmt.iterator)
         iter   = fst_to_ast(stmt.target)
         body   = fst_to_ast(stmt.value)
         return For(target, iter, body, strict=False)
+
     elif isinstance(stmt, IfelseblockNode):
         args = fst_to_ast(stmt.value)
         return If(*args)
+
     elif isinstance(stmt,(IfNode, ElifNode)):
         test = fst_to_ast(stmt.test)
         body = fst_to_ast(stmt.value)
         return Tuple(test, body)
+
     elif isinstance(stmt, ElseNode):
         test = True
         body = fst_to_ast(stmt.value)
         return Tuple(test, body)
+
     elif isinstance(stmt, WhileNode):
         test = fst_to_ast(stmt.test)
         body = fst_to_ast(stmt.value)
         return While(test, body)
+
     elif isinstance(stmt, AssertNode):
         expr = fst_to_ast(stmt.value)
         return Assert(expr)
+
     elif isinstance(stmt, EndlNode):
         return EmptyLine()
+
     elif isinstance(stmt, CommentNode):
         # if annotated comment
         if stmt.value.startswith('#$'):
@@ -426,15 +518,20 @@ def fst_to_ast(stmt):
             # TODO improve
             txt = stmt.value[1:].lstrip()
             return Comment(txt)
+
     elif isinstance(stmt, BreakNode):
         return Break()
+
     elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
         # this is a blocking error, since we don't want to convert the try body
         errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY, severity='critical', blocker=True)
+
     elif isinstance(stmt, RaiseNode):
         errors.report(PYCCEL_RESTRICTION_RAISE, severity='error')
+
     elif isinstance(stmt, (YieldNode, YieldAtomNode)):
         errors.report(PYCCEL_RESTRICTION_YIELD, severity='error')
+
     else:
         raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
 
@@ -854,10 +951,13 @@ class Parser(object):
                 return List(*ls)
             else:
                 return Tuple(*ls)
+
         elif isinstance(expr, (Integer, Float)):
             return expr
+
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             return expr
+
         elif isinstance(expr, Variable):
             name = expr.name
             var = self.get_variable(name)
@@ -865,8 +965,10 @@ class Parser(object):
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               severity='error', blocker=True)
             return var
+
         elif isinstance(expr, str):
             return repr(expr)
+
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
             # an indexed variable is only defined if the associated variable is in
             # the namespace
@@ -878,6 +980,7 @@ class Parser(object):
             dtype = var.dtype
             # TODO add shape
             return IndexedVariable(name, dtype=dtype)
+
         elif isinstance(expr, (IndexedElement, Indexed)):
             name = str(expr.base)
             var = self.get_variable(name)
@@ -888,6 +991,7 @@ class Parser(object):
             args = tuple(expr.indices)
             dtype = var.dtype
             return IndexedVariable(name, dtype=dtype).__getitem__(*args)
+
         elif isinstance(expr, Symbol):
             name = str(expr.name)
             var = self.get_variable(name)
@@ -895,6 +999,7 @@ class Parser(object):
                 raise PyccelSemanticError('Symbolic {name} variable '
                                           'is not allowed'.format(name=name))
             return var
+
         elif isinstance(expr, DottedVariable):
             first = self._annotate(expr.args[0])
             if not isinstance(expr.args[1],Function):
@@ -940,6 +1045,7 @@ class Parser(object):
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new)
             return expr_new
+
         elif isinstance(expr, Function):
             args = expr.args
             name = str(type(expr).__name__)
@@ -977,9 +1083,14 @@ class Parser(object):
                 # TODO shall we keep it, or do this only in the Assign?
                 func = self.get_variable(name)
                 if not(func is None):
-                    return FunctionCall(func, args)
+                    if isinstance(func, FunctionDef):
+                        return FunctionCall(func, args)
+                    else:
+                        return func(*args)
+                        #return Function(name)(*args)
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
+
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1010,6 +1121,18 @@ class Parser(object):
                 d_var['is_target']   = True
                 d_var['is_polymorphic'] = False
                 d_var['cls_base']    = cls
+
+            elif isinstance(rhs, Function):
+                name = str(type(rhs).__name__)
+                if name == 'Zeros':
+                    # TODO improve
+                    d_var = {}
+                    d_var['datatype']    = rhs.dtype
+                    d_var['allocatable'] = True
+                    d_var['shape']       = rhs.shape
+                    d_var['rank']        = rhs.rank
+                else:
+                    raise NotImplementedError('TODO')
 
             elif isinstance(rhs, MethodCall):
                 raise NotImplementedError('TODO')
@@ -1099,6 +1222,7 @@ class Parser(object):
                 return SymbolicAssign(lhs, expr.rhs)
             else:
                 return expr
+
         elif isinstance(expr, For):
             # treatment of the index/indices
             if isinstance(expr.target, Symbol):
@@ -1116,22 +1240,27 @@ class Parser(object):
             body = self._annotate(expr.body, **settings)
 
             return For(target, itr, body)
+
         elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
 
             return While(test, body)
+
         elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return If(*args)
+
         elif isinstance(expr, FunctionHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
             return expr
+
         elif isinstance(expr,ClassHeader):
             # TODO should we return it and keep it in the AST?
             self.insert_header(expr)
             return expr
+
         elif isinstance(expr, Return):
             results = expr.expr
             if isinstance(results, Symbol):
@@ -1155,6 +1284,7 @@ class Parser(object):
                 return Return(ls)
             else:
                 raise NotImplementedError('only symbol or iterable are allowed for returns')
+
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace('\'', '') # remove quotes for str representation
@@ -1311,13 +1441,17 @@ class Parser(object):
 #                    # TODO shall we check first that it is not in the namespace?
 #                    self.insert_variable(get_func, name=get_func.name)
             return func
+
         elif isinstance(expr, EmptyLine):
             return expr
+
         elif isinstance(expr, Print):
             args = self._annotate(expr.expr, **settings)
             return Print(args)
+
         elif isinstance(expr, Comment):
             return expr
+
         elif isinstance(expr, ClassDef):
             name = str(expr.name)
             name = name.replace('\'', '')
@@ -1356,11 +1490,14 @@ class Parser(object):
              # then use it to decorate our arguments
             attributs = self.get_variable(name).attributs
             return ClassDef(name,attributs,methods)
+
         elif isinstance(expr, Pass):
             return Pass()
+
         elif isinstance(expr, Del):
             ls =  self._annotate(expr.variables)
             return Del(ls)
+
         elif isinstance(expr, Is):
             if not isinstance(expr.rhs, Nil):
                 errors.report(PYCCEL_RESTRICTION_IS_RHS, severity='error', blocker=True)
@@ -1372,6 +1509,21 @@ class Parser(object):
                               severity='error', blocker=True)
 
             return Is(var, expr.rhs)
+
+        elif isinstance(expr, Import):
+            # TODO - must have a dict where to store things that have been
+            #        imported
+            #      - should not use namespace
+            name, atom = pyccel_builtin_import(expr)
+            if not(name is None):
+                F = self.get_variable(name)
+                if F is None:
+                    self.insert_variable(atom, name=name)
+                else:
+                    raise NotImplementedError('must report error')
+
+            return expr
+
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 

@@ -4,4 +4,3 @@ from .syntax    import *
 from .parser    import *
 from .errors    import *
 from .messages  import *
-from .utilities import *

@@ -214,6 +214,7 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError("Unexpected type {0}".format(type(expr)))
 
+
 class DottedName(Basic):
     """
     Represents a dotted variable.
@@ -240,6 +241,32 @@ class DottedName(Basic):
         sstr = printer.doprint
         return '.'.join(sstr(n) for n in self.name)
 
+
+class AsName(Basic):
+    """
+    Represents a renaming of a variable, used with Import.
+
+    Examples
+
+    >>> from pyccel.ast.core import AsName
+    >>> AsName('new', 'old')
+    new as old
+    """
+    def __new__(cls, name, target):
+        # TODO check
+        return Basic.__new__(cls, name, target)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def target(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
 
 
@@ -1427,6 +1454,24 @@ def is_iterable_datatype(dtype):
     except:
         return False
 
+
+def get_default_value(dtype):
+    """Returns the default value of a native datatype."""
+    if isinstance(dtype, NativeInteger):
+        value = 0
+    elif isinstance(dtype, NativeFloat):
+        value = 0.0
+    elif isinstance(dtype, NativeDouble):
+        value = 0.0
+    elif isinstance(dtype, NativeComplex):
+        value = 0.0
+    elif isinstance(dtype, NativeBool):
+        value = BooleanFalse()
+    else:
+        raise TypeError('Unknown type')
+    return value
+
+
 # TODO improve and remove try/except
 def is_with_construct_datatype(dtype):
     """Returns True if dtype is an with_construct class."""
@@ -1941,7 +1986,6 @@ class Variable(Symbol):
                    cls_parameters=self.cls_parameters)
 
 
-
 class DottedVariable(AtomicExpr, Boolean):
     """
     Represents a dotted variable.
@@ -1990,6 +2034,17 @@ class DottedVariable(AtomicExpr, Boolean):
     @property
     def cls_base(self):
         return self._args[1].cls_base
+
+    @property
+    def names(self):
+        """Return list of names as strings."""
+        ls = []
+        for i in self.args:
+            if not isinstance(i, DottedVariable):
+                ls.append(str(i))
+            else:
+                ls += i.names
+        return ls
 
 
 class ValuedVariable(Variable):
@@ -2632,48 +2687,90 @@ class Ceil(Function):
     def rhs(self):
         return self._args[0]
 
+
 class Import(Basic):
     """Represents inclusion of dependencies in the code.
 
-    fil : str
-        The filepath of the module (i.e. header in C).
-    funcs
-        The name of the function (or an iterable of names) to be imported.
+    target : str, list, tuple, Tuple
+        targets to import
 
     Examples
 
     >>> from pyccel.ast.core import Import
-    >>> Import('numpy', 'linspace')
-    Import(numpy, (linspace,))
-
     >>> from pyccel.ast.core import DottedName
-    >>> from pyccel.ast.core import Import
-    >>> mpi = DottedName('pyccel', 'stdlib', 'parallel', 'mpi')
-    >>> Import(mpi, 'mpi_init')
-    Import(pyccel.stdlib.parallel.mpi, (mpi_init,))
-    >>> Import(mpi, '*')
-    Import(pyccel.stdlib.parallel.mpi, (*,))
+    >>> Import('foo')
+    import foo
+
+    >>> abc = DottedName('foo', 'bar', 'baz')
+    >>> Import(abc)
+    import foo.bar.baz
+
+    >>> Import(['foo', abc])
+    import foo, foo.bar.baz
     """
 
-    def __new__(cls, fil, funcs=None):
-        if not isinstance(fil, (str, DottedName)):
-            raise TypeError('Expecting a string or DottedName')
+    def __new__(cls, target, source=None):
 
-        if funcs:
-            if iterable(funcs):
-                funcs = Tuple(*[Symbol(f) for f in funcs])
-            elif not isinstance(funcs, (str, DottedName)):
-                raise TypeError("Unrecognized funcs type: ", funcs)
+        def _format(i):
+            if isinstance(i, str):
+                # otherwise, sympy will treat `zeros` as function
+                return repr(i)
+            if isinstance(i, (DottedName, AsName)):
+                return i
+            elif isinstance(i, Symbol):
+                return str(i.name)
+            else:
+                raise TypeError("Expecting a string, Symbol DottedName, "
+                                "given {}".format(type(i)))
 
-        return Basic.__new__(cls, fil, funcs)
+        _target = []
+        if isinstance(target, (str, Symbol, DottedName, AsName)):
+            _target = [_format(target)]
+        elif iterable(target):
+            for i in target:
+                _target.append(_format(i))
+        target = Tuple(*_target)
+
+        if not(source is None):
+            source = _format(source)
+
+        return Basic.__new__(cls, target, source)
 
     @property
-    def fil(self):
+    def target(self):
         return self._args[0]
 
     @property
-    def funcs(self):
+    def source(self):
         return self._args[1]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        target = ", ".join([sstr(i) for i in self.target])
+        if self.source is None:
+            return 'import {target}'.format(target=target)
+        else:
+            source = sstr(self.source)
+            return 'from {source} import {target}'.format(source=source,
+                                                          target=target)
+
+class TupleImport(Basic):
+
+    def __new__(cls, *args):
+        for a in args:
+            if not isinstance(a, Import):
+                raise TypeError('Expecting an Import statement')
+
+        return Basic.__new__(cls, *args)
+
+    @property
+    def imports(self):
+        return self._args
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '\n'.join(sstr(n) for n in self.imports)
+
 
 class Load(Basic):
     """Similar to 'importlib' in python. In addition, we can also provide the
@@ -2941,7 +3038,7 @@ class Sign(Basic):
     def rhs(self):
         return self.args[0]
 
-class Zeros(Basic):
+class Zeros(Function):
     """Represents variable assignment using numpy.zeros for code generation.
 
     lhs : Expr
@@ -2968,72 +3065,64 @@ class Zeros(Basic):
     >>> Zeros(y, (n,m))
     y := False
     """
-    # TODO improve in the spirit of assign
-    def __new__(cls, lhs, shape=None, grid=None):
-        lhs   = sympify(lhs)
+    # TODO improve
+    def __new__(cls, shape, dtype=None):
 
-        if shape:
-            if isinstance(shape, list):
-                # this is a correction. otherwise it is not working on LRZ
-                if isinstance(shape[0], list):
-                    shape = Tuple(*(sympify(i) for i in shape[0]))
-                else:
-                    shape = Tuple(*(sympify(i) for i in shape))
-            elif isinstance(shape, int):
-                shape = Tuple(sympify(shape))
-            elif isinstance(shape,Len):
-                shape = shape.str
+        if isinstance(shape, list):
+            # this is a correction. otherwise it is not working on LRZ
+            if isinstance(shape[0], list):
+                shape = Tuple(*(sympify(i) for i in shape[0]))
             else:
-                shape = shape
+                shape = Tuple(*(sympify(i) for i in shape))
+        elif isinstance(shape, int):
+            shape = Tuple(sympify(shape))
+        elif isinstance(shape,Len):
+            shape = shape.str
+        else:
+            shape = shape
 
-        if grid:
-            if not isinstance(grid, (Range, Tensor, Variable)):
-                raise TypeError('Expecting a Range, Tensor or a Variable object.')
+        if dtype is None:
+            dtype = 'double'
 
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+        if isinstance(dtype, str):
+            dtype = datatype(dtype)
+        elif not isinstance(dtype, DataType):
+            raise TypeError("datatype must be an instance of DataType.")
 
-        return Basic.__new__(cls, lhs, shape, grid)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.init_value))
-
-    @property
-    def lhs(self):
-        return self._args[0]
+        return Basic.__new__(cls, shape, dtype)
 
     @property
     def shape(self):
-        if self._args[1]:
-            return self._args[1]
-        else:
-            ranges = self.grid.ranges
-            sh = [r.size for r in ranges]
-            return Tuple(*(i for i in sh))
+        return self._args[0]
 
     @property
-    def grid(self):
-        return self._args[2]
+    def rank(self):
+        if iterable(self.shape):
+            return len(self.shape)
+        else:
+            return 1
 
     @property
-    def init_value(self):
-        dtype = self.lhs.dtype
-        if isinstance(dtype, NativeInteger):
-            value = 0
-        elif isinstance(dtype, NativeFloat):
-            value = 0.0
-        elif isinstance(dtype, NativeDouble):
-            value = 0.0
-        elif isinstance(dtype, NativeComplex):
-            value = 0.0
-        elif isinstance(dtype, NativeBool):
-            value = BooleanFalse()
+    def dtype(self):
+        return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+        if isinstance(self.shape, Tuple):
+            # this is a correction. problem on LRZ
+            shape_code = ', '.join('0:' + printer(i-1) for i in self.shape)
         else:
-            raise TypeError('Unknown type')
-        return value
+            shape_code = '0:' + printer(self.shape-1)
+
+        init_value = printer(get_default_value(self.dtype))
+
+        lhs_code = printer(lhs)
+
+        code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
+        code_init = "{0} = {1}".format(lhs_code, init_value)
+        code = "{0}\n{1}".format(code_alloc, code_init)
+        return code
+
 
 class Ones(Zeros):
     """
@@ -3876,7 +3965,7 @@ class FunctionHeader(Header):
 
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
-      
+
         return Basic.__new__(cls, func, types, r_types, kind, is_static)
 
     @property
@@ -4460,3 +4549,21 @@ def builtin_function(expr, args=None):
         return Range(*args)
 
     return None
+
+def builtin_import(expr):
+    """Returns a builtin pyccel-extension function/object from an import."""
+    if not isinstance(expr, Import):
+        raise TypeError('Expecting an Import expression')
+
+    if expr.source is None:
+        return None, None
+
+    source = expr.source
+    if source == 'numpy':
+        # TODO improve
+        target = str(expr.target[0])
+        if target == 'zeros':
+            # TODO return as_name and not name
+            return target, Zeros
+
+    return None, None
