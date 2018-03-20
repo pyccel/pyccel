@@ -50,7 +50,7 @@ from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
-                             Len, Shape, Dot, Sign, Random,
+                             Len, Shape, Random,
                              IndexedElement, Slice,
                              DottedName, AsName, DottedVariable,
                              Print, If)
