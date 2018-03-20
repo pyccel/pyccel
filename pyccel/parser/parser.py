@@ -565,6 +565,7 @@ class Parser(object):
         self._namespace = {}
         self._namespace['cls_constructs'] = {}
         self._parent = None
+        self._current = None # we use it to detect the current method or function
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self._namespace['headers'] = {}
@@ -611,21 +612,6 @@ class Parser(object):
         if self._ast is None:
             self._ast = self.parse()
         return self._ast
-
-
-
-
-    def create_variable(self,var):
-        """creat a variable from a DottedVariable Node"""
-        if isinstance(var, DottedVariable):
-            d_var = self._infere_type(var.args[1])
-            dtype = d_var.pop('datatype')
-            var_name = var.name
-            return Variable(dtype, var_name, **d_var)
-        else :
-            return var
-
-
 
     def parse(self):
         """converts redbaron fst to sympy ast."""
@@ -1124,7 +1110,7 @@ class Parser(object):
 
             elif isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
-                if name == 'Zeros':
+                if name in ['Zeros', 'Ones']:
                     # TODO improve
                     d_var = {}
                     d_var['datatype']    = rhs.dtype
@@ -1182,7 +1168,7 @@ class Parser(object):
                 dtype = d_var.pop('datatype')
                 name = lhs.args[0].name
                 # case of lhs=dottedvariable in the __init__ method that starts with self
-                if name == 'self' and 'self.__init__' in self._namespace.keys():
+                if self._current == '__init__':
                      cls_name = str(self.get_variable('self').cls_base.name)
                      attributs = self.get_variable(cls_name).attributs
                      attributs = list(attributs)
@@ -1296,6 +1282,7 @@ class Parser(object):
             hide        = False
             kind        = 'function'
             imports     = []
+            self._current = name
 
             is_static = False
             if expr.arguments or results:
@@ -1382,12 +1369,6 @@ class Parser(object):
                     self.insert_variable(a_new, name=str(a_new.name))
 
             # we annotate the body
-            if cls_name and name == '__init__':
-                #TODO improve find another way to detect the __init__ method
-                #we push a variable self.__init__ just to check if we still in the __init__ method or no
-                var = Variable('nil', 'self.__init__', cls_base = self.get_variable(cls_name))
-                self.insert_variable(var, 'self.__init__')
-
             body = self._annotate(expr.body, **settings)
 
             # find return stmt and results
@@ -1447,7 +1428,8 @@ class Parser(object):
 #                for a in kw_args:
 #                    get_func = GetDefaultFunctionArg(a, func)
 #                    # TODO shall we check first that it is not in the namespace?
-#                    self.insert_variable(get_func, name=get_func.name)
+#                    self.insert_variable(get_func, name=get_func.namer
+            self._current = None
             return func
 
         elif isinstance(expr, EmptyLine):
@@ -1478,7 +1460,6 @@ class Parser(object):
                 if m_name == '__init__':
                     const = self._annotate(method)
                     methods.pop(i)
-                    self._namespace.pop('self.__init__')
 
             methods = [self._annotate(i) for i in methods]
             self._namespace.pop('self')
