@@ -2664,29 +2664,6 @@ class ClassDef(Basic):
         else:
             return self.is_iterable or self.is_with_construct
 
-class Ceil(Function):
-    """
-    Represents ceil expression in the code.
-
-    rhs: symbol or number
-        input for the ceil function
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Ceil, Variable
-    >>> n,x,y = symbols('n,x,y')
-    >>> var = Variable('float', x)
-    >>> Ceil(x)
-    Ceil(x)
-    >>> Ceil(var)
-    Ceil(x)
-    """
-    def __new__(cls,rhs):
-        return Basic.__new__(cls,rhs)
-
-    @property
-    def rhs(self):
-        return self._args[0]
-
 
 class Import(Basic):
     """Represents inclusion of dependencies in the code.

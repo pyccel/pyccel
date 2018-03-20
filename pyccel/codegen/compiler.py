@@ -3,30 +3,6 @@
 import os
 import subprocess
 
-from sympy.core import Tuple
-
-from pyccel.codegen.printing import fcode
-
-from pyccel.ast.core import DataType, DataTypeFactory
-from pyccel.ast.core import (Range, Tensor, Block, ParallelBlock, \
-                              For, Assign, Declare, Variable, \
-                              NativeRange, NativeTensor, \
-                              FunctionHeader, ClassHeader, MethodHeader, \
-                              datatype, While, NativeFloat, \
-                              EqualityStmt, NotequalStmt, \
-                              AugAssign, \
-                              FunctionDef, ClassDef, Del, Print, Import, \
-                              Comment, AnnotatedComment, \
-                              IndexedVariable, Slice, If, \
-                              Vector, Ceil, Break, \
-                              Array, ZerosLike, Shape, Len, \
-                              Dot, Sign, IndexedElement, Module, DottedName)
-
-
-_module_stmt = (Comment, FunctionDef, ClassDef, \
-                FunctionHeader, ClassHeader, MethodHeader)
-
-
 # ...
 def clean(filename):
     """
