@@ -1,12 +1,12 @@
 # this file can be used by developers to run all tests localy before travis
 
-pytest tests/pyccel/ast/test_ast.py
-pytest tests/pyccel/parser/test_headers.py
-pytest tests/pyccel/parser/test_openmp.py
-pytest tests/pyccel/parser/test_openacc.py
-pytest tests/pyccel/parser/test_syntax.py
-pytest tests/pyccel/parser/test_semantic.py
-pytest tests/pyccel/codegen/test_codegen.py  
+pytest tests/ast/test_ast.py
+pytest tests/parser/test_headers.py
+pytest tests/parser/test_openmp.py
+pytest tests/parser/test_openacc.py
+pytest tests/syntax/test_syntax.py
+pytest tests/semantic/test_semantic.py
+pytest tests/codegen/test_codegen.py  
 
 # not working for python3
 #pytest tests/epyccel/test_epyccel.py  
