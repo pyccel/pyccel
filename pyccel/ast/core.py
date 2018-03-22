@@ -1359,6 +1359,26 @@ class NativeSymbol(DataType):
     _name = 'Symbol'
     pass
 
+class NdArray(DataType):
+    _name ='NdArray'
+    pass
+
+class NdArrayInt(NdArray,NativeInteger):
+    _name = 'NdArrayInt'
+    pass
+
+class NdArrayFloat(NdArray,NativeFloat):
+    _name = 'NdArrayFloat'
+    pass
+
+class NdArrayDouble(NdArray,NativeDouble):
+    _name = 'NdArrayDouble'
+    pass
+
+class NdArrayComplex(NdArray,NativeComplex):
+    _name = 'NdArrayComplex'
+    pass
+
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
 
@@ -1381,6 +1401,11 @@ IntegerList = NativeIntegerList()
 FloatList = NativeFloatList()
 DoubleList = NativeDoubleList()
 ComplexList = NativeComplexList()
+NdArray = NdArray()
+NdArrayInt = NdArrayInt()
+NdArrayDouble = NdArrayDouble()
+NdArrayFloat = NdArrayFloat()
+NdArrayComplex = NdArrayComplex()
 
 
 dtype_registry = {'bool': Bool,
@@ -1397,6 +1422,10 @@ dtype_registry = {'bool': Bool,
                   '*float': FloatList,
                   '*double': DoubleList,
                   '*complex': ComplexList,
+                  'ndarrayint' :NdArrayInt,
+                  'ndarrayfloat': NdArrayFloat,
+                  'ndarraydouble': NdArrayDouble,
+                  'ndarraycomplex': NdArrayComplex,
                   'str': String}
 
 
@@ -3812,6 +3841,12 @@ class FunctionHeader(Header):
             for a in d[1]:
                 if isinstance(a, Slice) or a == ':':
                     rank += 1
+            if isinstance(dtype,(list,tuple)):
+                if not all(dtype[0] == rest for rest in dtype[1:]):
+                    raise TypeError('All Element of the list must be of the same datatype')
+                else:
+                    rank = len(dtype)
+                    dtype = dtype[0]
 
             shape  = None
             if isinstance(dtype,str):
@@ -3819,7 +3854,8 @@ class FunctionHeader(Header):
                     dtype = datatype(dtype)
                 except:
                     #TODO check if it's a class type before
-                    dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                    if isinstance(str):
+                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
             arg_name = 'arg_{0}'.format(str(i))
             arg = Variable(dtype, arg_name,
                            allocatable=allocatable,
@@ -3839,6 +3875,13 @@ class FunctionHeader(Header):
             for a in d[1]:
                 if isinstance(a, Slice) or a == ':':
                     rank += 1
+
+            if isinstance(dtype,(list,tuple)):
+                if not all(dtype[0] == rest for rest in dtype[1:]):
+                    raise TypeError('All Element of the list must be of the same datatype')
+                else:
+                    rank = len(dtype)
+                    dtype = dtype[0]
 
             shape  = None
 
