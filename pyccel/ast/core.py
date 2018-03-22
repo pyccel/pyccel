@@ -3854,7 +3854,7 @@ class FunctionHeader(Header):
                     dtype = datatype(dtype)
                 except:
                     #TODO check if it's a class type before
-                    if isinstance(str):
+                    if isinstance(dtype,str):
                         dtype =  DataTypeFactory(str(dtype), ("_name"))()
             arg_name = 'arg_{0}'.format(str(i))
             arg = Variable(dtype, arg_name,
