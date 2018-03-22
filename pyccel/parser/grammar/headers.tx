@@ -12,9 +12,7 @@ Statement:
 
 TrailerSubscriptList: '[' args*=':' [','] ']';
 
-Type: dtype=ID (trailer=TrailerSubscriptList)?;
-ListType : '[' dtype*=ID[','] ']';
-TypeHeader: Type|ListType ;
+TypeHeader: dtype=ID (trailer=TrailerSubscriptList)?;
 
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 
