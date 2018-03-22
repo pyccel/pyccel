@@ -3841,12 +3841,19 @@ class FunctionHeader(Header):
             for a in d[1]:
                 if isinstance(a, Slice) or a == ':':
                     rank += 1
+            if rank>0 and isinstance(dtype,str):#case of ndarray
+                if dtype in ['int','double','float','complex']:
+                    allocatable = True
+                    dtype = 'ndarray'+dtype
+            is_pointer = False
             if isinstance(dtype,(list,tuple)):
                 if not all(dtype[0] == rest for rest in dtype[1:]):
-                    raise TypeError('All Element of the list must be of the same datatype')
+                    raise TypeError('All Elements of the list must be of the same datatype')
                 else:
                     rank = len(dtype)
                     dtype = dtype[0]
+                    is_pointer = True
+
 
             shape  = None
             if isinstance(dtype,str):
@@ -3856,9 +3863,10 @@ class FunctionHeader(Header):
                     #TODO check if it's a class type before
                     if isinstance(dtype,str):
                         dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                        is_pointer = True
             arg_name = 'arg_{0}'.format(str(i))
             arg = Variable(dtype, arg_name,
-                           allocatable=allocatable,
+                           allocatable=allocatable,is_pointer=is_pointer,
                            rank=rank,
                            shape=shape)
             args.append(arg)
@@ -3875,19 +3883,32 @@ class FunctionHeader(Header):
             for a in d[1]:
                 if isinstance(a, Slice) or a == ':':
                     rank += 1
-
+                if rank>0 and isinstance(dtype,str):#case of ndarray
+                    if dtype in ['int','double','float','complex']:
+                        allocatable = True
+                        dtype = 'ndarray'+dtype
+            is_pointer = False
             if isinstance(dtype,(list,tuple)):
                 if not all(dtype[0] == rest for rest in dtype[1:]):
-                    raise TypeError('All Element of the list must be of the same datatype')
+                    raise TypeError('All Elements of the list must be of the same datatype')
                 else:
                     rank = len(dtype)
                     dtype = dtype[0]
+                    is_pointer = True
 
             shape  = None
+            if isinstance(dtype,str):
+                try:
+                    dtype = datatype(dtype)
+                except:
+                    #TODO check if it's a class type before
+                    if isinstance(dtype,str):
+                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                        is_pointer = True
 
             result_name = 'result_{0}'.format(str(i))
             result = Variable(dtype, result_name,
-                           allocatable=allocatable,
+                           allocatable=allocatable,is_pointer=is_pointer,
                            rank=rank,
                            shape=shape)
             results.append(result)

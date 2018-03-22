@@ -1104,7 +1104,8 @@ class Parser(object):
                 d_var['allocatable'] = False
                 d_var['shape']       = None
                 d_var['rank']        = 0
-                d_var['is_target']   = True
+                d_var['is_target']   = False
+                #set target  to True if we want the class objects to be pointers
                 d_var['is_polymorphic'] = False
                 d_var['cls_base']    = cls
 
@@ -1127,10 +1128,11 @@ class Parser(object):
                 d_var = self._infere_type(rhs, **settings)
                 if d_var['datatype'].__class__.__name__.startswith('Pyccel'):
                     d_var['cls_base'] = self.get_variable(d_var['datatype'].__class__.__name__[6:])
-                    d_var['is_pointer'] = True
-                    d_var['is_polymorphic'] = True
-                if d_var['rank']>0 and not(d_var['is_target']):
-                    d_var['is_pointer']=True
+                    d_var['is_pointer'] = d_var['is_target'] or d_var['is_pointer']
+                    #TODO if we want to use pointers then we set target to true
+                    #in the ConsturcterCall
+
+                    d_var['is_polymorphic'] = False
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
@@ -1314,15 +1316,6 @@ class Parser(object):
                 for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
-                    if dtype.__class__.__name__.startswith('Pyccel'):
-                        d_var['cls_base'] = self.get_variable(dtype.__class__.__name__[6:])
-                        d_var['is_pointer'] = True
-                        d_var['is_polymorphic'] = True
-                    if d_var['rank']>0 and not(d_var['is_target']):
-                        d_var['is_pointer']=True
-
-
-
                     # this is needed for the static case
                     additional_args = []
 

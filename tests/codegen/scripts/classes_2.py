@@ -1,3 +1,4 @@
+from numpy import ones
 #$ header class Point(public)
 #$ header method __init__(Point, double [:])
 #$ header method __del__(Point)
@@ -25,11 +26,12 @@ class Points(object):
     def __del__(self):
         pass
 
-x = [1., 2., 3.]
+x = ones(4)
 P1 = Point(x)
 P2 = Points(P1)
 P3 = P2.x
 P4 = P2
 P5 = P2.x.x
+print x,P5
 
 
