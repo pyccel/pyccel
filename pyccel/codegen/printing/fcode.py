@@ -24,6 +24,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
+from pyccel.ast import Zeros
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -47,10 +48,9 @@ from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
-from pyccel.ast.core import Zeros
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
-                             Len, Shape, Dot, Sign, subs, Random,
+                             Len, Shape, Random,
                              IndexedElement, Slice,
                              DottedName, AsName, DottedVariable,
                              Print, If)
