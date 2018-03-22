@@ -44,7 +44,7 @@ class Zeros(Function):
             dtype = 'double'
 
         if isinstance(dtype, str):
-            dtype = datatype(dtype)
+            dtype = datatype('ndarray'+dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
