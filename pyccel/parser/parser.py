@@ -790,6 +790,10 @@ class Parser(object):
             d_var['shape'] = var.shape
             d_var['rank'] = var.rank
             d_var['cls_base'] = var.cls_base
+            d_var['is_pointer'] = var.is_pointer
+            d_var['is_polymorphic'] = var.is_polymorphic
+            d_var['is_optional'] = var.is_optional
+            d_var['is_target'] = var.is_target
             return d_var
 
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
@@ -822,8 +826,9 @@ class Parser(object):
 
             d_var['shape'] = shape
             d_var['rank'] = rank
-#            # TODO pointer case
+#            # TODO pointer or allocatable case
 #            d_var['is_pointer'] = var.is_pointer
+#            d_var['allocatable'] = var.allocatable
             return d_var
 
         elif isinstance(expr, IndexedVariable):
@@ -1104,10 +1109,11 @@ class Parser(object):
                 d_var['allocatable'] = False
                 d_var['shape']       = None
                 d_var['rank']        = 0
-                d_var['is_target']   = False
+                d_var['is_target']   = True
                 #set target  to True if we want the class objects to be pointers
                 d_var['is_polymorphic'] = False
                 d_var['cls_base']    = cls
+                d_var['is_pointer'] = False
 
             elif isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
@@ -1118,6 +1124,7 @@ class Parser(object):
                     d_var['allocatable'] = True
                     d_var['shape']       = rhs.shape
                     d_var['rank']        = rhs.rank
+                    d_var['is_pointer'] = False
                 else:
                     raise NotImplementedError('TODO')
 
@@ -1190,19 +1197,22 @@ class Parser(object):
 #            lhs.inspect()
 #            if isinstance(expr.rhs, Variable):
 #                expr.rhs.inspect()
-            if expr.is_alias:
+            #if expr.is_alias:
                 # here we need to know if lhs is allocatable or a pointer
                 # TODO improve
-                allocatable = False
-                is_pointer  = False
-                if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
-                    allocatable = True
-                elif (isinstance(expr.rhs, Variable) and
-                      isinstance(expr.rhs.dtype, NativeList)):
-                    is_pointer = True
-                lhs = self.update_variable(expr.lhs,
-                                           allocatable=allocatable,
-                                           is_pointer=is_pointer)
+            allocatable = False
+            is_pointer = False
+            if d_var['allocatable']:
+                allocatable = True
+            if d_var['is_pointer']:
+                is_pointer = True
+            if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
+                allocatable = True
+            elif (isinstance(expr.rhs, Variable) and isinstance(expr.rhs.dtype, NativeList)):
+                is_pointer = True
+            if isinstance(lhs, Variable) and (allocatable or is_pointer):
+                lhs = self.update_variable(expr.lhs,allocatable=allocatable,is_pointer=is_pointer)
+            if is_pointer:
                 return AliasAssign(lhs, expr.rhs)
             elif expr.is_symbolic_alias:
                 return SymbolicAssign(lhs, expr.rhs)

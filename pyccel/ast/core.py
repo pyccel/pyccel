@@ -380,6 +380,7 @@ class Assign(Basic):
         cond = cond or isinstance(rhs, IndexedElement)
         cond = cond or isinstance(rhs, IndexedVariable)
         cond = cond and isinstance(lhs, Symbol)
+        cond = cond or (isinstance(rhs, Variable) and (rhs.is_pointer))
         return cond
 
     @property
@@ -2037,6 +2038,12 @@ class DottedVariable(AtomicExpr, Boolean):
     @property
     def args(self):
         return [self._args[0], self._args[1]]
+    @property
+    def rank(self):
+        return self._args[1].rank
+    @property
+    def dtype(self):
+        return self._args[1].dtype
 
     @property
     def name(self):
@@ -3846,7 +3853,7 @@ class FunctionHeader(Header):
                     allocatable = True
                     dtype = 'ndarray'+dtype
             is_pointer = False
-            if isinstance(dtype,(list,tuple)):
+            if isinstance(dtype,(list,tuple)):#case of pointer list
                 if not all(dtype[0] == rest for rest in dtype[1:]):
                     raise TypeError('All Elements of the list must be of the same datatype')
                 else:

@@ -614,18 +614,14 @@ class FCodePrinter(CodePrinter):
 
     def _print_AliasAssign(self, expr):
         code = ''
-
         lhs = expr.lhs
         # TODO improve
-        if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None):
+        if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None) and not lhs.is_pointer:
             stmt = ZerosLike(expr.lhs, expr.rhs)
             code += self._print(stmt)
             code += '\n'
 
-        op = '='
-        if isinstance(lhs, Variable) and (lhs.is_pointer):
-            op = '=>'
-
+        op = '=>'
         code += '{lhs} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           op=op,
                                           rhs=self._print(expr.rhs))
