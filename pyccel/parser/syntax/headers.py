@@ -23,30 +23,12 @@ class Header(object):
         """
         self.statements = kwargs.pop('statements', [])
 
-class ListType(BasicStmt):
-    """Base class representing a  ListType in the grammar."""
+class TypeHeader(BasicStmt):
+    """Base class representing a  header type in the grammar."""
 
     def __init__(self, **kwargs):
         """
         Constructor for a TypeHeader.
-
-        dtype: list fo str
-        """
-        self.dtype = kwargs.pop('dtype')
-
-        super(ListType, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        dtype = [str(i) for i in self.dtype]
-        return dtype,[]
-
-class Type(BasicStmt):
-    """Base class representing a header type in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Type.
 
         dtype: str
             variable type
@@ -54,7 +36,7 @@ class Type(BasicStmt):
         self.dtype = kwargs.pop('dtype')
         self.trailer = kwargs.pop('trailer', [])
 
-        super(Type, self).__init__(**kwargs)
+        super(TypeHeader, self).__init__(**kwargs)
 
     @property
     def expr(self):
@@ -65,9 +47,6 @@ class Type(BasicStmt):
         else:
             trailer = []
         return dtype, trailer
-
-class TypeHeader(BasicStmt):
-    pass
 
 class VariableHeaderStmt(BasicStmt):
     """Base class representing a header statement in the grammar."""
@@ -187,7 +166,7 @@ class ClassHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-hdr_classes = [Header, TypeHeader,Type,ListType,
+hdr_classes = [Header, TypeHeader,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt]
@@ -224,4 +203,4 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header class Square(public)'))
-    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
+    print(parse(stmts='#$ header method translate(Point, double, double)'))
