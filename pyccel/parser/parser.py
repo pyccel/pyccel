@@ -1125,7 +1125,6 @@ class Parser(object):
 
             else:
                 d_var = self._infere_type(rhs, **settings)
-                print d_var
                 if d_var['datatype'].__class__.__name__.startswith('Pyccel'):
                     d_var['cls_base'] = self.get_variable(d_var['datatype'].__class__.__name__[6:])
                     d_var['is_pointer'] = True
@@ -1167,7 +1166,6 @@ class Parser(object):
             elif isinstance(lhs, DottedVariable):
                 dtype = d_var.pop('datatype')
                 name = lhs.args[0].name
-                # case of lhs=dottedvariable in the __init__ method that starts with self
                 if self._current == '__init__':
                      cls_name = str(self.get_variable('self').cls_base.name)
                      attributs = self.get_variable(cls_name).attributs
