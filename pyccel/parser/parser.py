@@ -1125,6 +1125,12 @@ class Parser(object):
 
             else:
                 d_var = self._infere_type(rhs, **settings)
+                if d_var['datatype'].__class__.__name__.startswith('Pyccel'):
+                    d_var['cls_base'] = self.get_variable(d_var['datatype'].__class__.__name__[6:])
+                    d_var['is_pointer'] = True
+                    d_var['is_polymorphic'] = True
+                if d_var['rank']>0 and not(d_var['is_target']):
+                    d_var['is_pointer']=True
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
@@ -1159,21 +1165,13 @@ class Parser(object):
 
             elif isinstance(lhs, DottedVariable):
                 dtype = d_var.pop('datatype')
-
-                if 'cls_base'in d_var.keys():
-                    cls_b = d_var.pop('cls_base')
-                else:
-                    cls_b = None
-                if dtype.__class__.__name__.startswith('Pyccel'):
-                    cls_b = self.get_variable(dtype.__class__.__name__[6:])
                 name = lhs.args[0].name
-                # case of lhs=dottedvariable in the __init__ method that starts with self
                 if self._current == '__init__':
                      cls_name = str(self.get_variable('self').cls_base.name)
                      attributs = self.get_variable(cls_name).attributs
                      attributs = list(attributs)
                      n_name = str(lhs.args[1].name)
-                     attributs += [Variable(dtype, n_name,cls_base=cls_b ,**d_var)]
+                     attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
                      self.insert_variable(ClassDef(cls_name,attributs,[]), cls_name)
                      #update the self variable with the new attributs
@@ -1316,6 +1314,14 @@ class Parser(object):
                 for a, ah in zip(arguments, interface.arguments):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
+                    if dtype.__class__.__name__.startswith('Pyccel'):
+                        d_var['cls_base'] = self.get_variable(dtype.__class__.__name__[6:])
+                        d_var['is_pointer'] = True
+                        d_var['is_polymorphic'] = True
+                    if d_var['rank']>0 and not(d_var['is_target']):
+                        d_var['is_pointer']=True
+
+
 
                     # this is needed for the static case
                     additional_args = []
