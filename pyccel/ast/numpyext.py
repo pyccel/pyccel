@@ -1,7 +1,7 @@
 # coding: utf-8
 
 # TODO remove sympify, Symbol
-
+import numpy
 from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
@@ -9,11 +9,44 @@ from sympy.core.basic import Basic
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from .core import Variable, IndexedElement, IndexedVariable
+from .core import Variable, IndexedElement, IndexedVariable,List
 from .core import DataType, datatype
 from .core import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
                    NativeBool)
 
+
+class Array(Function):
+    """Represents a call to  numpy.array for code generation.
+
+    ls : list ,tuple ,Tuple,List
+    """
+    def __new__(cls, ls, dtype=None):
+        if not isinstance(ls,(list,tuple,Tuple,List) ):
+            raise TypeError("Uknown type of  %s." % type(ls))
+        if isinstance(dtype, str):
+            dtype = datatype('ndarray'+dtype)
+
+        return Basic.__new__(cls, ls, dtype)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return self.ls
+
+    @property
+    def ls(self):
+        return self._args[0]
+    
+    @property
+    def dtype(self):
+        return self._args[1]
+    
+    @property
+    def shape(self):
+        return numpy.shape(self._args[0])
+
+    @property
+    def rank(self):
+        return len(self.shape) 
 class Zeros(Function):
     """Represents a call to numpy.zeros for code generation.
 

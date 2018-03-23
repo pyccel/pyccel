@@ -413,24 +413,7 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Array(self,expr):
-        lhs_code   = self._print(expr.lhs)
-
-        if len(expr.shape)>1:
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-            st= ','.join(','.join(self._print(i) for i in array) for array in expr.rhs)
-            reshape = True
-        else:
-            shape_code = '0:' + self._print(expr.shape[0]) + '-1'
-            st=','.join(self._print(i) for i in expr.rhs)
-            reshape = False
-        shape=','.join(self._print(i) for i in expr.shape)
-
-        code  = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        code += '\n'
-        if reshape:
-            code += '{0} = reshape((/{1}/),(/{2}/))'.format(lhs_code, st, str(shape))
-        else:
-            code += '{0} = (/{1}/)'.format(lhs_code, st)
+        code   = self._print(expr.ls)
         return code
 
     def _print_ZerosLike(self, expr):

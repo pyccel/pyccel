@@ -88,7 +88,7 @@ from pyccel.parser.messages import *
 from sympy.core.basic import Basic
 
 from pyccel.ast import Range
-from pyccel.ast import List,Array
+from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 
@@ -842,22 +842,7 @@ class Parser(object):
             d_var['shape']       = var.shape
             d_var['rank']        = var.rank
             return d_var
-        elif isinstance(expr, Array):
-            d_var =self._infere_type(expr.ls, **settings)
-            dtype =d_var['datatype']
-            if isinstance(dtype, NativeInteger):
-                dtype = 'ndarrayint'
-            elif isinstance(dtype, NativeFloat):
-                dtype = 'ndarrayfloat'
-            elif isinstance(dtype, NativeDouble):
-                dtype = 'ndarraydouble'
-            elif isinstance(dtype ,NativeComplex):
-                dtype = 'ndarraycomplex'
-            else:
-                raise TypeError('Unrecongnized datatype of array argument {0}'.format(str(type(dtype))))
 
-            d_var['datatype'] = dtype
-            return d_var
         elif isinstance(expr, Range):
             d_var['datatype']    = NativeRange()
             d_var['allocatable'] = False
@@ -1140,6 +1125,27 @@ class Parser(object):
                     d_var['shape']       = rhs.shape
                     d_var['rank']        = rhs.rank
                     d_var['is_pointer'] = False
+
+                elif name in ['Array']:
+                    dvar = self._infere_type(rhs.ls, **settings)
+                    dtype =dvar['datatype']
+                    d_var = {}
+                    d_var['allocatable'] = True
+                    d_var['shape']       = dvar['shape']
+                    d_var['rank']        = dvar['rank']
+                    d_var['is_pointer'] = False
+                    if isinstance(dtype, NativeInteger):
+                        d_var['datatype'] = 'ndarrayint'
+                    elif isinstance(dtype, NativeFloat ):
+                        d_var['datatype'] = 'ndarrayfloat'
+                    elif isinstance(dtype, NativeDouble):
+                        d_var['datatype'] = 'ndarraydouble'
+                    elif isinstance(dtype, NativeComplex):
+                        d_var['datatype'] = 'ndarraycomplex'
+                    else:
+                        raise TypeError('list of type {0} not supported'.format(str(dtype)))
+
+
                 else:
                     raise NotImplementedError('TODO')
 

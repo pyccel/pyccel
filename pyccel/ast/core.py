@@ -2999,26 +2999,6 @@ class Shape(Function):
     def rhs(self):
         return self._args[0]
 
-# TODO: add example
-class Array(Basic):
-    """Represents variable assignment using numpy.array for code generation.
-
-    ls : list ,tuple ,Tuple,List
-    """
-    def __new__(cls, ls):
-        ls   = sympify(ls)
-        if not isinstance(ls,(list,tuple,Tuple,List) ):
-            raise TypeError("Uknown type of  %s." % type(ls))
-
-        return Basic.__new__(cls, ls)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return self.ls
-
-    @property
-    def ls(self):
-        return self._args[0]
 
 # TODO - add examples
 class ZerosLike(Basic):
