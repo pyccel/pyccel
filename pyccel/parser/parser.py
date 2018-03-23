@@ -88,7 +88,7 @@ from pyccel.parser.messages import *
 from sympy.core.basic import Basic
 
 from pyccel.ast import Range
-from pyccel.ast import List
+from pyccel.ast import List,Array
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 
@@ -119,7 +119,7 @@ from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 import os
-
+import numpy
 # ...
 
 # ... utilities
@@ -842,7 +842,22 @@ class Parser(object):
             d_var['shape']       = var.shape
             d_var['rank']        = var.rank
             return d_var
+        elif isinstance(expr, Array):
+            d_var =self._infere_type(expr.ls, **settings)
+            dtype =d_var['datatype']
+            if isinstance(dtype, NativeInteger):
+                dtype = 'ndarrayint'
+            elif isinstance(dtype, NativeFloat):
+                dtype = 'ndarrayfloat'
+            elif isinstance(dtype, NativeDouble):
+                dtype = 'ndarraydouble'
+            elif isinstance(dtype ,NativeComplex):
+                dtype = 'ndarraycomplex'
+            else:
+                raise TypeError('Unrecongnized datatype of array argument {0}'.format(str(type(dtype))))
 
+            d_var['datatype'] = dtype
+            return d_var
         elif isinstance(expr, Range):
             d_var['datatype']    = NativeRange()
             d_var['allocatable'] = False
@@ -903,7 +918,7 @@ class Parser(object):
             # TODO must check that it is consistent with pyccel's rules
             d_var['datatype']    = d['datatype']
             d_var['rank']        = d['rank'] + 1
-            d_var['shape']       = len(expr) # TODO improve
+            d_var['shape']       = numpy.shape(expr) # TODO improve
             d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
                 d_var['is_target'] = True

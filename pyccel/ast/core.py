@@ -3003,51 +3003,22 @@ class Shape(Function):
 class Array(Basic):
     """Represents variable assignment using numpy.array for code generation.
 
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Expr
-        Sympy object representing the rhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    shape : int or list of integers
+    ls : list ,tuple ,Tuple,List
     """
-    def __new__(cls, lhs,rhs,shape):
-        lhs   = sympify(lhs)
+    def __new__(cls, ls):
+        ls   = sympify(ls)
+        if not isinstance(ls,(list,tuple,Tuple,List) ):
+            raise TypeError("Uknown type of  %s." % type(ls))
 
-
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-        if not isinstance(rhs, (list, ndarray)):
-            raise TypeError("cannot assign rhs of type %s." % type(rhs))
-        if not isinstance(shape, tuple):
-            raise TypeError("shape must be of type tuple")
-
-
-        return Basic.__new__(cls, lhs, rhs,shape)
+        return Basic.__new__(cls, ls)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
+        return self.ls
 
     @property
-    def lhs(self):
+    def ls(self):
         return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def shape(self):
-        return self._args[2]
 
 # TODO - add examples
 class ZerosLike(Basic):
