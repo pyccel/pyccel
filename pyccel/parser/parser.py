@@ -871,6 +871,7 @@ class Parser(object):
             ds = [self._infere_type(i, **settings) for i in expr.args]
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
+            pointers = [d['is_pointer'] or d['is_target'] for  d in ds]
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
 
@@ -891,9 +892,20 @@ class Parser(object):
                 if s:
                     shape = s
             # ...
+            d_var['datatype'] = 'int'
+            #TODO imporve to hadle all possible types (complex ,ndarray , ...)
+            for i in dtypes:
+                if isinstance(i, str):
+                    if i == 'float' or i == 'double':
+                        d_var['datatype'] = i
+                        break
+                elif isinstance(i, (NativeDouble, NativeFloat)):
+                    d_var['datatype'] = i
+                    break
 
             d_var['datatype'] = dtypes[0]
-            d_var['allocatable'] = allocatables[0]
+            d_var['allocatable'] = any(allocatables)
+            d_var['is_pointer']  = any(pointers)
             d_var['shape'] = shape
             d_var['rank'] = rank
             return d_var
@@ -907,7 +919,6 @@ class Parser(object):
             d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
                 d_var['is_target'] = True
-
                 dtype = datatype(d['datatype'])
                 if isinstance(dtype, NativeInteger):
                     d_var['datatype'] = NativeIntegerList()
@@ -1392,7 +1403,6 @@ class Parser(object):
 
             # we annotate the body
             body = self._annotate(expr.body, **settings)
-
             # find return stmt and results
             # we keep the return stmt, in case of handling multi returns later
             for stmt in body:

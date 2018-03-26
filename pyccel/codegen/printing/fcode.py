@@ -514,6 +514,8 @@ class FCodePrinter(CodePrinter):
         rank        = arg_ranks[0]
         allocatable = arg_allocatables[0]
         shape       = arg_shapes[0]
+        if isinstance(shape,tuple) and len(shape) ==1:
+            shape = shape[0]
         is_pointer = arg_is_pointers[0]
         is_target = arg_is_targets[0]
         is_polymorphic = arg_is_polymorphics[0]
@@ -561,13 +563,10 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and
-            (isinstance(shape, (int, Variable))) and
-            not(allocatable) and
-            not(is_pointer)):
+        if ((rank == 1) and (isinstance(shape, (int, Variable))) and not(allocatable) and not(is_pointer)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
-            enable_alloc = False
-        elif (rank > 0) and (allocatable or is_pointer) :
+            enable_alloc = False 
+        elif (rank > 0) and (allocatable or is_pointer or is_target) :
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
