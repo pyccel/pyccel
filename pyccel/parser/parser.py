@@ -1026,6 +1026,9 @@ class Parser(object):
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
+                #print Add(expr_new, a_new).args[1] is a_new
+                #print type(Add(expr_new, a_new).args[1]) ,type(a_new)
+                #TODO fix bug when  Variable inherits Symbol:
                 if isinstance(expr, Add):
                     expr_new = Add(expr_new, a_new)
                 elif isinstance(expr, Mul):
@@ -1245,9 +1248,9 @@ class Parser(object):
             if isinstance(lhs, Variable) and (allocatable or is_pointer):
                 lhs = self.update_variable(expr.lhs,allocatable=allocatable,is_pointer=is_pointer)
             if is_pointer:
-                return AliasAssign(lhs, expr.rhs)
+                return AliasAssign(lhs, rhs)
             elif expr.is_symbolic_alias:
-                return SymbolicAssign(lhs, expr.rhs)
+                return SymbolicAssign(lhs, rhs)
             else:
                 return expr
 
@@ -1428,7 +1431,7 @@ class Parser(object):
                                       severity='error', blocker=True)
                 results = _results
 
-            # TODO improve
+            # TODO improve clean all the created variables
             for i in args + results:
                 if str(i) in self._namespace:
                     self._namespace.pop(str(i)) #clean namespace

@@ -19,6 +19,8 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
 from sympy import Integer
+from sympy import Atom, Indexed
+from sympy import preorder_traversal
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -597,13 +599,22 @@ class FCodePrinter(CodePrinter):
     def _print_AliasAssign(self, expr):
         code = ''
         lhs = expr.lhs
-        # TODO improve
-        if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None) and not lhs.is_pointer:
-            stmt = ZerosLike(expr.lhs, expr.rhs)
+        rhs = expr.rhs
+        # TODO improve 
+        op = '=>'
+        if isinstance(lhs, Variable) and (lhs.rank > 0)  and (not lhs.is_pointer or not isinstance(rhs, Atom)):
+            if not isinstance(rhs, Atom) and not isinstance(rhs, Indexed):
+                # case of rhs an expression and lhs is pointer we then allocate the memory for it
+                for i in list(preorder_traversal(rhs)):
+                    if isinstance(i, (Variable, DottedVariable)) and i.rank>0:
+                        rhs = i
+                        break
+            #TODO improve we only need to allocate the variable without setting it to zero
+            stmt = ZerosLike(lhs,rhs)
             code += self._print(stmt)
             code += '\n'
+            op = '='
 
-        op = '=>'
         code += '{lhs} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           op=op,
                                           rhs=self._print(expr.rhs))

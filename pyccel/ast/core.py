@@ -1821,7 +1821,7 @@ class Nil(Basic):
         return sstr('None')
 
 
-class Variable(Symbol):
+class Variable(AtomicExpr, Boolean):
     """Represents a typed variable.
 
     dtype : str, DataType
