@@ -564,6 +564,7 @@ class Parser(object):
         self._filename = None
         self._namespace = {}
         self._namespace['cls_constructs'] = {}
+        self._scoope ={} #represent the namespace of a function
         self._parent = None
         self._current = None # we use it to detect the current method or function
         # TODO use another name for headers
@@ -675,7 +676,10 @@ class Parser(object):
             for i in self._parent.attributs:
                 if str(i.name) == name:
                     return i
-        if name in self.namespace:
+        if self._current:
+            if name in self.scoope[self._current]:
+                return self.scoope[self._current][name]
+        elif name in self.namespace:
             return self.namespace[name]
         return None
 
@@ -684,12 +688,20 @@ class Parser(object):
         # TODO add some checks before
         if name is None:
             name = str(expr)
-        self._namespace[name] = expr
+
+        if self._current:
+            self._scoope[self._current][name] = expr
+        else:
+            self._namespace[name] = expr
 
     def update_variable(self, var, **options):
         """."""
         name = _get_variable_name(var).split('.')
-        var = self._namespace.pop(name[0], None)
+        var = None
+        if self._current:
+            var = self.scoope[self._current].pop(name[0],None)
+        if not var:
+            var = self._namespace.pop(name[0], None)
         if len(name)>1:
             name_ = _get_variable_name(var)
             for i in var.cls_base.attributs:
@@ -707,7 +719,7 @@ class Parser(object):
             d_var[key] = value
         dtype = d_var.pop('datatype')
         var = Variable(dtype, name, **d_var)
-        self._namespace[name] = var
+        self.insert_variable(var,name) #TODO improve to insert in the right namespace
         return var
 
     def get_header(self, name):
@@ -723,6 +735,16 @@ class Parser(object):
     def set_class_construct(self, name, value):
         """Sets the class datatype for name."""
         self._namespace['cls_constructs'][name] = value
+
+    def set_current_fun(name):
+
+        if name:
+            self._scoope[name] = {}
+        else:
+            self._scoope.pop(self._current)
+        self._current = name
+
+
 
     def insert_header(self, expr):
         """."""
@@ -1324,7 +1346,8 @@ class Parser(object):
             hide        = False
             kind        = 'function'
             imports     = []
-            self._current = name
+            self.set_current_fun(name)
+
 
             is_static = False
             if expr.arguments or results:
@@ -1461,7 +1484,7 @@ class Parser(object):
 #                    get_func = GetDefaultFunctionArg(a, func)
 #                    # TODO shall we check first that it is not in the namespace?
 #                    self.insert_variable(get_func, name=get_func.namer
-            self._current = None
+            self.set_current_fun(None)
             return func
 
         elif isinstance(expr, EmptyLine):
