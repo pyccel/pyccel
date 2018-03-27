@@ -2014,7 +2014,7 @@ class Variable(Symbol):
                    cls_parameters=self.cls_parameters)
 
 
-class DottedVariable(AtomicExpr, Boolean):
+class DottedVariable(AtomicExpr,Boolean):
     """
     Represents a dotted variable.
     """

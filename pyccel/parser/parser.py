@@ -123,7 +123,7 @@ import numpy
 # ...
 
 # ... utilities
-from sympy import srepr
+from sympy import srepr,sympify
 from sympy.printing.dot import dotprint
 
 import os
@@ -1028,11 +1028,10 @@ class Parser(object):
                 a_new = self._annotate(a, **settings)
                 #print Add(expr_new, a_new).args[1] is a_new
                 #print type(Add(expr_new, a_new).args[1]) ,type(a_new)
-                #TODO fix bug when  Variable inherits Symbol:
-                if isinstance(expr, Add):
-                    expr_new = Add(expr_new, a_new)
-                elif isinstance(expr, Mul):
-                    expr_new = Mul(expr_new, a_new)
+                #print Add(expr_new, a_new).arg
+                #TODO keep expr._new_rawargs or use the old one
+                if isinstance(expr, (Add, Mul)):
+                    expr_new = expr._new_rawargs(expr_new, a_new)
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new)
                 elif isinstance(expr, Or):
@@ -1047,8 +1046,6 @@ class Parser(object):
                     expr_new = Le(expr_new, a_new)
                 elif isinstance(expr, Gt):
                     expr_new = Gt(expr_new, a_new)
-                elif isinstance(expr, Ge):
-                    expr_new = Ge(expr_new, a_new)
             return expr_new
 
         elif isinstance(expr, Function):
