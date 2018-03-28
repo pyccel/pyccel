@@ -672,14 +672,14 @@ class Parser(object):
 
     def get_variable(self, name):
         """."""
-        if self._parent is not None :
-            for i in self._parent.attributs:
+        if self._parent:
+            for i in self._parent. attributs:
                 if str(i.name) == name:
                     return i
         if self._current:
-            if name in self.scoope[self._current]:
-                return self.scoope[self._current][name]
-        elif name in self.namespace:
+            if name in self._scoope[self._current]:
+                return self._scoope[self._current][name]
+        if name in self.namespace:
             return self.namespace[name]
         return None
 
@@ -688,8 +688,7 @@ class Parser(object):
         # TODO add some checks before
         if name is None:
             name = str(expr)
-
-        if self._current:
+        if self._current and not isinstance(expr, (ClassDef,FunctionDef)):
             self._scoope[self._current][name] = expr
         else:
             self._namespace[name] = expr
@@ -699,7 +698,7 @@ class Parser(object):
         name = _get_variable_name(var).split('.')
         var = None
         if self._current:
-            var = self.scoope[self._current].pop(name[0],None)
+            var = self._scoope[self._current].pop(name[0],None)
         if not var:
             var = self._namespace.pop(name[0], None)
         if len(name)>1:
@@ -736,7 +735,7 @@ class Parser(object):
         """Sets the class datatype for name."""
         self._namespace['cls_constructs'][name] = value
 
-    def set_current_fun(name):
+    def set_current_fun(self, name):
 
         if name:
             self._scoope[name] = {}
