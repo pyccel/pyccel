@@ -672,26 +672,73 @@ class Parser(object):
 
     def get_variable(self, name):
         """."""
+        var = None
         if self._parent:
             for i in self._parent. attributs:
                 if str(i.name) == name:
-                    return i
+                    var = i
+                    break
         if self._current:
             if name in self._scoope[self._current]:
-                return self._scoope[self._current][name]
-        if name in self.namespace:
-            return self.namespace[name]
-        return None
+                var = self._scoope[self._current][name]
+        if name in self._namespace:
+            var =  self._namespace[name]
+        if var and isinstance(var, Variable) or var is None:
+            return var
+        else:
+            raise TypeError('variable must be of type Variable')
 
     def insert_variable(self, expr, name=None):
         """."""
         # TODO add some checks before
         if name is None:
             name = str(expr)
-        if self._current and not isinstance(expr, (ClassDef,FunctionDef)):
+        if not isinstance(expr,(Variable, DottedName)):
+            raise TypeError('variable must be of type Variable')
+
+        if self._current:
             self._scoope[self._current][name] = expr
         else:
             self._namespace[name] = expr
+
+    def get_class(self, name):
+        """."""
+        cls = None
+        if name in self._namespace:
+            cls = self._namespace[name]
+        if isinstance(cls , ClassDef) or cls is None:
+            return cls
+        else:
+            raise TypeError('there is no class with name {0}'.format(name))
+
+    def insert_class(self, cls):
+        """."""
+        if isinstance(cls, ClassDef):
+            name = cls.name
+            self._namespace[name] = cls
+        else:
+            raise TypeError('Expected A class definition ')
+
+    def get_function(self, name):
+        """."""
+        func = None
+        if name in self._namespace:
+            func = self._namespace[name]
+        if isinstance(func, FunctionDef) or func is None:
+            return func
+        else:
+            raise TypeError('Expected a Function definition')
+
+    def insert_function(self, func):
+        """."""
+        if not isinstance(func, FunctionDef):
+            raise TypeError('Expected a Function definition')
+        else:
+            self._namespace[func.name] = func
+
+    def remove(self, name):
+        """."""
+        self._namespace.pop(name,None)
 
     def update_variable(self, var, **options):
         """."""
@@ -736,7 +783,7 @@ class Parser(object):
         self._namespace['cls_constructs'][name] = value
 
     def set_current_fun(self, name):
-
+        """."""
         if name:
             self._scoope[name] = {}
         else:
@@ -1374,7 +1421,7 @@ class Parser(object):
                 arguments = arguments[1:]
                 dt = self.get_class_construct(cls_name)()
                 var = Variable(dt, 'self', cls_base = self._namespace[cls_name])
-                self._namespace['self'] = var
+                self.insert_variable(var, 'self')
 
             if arguments:
                 for a, ah in zip(arguments, interface.arguments):
@@ -1450,14 +1497,9 @@ class Parser(object):
                                       severity='error', blocker=True)
                 results = _results
 
-            # TODO improve clean all the created variables
-            for i in args + results:
-                if str(i) in self._namespace:
-                    self._namespace.pop(str(i)) #clean namespace
-
             if arg and cls_name:
                 dt = self.get_class_construct(cls_name)()
-                var = Variable(dt, 'self', cls_base = self.get_variable(cls_name))
+                var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
                 args = [var] + args
 
             func=FunctionDef(name, args, results, body,
@@ -1465,15 +1507,15 @@ class Parser(object):
                                cls_name=cls_name, hide=hide,
                                kind=kind, imports=imports)
             if cls_name:
-                cls = self.get_variable(cls_name)
+                cls = self.get_class(cls_name)
                 methods = list(cls.methods) + [func]
                 #update the class  methods
-                self.insert_variable(ClassDef(cls_name, cls.attributs,methods), cls_name)
+                self.insert_class(ClassDef(cls_name, cls.attributs,methods), cls_name)
             # insert function def into namespace
             # TODO checking
-            F = self.get_variable(name)
+            F = self.get_function(name)
             if F is None:
-                self.insert_variable(func, name=name)
+                self.insert_function(func, name=name)
 #                # TODO uncomment and improve this part later.
 #                #      it will allow for handling parameters of different dtypes
 #                # for every parameterized argument, we need to create the
@@ -1527,8 +1569,8 @@ class Parser(object):
                                      'but could not find it.'.format(classe=name))
              # we construct a ClassDef from its header
              #clean namespace
-            for i in methods:
-                self._namespace.pop(str(i.name))
+            #for i in methods:
+            #    self._namespace.pop(str(i.name))
             options = header.options
              # then use it to decorate our arguments
             attributs = self.get_variable(name).attributs
