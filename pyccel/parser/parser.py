@@ -1123,7 +1123,7 @@ class Parser(object):
             args = expr.args
             name = str(type(expr).__name__)
             F = pyccel_builtin_function(expr, args)
-            if not(F is None):
+            if F:
                 return F
             elif name in self._namespace['cls_constructs'].keys():
                 # TODO improve the test
@@ -1279,7 +1279,7 @@ class Parser(object):
                 dtype = d_var.pop('datatype')
                 name = lhs.args[0].name
                 if self._current == '__init__':
-                     cls_name = str(self._namespace['self'].cls_base.name)
+                     cls_name = str(self.get_variable('self').cls_base.name)
                      attributs = self.get_class(cls_name).attributs
                      attributs = list(attributs)
                      n_name = str(lhs.args[1].name)
@@ -1288,8 +1288,8 @@ class Parser(object):
                      self.insert_class(ClassDef(cls_name,attributs,[]))
                      #update the self variable with the new attributs
                      dt=self.get_class_construct(cls_name)()
-                     var = Variable(dt,'self',cls_base = self._namespace[cls_name])
-                     self._namespace['self'] = var
+                     var = Variable(dt,'self',cls_base = self.get_class(cls_name))
+                     self.insert_variable(var,'self')
                      lhs = DottedVariable(var, Variable(dtype, n_name, **d_var))
                 else :
                     lhs =  self._annotate(lhs, **settings)
@@ -1423,7 +1423,7 @@ class Parser(object):
                 arguments = arguments[1:]
                 dt = self.get_class_construct(cls_name)()
                 var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
-                self._namespace['self'] = var
+                self.insert_variable(var, 'self')
 
             if arguments:
                 for a, ah in zip(arguments, interface.arguments):
@@ -1517,7 +1517,8 @@ class Parser(object):
             # TODO checking
             #F = self.get_function(name)
             #if F is None:
-            self.insert_function(func)
+            if not cls_name:
+                self.insert_function(func)
 #                # TODO uncomment and improve this part later.
 #                #      it will allow for handling parameters of different dtypes
 #                # for every parameterized argument, we need to create the
@@ -1560,7 +1561,6 @@ class Parser(object):
                     methods.pop(i)
 
             methods = [self._annotate(i) for i in methods]
-            self._namespace.pop('self')
             #remove the self object
             if not const:
                 raise SystemExit('missing contuctor in the class {0}'.format(name))
