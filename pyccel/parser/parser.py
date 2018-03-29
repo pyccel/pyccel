@@ -112,7 +112,7 @@ from sympy.core.containers import Dict
 from sympy.core.function import Function
 from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
-
+from sympy import FunctionClass
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
@@ -567,6 +567,7 @@ class Parser(object):
         self._scoope ={} #represent the namespace of a function
         self._parent = None
         self._current = None # we use it to detect the current method or function
+        self._imports ={} #we use it to store the imports
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self._namespace['headers'] = {}
@@ -706,7 +707,7 @@ class Parser(object):
         cls = None
         if name in self._namespace:
             cls = self._namespace[name]
-        if isinstance(cls , ClassDef) or cls is None:
+        if isinstance(cls , ClassDef):
             return cls
         else:
             raise TypeError('there is no class with name {0}'.format(name))
@@ -714,7 +715,7 @@ class Parser(object):
     def insert_class(self, cls):
         """."""
         if isinstance(cls, ClassDef):
-            name = cls.name
+            name = str(cls.name)
             self._namespace[name] = cls
         else:
             raise TypeError('Expected A class definition ')
@@ -724,7 +725,9 @@ class Parser(object):
         func = None
         if name in self._namespace:
             func = self._namespace[name]
-        if isinstance(func, FunctionDef) or func is None:
+        elif name in self._imports:
+            func = self._imports[name]
+        if isinstance(func, (FunctionDef, FunctionClass)):
             return func
         else:
             raise TypeError('Expected a Function definition')
@@ -734,7 +737,7 @@ class Parser(object):
         if not isinstance(func, FunctionDef):
             raise TypeError('Expected a Function definition')
         else:
-            self._namespace[func.name] = func
+            self._namespace[str(func.name)] = func
 
     def remove(self, name):
         """."""
@@ -1126,7 +1129,7 @@ class Parser(object):
                 # TODO improve the test
                 #      we must not invoke the namespace like this, only through
                 #      appropriate methods like get_variable ...
-                cls = self.get_variable(name)
+                cls = self.get_class(name)
                 d_methods = cls.methods_as_dict
                 method = d_methods.pop('__init__', None)
 
@@ -1151,7 +1154,7 @@ class Parser(object):
             else:
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
-                func = self.get_variable(name)
+                func = self.get_function(name)
                 if not(func is None):
                     if isinstance(func, FunctionDef):
                         return FunctionCall(func, args)
@@ -1179,7 +1182,7 @@ class Parser(object):
 
             elif isinstance(rhs, ConstructorCall):
                 cls_name = rhs.func.cls_name # create a new Datatype for the current class
-                cls = self.get_variable(cls_name)
+                cls = self.get_class(cls_name)
 
                 dtype = self.get_class_construct(cls_name)()
                 # to be moved to infere_type?
@@ -1234,7 +1237,7 @@ class Parser(object):
             else:
                 d_var = self._infere_type(rhs, **settings)
                 if d_var['datatype'].__class__.__name__.startswith('Pyccel'):
-                    d_var['cls_base'] = self.get_variable(d_var['datatype'].__class__.__name__[6:])
+                    d_var['cls_base'] = self.get_class(d_var['datatype'].__class__.__name__[6:])
                     d_var['is_pointer'] = d_var['is_target'] or d_var['is_pointer']
                     #TODO if we want to use pointers then we set target to true
                     #in the ConsturcterCall
@@ -1276,19 +1279,18 @@ class Parser(object):
                 dtype = d_var.pop('datatype')
                 name = lhs.args[0].name
                 if self._current == '__init__':
-                     cls_name = str(self.get_variable('self').cls_base.name)
-                     attributs = self.get_variable(cls_name).attributs
+                     cls_name = str(self._namespace['self'].cls_base.name)
+                     attributs = self.get_class(cls_name).attributs
                      attributs = list(attributs)
                      n_name = str(lhs.args[1].name)
                      attributs += [Variable(dtype, n_name, **d_var)]
                      #update the attributs of the class and push it to the namespace
-                     self.insert_variable(ClassDef(cls_name,attributs,[]), cls_name)
+                     self.insert_class(ClassDef(cls_name,attributs,[]))
                      #update the self variable with the new attributs
                      dt=self.get_class_construct(cls_name)()
                      var = Variable(dt,'self',cls_base = self._namespace[cls_name])
                      self._namespace['self'] = var
-                     obj = self.get_variable('self')
-                     lhs = DottedVariable(obj, Variable(dtype, n_name, **d_var))
+                     lhs = DottedVariable(var, Variable(dtype, n_name, **d_var))
                 else :
                     lhs =  self._annotate(lhs, **settings)
 
@@ -1420,8 +1422,8 @@ class Parser(object):
                 arg = arguments[0]
                 arguments = arguments[1:]
                 dt = self.get_class_construct(cls_name)()
-                var = Variable(dt, 'self', cls_base = self._namespace[cls_name])
-                self.insert_variable(var, 'self')
+                var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
+                self._namespace['self'] = var
 
             if arguments:
                 for a, ah in zip(arguments, interface.arguments):
@@ -1510,12 +1512,12 @@ class Parser(object):
                 cls = self.get_class(cls_name)
                 methods = list(cls.methods) + [func]
                 #update the class  methods
-                self.insert_class(ClassDef(cls_name, cls.attributs,methods), cls_name)
+                self.insert_class(ClassDef(cls_name, cls.attributs,methods))
             # insert function def into namespace
             # TODO checking
-            F = self.get_function(name)
-            if F is None:
-                self.insert_function(func, name=name)
+            #F = self.get_function(name)
+            #if F is None:
+            self.insert_function(func)
 #                # TODO uncomment and improve this part later.
 #                #      it will allow for handling parameters of different dtypes
 #                # for every parameterized argument, we need to create the
@@ -1543,7 +1545,7 @@ class Parser(object):
             name = name.replace('\'', '')
             # remove quotes for str representation
             attributs = []
-            self.insert_variable(ClassDef(name,[],[]), name)
+            self.insert_class(ClassDef(name,[],[]))
             header = self.get_header(name)
             methods = list(expr.methods)
             const = None
@@ -1573,7 +1575,7 @@ class Parser(object):
             #    self._namespace.pop(str(i.name))
             options = header.options
              # then use it to decorate our arguments
-            attributs = self.get_variable(name).attributs
+            attributs = self.get_class(name).attributs
             return ClassDef(name,attributs,methods)
 
         elif isinstance(expr, Pass):
@@ -1603,7 +1605,7 @@ class Parser(object):
             if not(name is None):
                 F = self.get_variable(name)
                 if F is None:
-                    self.insert_variable(atom, name=name)
+                    self._imports[name] = atom
                 else:
                     raise NotImplementedError('must report error')
 
