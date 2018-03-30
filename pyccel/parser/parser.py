@@ -1504,6 +1504,16 @@ class Parser(object):
                 var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
                 args = [var] + args
 
+            for var in self._scoope[name].values():
+                if not var in args+results and isinstance(var, Variable):
+                    local_vars += [var]
+
+            for var in self._namespace.values():
+                if not var in args+results+local_vars and isinstance(var, Variable):
+                    global_vars += [var]
+                    #TODO should we add all the variables or only the ones used in the function
+
+
             func=FunctionDef(name, args, results, body,
                                local_vars=local_vars, global_vars=global_vars,
                                cls_name=cls_name, hide=hide,
