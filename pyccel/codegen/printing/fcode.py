@@ -33,7 +33,7 @@ from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype
 from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.core import CustomDataType
+from pyccel.ast.core import CustomDataType, String
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
@@ -47,7 +47,7 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
+from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
@@ -376,10 +376,10 @@ class FCodePrinter(CodePrinter):
                 code = '{0}({1})'.format(name, code_args)
                 # ...
                 # ...
-                if func.is_procedure:
-                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)
+                if func.kind=='function':
+                    code = '{0}%{1}'.format(self._print(expr.args[0]), code)
                 else:
-                    raise NotImplemented('FunctionCall of kind function not implemented yet')
+                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)    
                 return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
@@ -547,6 +547,9 @@ class FCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.dtype)
         # ...
+        if isinstance(expr.dtype, NativeString):
+            if expr.intent:
+                dtype = dtype[:9] +'(len =*)'
 
         code_value = ''
         if expr.value:
@@ -803,7 +806,8 @@ class FCodePrinter(CodePrinter):
         return '.false.'
 
     def _print_NativeString(self, expr):
-        return 'char'
+        return 'character(len=280)'
+        #TODO fix improve later
 
     def _print_NativeVector(self, expr):
         return 'real(kind=8)'
@@ -825,6 +829,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_BooleanFalse(self,expr):
         return '.False.'
+
+    def _print_String(self,expr):
+        return expr.arg
 
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
@@ -974,7 +981,7 @@ class FCodePrinter(CodePrinter):
         name = self._print(expr.name)
         base = None # TODO: add base in ClassDef
 
-        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributs)
+        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributes)
 
         aliases = []
         names   = []

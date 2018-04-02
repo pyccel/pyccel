@@ -2223,6 +2223,9 @@ class FunctionDef(Basic):
 
     imports: list, tuple
         a list of needed imports
+    
+    decorators: list, tuple
+        a list of proporties
 
     Examples
 
@@ -2254,7 +2257,7 @@ class FunctionDef(Basic):
 
     def __new__(cls, name, arguments, results, \
                 body, local_vars=[], global_vars=[], \
-                cls_name=None, hide=False, kind='function', imports=[]):
+                cls_name=None, hide=False, kind='function', imports=[], decorators=[]):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2303,12 +2306,15 @@ class FunctionDef(Basic):
 
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
+        
+        if not iterable(decorators):
+            raise TypeError("imports must be an iterable")
 
         return Basic.__new__(cls, name, \
                              arguments, results, \
                              body, \
                              local_vars, global_vars, \
-                             cls_name,hide, kind, imports)
+                             cls_name,hide, kind, imports, decorators)
 
     @property
     def name(self):
@@ -2350,6 +2356,10 @@ class FunctionDef(Basic):
     @property
     def imports(self):
         return self._args[9]
+    
+    @property
+    def decorators(self):
+        return self._args[10]
 
     def print_body(self):
         for s in self.body:
@@ -2517,6 +2527,9 @@ class ClassDef(Basic):
 
     imports: list, tuple
         list of needed imports
+    
+    parent : str 
+        parent's class name 
 
     Examples
 
@@ -2536,17 +2549,17 @@ class ClassDef(Basic):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
-    def __new__(cls, name, attributs, methods, \
-                options=['public'], imports=[]):
+    def __new__(cls, name, attributes=[], methods=[], \
+                options=['public'], imports=[], parent=[]):
         # name
         if isinstance(name, str):
             name = Symbol(name)
         elif not isinstance(name, Symbol):
             raise TypeError("Function name must be Symbol or string")
         # attributs
-        if not iterable(attributs):
+        if not iterable(attributes):
             raise TypeError("attributs must be an iterable")
-        attributs = Tuple(*attributs)
+        attributes = Tuple(*attributes)
         # methods
         if not iterable(methods):
             raise TypeError("methods must be an iterable")
@@ -2556,6 +2569,9 @@ class ClassDef(Basic):
         # imports
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
+        
+        if not iterable:
+            raise TypeError("parent must be iterable")
 
         for i in methods:
             imports += i.imports
@@ -2564,39 +2580,40 @@ class ClassDef(Basic):
 
         # ...
         # look if the class has the method __del__
-        d_methods = {}
-        for i in methods:
-            d_methods[str(i.name).replace('\'','')] = i
-        if not ('__del__' in d_methods):
-            dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
-            this  = Variable(dtype(), 'self')
+        #d_methods = {}
+        #for i in methods:
+        #    d_methods[str(i.name).replace('\'','')] = i
+        #if not ('__del__' in d_methods):
+        #    dtype = DataTypeFactory(str(name), ("_name"), prefix='Custom')
+        #    this  = Variable(dtype(), 'self')
 
             # constructs the __del__ method if not provided
-            args = []
-            for a in attributs:
-                if isinstance(a, Variable):
-                    if a.allocatable:
-                        args.append(a)
+         #   args = []
+         #   for a in attributs:
+         #       if isinstance(a, Variable):
+         #           if a.allocatable:
+         #              args.append(a)
 
-            args = [Variable(a.dtype, DottedName(str(this), str(a.name))) for a in args]
-            body = [Del(a) for a in args]
+         #   args = [Variable(a.dtype, DottedName(str(this), str(a.name))) for a in args]
+         #   body = [Del(a) for a in args]
 
-            free = FunctionDef('__del__', [this], [], \
-                               body, local_vars=[], global_vars=[], \
-                               cls_name='__UNDEFINED__', kind='procedure', imports=[])
+         #   free = FunctionDef('__del__', [this], [], \
+         #                      body, local_vars=[], global_vars=[], \
+         #                      cls_name='__UNDEFINED__', kind='procedure', imports=[])
 
-            methods = list(methods) + [free]
+         #  methods = list(methods) + [free]
+         #TODO move this somewhere else
         methods = Tuple(*methods)
         # ...
 
-        return Basic.__new__(cls, name, attributs, methods, options, imports)
+        return Basic.__new__(cls, name, attributes, methods, options, imports, parent)
 
     @property
     def name(self):
         return self._args[0]
 
     @property
-    def attributs(self):
+    def attributes(self):
         return self._args[1]
 
     @property
@@ -2610,6 +2627,10 @@ class ClassDef(Basic):
     @property
     def imports(self):
         return self._args[4]
+    
+    @property
+    def parent(self):
+        return self._args[5]
 
     @property
     def methods_as_dict(self):
@@ -2621,15 +2642,15 @@ class ClassDef(Basic):
         return d_methods
 
     @property
-    def attributs_as_dict(self):
+    def attributes_as_dict(self):
         """Returns a dictionary that contains all attributs, where the key is the
         attribut's name."""
-        d_attributs = {}
-        for i in self.attributs:
-            d_attributs[str(i.name)] = i
-        return d_attributs
+        d_attributes = {}
+        for i in self.attributes:
+            d_attributes[str(i.name)] = i
+        return d_attributes
 
-    # TODO add other attributs?
+    # TODO add other attributes?
     @property
     def this(self):
         alias  = None
@@ -2650,14 +2671,14 @@ class ClassDef(Basic):
         else:
             cls_name = str(O)
 
-        attributs = {}
-        for i in self.attributs:
-            attributs[str(i.name)] = i
+        attributes = {}
+        for i in self.attributes:
+            attributes[str(i.name)] = i
 
-        if not attr in attributs:
+        if not attr in attributes:
             raise ValueError('{0} is not an attribut of {1}'.format(attr, str(self)))
 
-        var = attributs[attr]
+        var = attributes[attr]
         name = DottedName(cls_name, str(var.name))
         return Variable(var.dtype, name, \
                         rank=var.rank, \
@@ -3350,6 +3371,18 @@ class IndexedElement(Indexed):
     def dtype(self):
         return self.base.dtype
 
+class String(Basic):
+    """Represents the String"""
+    
+    def __new__(cls,arg):
+        if not isinstance(arg,str):
+            raise TypeError('arg must be of type str')
+        return Basic.__new__(cls,arg)
+   
+    @property
+    def arg(self):
+        return self._args[0]
+            
 
 class Concatinate(Basic):
     """Represents the String concatination operation.
@@ -3956,8 +3989,8 @@ class MethodHeader(FunctionHeader):
                 elif isinstance(d, DataType):
                     r_types.append((d, []))
                 elif isinstance(d, (tuple, list)):
-                    if not(len(d) == 2):
-                        raise ValueError("Expecting exactly two entries.")
+                    if not(len(d) in [2, 3]):
+                        raise ValueError("Expecting exactly 2 or 3 entries.")
                     r_types.append(d)
                 else:
                     raise TypeError("Wrong element in r_types.")

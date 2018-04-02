@@ -50,6 +50,7 @@ from pyccel.ast import NativeFloatList
 from pyccel.ast import NativeDoubleList
 from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
+from pyccel.ast import String
 from pyccel.ast import datatype,DataTypeFactory
 from pyccel.ast import Nil
 from pyccel.ast import Variable
@@ -227,7 +228,7 @@ def fst_to_ast(stmt):
         return repr(stmt)
 
     elif isinstance(stmt, StringNode):
-        return stmt.value
+        return String(stmt.value)
 
     elif isinstance(stmt, IntNode):
         return Integer(stmt.value)
@@ -403,17 +404,19 @@ def fst_to_ast(stmt):
         hide        = False
         kind        = 'function'
         imports     = []
+        decorators  = [i.value.value[0].value for i in stmt.decorators] #TODO improve later
         return FunctionDef(name, arguments, results, body,
                            local_vars=local_vars, global_vars=global_vars,
                            cls_name=cls_name, hide=hide,
-                           kind=kind, imports=imports)
+                           kind=kind, imports=imports ,decorators=decorators)
 
     elif isinstance(stmt, ClassNode):
         name = fst_to_ast(stmt.name)
         methods = [i for i in stmt.value if isinstance(i, DefNode)]
         methods = fst_to_ast(methods)
         attributes = methods[0].arguments
-        return ClassDef(name, attributes, methods)
+        parent = [i.value for i in stmt.inherit_from]
+        return ClassDef(name=name, attributes=attributes, methods=methods, parent=parent)
 
     elif isinstance(stmt, AtomtrailersNode):
          return fst_to_ast(stmt.value)
@@ -457,6 +460,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, CallNode):
         args = fst_to_ast(stmt.value)
         f_name = str(stmt.previous)
+        if len(args)==0:
+            args=((),)
         func = Function(f_name)(*args)
         parent = stmt.parent
         if stmt.previous.previous and isinstance(stmt.previous.previous, DotNode):
@@ -563,11 +568,14 @@ class Parser(object):
         self._ast = None
         self._filename = None
         self._namespace = {}
+        self._namespace['variables'] = {}
+        self._namespace['classes'] = {}
+        self._namespace['functions'] = {}
         self._namespace['cls_constructs'] = {}
-        self._scoope ={} #represent the namespace of a function
+        self._scope = {} #represent the namespace of a function
         self._parent = None
         self._current = None # we use it to detect the current method or function
-        self._imports ={} #we use it to store the imports
+        self._imports = {} #we use it to store the imports
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self._namespace['headers'] = {}
@@ -675,85 +683,74 @@ class Parser(object):
         """."""
         var = None
         if self._parent:
-            for i in self._parent. attributs:
+            for i in self._parent.attributes:
                 if str(i.name) == name:
                     var = i
-                    break
+                    return var
         if self._current:
-            if name in self._scoope[self._current]:
-                var = self._scoope[self._current][name]
-        if name in self._namespace:
-            var =  self._namespace[name]
-        if var and isinstance(var, Variable) or var is None:
-            return var
-        else:
-            raise TypeError('variable must be of type Variable')
+            if name in self._scope[self._current]['variables']:
+                var = self._scope[self._current]['variables'][name]
+        if name in self._namespace['variables']:
+            var =  self._namespace['variables'][name]
+        return var
 
     def insert_variable(self, expr, name=None):
         """."""
         # TODO add some checks before
         if name is None:
             name = str(expr)
-        if not isinstance(expr,(Variable, DottedName)):
+        if not isinstance(expr,Variable):
             raise TypeError('variable must be of type Variable')
 
         if self._current:
-            self._scoope[self._current][name] = expr
+            self._scope[self._current]['variables'][name] = expr
         else:
-            self._namespace[name] = expr
+            self._namespace['variables'][name] = expr
 
     def get_class(self, name):
         """."""
         cls = None
-        if name in self._namespace:
-            cls = self._namespace[name]
-        if isinstance(cls , ClassDef):
-            return cls
-        else:
-            raise TypeError('there is no class with name {0}'.format(name))
+        if name in self._namespace['classes']:
+            cls = self._namespace['classes'][name]
+        return cls
 
     def insert_class(self, cls):
         """."""
         if isinstance(cls, ClassDef):
             name = str(cls.name)
-            self._namespace[name] = cls
+            self._namespace['classes'][name] = cls
         else:
             raise TypeError('Expected A class definition ')
 
     def get_function(self, name):
         """."""
         func = None
-        if name in self._namespace:
-            func = self._namespace[name]
+        if name in self._namespace['functions']:
+            func = self._namespace['functions'][name]
         elif name in self._imports:
             func = self._imports[name]
-        if isinstance(func, (FunctionDef, FunctionClass)):
-            return func
-        else:
-            raise TypeError('Expected a Function definition')
+        return func
 
     def insert_function(self, func):
         """."""
         if not isinstance(func, FunctionDef):
             raise TypeError('Expected a Function definition')
         else:
-            self._namespace[str(func.name)] = func
+            self._namespace['functions'][str(func.name)] = func
 
     def remove(self, name):
         """."""
-        self._namespace.pop(name,None)
+        if self_current:
+            self._scope[self._current]['variables'].pop(name, None)
+        self._namespace['variables'].pop(name,None)
 
     def update_variable(self, var, **options):
         """."""
         name = _get_variable_name(var).split('.')
-        var = None
-        if self._current:
-            var = self._scoope[self._current].pop(name[0],None)
-        if not var:
-            var = self._namespace.pop(name[0], None)
+        var = self.get_variable(name[0])
         if len(name)>1:
             name_ = _get_variable_name(var)
-            for i in var.cls_base.attributs:
+            for i in var.cls_base.attributes:
                 if str(i.name)==name[1]:
                     var=i
             name = name_
@@ -788,9 +785,11 @@ class Parser(object):
     def set_current_fun(self, name):
         """."""
         if name:
-            self._scoope[name] = {}
+            self._scope[name] = {}
+            self._scope[name]['variables'] = {}
+            self._scope[name]['functions'] = {}
         else:
-            self._scoope.pop(self._current)
+            self._scope.pop(self._current)
         self._current = name
 
 
@@ -846,6 +845,12 @@ class Parser(object):
 
         elif isinstance(expr, Float):
             d_var['datatype'] = DEFAULT_FLOAT
+            d_var['allocatable'] = False
+            d_var['rank'] = 0
+            return d_var
+
+        elif isinstance(expr, String):
+            d_var['datatype'] = 'str'
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
@@ -1025,7 +1030,7 @@ class Parser(object):
             else:
                 return Tuple(*ls)
 
-        elif isinstance(expr, (Integer, Float)):
+        elif isinstance(expr, (Integer, Float, String)):
             return expr
 
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
@@ -1075,6 +1080,12 @@ class Parser(object):
 
         elif isinstance(expr, DottedVariable):
             first = self._annotate(expr.args[0])
+            attr_name = [i.name for i in first.cls_base.attributes]
+            if isinstance(expr.args[1], Symbol) and not expr.args[1].name in attr_name:
+                for i in first.cls_base.methods:
+                    if str(i.name)==expr.args[1].name and 'property' in i.decorators:
+                        second = FunctionCall(i,(),kind = i.kind)
+                        return DottedVariable(first, second)
             if not isinstance(expr.args[1],Function):
                 self._parent =first.cls_base
                 second = self._annotate(expr.args[1])
@@ -1083,6 +1094,8 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == str(type(expr.args[1]).__name__):
                         args = [self._annotate(arg) for arg in expr.args[1].args]
+                        if len(args)==1 and isinstance(args[0], Tuple) and len(args[0])==0:
+                            args=[]
                         second = FunctionCall(i,args,kind =i.kind)
             return DottedVariable(first, second)
 
@@ -1280,13 +1293,15 @@ class Parser(object):
                 name = lhs.args[0].name
                 if self._current == '__init__':
                      cls_name = str(self.get_variable('self').cls_base.name)
-                     attributs = self.get_class(cls_name).attributs
-                     attributs = list(attributs)
+                     cls = self.get_class(cls_name)
+                     attributes = cls.attributes
+                     parent = cls.parent
+                     attributes = list(attributes)
                      n_name = str(lhs.args[1].name)
-                     attributs += [Variable(dtype, n_name, **d_var)]
-                     #update the attributs of the class and push it to the namespace
-                     self.insert_class(ClassDef(cls_name,attributs,[]))
-                     #update the self variable with the new attributs
+                     attributes += [Variable(dtype, n_name, **d_var)]
+                     #update the attributes of the class and push it to the namespace
+                     self.insert_class(ClassDef(cls_name,attributes,[],parent = parent))
+                     #update the self variable with the new attributes
                      dt=self.get_class_construct(cls_name)()
                      var = Variable(dt,'self',cls_base = self.get_class(cls_name))
                      self.insert_variable(var,'self')
@@ -1394,6 +1409,7 @@ class Parser(object):
             hide        = False
             kind        = 'function'
             imports     = []
+            decorators  = expr.decorators
             self.set_current_fun(name)
 
 
@@ -1404,6 +1420,7 @@ class Parser(object):
                 else:
                     header = self.get_header(name)
                 if not header:
+                    print self._namespace['headers']
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
 
@@ -1504,11 +1521,11 @@ class Parser(object):
                 var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
                 args = [var] + args
 
-            for var in self._scoope[name].values():
-                if not var in args+results and isinstance(var, Variable):
+            for var in self._scope[name]['variables'].values():
+                if not var in args+results:
                     local_vars += [var]
 
-            for var in self._namespace.values():
+            for var in self._namespace['variables'].values():
                 if not var in args+results+local_vars and isinstance(var, Variable):
                     global_vars += [var]
                     #TODO should we add all the variables or only the ones used in the function
@@ -1517,17 +1534,16 @@ class Parser(object):
             func=FunctionDef(name, args, results, body,
                                local_vars=local_vars, global_vars=global_vars,
                                cls_name=cls_name, hide=hide,
-                               kind=kind, imports=imports)
+                               kind=kind, imports=imports, decorators=decorators)
             if cls_name:
                 cls = self.get_class(cls_name)
                 methods = list(cls.methods) + [func]
                 #update the class  methods
-                self.insert_class(ClassDef(cls_name, cls.attributs,methods))
+                self.insert_class(ClassDef(cls_name,cls.attributes,methods,parent=cls.parent))
             # insert function def into namespace
             # TODO checking
-            #F = self.get_function(name)
-            #if F is None:
-            if not cls_name:
+            F = self.get_function(name)
+            if F is None and not cls_name:
                 self.insert_function(func)
 #                # TODO uncomment and improve this part later.
 #                #      it will allow for handling parameters of different dtypes
@@ -1554,39 +1570,33 @@ class Parser(object):
         elif isinstance(expr, ClassDef):
             name = str(expr.name)
             name = name.replace('\'', '')
-            # remove quotes for str representation
-            attributs = []
-            self.insert_class(ClassDef(name,[],[]))
-            header = self.get_header(name)
             methods = list(expr.methods)
+            parent  = expr.parent
+            # remove quotes for str representation
+            self.insert_class(ClassDef(name,[],[],parent=parent))
             const = None
             for i,method in enumerate(methods):
                 m_name = str(method.name).replace('\'', '')
                 # remove quotes for str representation
-                if str(method.name).replace('\'','')=='__del__':
-                    methods.pop(i)
-                    #remove the__del__method
                 if m_name == '__init__':
                     const = self._annotate(method)
                     methods.pop(i)
 
             methods = [self._annotate(i) for i in methods]
             #remove the self object
+
             if not const:
                 raise SystemExit('missing contuctor in the class {0}'.format(name))
-            else:
-                methods = [const]+methods
+
+            methods = [const]+methods
+            header = self.get_header(name)
+
             if not header:
                 raise ValueError('Expecting a header class for {classe} '
                                      'but could not find it.'.format(classe=name))
-             # we construct a ClassDef from its header
-             #clean namespace
-            #for i in methods:
-            #    self._namespace.pop(str(i.name))
             options = header.options
-             # then use it to decorate our arguments
-            attributs = self.get_class(name).attributs
-            return ClassDef(name,attributs,methods)
+            attributes = self.get_class(name).attributes
+            return ClassDef(name, attributes, methods,parent=parent)
 
         elif isinstance(expr, Pass):
             return Pass()
