@@ -550,6 +550,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, NativeString):
             if expr.intent:
                 dtype = dtype[:9] +'(len =*)'
+                #TODO improve ,this is the case of character as argument
 
         code_value = ''
         if expr.value:
@@ -1754,7 +1755,7 @@ class FCodePrinter(CodePrinter):
                         result.append("%s%s" % ("! ", hunk))
                 else:
                     result.append(line)
-            else:
+            elif not ("'" in line or '"' in line):
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
@@ -1769,6 +1770,10 @@ class FCodePrinter(CodePrinter):
                     if line:
                         hunk += trailing
                     result.append("%s%s" % ("      " , hunk))
+            else:
+                #Case of a line with a sting in it we dont want to split
+                #TODO improve
+                result.append(line)
         return result
 
     def indent_code(self, code):

@@ -1420,7 +1420,6 @@ class Parser(object):
                 else:
                     header = self.get_header(name)
                 if not header:
-                    print self._namespace['headers']
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
 
