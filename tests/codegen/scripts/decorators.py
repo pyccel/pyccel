@@ -37,10 +37,10 @@ class Shape:
 
 rectangle = Shape(100., 45.)
 #finding the area of your rectangle:
-print(rectangle.area())
+print(rectangle.area)
 
 #finding the perimeter of your rectangle:
-print(rectangle.perimeter())
+print(rectangle.perimeter)
 
 #describing the rectangle
 rectangle.describe("A wide rectangle, more than twice as wide as it is tall")
@@ -49,4 +49,4 @@ rectangle.describe("A wide rectangle, more than twice as wide as it is tall")
 rectangle.scaleSize(0.5)
 
 #re-printing the new area of the rectangle
-print(rectangle.area())
+print(rectangle.area)
