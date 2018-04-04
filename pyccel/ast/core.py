@@ -1003,7 +1003,7 @@ class Module(Basic):
 
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
-
+        imports = list(imports)
         for i in funcs:
             imports += i.imports
         for i in classes:
