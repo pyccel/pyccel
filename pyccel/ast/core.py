@@ -979,7 +979,7 @@ class Module(Basic):
     Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
-    def __new__(cls, name, variables, funcs, classes, imports=[]):
+    def __new__(cls, name, variables, funcs,interfaces =[], classes = [], imports=[]):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
 
@@ -1001,6 +1001,13 @@ class Module(Basic):
             if not isinstance(i, ClassDef):
                 raise TypeError("Only a ClassDef instance is allowed.")
 
+        if not iterable(interfaces):
+            raise TypeError("interfaces must be an iterable")
+        for i in interfaces:
+            if not isinstance(i, Interface):
+                raise TypeError("Only a Inteface instance is allowed.")
+
+
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
         imports = list(imports)
@@ -1011,7 +1018,7 @@ class Module(Basic):
         imports = set(imports) # for unicity
         imports = Tuple(*imports)
 
-        return Basic.__new__(cls, name, variables, funcs, classes, imports)
+        return Basic.__new__(cls, name, variables, funcs,interfaces, classes, imports)
 
     @property
     def name(self):
@@ -1026,12 +1033,16 @@ class Module(Basic):
         return self._args[2]
 
     @property
-    def classes(self):
+    def interfaces(self):
         return self._args[3]
 
     @property
-    def imports(self):
+    def classes(self):
         return self._args[4]
+
+    @property
+    def imports(self):
+        return self._args[5]
 
     @property
     def declarations(self):
@@ -1039,7 +1050,7 @@ class Module(Basic):
 
     @property
     def body(self):
-        return self.funcs + self.classes
+        return self.interfaces + self.funcs + self.classes
 
 class Program(Basic):
     """Represents a Program in the code. A block consists of the following inputs
@@ -1086,7 +1097,7 @@ class Program(Basic):
     Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
-    def __new__(cls, name, variables, funcs, classes, body, imports=[], modules=[]):
+    def __new__(cls, name, variables, funcs,interfaces,classes, body, imports=[], modules=[]):
 
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1103,6 +1114,12 @@ class Program(Basic):
         for i in funcs:
             if not isinstance(i, FunctionDef):
                 raise TypeError("Only a FunctionDef instance is allowed.")
+        
+        if not iterable(interfaces):
+            raise TypeError("interfaces must be an iterable")
+        for i in interfaces:
+            if not isinstance(i, Interface):
+                raise TypeError("Only a Interface instance is allowed.")
 
         if not iterable(body):
             raise TypeError("body must be an iterable")
@@ -1133,7 +1150,7 @@ class Program(Basic):
 #                body += printer(s) + "\n"
 
 
-        return Basic.__new__(cls, name, variables, funcs, classes, body, imports, modules)
+        return Basic.__new__(cls, name, variables, funcs, interfaces, classes, body, imports, modules)
 
     @property
     def name(self):
@@ -1146,22 +1163,26 @@ class Program(Basic):
     @property
     def funcs(self):
         return self._args[2]
-
+   
     @property
-    def classes(self):
+    def interfaces(self):
         return self._args[3]
 
     @property
-    def body(self):
+    def classes(self):
         return self._args[4]
 
     @property
-    def imports(self):
+    def body(self):
         return self._args[5]
 
     @property
-    def modules(self):
+    def imports(self):
         return self._args[6]
+
+    @property
+    def modules(self):
+        return self._args[7]
 
     @property
     def declarations(self):
@@ -1640,11 +1661,14 @@ class FunctionCall(AtomicExpr):
 
     # TODO improve
     def __new__(cls, func, arguments, cls_variable=None, kind='function'):
-        if not isinstance(func, (FunctionDef, str)):
+        if not isinstance(func, (FunctionDef,Interface, str)):
             raise TypeError("Expecting func to be a FunctionDef or str")
 
         if isinstance(func, FunctionDef):
             kind = func.kind
+            f_name = func.name
+        elif isinstance(func, Interface):
+            kind = func.functions[0].kind
             f_name = func.name
         else:
             f_name = func
@@ -1736,7 +1760,7 @@ class MethodCall(AtomicExpr):
 
     # TODO improve
     def __new__(cls, func, arguments,cls_variable=None, kind='function'):
-        if not isinstance(func, (FunctionDef, str)):
+        if not isinstance(func, (FunctionDef,Interface, str)):
             raise TypeError("Expecting func to be a FunctionDef or str")
 
         if isinstance(func, FunctionDef):
@@ -2191,6 +2215,25 @@ class Return(Basic):
     def expr(self):
         return self._args[0]
 
+class Interface(Basic):
+    """Represent an Interface"""
+
+    def __new__(cls,name,functions):
+        if not isinstance(name, str):
+            raise TypeError("Expecting an str")
+        if not isinstance(functions,list):
+            raise TypeError("Expecting a list")
+        return Basic.__new__(cls, name, functions)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def functions(self):
+        return self._args[1]
+    
+
 class FunctionDef(Basic):
     """Represents a function definition.
 
@@ -2365,9 +2408,9 @@ class FunctionDef(Basic):
         for s in self.body:
             print (s)
 
-  #  def set_name(self,new_name):
-   #         return FunctionDef(new_name, self.arguments, self.results, self.body, self.local_vars,
-    #                  self.global_vars, self.cls_name, self.hide, self.kind, self.imports)
+    def set_name(self,new_name):
+            return FunctionDef(new_name, self.arguments, self.results, self.body, local_vars=self.local_vars,
+                      global_vars=self.global_vars, cls_name=self.cls_name, hide=self.hide, kind=self.kind, imports=self.imports)
 
 #    @property
 #    def declarations(self):
@@ -2923,32 +2966,29 @@ class Declare(Basic):
     Declare(NativeDouble(), (x,), out)
     """
 
-    def __new__(cls, dtype, variables, intent=None, value=None):
+    def __new__(cls, dtype, variable, intent=None, value=None):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
-        if not isinstance(variables, (list, tuple, Tuple)):
-            variables = [variables]
-        for var in variables:
-            if not isinstance(var, Variable):
-                raise TypeError("var must be of type Variable, given {0}".format(var))
-            if var.dtype != dtype:
-                raise ValueError("All variables must have the same dtype")
-        variables = Tuple(*variables)
+        
+        if not isinstance(variable, Variable):
+            raise TypeError("var must be of type Variable, given {0}".format(variable))
+        if variable.dtype != dtype:
+            raise ValueError("All variables must have the same dtype")
 
         if intent:
             if not(intent in ['in', 'out', 'inout']):
                 raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-        return Basic.__new__(cls, dtype, variables, intent, value)
+        return Basic.__new__(cls, dtype, variable, intent, value)
 
     @property
     def dtype(self):
         return self._args[0]
 
     @property
-    def variables(self):
+    def variable(self):
         return self._args[1]
 
     @property
@@ -3705,6 +3745,15 @@ class VariableHeader(Header):
         raise NotImplementedError('TODO')
 
 # TODO rename dtypes to arguments
+class UnionType(Basic):
+
+    def __new__(cls,args):
+        return Basic.__new__(cls, args)
+
+    @property
+    def args(self):
+        return self._args[0]
+
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
@@ -3746,34 +3795,16 @@ class FunctionHeader(Header):
 
         types = []
         for d in dtypes:
-            if isinstance(d, str):
-                types.append((datatype(d), []))
-            elif isinstance(d, DataType):
-                types.append((d, []))
-            elif isinstance(d, (tuple, list)):
-                if not(len(d) in [2, 3]):
-                    raise ValueError("Expecting exactly 2 or 3 entries.")
-                types.append(d)
-            else:
-                raise TypeError("Wrong element in dtypes.")
+            if not isinstance(d, list):
+                raise TypeError("Expecting  UnionType")
 
-        r_types = []
         if results:
             if not(iterable(results)):
                 raise TypeError("Expecting results to be iterable.")
 
-            r_types = []
             for d in results:
-                if isinstance(d, str):
-                    r_types.append((datatype(d), []))
-                elif isinstance(d, DataType):
-                    r_types.append((d, []))
-                elif isinstance(d, (tuple, list)):
-                    if not(len(d) in [2, 3]):
-                        raise ValueError("Expecting exactly 2 or 3 entries.")
-                    r_types.append(d)
-                else:
-                    raise TypeError("Wrong element in r_types.")
+                if not isinstance(d, list):
+                    raise ValueError("Expecting UnionType")
 
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
@@ -3783,8 +3814,7 @@ class FunctionHeader(Header):
 
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
-
-        return Basic.__new__(cls, func, types, r_types, kind, is_static)
+        return Basic.__new__(cls, func, dtypes, results, kind, is_static)
 
     @property
     def func(self):
@@ -3809,6 +3839,7 @@ class FunctionHeader(Header):
     def create_definition(self):
         """Returns a FunctionDef with empy body."""
         # TODO factorize what can be factorized
+        from itertools import product
 
         name = str(self.func)
 
@@ -3818,100 +3849,61 @@ class FunctionHeader(Header):
         kind      = self.kind
 #        kind      = 'procedure'
         imports   = []
+        funcs = []
+        for args_ in product(*self.dtypes):
+            args = []
+            for i,d in enumerate(args_):
+                dtype    = d[0]
+                allocatable = d[2]
+                # '' is converted to None
+                if isinstance(allocatable, str):
+                    allocatable = None
 
-        # ... factorize the following 2 blocks
-        args = []
-        for i,d in enumerate(self.dtypes):
-            dtype    = d[0]
-            allocatable = d[2]
-            # '' is converted to None
-            if isinstance(allocatable, str):
-                allocatable = None
-
-            rank = 0
-            for a in d[1]:
-                if isinstance(a, Slice) or a == ':':
-                    rank += 1
-            if rank>0 and isinstance(dtype,str):#case of ndarray
-                if dtype in ['int','double','float','complex']:
-                    allocatable = True
-                    dtype = 'ndarray'+dtype
-            is_pointer = False
-            if isinstance(dtype,(list,tuple)):#case of pointer list
-                if not all(dtype[0] == rest for rest in dtype[1:]):
-                    raise TypeError('All Elements of the list must be of the same datatype')
-                else:
-                    rank = len(dtype)
-                    dtype = dtype[0]
-                    is_pointer = True
-
-
-            shape  = None
-            if isinstance(dtype,str):
-                try:
-                    dtype = datatype(dtype)
-                except:
-                    #TODO check if it's a class type before
-                    if isinstance(dtype,str):
-                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
-                        is_pointer = True
-            arg_name = 'arg_{0}'.format(str(i))
-            arg = Variable(dtype, arg_name,
-                           allocatable=allocatable,is_pointer=is_pointer,
-                           rank=rank,
-                           shape=shape)
-            args.append(arg)
-
-        results = []
-        for i,d in enumerate(self.results):
-            dtype    = d[0]
-            allocatable = d[2]
-            # '' is converted to None
-            if isinstance(allocatable, str):
-                allocatable = None
-
-            rank = 0
-            for a in d[1]:
-                if isinstance(a, Slice) or a == ':':
-                    rank += 1
+                rank = 0
+                for a in d[1]:
+                    if isinstance(a, Slice) or a == ':':
+                        rank += 1
                 if rank>0 and isinstance(dtype,str):#case of ndarray
                     if dtype in ['int','double','float','complex']:
                         allocatable = True
                         dtype = 'ndarray'+dtype
-            is_pointer = False
-            if isinstance(dtype,(list,tuple)):
-                if not all(dtype[0] == rest for rest in dtype[1:]):
-                    raise TypeError('All Elements of the list must be of the same datatype')
-                else:
-                    rank = len(dtype)
-                    dtype = dtype[0]
-                    is_pointer = True
-
-            shape  = None
-            if isinstance(dtype,str):
-                try:
-                    dtype = datatype(dtype)
-                except:
-                    #TODO check if it's a class type before
-                    if isinstance(dtype,str):
-                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                is_pointer = False
+                if isinstance(dtype,(list,tuple)):#case of pointer list
+                    if not all(dtype[0] == rest for rest in dtype[1:]):
+                        raise TypeError('All Elements of the list must be of the same datatype')
+                    else:
+                        rank = len(dtype)
+                        dtype = dtype[0]
                         is_pointer = True
 
-            result_name = 'result_{0}'.format(str(i))
-            result = Variable(dtype, result_name,
-                           allocatable=allocatable,is_pointer=is_pointer,
-                           rank=rank,
-                           shape=shape)
-            results.append(result)
-        # ...
 
-        return FunctionDef(name, args, results, body,
-                           local_vars=[],
-                           global_vars=[],
-                           cls_name=cls_name,
-                           hide=hide,
-                           kind=kind,
-                           imports=imports)
+                shape  = None
+                if isinstance(dtype,str):
+                    try:
+                        dtype = datatype(dtype)
+                    except:
+                        #TODO check if it's a class type before
+                        if isinstance(dtype,str):
+                            dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                            is_pointer = True
+                arg_name = 'arg_{0}'.format(str(i))
+                arg = Variable(dtype, arg_name,
+                               allocatable=allocatable, is_pointer=is_pointer,
+                               rank=rank, shape=shape)
+                args.append(arg)
+
+        # ... factorize the following 2 blocks
+
+            results = []
+            func= FunctionDef(name, args, results, body,
+                             local_vars=[],
+                             global_vars=[],
+                             cls_name=cls_name,
+                             hide=hide,
+                             kind=kind,
+                             imports=imports)
+            funcs += [func]
+        return funcs
 
     def to_static(self):
         """returns a static function header. needed for f2py"""
@@ -3961,39 +3953,13 @@ class MethodHeader(FunctionHeader):
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
-        types = []
         for d in dtypes:
-            if isinstance(d, str):
-                types.append((datatype(d), []))
-            elif isinstance(d, DataType):
-                types.append((d, []))
-            elif isinstance(d, (tuple, list)):
-                # commented because of 'star' attribut
-                # TODO clean this later
-#                if not(len(d) == 2):
-#                    print '>> d = ', d
-#                    raise ValueError("Expecting exactly two entries.")
-                types.append(d)
-            else:
+            if not isinstance(d,list):
                 raise TypeError("Wrong element in dtypes.")
 
-        r_types = []
-        if results:
-            if not(iterable(results)):
-                raise TypeError("Expecting results to be iterable.")
-
-            r_types = []
-            for d in results:
-                if isinstance(d, str):
-                    r_types.append((datatype(d), []))
-                elif isinstance(d, DataType):
-                    r_types.append((d, []))
-                elif isinstance(d, (tuple, list)):
-                    if not(len(d) in [2, 3]):
-                        raise ValueError("Expecting exactly 2 or 3 entries.")
-                    r_types.append(d)
-                else:
-                    raise TypeError("Wrong element in r_types.")
+        for d in results:
+            if not isinstance(d,list):
+                raise TypeError("Wrong element in dtypes.")
 
 
         if not isinstance(kind, str):
@@ -4005,7 +3971,7 @@ class MethodHeader(FunctionHeader):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, name, types, r_types, kind, is_static)
+        return Basic.__new__(cls, name, dtypes, results, kind, is_static)
 
     @property
     def name(self):

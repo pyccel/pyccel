@@ -40,8 +40,8 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import Vector, Stencil
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import FunctionCall,MethodCall
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import FunctionCall, MethodCall
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
@@ -159,6 +159,16 @@ class FCodePrinter(CodePrinter):
 
         # ...
         sep = self._print(SeparatorComment(40))
+        interfaces = ''
+        if expr.interfaces:
+            interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+            for interface in expr.interfaces:
+                for i in interface.functions:
+                    body = ('{body}\n'
+                            '{sep}\n'
+                            '{f}\n'
+                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+           
         if expr.funcs:
             for i in expr.funcs:
                 body = ('{body}\n'
@@ -177,17 +187,19 @@ class FCodePrinter(CodePrinter):
         # ...
 
 
-        if expr.funcs or expr.classes:
-            body = 'contains\n{0}'.format(body)
+        if expr.funcs or expr.classes or expr.interfaces:
+            body = '\n contains\n{0}'.format(body)
 
         return ('module {name}\n'
                 '{imports}\n'
                 'implicit none\n'
                 '{decs}\n'
+                '{interfaces}\n'
                 '{body}\n'
                 'end module\n').format(name=name,
                                        imports=imports,
                                        decs=decs,
+                                       interfaces=interfaces,
                                        body=body)
 
     def _print_Program(self, expr):
@@ -197,17 +209,32 @@ class FCodePrinter(CodePrinter):
 
         modules = ''
         imports = '\n'.join(self._print(i) for i in expr.imports)
-        decs    = '\n'.join(self._print(i) for i in expr.declarations)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
+        decs    = expr.declarations
 
-        if expr.classes:
+        if expr.classes or expr.interfaces:
             # TODO shall we use expr.variables? or have a more involved algo
             #      we will need to walk through the expression and see what are
             #      the variables that are needed in the definitions of classes
             variables = []
-            module_utils = Module(expr.name, variables,
-                                  expr.funcs, expr.classes,
+            for i in expr.interfaces:
+                variables += i.functions[0].global_vars
+            for i in expr.funcs:
+                variables += i.global_vars
+            variables =list(set(variables))
+            for dec in decs:
+                #remove variables that are declared in the modules
+                if dec.variable in variables:
+                    decs.remove(dec)
+                            
+                        
+                        
+            
+            
+
+            module_utils = Module(expr.name, list(variables),
+                                  expr.funcs,expr.interfaces, expr.classes,
                                   imports=expr.imports)
 
             modules = self._print(module_utils)
@@ -232,7 +259,7 @@ class FCodePrinter(CodePrinter):
 
                 funcs = 'contains\n{0}'.format(funcs)
             # ...
-
+        decs = '\n'.join(self._print(i) for i in decs)
         return ('{modules}\n'
                 'program {name}\n'
                 '{imports}\n'
@@ -496,32 +523,25 @@ class FCodePrinter(CodePrinter):
             return ''
 
         # meta-variables
-        if (isinstance(expr.variables[0], Variable) and
-              str(expr.variables[0].name).startswith('__')):
+        if (isinstance(expr.variable, Variable) and
+              str(expr.variable.name).startswith('__')):
             return ''
         # ...
 
         # ... TODO improve
         # Group the variables by intent
-        arg_types        = [type(v) for v in expr.variables]
-        arg_ranks        = [v.rank for v in expr.variables]
-        arg_allocatables = [v.allocatable for v in expr.variables]
-        arg_shapes       = [v.shape for v in expr.variables]
-        arg_is_pointers = [v.is_pointer for v in expr.variables]
-        arg_is_targets = [v.is_target for v in expr.variables]
-        arg_is_polymorphics = [v.is_polymorphic for v in expr.variables]
-        arg_is_optionals = [v.is_optional for v in expr.variables]
+        var = expr.variable
+        arg_types        = type(var)
+        rank        = var.rank
+        allocatable = var.allocatable
+        shape       = var.shape
+        is_pointer = var.is_pointer
+        is_target = var.is_target
+        is_polymorphic = var.is_polymorphic
+        is_optional = var.is_optional
 
-        var = expr.variables[0]
-        rank        = arg_ranks[0]
-        allocatable = arg_allocatables[0]
-        shape       = arg_shapes[0]
         if isinstance(shape,tuple) and len(shape) ==1:
             shape = shape[0]
-        is_pointer = arg_is_pointers[0]
-        is_target = arg_is_targets[0]
-        is_polymorphic = arg_is_polymorphics[0]
-        is_optional = arg_is_optionals[0]
         # ...
 
         # ... print datatype
@@ -558,7 +578,7 @@ class FCodePrinter(CodePrinter):
 
         decs = []
         intent = expr.intent
-        vstr = ', '.join(self._print(i.name) for i in expr.variables)
+        vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
@@ -833,6 +853,29 @@ class FCodePrinter(CodePrinter):
 
     def _print_String(self,expr):
         return expr.arg
+    
+    def _print_Interface(self, expr):
+        # ... we don't print 'hidden' functions
+        name = self._print(expr.name)
+        if expr.functions[0].cls_name:
+            for k,m in list(_default_methods.items()):
+                name = name.replace(k,m)
+            cls_name = expr.cls_name
+            if not (cls_name == '__UNDEFINED__'):
+                name = '{0}_{1}'.format(cls_name, name)
+        else:
+            for i in _default_methods:
+                # because we may have a class Point with init: Point___init__
+                if i in name:
+                    name = name.replace(i, _default_methods[i])
+        interface = 'interface ' + name +'\n'
+        functions = []
+        for f in expr.functions:
+            interface += ' module procedure ' + str(f.name)+'\n'
+        interface += 'end interface'
+        return interface
+        
+       
 
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
@@ -1606,7 +1649,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        if func.is_procedure:
+        if isinstance(func,FunctionDef) and func.is_procedure or func.functions[0].is_procedure:
             code = 'call {0}'.format(code)
         # ...
 
