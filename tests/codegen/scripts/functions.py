@@ -10,13 +10,13 @@ def decr(x):
     y = x - 1
     return y
 
-#$ header function incr_array(int [:])
+#$ header function incr_array(int [:]|double[:])
 def incr_array(x):
     x = x + 1
 
 y_=[1,2,3]
 
-#$ header function decr_array([int]) 
+#$ header function decr_array([int]|[double]) 
 def decr_array(x):
     y_[1] = 6
     z = y_
