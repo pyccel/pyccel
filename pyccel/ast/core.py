@@ -2262,6 +2262,9 @@ class Interface(Basic):
     @property
     def is_procedure(self):
         return self.functions[0].is_procedure
+    
+    def rename(self, newname):
+        return Interface(newname,self.functions)
        
 
 class FunctionDef(Basic):
@@ -2614,7 +2617,7 @@ class ClassDef(Basic):
     """
 
     def __new__(cls, name, attributes=[], methods=[], \
-                options=['public'], imports=[], parent=[]):
+                options=['public'], imports=[], parent=[],interfaces=[]):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2634,8 +2637,11 @@ class ClassDef(Basic):
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
         
-        if not iterable:
+        if not iterable(parent):
             raise TypeError("parent must be iterable")
+        
+        if not iterable(interfaces):
+            raise TypeError("interfaces must be iterable")
 
         for i in methods:
             imports += i.imports
@@ -2670,7 +2676,7 @@ class ClassDef(Basic):
         methods = Tuple(*methods)
         # ...
 
-        return Basic.__new__(cls, name, attributes, methods, options, imports, parent)
+        return Basic.__new__(cls, name, attributes, methods, options, imports, parent,interfaces)
 
     @property
     def name(self):
@@ -2695,6 +2701,10 @@ class ClassDef(Basic):
     @property
     def parent(self):
         return self._args[5]
+   
+    @property
+    def interfaces(self):
+        return self._args[6]
 
     @property
     def methods_as_dict(self):

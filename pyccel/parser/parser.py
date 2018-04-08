@@ -1196,6 +1196,8 @@ class Parser(object):
                             dtype1 = dt['datatype'].__str__()
                             dtype2 = i[idx]['datatype'].__str__()
                             found = found and (dtype1 in dtype2 or dtype2 in dtype1)
+                            found = found and (dt['rank']==i[idx]['rank'])
+                            found = found and (dt['shape']==i[idx]['shape'])
                         if found:
                             break
                     if found:
@@ -1596,6 +1598,7 @@ class Parser(object):
             name = name.replace('\'', '')
             methods = list(expr.methods)
             parent  = expr.parent
+            interfaces = []
             # remove quotes for str representation
             self.insert_class(ClassDef(name,[],[],parent=parent))
             const = None
@@ -1620,7 +1623,11 @@ class Parser(object):
                                      'but could not find it.'.format(classe=name))
             options = header.options
             attributes = self.get_class(name).attributes
-            return ClassDef(name, attributes, methods,parent=parent)
+            for i in methods:
+                if isinstance(i,Interface):
+                    methods.remove(i)
+                    interfaces += [i]
+            return ClassDef(name, attributes, methods,interfaces=interfaces,parent=parent)
 
         elif isinstance(expr, Pass):
             return Pass()

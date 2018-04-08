@@ -167,7 +167,7 @@ class FCodePrinter(CodePrinter):
                     body = ('{body}\n'
                             '{sep}\n'
                             '{f}\n'
-                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))   
            
         if expr.funcs:
             for i in expr.funcs:
@@ -228,15 +228,9 @@ class FCodePrinter(CodePrinter):
                 if dec.variable in variables:
                     decs.remove(dec)
                             
-                        
-                        
-            
-            
-
             module_utils = Module(expr.name, list(variables),
                                   expr.funcs,expr.interfaces, expr.classes,
                                   imports=expr.imports)
-
             modules = self._print(module_utils)
 
             imports = ('{imports}\n'
@@ -871,8 +865,8 @@ class FCodePrinter(CodePrinter):
         interface = 'interface ' + name +'\n'
         functions = []
         for f in expr.functions:
-            interface += ' module procedure ' + str(f.name)+'\n'
-        interface += 'end interface'
+            interface += 'module procedure ' + str(f.name)+'\n'
+        interface += 'end interface\n'
         return interface
         
        
@@ -1037,6 +1031,12 @@ class FCodePrinter(CodePrinter):
             aliases.append(j)
             names.append('{0}_{1}'.format(name, self._print(j)))
         methods = '\n'.join('procedure :: {0} => {1}'.format(i,j) for i,j in zip(aliases, names))
+        for i in expr.interfaces:
+            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions)
+            methods += '\ngeneric, public :: {0} => {1}'.format(self._print(i.name),names)
+            methods += '\nprocedure :: {0}'.format(names)
+            
+
 
         options = ', '.join(i for i in expr.options)
 
@@ -1054,11 +1054,21 @@ class FCodePrinter(CodePrinter):
                     '{1}').format(code, methods)
         decs = ('{0}\n'
                 'end type {1}').format(code, name)
+       
+        sep = self._print(SeparatorComment(40))
+
+       # for i in expr.interfaces:
+        #    decs = ('{decs}\n'
+         #            '{sep}\n'
+          #           '{f}\n'
+           #          '{sep}\n').format(decs=decs, sep=sep, f=self._print(i))
 
         # we rename all methods because of the aliasing
         cls_methods = [i.rename('{0}'.format(i.name)) for i in expr.methods]
+        for i in expr.interfaces:
+            cls_methods +=  [j.rename('{0}'.format(j.name)) for j in i.functions]
 
-        sep = self._print(SeparatorComment(40))
+        
         methods = ''
         for i in cls_methods:
             methods = ('{methods}\n'
