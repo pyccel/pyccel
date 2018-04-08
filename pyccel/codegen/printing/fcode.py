@@ -19,6 +19,8 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
 from sympy import Integer
+from sympy import Atom, Indexed
+from sympy import preorder_traversal
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -31,21 +33,21 @@ from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype
 from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.core import CustomDataType
+from pyccel.ast.core import CustomDataType, String
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
 from pyccel.ast.core import Vector, Stencil
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import FunctionCall,MethodCall
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import FunctionCall, MethodCall
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
+from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
@@ -157,6 +159,16 @@ class FCodePrinter(CodePrinter):
 
         # ...
         sep = self._print(SeparatorComment(40))
+        interfaces = ''
+        if expr.interfaces:
+            interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+            for interface in expr.interfaces:
+                for i in interface.functions:
+                    body = ('{body}\n'
+                            '{sep}\n'
+                            '{f}\n'
+                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))   
+           
         if expr.funcs:
             for i in expr.funcs:
                 body = ('{body}\n'
@@ -175,17 +187,19 @@ class FCodePrinter(CodePrinter):
         # ...
 
 
-        if expr.funcs or expr.classes:
-            body = 'contains\n{0}'.format(body)
+        if expr.funcs or expr.classes or expr.interfaces:
+            body = '\n contains\n{0}'.format(body)
 
         return ('module {name}\n'
                 '{imports}\n'
                 'implicit none\n'
                 '{decs}\n'
+                '{interfaces}\n'
                 '{body}\n'
                 'end module\n').format(name=name,
                                        imports=imports,
                                        decs=decs,
+                                       interfaces=interfaces,
                                        body=body)
 
     def _print_Program(self, expr):
@@ -195,19 +209,28 @@ class FCodePrinter(CodePrinter):
 
         modules = ''
         imports = '\n'.join(self._print(i) for i in expr.imports)
-        decs    = '\n'.join(self._print(i) for i in expr.declarations)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
+        decs    = expr.declarations
 
-        if expr.classes:
+        if expr.classes or expr.interfaces:
             # TODO shall we use expr.variables? or have a more involved algo
             #      we will need to walk through the expression and see what are
             #      the variables that are needed in the definitions of classes
             variables = []
-            module_utils = Module(expr.name, variables,
-                                  expr.funcs, expr.classes,
+            for i in expr.interfaces:
+                variables += i.functions[0].global_vars
+            for i in expr.funcs:
+                variables += i.global_vars
+            variables =list(set(variables))
+            for dec in decs:
+                #remove variables that are declared in the modules
+                if dec.variable in variables:
+                    decs.remove(dec)
+                            
+            module_utils = Module(expr.name, list(variables),
+                                  expr.funcs,expr.interfaces, expr.classes,
                                   imports=expr.imports)
-
             modules = self._print(module_utils)
 
             imports = ('{imports}\n'
@@ -230,7 +253,7 @@ class FCodePrinter(CodePrinter):
 
                 funcs = 'contains\n{0}'.format(funcs)
             # ...
-
+        decs = '\n'.join(self._print(i) for i in decs)
         return ('{modules}\n'
                 'program {name}\n'
                 '{imports}\n'
@@ -374,10 +397,9 @@ class FCodePrinter(CodePrinter):
                 code = '{0}({1})'.format(name, code_args)
                 # ...
                 # ...
+                code = '{0}%{1}'.format(self._print(expr.args[0]), code)
                 if func.is_procedure:
-                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)
-                else:
-                    raise NotImplemented('FunctionCall of kind function not implemented yet')
+                    code = 'call {0}'.format(code)    
                 return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
@@ -413,24 +435,7 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Array(self,expr):
-        lhs_code   = self._print(expr.lhs)
-
-        if len(expr.shape)>1:
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-            st= ','.join(','.join(self._print(i) for i in array) for array in expr.rhs)
-            reshape = True
-        else:
-            shape_code = '0:' + self._print(expr.shape[0]) + '-1'
-            st=','.join(self._print(i) for i in expr.rhs)
-            reshape = False
-        shape=','.join(self._print(i) for i in expr.shape)
-
-        code  = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        code += '\n'
-        if reshape:
-            code += '{0} = reshape((/{1}/),(/{2}/))'.format(lhs_code, st, str(shape))
-        else:
-            code += '{0} = (/{1}/)'.format(lhs_code, st)
+        code   = self._print(expr.ls)
         return code
 
     def _print_ZerosLike(self, expr):
@@ -511,30 +516,25 @@ class FCodePrinter(CodePrinter):
             return ''
 
         # meta-variables
-        if (isinstance(expr.variables[0], Variable) and
-              str(expr.variables[0].name).startswith('__')):
+        if (isinstance(expr.variable, Variable) and
+              str(expr.variable.name).startswith('__')):
             return ''
         # ...
 
         # ... TODO improve
         # Group the variables by intent
-        arg_types        = [type(v) for v in expr.variables]
-        arg_ranks        = [v.rank for v in expr.variables]
-        arg_allocatables = [v.allocatable for v in expr.variables]
-        arg_shapes       = [v.shape for v in expr.variables]
-        arg_is_pointers = [v.is_pointer for v in expr.variables]
-        arg_is_targets = [v.is_target for v in expr.variables]
-        arg_is_polymorphics = [v.is_polymorphic for v in expr.variables]
-        arg_is_optionals = [v.is_optional for v in expr.variables]
+        var = expr.variable
+        arg_types        = type(var)
+        rank        = var.rank
+        allocatable = var.allocatable
+        shape       = var.shape
+        is_pointer = var.is_pointer
+        is_target = var.is_target
+        is_polymorphic = var.is_polymorphic
+        is_optional = var.is_optional
 
-        var = expr.variables[0]
-        rank        = arg_ranks[0]
-        allocatable = arg_allocatables[0]
-        shape       = arg_shapes[0]
-        is_pointer = arg_is_pointers[0]
-        is_target = arg_is_targets[0]
-        is_polymorphic = arg_is_polymorphics[0]
-        is_optional = arg_is_optionals[0]
+        if isinstance(shape,tuple) and len(shape) ==1:
+            shape = shape[0]
         # ...
 
         # ... print datatype
@@ -560,6 +560,10 @@ class FCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.dtype)
         # ...
+        if isinstance(expr.dtype, NativeString):
+            if expr.intent:
+                dtype = dtype[:9] +'(len =*)'
+                #TODO improve ,this is the case of character as argument
 
         code_value = ''
         if expr.value:
@@ -567,7 +571,7 @@ class FCodePrinter(CodePrinter):
 
         decs = []
         intent = expr.intent
-        vstr = ', '.join(self._print(i.name) for i in expr.variables)
+        vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
@@ -578,13 +582,10 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and
-            (isinstance(shape, (int, Variable))) and
-            not(allocatable) and
-            not(is_pointer)):
+        if ((rank == 1) and (isinstance(shape, (int, Variable))) and not(allocatable) and not(is_pointer)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
-            enable_alloc = False
-        elif (rank > 0) and (allocatable or is_pointer) :
+            enable_alloc = False 
+        elif (rank > 0) and (allocatable or is_pointer or is_target) :
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
@@ -614,17 +615,22 @@ class FCodePrinter(CodePrinter):
 
     def _print_AliasAssign(self, expr):
         code = ''
-
         lhs = expr.lhs
-        # TODO improve
-        if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None):
-            stmt = ZerosLike(expr.lhs, expr.rhs)
+        rhs = expr.rhs
+        # TODO improve 
+        op = '=>'
+        if isinstance(lhs, Variable) and (lhs.rank > 0)  and (not lhs.is_pointer or not isinstance(rhs, Atom)):
+            if not isinstance(rhs, Atom) and not isinstance(rhs, Indexed):
+                # case of rhs an expression and lhs is pointer we then allocate the memory for it
+                for i in list(preorder_traversal(rhs)):
+                    if isinstance(i, (Variable, DottedVariable)) and i.rank>0:
+                        rhs = i
+                        break
+            #TODO improve we only need to allocate the variable without setting it to zero
+            stmt = ZerosLike(lhs,rhs)
             code += self._print(stmt)
             code += '\n'
-
-        op = '='
-        if isinstance(lhs, Variable) and (lhs.is_pointer):
-            op = '=>'
+            op = '='
 
         code += '{lhs} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           op=op,
@@ -814,7 +820,8 @@ class FCodePrinter(CodePrinter):
         return '.false.'
 
     def _print_NativeString(self, expr):
-        return 'char'
+        return 'character(len=280)'
+        #TODO fix improve later
 
     def _print_NativeVector(self, expr):
         return 'real(kind=8)'
@@ -836,6 +843,32 @@ class FCodePrinter(CodePrinter):
 
     def _print_BooleanFalse(self,expr):
         return '.False.'
+
+    def _print_String(self,expr):
+        return expr.arg
+    
+    def _print_Interface(self, expr):
+        # ... we don't print 'hidden' functions
+        name = self._print(expr.name)
+        if expr.functions[0].cls_name:
+            for k,m in list(_default_methods.items()):
+                name = name.replace(k,m)
+            cls_name = expr.cls_name
+            if not (cls_name == '__UNDEFINED__'):
+                name = '{0}_{1}'.format(cls_name, name)
+        else:
+            for i in _default_methods:
+                # because we may have a class Point with init: Point___init__
+                if i in name:
+                    name = name.replace(i, _default_methods[i])
+        interface = 'interface ' + name +'\n'
+        functions = []
+        for f in expr.functions:
+            interface += 'module procedure ' + str(f.name)+'\n'
+        interface += 'end interface\n'
+        return interface
+        
+       
 
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
@@ -985,7 +1018,7 @@ class FCodePrinter(CodePrinter):
         name = self._print(expr.name)
         base = None # TODO: add base in ClassDef
 
-        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributs)
+        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributes)
 
         aliases = []
         names   = []
@@ -997,6 +1030,12 @@ class FCodePrinter(CodePrinter):
             aliases.append(j)
             names.append('{0}_{1}'.format(name, self._print(j)))
         methods = '\n'.join('procedure :: {0} => {1}'.format(i,j) for i,j in zip(aliases, names))
+        for i in expr.interfaces:
+            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions)
+            methods += '\ngeneric, public :: {0} => {1}'.format(self._print(i.name),names)
+            methods += '\nprocedure :: {0}'.format(names)
+            
+
 
         options = ', '.join(i for i in expr.options)
 
@@ -1014,11 +1053,21 @@ class FCodePrinter(CodePrinter):
                     '{1}').format(code, methods)
         decs = ('{0}\n'
                 'end type {1}').format(code, name)
+       
+        sep = self._print(SeparatorComment(40))
+
+       # for i in expr.interfaces:
+        #    decs = ('{decs}\n'
+         #            '{sep}\n'
+          #           '{f}\n'
+           #          '{sep}\n').format(decs=decs, sep=sep, f=self._print(i))
 
         # we rename all methods because of the aliasing
         cls_methods = [i.rename('{0}'.format(i.name)) for i in expr.methods]
+        for i in expr.interfaces:
+            cls_methods +=  [j.rename('{0}'.format(j.name)) for j in i.functions]
 
-        sep = self._print(SeparatorComment(40))
+        
         methods = ''
         for i in cls_methods:
             methods = ('{methods}\n'
@@ -1626,7 +1675,9 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in expr.arguments)
 
         this = self._print(expr.cls_variable)
-        code = 'call {0} % {1}({2})'.format(this, name, code_args)
+        code = '{0} % {1}({2})'.format(this, name, code_args)
+        if func.is_procedure:
+            code = 'call {0}'.format(code)  
         return self._get_statement(code)
 
     def _print_ImaginaryUnit(self, expr):
@@ -1758,7 +1809,7 @@ class FCodePrinter(CodePrinter):
                         result.append("%s%s" % ("! ", hunk))
                 else:
                     result.append(line)
-            else:
+            elif not ("'" in line or '"' in line):
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
@@ -1773,6 +1824,10 @@ class FCodePrinter(CodePrinter):
                     if line:
                         hunk += trailing
                     result.append("%s%s" % ("      " , hunk))
+            else:
+                #Case of a line with a sting in it we dont want to split
+                #TODO improve
+                result.append(line)
         return result
 
     def indent_code(self, code):

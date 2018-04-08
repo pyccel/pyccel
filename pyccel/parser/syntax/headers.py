@@ -47,6 +47,20 @@ class TypeHeader(BasicStmt):
         else:
             trailer = []
         return dtype, trailer
+class TypeHeader(BasicStmt):
+    pass
+
+class UnionTypeStmt(BasicStmt):
+    def __init__(self, **kwargs):
+        """
+        Constructor for a TypeHeader.
+
+        dtype: list fo str
+        """
+        self.dtypes = kwargs.pop('dtype')
+
+        super(UnionTypeStmt, self).__init__(**kwargs)
+
 
 class VariableHeaderStmt(BasicStmt):
     """Base class representing a header statement in the grammar."""
@@ -101,23 +115,14 @@ class FunctionHeaderStmt(BasicStmt):
     def expr(self):
         # TODO: do we need dtypes and results to be attributs of the class?
         dtypes = []
-        attributs = []
         for dec in self.decs:
-            dtype, trailer = dec.expr
-            dtypes.append(dtype)
-            attributs.append(trailer)
-        stars = ['' for i in dtypes]
-        self.dtypes = list(zip(dtypes, attributs, stars))
-
-        if not (self.results is None):
-            r_dtypes = []
-            attributs = []
-            for dec in self.results.decs:
-                dtype, trailer = dec.expr
-                r_dtypes.append(dtype)
-                attributs.append(trailer)
-            r_stars = ['' for i in r_dtypes]
-            self.results = list(zip(r_dtypes, attributs, r_stars))
+            if isinstance(dec,UnionTypeStmt):
+                l = []
+                for i in dec.dtypes:
+                    l += [i.expr +('',)]
+                dtypes +=[l]
+            else:       
+                dtypes +=[[dec.expr + ('',)]]                
 
         if self.kind is None:
             kind = 'function'
@@ -129,14 +134,16 @@ class FunctionHeaderStmt(BasicStmt):
             is_static = True
 
         if kind == 'method':
-            cls_instance = self.dtypes[0]
-            cls_instance = cls_instance[0] # remove the attribut
-            dtypes = self.dtypes[1:]
-            return MethodHeader((cls_instance, self.name), dtypes, self.results)
+            cls_instance = dtypes[0][0][0]
+            dtypes = dtypes[1:] # remove the attribut
+            kind = 'procedure'
+            if self.results:
+                kind = 'function'
+            return MethodHeader((cls_instance, self.name), dtypes, [],kind=kind )
         else:
             return FunctionHeader(self.name,
-                                  self.dtypes,
-                                  results=self.results,
+                                  dtypes,
+                                  results=[],
                                   kind=kind,
                                   is_static=is_static)
 
@@ -166,7 +173,8 @@ class ClassHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-hdr_classes = [Header, TypeHeader,
+
+hdr_classes = [Header, TypeHeader,Type,ListType,UnionTypeStmt,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt]
@@ -203,4 +211,4 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header class Square(public)'))
-    print(parse(stmts='#$ header method translate(Point, double, double)'))
+    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
