@@ -1198,7 +1198,10 @@ class Parser(object):
                             found = found and (dtype1 in dtype2 or dtype2 in dtype1)
                         if found:
                             break
-                    func = func.functions[j]
+                    if found:
+                        func = func.functions[j]
+                    else:
+                        raise SystemExit('function not found in the interface')
    
                 results = func.results
                 d_var = [self._infere_type(i, **settings) for i in results]
