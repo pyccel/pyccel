@@ -397,10 +397,9 @@ class FCodePrinter(CodePrinter):
                 code = '{0}({1})'.format(name, code_args)
                 # ...
                 # ...
-                if func.kind=='function':
-                    code = '{0}%{1}'.format(self._print(expr.args[0]), code)
-                else:
-                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)    
+                code = '{0}%{1}'.format(self._print(expr.args[0]), code)
+                if func.is_procedure:
+                    code = 'call {0}'.format(code)    
                 return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
@@ -1659,7 +1658,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        if isinstance(func,FunctionDef) and func.is_procedure or func.functions[0].is_procedure:
+        if func.is_procedure:
             code = 'call {0}'.format(code)
         # ...
 
@@ -1676,7 +1675,9 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in expr.arguments)
 
         this = self._print(expr.cls_variable)
-        code = 'call {0} % {1}({2})'.format(this, name, code_args)
+        code = '{0} % {1}({2})'.format(this, name, code_args)
+        if func.is_procedure:
+            code = 'call {0}'.format(code)  
         return self._get_statement(code)
 
     def _print_ImaginaryUnit(self, expr):
