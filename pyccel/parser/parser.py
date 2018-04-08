@@ -1183,11 +1183,30 @@ class Parser(object):
                 func = rhs.func
 
                 # treating results
+                arg_dvar = [self._infere_type(i, **settings) for i in rhs.arguments]
+                 
+                if isinstance(func, Interface):
+                    f_dvar = [[self._infere_type(j, **settings) for j in i.arguments] for i in func.functions]
+                    j = -1
+                    for i in f_dvar:
+                        j += 1
+                        found = True
+                        for idx,dt in enumerate(arg_dvar):
+                            #TODO imporve add the other verification shape,rank,pointer,...
+                            dtype1 = dt['datatype'].__str__()
+                            dtype2 = i[idx]['datatype'].__str__()
+                            found = found and (dtype1 in dtype2 or dtype2 in dtype1)
+                        if found:
+                            break
+                    func = func.functions[j]
+   
                 results = func.results
                 d_var = [self._infere_type(i, **settings) for i in results]
                 # if there is only one result, we don't consider d_var as a list
                 if len(d_var) == 1:
                     d_var = d_var[0]
+
+                rhs = FunctionCall(func.rename(rhs.func.name), rhs.arguments, kind=rhs.func.kind)
 
             elif isinstance(rhs, ConstructorCall):
                 cls_name = rhs.func.cls_name # create a new Datatype for the current class
@@ -1541,7 +1560,7 @@ class Parser(object):
 
                 return funcs[0]
             else:
-                funcs = [f.set_name(str(f.name)+'_'+str(i)) for i,f in enumerate(funcs)]
+                funcs = [f.rename(str(f.name)+'_'+str(i)) for i,f in enumerate(funcs)]
                 # TODO checking
                 funcs = Interface(name,funcs)
                 F = self.get_function(name)

@@ -1302,6 +1302,9 @@ class DataType(with_metaclass(Singleton, Basic)):
     @property
     def name(self):
         return self._name
+ 
+    def __str__(self):
+        return str(self.name).lower()
 
 class NativeBool(DataType):
     _name = 'Bool'
@@ -1309,7 +1312,6 @@ class NativeBool(DataType):
 
 class NativeInteger(DataType):
     _name = 'Int'
-    pass
 
 class NativeFloat(DataType):
     _name = 'Float'
@@ -2233,6 +2235,34 @@ class Interface(Basic):
     def functions(self):
         return self._args[1]
     
+    @property
+    def global_vars(self):
+        return self.functions[0].global_vars
+ 
+    @property
+    def cls_name(self):
+        return self.functions[0].cls_name
+ 
+    @property
+    def hide(self):
+        return self.functions[0].hide
+ 
+    @property 
+    def kind(self):
+        return self.functions[0].kind
+  
+    @property
+    def imports(self):
+        return self.functions[0].imports
+
+    @property
+    def decorators(self):
+        return self.functions[0].decorators
+
+    @property
+    def is_procedure(self):
+        return self.functions[0].is_procedure
+       
 
 class FunctionDef(Basic):
     """Represents a function definition.
@@ -2407,15 +2437,6 @@ class FunctionDef(Basic):
     def print_body(self):
         for s in self.body:
             print (s)
-
-    def set_name(self,new_name):
-            return FunctionDef(new_name, self.arguments, self.results, self.body, local_vars=self.local_vars,
-                      global_vars=self.global_vars, cls_name=self.cls_name, hide=self.hide, kind=self.kind, imports=self.imports)
-
-#    @property
-#    def declarations(self):
-#        ls = self.arguments + self.results + self.local_vars
-#        return [Declare(i.dtype, i) for i in ls]
 
     def rename(self, newname):
         """
