@@ -206,7 +206,6 @@ class FCodePrinter(CodePrinter):
 
         name = 'prog_{0}'.format(self._print(expr.name))
         name = name.replace('.', '_')
-
         modules = ''
         imports = '\n'.join(self._print(i) for i in expr.imports)
         funcs   = ''
@@ -869,7 +868,24 @@ class FCodePrinter(CodePrinter):
         return interface
         
        
+    def _print_Block(self,expr):
+        
+        decs=[]
+        for i in expr.variables:
+            dec = Declare(i.dtype, i)
+            decs += [dec]
+        body = expr.body
+          
+        body_code = '\n'.join(self._print(i) for i in body)
+        prelude   = '\n'.join(self._print(i) for i in decs)
 
+        return ('{name} : Block\n'
+                '{prelude}\n'
+                 '{body}\n'
+                'end Block {name}').format(name=expr.name, prelude=prelude, body=body_code)
+       
+    
+   
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
         if expr.hide:
@@ -1511,10 +1527,10 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
 
-    def _print_Block(self, expr):
-        body    = '\n'.join(self._print(i) for i in expr.body)
-        prelude = '\n'.join(self._print(i) for i in expr.declarations)
-        return prelude, body
+    #def _print_Block(self, expr):
+    #    body    = '\n'.join(self._print(i) for i in expr.body)
+    #    prelude = '\n'.join(self._print(i) for i in expr.declarations)
+    #    return prelude, body
 
     def _print_While(self,expr):
         body = '\n'.join(self._print(i) for i in expr.body)

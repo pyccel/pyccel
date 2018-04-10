@@ -1090,7 +1090,7 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == str(type(expr.args[1]).__name__):
                         args = [self._annotate(arg) for arg in expr.args[1].args]
-                        if len(args)==1 and isinstance(args[0], Tuple) and len(args[0])==0:
+                        if len(args)==1 and args[0]==():
                             args=[]
                         second = FunctionCall(i,args,kind =i.kind)
             return DottedVariable(first, second)
@@ -1166,6 +1166,11 @@ class Parser(object):
                 func = self.get_function(name)
                 if not(func is None):
                     if isinstance(func, (FunctionDef, Interface)):
+                        if len(args)==1 and args[0]==():
+                            args=[]
+                            #case of function that takes no argument
+                        if 'inline' in func.decorators:
+                            return FunctionCall(func,args).inline
                         return FunctionCall(func, args)
                     else:
                         return func(*args)
@@ -1184,7 +1189,7 @@ class Parser(object):
 
                 # treating results
                 arg_dvar = [self._infere_type(i, **settings) for i in rhs.arguments]
-                 
+
                 if isinstance(func, Interface):
                     f_dvar = [[self._infere_type(j, **settings) for j in i.arguments] for i in func.functions]
                     j = -1
@@ -1204,7 +1209,7 @@ class Parser(object):
                         func = func.functions[j]
                     else:
                         raise SystemExit('function not found in the interface')
-   
+
                 results = func.results
                 d_var = [self._infere_type(i, **settings) for i in results]
                 # if there is only one result, we don't consider d_var as a list
@@ -1446,7 +1451,7 @@ class Parser(object):
                 kind = header.kind
             else:
                  interfaces = [FunctionDef(name,[],[],[])]
-            
+
             for m in interfaces:
                 args = []
                 results = []
@@ -1544,10 +1549,10 @@ class Parser(object):
                     methods = list(cls.methods) + [func]
                     #update the class  methods
                     self.insert_class(ClassDef(cls_name,cls.attributes,methods,parent=cls.parent))
-                                
+
                 self.set_current_fun(None)
                 funcs += [func]
-            
+
             if len(funcs)==1:# insert function def into namespace
                 # TODO checking
                 F = self.get_function(name)
@@ -1580,7 +1585,7 @@ class Parser(object):
 #                        get_func = GetDefaultFunctionArg(a, func)
 #                        # TODO shall we check first that it is not in the namespace?
 #                        self.insert_variable(get_func, name=get_func.namer
-                
+
                 return funcs
 
         elif isinstance(expr, EmptyLine):

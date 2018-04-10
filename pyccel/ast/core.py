@@ -51,93 +51,41 @@ from sympy.core.compatibility import is_sequence
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
-#def subs(expr, a_old, a_new):
-#    """
-#    Substitutes old for new in an expression after sympifying args.
-#
-#    a_old: str, Symbol, Variable
-#        name of the symbol to replace
-#    a_new: str, Symbol, Variable
-#        name of the new symbol
-#
-#    Examples
-#    """
-#    a_new = a_old.clone(str(a_new))
-#
-#    if iterable(expr):
-#        return [subs(i, a_old, a_new) for i in expr]
-#    elif isinstance(expr, Variable):
-#        if expr.name == str(a_old):
-#            return a_new
-#        else:
-#            return expr
-#    elif isinstance(expr, IndexedVariable):
-#        if str(expr) == str(a_old):
-#            return IndexedVariable(str(a_new))
-#        else:
-#            return expr
-#    elif isinstance(expr, IndexedElement):
-#        base    = subs(expr.base   , a_old, a_new)
-#        indices = subs(expr.indices, a_old, a_new)
-#        return base[indices]
-#    elif isinstance(expr, Expr):
-#        return expr.subs({a_old: a_new})
-#    elif isinstance(expr, Zeros):
-#        e_lhs   = subs(expr.lhs, a_old, a_new)
-#        e_shape = subs(expr.shape, a_old, a_new)
-#        return Zeros(e_lhs, e_shape)
-#    elif isinstance(expr, Ones):
-#        e_lhs   = subs(expr.lhs, a_old, a_new)
-#        e_shape = subs(expr.shape, a_old, a_new)
-#        return Ones(e_lhs, e_shape)
-#    elif isinstance(expr, ZerosLike):
-#        e_rhs = subs(expr.rhs, a_old, a_new)
-#        e_lhs = subs(expr.lhs, a_old, a_new)
-#        return ZerosLike(e_lhs, e_rhs)
-#    elif isinstance(expr, Assign):
-#        e_rhs = subs(expr.rhs, a_old, a_new)
-#        e_lhs = subs(expr.lhs, a_old, a_new)
-#        return Assign(e_lhs, e_rhs, strict=False)
-#    elif isinstance(expr, MultiAssign):
-#        e_rhs   = subs(expr.rhs, a_old, a_new)
-#        e_lhs   = subs(expr.lhs, a_old, a_new)
-#        return MultiAssign(e_lhs, e_rhs)
-#    elif isinstance(expr, While):
-#        test = subs(expr.test, a_old, a_new)
-#        body = subs(expr.body, a_old, a_new)
-#        return While(test, body)
-#    elif isinstance(expr, For):
-#        # TODO treat iter correctly
-##        target   = subs(expr.target, a_old, a_new)
-##        it       = subs(expr.iterable, a_old, a_new)
-#        target   = expr.target
-#        it       = expr.iterable
-#        body     = subs(expr.body, a_old, a_new)
-#        return For(target, it, body)
-#    elif isinstance(expr, If):
-#        args = []
-#        for block in expr.args:
-#            test  = block[0]
-#            stmts = block[1]
-#            t = subs(test,  a_old, a_new)
-#            s = subs(stmts, a_old, a_new)
-#            args.append((t,s))
-#        return If(*args)
-#    elif isinstance(expr, FunctionDef):
-#        name        = subs(expr.name, a_old, a_new)
-#        arguments   = subs(expr.arguments, a_old, a_new)
-#        results     = subs(expr.results, a_old, a_new)
-#        body        = subs(expr.body, a_old, a_new)
-#        local_vars  = subs(expr.local_vars, a_old, a_new)
-#        global_vars = subs(expr.global_vars, a_old, a_new)
-#        return FunctionDef(name, arguments, results, \
-#                           body, local_vars, global_vars)
-#    elif isinstance(expr, Declare):
-#        dtype     = subs(expr.dtype, a_old, a_new)
-#        variables = subs(expr.variables, a_old, a_new)
-#        return Declare(dtype, variables)
-#    else:
-#        return expr
+def subs(expr,new_elements):
+    """
+    Substitutes old for new in an expression after sympifying args.
+
+    new_elements : list of tuples like [(x,2)(y,3)]
+    """
+    if isinstance(expr,(list,tuple,Tuple)):
+        return [subs(expr,new_elements) for i in expr]
+    elif isinstance(expr,(Expr,Assign)):
+        print expr , expr.subs(new_elements) ,'##'
+        return expr.subs(new_elements)
+    elif isinstance(expr, While):
+        test = subs(expr.test, a_old, a_new)
+        body = subs(expr.body, a_old, a_new)
+        return While(test, body)
+    elif isinstance(expr, For):
+        # TODO treat iter correctly
+        target   = subs(expr.target, a_old, a_new)
+        it       = subs(expr.iterable, a_old, a_new)
+        target   = expr.target
+        it       = expr.iterable
+        body     = subs(expr.body, a_old, a_new)
+        return For(target, it, body)
+    elif isinstance(expr, If):
+        args = []
+        for block in expr.args:
+            test  = block[0]
+            stmts = block[1]
+            t = subs(test,  a_old, a_new)
+            s = subs(stmts, a_old, a_new)
+            args.append((t,s))
+        return If(*args)
+    else:
+        print expr , type(expr) ,'##'
+        return expr
 
 def allocatable_like(expr, verbose=False):
     """
@@ -869,7 +817,9 @@ class Block(Basic):
     Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
     """
 
-    def __new__(cls, variables, body):
+    def __new__(cls, name,variables, body):
+        if not isinstance(name, str):
+            raise TypeError("name must be of type str")
         if not iterable(variables):
             raise TypeError("variables must be an iterable")
         for var in variables:
@@ -877,15 +827,19 @@ class Block(Basic):
                 raise TypeError("Only a Variable instance is allowed.")
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        return Basic.__new__(cls, variables, body)
+        return Basic.__new__(cls, name, variables, body)
 
     @property
-    def variables(self):
+    def name(self):
         return self._args[0]
+    
+    @property
+    def variables(self):
+        return self._args[1]
 
     @property
     def body(self):
-        return self._args[1]
+        return self._args[2]
 
     @property
     def declarations(self):
@@ -1114,7 +1068,7 @@ class Program(Basic):
         for i in funcs:
             if not isinstance(i, FunctionDef):
                 raise TypeError("Only a FunctionDef instance is allowed.")
-        
+
         if not iterable(interfaces):
             raise TypeError("interfaces must be an iterable")
         for i in interfaces:
@@ -1163,7 +1117,7 @@ class Program(Basic):
     @property
     def funcs(self):
         return self._args[2]
-   
+
     @property
     def interfaces(self):
         return self._args[3]
@@ -1302,7 +1256,7 @@ class DataType(with_metaclass(Singleton, Basic)):
     @property
     def name(self):
         return self._name
- 
+
     def __str__(self):
         return str(self.name).lower()
 
@@ -1717,6 +1671,14 @@ class FunctionCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
+
+    @property
+    def inline(self):
+        func = self.func
+        local_vars = func.local_vars
+        body = func.body
+        body=subs(body,zip(func.arguments, self.arguments))
+        return Block(str(func.name),local_vars,body)
 
 class MethodCall(AtomicExpr):
     """
@@ -2234,23 +2196,23 @@ class Interface(Basic):
     @property
     def functions(self):
         return self._args[1]
-    
+
     @property
     def global_vars(self):
         return self.functions[0].global_vars
- 
+
     @property
     def cls_name(self):
         return self.functions[0].cls_name
- 
+
     @property
     def hide(self):
         return self.functions[0].hide
- 
-    @property 
+
+    @property
     def kind(self):
         return self.functions[0].kind
-  
+
     @property
     def imports(self):
         return self.functions[0].imports
@@ -2262,10 +2224,10 @@ class Interface(Basic):
     @property
     def is_procedure(self):
         return self.functions[0].is_procedure
-    
+
     def rename(self, newname):
         return Interface(newname,self.functions)
-       
+
 
 class FunctionDef(Basic):
     """Represents a function definition.
@@ -2299,7 +2261,7 @@ class FunctionDef(Basic):
 
     imports: list, tuple
         a list of needed imports
-    
+
     decorators: list, tuple
         a list of proporties
 
@@ -2382,7 +2344,7 @@ class FunctionDef(Basic):
 
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
-        
+
         if not iterable(decorators):
             raise TypeError("imports must be an iterable")
 
@@ -2432,7 +2394,7 @@ class FunctionDef(Basic):
     @property
     def imports(self):
         return self._args[9]
-    
+
     @property
     def decorators(self):
         return self._args[10]
@@ -2594,9 +2556,9 @@ class ClassDef(Basic):
 
     imports: list, tuple
         list of needed imports
-    
-    parent : str 
-        parent's class name 
+
+    parent : str
+        parent's class name
 
     Examples
 
@@ -2636,10 +2598,10 @@ class ClassDef(Basic):
         # imports
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
-        
+
         if not iterable(parent):
             raise TypeError("parent must be iterable")
-        
+
         if not iterable(interfaces):
             raise TypeError("interfaces must be iterable")
 
@@ -2697,11 +2659,11 @@ class ClassDef(Basic):
     @property
     def imports(self):
         return self._args[4]
-    
+
     @property
     def parent(self):
         return self._args[5]
-   
+
     @property
     def interfaces(self):
         return self._args[6]
@@ -3003,7 +2965,7 @@ class Declare(Basic):
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
-        
+
         if not isinstance(variable, Variable):
             raise TypeError("var must be of type Variable, given {0}".format(variable))
         if variable.dtype != dtype:
@@ -3444,16 +3406,16 @@ class IndexedElement(Indexed):
 
 class String(Basic):
     """Represents the String"""
-    
+
     def __new__(cls,arg):
         if not isinstance(arg,str):
             raise TypeError('arg must be of type str')
         return Basic.__new__(cls,arg)
-   
+
     @property
     def arg(self):
         return self._args[0]
-            
+
 
 class Concatinate(Basic):
     """Represents the String concatination operation.
