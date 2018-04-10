@@ -132,7 +132,10 @@ class FunctionHeaderStmt(BasicStmt):
             cls_instance = self.dtypes[0]
             cls_instance = cls_instance[0] # remove the attribut
             dtypes = self.dtypes[1:]
-            return MethodHeader((cls_instance, self.name), dtypes, self.results)
+            kind = 'procedure'
+            if self.results:
+                kind = 'function'
+            return MethodHeader((cls_instance, self.name), dtypes, self.results,kind=kind )
         else:
             return FunctionHeader(self.name,
                                   self.dtypes,

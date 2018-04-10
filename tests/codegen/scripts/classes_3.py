@@ -1,8 +1,8 @@
 from numpy import ones
 #$ header class Point(public)
-#$ header method __init__(Point, double [:])
+#$ header method __init__(Point, [double])
 #$ header method __del__(Point)
-#$ header method translate(Point, double [:])
+#$ header method translate(Point, [double])
 
 #$ header class Points(public)
 #$ header method __init__(Points, Point)
@@ -26,7 +26,7 @@ class Points(object):
     def __del__(self):
         pass
 
-x = ones(4)
+x = [1., 1., 1.]
 P1 = Point(x)
 P2 = Points(P1)
 P3 = P2.x

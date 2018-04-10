@@ -14,10 +14,15 @@ def decr(x):
 def incr_array(x):
     x = x + 1
 
-#$ header function decr_array(int [:]) results(int [:])
+y_=[1,2,3]
+
+#$ header function decr_array([int]) results([int])
 def decr_array(x):
-    y = x - 1
-    return y
+    y_[1] = 6
+    z = y_
+    t = y_+x
+    
+    return t
 
 #$ header function f1(int, int, int) results(int)
 def f1(x, n=2, m=3):

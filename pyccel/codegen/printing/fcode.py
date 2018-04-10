@@ -19,6 +19,8 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
 from sympy import Integer
+from sympy import Atom, Indexed
+from sympy import preorder_traversal
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -31,7 +33,7 @@ from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import DataType, is_pyccel_datatype
 from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.core import CustomDataType
+from pyccel.ast.core import CustomDataType, String
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
@@ -45,7 +47,7 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
+from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
@@ -374,10 +376,10 @@ class FCodePrinter(CodePrinter):
                 code = '{0}({1})'.format(name, code_args)
                 # ...
                 # ...
-                if func.is_procedure:
-                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)
+                if func.kind=='function':
+                    code = '{0}%{1}'.format(self._print(expr.args[0]), code)
                 else:
-                    raise NotImplemented('FunctionCall of kind function not implemented yet')
+                    code = 'call {0}%{1}'.format(self._print(expr.args[0]), code)    
                 return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
@@ -413,24 +415,7 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Array(self,expr):
-        lhs_code   = self._print(expr.lhs)
-
-        if len(expr.shape)>1:
-            shape_code = ', '.join('0:' + self._print(i) + '-1' for i in expr.shape)
-            st= ','.join(','.join(self._print(i) for i in array) for array in expr.rhs)
-            reshape = True
-        else:
-            shape_code = '0:' + self._print(expr.shape[0]) + '-1'
-            st=','.join(self._print(i) for i in expr.rhs)
-            reshape = False
-        shape=','.join(self._print(i) for i in expr.shape)
-
-        code  = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        code += '\n'
-        if reshape:
-            code += '{0} = reshape((/{1}/),(/{2}/))'.format(lhs_code, st, str(shape))
-        else:
-            code += '{0} = (/{1}/)'.format(lhs_code, st)
+        code   = self._print(expr.ls)
         return code
 
     def _print_ZerosLike(self, expr):
@@ -531,6 +516,8 @@ class FCodePrinter(CodePrinter):
         rank        = arg_ranks[0]
         allocatable = arg_allocatables[0]
         shape       = arg_shapes[0]
+        if isinstance(shape,tuple) and len(shape) ==1:
+            shape = shape[0]
         is_pointer = arg_is_pointers[0]
         is_target = arg_is_targets[0]
         is_polymorphic = arg_is_polymorphics[0]
@@ -560,6 +547,10 @@ class FCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.dtype)
         # ...
+        if isinstance(expr.dtype, NativeString):
+            if expr.intent:
+                dtype = dtype[:9] +'(len =*)'
+                #TODO improve ,this is the case of character as argument
 
         code_value = ''
         if expr.value:
@@ -578,13 +569,10 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and
-            (isinstance(shape, (int, Variable))) and
-            not(allocatable) and
-            not(is_pointer)):
+        if ((rank == 1) and (isinstance(shape, (int, Variable))) and not(allocatable) and not(is_pointer)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
-            enable_alloc = False
-        elif (rank > 0) and (allocatable or is_pointer) :
+            enable_alloc = False 
+        elif (rank > 0) and (allocatable or is_pointer or is_target) :
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
@@ -614,17 +602,22 @@ class FCodePrinter(CodePrinter):
 
     def _print_AliasAssign(self, expr):
         code = ''
-
         lhs = expr.lhs
-        # TODO improve
-        if isinstance(lhs, Variable) and (lhs.rank > 0) and (lhs.shape is None):
-            stmt = ZerosLike(expr.lhs, expr.rhs)
+        rhs = expr.rhs
+        # TODO improve 
+        op = '=>'
+        if isinstance(lhs, Variable) and (lhs.rank > 0)  and (not lhs.is_pointer or not isinstance(rhs, Atom)):
+            if not isinstance(rhs, Atom) and not isinstance(rhs, Indexed):
+                # case of rhs an expression and lhs is pointer we then allocate the memory for it
+                for i in list(preorder_traversal(rhs)):
+                    if isinstance(i, (Variable, DottedVariable)) and i.rank>0:
+                        rhs = i
+                        break
+            #TODO improve we only need to allocate the variable without setting it to zero
+            stmt = ZerosLike(lhs,rhs)
             code += self._print(stmt)
             code += '\n'
-
-        op = '='
-        if isinstance(lhs, Variable) and (lhs.is_pointer):
-            op = '=>'
+            op = '='
 
         code += '{lhs} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           op=op,
@@ -814,7 +807,8 @@ class FCodePrinter(CodePrinter):
         return '.false.'
 
     def _print_NativeString(self, expr):
-        return 'char'
+        return 'character(len=280)'
+        #TODO fix improve later
 
     def _print_NativeVector(self, expr):
         return 'real(kind=8)'
@@ -836,6 +830,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_BooleanFalse(self,expr):
         return '.False.'
+
+    def _print_String(self,expr):
+        return expr.arg
 
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
@@ -985,7 +982,7 @@ class FCodePrinter(CodePrinter):
         name = self._print(expr.name)
         base = None # TODO: add base in ClassDef
 
-        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributs)
+        decs = '\n'.join(self._print(Declare(i.dtype, i)) for i in expr.attributes)
 
         aliases = []
         names   = []
@@ -1758,7 +1755,7 @@ class FCodePrinter(CodePrinter):
                         result.append("%s%s" % ("! ", hunk))
                 else:
                     result.append(line)
-            else:
+            elif not ("'" in line or '"' in line):
                 # code line
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
@@ -1773,6 +1770,10 @@ class FCodePrinter(CodePrinter):
                     if line:
                         hunk += trailing
                     result.append("%s%s" % ("      " , hunk))
+            else:
+                #Case of a line with a sting in it we dont want to split
+                #TODO improve
+                result.append(line)
         return result
 
     def indent_code(self, code):
