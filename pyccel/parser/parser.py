@@ -686,9 +686,25 @@ class Parser(object):
         if self._current:
             if name in self._scope[self._current]['variables']:
                 var = self._scope[self._current]['variables'][name]
+        if isinstance(self._current, DottedName):
+            if name in self._scope[self._current.name[0]]['variables']:
+                var = self._scope[self._current.name[0]]['variables'][name]
         if name in self._namespace['variables']:
             var =  self._namespace['variables'][name]
         return var
+
+    def get_variables(self,source = None):
+        if source=='parent':
+            if isinstance(self._current, DottedName):
+                name = self._current.name[0]
+            elif not (self._current is None):
+                name = self._current
+            else:
+                raise TypeError('there is no parent to extract variables from ')
+            return self._scope[name]['variables'].values()
+        else:
+            return self._namespace['variables'].values()
+
 
     def insert_variable(self, expr, name=None):
         """."""
@@ -732,7 +748,10 @@ class Parser(object):
         if not isinstance(func, (FunctionDef,Interface)):
             raise TypeError('Expected a Function definition')
         else:
-            self._namespace['functions'][str(func.name)] = func
+            if isinstance(self._current, DottedName):
+                self._scope[self._current.name[0]]['functions'][str(func.name)] = func
+            else:
+                self._namespace['functions'][str(func.name)] = func
 
     def remove(self, name):
         """."""
@@ -781,13 +800,18 @@ class Parser(object):
     def set_current_fun(self, name):
         """."""
         if name:
+            if self._current:
+                name = DottedName(self._current, name)
+                self._current = name
             self._scope[name] = {}
             self._scope[name]['variables'] = {}
             self._scope[name]['functions'] = {}
         else:
             self._scope.pop(self._current)
+            if isinstance(self._current, DottedName):
+                #case of a functiondef in a another function
+                name = self._current.name[0]
         self._current = name
-
 
 
     def insert_header(self, expr):
@@ -1458,8 +1482,8 @@ class Parser(object):
                 local_vars  = []
                 global_vars = []
                 imports     = []
-                self.set_current_fun(name)
                 arg = None
+                self.set_current_fun(name)
                 arguments = expr.arguments
                 if cls_name and str(arguments[0].name) == 'self':
                     arg = arguments[0]
@@ -1531,12 +1555,11 @@ class Parser(object):
                     dt = self.get_class_construct(cls_name)()
                     var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
                     args = [var] + args
-
-                for var in self._scope[name]['variables'].values():
+                for var in self.get_variables():
                     if not var in args+results:
                         local_vars += [var]
 
-                for var in self._namespace['variables'].values():
+                for var in self.get_variables('parent'):
                     if not var in args+results+local_vars and isinstance(var, Variable):
                         global_vars += [var]
                         #TODO should we add all the variables or only the ones used in the function

@@ -1,3 +1,10 @@
+#$ header function incr_(int)
+def incr_(x):
+    #$ header function decr_(int)
+    def decr_(y):
+        y = y-1
+    x = x + 1
+
 def helloworld():
     print('hello world')
 
