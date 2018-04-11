@@ -211,8 +211,13 @@ class FCodePrinter(CodePrinter):
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
         decs    = expr.declarations
-
-        if expr.classes or expr.interfaces:
+        func_in_func = False
+        for func in expr.funcs:
+            for i in func.body:
+                if isinstance(i, FunctionDef):
+                    func_in_func = True
+                    break
+        if expr.classes or expr.interfaces or func_in_func:
             # TODO shall we use expr.variables? or have a more involved algo
             #      we will need to walk through the expression and see what are
             #      the variables that are needed in the definitions of classes

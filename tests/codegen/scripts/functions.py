@@ -50,6 +50,8 @@ z = f1(1)
 z1 = f2(1)
 z2 = f2(1, m=0)
 
+helloworld()
+
 # TODO add messages. for the moment there's a bug in Print
 print(z1)
 print(z2)

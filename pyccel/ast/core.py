@@ -2431,12 +2431,12 @@ class FunctionDef(Basic):
     @property
     def is_procedure(self):
         """Returns True if a procedure."""
-        #flag = ((len(self.results) == 1) and (self.results[0].allocatable))
-        #flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
-        #flag = flag or (len(self.results) > 1)
-        #flag = flag or (len(self.results) == 0)
-        #flag = flag or (self.kind == 'procedure')
-        flag = len(self.results)!=1
+        flag = ((len(self.results) == 1) and (self.results[0].allocatable))
+        flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
+        flag = flag or (len(self.results) > 1)
+        flag = flag or (len(self.results) == 0)
+        flag = flag or (self.kind == 'procedure')
+        flag = flag or len(self.results)!=1
         return flag
 
     def is_compatible_header(self, header):

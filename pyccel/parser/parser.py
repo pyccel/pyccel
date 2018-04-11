@@ -697,12 +697,12 @@ class Parser(object):
             if isinstance(self._current, DottedName):
                 name = self._current.name[0]
             elif not (self._current is None):
-                name = self._current
+                return self._namespace['variables'].values()
             else:
                 raise TypeError('there is no parent to extract variables from ')
             return self._scope[name]['variables'].values()
         else:
-            return self._namespace['variables'].values()
+            return self._scope[self._current]['variables'].values()
 
 
     def insert_variable(self, expr, name=None):
@@ -1197,7 +1197,7 @@ class Parser(object):
                 func = self.get_function(name)
                 if not(func is None):
                     if isinstance(func, (FunctionDef, Interface)):
-                        if len(args)==1 and args[0]==():
+                        if args==((),):
                             args=[]
                             #case of function that takes no argument
                         if 'inline' in func.decorators:
@@ -1567,7 +1567,7 @@ class Parser(object):
                         local_vars += [var]
 
                 for var in self.get_variables('parent'):
-                    if not var in args+results+local_vars and isinstance(var, Variable):
+                    if not var in args+results+local_vars:
                         global_vars += [var]
                         #TODO should we add all the variables or only the ones used in the function
                 func=FunctionDef(name, args, results, body,
