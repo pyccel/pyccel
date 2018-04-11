@@ -412,7 +412,8 @@ class FCodePrinter(CodePrinter):
          if is_list:
              return '[' + self._print(expr.left) + ', ' + self._print(expr.right) + ']'
          else:
-             raise TypeError('Concatination of this type not supported yet')
+             #TODO imporve add more checks
+             return 'trim('+ self._print(expr.left) +') // trim(' + self._print(expr.right) + ')'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)

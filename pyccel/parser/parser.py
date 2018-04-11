@@ -116,7 +116,6 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
 
 import os
-import numpy
 # ...
 
 # ... utilities
@@ -296,7 +295,7 @@ def fst_to_ast(stmt):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
         if stmt.value == '+':
-            if isinstance(first,(str, List)) or isinstance(second,(str, List)):
+            if isinstance(first,(String, List)) or isinstance(second,(String, List)):
                 return Concatinate(first,second)
             return Add(first, second)
         elif stmt.value == '*':
@@ -1007,6 +1006,7 @@ class Parser(object):
             return d_var
 
         elif isinstance(expr, (tuple, list, List, Tuple)):
+            import numpy
             d = self._infere_type(expr[0], **settings)
             # TODO must check that it is consistent with pyccel's rules
             d_var['datatype']    = d['datatype']
@@ -1031,7 +1031,8 @@ class Parser(object):
             d_var_left = self._infere_type(expr.left, **settings)
             d_var_right = self._infere_type(expr.right, **settings)
             import operator
-            d_var_left['shape'] = tuple(map(operator.add,d_var_right['shape'],d_var_left['shape']))
+            if not(d_var_left['datatype']=='str' or d_var_right['datatype']=='str'):
+                d_var_left['shape'] = tuple(map(operator.add,d_var_right['shape'],d_var_left['shape']))
             return d_var_left
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
