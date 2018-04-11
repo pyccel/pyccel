@@ -12,17 +12,21 @@ Statement:
 
 TrailerSubscriptList: '[' args*=':' [','] ']';
 
-TypeHeader: dtype=ID (trailer=TrailerSubscriptList)?;
+Type: dtype=ID (trailer=TrailerSubscriptList)?;
+ListType : '[' dtype+=ID[','] ']';
+TypeHeader: Type|ListType ;
+UnionTypeStmt:  dtype+=TypeHeader['|'] ;
+
 
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 
 FunctionHeaderStmt: 
-  (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=TypeHeader[','] ')' (results=HeaderResults)?
+  (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
 
 FunctionKind: 'function' | 'procedure' | 'method';
 Static: 'static';
-HeaderResults: 'results' '(' decs*=TypeHeader[','] ')'; 
+HeaderResults: 'results' '(' decs+=TypeHeader[','] ')'; 
 
 ClassHeaderStmt: 'class'  name=ID '(' options+=ClassOptions[','] ')';
 

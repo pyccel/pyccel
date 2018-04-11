@@ -5,7 +5,7 @@ import os
 
 from pyccel.codegen.printing import fcode
 
-from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import
+from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import, Interface
 from pyccel.ast.core import Header, EmptyLine, Comment
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import Variable,DottedName
@@ -78,6 +78,12 @@ class Codegen(object):
     def classes(self):
         """Returns the classes if Module."""
         return self._stmts['classes']
+    
+    @property
+    def interfaces(self):
+        """Returns the interfaces."""
+        return self._stmts['interfaces']
+
 
     @property
     def modules(self):
@@ -128,6 +134,7 @@ class Codegen(object):
         modules = []
         body = []
         decs = []
+        interfaces = []
 
         for stmt in self.ast:
             if isinstance(stmt, FunctionDef):
@@ -138,6 +145,8 @@ class Codegen(object):
                 imports += [stmt]
             elif isinstance(stmt, Module):
                 modules += [stmt]
+            elif isinstance(stmt, Interface):
+                interfaces += [stmt]
             else:
                 # TODO improve later, as in the old codegen
                 # we don't generate code for symbolic assignments
@@ -166,6 +175,7 @@ class Codegen(object):
         self._stmts['routines'] = routines
         self._stmts['classes'] = classes
         self._stmts['modules'] = modules
+        self._stmts['interfaces'] = interfaces
 
         errors.check()
 
@@ -192,12 +202,14 @@ class Codegen(object):
             expr = Module(self.name,
                           self.variables,
                           self.routines,
+                          self.interfaces,
                           self.classes,
                           imports=self.imports)
         elif self.is_program:
             expr = Program(self.name,
                            self.variables,
                            self.routines,
+                           self.interfaces,
                            self.classes,
                            self.body,
                            imports=self.imports,

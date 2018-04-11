@@ -59,7 +59,7 @@ from pyccel.ast import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
-from pyccel.ast import FunctionDef
+from pyccel.ast import FunctionDef, Interface
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For
@@ -114,10 +114,6 @@ from sympy.core.function import Function
 from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
-
-from pyccel.parser.syntax.headers import parse as hdr_parse
-from pyccel.parser.syntax.openmp  import parse as omp_parse
-from pyccel.parser.syntax.openacc import parse as acc_parse
 
 import os
 import numpy
@@ -733,7 +729,7 @@ class Parser(object):
 
     def insert_function(self, func):
         """."""
-        if not isinstance(func, FunctionDef):
+        if not isinstance(func, (FunctionDef,Interface)):
             raise TypeError('Expected a Function definition')
         else:
             self._namespace['functions'][str(func.name)] = func
@@ -1094,7 +1090,7 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == str(type(expr.args[1]).__name__):
                         args = [self._annotate(arg) for arg in expr.args[1].args]
-                        if len(args)==1 and isinstance(args[0], Tuple) and len(args[0])==0:
+                        if len(args)==1 and args[0]==():
                             args=[]
                         second = FunctionCall(i,args,kind =i.kind)
             return DottedVariable(first, second)
@@ -1169,7 +1165,12 @@ class Parser(object):
                 # TODO shall we keep it, or do this only in the Assign?
                 func = self.get_function(name)
                 if not(func is None):
-                    if isinstance(func, FunctionDef):
+                    if isinstance(func, (FunctionDef, Interface)):
+                        if len(args)==1 and args[0]==():
+                            args=[]
+                            #case of function that takes no argument
+                        if 'inline' in func.decorators:
+                            return FunctionCall(func,args).inline
                         return FunctionCall(func, args)
                     else:
                         return func(*args)
@@ -1187,11 +1188,35 @@ class Parser(object):
                 func = rhs.func
 
                 # treating results
+                arg_dvar = [self._infere_type(i, **settings) for i in rhs.arguments]
+
+                if isinstance(func, Interface):
+                    f_dvar = [[self._infere_type(j, **settings) for j in i.arguments] for i in func.functions]
+                    j = -1
+                    for i in f_dvar:
+                        j += 1
+                        found = True
+                        for idx,dt in enumerate(arg_dvar):
+                            #TODO imporve add the other verification shape,rank,pointer,...
+                            dtype1 = dt['datatype'].__str__()
+                            dtype2 = i[idx]['datatype'].__str__()
+                            found = found and (dtype1 in dtype2 or dtype2 in dtype1)
+                            found = found and (dt['rank']==i[idx]['rank'])
+                            found = found and (dt['shape']==i[idx]['shape'])
+                        if found:
+                            break
+                    if found:
+                        func = func.functions[j]
+                    else:
+                        raise SystemExit('function not found in the interface')
+
                 results = func.results
                 d_var = [self._infere_type(i, **settings) for i in results]
                 # if there is only one result, we don't consider d_var as a list
                 if len(d_var) == 1:
                     d_var = d_var[0]
+
+                rhs = FunctionCall(func.rename(rhs.func.name), rhs.arguments, kind=rhs.func.kind)
 
             elif isinstance(rhs, ConstructorCall):
                 cls_name = rhs.func.cls_name # create a new Datatype for the current class
@@ -1401,160 +1426,167 @@ class Parser(object):
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace('\'', '') # remove quotes for str representation
-            args = []
-            results = []
-            local_vars  = []
-            global_vars = []
             cls_name    = expr.cls_name
             hide        = False
             kind        = 'function'
-            imports     = []
             decorators  = expr.decorators
-            self.set_current_fun(name)
-
+            funcs = []
 
             is_static = False
-            if expr.arguments or results:
-                if cls_name:
-                    header = self.get_header(cls_name+'.'+name)
-                else:
-                    header = self.get_header(name)
-                if not header:
+            if cls_name:
+                header = self.get_header(cls_name+'.'+name)
+            else:
+                header = self.get_header(name)
+            if expr.arguments and not header:
                     errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                                   severity='error', blocker=True)
 
                 # we construct a FunctionDef from its header
-                interface = header.create_definition()
+            if header:
+                interfaces = header.create_definition()
                 # is_static will be used for f2py
                 is_static = header.is_static
 
                 # get function kind from the header
                 kind = header.kind
+            else:
+                 interfaces = [FunctionDef(name,[],[],[])]
 
-            # then use it to decorate our arguments
-            arguments = expr.arguments
-            arg = None
-            if cls_name and str(expr.arguments[0].name) == 'self':
-                arg = arguments[0]
-                arguments = arguments[1:]
-                dt = self.get_class_construct(cls_name)()
-                var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
-                self.insert_variable(var, 'self')
+            for m in interfaces:
+                args = []
+                results = []
+                local_vars  = []
+                global_vars = []
+                imports     = []
+                self.set_current_fun(name)
+                arg = None
+                arguments = expr.arguments
+                if cls_name and str(arguments[0].name) == 'self':
+                    arg = arguments[0]
+                    arguments = arguments[1:]
+                    dt = self.get_class_construct(cls_name)()
+                    var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
+                    self.insert_variable(var, 'self')
 
-            if arguments:
-                for a, ah in zip(arguments, interface.arguments):
-                    d_var = self._infere_type(ah, **settings)
-                    dtype = d_var.pop('datatype')
-                    # this is needed for the static case
-                    additional_args = []
+                if arguments:
+                    for a, ah in zip(arguments, m.arguments):
+                        d_var = self._infere_type(ah, **settings)
+                        dtype = d_var.pop('datatype')
+                        # this is needed for the static case
+                        additional_args = []
 
-                    if isinstance(a, ValuedArgument):
-                        # optional argument only if the value is None
-                        if isinstance(a.value, Nil):
-                            d_var['is_optional'] = True
-                        a_new = ValuedVariable(dtype, str(a.name),
-                                               value=a.value, **d_var)
-                    else:
-                        # add shape as arguments if is_static and arg is array
-                        rank = d_var['rank']
-                        if is_static and (rank > 0):
-                            for i in range(0, rank):
-                                n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
-                                n_arg = Variable('int', n_name)
-                                # TODO clean namespace later
-                                var = self.get_variable(n_name)
-                                if not(var is None):
-                                    # TODO report appropriate message
-                                    errors.report('variable already defined',
-                                                  symbol=n_name,
-                                                  severity='error', blocker=True)
+                        if isinstance(a, ValuedArgument):
+                            # optional argument only if the value is None
+                            if isinstance(a.value, Nil):
+                                d_var['is_optional'] = True
+                            a_new = ValuedVariable(dtype, str(a.name),
+                                                   value=a.value, **d_var)
+                        else:
+                            # add shape as arguments if is_static and arg is array
+                            rank = d_var['rank']
+                            if is_static and (rank > 0):
+                                for i in range(0, rank):
+                                    n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
+                                    n_arg = Variable('int', n_name)
+                                    # TODO clean namespace later
+                                    var = self.get_variable(n_name)
+                                    if not(var is None):
+                                        # TODO report appropriate message
+                                        errors.report('variable already defined',
+                                                      symbol=n_name,
+                                                      severity='error', blocker=True)
 
-                                self.insert_variable(n_arg)
+                                    self.insert_variable(n_arg)
 
-                                additional_args += [n_arg]
+                                    additional_args += [n_arg]
 
-                            # update shape
-                            # TODO can this be improved? add some check
-                            d_var['shape'] = Tuple(*additional_args)
+                                # update shape
+                                # TODO can this be improved? add some check
+                                d_var['shape'] = Tuple(*additional_args)
 
-                        a_new = Variable(dtype, str(a.name), **d_var)
+                            a_new = Variable(dtype, str(a.name), **d_var)
 
-                    if additional_args:
-                        args += additional_args
+                        if additional_args:
+                            args += additional_args
 
-                    args.append(a_new)
+                        args.append(a_new)
 
-                    # TODO add scope and store already declared variables there,
-                    #      then retrieve them
-                    self.insert_variable(a_new, name=str(a_new.name))
+                        # TODO add scope and store already declared variables there,
+                        #      then retrieve them
+                        self.insert_variable(a_new, name=str(a_new.name))
 
-            # we annotate the body
-            body = self._annotate(expr.body, **settings)
-            # find return stmt and results
-            # we keep the return stmt, in case of handling multi returns later
-            for stmt in body:
-                # TODO case of multiple calls to return
-                if isinstance(stmt, Return):
-                    results = stmt.expr
-                    if isinstance(results, (Symbol, Variable)):
-                        results = [results]
+                # we annotate the body
+                body = self._annotate(expr.body, **settings)
+                # find return stmt and results
+                # we keep the return stmt, in case of handling multi returns later
+                for stmt in body:
+                    # TODO case of multiple calls to return
+                    if isinstance(stmt, Return):
+                        results = stmt.expr
+                        if isinstance(results, Variable):
+                            results = [results]
+                            kind = 'function'
 
-            if results:
-                _results = []
-                for a, ah in zip(results, interface.results):
-                    d_var = self._infere_type(ah, **settings)
-                    dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, a.name, **d_var)
+                if arg and cls_name:
+                    dt = self.get_class_construct(cls_name)()
+                    var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
+                    args = [var] + args
 
-                    # results must be variable that were already declared
-                    var = self.get_variable(str(a_new.name))
-                    _results.append(var)
+                for var in self._scope[name]['variables'].values():
+                    if not var in args+results:
+                        local_vars += [var]
 
-                    if var is None:
-                        errors.report(UNDEFINED_VARIABLE, symbol=str(a_new.name),
-                                      severity='error', blocker=True)
-                results = _results
+                for var in self._namespace['variables'].values():
+                    if not var in args+results+local_vars and isinstance(var, Variable):
+                        global_vars += [var]
+                        #TODO should we add all the variables or only the ones used in the function
+                func=FunctionDef(name, args, results, body,
+                                   local_vars=local_vars, global_vars=global_vars,
+                                   cls_name=cls_name, hide=hide,
+                                   kind=kind, imports=imports, decorators=decorators)
+                if cls_name:
+                    cls = self.get_class(cls_name)
+                    methods = list(cls.methods) + [func]
+                    #update the class  methods
+                    self.insert_class(ClassDef(cls_name,cls.attributes,methods,parent=cls.parent))
 
-            if arg and cls_name:
-                dt = self.get_class_construct(cls_name)()
-                var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
-                args = [var] + args
+                self.set_current_fun(None)
+                funcs += [func]
 
-            for var in self._scope[name]['variables'].values():
-                if not var in args+results:
-                    local_vars += [var]
+            if len(funcs)==1:# insert function def into namespace
+                # TODO checking
+                F = self.get_function(name)
+                if F is None and not cls_name:
+                    self.insert_function(funcs[0])
+#                    # TODO uncomment and improve this part later.
+#                    #      it will allow for handling parameters of different dtypes
+#                    # for every parameterized argument, we need to create the
+#                    # get_default associated function
+#                    kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
+#                    for a in kw_args:
+#                        get_func = GetDefaultFunctionArg(a, func)
+#                        # TODO shall we check first that it is not in the namespace?
+#                        self.insert_variable(get_func, name=get_func.namer
 
-            for var in self._namespace['variables'].values():
-                if not var in args+results+local_vars and isinstance(var, Variable):
-                    global_vars += [var]
-                    #TODO should we add all the variables or only the ones used in the function
+                return funcs[0]
+            else:
+                funcs = [f.rename(str(f.name)+'_'+str(i)) for i,f in enumerate(funcs)]
+                # TODO checking
+                funcs = Interface(name,funcs)
+                F = self.get_function(name)
+                if F is None and not cls_name:
+                    self.insert_function(funcs)
+#                    # TODO uncomment and improve this part later.
+#                    #      it will allow for handling parameters of different dtypes
+#                    # for every parameterized argument, we need to create the
+#                    # get_default associated function
+#                    kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
+#                    for a in kw_args:
+#                        get_func = GetDefaultFunctionArg(a, func)
+#                        # TODO shall we check first that it is not in the namespace?
+#                        self.insert_variable(get_func, name=get_func.namer
 
-
-            func=FunctionDef(name, args, results, body,
-                               local_vars=local_vars, global_vars=global_vars,
-                               cls_name=cls_name, hide=hide,
-                               kind=kind, imports=imports, decorators=decorators)
-            if cls_name:
-                cls = self.get_class(cls_name)
-                methods = list(cls.methods) + [func]
-                #update the class  methods
-                self.insert_class(ClassDef(cls_name,cls.attributes,methods,parent=cls.parent))
-            # insert function def into namespace
-            # TODO checking
-            F = self.get_function(name)
-            if F is None and not cls_name:
-                self.insert_function(func)
-#                # TODO uncomment and improve this part later.
-#                #      it will allow for handling parameters of different dtypes
-#                # for every parameterized argument, we need to create the
-#                # get_default associated function
-#                kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
-#                for a in kw_args:
-#                    get_func = GetDefaultFunctionArg(a, func)
-#                    # TODO shall we check first that it is not in the namespace?
-#                    self.insert_variable(get_func, name=get_func.namer
-            self.set_current_fun(None)
-            return func
+                return funcs
 
         elif isinstance(expr, EmptyLine):
             return expr
@@ -1571,6 +1603,7 @@ class Parser(object):
             name = name.replace('\'', '')
             methods = list(expr.methods)
             parent  = expr.parent
+            interfaces = []
             # remove quotes for str representation
             self.insert_class(ClassDef(name,[],[],parent=parent))
             const = None
@@ -1595,7 +1628,11 @@ class Parser(object):
                                      'but could not find it.'.format(classe=name))
             options = header.options
             attributes = self.get_class(name).attributes
-            return ClassDef(name, attributes, methods,parent=parent)
+            for i in methods:
+                if isinstance(i,Interface):
+                    methods.remove(i)
+                    interfaces += [i]
+            return ClassDef(name, attributes, methods,interfaces=interfaces,parent=parent)
 
         elif isinstance(expr, Pass):
             return Pass()
