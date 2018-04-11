@@ -60,7 +60,7 @@ def subs(expr,new_elements):
     if isinstance(expr,(list,tuple,Tuple)):
         return [subs(expr,new_elements) for i in expr]
     elif isinstance(expr,(Expr,Assign)):
-        print expr , expr.subs(new_elements) ,'##'
+        print (expr , expr.subs(new_elements) ,'##')
         return expr.subs(new_elements)
     elif isinstance(expr, While):
         test = subs(expr.test, a_old, a_new)
@@ -84,7 +84,7 @@ def subs(expr,new_elements):
             args.append((t,s))
         return If(*args)
     else:
-        print expr , type(expr) ,'##'
+        print (expr , type(expr) ,'##')
         return expr
 
 def allocatable_like(expr, verbose=False):
@@ -832,7 +832,7 @@ class Block(Basic):
     @property
     def name(self):
         return self._args[0]
-    
+
     @property
     def variables(self):
         return self._args[1]
