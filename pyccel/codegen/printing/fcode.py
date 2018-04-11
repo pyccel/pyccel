@@ -1002,7 +1002,7 @@ class FCodePrinter(CodePrinter):
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
         if len(functions)>0:
-            functions_code='\n'.join(self._print(i) for  i in functions)
+            functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains \n' +functions_code
         body_code = prelude + '\n\n' + body_code
 
