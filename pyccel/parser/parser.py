@@ -1599,6 +1599,8 @@ class Parser(object):
             return expr
 
         elif isinstance(expr, ClassDef):
+            # TODO - improve the use and def of interfaces
+            #      - wouldn't be better if it is done inside ClassDef?
             name = str(expr.name)
             name = name.replace('\'', '')
             methods = list(expr.methods)
