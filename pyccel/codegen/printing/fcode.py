@@ -47,13 +47,13 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString
+from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString,NativeList
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
                              Len, Shape, Random,
-                             IndexedElement, Slice,
+                             IndexedElement, Slice,List,
                              DottedName, AsName, DottedVariable,
                              Print, If)
 
@@ -404,6 +404,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
+ 
+    def _print_Concatinate(self, expr):
+         is_list = isinstance(expr.right, Variable) and isinstance(expr.right.dtype, NativeList)
+         is_list = is_list or isinstance(expr.left, Variable) and isinstance(expr.left.dtype, NativeList)
+         is_list = is_list or isinstance(expr.right, List) or isinstance(expr.left, List)
+         if is_list:
+             return '[' + self._print(expr.left) + ', ' + self._print(expr.right) + ']'
+         else:
+             raise TypeError('Concatination of this type not supported yet')
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -531,7 +540,6 @@ class FCodePrinter(CodePrinter):
         is_target = var.is_target
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
-
         if isinstance(shape,tuple) and len(shape) ==1:
             shape = shape[0]
         # ...

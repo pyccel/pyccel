@@ -296,7 +296,7 @@ def fst_to_ast(stmt):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
         if stmt.value == '+':
-            if isinstance(first,str) or isinstance(second,str):
+            if isinstance(first,(str, List)) or isinstance(second,(str, List)):
                 return Concatinate(first,second)
             return Add(first, second)
         elif stmt.value == '*':
@@ -1027,6 +1027,12 @@ class Parser(object):
                 else:
                     raise NotImplementedError('TODO')
             return d_var
+        elif isinstance(expr, Concatinate):
+            d_var_left = self._infere_type(expr.left, **settings)
+            d_var_right = self._infere_type(expr.right, **settings)
+            import operator
+            d_var_left['shape'] = tuple(map(operator.add,d_var_right['shape'],d_var_left['shape']))
+            return d_var_left
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1691,7 +1697,10 @@ class Parser(object):
                     raise NotImplementedError('must report error')
 
             return expr
-
+        elif isinstance(expr, Concatinate):
+            left = self._annotate(expr.left)
+            right = self._annotate(expr.right)
+            return Concatinate(left, right)
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
