@@ -3610,6 +3610,7 @@ class If(Basic):
         b = []
         for i in self._args:
             b += i[1]
+        return b
 
 # TODO: to improve
 class Vector(Basic):

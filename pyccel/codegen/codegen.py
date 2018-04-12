@@ -128,12 +128,14 @@ class Codegen(object):
             for stmt in ast:
                 if isinstance(stmt, For):
                     if isinstance(stmt.target, Variable):
+
                         vars_ += [stmt.target] + collect_for_targets(stmt.body)
                 if isinstance(stmt, If):
                     vars_ += collect_for_targets(stmt.bodies)
                 if isinstance(stmt, While):
                     vars_ += collect_for_targets(stmt.body)
             return vars_
+
 
         errors = Errors()
         errors.set_parser_stage('codegen')
