@@ -26,7 +26,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-from pyccel.ast import Zeros
+from pyccel.ast import Zeros, Array, Int, Shape
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -448,9 +448,9 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_Array(self,expr):
-        code   = self._print(expr.ls)
-        return code
+  #  def _print_Array(self,expr):
+  #      code   = self._print(expr.ls)
+  #      return code
 
     def _print_ZerosLike(self, expr):
         lhs = self._print(expr.lhs)
@@ -595,12 +595,16 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and (isinstance(shape, (int, Variable))) and not(allocatable) and not(is_pointer)):
+        if ((rank == 1) and (isinstance(shape, (int,Integer, Variable))) and not(allocatable) and not(is_pointer)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
         elif (rank > 0) and (allocatable or is_pointer or is_target) :
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
+        elif rank>0 and (isinstance(shape, (Tuple,tuple,list)) and not(allocatable) and not(is_pointer)):
+             rankstr =  ','.join('({0}:{1})'.format(self._print(s), self._print(i-1)) for i in shape)
+             enable_alloc = False
+            
 
         allocatablestr = ''
         if is_pointer:
@@ -660,7 +664,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, (Range, Tensor)):
             return ''
 
-        if isinstance(expr.rhs, Zeros):
+        if isinstance(expr.rhs, (Zeros, Array, Int, Shape)):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         elif isinstance(expr.rhs, Shape):
@@ -968,6 +972,7 @@ class FCodePrinter(CodePrinter):
                 func_end  = ' result({0})'.format(result.name)
         else:
             # TODO compute intent
+            #TODO improve for functions without return
             out_args = [result for result in expr.results]
             for result in expr.results:
                 if result in expr.arguments:

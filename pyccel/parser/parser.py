@@ -1198,8 +1198,8 @@ class Parser(object):
                 if not(func is None):
                     if isinstance(func, (FunctionDef, Interface)):
                         if args==[()]:
-                            args=[]
-                            #case of function that takes no argument
+                            args = []
+                            #case of a function that takes no argument
                         if 'inline' in func.decorators:
                             return FunctionCall(func,args).inline
                         return FunctionCall(func, args)
@@ -1268,11 +1268,11 @@ class Parser(object):
 
             elif isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
-                if name in ['Zeros', 'Ones']:
+                if name in ['Zeros', 'Ones', 'Shape','Int']:
                     # TODO improve
                     d_var = {}
                     d_var['datatype']    = rhs.dtype
-                    d_var['allocatable'] = True
+                    d_var['allocatable'] = not(name=='Shape' or name =='Int')
                     d_var['shape']       = rhs.shape
                     d_var['rank']        = rhs.rank
                     d_var['is_pointer'] = False
@@ -1397,6 +1397,7 @@ class Parser(object):
             if isinstance(expr.target, Symbol):
                 name = str(expr.target.name)
                 var = self.get_variable(name)
+                target = var
                 if var is None:
                     target = Variable('int', name, rank=0)
                     self.insert_variable(target)
@@ -1407,7 +1408,6 @@ class Parser(object):
 
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
-
             return For(target, itr, body)
 
         elif isinstance(expr, While):

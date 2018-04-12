@@ -18,3 +18,12 @@ a2 = ones(n)
 b1 = ones((4, 3))
 b2 = ones((n, 2*n))
 
+
+x=array([1.,2.,3.])
+z = x
+n = shape(x)
+m = shape(array([1.,2.,3.]))
+
+a=2.
+b=int(a)
+

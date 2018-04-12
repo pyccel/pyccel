@@ -2827,7 +2827,6 @@ class TupleImport(Basic):
         for a in args:
             if not isinstance(a, Import):
                 raise TypeError('Expecting an Import statement')
-
         return Basic.__new__(cls, *args)
 
     @property

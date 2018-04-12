@@ -37,11 +37,11 @@ class Codegen(object):
 
         self._stmts = {}
         _structs = ['imports', 'body', 'routines', 'classes', 'modules',
-                    'variables']
+                    'variables', 'interfaces']
         for key in _structs:
             self._stmts[key] = []
 
-        self._collect_statments()
+        self._collect_statments(self.ast)
         self._set_kind()
 
     @property
@@ -120,23 +120,23 @@ class Codegen(object):
         """Returns the generated code."""
         return self._code
 
-    def _collect_statments(self):
+    def _collect_statments(self,ast):
         """Collects statments and split them into routines, classes, etc."""
 
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        variables = []
+        variables = self._stmts['variables']
+        routines = self._stmts['routines']
+        classes = self._stmts['classes']
+        imports = self._stmts['imports']
+        modules = self._stmts['modules']
+        body = self._stmts['body']
+        interfaces = self._stmts['interfaces']
         variables_name=[]
-        routines = []
-        classes = []
-        imports = []
-        modules = []
-        body = []
         decs = []
-        interfaces = []
 
-        for stmt in self.ast:
+        for stmt in ast:
             if isinstance(stmt, FunctionDef):
                 routines += [stmt]
             elif isinstance(stmt, ClassDef):
@@ -161,16 +161,17 @@ class Codegen(object):
 
                 if isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
-                        if not isinstance(stmt.lhs.name,DottedName) and stmt.lhs.name not in variables_name:
+                        if not isinstance(stmt.lhs.name,DottedName):
                             variables += [stmt.lhs]
-                            variables_name += [stmt.lhs.name]
                             #we only add the variables which are not DottedName
                 if isinstance(stmt, For):
                     if isinstance(stmt.target, Variable):
                         variables += [stmt.target]
+                        self._collect_statments(stmt.body)
+                        #TODO fix bug
 
         self._stmts['imports'] = imports
-        self._stmts['variables'] = variables
+        self._stmts['variables'] = list(set(variables))
         self._stmts['body'] = body
         self._stmts['routines'] = routines
         self._stmts['classes'] = classes
