@@ -3,7 +3,7 @@
 from sympy.core.function import Function
 
 from .core import Import
-from .core import Range
+from .core import Range, Len
 from .numpyext import Zeros, Ones
 from .numpyext import Array ,Shape ,Int
 
@@ -26,6 +26,8 @@ def builtin_function(expr, args=None):
         return Shape(*args)
     if name == 'int':
         return Int(*args)
+    if name == 'len':
+        return Len(*args)
 
     return None
 
@@ -48,5 +50,14 @@ def builtin_import(expr):
         if target == 'ones':
             # TODO return as_name and not name
             return target, Ones
+         
+        if target == 'array':
+            return target, Array
+        
+        if target == 'shape':
+            return target, Shape
+          
+        if target == 'int':
+            return target, Int
 
     return None, None

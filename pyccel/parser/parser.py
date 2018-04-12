@@ -1293,8 +1293,12 @@ class Parser(object):
                         d_var['datatype'] = 'ndarraycomplex'
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
-
-
+                elif name in ['Len']:
+                     d_var = {}
+                     d_var['datatype']='int'
+                     d_var['rank'] = 0
+                     d_var['allocatable'] = False
+                     d_var['is_pointer'] = False
                 else:
                     raise NotImplementedError('TODO')
 
