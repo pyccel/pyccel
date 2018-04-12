@@ -11,14 +11,13 @@ import numpy as np
 
 from sympy import Lambda
 from sympy.core import Symbol
-from sympy.core import Float
+from sympy.core import Float, Integer
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
 from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq,Ne,true,false
-from sympy import Integer
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
 
@@ -597,8 +596,7 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-
-        if ((rank == 1) and (isinstance(shape, (int, Variable))) and
+        if ((rank == 1) and (isinstance(shape, (int,Integer, Variable))) and
             (not(allocatable or is_pointer) or is_static)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
