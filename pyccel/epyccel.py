@@ -7,6 +7,28 @@ from pyccel.ast.core import FunctionHeader
 import inspect
 import subprocess
 import importlib
+import sys
+
+
+def compile_fortran(source, modulename, extra_args=''):
+    """use f2py to compile a source code. We ensure here that the f2py used is
+    the right one with respect to the python/numpy version, which is not the
+    case if we run directly the command line f2py ..."""
+    import tempfile
+
+    try:
+        f = tempfile.NamedTemporaryFile(suffix='.f90')
+        f.write(source)
+        f.flush()
+
+        args = ' -c -m {} {} {}'.format(modulename, f.name, extra_args)
+        cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
+
+        output = subprocess.check_output(cmd, shell=True)
+        return output, cmd
+
+    finally:
+        f.close()
 
 
 def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
@@ -132,9 +154,6 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
     codegen.export()
     # ...
 
-#    print(code)
-#    import sys; sys.exit(0)
-
     # ...
     filename = '{name}.f90'.format(name=name)
     # ...
@@ -165,20 +184,22 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
     libs = _format_libs(libs)
     deps_o = _format_modules(modules)
 
-    cmd = 'f2py {flags} {deps_o} {filename} -m {binary} {libs}'.format(flags=flags,
-                                                                       filename=filename,
-                                                                       binary=binary,
-                                                                       libs=libs,
-                                                                       deps_o=deps_o)
+    # TODO update compile_fortran args with these ones and then remove this line
+#    cmd = 'f2py {flags} {deps_o} {filename} -m {binary} {libs}'.format(flags=flags,
+#                                                                       filename=filename,
+#                                                                       binary=binary,
+#                                                                       libs=libs,
+#                                                                       deps_o=deps_o)
+
+    output, cmd = compile_fortran(code, name)
 
     if verbose:
         print(cmd)
 
-    output = subprocess.check_output(cmd, shell=True)
-
     if verbose:
         print(output)
     # ...
+
 
     # ...
     try:
