@@ -45,6 +45,7 @@ script:
   - pytest tests/syntax/test_syntax.py
   - pytest tests/semantic/test_semantic.py
   - pytest tests/codegen/test_codegen.py
+  - python tests/epyccel/test_epyccel.py  
 #  - python tests/test_pyccel.py --execute
 #  - python tests/test_pyccel_openmp.py --openmp --execute
 #  - python tests/test_pyccel_lapack.py --libs='blas lapack' --execute
