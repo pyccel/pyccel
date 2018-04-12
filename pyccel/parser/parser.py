@@ -1137,10 +1137,6 @@ class Parser(object):
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                #print Add(expr_new, a_new).args[1] is a_new
-                #print type(Add(expr_new, a_new).args[1]) ,type(a_new)
-                #print Add(expr_new, a_new).arg
-                #TODO keep expr._new_rawargs or use the old one
                 if isinstance(expr, (Add, Mul)):
                     expr_new = expr._new_rawargs(expr_new, a_new)
                 elif isinstance(expr, And):
@@ -1157,6 +1153,8 @@ class Parser(object):
                     expr_new = Le(expr_new, a_new)
                 elif isinstance(expr, Gt):
                     expr_new = Gt(expr_new, a_new)
+                elif isinstance(expr, Ge):
+                    expr_new = Ge(expr_new, a_new)
             return expr_new
 
         elif isinstance(expr, Function):

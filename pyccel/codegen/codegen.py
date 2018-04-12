@@ -123,17 +123,20 @@ class Codegen(object):
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
 
-        def collect_for_targets(ast):
+        def collect_vars(ast):
             vars_=[]
             for stmt in ast:
                 if isinstance(stmt, For):
                     if isinstance(stmt.target, Variable):
-
-                        vars_ += [stmt.target] + collect_for_targets(stmt.body)
-                if isinstance(stmt, If):
-                    vars_ += collect_for_targets(stmt.bodies)
-                if isinstance(stmt, While):
-                    vars_ += collect_for_targets(stmt.body)
+                        vars_ += [stmt.target] + collect_vars(stmt.body)
+                elif isinstance(stmt, If):
+                    vars_ += collect_vars(stmt.bodies)
+                elif isinstance(stmt, While):
+                    vars_ += collect_vars(stmt.body)
+                elif isinstance(stmt, (Assign, AliasAssign)):
+                    if isinstance(stmt.lhs, Variable):
+                        if not isinstance(stmt.lhs.name,DottedName):
+                            vars_ += [stmt.lhs]
             return vars_
 
 
@@ -163,6 +166,7 @@ class Codegen(object):
             else:
                 # TODO improve later, as in the old codegen
                 # we don't generate code for symbolic assignments
+                # we must also look in For While and If bodies
                 if isinstance(stmt, SymbolicAssign):
                     errors.report(FOUND_SYMBOLIC_ASSIGN, symbol=stmt.lhs, severity='warning')
                     body += [Comment(str(stmt))]
@@ -172,12 +176,7 @@ class Codegen(object):
                 else:
                     body += [stmt]
 
-                if isinstance(stmt, (Assign, AliasAssign)):
-                    if isinstance(stmt.lhs, Variable):
-                        if not isinstance(stmt.lhs.name,DottedName):
-                            variables += [stmt.lhs]
-                            #we only add the variables which are not DottedName
-        variables += collect_for_targets(self.ast)
+        variables += collect_vars(self.ast)
         self._stmts['imports'] = imports
         self._stmts['variables'] = list(set(variables))
         self._stmts['body'] = body
