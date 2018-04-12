@@ -2259,6 +2259,9 @@ class FunctionDef(Basic):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_static: bool
+        True for static functions. Needed for f2py
+
     imports: list, tuple
         a list of needed imports
 
@@ -2293,9 +2296,12 @@ class FunctionDef(Basic):
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
 
-    def __new__(cls, name, arguments, results, \
-                body, local_vars=[], global_vars=[], \
-                cls_name=None, hide=False, kind='function', imports=[], decorators=[]):
+    def __new__(cls, name, arguments, results,
+                body, local_vars=[], global_vars=[],
+                cls_name=None, hide=False,
+                kind='function',
+                is_static=False,
+                imports=[], decorators=[]):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2339,6 +2345,9 @@ class FunctionDef(Basic):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
+        if not isinstance(is_static, bool):
+            raise TypeError('Expecting a boolean for is_static attribut')
+
         if not (kind in ['function', 'procedure']):
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
@@ -2348,11 +2357,13 @@ class FunctionDef(Basic):
         if not iterable(decorators):
             raise TypeError("imports must be an iterable")
 
-        return Basic.__new__(cls, name, \
-                             arguments, results, \
-                             body, \
-                             local_vars, global_vars, \
-                             cls_name,hide, kind, imports, decorators)
+        return Basic.__new__(cls, name,
+                             arguments, results,
+                             body,
+                             local_vars, global_vars,
+                             cls_name, hide,
+                             kind, is_static,
+                             imports, decorators)
 
     @property
     def name(self):
@@ -2382,7 +2393,6 @@ class FunctionDef(Basic):
     def cls_name(self):
         return self._args[6]
 
-
     @property
     def hide(self):
         return self._args[7]
@@ -2392,12 +2402,16 @@ class FunctionDef(Basic):
         return self._args[8]
 
     @property
-    def imports(self):
+    def is_static(self):
         return self._args[9]
 
     @property
-    def decorators(self):
+    def imports(self):
         return self._args[10]
+
+    @property
+    def decorators(self):
+        return self._args[11]
 
     def print_body(self):
         for s in self.body:
@@ -2411,12 +2425,14 @@ class FunctionDef(Basic):
         newname: str
             new name for the FunctionDef
         """
-        return FunctionDef(newname, self.arguments, self.results, self.body, \
-                           local_vars=self.local_vars, \
-                           global_vars=self.global_vars, \
-                           cls_name=self.cls_name, \
-                           hide=self.hide, \
-                           kind=self.kind)
+        return FunctionDef(newname, self.arguments,
+                           self.results, self.body,
+                           local_vars=self.local_vars,
+                           global_vars=self.global_vars,
+                           cls_name=self.cls_name,
+                           hide=self.hide,
+                           kind=self.kind,
+                           is_static=self.is_static)
 
     def __call__(self, *args, **kwargs):
         """Represents a call to the function."""
@@ -2432,13 +2448,12 @@ class FunctionDef(Basic):
 
     @property
     def is_procedure(self):
-        """Returns True if a procedure."""
-        #flag = ((len(self.results) == 1) and (self.results[0].allocatable))
-        #flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
-        #flag = flag or (len(self.results) > 1)
-        #flag = flag or (len(self.results) == 0)
-        #flag = flag or (self.kind == 'procedure')
-        flag = len(self.results)!=1
+        """Returns True if a procedure. static functions will always be
+        generated as procedure"""
+#        flag = len(self.results)!=1 # we must use the kind TODO to remove
+        flag = ((self.kind == 'procedure') or
+                self.is_static or
+                (len(self.results) != 1) )
         return flag
 
     def is_compatible_header(self, header):
@@ -2949,6 +2964,8 @@ class Declare(Basic):
         one among {'in', 'out', 'inout'}
     value: Expr
         variable value
+    static: bool
+        True for a static declaration of an array.
 
     Examples
 
@@ -2959,12 +2976,11 @@ class Declare(Basic):
     Declare(NativeDouble(), (x,), out)
     """
 
-    def __new__(cls, dtype, variable, intent=None, value=None):
+    def __new__(cls, dtype, variable, intent=None, value=None, static=False):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
-
 
         if not isinstance(variable, Variable):
             raise TypeError("var must be of type Variable, given {0}".format(variable))
@@ -2974,7 +2990,11 @@ class Declare(Basic):
         if intent:
             if not(intent in ['in', 'out', 'inout']):
                 raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-        return Basic.__new__(cls, dtype, variable, intent, value)
+
+        if not isinstance(static, bool):
+            raise TypeError('Expecting a boolean for static attribut')
+
+        return Basic.__new__(cls, dtype, variable, intent, value, static)
 
     @property
     def dtype(self):
@@ -2991,6 +3011,10 @@ class Declare(Basic):
     @property
     def value(self):
         return self._args[3]
+
+    @property
+    def static(self):
+        return self._args[4]
 
 class Break(Basic):
     """Represents a break in the code."""
@@ -3807,6 +3831,7 @@ class FunctionHeader(Header):
 
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
+
         return Basic.__new__(cls, func, dtypes, results, kind, is_static)
 
     @property
@@ -3840,7 +3865,7 @@ class FunctionHeader(Header):
         cls_name  = None
         hide      = False
         kind      = self.kind
-#        kind      = 'procedure'
+        is_static = self.is_static
         imports   = []
         funcs = []
         for args_ in product(*self.dtypes):
@@ -3894,6 +3919,7 @@ class FunctionHeader(Header):
                              cls_name=cls_name,
                              hide=hide,
                              kind=kind,
+                             is_static=is_static,
                              imports=imports)
             funcs += [func]
         return funcs

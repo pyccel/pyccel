@@ -167,8 +167,8 @@ class FCodePrinter(CodePrinter):
                     body = ('{body}\n'
                             '{sep}\n'
                             '{f}\n'
-                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))   
-           
+                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+
         if expr.funcs:
             for i in expr.funcs:
                 body = ('{body}\n'
@@ -226,7 +226,7 @@ class FCodePrinter(CodePrinter):
                 #remove variables that are declared in the modules
                 if dec.variable in variables:
                     decs.remove(dec)
-                            
+
             module_utils = Module(expr.name, list(variables),
                                   expr.funcs,expr.interfaces, expr.classes,
                                   imports=expr.imports)
@@ -398,7 +398,7 @@ class FCodePrinter(CodePrinter):
                 # ...
                 code = '{0}%{1}'.format(self._print(expr.args[0]), code)
                 if func.is_procedure:
-                    code = 'call {0}'.format(code)    
+                    code = 'call {0}'.format(code)
                 return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
@@ -531,6 +531,7 @@ class FCodePrinter(CodePrinter):
         is_target = var.is_target
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
+        is_static = expr.static
 
         if isinstance(shape,tuple) and len(shape) ==1:
             shape = shape[0]
@@ -576,25 +577,28 @@ class FCodePrinter(CodePrinter):
         s = '0'
         e = ''
         enable_alloc = True
-        if allocatable or (var.shape is None):
+        if not(is_static) and (allocatable or (var.shape is None)):
             s = ''
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and (isinstance(shape, (int, Variable))) and not(allocatable) and not(is_pointer)):
+        if ((rank == 1) and (isinstance(shape, (int, Variable))) and
+            (not(allocatable or is_pointer) or is_static)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
-            enable_alloc = False 
+            enable_alloc = False
+
         elif (rank > 0) and (allocatable or is_pointer or is_target) :
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
 
         allocatablestr = ''
-        if is_pointer:
-            allocatablestr = ', pointer'
-        elif is_target:
-            allocatablestr = ', target'
-        elif allocatable:
-            allocatablestr = ', allocatable'
+        if not is_static:
+            if is_pointer:
+                allocatablestr = ', pointer'
+            elif is_target:
+                allocatablestr = ', target'
+            elif allocatable:
+                allocatablestr = ', allocatable'
 
         optionalstr = ''
         if is_optional:
@@ -616,7 +620,7 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        # TODO improve 
+        # TODO improve
         op = '=>'
         if isinstance(lhs, Variable) and (lhs.rank > 0)  and (not lhs.is_pointer or not isinstance(rhs, Atom)):
             if not isinstance(rhs, Atom) and not isinstance(rhs, Indexed):
@@ -845,7 +849,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_String(self,expr):
         return expr.arg
-    
+
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
@@ -866,16 +870,16 @@ class FCodePrinter(CodePrinter):
             interface += 'module procedure ' + str(f.name)+'\n'
         interface += 'end interface\n'
         return interface
-        
-       
+
+
     def _print_Block(self,expr):
-        
+
         decs=[]
         for i in expr.variables:
             dec = Declare(i.dtype, i)
             decs += [dec]
         body = expr.body
-          
+
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
 
@@ -883,9 +887,9 @@ class FCodePrinter(CodePrinter):
                 '{prelude}\n'
                  '{body}\n'
                 'end Block {name}').format(name=expr.name, prelude=prelude, body=body_code)
-       
-    
-   
+
+
+
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
         if expr.hide:
@@ -893,6 +897,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         name = self._print(expr.name)
+        is_static = expr.is_static
+
         if expr.cls_name:
             for k,m in list(_default_methods.items()):
                 name = name.replace(k,m)
@@ -947,12 +953,13 @@ class FCodePrinter(CodePrinter):
                 func_end  = ' result({0})'.format(result.name)
         else:
             # TODO compute intent
+            # a static function is always treated as a procedure
             out_args = [result for result in expr.results]
             for result in expr.results:
                 if result in expr.arguments:
-                    dec = Declare(result.dtype, result, intent='inout')
+                    dec = Declare(result.dtype, result, intent='inout', static=is_static)
                 else:
-                    dec = Declare(result.dtype, result, intent='out')
+                    dec = Declare(result.dtype, result, intent='out', static=is_static)
                 decs[str(result)] = dec
 
             sig = 'subroutine ' + name
@@ -971,11 +978,11 @@ class FCodePrinter(CodePrinter):
         list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
         for arg in expr.arguments:
             if arg in list(expr.results) + list_lhs:
-                dec = Declare(arg.dtype, arg, intent='inout')
+                dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
             elif str(arg) == 'self':
-                dec = Declare(arg.dtype, arg, intent='inout')
+                dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
             else:
-                dec = Declare(arg.dtype, arg, intent='in')
+                dec = Declare(arg.dtype, arg, intent='in', static=is_static)
             decs[str(arg)] = dec
 
         decs = [v for k,v in decs.items()]
@@ -991,7 +998,6 @@ class FCodePrinter(CodePrinter):
         arg_code  = ', '.join(self._print(i) for i in expr.arguments)
         if len(out_code) > 0:
             arg_code  = ', '.join(i for i in [arg_code, out_code])
-
 
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
@@ -1050,7 +1056,7 @@ class FCodePrinter(CodePrinter):
             names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions)
             methods += '\ngeneric, public :: {0} => {1}'.format(self._print(i.name),names)
             methods += '\nprocedure :: {0}'.format(names)
-            
+
 
 
         options = ', '.join(i for i in expr.options)
@@ -1069,7 +1075,7 @@ class FCodePrinter(CodePrinter):
                     '{1}').format(code, methods)
         decs = ('{0}\n'
                 'end type {1}').format(code, name)
-       
+
         sep = self._print(SeparatorComment(40))
 
        # for i in expr.interfaces:
@@ -1083,7 +1089,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.interfaces:
             cls_methods +=  [j.rename('{0}'.format(j.name)) for j in i.functions]
 
-        
+
         methods = ''
         for i in cls_methods:
             methods = ('{methods}\n'
@@ -1693,7 +1699,7 @@ class FCodePrinter(CodePrinter):
         this = self._print(expr.cls_variable)
         code = '{0} % {1}({2})'.format(this, name, code_args)
         if func.is_procedure:
-            code = 'call {0}'.format(code)  
+            code = 'call {0}'.format(code)
         return self._get_statement(code)
 
     def _print_ImaginaryUnit(self, expr):

@@ -132,6 +132,9 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
     codegen.export()
     # ...
 
+#    print(code)
+#    import sys; sys.exit(0)
+
     # ...
     filename = '{name}.f90'.format(name=name)
     # ...

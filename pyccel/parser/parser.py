@@ -1450,7 +1450,8 @@ class Parser(object):
                 # get function kind from the header
                 kind = header.kind
             else:
-                 interfaces = [FunctionDef(name,[],[],[])]
+                # TODO why are we doing this?
+                interfaces = [FunctionDef(name,[],[],[])]
 
             for m in interfaces:
                 args = []
@@ -1540,10 +1541,15 @@ class Parser(object):
                     if not var in args+results+local_vars and isinstance(var, Variable):
                         global_vars += [var]
                         #TODO should we add all the variables or only the ones used in the function
-                func=FunctionDef(name, args, results, body,
-                                   local_vars=local_vars, global_vars=global_vars,
-                                   cls_name=cls_name, hide=hide,
-                                   kind=kind, imports=imports, decorators=decorators)
+                func = FunctionDef(name, args, results, body,
+                                   local_vars=local_vars,
+                                   global_vars=global_vars,
+                                   cls_name=cls_name,
+                                   hide=hide,
+                                   kind=kind,
+                                   is_static=is_static,
+                                   imports=imports,
+                                   decorators=decorators)
                 if cls_name:
                     cls = self.get_class(cls_name)
                     methods = list(cls.methods) + [func]
