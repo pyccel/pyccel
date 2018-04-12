@@ -41,7 +41,7 @@ class Codegen(object):
         for key in _structs:
             self._stmts[key] = []
 
-        self._collect_statments(self.ast)
+        self._collect_statments()
         self._set_kind()
 
     @property
@@ -120,23 +120,30 @@ class Codegen(object):
         """Returns the generated code."""
         return self._code
 
-    def _collect_statments(self,ast):
+    def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
+
+        def collect_for_stmts(ast,vars_):
+            for stmt in ast:
+                if isinstance(stmt, For):
+                    print
+                    if isinstance(stmt.target, Variable):
+                        vars_ += [stmt.target]
+                    collect_for_stmts(stmt.body,vars_)
 
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        variables = self._stmts['variables']
-        routines = self._stmts['routines']
-        classes = self._stmts['classes']
-        imports = self._stmts['imports']
-        modules = self._stmts['modules']
-        body = self._stmts['body']
-        interfaces = self._stmts['interfaces']
-        variables_name=[]
-        decs = []
+        variables =  []
+        routines =   []
+        classes =    []
+        imports =    []
+        modules =    []
+        body =       []
+        interfaces = []
+        decs =       []
 
-        for stmt in ast:
+        for stmt in self.ast:
             if isinstance(stmt, FunctionDef):
                 routines += [stmt]
             elif isinstance(stmt, ClassDef):
@@ -164,11 +171,10 @@ class Codegen(object):
                         if not isinstance(stmt.lhs.name,DottedName):
                             variables += [stmt.lhs]
                             #we only add the variables which are not DottedName
+                 
                 if isinstance(stmt, For):
-                    if isinstance(stmt.target, Variable):
-                        variables += [stmt.target]
-                        self._collect_statments(stmt.body)
-                        #TODO fix bug
+                    collect_for_stmts(self.ast,variables)
+                    #TODO fix bug
 
         self._stmts['imports'] = imports
         self._stmts['variables'] = list(set(variables))
