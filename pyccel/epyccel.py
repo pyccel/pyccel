@@ -15,6 +15,7 @@ def compile_fortran(source, modulename, extra_args=''):
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
     import tempfile
+    from numpy.distutils.exec_command import exec_command
 
     try:
         f = tempfile.NamedTemporaryFile(suffix='.f90')
@@ -24,7 +25,8 @@ def compile_fortran(source, modulename, extra_args=''):
         args = ' -c -m {} {} {}'.format(modulename, f.name, extra_args)
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
 
-        output = subprocess.check_output(cmd, shell=True)
+#        output = subprocess.check_output(cmd, shell=True)
+        status, output = exec_command(cmd)
         return output, cmd
 
     finally:
