@@ -167,7 +167,7 @@ class Zeros(Function):
             shape = shape
 
         if dtype is None:
-            dtype = 'double'
+            dtype = String('double')
 
         if isinstance(dtype, String):
             dtype = datatype('ndarray'+dtype.arg.replace('\'', ''))
