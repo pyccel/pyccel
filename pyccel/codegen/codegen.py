@@ -126,10 +126,13 @@ class Codegen(object):
         def collect_for_stmts(ast,vars_):
             for stmt in ast:
                 if isinstance(stmt, For):
-                    print
                     if isinstance(stmt.target, Variable):
                         vars_ += [stmt.target]
                     collect_for_stmts(stmt.body,vars_)
+                if isinstance(stmt,If):
+                    for i in stmt.bodies:
+                        collect_for_stmts(stmt.body,vars_)    
+                    
 
         errors = Errors()
         errors.set_parser_stage('codegen')
