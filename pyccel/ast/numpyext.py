@@ -100,7 +100,7 @@ class Shape(Array):
            init_value = printer(self.ls.ls)
         else:
            init_value = printer(self.ls)
-        code_init = "{0} = size({1})".format(lhs_code, init_value)
+        code_init = "{0} = shape({1})".format(lhs_code, init_value)
         
         return code_init
 
