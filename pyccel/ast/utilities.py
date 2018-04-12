@@ -5,7 +5,7 @@ from sympy.core.function import Function
 from .core import Import
 from .core import Range
 from .numpyext import Zeros, Ones
-from .numpyext import Array
+from .numpyext import Array ,Shape ,Int
 
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
@@ -22,6 +22,10 @@ def builtin_function(expr, args=None):
         return Range(*args)
     elif name == 'array':
         return Array(*args)
+    if name == 'shape':
+        return Shape(*args)
+    if name == 'int':
+        return Int(*args)
 
     return None
 

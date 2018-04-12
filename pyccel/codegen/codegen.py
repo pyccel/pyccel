@@ -37,7 +37,7 @@ class Codegen(object):
 
         self._stmts = {}
         _structs = ['imports', 'body', 'routines', 'classes', 'modules',
-                    'variables']
+                    'variables', 'interfaces']
         for key in _structs:
             self._stmts[key] = []
 
@@ -123,18 +123,25 @@ class Codegen(object):
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
 
+        def collect_for_stmts(ast,vars_):
+            for stmt in ast:
+                if isinstance(stmt, For):
+                    print
+                    if isinstance(stmt.target, Variable):
+                        vars_ += [stmt.target]
+                    collect_for_stmts(stmt.body,vars_)
+
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        variables = []
-        variables_name=[]
-        routines = []
-        classes = []
-        imports = []
-        modules = []
-        body = []
-        decs = []
+        variables =  []
+        routines =   []
+        classes =    []
+        imports =    []
+        modules =    []
+        body =       []
         interfaces = []
+        decs =       []
 
         for stmt in self.ast:
             if isinstance(stmt, FunctionDef):
@@ -161,16 +168,16 @@ class Codegen(object):
 
                 if isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
-                        if not isinstance(stmt.lhs.name,DottedName) and stmt.lhs.name not in variables_name:
+                        if not isinstance(stmt.lhs.name,DottedName):
                             variables += [stmt.lhs]
-                            variables_name += [stmt.lhs.name]
                             #we only add the variables which are not DottedName
+                 
                 if isinstance(stmt, For):
-                    if isinstance(stmt.target, Variable):
-                        variables += [stmt.target]
+                    collect_for_stmts(self.ast,variables)
+                    #TODO fix bug
 
         self._stmts['imports'] = imports
-        self._stmts['variables'] = variables
+        self._stmts['variables'] = list(set(variables))
         self._stmts['body'] = body
         self._stmts['routines'] = routines
         self._stmts['classes'] = classes

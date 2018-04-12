@@ -50,3 +50,4 @@ rectangle.scaleSize(0.5)
 
 #re-printing the new area of the rectangle
 print(rectangle.area)
+

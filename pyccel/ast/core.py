@@ -60,7 +60,6 @@ def subs(expr,new_elements):
     if isinstance(expr,(list,tuple,Tuple)):
         return [subs(expr,new_elements) for i in expr]
     elif isinstance(expr,(Expr,Assign)):
-        print (expr , expr.subs(new_elements) ,'##')
         return expr.subs(new_elements)
     elif isinstance(expr, While):
         test = subs(expr.test, a_old, a_new)
@@ -84,7 +83,6 @@ def subs(expr,new_elements):
             args.append((t,s))
         return If(*args)
     else:
-        print (expr , type(expr) ,'##')
         return expr
 
 def allocatable_like(expr, verbose=False):
@@ -2448,12 +2446,14 @@ class FunctionDef(Basic):
 
     @property
     def is_procedure(self):
-        """Returns True if a procedure. static functions will always be
-        generated as procedure"""
-#        flag = len(self.results)!=1 # we must use the kind TODO to remove
-        flag = ((self.kind == 'procedure') or
-                self.is_static or
-                (len(self.results) != 1) )
+        """Returns True if a procedure."""
+        flag = ((len(self.results) == 1) and (self.results[0].allocatable))
+        flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
+        flag = flag or (len(self.results) > 1)
+        flag = flag or (len(self.results) == 0)
+        flag = flag or (self.kind == 'procedure') or self.is_static
+        flag = flag or len(self.results)!=1
+        flag = flag or len(set(self.results).intersection(self.arguments))>0
         return flag
 
     def is_compatible_header(self, header):
@@ -2843,7 +2843,6 @@ class TupleImport(Basic):
         for a in args:
             if not isinstance(a, Import):
                 raise TypeError('Expecting an Import statement')
-
         return Basic.__new__(cls, *args)
 
     @property

@@ -12,7 +12,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from .core import Variable, IndexedElement, IndexedVariable,List
 from .core import DataType, datatype
 from .core import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
-                   NativeBool)
+                   NativeBool, String)
 
 
 class Array(Function):
@@ -31,7 +31,8 @@ class Array(Function):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return self.ls
-
+     
+    
     @property
     def ls(self):
         return self._args[0]
@@ -42,11 +43,103 @@ class Array(Function):
     
     @property
     def shape(self):
-        return numpy.shape(self._args[0])
+        return Tuple(*numpy.shape(self._args[0]))
 
     @property
     def rank(self):
         return len(self.shape) 
+    
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+        if isinstance(self.shape, (Tuple,tuple)):
+        # this is a correction. problem on LRZ
+            shape_code = ', '.join('0:' + printer(i-1) for i in self.shape)
+        else:
+            shape_code = '0:' + printer(self.shape-1)
+        lhs_code = printer(lhs)
+
+        code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
+        init_value = printer(self.ls)
+        code_init = "{0} = {1}".format(lhs_code, init_value)
+        code = "{0}\n{1}".format(code_alloc, code_init)
+
+        return code
+
+
+class Shape(Array):
+    """Represents a call to  numpy.shape for code generation.
+
+    ls : list ,tuple ,Tuple,List, Variable
+    """
+    def __new__(cls, ls):
+        if not isinstance(ls,(list,tuple,Tuple,List,Array, Variable) ):
+            raise TypeError("Uknown type of  %s." % type(ls))
+        return Basic.__new__(cls, ls)
+
+    @property
+    def ls(self):
+        return self._args[0]
+    
+    @property
+    def dtype(self):
+        return 'ndarrayint'
+    
+    @property
+    def shape(self):
+        return Tuple(self.ls.rank,)
+
+    @property
+    def rank(self):
+        return 1 
+  
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+ 
+        lhs_code = printer(lhs)
+        if isinstance(self.ls, Array):
+           init_value = printer(self.ls.ls)
+        else:
+           init_value = printer(self.ls)
+        code_init = "{0} = shape({1})".format(lhs_code, init_value)
+        
+        return code_init
+
+
+class Int(Function):
+    """Represents a call to  numpy.int for code generation.
+
+    arg : Variable,Float,Integer
+    """
+    def __new__(cls, arg):
+        if not isinstance(arg,(Variable,NativeInteger, NativeFloat, NativeDouble, NativeComplex)):
+            raise TypeError("Uknown type of  %s." % type(ls))
+        return Basic.__new__(cls, arg)
+
+    @property
+    def arg(self):
+        return self._args[0]
+    
+    @property
+    def dtype(self):
+        return 'int'
+    
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0 
+    
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+        lhs_code = printer(lhs)
+        init_value = printer(self.arg)
+        code = "{0} = Int({1})".format(lhs_code, init_value)
+        return code
+
+
+
 class Zeros(Function):
     """Represents a call to numpy.zeros for code generation.
 
@@ -74,10 +167,10 @@ class Zeros(Function):
             shape = shape
 
         if dtype is None:
-            dtype = 'double'
+            dtype = String('double')
 
-        if isinstance(dtype, str):
-            dtype = datatype('ndarray'+dtype)
+        if isinstance(dtype, String):
+            dtype = datatype('ndarray'+dtype.arg.replace('\'', ''))
         elif not isinstance(dtype, DataType):
             raise TypeError("datatype must be an instance of DataType.")
 
@@ -157,3 +250,4 @@ class Ones(Zeros):
         else:
             raise TypeError('Unknown type')
         return value
+

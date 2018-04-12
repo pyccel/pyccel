@@ -116,7 +116,6 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
 
 import os
-import numpy
 # ...
 
 # ... utilities
@@ -296,7 +295,7 @@ def fst_to_ast(stmt):
         first  = fst_to_ast(stmt.first)
         second = fst_to_ast(stmt.second)
         if stmt.value == '+':
-            if isinstance(first,str) or isinstance(second,str):
+            if isinstance(first,(String, List)) or isinstance(second,(String, List)):
                 return Concatinate(first,second)
             return Add(first, second)
         elif stmt.value == '*':
@@ -686,9 +685,25 @@ class Parser(object):
         if self._current:
             if name in self._scope[self._current]['variables']:
                 var = self._scope[self._current]['variables'][name]
+        if isinstance(self._current, DottedName):
+            if name in self._scope[self._current.name[0]]['variables']:
+                var = self._scope[self._current.name[0]]['variables'][name]
         if name in self._namespace['variables']:
             var =  self._namespace['variables'][name]
         return var
+
+    def get_variables(self,source = None):
+        if source=='parent':
+            if isinstance(self._current, DottedName):
+                name = self._current.name[0]
+            elif not (self._current is None):
+                return self._namespace['variables'].values()
+            else:
+                raise TypeError('there is no parent to extract variables from ')
+            return self._scope[name]['variables'].values()
+        else:
+            return self._scope[self._current]['variables'].values()
+
 
     def insert_variable(self, expr, name=None):
         """."""
@@ -732,7 +747,10 @@ class Parser(object):
         if not isinstance(func, (FunctionDef,Interface)):
             raise TypeError('Expected a Function definition')
         else:
-            self._namespace['functions'][str(func.name)] = func
+            if isinstance(self._current, DottedName):
+                self._scope[self._current.name[0]]['functions'][str(func.name)] = func
+            else:
+                self._namespace['functions'][str(func.name)] = func
 
     def remove(self, name):
         """."""
@@ -781,13 +799,18 @@ class Parser(object):
     def set_current_fun(self, name):
         """."""
         if name:
+            if self._current:
+                name = DottedName(self._current, name)
+                self._current = name
             self._scope[name] = {}
             self._scope[name]['variables'] = {}
             self._scope[name]['functions'] = {}
         else:
             self._scope.pop(self._current)
+            if isinstance(self._current, DottedName):
+                #case of a functiondef in a another function
+                name = self._current.name[0]
         self._current = name
-
 
 
     def insert_header(self, expr):
@@ -983,6 +1006,7 @@ class Parser(object):
             return d_var
 
         elif isinstance(expr, (tuple, list, List, Tuple)):
+            import numpy
             d = self._infere_type(expr[0], **settings)
             # TODO must check that it is consistent with pyccel's rules
             d_var['datatype']    = d['datatype']
@@ -1003,6 +1027,13 @@ class Parser(object):
                 else:
                     raise NotImplementedError('TODO')
             return d_var
+        elif isinstance(expr, Concatinate):
+            d_var_left = self._infere_type(expr.left, **settings)
+            d_var_right = self._infere_type(expr.right, **settings)
+            import operator
+            if not(d_var_left['datatype']=='str' or d_var_right['datatype']=='str'):
+                d_var_left['shape'] = tuple(map(operator.add,d_var_right['shape'],d_var_left['shape']))
+            return d_var_left
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1129,7 +1160,7 @@ class Parser(object):
             return expr_new
 
         elif isinstance(expr, Function):
-            args = expr.args
+            args = [self._annotate(i, **settings) for i in expr.args]
             name = str(type(expr).__name__)
             F = pyccel_builtin_function(expr, args)
             if F:
@@ -1166,9 +1197,9 @@ class Parser(object):
                 func = self.get_function(name)
                 if not(func is None):
                     if isinstance(func, (FunctionDef, Interface)):
-                        if len(args)==1 and args[0]==():
-                            args=[]
-                            #case of function that takes no argument
+                        if args==[()]:
+                            args = []
+                            #case of a function that takes no argument
                         if 'inline' in func.decorators:
                             return FunctionCall(func,args).inline
                         return FunctionCall(func, args)
@@ -1237,11 +1268,11 @@ class Parser(object):
 
             elif isinstance(rhs, Function):
                 name = str(type(rhs).__name__)
-                if name in ['Zeros', 'Ones']:
+                if name in ['Zeros', 'Ones', 'Shape','Int']:
                     # TODO improve
                     d_var = {}
                     d_var['datatype']    = rhs.dtype
-                    d_var['allocatable'] = True
+                    d_var['allocatable'] = not(name=='Shape' or name =='Int')
                     d_var['shape']       = rhs.shape
                     d_var['rank']        = rhs.rank
                     d_var['is_pointer'] = False
@@ -1366,6 +1397,7 @@ class Parser(object):
             if isinstance(expr.target, Symbol):
                 name = str(expr.target.name)
                 var = self.get_variable(name)
+                target = var
                 if var is None:
                     target = Variable('int', name, rank=0)
                     self.insert_variable(target)
@@ -1376,7 +1408,6 @@ class Parser(object):
 
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
-
             return For(target, itr, body)
 
         elif isinstance(expr, While):
@@ -1459,8 +1490,8 @@ class Parser(object):
                 local_vars  = []
                 global_vars = []
                 imports     = []
-                self.set_current_fun(name)
                 arg = None
+                self.set_current_fun(name)
                 arguments = expr.arguments
                 if cls_name and str(arguments[0].name) == 'self':
                     arg = arguments[0]
@@ -1532,13 +1563,12 @@ class Parser(object):
                     dt = self.get_class_construct(cls_name)()
                     var = Variable(dt, 'self', cls_base = self.get_class(cls_name))
                     args = [var] + args
-
-                for var in self._scope[name]['variables'].values():
+                for var in self.get_variables():
                     if not var in args+results:
                         local_vars += [var]
 
-                for var in self._namespace['variables'].values():
-                    if not var in args+results+local_vars and isinstance(var, Variable):
+                for var in self.get_variables('parent'):
+                    if not var in args+results+local_vars:
                         global_vars += [var]
                         #TODO should we add all the variables or only the ones used in the function
                 func = FunctionDef(name, args, results, body,
@@ -1674,7 +1704,10 @@ class Parser(object):
                     raise NotImplementedError('must report error')
 
             return expr
-
+        elif isinstance(expr, Concatinate):
+            left = self._annotate(expr.left)
+            right = self._annotate(expr.right)
+            return Concatinate(left, right)
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
