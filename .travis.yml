@@ -9,17 +9,21 @@ language: python
 
 # which python versions to test
 python:
-#  - "2.6"
   - "2.7"
-#  - "3.2"
-#  - "3.3"
-#  - "3.4"
+  - "3.4"
 #  - "3.5"
 #  - "3.5-dev" # 3.5 development branch
 #  - "3.6"
 #  - "3.6-dev" # 3.6 development branch
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
+
+matrix:
+  allow_failures:
+    - python: "2.7"
+    - python: "3.4"
+#    - python: "3.5"
+#    - python: "3.6"
 
 virtualenv:
     system_site_packages: true
@@ -38,13 +42,14 @@ install:
 # command to run tests
 script:
 #  - pytest # or py.test for Python versions 3.5 and below
-  - pytest tests/ast/test_ast.py
-  - pytest tests/parser/test_headers.py
-  - pytest tests/parser/test_openmp.py
-  - pytest tests/parser/test_openacc.py
-  - pytest tests/syntax/test_syntax.py
-  - pytest tests/semantic/test_semantic.py
-  - pytest tests/codegen/test_codegen.py
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.4 || $TRAVIS_PYTHON_VERSION == 3.5 ]]; then export PYTEST=py.test ;else export PYTEST=pytest ; fi
+  - $PYTEST tests/ast/test_ast.py
+  - $PYTEST tests/parser/test_headers.py
+  - $PYTEST tests/parser/test_openmp.py
+  - $PYTEST tests/parser/test_openacc.py
+  - $PYTEST tests/syntax/test_syntax.py
+  - $PYTEST tests/semantic/test_semantic.py
+  - $PYTEST tests/codegen/test_codegen.py
   - cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
 #  - python tests/test_pyccel.py --execute
 #  - python tests/test_pyccel_openmp.py --openmp --execute
