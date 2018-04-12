@@ -153,38 +153,38 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
 
     codegen = Codegen(ast, name)
     code = codegen.doprint()
-    codegen.export()
+#    codegen.export()
     # ...
 
-    # ...
-    filename = '{name}.f90'.format(name=name)
-    # ...
-
-    # ...
-    def _format_libs(ls):
-        if not ls:
-            ls = ''
-        elif isinstance(ls, (tuple, list)):
-            ls = ' '.join(i for i in ls)
-        elif not isinstance(ls, str):
-            raise TypeError('Expecting a list or a string for libs')
-        return ls
-
-    def _format_modules(ls):
-        if isinstance(ls, (tuple, list)):
-            ls = ''.join('{}.o '.format(m) for m in ls)
-        else:
-            raise TypeError('Expecting a list/tuple')
-        return ls
-    # ...
-
-    # TODO improve
-    flags  = '--quiet -c'
-
-    binary = name
-    compiler = 'f2py'
-    libs = _format_libs(libs)
-    deps_o = _format_modules(modules)
+#    # ...
+#    filename = '{name}.f90'.format(name=name)
+#    # ...
+#
+#    # ...
+#    def _format_libs(ls):
+#        if not ls:
+#            ls = ''
+#        elif isinstance(ls, (tuple, list)):
+#            ls = ' '.join(i for i in ls)
+#        elif not isinstance(ls, str):
+#            raise TypeError('Expecting a list or a string for libs')
+#        return ls
+#
+#    def _format_modules(ls):
+#        if isinstance(ls, (tuple, list)):
+#            ls = ''.join('{}.o '.format(m) for m in ls)
+#        else:
+#            raise TypeError('Expecting a list/tuple')
+#        return ls
+#    # ...
+#
+#    # TODO improve
+#    flags  = '--quiet -c'
+#
+#    binary = name
+#    compiler = 'f2py'
+#    libs = _format_libs(libs)
+#    deps_o = _format_modules(modules)
 
     # TODO update compile_fortran args with these ones and then remove this line
 #    cmd = 'f2py {flags} {deps_o} {filename} -m {binary} {libs}'.format(flags=flags,
