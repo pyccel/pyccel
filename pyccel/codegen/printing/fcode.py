@@ -759,7 +759,11 @@ class FCodePrinter(CodePrinter):
 
             # TODO check this for MPI
             if is_procedure:
-                code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
+                if expr.lhs in expr.rhs.arguments:
+                    #avoid repetition if the lhs is also an argument
+                    code = 'call {0}({1})'.format(rhs_code, code_args)
+                else:
+                    code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
             else:
                 rhs_code = '{0}({1})'.format(rhs_code, code_args)
                 code = '{0} = {1}'.format(lhs_code, rhs_code)

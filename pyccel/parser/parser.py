@@ -1160,7 +1160,7 @@ class Parser(object):
             return expr_new
 
         elif isinstance(expr, Function):
-            args = expr.args
+            args = [self._annotate(i, **settings) for i in expr.args]
             name = str(type(expr).__name__)
             F = pyccel_builtin_function(expr, args)
             if F:
@@ -1197,7 +1197,7 @@ class Parser(object):
                 func = self.get_function(name)
                 if not(func is None):
                     if isinstance(func, (FunctionDef, Interface)):
-                        if args==((),):
+                        if args==[()]:
                             args=[]
                             #case of function that takes no argument
                         if 'inline' in func.decorators:

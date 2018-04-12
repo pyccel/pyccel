@@ -2437,6 +2437,7 @@ class FunctionDef(Basic):
         flag = flag or (len(self.results) == 0)
         flag = flag or (self.kind == 'procedure')
         flag = flag or len(self.results)!=1
+        flag = flag or len(set(self.results).intersection(self.arguments))>0
         return flag
 
     def is_compatible_header(self, header):
