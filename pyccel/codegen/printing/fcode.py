@@ -601,7 +601,8 @@ class FCodePrinter(CodePrinter):
         elif (rank > 0) and (allocatable or is_pointer or is_target) :
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
-        elif rank>0 and (isinstance(shape, (Tuple,tuple,list)) and not(allocatable) and not(is_pointer)):
+        elif rank>0 and (isinstance(shape, (Tuple,tuple)) and not(allocatable) and not(is_pointer)):
+             #TODO fix bug when we inclue shape of type list
              rankstr =  ','.join('({0}:{1})'.format(self._print(s), self._print(i-1)) for i in shape)
              enable_alloc = False
             
