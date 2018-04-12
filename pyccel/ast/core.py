@@ -3604,6 +3604,12 @@ class If(Basic):
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
+    
+    @property
+    def bodies(self):
+        b = []
+        for i in self._args:
+            b += i[1]
 
 # TODO: to improve
 class Vector(Basic):

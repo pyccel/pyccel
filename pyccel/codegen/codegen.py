@@ -9,7 +9,7 @@ from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, Import, Inte
 from pyccel.ast.core import Header, EmptyLine, Comment
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import Variable,DottedName
-from pyccel.ast.core import For
+from pyccel.ast.core import For, If, While
 from pyccel.ast.core import Is
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
@@ -123,13 +123,17 @@ class Codegen(object):
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
 
-        def collect_for_stmts(ast,vars_):
+        def collect_for_targets(ast):
+            vars_=[]
             for stmt in ast:
                 if isinstance(stmt, For):
-                    print
                     if isinstance(stmt.target, Variable):
-                        vars_ += [stmt.target]
-                    collect_for_stmts(stmt.body,vars_)
+                        vars_ += [stmt.target] + collect_for_targets(stmt.body)
+                if isinstance(stmt, If):
+                    vars_ += collect_for_targets(stmt.bodies)
+                if isinstance(stmt, While):
+                    vars_ += collect_for_targets(stmt.body)
+            return vars_
 
         errors = Errors()
         errors.set_parser_stage('codegen')
@@ -171,11 +175,7 @@ class Codegen(object):
                         if not isinstance(stmt.lhs.name,DottedName):
                             variables += [stmt.lhs]
                             #we only add the variables which are not DottedName
-                 
-                if isinstance(stmt, For):
-                    collect_for_stmts(self.ast,variables)
-                    #TODO fix bug
-
+        variables += collect_for_targets(self.ast)
         self._stmts['imports'] = imports
         self._stmts['variables'] = list(set(variables))
         self._stmts['body'] = body
