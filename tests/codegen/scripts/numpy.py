@@ -1,6 +1,8 @@
 
 from numpy import zeros
 from numpy import ones
+from numpy import sum
+#from numpy import zeros_like
 
 n = 5
 x1 = zeros(4)
@@ -21,9 +23,14 @@ b2 = ones((n, 2*n))
 
 x=array([1.,2.,3.])
 z = x
-n = shape(x)
-m = shape(array([1.,2.,3.]))
+nn = shape(x)
+mm = shape(array([1.,2.,3.]))
 
 a=2.
 b=int(a)
+
+#tt = zeros_like(x)
+z1 = ones((n,m,2), 'double')
+print(sum(z1)==n*m*2)
+
 
