@@ -479,7 +479,7 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Len(self, expr):
-        return self._get_statement('size(%s,1)'%(self._print(expr.rhs)))
+        return self._get_statement('size(%s,1)'%(self._print(expr.arg)))
 
     def _print_Sum(self, expr):
         return expr.fprint(self._print)

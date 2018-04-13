@@ -1276,7 +1276,7 @@ class Parser(object):
                     d_var['is_pointer'] = False
 
                 elif name in ['Array']:
-                    dvar = self._infere_type(rhs.args, **settings)
+                    dvar = self._infere_type(rhs.arg, **settings)
                     dtype =dvar['datatype']
                     d_var = {}
                     d_var['allocatable'] = True
@@ -1294,9 +1294,10 @@ class Parser(object):
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
                 elif name in ['Len','Sum']:
+                     d_var = {}
                      d_var['datatype']='int'
                      if name == 'Sum':
-                         dvar = self._infere_type(rhs.args, **settings)
+                         dvar = self._infere_type(rhs.arg, **settings)
                          d_var['datatype'] = dvar['datatype']
                      d_var['rank'] = 0
                      d_var['allocatable'] = False

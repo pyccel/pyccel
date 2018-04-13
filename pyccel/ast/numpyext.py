@@ -20,21 +20,21 @@ class Array(Function):
 
     ls : list ,tuple ,Tuple,List
     """
-    def __new__(cls, args, dtype=None):
-        if not isinstance(ls,(list,tuple,Tuple,List) ):
-            raise TypeError("Uknown type of  %s." % type(args))
+    def __new__(cls, arg, dtype=None):
+        if not isinstance(arg,(list,tuple,Tuple,List) ):
+            raise TypeError("Uknown type of  %s." % type(arg))
         if isinstance(dtype, str):
             dtype = datatype('ndarray'+dtype)
 
-        return Basic.__new__(cls, args, dtype)
+        return Basic.__new__(cls, arg, dtype)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return self.args
+        return self.arg
      
     
     @property
-    def args(self):
+    def arg(self):
         return self._args[0]
     
     @property
@@ -59,20 +59,20 @@ class Array(Function):
         lhs_code = printer(lhs)
 
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
-        init_value = printer(self.args)
+        init_value = printer(self.arg)
         code_init = "{0} = {1}".format(lhs_code, init_value)
         code = "{0}\n{1}".format(code_alloc, code_init)
 
         return code
 
 class Sum(Function):
-    def __new__(cls, args):
-        if not isinstance(args,(list,tuple,Tuple,List, Variable) ):
-            raise TypeError("Uknown type of  %s." % type(args))
-        return Basic.__new__(cls, args)   
+    def __new__(cls, arg):
+        if not isinstance(arg,(list,tuple,Tuple,List, Variable) ):
+            raise TypeError("Uknown type of  %s." % type(arg))
+        return Basic.__new__(cls, arg)   
     
     @property
-    def args(self):
+    def arg(self):
         return self._args[0]
     
     @property
@@ -85,7 +85,7 @@ class Sum(Function):
     
     def fprint(self, printer, lhs=None):
         """Fortran print."""
-        rhs_code = printer(self.args)
+        rhs_code = printer(self.arg)
         if lhs:
             lhs_code = printer(lhs)
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
@@ -94,15 +94,15 @@ class Sum(Function):
 class Shape(Array):
     """Represents a call to  numpy.shape for code generation.
 
-    ls : list ,tuple ,Tuple,List, Variable
+    arg : list ,tuple ,Tuple,List, Variable
     """
-    def __new__(cls, args):
-        if not isinstance(args,(list,tuple,Tuple,List,Array, Variable) ):
-            raise TypeError("Uknown type of  %s." % type(args))
-        return Basic.__new__(cls, args)
+    def __new__(cls, arg):
+        if not isinstance(arg,(list,tuple,Tuple,List,Array, Variable) ):
+            raise TypeError("Uknown type of  %s." % type(arg))
+        return Basic.__new__(cls, arg)
 
     @property
-    def args(self):
+    def arg(self):
         return self._args[0]
     
     @property
@@ -111,7 +111,7 @@ class Shape(Array):
     
     @property
     def shape(self):
-        return Tuple(self.ls.rank,)
+        return Tuple(self.arg.rank,)
 
     @property
     def rank(self):
@@ -121,10 +121,10 @@ class Shape(Array):
         """Fortran print."""
  
         lhs_code = printer(lhs)
-        if isinstance(self.ls, Array):
-           init_value = printer(self.args.args)
+        if isinstance(self.arg, Array):
+           init_value = printer(self.arg.arg)
         else:
-           init_value = printer(self.ls)
+           init_value = printer(self.arg)
         code_init = "{0} = shape({1})".format(lhs_code, init_value)
         
         return code_init
@@ -135,13 +135,13 @@ class Int(Function):
 
     arg : Variable,Float,Integer
     """
-    def __new__(cls, args):
-        if not isinstance(args,(Variable,NativeInteger, NativeFloat, NativeDouble, NativeComplex)):
-            raise TypeError("Uknown type of  %s." % type(args))
-        return Basic.__new__(cls, args)
+    def __new__(cls, arg):
+        if not isinstance(arg,(Variable,NativeInteger, NativeFloat, NativeDouble, NativeComplex)):
+            raise TypeError("Uknown type of  %s." % type(arg))
+        return Basic.__new__(cls, arg)
 
     @property
-    def args(self):
+    def arg(self):
         return self._args[0]
     
     @property
@@ -159,7 +159,7 @@ class Int(Function):
     def fprint(self, printer, lhs):
         """Fortran print."""
         lhs_code = printer(lhs)
-        init_value = printer(self.args)
+        init_value = printer(self.arg)
         code = "{0} = Int({1})".format(lhs_code, init_value)
         return code
 
