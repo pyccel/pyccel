@@ -25,7 +25,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-from pyccel.ast import Zeros, Array, Int, Shape
+from pyccel.ast import Zeros, Array, Int, Shape, Sum
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -51,7 +51,7 @@ from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
-                             Len, Shape, Random,
+                             Len, Random,
                              IndexedElement, Slice,List,
                              DottedName, AsName, DottedVariable,
                              Print, If)
@@ -479,12 +479,23 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Len(self, expr):
-        if isinstance(expr.rhs,list):
-            st=','.join([str(i) for i in expr.rhs])
-            return self._get_statement('size((/%s/),1)'%(st))
-        else:
-            return self._get_statement('size(%s,1)'%(expr.rhs))
+        return self._get_statement('size(%s,1)'%(self._print(expr.rhs)))
 
+    def _print_Sum(self, expr):
+        return expr.fprint(self._print)
+    
+    def _print_Shape(self, expr):
+        return expr.fprint(self._print)
+    
+    def _print_Zeros(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Array(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Int(self, expr):
+        return expr.fprint(self._print)
+        
     def _print_Min(self, expr):
         args = expr.args
         if len(args) == 1:
@@ -670,7 +681,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, (Range, Tensor)):
             return ''
 
-        if isinstance(expr.rhs, (Zeros, Array, Int, Shape)):
+        if isinstance(expr.rhs, (Zeros, Array, Int, Shape,Sum)):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         elif isinstance(expr.rhs, Shape):
@@ -1796,7 +1807,7 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.label)
 
     def _print_Slice(self, expr):
-        if expr.start is None:
+        if expr.start is None or  isinstance(expr.start, Nil):
             start = ''
         else:
             start = self._print(expr.start)

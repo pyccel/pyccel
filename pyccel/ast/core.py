@@ -3053,27 +3053,11 @@ class Len(Function):
     def __str__(self):
         return "len"
 
-    def __new__(cls, rhs):
-        return Basic.__new__(cls, rhs)
+    def __new__(cls, arg):
+        return Basic.__new__(cls, arg)
 
     @property
-    def rhs(self):
-        return self._args[0]
-
-# TODO add example
-class Shape(Function):
-    """
-    Represents a 'shape' expression in the code.
-    """
-    # TODO : remove later
-    def __str__(self):
-        return "shape"
-
-    def __new__(cls, rhs):
-        return Basic.__new__(cls, rhs)
-
-    @property
-    def rhs(self):
+    def arg(self):
         return self._args[0]
 
 
