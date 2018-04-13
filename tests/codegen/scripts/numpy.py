@@ -1,8 +1,12 @@
-
 from numpy import zeros
 from numpy import ones
 from numpy import sum
 #from numpy import zeros_like
+from numpy import array
+a=array((1,2,3,5,8,5),'float')
+b=array((5,8,6,9,8,2),'int')
+k=zeros((len(a),len(a)),'int')
+d=array(((5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2)),'double')
 
 n = 5
 x1 = zeros(4)
@@ -39,6 +43,7 @@ xr = random()
 yr = rand()
 print(xr)
 print(yr)
+
 
 
 

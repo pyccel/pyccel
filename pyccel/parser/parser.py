@@ -1283,6 +1283,7 @@ class Parser(object):
                     d_var['shape']       = dvar['shape']
                     d_var['rank']        = dvar['rank']
                     d_var['is_pointer'] = False
+                    
                     if isinstance(dtype, NativeInteger):
                         d_var['datatype'] = 'ndarrayint'
                     elif isinstance(dtype, NativeFloat ):
@@ -1291,6 +1292,8 @@ class Parser(object):
                         d_var['datatype'] = 'ndarraydouble'
                     elif isinstance(dtype, NativeComplex):
                         d_var['datatype'] = 'ndarraycomplex'
+                    elif isinstance(dtype, str):
+                        d_var['datatype'] = 'ndarray'+dtype
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
                 elif name in ['Len','Sum','Rand']:

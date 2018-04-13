@@ -18,7 +18,7 @@ from .core import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
 class Array(Function):
     """Represents a call to  numpy.array for code generation.
 
-    ls : list ,tuple ,Tuple,List
+    arg : list ,tuple ,Tuple,List
     """
     def __new__(cls, arg, dtype=None):
         if not isinstance(arg,(list,tuple,Tuple,List) ):
@@ -43,7 +43,7 @@ class Array(Function):
     
     @property
     def shape(self):
-        return Tuple(*numpy.shape(self._args[0]))
+        return Tuple(*numpy.shape(self.arg))
 
     @property
     def rank(self):
@@ -57,15 +57,25 @@ class Array(Function):
         else:
             shape_code = '0:' + printer(self.shape-1)
         lhs_code = printer(lhs)
-
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
-        init_value = printer(self.arg)
+        arg = self.arg
+        if self.rank>1:
+            import operator
+            arg = reduce(operator.concat, arg)
+            init_value = 'reshape('+printer(arg)+','+printer(self.shape)+')'
+        else:
+            init_value = printer(arg)
+         
         code_init = "{0} = {1}".format(lhs_code, init_value)
         code = "{0}\n{1}".format(code_alloc, code_init)
-
         return code
 
+
 class Sum(Function):
+    """Represents a call to  numpy.sum for code generation.
+
+    arg : list , tuple , Tuple, List, Variable
+    """
     def __new__(cls, arg):
         if not isinstance(arg,(list,tuple,Tuple,List, Variable) ):
             raise TypeError("Uknown type of  %s." % type(arg))
@@ -92,6 +102,10 @@ class Sum(Function):
         return 'sum({0})'.format(rhs_code)
 
 class Rand(Function):
+    """Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+
+    arg : list ,tuple ,Tuple,List
+    """
     def __new__(cls, arg):
         if not isinstance(arg,(list,tuple,Tuple) ):
             raise TypeError("Uknown type of  %s." % type(arg))
