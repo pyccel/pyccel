@@ -6,6 +6,12 @@ from .core import Import
 from .core import Range, Len
 from .numpyext import Zeros, Ones
 from .numpyext import Array ,Shape ,Int, Sum ,Rand
+from sympy import (Abs, sqrt, sin,  cos,  exp,  log, \
+                   csc,  cos,  sec,  tan,  cot,  asin, \
+                    acsc, acos, asec, atan, acot, atan2)
+math_functions ={'Abs':Abs, 'sqrt':sqrt, 'sin':sin, 'cos':cos, 'exp':exp,\
+ 'log':log, 'csc':csc, 'sec':sec, 'tan':tan, 'cot':cot, 'asin':asin,\
+'acsc':acsc, 'acos':acos, 'asec':asec, 'atan':atan, 'acot':acot, 'atan2':atan2}
 
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
@@ -70,6 +76,16 @@ def builtin_import(expr):
         
         if target in ['rand', 'random']:
             return target, Rand
+
+        if target in math_functions.keys():
+            return target, math_functions[target]
+
+    elif source == 'math':
+        
+        target = str(expr.target[0])
+        if target in math_functions.keys():
+            return target, math_functions[target]
+        
 
     return None, None
 
