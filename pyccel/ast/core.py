@@ -3062,7 +3062,7 @@ class Len(Function):
 
 
 # TODO - add examples
-class ZerosLike(Basic):
+class ZerosLike(Function):
     """Represents variable assignment using numpy.zeros_like for code generation.
 
     lhs : Expr

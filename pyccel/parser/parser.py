@@ -1371,31 +1371,32 @@ class Parser(object):
                     lhs =  self._annotate(lhs, **settings)
 
             expr = Assign(lhs, rhs, strict=False)
-            # we check here, if it is an alias assignment
-#            lhs.inspect()
-#            if isinstance(expr.rhs, Variable):
-#                expr.rhs.inspect()
-            #if expr.is_alias:
-                # here we need to know if lhs is allocatable or a pointer
-                # TODO improve
-            allocatable = False
-            is_pointer = False
-            if d_var['allocatable']:
-                allocatable = True
-            if d_var['is_pointer']:
-                is_pointer = True
-            if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
-                allocatable = True
-            elif (isinstance(expr.rhs, Variable) and isinstance(expr.rhs.dtype, NativeList)):
-                is_pointer = True
-            if isinstance(lhs, Variable) and (allocatable or is_pointer):
-                lhs = self.update_variable(expr.lhs,allocatable=allocatable,is_pointer=is_pointer)
-            if is_pointer:
-                return AliasAssign(lhs, rhs)
-            elif expr.is_symbolic_alias:
-                return SymbolicAssign(lhs, rhs)
-            else:
-                return expr
+            if not isinstance(lhs,(list,Tuple,tuple)):
+                d_var = [d_var]
+                            
+            for i,dic in enumerate(d_var):
+                if not isinstance(lhs, (list,Tuple,tuple)):
+                    lhs = [lhs]   
+                allocatable = False
+                is_pointer = False
+                if dic['allocatable']:
+                    allocatable = True
+                if dic['is_pointer']:
+                    is_pointer = True
+                if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
+                    allocatable = True
+                elif (isinstance(expr.rhs, Variable) and isinstance(expr.rhs.dtype, NativeList)):
+                    is_pointer = True
+                if isinstance(lhs, Variable) and (allocatable or is_pointer):
+                    lhs[i] = self.update_variable(expr.lhs[i],allocatable=allocatable,is_pointer=is_pointer)
+                if len(lhs)==1:
+                       lhs = lhs[0]
+                if is_pointer:
+                   expr = AliasAssign(lhs, rhs)
+                elif expr.is_symbolic_alias:
+                   expr = SymbolicAssign(lhs, rhs)
+    
+            return expr
 
         elif isinstance(expr, For):
             # treatment of the index/indices
