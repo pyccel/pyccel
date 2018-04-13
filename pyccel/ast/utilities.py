@@ -1,11 +1,11 @@
 # coding: utf-8
 
 from sympy.core.function import Function
-
+from .core import DottedName
 from .core import Import
 from .core import Range, Len
 from .numpyext import Zeros, Ones
-from .numpyext import Array ,Shape ,Int, Sum
+from .numpyext import Array ,Shape ,Int, Sum ,Rand
 
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
@@ -42,6 +42,9 @@ def builtin_import(expr):
         return None, None
 
     source = expr.source
+    if isinstance(source, DottedName):
+        source = source.name[0]
+        #TODO imrove
     if source == 'numpy':
         # TODO improve
         target = str(expr.target[0])
@@ -64,5 +67,10 @@ def builtin_import(expr):
         
         if target == 'sum':
             return target, Sum
+        
+        if target in ['rand', 'random']:
+            return target, Rand
 
     return None, None
+
+

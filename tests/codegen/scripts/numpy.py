@@ -1,13 +1,17 @@
-
 from numpy import zeros
 from numpy import ones
 from numpy import sum
 #from numpy import zeros_like
+from numpy import array
+a=array((1,2,3,5,8,5),'float')
+b=array((5,8,6,9,8,2),'int')
+k=zeros((len(a),len(a)),'int')
+d=array(((5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2),(5,8,6,9,8,2)),'double')
 
 n = 5
 x1 = zeros(4)
 x2 = zeros(n)
-#x3 = zeros(n, 'int')
+x3 = zeros(n, 'int')
 
 y1 = zeros((4, 3))
 y2 = zeros((n, 2*n))
@@ -15,7 +19,7 @@ y2 = zeros((n, 2*n))
 m = 5
 a1 = ones(4)
 a2 = ones(n)
-#a3 = ones(n, 'int')
+a3 = ones(n, 'int')
 
 b1 = ones((4, 3))
 b2 = ones((n, 2*n))
@@ -32,5 +36,14 @@ b=int(a)
 #tt = zeros_like(x)
 z1 = ones((n,m,2), 'double')
 print(sum(z1)==n*m*2)
+
+from numpy import random
+from numpy.random import rand
+xr = random()
+yr = rand()
+print(xr)
+print(yr)
+
+
 
 
