@@ -1,6 +1,6 @@
 #coding: utf-8
 from redbaron import RedBaron
-from redbaron import StringNode, IntNode, FloatNode, ComplexNode
+from redbaron import StringNode, IntNode, FloatNode, ComplexNode,FloatExponantNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
@@ -55,7 +55,7 @@ from pyccel.ast import datatype,DataTypeFactory
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName,DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
@@ -231,12 +231,17 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, FloatNode):
         return Float(stmt.value)
 
+    elif isinstance(stmt, FloatExponantNode):
+        return Float(stmt.value)
+
     elif isinstance(stmt, ComplexNode):
         raise NotImplementedError('ComplexNode not yet available')
 
     elif isinstance(stmt, AssignmentNode):
         lhs = fst_to_ast(stmt.target)
         rhs = fst_to_ast(stmt.value)
+        if stmt.operator in ['+', '-', '*', '/']:
+            return AugAssign(lhs, stmt.operator,rhs)
         return Assign(lhs, rhs)
 
     elif isinstance(stmt, NameNode):
@@ -1126,7 +1131,7 @@ class Parser(object):
                         second = FunctionCall(i,args,kind =i.kind)
             return DottedVariable(first, second)
 
-        elif isinstance(expr, (Add, Mul, And, Or, Eq, Ne, Lt, Gt, Le, Ge)):
+        elif isinstance(expr, (Add, Mul, Pow,And, Or, Eq, Ne, Lt, Gt, Le, Ge)):
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
             args = expr.args
@@ -1139,6 +1144,8 @@ class Parser(object):
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, (Add, Mul)):
                     expr_new = expr._new_rawargs(expr_new, a_new)
+                elif isinstance(expr, Pow):
+                    expr_new = Pow(expr_new, a_new)
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new)
                 elif isinstance(expr, Or):
@@ -1210,7 +1217,7 @@ class Parser(object):
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
-        elif isinstance(expr, Assign):
+        elif isinstance(expr,( Assign, AugAssign)):
             rhs = self._annotate(expr.rhs, **settings)
             # d_var can be a list of dictionaries
             if isinstance(rhs, FunctionCall):
@@ -1283,7 +1290,6 @@ class Parser(object):
                     d_var['shape']       = dvar['shape']
                     d_var['rank']        = dvar['rank']
                     d_var['is_pointer'] = False
-                    
                     if isinstance(dtype, NativeInteger):
                         d_var['datatype'] = 'ndarrayint'
                     elif isinstance(dtype, NativeFloat ):
@@ -1297,14 +1303,18 @@ class Parser(object):
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
                 elif name in ['Len','Sum','Rand']:
-                     d_var = {}
-                     d_var['datatype']=rhs.dtype
-                     if name in['Sum'] :
-                         dvar = self._infere_type(rhs.arg, **settings)
-                         d_var['datatype'] = dvar['datatype']
-                     d_var['rank'] = 0
-                     d_var['allocatable'] = False
-                     d_var['is_pointer'] = False
+                    d_var = {}
+                    d_var['datatype']=rhs.dtype
+                    if name in['Sum'] :
+                        dvar = self._infere_type(rhs.arg, **settings)
+                        d_var['datatype'] = dvar['datatype']
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                elif name in ['Abs', 'sqrt', 'sin',  'cos',  'exp',  'log', \
+                            'csc',  'cos',  'sec',  'tan','cot',  'asin', \
+                            'acsc', 'acos', 'asec', 'atan', 'acot', 'atan2']:
+                    d_var = self._infere_type(rhs.args[0], **settings)
                 else:
                     raise NotImplementedError('TODO')
 
@@ -1373,33 +1383,35 @@ class Parser(object):
                 else :
                     lhs =  self._annotate(lhs, **settings)
 
-            expr = Assign(lhs, rhs, strict=False)
+            expr_new = Assign(lhs, rhs, strict=False)
             if not isinstance(lhs,(list,Tuple,tuple)):
                 d_var = [d_var]
-                            
+
             for i,dic in enumerate(d_var):
                 if not isinstance(lhs, (list,Tuple,tuple)):
-                    lhs = [lhs]   
+                    lhs = [lhs]
                 allocatable = False
                 is_pointer = False
                 if dic['allocatable']:
                     allocatable = True
                 if dic['is_pointer']:
                     is_pointer = True
-                if isinstance(expr.rhs, IndexedElement) and (expr.lhs.rank > 0):
+                if isinstance(expr_new.rhs, IndexedElement) and (expr_new.lhs.rank > 0):
                     allocatable = True
-                elif (isinstance(expr.rhs, Variable) and isinstance(expr.rhs.dtype, NativeList)):
+                elif (isinstance(expr_new.rhs, Variable) and isinstance(expr_new.rhs.dtype, NativeList)):
                     is_pointer = True
                 if isinstance(lhs, Variable) and (allocatable or is_pointer):
-                    lhs[i] = self.update_variable(expr.lhs[i],allocatable=allocatable,is_pointer=is_pointer)
+                    lhs[i] = self.update_variable(expr_new.lhs[i],allocatable=allocatable,is_pointer=is_pointer)
                 if len(lhs)==1:
                        lhs = lhs[0]
                 if is_pointer:
-                   expr = AliasAssign(lhs, rhs)
-                elif expr.is_symbolic_alias:
-                   expr = SymbolicAssign(lhs, rhs)
-    
-            return expr
+                   expr_new = AliasAssign(lhs, rhs)
+                elif expr_new.is_symbolic_alias:
+                   expr_new = SymbolicAssign(lhs, rhs)
+
+            if isinstance(expr, AugAssign):
+                expr_new = AugAssign(expr_new.lhs, expr.op, expr_new.rhs)
+            return expr_new
 
         elif isinstance(expr, For):
             # treatment of the index/indices
