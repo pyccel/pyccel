@@ -1453,9 +1453,8 @@ class Parser(object):
 
         elif isinstance(expr, Return):
             results = expr.expr
-            if isinstance(results, Symbol):
-                name = results.name
-                var = self.get_variable(name)
+            if isinstance(results, (Expr, Symbol)):
+                var = self._annotate(results, **settings)
                 if var is None:
                     errors.report(UNDEFINED_VARIABLE, symbol=name,
                                   severity='error', blocker=True)
@@ -1464,6 +1463,7 @@ class Parser(object):
                 ls = []
                 for i in results:
                     if not isinstance(i, Symbol):
+                        print i
                         raise NotImplementedError('only symbol or iterable are allowed for returns')
                     name = i.name
                     var = self.get_variable(name)

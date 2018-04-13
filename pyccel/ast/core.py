@@ -5,7 +5,7 @@ import importlib
 
 from numpy import ndarray
 
-from sympy import Lambda
+from sympy import Lambda, preorder_traversal
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational,Ne,Eq
@@ -2447,12 +2447,16 @@ class FunctionDef(Basic):
     @property
     def is_procedure(self):
         """Returns True if a procedure."""
-        flag = ((len(self.results) == 1) and (self.results[0].allocatable))
-        flag = ((len(self.results) == 1) and (self.results[0].rank > 0))
+        flag = False
+        if len(self.results) == 1 and isinstance(self.results[0], Expr):
+            vars_ = [i for i in preorder_traversal(self.results) if isinstance(i, Variable)]
+            flag = flag or any([i.allocatable or i.rank>0 for i in vars_])
+        else:
+            flag = flag or ((len(self.results) == 1) and (self.results[0].allocatable))
+            flag = flag or ((len(self.results) == 1) and (self.results[0].rank > 0))
         flag = flag or (len(self.results) > 1)
         flag = flag or (len(self.results) == 0)
         flag = flag or (self.kind == 'procedure') or self.is_static
-        flag = flag or len(self.results)!=1
         flag = flag or len(set(self.results).intersection(self.arguments))>0
         return flag
 
@@ -3592,7 +3596,7 @@ class If(Basic):
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
-    
+
     @property
     def bodies(self):
         b = []
