@@ -60,8 +60,8 @@ class Array(Function):
         code_alloc = "allocate({0}({1}))".format(lhs_code, shape_code)
         arg = self.arg
         if self.rank>1:
-            import operator
-            arg = reduce(operator.concat, arg)
+            import functools,operator
+            arg = functools.reduce(operator.concat, arg)
             init_value = 'reshape('+printer(arg)+','+printer(self.shape)+')'
         else:
             init_value = printer(arg)
