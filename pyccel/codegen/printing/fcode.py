@@ -25,7 +25,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-from pyccel.ast import Zeros, Array, Int, Shape, Sum
+from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -51,7 +51,7 @@ from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import (Assign, AugAssign, Variable,
                              Declare, ValuedVariable,
-                             Len, Random,
+                             Len,
                              IndexedElement, Slice,List,
                              DottedName, AsName, DottedVariable,
                              Print, If)
@@ -495,6 +495,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Int(self, expr):
         return expr.fprint(self._print)
+
+    def _print_Rand(self, expr):
+        return expr.fprint(self._print)
         
     def _print_Min(self, expr):
         args = expr.args
@@ -681,7 +684,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, (Range, Tensor)):
             return ''
 
-        if isinstance(expr.rhs, (Zeros, Array, Int, Shape,Sum)):
+        if isinstance(expr.rhs, (Zeros, Array, Int, Shape,Sum, Rand)):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         elif isinstance(expr.rhs, Shape):
@@ -713,10 +716,10 @@ class FCodePrinter(CodePrinter):
 
             return self._get_statement(code)
 
-        elif isinstance(expr.rhs, Random):
-            lhs = self._print(expr.lhs)
-            code = 'call random_number({0})'.format(lhs)
-            return self._get_statement(code)
+        #elif isinstance(expr.rhs, Random):
+        #    lhs = self._print(expr.lhs)
+        #    code = 'call random_number({0})'.format(lhs)
+        #    return self._get_statement(code)
 
         elif isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)

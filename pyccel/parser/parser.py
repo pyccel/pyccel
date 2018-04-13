@@ -1293,10 +1293,10 @@ class Parser(object):
                         d_var['datatype'] = 'ndarraycomplex'
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
-                elif name in ['Len','Sum']:
+                elif name in ['Len','Sum','Rand']:
                      d_var = {}
-                     d_var['datatype']='int'
-                     if name == 'Sum':
+                     d_var['datatype']=rhs.dtype
+                     if name in['Sum'] :
                          dvar = self._infere_type(rhs.arg, **settings)
                          d_var['datatype'] = dvar['datatype']
                      d_var['rank'] = 0

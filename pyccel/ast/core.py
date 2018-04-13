@@ -3060,6 +3060,10 @@ class Len(Function):
     def arg(self):
         return self._args[0]
 
+    @property
+    def dtype(self):
+        return 'int'
+
 
 # TODO - add examples
 class ZerosLike(Function):

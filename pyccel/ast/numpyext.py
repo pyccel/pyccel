@@ -91,6 +91,36 @@ class Sum(Function):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
+class Rand(Function):
+    def __new__(cls, arg):
+        if not isinstance(arg,(list,tuple,Tuple) ):
+            raise TypeError("Uknown type of  %s." % type(arg))
+        return Basic.__new__(cls, arg)   
+    
+    @property
+    def arg(self):
+        return self._args[0]
+    
+    @property
+    def dtype(self):
+        return 'double'
+    
+    @property
+    def rank(self):
+        #TODO improve
+        return 0
+    
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+        rhs_code = printer(self.arg)
+        if len(self.arg) == 0:
+            rhs_code = ''
+        if lhs:
+            lhs_code = printer(lhs)
+            return '{0} = rand({1})'.format(lhs_code, rhs_code)
+        return 'rand({0})'.format(rhs_code)
+
+
 class Shape(Array):
     """Represents a call to  numpy.shape for code generation.
 
