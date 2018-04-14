@@ -1018,6 +1018,8 @@ class FCodePrinter(CodePrinter):
                     functions += [stmt]
                 elif not isinstance(stmt, Return): # for list of Results
                     body.append(stmt)
+                elif isinstance(stmt,Return):
+                    body += stmt.stmts
 #                elif not isinstance(stmt, list): # for list of Results
 #                    body.append(stmt)
 
@@ -1062,7 +1064,11 @@ class FCodePrinter(CodePrinter):
         return 'return'
 
     def _print_Return(self, expr):
-        return 'return'
+        stmts = ''
+        for i in expr.stmts:
+            stmts += self._print(i)+'\n'
+        stmts +='return'
+        return stmts
 
     def _print_Del(self, expr):
         # TODO: treate class case

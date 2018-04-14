@@ -792,6 +792,25 @@ class Parser(object):
         else:
             self._namespace['variables'][name] = expr
 
+    def create_variable(self, d_var, expr):
+        """."""
+        name = 'result_'+str(abs(hash(expr)))[-4:]
+        dtype = d_var['datatype']
+        allocatable = d_var['allocatable']
+        is_target = d_var['is_target']
+        is_pointer = d_var['is_pointer']
+        rank = d_var['rank']
+        shape = d_var['shape']
+        is_polymorphic = d_var['is_polymorphic']
+        is_optional = d_var['is_optional']
+        cls_base = d_var['cls_base']
+        cls_parameters = d_var['cls_parameters']
+        return Variable(dtype, name, rank=rank,
+                        shape=shape,allocatable=allocatable,
+                        is_target=is_target, is_pointer=is_pointer,
+                        is_polymorphic=is_polymorphic, is_optional=is_optional,
+                       cls_base=cls_base, cls_parameters=cls_parameters)
+
     def get_class(self, name):
         """."""
 
@@ -945,6 +964,8 @@ class Parser(object):
         d_var['is_target'] = None
         d_var['is_polymorphic'] = None
         d_var['is_optional'] = None
+        d_var['cls_base'] = None
+        d_var['cls_parameters'] = None
 
         # TODO improve => put settings as attribut of Parser
 
@@ -1240,7 +1261,7 @@ class Parser(object):
                             args = []
                         second = FunctionCall(i, args, kind=i.kind)
             return DottedVariable(first, second)
-        elif isinstance(expr, (Add, Mul, Pow, And, Or, 
+        elif isinstance(expr, (Add, Mul, Pow, And, Or,
                                 Eq, Ne, Lt, Gt, Le, Ge)):
 
             # we reconstruct the arithmetic expressions using the annotated
@@ -1648,25 +1669,25 @@ class Parser(object):
             results = expr.expr
             if isinstance(results, (Expr, Symbol)):
                 var = self._annotate(results, **settings)
-                if var is None:
-                    errors.report(UNDEFINED_VARIABLE, symbol=name,
-                                  severity='error', blocker=True)
-                return Return([var])
+                if isinstance(var, Expr):
+                    new_var =self.create_variable(self._infere_type(var,
+                                                            **settings), var)
+                    #in the case of expression, we return an assign also
+                    return Return([new_var], [Assign(new_var,var)])
+                return Return([var], [])
             elif isinstance(results, (list, tuple, Tuple)):
                 ls = []
+                assigns = []
                 for i in results:
-                    if not isinstance(i, Symbol):
-                        print i
-                        raise NotImplementedError('only symbol or iterable are allowed for returns'
-                                )
-                    name = i.name
-                    var = self.get_variable(name)
-                    if var is None:
-                        errors.report(RETURN_VALUE_EXPECTED,
-                                symbol=name, severity='error',
-                                blocker=True)
-                    ls += [var]
-                return Return(ls)
+                    var = self._annotate(i, **settings)
+                    if isinstance(var, Expr):
+                        new_var =self.create_variable(self._infere_type(var,
+                                                                        **settings), var)
+                        ls += [new_var]
+                        assigns +=[Assign(new_var, var)]
+                    else:
+                        ls += [var]
+                return Return(ls, assigns)
             else:
                 raise NotImplementedError('only symbol or iterable are allowed for returns'
                         )
@@ -1797,6 +1818,8 @@ class Parser(object):
                     # TODO case of multiple calls to return
 
                     if isinstance(stmt, Return):
+                        #TODO improve the search of return in nested bodies
+                        # like ifs,for stmts and while stmts
                         results = stmt.expr
                         if isinstance(results, Variable):
                             results = [results]

@@ -2159,22 +2159,33 @@ class ValuedArgument(Basic):
         value    = sstr(self.value)
         return '{0}={1}'.format(argument, value)
 
-
-# TODO keep sympify?
 class Return(Basic):
     """Represents a function return in the code.
 
     expr : sympy expr
         The expression to return.
+    
+    stmts :represent assign stmts in the case of expression return
     """
 
-    def __new__(cls, expr):
-#        expr = _sympify(expr)
-        return Basic.__new__(cls, expr)
+    def __new__(cls, expr, stmts = None):
+                
+        if not(stmts is None) and not isinstance(stmts,list):
+            raise TypeError('stmts should only be of type list')
+        elif not(stmts is None):
+            for i in stmts:
+                if not isinstance(i, Assign):
+                    raise TypeError('stmts should only be of type Assign')
+        
+        return Basic.__new__(cls, expr, stmts)
 
     @property
     def expr(self):
         return self._args[0]
+
+    @property
+    def stmts(self):
+        return self._args[1]
 
 class Interface(Basic):
     """Represent an Interface"""
