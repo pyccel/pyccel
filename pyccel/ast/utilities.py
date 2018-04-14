@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Function
-from core import DottedName
-from core import Import
-from core import Range, Len
-from numpyext import Zeros, Ones
-from numpyext import Array, Shape, Int, Sum, Rand
+from .core import DottedName
+from .core import Import
+from .core import Range, Len
+from .numpyext import Zeros, Ones
+from .numpyext import Array, Shape, Int, Sum, Rand
 from sympy import Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, \
     cot, asin, acsc, acos, asec, atan, acot, atan2
 math_functions = {

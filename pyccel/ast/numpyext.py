@@ -11,9 +11,9 @@ from sympy.core.basic import Basic
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from core import Variable, IndexedElement, IndexedVariable, List
-from core import DataType, datatype
-from core import NativeInteger, NativeFloat, NativeDouble, \
+from .core import Variable, IndexedElement, IndexedVariable, List
+from .core import DataType, datatype
+from .core import NativeInteger, NativeFloat, NativeDouble, \
     NativeComplex, NativeBool, String
 
 
