@@ -133,7 +133,7 @@ import os
 def view_tree(expr):
     """Views a sympy expression tree."""
 
-    print srepr(expr)
+    print (srepr(expr))
 
 
 #  ...
@@ -719,10 +719,10 @@ class Parser(object):
 
         # TODO improve spacing
 
-        print '------- Namespace -------'
+        print('------- Namespace -------')
         for (k, v) in self.namespace.items():
-            print '{var} \t :: \t {dtype}'.format(var=k, dtype=type(v))
-        print '-------------------------'
+            print('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
+        print('-------------------------')
 
     def dot(self, filename):
         """Exports sympy AST using graphviz then convert it to an image."""
