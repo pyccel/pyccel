@@ -54,7 +54,7 @@ def test_array_3():
     y = f(x)
 
 def test_array_4():
-    header = '#$ header procedure f1_py(int, double [:]) results(double [:])'
+    header = '#$ header procedure f1_py(int, double [:])'
     def f1_py(m1, x):
         x = 0.
         for i in range(0, m1):
@@ -70,7 +70,7 @@ def test_array_4():
     assert(np.allclose(x, x_expected))
 
 def test_array_5():
-    header = '#$ header procedure f2_py(int, int, double [:,:]) results(double [:,:])'
+    header = '#$ header procedure f2_py(int, int, double [:,:])'
     def f2_py(m1, m2, x):
         x = 0.
         for i in range(0, m1):
