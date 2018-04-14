@@ -408,7 +408,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
- 
+
     def _print_Concatinate(self, expr):
          is_list = isinstance(expr.right, Variable) and isinstance(expr.right.dtype, NativeList)
          is_list = is_list or isinstance(expr.left, Variable) and isinstance(expr.left.dtype, NativeList)
@@ -483,10 +483,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_Sum(self, expr):
         return expr.fprint(self._print)
-    
+
     def _print_Shape(self, expr):
         return expr.fprint(self._print)
-    
+
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
 
@@ -498,7 +498,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Rand(self, expr):
         return expr.fprint(self._print)
-        
+
     def _print_Min(self, expr):
         args = expr.args
         if len(args) == 1:
@@ -560,7 +560,7 @@ class FCodePrinter(CodePrinter):
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
         is_static = expr.static
-        
+
         if isinstance(shape,tuple) and len(shape) ==1:
             shape = shape[0]
         # ...
@@ -615,15 +615,20 @@ class FCodePrinter(CodePrinter):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
 
+        elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
+            (not(allocatable or is_pointer) or is_static)):
+            #TODO fix bug when we inclue shape of type list
+            rankstr =  ','.join('{0}:{1}'.format(self._print(s),
+                                                 self._print(i-1)) for i in shape)
+            rankstr = '({rank})'.format(rank=rankstr)
+            enable_alloc = False
 
-        elif (rank > 0) and (allocatable or is_pointer or is_target) :
+        elif (rank > 0) and (allocatable or is_pointer or is_target):
             rankstr = ','.join(':' for f in range(0, rank))
             rankstr = '(' + rankstr + ')'
-        elif rank>0 and (isinstance(shape, (Tuple,tuple)) and not(allocatable) and not(is_pointer)):
-             #TODO fix bug when we inclue shape of type list
-             rankstr =  ','.join('({0}:{1})'.format(self._print(s), self._print(i-1)) for i in shape)
-             enable_alloc = False
-            
+#        else:
+#            raise NotImplementedError('Not treated yet')
+
 
         allocatablestr = ''
         if not is_static:

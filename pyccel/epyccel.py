@@ -14,19 +14,18 @@ def compile_fortran(source, modulename, extra_args=''):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
-    import tempfile
 
     try:
-        f = tempfile.NamedTemporaryFile(suffix='.f90')
-        f.write(source)
-        f.flush()
+        filename = '{}.f90'.format(modulename)
+        f = open(filename, "w")
+        for line in source:
+            f.write(line)
+        f.close()
 
-        args = ' -c -m {} {} {}'.format(modulename, f.name, extra_args)
+        args = ' -c -m {} {} {}'.format(modulename, filename, extra_args)
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
 
         output = subprocess.check_output(cmd, shell=True)
-#        from numpy.distutils.exec_command import exec_command
-#        status, output = exec_command(cmd)
         return output, cmd
 
     finally:
@@ -201,10 +200,6 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
     if verbose:
         print(output)
     # ...
-
-    import os
-    print(os.listdir('.'))
-
 
     # ...
     try:
