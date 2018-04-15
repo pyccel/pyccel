@@ -89,6 +89,9 @@ from pyccel.parser.errors import Errors, PyccelSyntaxError, \
 
 from pyccel.parser.messages import *
 
+from collections import OrderedDict
+
+
 ########################
 #  ... TODO should be moved to pyccel.ast
 
@@ -193,8 +196,6 @@ class Parser(object):
         headers: list, tuple
             list of headers to append to the namespace
         """
-        from collections import OrderedDict
-
         self._fst = None
         self._ast = None
         self._filename = None
@@ -307,7 +308,7 @@ class Parser(object):
         print('-------------------------')
 
     def view_namespace(self, entry):
-        # TODO improve spacing
+        # TODO improve
         try:
             from tabulate import tabulate
 
@@ -321,7 +322,8 @@ class Parser(object):
                 line = [k_str, v_str]
                 table.append(line)
             headers = ['module', 'target']
-            txt = tabulate(table, headers, tablefmt="rst")
+#            txt = tabulate(table, headers, tablefmt="rst")
+            txt = tabulate(table, tablefmt="rst")
             print(txt)
 
         except:
@@ -2100,6 +2102,68 @@ class PyccelParser(Parser):
 
     pass
 
+def is_python_file(filename):
+    """Returns True if filename is an existing python file."""
+    if not isinstance(filename, str):
+        return False
+
+    name = os.path.basename(filename.split('.')[0])
+    ext  = filename.split('.')[-1]
+    if not(ext == 'py'):
+        return False
+    fname = os.path.abspath(filename)
+    return os.path.isfile(fname)
+
+
+def syntax_analysis(expr):
+    """Recursive algorithm for syntax analysis on a given file and its
+    dependencies.
+    This function always terminates with an OrderedDict that contains parsers
+    for all involved files.
+    """
+
+    if is_python_file(expr):
+        print('> treating :: {}'.format(expr))
+        p = Parser(expr)
+        p.parse()
+
+        d_parsers = OrderedDict()
+        name = os.path.basename(expr.split('.')[0])
+        d_parsers[name] = p
+
+        # treat dependencies
+        imports = list(p.imports.keys())
+        if not imports:
+            return d_parsers
+
+        else:
+            for source in imports:
+                d_parsers[source] = syntax_analysis(source)
+            return syntax_analysis(d_parsers)
+
+    elif isinstance(expr, str):
+        print('> treating :: {}'.format(expr))
+        # TODO improve
+        f_name = '{}.py'.format(expr)
+        q = Parser(f_name)
+        q.parse()
+        return q
+
+    elif isinstance(expr, OrderedDict):
+        imports = []
+        for key,p in list(expr.items()):
+            sources = list(p.imports.keys())
+            imports += sources
+        imports = set(imports)
+        treated = set(expr.keys())
+        imports = imports.difference(treated)
+        if not imports:
+            return expr
+
+        else:
+            for source in imports:
+                expr[source] = syntax_analysis(source)
+            return syntax_analysis(expr)
 
 ######################################################
 
@@ -2111,12 +2175,12 @@ if __name__ == '__main__':
     except:
         raise ValueError('Expecting an argument for filename')
 
-    pyccel = Parser(filename)
+    syntax_analysis(filename)
 
-    pyccel.parse()
-    pyccel.view_namespace('imports')
-
-    settings = {}
+#    pyccel = Parser(filename)
+#    pyccel.parse()
+#
+#    settings = {}
 #    pyccel.annotate(**settings)
 #    pyccel.print_namespace()
 #
