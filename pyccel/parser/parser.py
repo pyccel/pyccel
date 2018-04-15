@@ -184,7 +184,7 @@ class Parser(object):
 
     """ Class for a Parser."""
 
-    def __init__(self, inputs, debug=False, headers=None):
+    def __init__(self, inputs, debug=False, headers=None, parent=None):
         """Parser constructor.
 
         inputs: str
@@ -195,6 +195,9 @@ class Parser(object):
 
         headers: list, tuple
             list of headers to append to the namespace
+
+        parent: Parser
+            a Parser can have a parent, that appears in the son import
         """
         self._fst = None
         self._ast = None
@@ -206,9 +209,10 @@ class Parser(object):
         self._namespace['functions'] = {}
         self._namespace['cls_constructs'] = {}
         self._scope = {}  # represent the namespace of a function
-        self._parent = None
+        self._current_class = None
         self._current = None  # we use it to detect the current method or function
         self._imports = {}  # we use it to store the imports
+        self._parent = parent
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -263,6 +267,15 @@ class Parser(object):
             self._ast = self.parse()
         return self._ast
 
+    @property
+    def current_class(self):
+        return self._current_class
+
+    @property
+    def parent(self):
+        """Returns the parent parser."""
+        return self._parent
+
     def parse(self):
         """converts redbaron fst to sympy ast."""
 
@@ -315,10 +328,16 @@ class Parser(object):
             table = []
             for (k, v) in self.namespace[entry].items():
                 k_str = '{}'.format(k)
-                if v is None:
-                    v_str = '*'
+                if entry == 'imports':
+                    if v is None:
+                        v_str = '*'
+                    else:
+                        v_str = '{}'.format(v)
+                elif entry == 'variables':
+                    v_str = '{}'.format(type(v))
                 else:
-                    v_str = '{}'.format(v)
+                    raise NotImplementedError('TODO')
+
                 line = [k_str, v_str]
                 table.append(line)
             headers = ['module', 'target']
@@ -377,8 +396,8 @@ class Parser(object):
         """."""
 
         var = None
-        if self._parent:
-            for i in self._parent.attributes:
+        if self.current_class:
+            for i in self._current_class.attributes:
                 if str(i.name) == name:
                     var = i
                     return var
@@ -1176,11 +1195,11 @@ class Parser(object):
         elif isinstance(expr, DottedVariable):
 
             if isinstance(expr.args[0], DottedVariable):
-                self._parent = expr.args[0].args[1].cls_base
+                self._current_class = expr.args[0].args[1].cls_base
             else:
-                self._parent = expr.args[0].cls_base
+                self._current_class = expr.args[0].cls_base
             d_var = self._infere_type(expr.args[1])
-            self._parent = None
+            self._current_class = None
             return d_var
         elif isinstance(expr, Expr):
 
@@ -1353,9 +1372,9 @@ class Parser(object):
                         second = FunctionCall(i, (), kind=i.kind)
                         return DottedVariable(first, second)
             if not isinstance(expr.args[1], Function):
-                self._parent = first.cls_base
+                self._current_class = first.cls_base
                 second = self._annotate(expr.args[1])
-                self._parent = None
+                self._current_class = None
             else:
                 for i in first.cls_base.methods:
                     if str(i.name) == str(type(expr.args[1]).__name__):
@@ -2115,7 +2134,7 @@ def is_python_file(filename):
     return os.path.isfile(fname)
 
 
-def syntax_analysis(expr):
+def syntax_analysis(expr, verbose=True):
     """Recursive algorithm for syntax analysis on a given file and its
     dependencies.
     This function always terminates with an OrderedDict that contains parsers
@@ -2123,13 +2142,15 @@ def syntax_analysis(expr):
     """
 
     if is_python_file(expr):
-        print('> treating :: {}'.format(expr))
+        if verbose:
+            print('> treating :: {}'.format(expr))
+
         p = Parser(expr)
         p.parse()
 
         d_parsers = OrderedDict()
         name = os.path.basename(expr.split('.')[0])
-        d_parsers[name] = p
+        d_parsers[expr] = p
 
         # treat dependencies
         imports = list(p.imports.keys())
@@ -2138,11 +2159,13 @@ def syntax_analysis(expr):
 
         else:
             for source in imports:
-                d_parsers[source] = syntax_analysis(source)
-            return syntax_analysis(d_parsers)
+                d_parsers[source] = syntax_analysis(source, verbose=verbose)
+            return syntax_analysis(d_parsers, verbose=verbose)
 
     elif isinstance(expr, str):
-        print('> treating :: {}'.format(expr))
+        if verbose:
+            print('> treating :: {}'.format(expr))
+
         # TODO improve
         f_name = '{}.py'.format(expr)
         q = Parser(f_name)
@@ -2162,8 +2185,29 @@ def syntax_analysis(expr):
 
         else:
             for source in imports:
-                expr[source] = syntax_analysis(source)
-            return syntax_analysis(expr)
+                expr[source] = syntax_analysis(source, verbose=verbose)
+            return syntax_analysis(expr, verbose=verbose)
+
+def semantic_analysis(expr, **settings):
+    """Applies the semantic analysis recursively.
+    This function takes as an input an OrderedDict of parsers.
+    The main parser is the only one that has a valid python filename as a key.
+    This algorithms walks through the dependencies from the bottom. The main
+    parser will be the last one to treat.
+    """
+    keys = [k for k in list(expr.keys()) if is_python_file(k)]
+    if not(len(keys) == 1):
+        raise ValueError('Expecting exactly one valid python file name.')
+
+    filename = keys[0]
+    main_parser = expr[filename]
+    print('TADA')
+
+    # we first treat parsers that have no imports
+    for k, p in list(expr.items()):
+        if not p.imports:
+            p.annotate(**settings)
+
 
 ######################################################
 
@@ -2175,7 +2219,10 @@ if __name__ == '__main__':
     except:
         raise ValueError('Expecting an argument for filename')
 
-    syntax_analysis(filename)
+    d_parsers = syntax_analysis(filename)
+    settings = {}
+    semantic_analysis(d_parsers, **settings)
+
 
 #    pyccel = Parser(filename)
 #    pyccel.parse()
