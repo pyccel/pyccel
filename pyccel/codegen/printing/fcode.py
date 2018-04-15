@@ -49,7 +49,7 @@ from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
-from pyccel.ast.core import (Assign, AugAssign, Variable,
+from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
                              Len,
                              IndexedElement, Slice, List,
@@ -678,6 +678,9 @@ class FCodePrinter(CodePrinter):
                                           rhs=self._print(expr.rhs))
 
         return self._get_statement(code)
+
+    def _print_Assigns(self, expr):
+        return '\n'.join(self._print(i) for i in expr.stmts)
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)

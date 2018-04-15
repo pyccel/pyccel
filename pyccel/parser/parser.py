@@ -57,7 +57,7 @@ from pyccel.ast import datatype, DataTypeFactory
 from pyccel.ast import Nil
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign ,Assigns
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
@@ -369,24 +369,12 @@ class Parser(object):
         else:
             self._namespace['variables'][name] = expr
 
-    def create_variable(self, d_var, expr):
+    def create_variable(self, expr):
         """."""
-        name = 'result_'+str(abs(hash(expr)))[-4:]
-        dtype = d_var['datatype']
-        allocatable = d_var['allocatable']
-        is_target = d_var['is_target']
-        is_pointer = d_var['is_pointer']
-        rank = d_var['rank']
-        shape = d_var['shape']
-        is_polymorphic = d_var['is_polymorphic']
-        is_optional = d_var['is_optional']
-        cls_base = d_var['cls_base']
-        cls_parameters = d_var['cls_parameters']
-        return Variable(dtype, name, rank=rank,
-                        shape=shape,allocatable=allocatable,
-                        is_target=is_target, is_pointer=is_pointer,
-                        is_polymorphic=is_polymorphic, is_optional=is_optional,
-                       cls_base=cls_base, cls_parameters=cls_parameters)
+        import numpy as np
+        name = 'result_'+str(abs(hash(expr) + np.random.randint(500)))[-4:]
+       
+        return Symbol(name)
 
     def get_class(self, name):
         """."""
@@ -1399,8 +1387,20 @@ class Parser(object):
 
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
         elif isinstance(expr, (Assign, AugAssign)):
-
-            rhs = self._annotate(expr.rhs, **settings)
+            rhs = expr.rhs
+            exprs = rhs.atoms(Function)
+            assigns = None
+            if len(exprs)>0 and not isinstance(rhs, Function):
+                #case of a function call in the rhs
+                assigns = []
+                for i in exprs:
+                    var = self.create_variable(i)
+                    rhs = rhs.subs(i,var)
+                    assigns += [Assign(var,i)]
+                assigns = [self._annotate(i, **settings) for i in assigns]
+                
+                
+            rhs = self._annotate(rhs, **settings)
 
             # d_var can be a list of dictionaries
 
@@ -1437,17 +1437,11 @@ class Parser(object):
                     if found:
                         func = func.functions[j]
                     else:
-                        raise SystemExit('function not found in the interface'
-                                )
+                        raise SystemExit('function not found in the interface')
 
                 results = func.results
                 d_var = [self._infere_type(i, **settings) for i in
                          results]
-
-                # if there is only one result, we don't consider d_var as a list
-
-                if len(d_var) == 1:
-                    d_var = d_var[0]
 
                 rhs = FunctionCall(func.rename(rhs.func.name),
                                    rhs.arguments, kind=rhs.func.kind)
@@ -1539,11 +1533,7 @@ class Parser(object):
                     d_var = self._infere_type(rhs.args[0], **settings)
                 else:
                     raise NotImplementedError('TODO')
-            elif isinstance(rhs, MethodCall):
-
-                raise NotImplementedError('TODO')
             else:
-
                 d_var = self._infere_type(rhs, **settings)
                 if d_var['datatype'
                          ].__class__.__name__.startswith('Pyccel'):
@@ -1559,6 +1549,11 @@ class Parser(object):
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
+                if isinstance(d_var, (list)):
+                    if len(d_var)>1:
+                        raise ValueError('can not assign multiple object into one variable')
+                    elif len(d_var)==1:
+                        d_var = d_var[0]
                 name = lhs.name
                 dtype = d_var.pop('datatype')
                 lhs = Variable(dtype, name, **d_var)
@@ -1655,6 +1650,17 @@ class Parser(object):
             if isinstance(expr, AugAssign):
                 expr_new = AugAssign(expr_new.lhs, expr.op,
                         expr_new.rhs)
+            if assigns and len(assigns)>0:
+                #remove the Assignments that have rhs a function and not a subroutine
+                assigns_ = assigns[:]
+                for i in assigns_:
+                    if not i.rhs.func.is_procedure:
+                        expr_new = expr_new.subs(i.lhs,i.rhs)
+                        assigns.remove(i)
+                        
+            if assigns and len(assigns)>0:
+                assigns += [expr_new]
+                return Assigns(assigns)
             return expr_new
         elif isinstance(expr, For):
 
@@ -1702,20 +1708,22 @@ class Parser(object):
             results = expr.expr
             if isinstance(results, (Expr, Symbol)):
                 var = self._annotate(results, **settings)
-                if isinstance(var, Expr):
-                    new_var =self.create_variable(self._infere_type(var,
-                                                            **settings), var)
+                if isinstance(var, Expr) and not isinstance(var, Symbol):
+                    new_var =self.create_variable(var)
+                    stmt = self._annotate(Assign(new_var,var))
+                    new_var =stmt.lhs
                     #in the case of expression, we return an assign also
-                    return Return([new_var], [Assign(new_var,var)])
-                return Return([var], [])
+                    return Return([new_var], [stmt])
+                return Return([var])
             elif isinstance(results, (list, tuple, Tuple)):
                 ls = []
                 assigns = []
                 for i in results:
                     var = self._annotate(i, **settings)
-                    if isinstance(var, Expr):
-                        new_var =self.create_variable(self._infere_type(var,
-                                                                        **settings), var)
+                    if isinstance(var, Expr) and not isinstance(var, Symbol):
+                        new_var =self.create_variable(var)
+                        stmt = self._annotate(Assign(new_var,var))
+                        new_var = stmt.lhs
                         ls += [new_var]
                         assigns +=[Assign(new_var, var)]
                     else:

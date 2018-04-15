@@ -9,7 +9,7 @@ from pyccel.codegen.printing import fcode
 from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, \
     Import, Interface
 from pyccel.ast.core import Header, EmptyLine, Comment
-from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign , Assigns
 from pyccel.ast.core import Variable, DottedName
 from pyccel.ast.core import For, If, While
 from pyccel.ast.core import Is
@@ -162,6 +162,8 @@ class Codegen(object):
                     vars_ += collect_vars(stmt.bodies)
                 elif isinstance(stmt, While):
                     vars_ += collect_vars(stmt.body)
+                elif isinstance(stmt, Assigns):
+                    vars_ += collect_vars(stmt.stmts)
                 elif isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
                         if not isinstance(stmt.lhs.name, DottedName):

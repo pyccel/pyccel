@@ -347,6 +347,28 @@ class Assign(Basic):
 
         return False
 
+class Assigns(Basic):
+    """Represents a list of assignments for code generation.
+    """
+
+    def __new__(cls, assigns):
+             for i in assigns:
+                 if not isinstance(i, Assign):
+                     raise TypeError('assigns object must contain a list of assign stmts')
+             return Basic.__new__(cls, assigns)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        stmt = self.stmts[-1]
+        for i in self.stmts[:-1]:
+            stmt.sub(i.lhs, i.rhs)
+        return '{0} := {1}'.format(sstr(stmt.lhs), sstr(stmt.rhs))
+
+    @property
+    def stmts(self):
+        return self._args[0]
+
+
 class AliasAssign(Basic):
     """Represents aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
@@ -2169,13 +2191,14 @@ class Return(Basic):
     """
 
     def __new__(cls, expr, stmts = None):
-                
-        if not(stmts is None) and not isinstance(stmts,list):
+        
+        if stmts is None:
+            stmts = []        
+        if not isinstance(stmts,list):
             raise TypeError('stmts should only be of type list')
-        elif not(stmts is None):
-            for i in stmts:
-                if not isinstance(i, Assign):
-                    raise TypeError('stmts should only be of type Assign')
+        for i in stmts:
+            if not isinstance(i, Assign):
+                raise TypeError('stmts should only be of type Assign')
         
         return Basic.__new__(cls, expr, stmts)
 
