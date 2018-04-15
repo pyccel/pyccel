@@ -1618,6 +1618,14 @@ class Parser(object):
                 expr_new = AugAssign(expr_new.lhs, expr.op,
                         expr_new.rhs)
             if assigns and len(assigns)>0:
+                #remove the Assignments that have rhs a function and not a subroutine
+                assigns_ = assigns[:]
+                for i in assigns_:
+                    if not i.rhs.func.is_procedure:
+                        expr_new = expr_new.subs(i.lhs,i.rhs)
+                        assigns.remove(i)
+                        
+            if assigns and len(assigns)>0:
                 assigns += [expr_new]
                 return Assigns(assigns)
             return expr_new
