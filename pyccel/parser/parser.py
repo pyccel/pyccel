@@ -287,13 +287,21 @@ def fst_to_ast(stmt):
             return false
         else:
             return Symbol(str(stmt.value))
+
     elif isinstance(stmt, ImportNode):
+        if not(isinstance(stmt.parent, (RedBaron, DefNode))):
+            errors.report(PYCCEL_RESTRICTION_IMPORT, severity='error')
+
+        if isinstance(stmt.parent, DefNode):
+            errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF, severity='error')
 
         # in an import statement, we can have seperate target by commas
-
         ls = fst_to_ast(stmt.value)
         return Import(ls)
+
     elif isinstance(stmt, FromImportNode):
+        if not(isinstance(stmt.parent, (RedBaron, DefNode))):
+            errors.report(PYCCEL_RESTRICTION_IMPORT, severity='error')
 
         source = fst_to_ast(stmt.value)
         if isinstance(source, DottedVariable):
@@ -730,7 +738,7 @@ class Parser(object):
         expr = self.ast
         graph_str = dotprint(expr)
 
-        f = file(filename, 'w')
+        f = open(filename, 'w')
         f.write(graph_str)
         f.close()
 
@@ -2014,8 +2022,7 @@ if __name__ == '__main__':
     pyccel.parse()
 
     settings = {}
-    pyccel.annotate(**settings)
-    pyccel.print_namespace()
-
-    pyccel.dot('ast.gv')
-
+#    pyccel.annotate(**settings)
+#    pyccel.print_namespace()
+#
+#    pyccel.dot('ast.gv')
