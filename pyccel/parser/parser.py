@@ -197,6 +197,7 @@ class Parser(object):
         self._ast = None
         self._filename = None
         self._namespace = {}
+        self._namespace['imports'] = {}
         self._namespace['variables'] = {}
         self._namespace['classes'] = {}
         self._namespace['functions'] = {}
@@ -236,6 +237,10 @@ class Parser(object):
     @property
     def headers(self):
         return self.namespace['headers']
+
+    @property
+    def imports(self):
+        return self.namespace['imports']
 
     @property
     def filename(self):
@@ -293,9 +298,7 @@ class Parser(object):
         return ast
 
     def print_namespace(self):
-
         # TODO improve spacing
-
         print('------- Namespace -------')
         for (k, v) in self.namespace.items():
             print('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
@@ -530,28 +533,29 @@ class Parser(object):
             ls = [self._fst_to_ast(i) for i in stmt]
             if isinstance(stmt, (list, ListNode)):
                 return List(*ls)
+
             else:
                 return Tuple(*ls)
         # ...
 
-        if isinstance(stmt, (
-            RedBaron,
-            LineProxyList,
-            CommaProxyList,
-            NodeList,
-            TupleNode,
-            ListNode,
-            tuple,
-            list,
-            )):
+        if isinstance(stmt, (RedBaron,
+                             LineProxyList,
+                             CommaProxyList,
+                             NodeList,
+                             TupleNode,
+                             ListNode,
+                             tuple,
+                             list)):
             return _treat_iterable(stmt)
 
         elif isinstance(stmt, DottedAsNameNode):
             names = []
             for a in stmt.value:
                 names.append(str(a.value))
+
             if len(names) == 1:
                 return names[0]
+
             else:
                 return DottedName(*names)
 
@@ -619,19 +623,25 @@ class Parser(object):
             rhs = self._fst_to_ast(stmt.value)
             if stmt.operator in ['+', '-', '*', '/']:
                 return AugAssign(lhs, stmt.operator, rhs)
+
             return Assign(lhs, rhs)
 
         elif isinstance(stmt, NameNode):
             if isinstance(stmt.previous, DotNode):
                 return self._fst_to_ast(stmt.previous)
+
             if isinstance(stmt.next, GetitemNode):
                 return self._fst_to_ast(stmt.next)
+
             if stmt.value == 'None':
                 return Nil()
+
             elif stmt.value == 'True':
                 return true
+
             elif stmt.value == 'False':
                 return false
+
             else:
                 return Symbol(str(stmt.value))
 
@@ -661,6 +671,7 @@ class Parser(object):
 
             if len(targets) == 1:
                 return Import(targets, source=source)
+
             else:
                 return TupleImport(*targets)
 
@@ -672,15 +683,19 @@ class Parser(object):
             target = self._fst_to_ast(stmt.target)
             if stmt.value == 'not':
                 return Not(target)
+
             elif stmt.value == '+':
                 return target
+
             elif stmt.value == '-':
                 return -target
+
             elif stmt.value == '~':
                 errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
                               severity='error')
             else:
                 raise PyccelSyntaxError('unknown/unavailable unary operator {node}'.format(node=type(stmt.value)))
+
         elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
 
             first = self._fst_to_ast(stmt.first)
@@ -689,6 +704,7 @@ class Parser(object):
                 if isinstance(first, (String, List)) or isinstance(second,
                         (String, List)):
                     return Concatinate(first, second)
+
                 return Add(first, second)
 
             elif stmt.value == '*':
@@ -815,19 +831,17 @@ class Parser(object):
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
-            return FunctionDef(
-                name,
-                arguments,
-                results,
-                body,
-                local_vars=local_vars,
-                global_vars=global_vars,
-                cls_name=cls_name,
-                hide=hide,
-                kind=kind,
-                imports=imports,
-                decorators=decorators,
-                )
+            return FunctionDef(name,
+                               arguments,
+                               results,
+                               body,
+                               local_vars=local_vars,
+                               global_vars=global_vars,
+                               cls_name=cls_name,
+                               hide=hide,
+                               kind=kind,
+                               imports=imports,
+                               decorators=decorators)
 
         elif isinstance(stmt, ClassNode):
             name = self._fst_to_ast(stmt.name)
@@ -835,8 +849,10 @@ class Parser(object):
             methods = self._fst_to_ast(methods)
             attributes = methods[0].arguments
             parent = [i.value for i in stmt.inherit_from]
-            return ClassDef(name=name, attributes=attributes,
-                            methods=methods, parent=parent)
+            return ClassDef(name=name,
+                            attributes=attributes,
+                            methods=methods,
+                            parent=parent)
 
         elif isinstance(stmt, AtomtrailersNode):
             return self._fst_to_ast(stmt.value)
