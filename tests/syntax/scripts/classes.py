@@ -7,3 +7,10 @@ class Point(object):
     def translate(self, a, b):
         self.x = self.x + a
         self.y = self.y + b
+
+
+class Point2(object):
+    import inside_class
+
+    def __init__(self, x):
+        self.x = x

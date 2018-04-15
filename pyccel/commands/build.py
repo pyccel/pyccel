@@ -3,6 +3,9 @@
     Quickly setup a Pyccel source to work with pyccel.
 """
 
+# TODO this file has not been refactored yet
+
+
 import sys
 import os
 import argparse
@@ -10,10 +13,10 @@ import argparse
 from os import path
 
 from pyccel import __version__ as __display_version__
-from pyccel.codegen.utilities import build_file
-from pyccel.codegen.utilities import build_cmakelists
-from pyccel.codegen.utilities import build_cmakelists_dir
-from pyccel.codegen.utilities import generate_project_main
+from pyccel.codegen.utilities_old import build_file
+from pyccel.codegen.utilities_old import build_cmakelists
+from pyccel.codegen.utilities_old import build_cmakelists_dir
+from pyccel.codegen.utilities_old import generate_project_main
 
 
 EXTENSIONS = {

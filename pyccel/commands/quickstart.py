@@ -3,6 +3,7 @@
     Quickly setup a Pyccel source to work with pyccel.
 """
 
+# TODO this file has not been refactored yet
 # TODO: - enables testing extensions when invoking pyccel-quickstart
 
 import sys
@@ -11,12 +12,12 @@ import argparse
 
 from os import path
 
-from pyccel.codegen.utilities import load_extension
-from pyccel.codegen.utilities import initialize_project
-from pyccel.codegen.utilities import build_cmakelists_dir
-from pyccel.codegen.utilities import generate_project_main
-from pyccel.codegen.utilities import generate_project_init
-from pyccel.codegen.utilities import generate_project_conf
+from pyccel.codegen.utilities_old import load_extension
+from pyccel.codegen.utilities_old import initialize_project
+from pyccel.codegen.utilities_old import build_cmakelists_dir
+from pyccel.codegen.utilities_old import generate_project_main
+from pyccel.codegen.utilities_old import generate_project_init
+from pyccel.codegen.utilities_old import generate_project_conf
 
 
 EXTENSIONS = {
