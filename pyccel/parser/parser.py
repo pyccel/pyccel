@@ -84,7 +84,8 @@ from pyccel.ast import AsName
 from pyccel.parser.errors import Errors, PyccelSyntaxError, \
                                  PyccelSemanticError
 
-# TODO remove import * and only import what we need
+# TODO - remove import * and only import what we need
+#      - use OrderedDict whenever it is possible
 
 from pyccel.parser.messages import *
 
@@ -192,12 +193,13 @@ class Parser(object):
         headers: list, tuple
             list of headers to append to the namespace
         """
+        from collections import OrderedDict
 
         self._fst = None
         self._ast = None
         self._filename = None
         self._namespace = {}
-        self._namespace['imports'] = {}
+        self._namespace['imports'] = OrderedDict()
         self._namespace['variables'] = {}
         self._namespace['classes'] = {}
         self._namespace['functions'] = {}
@@ -299,10 +301,35 @@ class Parser(object):
 
     def print_namespace(self):
         # TODO improve spacing
-        print('------- Namespace -------')
+        print('------- namespace -------')
         for (k, v) in self.namespace.items():
             print('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
         print('-------------------------')
+
+    def view_namespace(self, entry):
+        # TODO improve spacing
+        try:
+            from tabulate import tabulate
+
+            table = []
+            for (k, v) in self.namespace[entry].items():
+                k_str = '{}'.format(k)
+                if v is None:
+                    v_str = '*'
+                else:
+                    v_str = '{}'.format(v)
+                line = [k_str, v_str]
+                table.append(line)
+            headers = ['module', 'target']
+            txt = tabulate(table, headers, tablefmt="rst")
+            print(txt)
+
+        except:
+            print('------- namespace.{} -------'.format(entry))
+            for (k, v) in self.namespace[entry].items():
+                print('{var} \t :: \t {value}'.format(var=k, value=v))
+            print('-------------------------')
+
 
     def dot(self, filename):
         """Exports sympy AST using graphviz then convert it to an image."""
@@ -323,6 +350,26 @@ class Parser(object):
         name = os.path.splitext(name)[0]
         cmd = 'dot -Tps {name}.gv -o {name}.ps'.format(name=name)
         os.system(cmd)
+
+    def insert_import(self, expr):
+        """."""
+        # TODO improve
+
+        if not isinstance(expr, Import):
+            raise TypeError('Expecting Import expression')
+
+        # if source is not specified, imported things are treated as sources
+        source = expr.source
+        if source is None:
+            for t in expr.target:
+                name = str(t)
+                self._namespace['imports'][name] = None
+        else:
+            source = str(source)
+            for t in expr.target:
+                name = str(t)
+                self._namespace['imports'][source] = name
+
 
     def get_variable(self, name):
         """."""
@@ -654,7 +701,9 @@ class Parser(object):
 
             # in an import statement, we can have seperate target by commas
             ls = self._fst_to_ast(stmt.value)
-            return Import(ls)
+            expr = Import(ls)
+            self.insert_import(expr)
+            return expr
 
         elif isinstance(stmt, FromImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
@@ -670,10 +719,14 @@ class Parser(object):
                 targets.append(s)
 
             if len(targets) == 1:
-                return Import(targets, source=source)
+                expr = Import(targets, source=source)
 
             else:
-                return TupleImport(*targets)
+                expr = TupleImport(*targets)
+
+            self.insert_import(expr)
+            return expr
+
 
         elif isinstance(stmt, DelNode):
             arg = self._fst_to_ast(stmt.value)
@@ -2061,6 +2114,7 @@ if __name__ == '__main__':
     pyccel = Parser(filename)
 
     pyccel.parse()
+    pyccel.view_namespace('imports')
 
     settings = {}
 #    pyccel.annotate(**settings)
