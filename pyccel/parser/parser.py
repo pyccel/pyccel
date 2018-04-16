@@ -1668,7 +1668,7 @@ class Parser(object):
                 assigns_ = assigns[:]
                 for i in assigns_:
                     target = isinstance(i.rhs.func, FunctionDef) and not(i.rhs.func.is_procedure)
-                    if  target or isinstance(i.rhs.func, (Function,FunctionClass)):
+                    if  target or isinstance(i.rhs.func, (Function, FunctionClass)):
                         expr_new = expr_new.subs(i.lhs,i.rhs)
                         assigns.remove(i)
 

@@ -1,9 +1,12 @@
 from numpy import cos
 from numpy import exp
+#TODO fix so that it works without the imports
 #$header function f(double)
 #$header function g(double,double)
-@python
+@sympy
 def g(t,i0):
+    #This function must return a sympy expression 
+    #that depends on the arguments of the function
     from sympy import symbols, Eq, dsolve, solve, Derivative, sin
     x = symbols('x')
     t = symbols('t')
