@@ -810,7 +810,7 @@ class Parser(object):
                 l= {}
                 import sys
                 if sys.version_info[0] < 3:
-                    exec(code) in g
+                    exec(code) in g in {}
                 else:
                     exec(code ,g)
 
