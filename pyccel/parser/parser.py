@@ -309,8 +309,10 @@ class Parser(object):
         # TODO check son is not in sons
         self._sons.append(son)
 
-    def parse(self, d_parsers=None, verbose=True):
+    def parse(self, d_parsers=None, verbose=False):
         """converts redbaron fst to sympy ast."""
+        if self.syntax_done:
+            return self.ast
 
         # TODO - add settings to Errors
         #      - filename
@@ -334,6 +336,8 @@ class Parser(object):
 
     def annotate(self, **settings):
         """."""
+        if self.semantic_done:
+            return self.ast
 
         # TODO - add settings to Errors
         #      - filename
@@ -343,6 +347,11 @@ class Parser(object):
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('semantic')
 
+        # we first treat all sons to get imports
+        verbose = settings.pop('verbose', True)
+        self._annotate_parents(verbose=verbose)
+
+        # then we treat the current file
         ast = self.ast
         ast = self._annotate(ast, **settings)
         self._ast = ast
@@ -381,6 +390,39 @@ class Parser(object):
             self.append_son(d_parsers[source])
 
         return d_parsers
+
+    def _annotate_parents(self, **settings):
+
+        verbose = settings.pop('verbose', True)
+
+        # ...
+        def _update_from_son(p):
+            # TODO - only import what is needed
+            #      - use insert_variable etc
+            for entry in ['variables', 'classes', 'functions',
+                          'cls_constructs']:
+                d_self = self._namespace[entry]
+                d_son  = p.namespace[entry]
+                for k,v in list(d_son.items()):
+                    d_self[k] = v
+        # ...
+
+        # we first treat sons that have no imports
+        for p in self.sons:
+            if not p.sons:
+                if verbose:
+                    print('> treating :: {}'.format(p.filename))
+                p.annotate(**settings)
+                _update_from_son(p)
+
+        # finally we treat the remaining sons recursively
+        for p in self.sons:
+            if p.sons:
+                if verbose:
+                    print('> treating :: {}'.format(p.filename))
+                p.annotate(**settings)
+                _update_from_son(p)
+
 
     def print_namespace(self):
         # TODO improve spacing
@@ -2203,43 +2245,6 @@ def is_python_file(filename):
     return os.path.isfile(fname)
 
 
-def semantic_analysis(expr, **settings):
-    """Applies the semantic analysis recursively.
-    This function takes as an input an OrderedDict of parsers.
-    The main parser is the only one that has a valid python filename as a key.
-    This algorithms walks through the dependencies from the bottom. The main
-    parser will be the last one to treat.
-    """
-    # TODO
-    verbose = True
-
-    keys = [k for k in list(expr.keys()) if is_python_file(k)]
-    if not(len(keys) == 1):
-        raise ValueError('Expecting exactly one valid python file name.')
-
-    filename = keys[0]
-    main_parser = expr[filename]
-    print('TADA')
-
-    # we first treat parsers that have no imports
-    leafs = []
-    for k, p in list(expr.items()):
-        if not p.imports:
-            leafs.append(p)
-            if verbose:
-                print('> treating :: {}'.format(p.filename))
-            p.annotate(**settings)
-
-    # treat leafs parents
-    for leaf in leafs:
-        for p in leaf.parents:
-            if not p.semantic_done:
-                if verbose:
-                    print('> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
-
-
-
 ######################################################
 
 if __name__ == '__main__':
@@ -2250,17 +2255,12 @@ if __name__ == '__main__':
     except:
         raise ValueError('Expecting an argument for filename')
 
-#    d_parsers = syntax_analysis(filename)
-#    settings = {}
-#    semantic_analysis(d_parsers, **settings)
-
-
     pyccel = Parser(filename)
     pyccel.parse()
-    print(pyccel.d_parsers)
 
-#    settings = {}
-#    pyccel.annotate(**settings)
+    settings = {}
+    pyccel.annotate(**settings)
+    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()
-#
+
 #    pyccel.dot('ast.gv')
