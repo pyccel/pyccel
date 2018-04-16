@@ -1017,8 +1017,7 @@ class Parser(object):
                 code = stmt.__str__()
                 g = {}
                 if PY2:
-#                    exec(code) in {}, g
-                    exec(code) in g
+                    exec(code) in {}, g
                 elif PY3:
                     exec(code, g)
 
