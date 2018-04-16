@@ -84,9 +84,13 @@ from pyccel.ast import AsName
 from pyccel.parser.errors import Errors, PyccelSyntaxError, \
                                  PyccelSemanticError
 
-# TODO remove import * and only import what we need
+# TODO - remove import * and only import what we need
+#      - use OrderedDict whenever it is possible
 
 from pyccel.parser.messages import *
+
+from collections import OrderedDict
+
 
 ########################
 #  ... TODO should be moved to pyccel.ast
@@ -97,6 +101,7 @@ from pyccel.ast import Range
 from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
+from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp import parse as omp_parse
@@ -192,20 +197,29 @@ class Parser(object):
 
         headers: list, tuple
             list of headers to append to the namespace
-        """
 
+        """
         self._fst = None
         self._ast = None
         self._filename = None
         self._namespace = {}
+        self._namespace['imports'] = OrderedDict()
         self._namespace['variables'] = {}
         self._namespace['classes'] = {}
         self._namespace['functions'] = {}
         self._namespace['cls_constructs'] = {}
         self._scope = {}  # represent the namespace of a function
-        self._parent = None
+        self._current_class = None
         self._current = None  # we use it to detect the current method or function
-        self._imports = {}  # we use it to store the imports
+        # we use it to store the imports
+        self._imports = {}
+        # a Parser can have parents, who are importing it. imports are then its sons.
+        self._parents = []
+        self._sons = []
+        self._d_parsers = OrderedDict()
+        # the following flags give us a status on the parsing stage
+        self._syntax_done = False
+        self._semantic_done = False
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -239,6 +253,10 @@ class Parser(object):
         return self.namespace['headers']
 
     @property
+    def imports(self):
+        return self.namespace['imports']
+
+    @property
     def filename(self):
         return self._filename
 
@@ -256,8 +274,47 @@ class Parser(object):
             self._ast = self.parse()
         return self._ast
 
-    def parse(self):
+    @property
+    def current_class(self):
+        return self._current_class
+
+    @property
+    def syntax_done(self):
+        return self._syntax_done
+
+    @property
+    def semantic_done(self):
+        return self._semantic_done
+
+    @property
+    def parents(self):
+        """Returns the parents parser."""
+        return self._parents
+
+    @property
+    def sons(self):
+        """Returns the sons parser."""
+        return self._sons
+
+    @property
+    def d_parsers(self):
+        """Returns the d_parsers parser."""
+        return self._d_parsers
+
+    def append_parent(self, parent):
+        """."""
+        # TODO check parent is not in parents
+        self._parents.append(parent)
+
+    def append_son(self, son):
+        """."""
+        # TODO check son is not in sons
+        self._sons.append(son)
+
+    def parse(self, d_parsers=None, verbose=False):
         """converts redbaron fst to sympy ast."""
+        if self.syntax_done:
+            return self.ast
 
         # TODO - add settings to Errors
         #      - filename
@@ -271,11 +328,18 @@ class Parser(object):
         self._ast = ast
 
         errors.check()
+        self._syntax_done = True
+
+        if d_parsers is None:
+            d_parsers = OrderedDict()
+        self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
 
         return ast
 
     def annotate(self, **settings):
         """."""
+        if self.semantic_done:
+            return self.ast
 
         # TODO - add settings to Errors
         #      - filename
@@ -285,22 +349,119 @@ class Parser(object):
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('semantic')
 
+        # we first treat all sons to get imports
+        verbose = settings.pop('verbose', True)
+        self._annotate_parents(verbose=verbose)
+
+        # then we treat the current file
         ast = self.ast
         ast = self._annotate(ast, **settings)
         self._ast = ast
 
         errors.check()
+        self._semantic_done = True
 
         return ast
 
+    def _parse_sons(self, d_parsers, verbose=False):
+        """Recursive algorithm for syntax analysis on a given file and its
+        dependencies.
+        This function always terminates with an OrderedDict that contains parsers
+        for all involved files.
+        """
+        treated = set(d_parsers.keys())
+        imports = set(self.imports.keys())
+        imports = imports.difference(treated)
+        if not imports:
+            return d_parsers
+
+        for source in imports:
+            if verbose:
+                print('> treating :: {}'.format(source))
+
+            # TODO improve
+            f_name = '{}.py'.format(source)
+            q = Parser(f_name)
+            q.parse(d_parsers=d_parsers)
+            d_parsers[source] = q
+
+        # link self to its sons
+        imports = list(self.imports.keys())
+        for source in imports:
+            d_parsers[source].append_parent(self)
+            self.append_son(d_parsers[source])
+
+        return d_parsers
+
+    def _annotate_parents(self, **settings):
+
+        verbose = settings.pop('verbose', True)
+
+        # ...
+        def _update_from_son(p):
+            # TODO - only import what is needed
+            #      - use insert_variable etc
+            for entry in ['variables', 'classes', 'functions',
+                          'cls_constructs']:
+                d_self = self._namespace[entry]
+                d_son  = p.namespace[entry]
+                for k,v in list(d_son.items()):
+                    d_self[k] = v
+        # ...
+
+        # we first treat sons that have no imports
+        for p in self.sons:
+            if not p.sons:
+                if verbose:
+                    print('> treating :: {}'.format(p.filename))
+                p.annotate(**settings)
+
+        # finally we treat the remaining sons recursively
+        for p in self.sons:
+            if p.sons:
+                if verbose:
+                    print('> treating :: {}'.format(p.filename))
+                p.annotate(**settings)
+
+
     def print_namespace(self):
-
         # TODO improve spacing
-
-        print('------- Namespace -------')
+        print('------- namespace -------')
         for (k, v) in self.namespace.items():
             print('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
         print('-------------------------')
+
+    def view_namespace(self, entry):
+        # TODO improve
+        try:
+            from tabulate import tabulate
+
+            table = []
+            for (k, v) in self.namespace[entry].items():
+                k_str = '{}'.format(k)
+                if entry == 'imports':
+                    if v is None:
+                        v_str = '*'
+                    else:
+                        v_str = '{}'.format(v)
+                elif entry == 'variables':
+                    v_str = '{}'.format(type(v))
+                else:
+                    raise NotImplementedError('TODO')
+
+                line = [k_str, v_str]
+                table.append(line)
+            headers = ['module', 'target']
+#            txt = tabulate(table, headers, tablefmt="rst")
+            txt = tabulate(table, tablefmt="rst")
+            print(txt)
+
+        except:
+            print('------- namespace.{} -------'.format(entry))
+            for (k, v) in self.namespace[entry].items():
+                print('{var} \t :: \t {value}'.format(var=k, value=v))
+            print('-------------------------')
+
 
     def dot(self, filename):
         """Exports sympy AST using graphviz then convert it to an image."""
@@ -322,12 +483,34 @@ class Parser(object):
         cmd = 'dot -Tps {name}.gv -o {name}.ps'.format(name=name)
         os.system(cmd)
 
+    def insert_import(self, expr):
+        """."""
+        # TODO improve
+
+        if not isinstance(expr, Import):
+            raise TypeError('Expecting Import expression')
+
+        # if source is not specified, imported things are treated as sources
+        # TODO test if builtin import
+        source = expr.source
+        if source is None:
+            for t in expr.target:
+                name = str(t)
+                self._namespace['imports'][name] = None
+        else:
+            source = str(source)
+            if not(source in pyccel_builtin_import_registery):
+                for t in expr.target:
+                    name = str(t)
+                    self._namespace['imports'][source] = name
+
+
     def get_variable(self, name):
         """."""
 
         var = None
-        if self._parent:
-            for i in self._parent.attributes:
+        if self.current_class:
+            for i in self._current_class.attributes:
                 if str(i.name) == name:
                     var = i
                     return var
@@ -519,28 +702,29 @@ class Parser(object):
             ls = [self._fst_to_ast(i) for i in stmt]
             if isinstance(stmt, (list, ListNode)):
                 return List(*ls)
+
             else:
                 return Tuple(*ls)
         # ...
 
-        if isinstance(stmt, (
-            RedBaron,
-            LineProxyList,
-            CommaProxyList,
-            NodeList,
-            TupleNode,
-            ListNode,
-            tuple,
-            list,
-            )):
+        if isinstance(stmt, (RedBaron,
+                             LineProxyList,
+                             CommaProxyList,
+                             NodeList,
+                             TupleNode,
+                             ListNode,
+                             tuple,
+                             list)):
             return _treat_iterable(stmt)
 
         elif isinstance(stmt, DottedAsNameNode):
             names = []
             for a in stmt.value:
                 names.append(str(a.value))
+
             if len(names) == 1:
                 return names[0]
+
             else:
                 return DottedName(*names)
 
@@ -608,19 +792,25 @@ class Parser(object):
             rhs = self._fst_to_ast(stmt.value)
             if stmt.operator in ['+', '-', '*', '/']:
                 return AugAssign(lhs, stmt.operator, rhs)
+
             return Assign(lhs, rhs)
 
         elif isinstance(stmt, NameNode):
             if isinstance(stmt.previous, DotNode):
                 return self._fst_to_ast(stmt.previous)
+
             if isinstance(stmt.next, GetitemNode):
                 return self._fst_to_ast(stmt.next)
+
             if stmt.value == 'None':
                 return Nil()
+
             elif stmt.value == 'True':
                 return true
+
             elif stmt.value == 'False':
                 return false
+
             else:
                 return Symbol(str(stmt.value))
 
@@ -633,7 +823,9 @@ class Parser(object):
 
             # in an import statement, we can have seperate target by commas
             ls = self._fst_to_ast(stmt.value)
-            return Import(ls)
+            expr = Import(ls)
+            self.insert_import(expr)
+            return expr
 
         elif isinstance(stmt, FromImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
@@ -649,9 +841,14 @@ class Parser(object):
                 targets.append(s)
 
             if len(targets) == 1:
-                return Import(targets, source=source)
+                expr = Import(targets, source=source)
+
             else:
-                return TupleImport(*targets)
+                expr = TupleImport(*targets)
+
+            self.insert_import(expr)
+            return expr
+
 
         elif isinstance(stmt, DelNode):
             arg = self._fst_to_ast(stmt.value)
@@ -661,15 +858,19 @@ class Parser(object):
             target = self._fst_to_ast(stmt.target)
             if stmt.value == 'not':
                 return Not(target)
+
             elif stmt.value == '+':
                 return target
+
             elif stmt.value == '-':
                 return -target
+
             elif stmt.value == '~':
                 errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
                               severity='error')
             else:
                 raise PyccelSyntaxError('unknown/unavailable unary operator {node}'.format(node=type(stmt.value)))
+
         elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
 
             first = self._fst_to_ast(stmt.first)
@@ -678,6 +879,7 @@ class Parser(object):
                 if isinstance(first, (String, List)) or isinstance(second,
                         (String, List)):
                     return Concatinate(first, second)
+
                 return Add(first, second)
 
             elif stmt.value == '*':
@@ -803,6 +1005,7 @@ class Parser(object):
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
+
             if 'sympy' in decorators:
                 stmt.decorators.pop()
                 code= stmt.__str__()
@@ -817,19 +1020,18 @@ class Parser(object):
                 body=[Return(g[name.replace("'", '')](*arguments))]
             else:
                 body = self._fst_to_ast(stmt.value)
-            return FunctionDef(
-                name,
-                arguments,
-                results,
-                body,
-                local_vars=local_vars,
-                global_vars=global_vars,
-                cls_name=cls_name,
-                hide=hide,
-                kind=kind,
-                imports=imports,
-                decorators=decorators,
-                )
+
+            return FunctionDef(name,
+                               arguments,
+                               results,
+                               body,
+                               local_vars=local_vars,
+                               global_vars=global_vars,
+                               cls_name=cls_name,
+                               hide=hide,
+                               kind=kind,
+                               imports=imports,
+                               decorators=decorators)
 
         elif isinstance(stmt, ClassNode):
             name = self._fst_to_ast(stmt.name)
@@ -837,8 +1039,10 @@ class Parser(object):
             methods = self._fst_to_ast(methods)
             attributes = methods[0].arguments
             parent = [i.value for i in stmt.inherit_from]
-            return ClassDef(name=name, attributes=attributes,
-                            methods=methods, parent=parent)
+            return ClassDef(name=name,
+                            attributes=attributes,
+                            methods=methods,
+                            parent=parent)
 
         elif isinstance(stmt, AtomtrailersNode):
             return self._fst_to_ast(stmt.value)
@@ -1109,11 +1313,11 @@ class Parser(object):
         elif isinstance(expr, DottedVariable):
 
             if isinstance(expr.args[0], DottedVariable):
-                self._parent = expr.args[0].args[1].cls_base
+                self._current_class = expr.args[0].args[1].cls_base
             else:
-                self._parent = expr.args[0].cls_base
+                self._current_class = expr.args[0].cls_base
             d_var = self._infere_type(expr.args[1])
-            self._parent = None
+            self._current_class = None
             return d_var
         elif isinstance(expr, Expr):
 
@@ -1288,9 +1492,9 @@ class Parser(object):
                         second = FunctionCall(i, (), kind=i.kind)
                         return DottedVariable(first, second)
             if not isinstance(expr.args[1], Function):
-                self._parent = first.cls_base
+                self._current_class = first.cls_base
                 second = self._annotate(expr.args[1])
-                self._parent = None
+                self._current_class = None
             else:
                 for i in first.cls_base.methods:
                     if str(i.name) == str(type(expr.args[1]).__name__):
@@ -2024,13 +2228,28 @@ class Parser(object):
             #        imported
             #      - should not use namespace
 
-            (name, atom) = pyccel_builtin_import(expr)
-            if not name is None:
-                F = self.get_variable(name)
-                if F is None:
-                    self._imports[name] = atom
+            if expr.source:
+                if expr.source in pyccel_builtin_import_registery:
+                    (name, atom) = pyccel_builtin_import(expr)
+                    if not name is None:
+                        F = self.get_variable(name)
+                        if F is None:
+                            # TODO remove: not up to date with Said devs on
+                            # scoping
+                            self._imports[name] = atom
+                        else:
+                            raise NotImplementedError('must report error')
                 else:
-                    raise NotImplementedError('must report error')
+                    # TODO improve
+                    p = self.d_parsers[expr.source]
+                    for entry in ['variables', 'classes', 'functions',
+                                  'cls_constructs']:
+                        d_self = self._namespace[entry]
+                        d_son  = p.namespace[entry]
+                        for k,v in list(d_son.items()):
+                            # TODO test if it is not already in the namespace
+                            if k in expr.target:
+                                d_self[k] = v
 
             return expr
         elif isinstance(expr, Concatinate):
@@ -2045,6 +2264,18 @@ class PyccelParser(Parser):
 
     pass
 
+def is_python_file(filename):
+    """Returns True if filename is an existing python file."""
+    if not isinstance(filename, str):
+        return False
+
+    name = os.path.basename(filename.split('.')[0])
+    ext  = filename.split('.')[-1]
+    if not(ext == 'py'):
+        return False
+    fname = os.path.abspath(filename)
+    return os.path.isfile(fname)
+
 
 ######################################################
 
@@ -2057,11 +2288,11 @@ if __name__ == '__main__':
         raise ValueError('Expecting an argument for filename')
 
     pyccel = Parser(filename)
-
     pyccel.parse()
 
     settings = {}
-#    pyccel.annotate(**settings)
+    pyccel.annotate(**settings)
+    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()
-#
+
 #    pyccel.dot('ast.gv')
