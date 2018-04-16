@@ -846,11 +846,13 @@ class Parser(object):
                 s = self._fst_to_ast(i)
                 targets.append(s)
 
-            if len(targets) == 1:
-                expr = Import(targets, source=source)
-
-            else:
-                expr = TupleImport(*targets)
+            # TODO improve
+            expr = Import(targets, source=source)
+#            if len(targets) == 1:
+#                expr = Import(targets, source=source)
+#
+#            else:
+#                expr = TupleImport(*targets)
 
             self.insert_import(expr)
             return expr
