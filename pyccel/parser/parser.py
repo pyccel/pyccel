@@ -91,6 +91,12 @@ from pyccel.parser.messages import *
 
 from collections import OrderedDict
 
+import sys
+
+# Useful for very coarse version differentiation.
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
 
 ########################
 #  ... TODO should be moved to pyccel.ast
@@ -1008,14 +1014,13 @@ class Parser(object):
 
             if 'sympy' in decorators:
                 stmt.decorators.pop()
-                code= stmt.__str__()
-                g= {}
-                l= {}
-                import sys
-                if sys.version_info[0] < 3:
-                    exec(code) in {}, g
-                else:
-                    exec(code ,g)
+                code = stmt.__str__()
+                g = {}
+                if PY2:
+#                    exec(code) in {}, g
+                    exec(code) in g
+                elif PY3:
+                    exec(code, g)
 
                 body=[Return(g[name.replace("'", '')](*arguments))]
             else:
