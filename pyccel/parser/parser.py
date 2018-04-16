@@ -356,7 +356,7 @@ class Parser(object):
         errors.set_parser_stage('semantic')
 
         # we first treat all sons to get imports
-        verbose = settings.pop('verbose', True)
+        verbose = settings.pop('verbose', False)
         self._annotate_parents(verbose=verbose)
 
         # then we treat the current file
@@ -383,7 +383,7 @@ class Parser(object):
 
         for source in imports:
             if verbose:
-                print('> treating :: {}'.format(source))
+                print('>>> treating :: {}'.format(source))
 
             # TODO improve
             f_name = '{}.py'.format(source)
@@ -401,7 +401,7 @@ class Parser(object):
 
     def _annotate_parents(self, **settings):
 
-        verbose = settings.pop('verbose', True)
+        verbose = settings.pop('verbose', False)
 
         # ...
         def _update_from_son(p):
@@ -419,14 +419,14 @@ class Parser(object):
         for p in self.sons:
             if not p.sons:
                 if verbose:
-                    print('> treating :: {}'.format(p.filename))
+                    print('>>> treating :: {}'.format(p.filename))
                 p.annotate(**settings)
 
         # finally we treat the remaining sons recursively
         for p in self.sons:
             if p.sons:
                 if verbose:
-                    print('> treating :: {}'.format(p.filename))
+                    print('>>> treating :: {}'.format(p.filename))
                 p.annotate(**settings)
 
 

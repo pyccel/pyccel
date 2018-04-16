@@ -1,33 +1,37 @@
 # coding: utf-8
 
+# Note that we need to change the directory for tests involving the import
+# statement
+
 from pyccel.parser import Parser
 import os
-import sys
-
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
 
 def test_semantic():
+    print('*********************************')
+    print('***                           ***')
+    print('***      TESTING SEMANTIC     ***')
+    print('***                           ***')
+    print('*********************************')
+
+    init_dir = os.getcwd()
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, 'scripts')
 
     files = sorted(os.listdir(path_dir))
     files = [f for f in files if (f.endswith(".py"))]
 
-    if PY3:
-        # not working with python3
-        _ignored = ['classes.py']
-        files = [f for f in files if not (f in _ignored)]
-
+    os.chdir(path_dir)
     for f in files:
         print('> testing {0}'.format(str(f)))
-        f_name = os.path.join(path_dir, f)
 
-        pyccel = Parser(f_name)
+        pyccel = Parser(f)
         ast = pyccel.parse()
 
         settings = {}
         ast = pyccel.annotate(**settings)
+
+    os.chdir(init_dir)
+    print('\n')
 
 ######################
 if __name__ == '__main__':
