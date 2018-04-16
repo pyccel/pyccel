@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from redbaron import RedBaron
-from redbaron import StringNode, IntNode, FloatNode, ComplexNode, FloatExponantNode
+from redbaron import StringNode, IntNode, FloatNode, ComplexNode, FloatExponantNode ,StarNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
@@ -102,8 +102,9 @@ from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
-from sympy import Symbol
+from sympy import Symbol, sympify
 from sympy import Tuple
+from sympy import NumberSymbol, Number
 from sympy import Add, Mul, Pow, floor, Mod
 from sympy.core.expr import Expr
 from sympy.logic.boolalg import And, Or
@@ -113,7 +114,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import Integer, Float
 from sympy.core.containers import Dict
-from sympy.core.function import Function
+from sympy.core.function import Function, FunctionClass
 from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
@@ -428,14 +429,21 @@ def fst_to_ast(stmt):
 
         name = fst_to_ast(stmt.name)
         arguments = fst_to_ast(stmt.arguments)
+        decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
         results = []
-        body = fst_to_ast(stmt.value)
+        if 'python' in decorators:
+            stmt.decorators.pop()
+            code= stmt.__str__()
+            g={}
+            exec(code ,g)
+            body=[Return(g[name.replace("'", '')](*arguments))]
+        else:
+            body = fst_to_ast(stmt.value)
         local_vars = []
         global_vars = []
         hide = False
         kind = 'function'
         imports = []
-        decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
         return FunctionDef(
             name,
             arguments,
@@ -573,6 +581,8 @@ def fst_to_ast(stmt):
     elif isinstance(stmt, BreakNode):
 
         return Break()
+    elif isinstance(stmt, StarNode):
+        return '*'
     elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
 
         # this is a blocking error, since we don't want to convert the try body
@@ -1067,7 +1077,10 @@ class Parser(object):
             self._parent = None
             return d_var
         elif isinstance(expr, Expr):
+            
 
+            #ds = [self._infere_type(i, **settings) for i in expr.atoms(Symbol)]
+            #TODO should we keep it or use the other
             ds = [self._infere_type(i, **settings) for i in expr.args]
             dtypes = [d['datatype'] for d in ds]
             allocatables = [d['allocatable'] for d in ds]
@@ -1108,8 +1121,6 @@ class Parser(object):
                 elif isinstance(i, (NativeDouble, NativeFloat)):
                     d_var['datatype'] = i
                     break
-
-            d_var['datatype'] = dtypes[0]
             d_var['allocatable'] = any(allocatables)
             d_var['is_pointer'] = any(pointers)
             d_var['shape'] = shape
@@ -1174,8 +1185,9 @@ class Parser(object):
             else:
                 return Tuple(*ls)
         elif isinstance(expr, (Integer, Float, String)):
-
             return expr
+        elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
+            return sympify(float(expr))
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
 
             return expr
@@ -1350,6 +1362,8 @@ class Parser(object):
 
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
+        elif isinstance(expr, FunctionCall):
+            return expr
         elif isinstance(expr, Expr):
 
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
@@ -1365,8 +1379,7 @@ class Parser(object):
                     rhs = rhs.subs(i,var)
                     assigns += [Assign(var,i)]
                 assigns = [self._annotate(i, **settings) for i in assigns]
-                
-                
+                    
             rhs = self._annotate(rhs, **settings)
 
             # d_var can be a list of dictionaries
@@ -1621,7 +1634,8 @@ class Parser(object):
                 #remove the Assignments that have rhs a function and not a subroutine
                 assigns_ = assigns[:]
                 for i in assigns_:
-                    if not i.rhs.func.is_procedure:
+                    target = isinstance(i.rhs.func, FunctionDef) and not(i.rhs.func.is_procedure)
+                    if  target or isinstance(i.rhs.func, (Function,FunctionClass)):
                         expr_new = expr_new.subs(i.lhs,i.rhs)
                         assigns.remove(i)
                         
@@ -1678,9 +1692,14 @@ class Parser(object):
                 if isinstance(var, Expr) and not isinstance(var, Symbol):
                     new_var =self.create_variable(var)
                     stmt = self._annotate(Assign(new_var,var))
-                    new_var =stmt.lhs
+                    if isinstance(stmt, Assigns):
+                        stmt = stmt.stmts
+                        new_var = stmt[-1].lhs
+                    else:
+                        new_var =stmt.lhs
+                        stmt = [stmt]
                     #in the case of expression, we return an assign also
-                    return Return([new_var], [stmt])
+                    return Return([new_var],stmt)
                 return Return([var])
             elif isinstance(results, (list, tuple, Tuple)):
                 ls = []
@@ -1708,7 +1727,6 @@ class Parser(object):
             kind = 'function'
             decorators = expr.decorators
             funcs = []
-
             is_static = False
             if cls_name:
                 header = self.get_header(cls_name + """.""" + name)
@@ -1757,51 +1775,32 @@ class Parser(object):
                     for (a, ah) in zip(arguments, m.arguments):
                         d_var = self._infere_type(ah, **settings)
                         dtype = d_var.pop('datatype')
-
                         # this is needed for the static case
-
                         additional_args = []
-
                         if isinstance(a, ValuedArgument):
-
                             # optional argument only if the value is None
-
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
                             a_new = ValuedVariable(dtype, str(a.name),
                                     value=a.value, **d_var)
                         else:
-
                             # add shape as arguments if is_static and arg is array
-
                             rank = d_var['rank']
                             if is_static and rank > 0:
                                 for i in range(0, rank):
-                                    n_name = \
-    'n{i}_{name}'.format(name=str(a.name), i=i)
+                                    n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
                                     n_arg = Variable('int', n_name)
-
                                     # TODO clean namespace later
-
                                     var = self.get_variable(n_name)
                                     if not var is None:
-
                                         # TODO report appropriate message
-
-                                        errors.report('variable already defined'
-        , symbol=n_name, severity='error', blocker=True)
-
+                                        errors.report('variable already defined', symbol=n_name, severity='error', blocker=True)
                                     self.insert_variable(n_arg)
-
                                     additional_args += [n_arg]
-
                                 # update shape
                                 # TODO can this be improved? add some check
-
                                 d_var['shape'] = Tuple(*additional_args)
-
-                            a_new = Variable(dtype, str(a.name),
-                                    **d_var)
+                            a_new = Variable(dtype, str(a.name),**d_var)
 
                         if additional_args:
                             args += additional_args
@@ -1815,7 +1814,8 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-
+                
+                
                 body = self._annotate(expr.body, **settings)
 
                 # find return stmt and results
