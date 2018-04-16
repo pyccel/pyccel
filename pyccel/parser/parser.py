@@ -844,6 +844,10 @@ class Parser(object):
             targets = []
             for i in stmt.targets:
                 s = self._fst_to_ast(i)
+                if s == '*':
+                    errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
+                                  severity='critical')
+
                 targets.append(s)
 
             # TODO improve

@@ -21,3 +21,4 @@ class Point(object):
     def __init__(self, x):
         self.x = x
 
+from foo import *
