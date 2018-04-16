@@ -168,438 +168,6 @@ def datatype_from_redbaron(node):
     else:
         raise NotImplementedError('TODO')
 
-
-def fst_to_ast(stmt):
-    """Creates AST from FST."""
-
-    # TODO - add settings to Errors
-    #      - line and column
-    #      - blocking errors
-
-    errors = Errors()
-
-    # ...
-
-    def _treat_iterable(stmt):
-        ls = [fst_to_ast(i) for i in stmt]
-        if isinstance(stmt, (list, ListNode)):
-            return List(*ls)
-        else:
-            return Tuple(*ls)
-
-    # ...
-
-    if isinstance(stmt, (
-        RedBaron,
-        LineProxyList,
-        CommaProxyList,
-        NodeList,
-        TupleNode,
-        ListNode,
-        tuple,
-        list,
-        )):
-        return _treat_iterable(stmt)
-    elif isinstance(stmt, DottedAsNameNode):
-
-        names = []
-        for a in stmt.value:
-            names.append(str(a.value))
-        if len(names) == 1:
-            return names[0]
-        else:
-            return DottedName(*names)
-    elif isinstance(stmt, NameAsNameNode):
-
-        if not isinstance(stmt.value, str):
-            raise TypeError('Expecting a string')
-
-        value = str(stmt.value)
-        if not stmt.target:
-            return value
-
-        old = value
-        new = fst_to_ast(stmt.target)
-
-        # TODO improve
-
-        if isinstance(old, str):
-            old = old.replace("'", '')
-        if isinstance(new, str):
-            new = new.replace("'", '')
-        return AsName(new, old)
-    elif isinstance(stmt, DictNode):
-
-        d = {}
-        for i in stmt.value:
-            if not isinstance(i, DictitemNode):
-                raise PyccelSyntaxError('Expecting a DictitemNode')
-
-            key = fst_to_ast(i.key)
-            value = fst_to_ast(i.value)
-
-            # sympy does not allow keys to be strings
-
-            if isinstance(key, str):
-                errors.report(SYMPY_RESTRICTION_DICT_KEYS,
-                              severity='error')
-
-            d[key] = value
-        return Dict(d)
-    elif stmt is None:
-
-        return Nil()
-    elif isinstance(stmt, str):
-
-        return repr(stmt)
-    elif isinstance(stmt, StringNode):
-
-        return String(stmt.value)
-    elif isinstance(stmt, IntNode):
-
-        return Integer(stmt.value)
-    elif isinstance(stmt, FloatNode):
-
-        return Float(stmt.value)
-    elif isinstance(stmt, FloatExponantNode):
-
-        return Float(stmt.value)
-    elif isinstance(stmt, ComplexNode):
-
-        raise NotImplementedError('ComplexNode not yet available')
-    elif isinstance(stmt, AssignmentNode):
-
-        lhs = fst_to_ast(stmt.target)
-        rhs = fst_to_ast(stmt.value)
-        if stmt.operator in ['+', '-', '*', '/']:
-            return AugAssign(lhs, stmt.operator, rhs)
-        return Assign(lhs, rhs)
-    elif isinstance(stmt, NameNode):
-
-        if isinstance(stmt.previous, DotNode):
-            return fst_to_ast(stmt.previous)
-        if isinstance(stmt.next, GetitemNode):
-            return fst_to_ast(stmt.next)
-        if stmt.value == 'None':
-            return Nil()
-        elif stmt.value == 'True':
-            return true
-        elif stmt.value == 'False':
-            return false
-        else:
-            return Symbol(str(stmt.value))
-    elif isinstance(stmt, ImportNode):
-
-        # in an import statement, we can have seperate target by commas
-
-        ls = fst_to_ast(stmt.value)
-        return Import(ls)
-    elif isinstance(stmt, FromImportNode):
-
-        source = fst_to_ast(stmt.value)
-        if isinstance(source, DottedVariable):
-            source = DottedName(*source.names)
-
-        targets = []
-        for i in stmt.targets:
-            s = fst_to_ast(i)
-            targets.append(s)
-
-        if len(targets) == 1:
-            return Import(targets, source=source)
-        else:
-            return TupleImport(*targets)
-    elif isinstance(stmt, DelNode):
-
-        arg = fst_to_ast(stmt.value)
-        return Del(arg)
-    elif isinstance(stmt, UnitaryOperatorNode):
-
-        target = fst_to_ast(stmt.target)
-        if stmt.value == 'not':
-            return Not(target)
-        elif stmt.value == '+':
-            return target
-        elif stmt.value == '-':
-            return -target
-        elif stmt.value == '~':
-            errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
-                          severity='error')
-        else:
-            raise PyccelSyntaxError('unknown/unavailable unary operator {node}'.format(node=type(stmt.value)))
-    elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
-
-        first = fst_to_ast(stmt.first)
-        second = fst_to_ast(stmt.second)
-        if stmt.value == '+':
-            if isinstance(first, (String, List)) or isinstance(second,
-                    (String, List)):
-                return Concatinate(first, second)
-            return Add(first, second)
-        elif stmt.value == '*':
-            return Mul(first, second)
-        elif stmt.value == '-':
-            second = Mul(-1, second)
-            return Add(first, second)
-        elif stmt.value == '/':
-            second = Pow(second, -1)
-            return Mul(first, second)
-        elif stmt.value == 'and':
-            return And(first, second)
-        elif stmt.value == 'or':
-            return Or(first, second)
-        elif stmt.value == '**':
-            return Pow(first, second)
-        elif stmt.value == '//':
-            second = Pow(second, -1)
-            return floor(Mul(first, second))
-        elif stmt.value == '%':
-            return Mod(first, second)
-        else:
-            raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(stmt.value)))
-    elif isinstance(stmt, ComparisonOperatorNode):
-
-        if stmt.first == '==':
-            return '=='
-        elif stmt.first == '!=':
-            return '!='
-        elif stmt.first == '<':
-            return '<'
-        elif stmt.first == '>':
-            return '>'
-        elif stmt.first == '<=':
-            return '<='
-        elif stmt.first == '>=':
-            return '>='
-        elif stmt.first == 'is':
-            return 'is'
-        else:
-            raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
-    elif isinstance(stmt, ComparisonNode):
-
-        first = fst_to_ast(stmt.first)
-        second = fst_to_ast(stmt.second)
-        op = fst_to_ast(stmt.value)
-        if op == '==':
-            return Eq(first, second)
-        elif op == '!=':
-            return Ne(first, second)
-        elif op == '<':
-            return Lt(first, second)
-        elif op == '>':
-            return Gt(first, second)
-        elif op == '<=':
-            return Le(first, second)
-        elif op == '>=':
-            return Ge(first, second)
-        elif op == 'is':
-            return Is(first, second)
-        else:
-            raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(op)))
-    elif isinstance(stmt, PrintNode):
-
-        expr = fst_to_ast(stmt.value)
-        return Print(expr)
-    elif isinstance(stmt, AssociativeParenthesisNode):
-
-        return fst_to_ast(stmt.value)
-    elif isinstance(stmt, DefArgumentNode):
-
-        name = fst_to_ast(stmt.target)
-        arg = Argument(str(name))
-        if stmt.value is None:
-            return arg
-        else:
-            value = fst_to_ast(stmt.value)
-            return ValuedArgument(arg, value)
-    elif isinstance(stmt, ReturnNode):
-
-        return Return(fst_to_ast(stmt.value))
-    elif isinstance(stmt, PassNode):
-
-        return Pass()
-    elif isinstance(stmt, DefNode):
-
-        #  TODO check all inputs and which ones should be treated in stage 1 or 2
-
-        if isinstance(stmt.parent, ClassNode):
-            cls_name = stmt.parent.name
-        else:
-            cls_name = None
-
-        name = fst_to_ast(stmt.name)
-        arguments = fst_to_ast(stmt.arguments)
-        decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
-        results = []
-        if 'python' in decorators:
-            stmt.decorators.pop()
-            code= stmt.__str__()
-            g={}
-            exec(code ,g)
-            body=[Return(g[name.replace("'", '')](*arguments))]
-        else:
-            body = fst_to_ast(stmt.value)
-        local_vars = []
-        global_vars = []
-        hide = False
-        kind = 'function'
-        imports = []
-        return FunctionDef(
-            name,
-            arguments,
-            results,
-            body,
-            local_vars=local_vars,
-            global_vars=global_vars,
-            cls_name=cls_name,
-            hide=hide,
-            kind=kind,
-            imports=imports,
-            decorators=decorators,
-            )
-    elif isinstance(stmt, ClassNode):
-
-        name = fst_to_ast(stmt.name)
-        methods = [i for i in stmt.value if isinstance(i, DefNode)]
-        methods = fst_to_ast(methods)
-        attributes = methods[0].arguments
-        parent = [i.value for i in stmt.inherit_from]
-        return ClassDef(name=name, attributes=attributes,
-                        methods=methods, parent=parent)
-    elif isinstance(stmt, AtomtrailersNode):
-
-        return fst_to_ast(stmt.value)
-    elif isinstance(stmt, GetitemNode):
-
-        parent = stmt.parent
-        args = fst_to_ast(stmt.value)
-        if isinstance(stmt.previous.previous, DotNode):
-            return fst_to_ast(stmt.previous.previous)
-
-         # elif isinstance(stmt.previous,GetitemNode):
-         #    return fst_to_ast(stmt.previous.previous)
-
-        name = Symbol(str(stmt.previous.value))
-        stmt.parent.remove(stmt.previous)
-        stmt.parent.remove(stmt)
-        if not hasattr(args, '__iter__'):
-            args = [args]
-        args = tuple(args)
-        return IndexedBase(name)[args]
-    elif isinstance(stmt, SliceNode):
-
-        upper = fst_to_ast(stmt.upper)
-        lower = fst_to_ast(stmt.lower)
-        if upper and lower:
-            return Slice(lower, upper)
-        elif lower:
-            return Slice(lower, None)
-        elif upper:
-            return Slice(None, upper)
-    elif isinstance(stmt, DotProxyList):
-
-        return fst_to_ast(stmt[-1])
-    elif isinstance(stmt, DotNode):
-
-        suf = stmt.next
-        pre = fst_to_ast(stmt.previous)
-        if stmt.previous:
-            stmt.parent.value.remove(stmt.previous)
-        suf = fst_to_ast(suf)
-        return DottedVariable(pre, suf)
-    elif isinstance(stmt, CallNode):
-
-        args = fst_to_ast(stmt.value)
-        f_name = str(stmt.previous)
-        if len(args) == 0:
-            args = ((), )
-        func = Function(f_name)(*args)
-        parent = stmt.parent
-        if stmt.previous.previous \
-            and isinstance(stmt.previous.previous, DotNode):
-            parent.value.remove(stmt.previous)
-            parent.value.remove(stmt)
-            pre = fst_to_ast(stmt.parent)
-            return DottedVariable(pre, func)
-        else:
-            return func
-    elif isinstance(stmt, CallArgumentNode):
-
-        return fst_to_ast(stmt.value)
-    elif isinstance(stmt, ForNode):
-
-        target = fst_to_ast(stmt.iterator)
-        iter = fst_to_ast(stmt.target)
-        body = fst_to_ast(stmt.value)
-        return For(target, iter, body, strict=False)
-    elif isinstance(stmt, IfelseblockNode):
-
-        args = fst_to_ast(stmt.value)
-        return If(*args)
-    elif isinstance(stmt, (IfNode, ElifNode)):
-
-        test = fst_to_ast(stmt.test)
-        body = fst_to_ast(stmt.value)
-        return Tuple(test, body)
-    elif isinstance(stmt, ElseNode):
-
-        test = True
-        body = fst_to_ast(stmt.value)
-        return Tuple(test, body)
-    elif isinstance(stmt, WhileNode):
-
-        test = fst_to_ast(stmt.test)
-        body = fst_to_ast(stmt.value)
-        return While(test, body)
-    elif isinstance(stmt, AssertNode):
-
-        expr = fst_to_ast(stmt.value)
-        return Assert(expr)
-    elif isinstance(stmt, EndlNode):
-
-        return EmptyLine()
-    elif isinstance(stmt, CommentNode):
-
-        # if annotated comment
-
-        if stmt.value.startswith('#$'):
-            env = stmt.value[2:].lstrip()
-            if env.startswith('omp'):
-                return omp_parse(stmts=stmt.value)
-            elif env.startswith('acc'):
-                return acc_parse(stmts=stmt.value)
-            elif env.startswith('header'):
-                return hdr_parse(stmts=stmt.value)
-            else:
-                errors.report(PYCCEL_INVALID_HEADER, severity='error')
-        else:
-
-            # TODO improve
-
-            txt = stmt.value[1:].lstrip()
-            return Comment(txt)
-    elif isinstance(stmt, BreakNode):
-
-        return Break()
-    elif isinstance(stmt, StarNode):
-        return '*'
-    elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
-
-        # this is a blocking error, since we don't want to convert the try body
-
-        errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
-                      severity='critical', blocker=True)
-    elif isinstance(stmt, RaiseNode):
-
-        errors.report(PYCCEL_RESTRICTION_RAISE, severity='error')
-    elif isinstance(stmt, (YieldNode, YieldAtomNode)):
-
-        errors.report(PYCCEL_RESTRICTION_YIELD, severity='error')
-    else:
-
-        raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
-
-
 def _read_file(filename):
     """Returns the source code from a filename."""
 
@@ -699,7 +267,7 @@ class Parser(object):
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
-        ast = fst_to_ast(self.fst)
+        ast = self._fst_to_ast(self.fst)
         self._ast = ast
 
         errors.check()
@@ -740,7 +308,7 @@ class Parser(object):
         expr = self.ast
         graph_str = dotprint(expr)
 
-        f = file(filename, 'w')
+        f = open(filename, 'w')
         f.write(graph_str)
         f.close()
 
@@ -806,7 +374,7 @@ class Parser(object):
         """."""
         import numpy as np
         name = 'result_'+str(abs(hash(expr) + np.random.randint(500)))[-4:]
-       
+
         return Symbol(name)
 
     def get_class(self, name):
@@ -937,6 +505,462 @@ class Parser(object):
             self.set_class_construct(str(expr.name), dtype)
         else:
             raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
+
+    def _fst_to_ast(self, stmt):
+        """Creates AST from FST."""
+
+        # TODO - add settings to Errors
+        #      - line and column
+        #      - blocking errors
+        errors = Errors()
+
+        # ...
+        def _treat_iterable(stmt):
+            ls = [self._fst_to_ast(i) for i in stmt]
+            if isinstance(stmt, (list, ListNode)):
+                return List(*ls)
+            else:
+                return Tuple(*ls)
+        # ...
+
+        if isinstance(stmt, (
+            RedBaron,
+            LineProxyList,
+            CommaProxyList,
+            NodeList,
+            TupleNode,
+            ListNode,
+            tuple,
+            list,
+            )):
+            return _treat_iterable(stmt)
+
+        elif isinstance(stmt, DottedAsNameNode):
+            names = []
+            for a in stmt.value:
+                names.append(str(a.value))
+            if len(names) == 1:
+                return names[0]
+            else:
+                return DottedName(*names)
+
+        elif isinstance(stmt, NameAsNameNode):
+            if not isinstance(stmt.value, str):
+                raise TypeError('Expecting a string')
+
+            value = str(stmt.value)
+            if not stmt.target:
+                return value
+
+            old = value
+            new = self._fst_to_ast(stmt.target)
+
+            # TODO improve
+
+            if isinstance(old, str):
+                old = old.replace("'", '')
+            if isinstance(new, str):
+                new = new.replace("'", '')
+            return AsName(new, old)
+
+        elif isinstance(stmt, DictNode):
+
+            d = {}
+            for i in stmt.value:
+                if not isinstance(i, DictitemNode):
+                    raise PyccelSyntaxError('Expecting a DictitemNode')
+
+                key = self._fst_to_ast(i.key)
+                value = self._fst_to_ast(i.value)
+
+                # sympy does not allow keys to be strings
+
+                if isinstance(key, str):
+                    errors.report(SYMPY_RESTRICTION_DICT_KEYS,
+                                  severity='error')
+
+                d[key] = value
+            return Dict(d)
+
+        elif stmt is None:
+            return Nil()
+
+        elif isinstance(stmt, str):
+            return repr(stmt)
+
+        elif isinstance(stmt, StringNode):
+            return String(stmt.value)
+
+        elif isinstance(stmt, IntNode):
+            return Integer(stmt.value)
+
+        elif isinstance(stmt, FloatNode):
+            return Float(stmt.value)
+
+        elif isinstance(stmt, FloatExponantNode):
+            return Float(stmt.value)
+
+        elif isinstance(stmt, ComplexNode):
+            raise NotImplementedError('ComplexNode not yet available')
+
+        elif isinstance(stmt, AssignmentNode):
+            lhs = self._fst_to_ast(stmt.target)
+            rhs = self._fst_to_ast(stmt.value)
+            if stmt.operator in ['+', '-', '*', '/']:
+                return AugAssign(lhs, stmt.operator, rhs)
+            return Assign(lhs, rhs)
+
+        elif isinstance(stmt, NameNode):
+            if isinstance(stmt.previous, DotNode):
+                return self._fst_to_ast(stmt.previous)
+            if isinstance(stmt.next, GetitemNode):
+                return self._fst_to_ast(stmt.next)
+            if stmt.value == 'None':
+                return Nil()
+            elif stmt.value == 'True':
+                return true
+            elif stmt.value == 'False':
+                return false
+            else:
+                return Symbol(str(stmt.value))
+
+        elif isinstance(stmt, ImportNode):
+            if not(isinstance(stmt.parent, (RedBaron, DefNode))):
+                errors.report(PYCCEL_RESTRICTION_IMPORT, severity='error')
+
+            if isinstance(stmt.parent, DefNode):
+                errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF, severity='error')
+
+            # in an import statement, we can have seperate target by commas
+            ls = self._fst_to_ast(stmt.value)
+            return Import(ls)
+
+        elif isinstance(stmt, FromImportNode):
+            if not(isinstance(stmt.parent, (RedBaron, DefNode))):
+                errors.report(PYCCEL_RESTRICTION_IMPORT, severity='error')
+
+            source = self._fst_to_ast(stmt.value)
+            if isinstance(source, DottedVariable):
+                source = DottedName(*source.names)
+
+            targets = []
+            for i in stmt.targets:
+                s = self._fst_to_ast(i)
+                targets.append(s)
+
+            if len(targets) == 1:
+                return Import(targets, source=source)
+            else:
+                return TupleImport(*targets)
+
+        elif isinstance(stmt, DelNode):
+            arg = self._fst_to_ast(stmt.value)
+            return Del(arg)
+
+        elif isinstance(stmt, UnitaryOperatorNode):
+            target = self._fst_to_ast(stmt.target)
+            if stmt.value == 'not':
+                return Not(target)
+            elif stmt.value == '+':
+                return target
+            elif stmt.value == '-':
+                return -target
+            elif stmt.value == '~':
+                errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
+                              severity='error')
+            else:
+                raise PyccelSyntaxError('unknown/unavailable unary operator {node}'.format(node=type(stmt.value)))
+        elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
+
+            first = self._fst_to_ast(stmt.first)
+            second = self._fst_to_ast(stmt.second)
+            if stmt.value == '+':
+                if isinstance(first, (String, List)) or isinstance(second,
+                        (String, List)):
+                    return Concatinate(first, second)
+                return Add(first, second)
+
+            elif stmt.value == '*':
+                return Mul(first, second)
+
+            elif stmt.value == '-':
+                second = Mul(-1, second)
+                return Add(first, second)
+
+            elif stmt.value == '/':
+                second = Pow(second, -1)
+                return Mul(first, second)
+
+            elif stmt.value == 'and':
+                return And(first, second)
+
+            elif stmt.value == 'or':
+                return Or(first, second)
+
+            elif stmt.value == '**':
+                return Pow(first, second)
+
+            elif stmt.value == '//':
+                second = Pow(second, -1)
+                return floor(Mul(first, second))
+
+            elif stmt.value == '%':
+                return Mod(first, second)
+
+            else:
+                raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(stmt.value)))
+
+        elif isinstance(stmt, ComparisonOperatorNode):
+            if stmt.first == '==':
+                return '=='
+
+            elif stmt.first == '!=':
+                return '!='
+
+            elif stmt.first == '<':
+                return '<'
+
+            elif stmt.first == '>':
+                return '>'
+
+            elif stmt.first == '<=':
+                return '<='
+
+            elif stmt.first == '>=':
+                return '>='
+
+            elif stmt.first == 'is':
+                return 'is'
+
+            else:
+                raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
+
+        elif isinstance(stmt, ComparisonNode):
+
+            first = self._fst_to_ast(stmt.first)
+            second = self._fst_to_ast(stmt.second)
+            op = self._fst_to_ast(stmt.value)
+            if op == '==':
+                return Eq(first, second)
+
+            elif op == '!=':
+                return Ne(first, second)
+
+            elif op == '<':
+                return Lt(first, second)
+
+            elif op == '>':
+                return Gt(first, second)
+
+            elif op == '<=':
+                return Le(first, second)
+
+            elif op == '>=':
+                return Ge(first, second)
+
+            elif op == 'is':
+                return Is(first, second)
+
+            else:
+                raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(op)))
+
+        elif isinstance(stmt, PrintNode):
+            expr = self._fst_to_ast(stmt.value)
+            return Print(expr)
+
+        elif isinstance(stmt, AssociativeParenthesisNode):
+            return self._fst_to_ast(stmt.value)
+
+        elif isinstance(stmt, DefArgumentNode):
+            name = self._fst_to_ast(stmt.target)
+            arg = Argument(str(name))
+            if stmt.value is None:
+                return arg
+
+            else:
+                value = self._fst_to_ast(stmt.value)
+                return ValuedArgument(arg, value)
+
+        elif isinstance(stmt, ReturnNode):
+            return Return(self._fst_to_ast(stmt.value))
+
+        elif isinstance(stmt, PassNode):
+            return Pass()
+
+        elif isinstance(stmt, DefNode):
+            #  TODO check all inputs and which ones should be treated in stage 1 or 2
+            if isinstance(stmt.parent, ClassNode):
+                cls_name = stmt.parent.name
+            else:
+                cls_name = None
+
+            name = self._fst_to_ast(stmt.name)
+            arguments = self._fst_to_ast(stmt.arguments)
+            results = []
+            body = self._fst_to_ast(stmt.value)
+            local_vars = []
+            global_vars = []
+            hide = False
+            kind = 'function'
+            imports = []
+            decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
+            return FunctionDef(
+                name,
+                arguments,
+                results,
+                body,
+                local_vars=local_vars,
+                global_vars=global_vars,
+                cls_name=cls_name,
+                hide=hide,
+                kind=kind,
+                imports=imports,
+                decorators=decorators,
+                )
+
+        elif isinstance(stmt, ClassNode):
+            name = self._fst_to_ast(stmt.name)
+            methods = [i for i in stmt.value if isinstance(i, DefNode)]
+            methods = self._fst_to_ast(methods)
+            attributes = methods[0].arguments
+            parent = [i.value for i in stmt.inherit_from]
+            return ClassDef(name=name, attributes=attributes,
+                            methods=methods, parent=parent)
+
+        elif isinstance(stmt, AtomtrailersNode):
+            return self._fst_to_ast(stmt.value)
+
+        elif isinstance(stmt, GetitemNode):
+            parent = stmt.parent
+            args = self._fst_to_ast(stmt.value)
+            if isinstance(stmt.previous.previous, DotNode):
+                return self._fst_to_ast(stmt.previous.previous)
+
+             # elif isinstance(stmt.previous,GetitemNode):
+             #    return self._fst_to_ast(stmt.previous.previous)
+
+            name = Symbol(str(stmt.previous.value))
+            stmt.parent.remove(stmt.previous)
+            stmt.parent.remove(stmt)
+            if not hasattr(args, '__iter__'):
+                args = [args]
+            args = tuple(args)
+            return IndexedBase(name)[args]
+
+        elif isinstance(stmt, SliceNode):
+            upper = self._fst_to_ast(stmt.upper)
+            lower = self._fst_to_ast(stmt.lower)
+            if upper and lower:
+                return Slice(lower, upper)
+
+            elif lower:
+                return Slice(lower, None)
+
+            elif upper:
+                return Slice(None, upper)
+
+        elif isinstance(stmt, DotProxyList):
+            return self._fst_to_ast(stmt[-1])
+
+        elif isinstance(stmt, DotNode):
+
+            suf = stmt.next
+            pre = self._fst_to_ast(stmt.previous)
+            if stmt.previous:
+                stmt.parent.value.remove(stmt.previous)
+            suf = self._fst_to_ast(suf)
+            return DottedVariable(pre, suf)
+
+        elif isinstance(stmt, CallNode):
+            args = self._fst_to_ast(stmt.value)
+            f_name = str(stmt.previous)
+            if len(args) == 0:
+                args = ((), )
+            func = Function(f_name)(*args)
+            parent = stmt.parent
+            if stmt.previous.previous \
+                and isinstance(stmt.previous.previous, DotNode):
+                parent.value.remove(stmt.previous)
+                parent.value.remove(stmt)
+                pre = self._fst_to_ast(stmt.parent)
+                return DottedVariable(pre, func)
+
+            else:
+                return func
+
+        elif isinstance(stmt, CallArgumentNode):
+            return self._fst_to_ast(stmt.value)
+
+        elif isinstance(stmt, ForNode):
+            target = self._fst_to_ast(stmt.iterator)
+            iter = self._fst_to_ast(stmt.target)
+            body = self._fst_to_ast(stmt.value)
+            return For(target, iter, body, strict=False)
+
+        elif isinstance(stmt, IfelseblockNode):
+            args = self._fst_to_ast(stmt.value)
+            return If(*args)
+
+        elif isinstance(stmt, (IfNode, ElifNode)):
+            test = self._fst_to_ast(stmt.test)
+            body = self._fst_to_ast(stmt.value)
+            return Tuple(test, body)
+
+        elif isinstance(stmt, ElseNode):
+            test = True
+            body = self._fst_to_ast(stmt.value)
+            return Tuple(test, body)
+
+        elif isinstance(stmt, WhileNode):
+            test = self._fst_to_ast(stmt.test)
+            body = self._fst_to_ast(stmt.value)
+            return While(test, body)
+
+        elif isinstance(stmt, AssertNode):
+            expr = self._fst_to_ast(stmt.value)
+            return Assert(expr)
+
+        elif isinstance(stmt, EndlNode):
+            return EmptyLine()
+
+        elif isinstance(stmt, CommentNode):
+            # if annotated comment
+            if stmt.value.startswith('#$'):
+                env = stmt.value[2:].lstrip()
+                if env.startswith('omp'):
+                    return omp_parse(stmts=stmt.value)
+
+                elif env.startswith('acc'):
+                    return acc_parse(stmts=stmt.value)
+
+                elif env.startswith('header'):
+                    return hdr_parse(stmts=stmt.value)
+
+                else:
+                    errors.report(PYCCEL_INVALID_HEADER, severity='error')
+
+            else:
+                # TODO improve
+                txt = stmt.value[1:].lstrip()
+                return Comment(txt)
+
+        elif isinstance(stmt, BreakNode):
+            return Break()
+
+        elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
+            # this is a blocking error, since we don't want to convert the try body
+            errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
+                          severity='critical', blocker=True)
+
+        elif isinstance(stmt, RaiseNode):
+            errors.report(PYCCEL_RESTRICTION_RAISE, severity='error')
+
+        elif isinstance(stmt, (YieldNode, YieldAtomNode)):
+            errors.report(PYCCEL_RESTRICTION_YIELD, severity='error')
+
+        else:
+            raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
+
 
     def _infere_type(self, expr, **settings):
         """
@@ -1077,7 +1101,7 @@ class Parser(object):
             self._parent = None
             return d_var
         elif isinstance(expr, Expr):
-            
+
 
             #ds = [self._infere_type(i, **settings) for i in expr.atoms(Symbol)]
             #TODO should we keep it or use the other
@@ -1379,7 +1403,7 @@ class Parser(object):
                     rhs = rhs.subs(i,var)
                     assigns += [Assign(var,i)]
                 assigns = [self._annotate(i, **settings) for i in assigns]
-                    
+
             rhs = self._annotate(rhs, **settings)
 
             # d_var can be a list of dictionaries
@@ -1638,7 +1662,7 @@ class Parser(object):
                     if  target or isinstance(i.rhs.func, (Function,FunctionClass)):
                         expr_new = expr_new.subs(i.lhs,i.rhs)
                         assigns.remove(i)
-                        
+
             if assigns and len(assigns)>0:
                 assigns += [expr_new]
                 return Assigns(assigns)
@@ -1814,8 +1838,8 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-                
-                
+
+
                 body = self._annotate(expr.body, **settings)
 
                 # find return stmt and results
@@ -2022,8 +2046,7 @@ if __name__ == '__main__':
     pyccel.parse()
 
     settings = {}
-    pyccel.annotate(**settings)
-    pyccel.print_namespace()
-
-    pyccel.dot('ast.gv')
-
+#    pyccel.annotate(**settings)
+#    pyccel.print_namespace()
+#
+#    pyccel.dot('ast.gv')

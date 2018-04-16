@@ -63,6 +63,8 @@ PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
 PYCCEL_RESTRICTION_IS_RHS = 'Only None is allowed as rhs for is statement'
+PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
+PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header.'
