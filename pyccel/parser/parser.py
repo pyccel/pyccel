@@ -797,13 +797,20 @@ class Parser(object):
             name = self._fst_to_ast(stmt.name)
             arguments = self._fst_to_ast(stmt.arguments)
             results = []
-            body = self._fst_to_ast(stmt.value)
             local_vars = []
             global_vars = []
             hide = False
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
+            if 'python' in decorators:
+                stmt.decorators.pop()
+                code= stmt.__str__()
+                g={}
+                exec(code ,g)
+                body=[Return(g[name.replace("'", '')](*arguments))]
+            else:
+                body = self._fst_to_ast(stmt.value)
             return FunctionDef(
                 name,
                 arguments,
@@ -946,6 +953,8 @@ class Parser(object):
 
         elif isinstance(stmt, BreakNode):
             return Break()
+        elif isinstance(stmt, StarNode):
+            return '*'
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
