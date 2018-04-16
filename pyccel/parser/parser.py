@@ -803,11 +803,17 @@ class Parser(object):
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
-            if 'python' in decorators:
+            if 'sympy' in decorators:
                 stmt.decorators.pop()
                 code= stmt.__str__()
-                g={}
-                exec(code ,g)
+                g= {}
+                l= {}
+                import sys
+                if sys.version_info[0] < 3:
+                    exec(code) in g
+                else:
+                    exec(code ,g)
+
                 body=[Return(g[name.replace("'", '')](*arguments))]
             else:
                 body = self._fst_to_ast(stmt.value)
