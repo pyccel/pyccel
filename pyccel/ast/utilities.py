@@ -57,6 +57,8 @@ def builtin_function(expr, args=None):
 
     return None
 
+# TODO add documentation
+builtin_import_registery = ('numpy', 'scipy', 'itertools')
 
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""

@@ -101,6 +101,7 @@ from pyccel.ast import Range
 from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
+from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp import parse as omp_parse
@@ -413,7 +414,6 @@ class Parser(object):
                 if verbose:
                     print('> treating :: {}'.format(p.filename))
                 p.annotate(**settings)
-                _update_from_son(p)
 
         # finally we treat the remaining sons recursively
         for p in self.sons:
@@ -421,7 +421,6 @@ class Parser(object):
                 if verbose:
                     print('> treating :: {}'.format(p.filename))
                 p.annotate(**settings)
-                _update_from_son(p)
 
 
     def print_namespace(self):
@@ -491,6 +490,7 @@ class Parser(object):
             raise TypeError('Expecting Import expression')
 
         # if source is not specified, imported things are treated as sources
+        # TODO test if builtin import
         source = expr.source
         if source is None:
             for t in expr.target:
@@ -498,9 +498,10 @@ class Parser(object):
                 self._namespace['imports'][name] = None
         else:
             source = str(source)
-            for t in expr.target:
-                name = str(t)
-                self._namespace['imports'][source] = name
+            if not(source in pyccel_builtin_import_registery):
+                for t in expr.target:
+                    name = str(t)
+                    self._namespace['imports'][source] = name
 
 
     def get_variable(self, name):
@@ -2211,13 +2212,28 @@ class Parser(object):
             #        imported
             #      - should not use namespace
 
-            (name, atom) = pyccel_builtin_import(expr)
-            if not name is None:
-                F = self.get_variable(name)
-                if F is None:
-                    self._imports[name] = atom
+            if expr.source:
+                if expr.source in pyccel_builtin_import_registery:
+                    (name, atom) = pyccel_builtin_import(expr)
+                    if not name is None:
+                        F = self.get_variable(name)
+                        if F is None:
+                            # TODO remove: not up to date with Said devs on
+                            # scoping
+                            self._imports[name] = atom
+                        else:
+                            raise NotImplementedError('must report error')
                 else:
-                    raise NotImplementedError('must report error')
+                    # TODO improve
+                    p = self.d_parsers[expr.source]
+                    for entry in ['variables', 'classes', 'functions',
+                                  'cls_constructs']:
+                        d_self = self._namespace[entry]
+                        d_son  = p.namespace[entry]
+                        for k,v in list(d_son.items()):
+                            # TODO test if it is not already in the namespace
+                            if k in expr.target:
+                                d_self[k] = v
 
             return expr
         elif isinstance(expr, Concatinate):
