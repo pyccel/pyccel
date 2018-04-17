@@ -75,6 +75,7 @@ from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader
+from pyccel.ast import MetaVariable
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
@@ -268,6 +269,7 @@ class Parser(object):
         self._fst = None
         self._ast = None
         self._filename = None
+        self._metavars = []
         self._namespace = {}
         self._namespace['imports'] = OrderedDict()
         self._namespace['variables'] = {}
@@ -339,6 +341,10 @@ class Parser(object):
         if self._ast is None:
             self._ast = self.parse()
         return self._ast
+
+    @property
+    def metavars(self):
+        return self._metavars
 
     @property
     def current_class(self):
@@ -1240,7 +1246,12 @@ class Parser(object):
                     return acc_parse(stmts=stmt.value)
 
                 elif env.startswith('header'):
-                    return hdr_parse(stmts=stmt.value)
+                    expr = hdr_parse(stmts=stmt.value)
+                    if isinstance(expr, MetaVariable):
+                        self._metavars.append(expr)
+                        return EmptyLine()
+                    else:
+                        return expr
 
                 else:
                     errors.report(PYCCEL_INVALID_HEADER, severity='error')
