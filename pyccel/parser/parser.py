@@ -74,6 +74,7 @@ from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast import VariableHeader
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
@@ -1975,9 +1976,7 @@ class Parser(object):
                 return Assigns(assigns)
             return expr_new
         elif isinstance(expr, For):
-
             # treatment of the index/indices
-
             if isinstance(expr.target, Symbol):
                 name = str(expr.target.name)
                 var = self.get_variable(name)
@@ -1993,16 +1992,36 @@ class Parser(object):
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
             return For(target, itr, body)
-        elif isinstance(expr, While):
 
+        elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
 
             return While(test, body)
-        elif isinstance(expr, If):
 
+        elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return If(*args)
+
+        elif isinstance(expr, VariableHeader):
+            # TODO improve
+            #      move it to the ast like create_definition for FunctionHeader?
+            name = expr.name
+            dtype = expr.dtypes[0]
+            attr = expr.dtypes[1]
+
+            rank = 0
+            for i in attr:
+                if isinstance(i, Slice):
+                    rank += 1
+
+            d_var = {}
+            d_var['rank'] = rank
+
+            var = Variable(dtype, name, **d_var)
+            self.insert_variable(var)
+            return expr
+
         elif isinstance(expr, FunctionHeader):
 
             # TODO should we return it and keep it in the AST?
