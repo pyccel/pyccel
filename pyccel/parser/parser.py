@@ -90,7 +90,7 @@ from pyccel.parser.errors import Errors, PyccelSyntaxError, \
 from pyccel.parser.messages import *
 
 from collections import OrderedDict
-
+import importlib
 import sys
 
 # Useful for very coarse version differentiation.
@@ -178,6 +178,32 @@ def get_filename_from_import(module):
 
     if is_valid_filename_pyh(filename_pyh): return os.path.abspath(filename_pyh)
     if is_valid_filename_py(filename_py): return os.path.abspath(filename_py)
+
+    source = module
+    if len(module.split('.')) > 1:
+        # we remove the last entry, since it can be a pyh file
+        source = '.'.join(i for i in module.split('.')[:-1])
+        _module = module.split('.')[-1]
+        filename_pyh = '{}.pyh'.format(_module)
+        filename_py  = '{}.py'.format(_module)
+
+    try:
+        package = importlib.import_module(source)
+        package_dir = str(package.__path__[0])
+    except:
+        errors = Errors()
+        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
+                      symbol=source,
+                      blocker=True,
+                      severity='critical')
+
+    filename_pyh = os.path.join(package_dir, filename_pyh)
+    filename_py  = os.path.join(package_dir, filename_py)
+
+    if os.path.isfile(filename_pyh):
+        return filename_pyh
+    elif os.path.isfile(filename_py):
+        return filename_py
 
     errors = Errors()
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
@@ -2305,8 +2331,10 @@ class Parser(object):
                         else:
                             raise NotImplementedError('must report error')
                 else:
-                    # TODO improve
-                    p = self.d_parsers[expr.source]
+                    # we need to use str here since source has been defined
+                    # using repr.
+                    # TODO shall we improve it?
+                    p = self.d_parsers[str(expr.source)]
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
