@@ -2287,6 +2287,9 @@ class Parser(object):
             #        imported
             #      - should not use namespace
 
+            # in some cases (blas, lapack, openmp and openacc level-0)
+            # the import should not appear in the final file
+            ignore_at_import = False
             if expr.source:
                 if expr.source in pyccel_builtin_import_registery:
                     (name, atom) = pyccel_builtin_import(expr)
@@ -2310,7 +2313,17 @@ class Parser(object):
                             if k in expr.target:
                                 d_self[k] = v
 
-            return expr
+                    # meta variables
+                    # TODO improve
+                    d_variables = p.namespace['variables']
+                    if '__ignore_at_import__' in list(d_variables.keys()):
+                        ignore_at_import = d_variables['__ignore_at_import__']
+
+            if not ignore_at_import:
+                return expr
+            else:
+                return EmptyLine()
+
         elif isinstance(expr, Concatinate):
             left = self._annotate(expr.left)
             right = self._annotate(expr.right)
