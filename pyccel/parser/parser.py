@@ -268,7 +268,7 @@ class Parser(object):
             if not isinstance(headers, dict):
                 raise TypeError('Expecting a dict of headers')
 
-            for (key, value) in headers.items():
+            for (key, value) in list(headers.items()):
                 self._namespace['headers'][key] = value
 
         # check if inputs is a file
@@ -340,6 +340,11 @@ class Parser(object):
         """Returns the d_parsers parser."""
         return self._d_parsers
 
+    @property
+    def is_header_file(self):
+        """Returns True if we are treating a header file."""
+        return self.filename.split('.')[-1] == 'pyh'
+
     def append_parent(self, parent):
         """."""
         # TODO check parent is not in parents
@@ -396,6 +401,22 @@ class Parser(object):
         ast = self.ast
         ast = self._annotate(ast, **settings)
         self._ast = ast
+
+        # in the case of a header file, we need to convert all headers to
+        # FunctionDef etc ...
+        if self.is_header_file:
+            for name,v in list(self.headers.items()):
+                if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
+                    F = self.get_function(name)
+                    if F is None:
+                        interfaces = v.create_definition()
+                        for F in interfaces:
+                            self.insert_function(F)
+                    else:
+                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
+                                      symbol=name,
+                                      blocker=True,
+                                      severity='critical')
 
         errors.check()
         self._semantic_done = True
@@ -619,6 +640,7 @@ class Parser(object):
 
     def get_function(self, name):
         """."""
+        # TODO shall we keep the elif in _imports?
 
         func = None
         if name in self._namespace['functions']:

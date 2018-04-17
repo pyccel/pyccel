@@ -71,6 +71,9 @@ PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 
+IMPORTING_EXISTING_IDENTIFIED = \
+        'Trying to import an identifier that already exists in the namespace. Hint: use import as'
+
 UNDEFINED_FUNCTION = 'Undefined function'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
