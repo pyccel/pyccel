@@ -607,10 +607,11 @@ class Parser(object):
 
     def remove(self, name):
         """."""
-
-        if self_current:
+        #TODO improve to checkt each level of scoping
+        if self._current:
             self._scope[self._current]['variables'].pop(name, None)
-        self._namespace['variables'].pop(name, None)
+        else:
+            self._namespace['variables'].pop(name, None)
 
     def update_variable(self, var, **options):
         """."""
@@ -1625,7 +1626,7 @@ class Parser(object):
             exprs = rhs.atoms(Function)
             assigns = None
             if len(exprs)>0 and not isinstance(rhs, Function):
-                #case of a function call in the rhs
+                #case of a function call inside the rhs expression
                 assigns = []
                 for i in exprs:
                     var = self.create_variable(i)
@@ -1891,6 +1892,8 @@ class Parser(object):
                     if  target or isinstance(i.rhs.func, (Function, FunctionClass)):
                         expr_new = expr_new.subs(i.lhs,i.rhs)
                         assigns.remove(i)
+                        self.remove(i.lhs.name)
+
 
             if assigns and len(assigns)>0:
                 assigns += [expr_new]
@@ -1964,7 +1967,7 @@ class Parser(object):
                         stmt = self._annotate(Assign(new_var,var))
                         new_var = stmt.lhs
                         ls += [new_var]
-                        assigns +=[Assign(new_var, var)]
+                        assigns +=[stmt]
                     else:
                         ls += [var]
                 return Return(ls, assigns)
