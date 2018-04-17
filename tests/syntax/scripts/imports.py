@@ -1,7 +1,10 @@
-import foo
-import a, b
-import foo.bar.baz
+import functions
+import asserts, breaks
+from expressions import ai, bi
 
 from numpy import linspace
 from numpy import linspace as line
-from scipy.sparse import csr_matrix
+
+# TODO not available yet
+#import foo.bar.baz
+#from scipy.sparse import csr_matrix
