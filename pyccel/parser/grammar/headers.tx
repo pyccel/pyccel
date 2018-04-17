@@ -8,6 +8,7 @@ Statement:
     VariableHeaderStmt
   | FunctionHeaderStmt 
   | ClassHeaderStmt
+  | MetavarHeaderStmt
 ;
 
 TrailerSubscriptList: '[' args*=':' [','] ']';
@@ -40,3 +41,5 @@ ClassOptions:
   | 'openmp'
   | 'openacc'
 ;
+
+MetavarHeaderStmt: 'metavar'  name=ID '=' value=STRING;
