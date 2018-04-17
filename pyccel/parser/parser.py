@@ -1854,6 +1854,7 @@ class Parser(object):
                     'atan',
                     'acot',
                     'atan2',
+                    'Mod',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                 else:

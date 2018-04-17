@@ -21,10 +21,6 @@ def test_mpi_core():
     files = sorted(os.listdir(path_dir))
     files = [f for f in files if (f.endswith(".py"))]
 
-    # TODO fix these examples
-    ignore = ['split.py']
-    files = [f for f in files if not(f in ignore)]
-
     os.chdir(path_dir)
     for f in files:
         print('> testing {0}'.format(str(f)))

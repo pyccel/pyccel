@@ -1,7 +1,5 @@
 # coding: utf-8
 
-# TODO not working yet => mod function not available
-
 from pyccel.stdlib.external.mpi import mpi_init
 from pyccel.stdlib.external.mpi import mpi_finalize
 from pyccel.stdlib.external.mpi import mpi_comm_size
@@ -44,7 +42,7 @@ if rank_in_world == 2:
     key = -1
 
 two   = 2
-color = mod(rank_in_world, two)
+color = rank_in_world % two
 
 newcomm = -1
 mpi_comm_split (comm, color, key, newcomm, ierr)
