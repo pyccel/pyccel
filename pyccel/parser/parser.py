@@ -131,27 +131,62 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
 
 import os
-
 #  ...
 
 #  ... utilities
-
 from sympy import srepr, sympify
 from sympy.printing.dot import dotprint
-
-import os
-
 
 def view_tree(expr):
     """Views a sympy expression tree."""
 
     print (srepr(expr))
+#  ...
 
+#  ... checking the validity of the filenames, using absolute paths
+def _is_valid_filename(filename, ext):
+    """Returns True if filename has the extension ext and exists."""
+    if not isinstance(filename, str):
+        return False
 
+    if not(ext == filename.split('.')[-1]):
+        return False
+    fname = os.path.abspath(filename)
+    return os.path.isfile(fname)
+
+def is_valid_filename_py(filename):
+    """Returns True if filename is an existing python file."""
+    return _is_valid_filename(filename, 'py')
+
+def is_valid_filename_pyh(filename):
+    """Returns True if filename is an existing pyccel header file."""
+    return _is_valid_filename(filename, 'pyh')
+#  ...
+
+#  ... useful functions for imports
+# TODO installed modules. must ask python (working version) where the module is
+#      installed
+def get_filename_from_import(module):
+    """Returns a valid filename with absolute path, that corresponds to the
+    definition of module.
+    The priority order is:
+        - header files (extension == pyh)
+        - python files (extension == py)
+    """
+    filename_pyh = '{}.pyh'.format(module)
+    filename_py  = '{}.py'.format(module)
+
+    if is_valid_filename_pyh(filename_pyh): return os.path.abspath(filename_pyh)
+    if is_valid_filename_py(filename_py): return os.path.abspath(filename_py)
+
+    errors = Errors()
+    errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
+                  symbol=module,
+                  blocker=True,
+                  severity='critical')
 #  ...
 
 #  ...
-
 def _get_variable_name(var):
     """."""
 
@@ -161,8 +196,6 @@ def _get_variable_name(var):
         return str(var.base)
 
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
-
-
 #  ...
 
 # TODO use Double instead of Float? or add precision
@@ -385,9 +418,10 @@ class Parser(object):
             if verbose:
                 print('>>> treating :: {}'.format(source))
 
-            # TODO improve
-            f_name = '{}.py'.format(source)
-            q = Parser(f_name)
+            # get the absolute path corresponding to source
+            filename = get_filename_from_import(source)
+
+            q = Parser(filename)
             q.parse(d_parsers=d_parsers)
             d_parsers[source] = q
 
@@ -850,14 +884,7 @@ class Parser(object):
 
                 targets.append(s)
 
-            # TODO improve
             expr = Import(targets, source=source)
-#            if len(targets) == 1:
-#                expr = Import(targets, source=source)
-#
-#            else:
-#                expr = TupleImport(*targets)
-
             self.insert_import(expr)
             return expr
 
@@ -2273,18 +2300,6 @@ class Parser(object):
 class PyccelParser(Parser):
 
     pass
-
-def is_python_file(filename):
-    """Returns True if filename is an existing python file."""
-    if not isinstance(filename, str):
-        return False
-
-    name = os.path.basename(filename.split('.')[0])
-    ext  = filename.split('.')[-1]
-    if not(ext == 'py'):
-        return False
-    fname = os.path.abspath(filename)
-    return os.path.isfile(fname)
 
 
 ######################################################

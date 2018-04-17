@@ -68,7 +68,8 @@ PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def sta
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 
 # other Pyccel messages
-PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header.'
+PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
+PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 
 UNDEFINED_FUNCTION = 'Undefined function'
 UNDEFINED_VARIABLE = 'Undefined variable'
