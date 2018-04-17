@@ -269,7 +269,7 @@ class Parser(object):
         self._fst = None
         self._ast = None
         self._filename = None
-        self._metavars = []
+        self._metavars = {}
         self._namespace = {}
         self._namespace['imports'] = OrderedDict()
         self._namespace['variables'] = {}
@@ -1248,7 +1248,9 @@ class Parser(object):
                 elif env.startswith('header'):
                     expr = hdr_parse(stmts=stmt.value)
                     if isinstance(expr, MetaVariable):
-                        self._metavars.append(expr)
+                        # a metavar will not appear in the semantic stage.
+                        # but can be used to modify the ast
+                        self._metavars[str(expr.name)] = str(expr.value)
                         return EmptyLine()
                     else:
                         return expr
@@ -2346,9 +2348,6 @@ class Parser(object):
             #        imported
             #      - should not use namespace
 
-            # in some cases (blas, lapack, openmp and openacc level-0)
-            # the import should not appear in the final file
-            ignore_at_import = False
             if expr.source:
                 if expr.source in pyccel_builtin_import_registery:
                     (name, atom) = pyccel_builtin_import(expr)
@@ -2361,6 +2360,12 @@ class Parser(object):
                         else:
                             raise NotImplementedError('must report error')
                 else:
+                    # in some cases (blas, lapack, openmp and openacc level-0)
+                    # the import should not appear in the final file
+                    # all metavars here, will have a prefix and suffix = __
+                    __ignore_at_import__ = False
+                    __module_name__ = None
+
                     # we need to use str here since source has been defined
                     # using repr.
                     # TODO shall we improve it?
@@ -2374,16 +2379,21 @@ class Parser(object):
                             if k in expr.target:
                                 d_self[k] = v
 
-                    # meta variables
-                    # TODO improve
-                    d_variables = p.namespace['variables']
-                    if '__ignore_at_import__' in list(d_variables.keys()):
-                        ignore_at_import = d_variables['__ignore_at_import__']
+                    # ... meta variables
+                    if 'ignore_at_import' in list(p.metavars.keys()):
+                        __ignore_at_import__ = p.metavars['ignore_at_import']
 
-            if not ignore_at_import:
-                return expr
-            else:
-                return EmptyLine()
+                    if 'module_name' in list(p.metavars.keys()):
+                        __module_name__ = p.metavars['module_name']
+                        expr = Import(expr.target, __module_name__)
+                    # ...
+
+                    if not __ignore_at_import__:
+                        return expr
+                    else:
+                        return EmptyLine()
+
+            return expr
 
         elif isinstance(expr, Concatinate):
             left = self._annotate(expr.left)

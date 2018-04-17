@@ -1,8 +1,8 @@
 # pyccel header for BLAS.
 
-__ignore_at_import__ = True
-__version__          = '3.8'
-__libraries__        = '${BLAS_LIBRARIES}'
+#$ header metavar module_version='3.8'
+#$ header metavar ignore_at_import=True
+#$ header metavar libraries='${BLAS_LIBRARIES}'
 
 # .......................................
 #             LEVEL-1

@@ -211,7 +211,7 @@ class MetavarHeaderStmt(BasicStmt):
     def expr(self):
         # TODO further checking
         name = str(self.name)
-        value = str(self.value)
+        value = self.value
         return MetaVariable(name, value)
 
 #################################################

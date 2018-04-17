@@ -1,8 +1,8 @@
 # pyccel header for LAPACK.
 
-__ignore_at_import__ = True
-__version__          = '3.8'
-__libraries__        = '${LAPACK_LIBRARIES}'
+#$ header metavar module_version='3.8'
+#$ header metavar ignore_at_import=True
+#$ header metavar libraries='${LAPACK_LIBRARIES}'
 
 #$ header function dgbtrf(int, int, int, int, double [:,:], int, int [:], int)
 

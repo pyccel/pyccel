@@ -42,4 +42,5 @@ ClassOptions:
   | 'openacc'
 ;
 
-MetavarHeaderStmt: 'metavar'  name=ID '=' value=STRING;
+MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
+MetavarValues: BOOL|STRING;

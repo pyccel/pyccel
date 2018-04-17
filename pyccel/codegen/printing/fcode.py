@@ -319,6 +319,8 @@ class FCodePrinter(CodePrinter):
 #            code = '{code}{line}'.format(code=code, line=line)
             code = '{code}\n{line}'.format(code=code, line=line)
 
+        # in some cases, the source is given as a string (when using metavar)
+        code = code.replace("'", '')
         return self._get_statement(code)
 
     def _print_TupleImport(self, expr):

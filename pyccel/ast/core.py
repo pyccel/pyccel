@@ -3454,7 +3454,7 @@ class IndexedElement(Indexed):
 
 
 class MetaVariable(Basic):
-    """Represents the MetaVariable"""
+    """Represents the MetaVariable."""
 
     def __new__(cls, name, value):
         if not isinstance(name, str):

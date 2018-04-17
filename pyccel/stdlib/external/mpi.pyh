@@ -2,7 +2,8 @@
 #
 # Conventions: - data are treated as str
 
-__version__ = '3.1'
+#$ header metavar module_name='mpi'
+#$ header metavar module_version='3.1'
 
 # ............................................................
 #            MPI Constants
