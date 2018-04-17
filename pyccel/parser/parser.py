@@ -343,7 +343,10 @@ class Parser(object):
     @property
     def is_header_file(self):
         """Returns True if we are treating a header file."""
-        return self.filename.split('.')[-1] == 'pyh'
+        if self.filename:
+            return self.filename.split('.')[-1] == 'pyh'
+        else:
+            return False
 
     def append_parent(self, parent):
         """."""
