@@ -7,4 +7,6 @@ python tests/parser/test_openacc.py
 python tests/syntax/test_syntax.py
 python tests/semantic/test_semantic.py
 python tests/codegen/test_codegen.py  
+python tests/blas/test_blas.py  
+
 cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
