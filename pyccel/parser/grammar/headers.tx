@@ -13,8 +13,10 @@ Statement:
 
 TrailerSubscriptList: '[' args*=':' [','] ']';
 
-Type: dtype=ID (trailer=TrailerSubscriptList)?;
-ListType : '[' dtype+=ID[','] ']';
+DataType: ID|STAR;
+
+Type: dtype=DataType (trailer=TrailerSubscriptList)?;
+ListType : '[' dtype+=DataType[','] ']';
 TypeHeader: Type|ListType ;
 UnionTypeStmt:  dtype+=TypeHeader['|'] ;
 
@@ -44,3 +46,5 @@ ClassOptions:
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
+
+STAR: '*';
