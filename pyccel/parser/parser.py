@@ -2028,16 +2028,8 @@ class Parser(object):
             # TODO improve
             #      move it to the ast like create_definition for FunctionHeader?
             name = expr.name
-            dtype = expr.dtypes[0]
-            attr = expr.dtypes[1]
-
-            rank = 0
-            for i in attr:
-                if isinstance(i, Slice):
-                    rank += 1
-
-            d_var = {}
-            d_var['rank'] = rank
+            d_var = expr.dtypes
+            dtype = d_var.pop('datatype')
 
             var = Variable(dtype, name, **d_var)
             self.insert_variable(var)

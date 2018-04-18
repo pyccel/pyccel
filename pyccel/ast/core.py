@@ -3776,9 +3776,8 @@ class VariableHeader(Header):
     name: str
         variable name
 
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
+    dtypes: dict
+        a dictionary for typing
 
     Examples
 
@@ -3786,18 +3785,8 @@ class VariableHeader(Header):
 
     # TODO dtypes should be a dictionary (useful in syntax)
     def __new__(cls, name, dtypes):
-        if not(iterable(dtypes)):
-            raise TypeError("Expecting dtypes to be iterable.")
-
-#        if isinstance(dtypes, str):
-#            types.append((datatype(dtypes), []))
-#        elif isinstance(dtypes, DataType):
-#            types.append((dtypes, []))
-#        elif isinstance(dtypes, (tuple, list)):
-#            if not(len(dtypes) in [2, 3]):
-#                raise ValueError("Expecting exactly 2 or 3 entries.")
-#        else:
-#            raise TypeError("Wrong element in dtypes.")
+        if not(isinstance(dtypes, dict)):
+            raise TypeError("Expecting dtypes to be a dict.")
 
         return Basic.__new__(cls, name, dtypes)
 
@@ -3808,10 +3797,6 @@ class VariableHeader(Header):
     @property
     def dtypes(self):
         return self._args[1]
-
-    def create_definition(self):
-        """Returns a Variable."""
-        raise NotImplementedError('TODO')
 
 # TODO rename dtypes to arguments
 class UnionType(Basic):

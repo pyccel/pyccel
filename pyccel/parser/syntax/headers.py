@@ -136,9 +136,8 @@ class VariableHeaderStmt(BasicStmt):
     @property
     def expr(self):
         dtype = self.dec.expr
-        star = None
 
-        return VariableHeader(self.name, (dtype, star))
+        return VariableHeader(self.name, dtype)
 
 class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""
