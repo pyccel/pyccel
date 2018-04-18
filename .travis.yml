@@ -50,6 +50,7 @@ script:
   - $PYTEST tests/syntax/test_syntax.py
   - $PYTEST tests/semantic/test_semantic.py
   - $PYTEST tests/codegen/test_codegen.py
+  - $PYTEST tests/symbolic/test_symbolic.py
   - $PYTEST tests/blas/test_blas.py
   - $PYTEST tests/lapack/test_lapack.py
   - $PYTEST tests/mpi/test_mpi.py
