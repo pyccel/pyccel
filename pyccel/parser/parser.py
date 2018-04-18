@@ -42,6 +42,7 @@ from redbaron import GetitemNode, SliceNode
 from redbaron import ImportNode, FromImportNode
 from redbaron import DottedAsNameNode
 from redbaron import NameAsNameNode
+from redbaron import LambdaNode
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, \
                        NativeComplex
@@ -52,6 +53,7 @@ from pyccel.ast import NativeFloatList
 from pyccel.ast import NativeDoubleList
 from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
+from pyccel.ast import NativeSymbol
 from pyccel.ast import String
 from pyccel.ast import datatype, DataTypeFactory
 from pyccel.ast import Nil
@@ -131,6 +133,8 @@ from sympy.core.function import Function, FunctionClass
 from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
+from sympy import Lambda
+
 
 import os
 #  ...
@@ -1265,8 +1269,14 @@ class Parser(object):
 
         elif isinstance(stmt, BreakNode):
             return Break()
+
         elif isinstance(stmt, StarNode):
             return '*'
+
+        elif isinstance(stmt, LambdaNode):
+            expr = self._fst_to_ast(stmt.value)
+            args = self._fst_to_ast(stmt.arguments)
+            return Lambda(args, expr)
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
@@ -1319,20 +1329,20 @@ class Parser(object):
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
-        elif isinstance(expr, Float):
 
+        elif isinstance(expr, Float):
             d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
-        elif isinstance(expr, String):
 
+        elif isinstance(expr, String):
             d_var['datatype'] = 'str'
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
-        elif isinstance(expr, Variable):
 
+        elif isinstance(expr, Variable):
             name = expr.name
             var = self.get_variable(name)
             if var is None:
@@ -1348,15 +1358,15 @@ class Parser(object):
             d_var['is_optional'] = var.is_optional
             d_var['is_target'] = var.is_target
             return d_var
-        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
 
+        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             d_var['datatype'] = NativeBool()
             d_var['allocatable'] = False
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
-        elif isinstance(expr, IndexedElement):
 
+        elif isinstance(expr, IndexedElement):
             d_var['datatype'] = expr.dtype
             name = str(expr.base)
             var = self.get_variable(name)
@@ -1385,8 +1395,8 @@ class Parser(object):
 #            d_var['allocatable'] = var.allocatable
 
             return d_var
-        elif isinstance(expr, IndexedVariable):
 
+        elif isinstance(expr, IndexedVariable):
             name = str(expr)
             var = self.get_variable(name)
             if var is None:
@@ -1397,23 +1407,23 @@ class Parser(object):
             d_var['shape'] = var.shape
             d_var['rank'] = var.rank
             return d_var
-        elif isinstance(expr, Range):
 
+        elif isinstance(expr, Range):
             d_var['datatype'] = NativeRange()
             d_var['allocatable'] = False
             d_var['shape'] = None
             d_var['rank'] = 0
             d_var['cls_base'] = expr  # TODO: shall we keep it?
             return d_var
-        elif isinstance(expr, Is):
 
+        elif isinstance(expr, Is):
             d_var['datatype'] = NativeBool()
             d_var['allocatable'] = False
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
-        elif isinstance(expr, DottedVariable):
 
+        elif isinstance(expr, DottedVariable):
             if isinstance(expr.args[0], DottedVariable):
                 self._current_class = expr.args[0].args[1].cls_base
             else:
@@ -1421,9 +1431,15 @@ class Parser(object):
             d_var = self._infere_type(expr.args[1])
             self._current_class = None
             return d_var
+
+        elif isinstance(expr, Lambda):
+            d_var['datatype'] = NativeSymbol()
+            d_var['allocatable'] = False
+            d_var['is_pointer'] = False
+            d_var['rank'] = 0
+            return d_var
+
         elif isinstance(expr, Expr):
-
-
             #ds = [self._infere_type(i, **settings) for i in expr.atoms(Symbol)]
             #TODO should we keep it or use the other
             ds = [self._infere_type(i, **settings) for i in expr.args]
@@ -1435,7 +1451,6 @@ class Parser(object):
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
-
             r_min = min(ranks)
             r_max = max(ranks)
             if not r_min == r_max:
@@ -1443,21 +1458,18 @@ class Parser(object):
                     raise ValueError('cannot process arrays of different ranks.'
                             )
             rank = r_max
-
-            # ...
             # ...
 
+            # ...
             shape = None
             for s in shapes:
                 if s:
                     shape = s
-
             # ...
 
             d_var['datatype'] = 'int'
 
             # TODO imporve to hadle all possible types (complex ,ndarray , ...)
-
             for i in dtypes:
                 if isinstance(i, str):
                     if i == 'float' or i == 'double':
@@ -1471,6 +1483,7 @@ class Parser(object):
             d_var['shape'] = shape
             d_var['rank'] = rank
             return d_var
+
         elif isinstance(expr, (tuple, list, List, Tuple)):
 
             import numpy
@@ -1707,11 +1720,16 @@ class Parser(object):
 
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               severity='error', blocker=True)
+
         elif isinstance(expr, FunctionCall):
             return expr
-        elif isinstance(expr, Expr):
 
+        elif isinstance(expr, Lambda):
+            return expr
+
+        elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
         elif isinstance(expr, (Assign, AugAssign)):
             rhs = expr.rhs
             exprs = rhs.atoms(Function)
