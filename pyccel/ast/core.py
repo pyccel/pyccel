@@ -3857,15 +3857,9 @@ class FunctionHeader(Header):
                 results=None,
                 kind='function',
                 is_static=False):
-
         func = str(func)
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
-
-        types = []
-        for d in dtypes:
-            if not isinstance(d, list):
-                raise TypeError("Expecting  UnionType")
 
         if results:
             if not(iterable(results)):
@@ -3922,32 +3916,20 @@ class FunctionHeader(Header):
         is_static = self.is_static
         imports   = []
         funcs = []
-        for args_ in product(*self.dtypes):
+        dtypes = []
+        for i in self.dtypes:
+            dtypes += [i.args]
+        for args_ in product(*dtypes):
             args = []
-            for i, d in enumerate(args_):
-                dtype    = d[0]
-                allocatable = d[2]
-                # '' is converted to None
-                if isinstance(allocatable, str):
-                    allocatable = None
-
-                rank = 0
-                for a in d[1]:
-                    if isinstance(a, Slice) or a == ':':
-                        rank += 1
-                if rank>0 and isinstance(dtype, str):#case of ndarray
+            for d in args_:
+                dtype    = d['datatype']
+                allocatable = d['allocatable']
+                is_pointer = d['is_pointer']
+                rank = d['rank']
+                if rank>0 and allocatable:#case of ndarray
                     if dtype in ['int', 'double', 'float', 'complex']:
                         allocatable = True
                         dtype = 'ndarray'+dtype
-                is_pointer = False
-                if isinstance(dtype, (list, tuple)):#case of pointer list
-                    if not all(dtype[0] == rest for rest in dtype[1:]):
-                        raise TypeError('All Elements of the list must be of the same datatype')
-                    else:
-                        rank = len(dtype)
-                        dtype = dtype[0]
-                        is_pointer = True
-
 
                 shape  = None
                 if isinstance(dtype, str):
@@ -4030,11 +4012,11 @@ class MethodHeader(FunctionHeader):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, list):
+            if not isinstance(d, UnionType):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
-            if not isinstance(d, list):
+            if not isinstance(d, UnionType):
                 raise TypeError("Wrong element in dtypes.")
 
 
