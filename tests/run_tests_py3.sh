@@ -10,5 +10,6 @@ python3 tests/codegen/test_codegen.py
 python3 tests/blas/test_blas.py  
 python3 tests/lapack/test_lapack.py  
 python3 tests/mpi/test_mpi.py  
+python3 tests/openmp/test_openmp.py  
 
 cd tests/epyccel/ ; python3 test_epyccel.py ; cd ../.. 

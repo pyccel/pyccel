@@ -18,8 +18,8 @@
 #      - data movement routines (do we really need them?)
 
 
+#$ header metavar module_name='omp_lib'
 #$ header metavar module_version='2.5'
-#$ header metavar ignore_at_import=True
 
 # ............................................................
 #            Runtime Library Routines for Fortran

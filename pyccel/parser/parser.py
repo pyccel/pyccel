@@ -82,6 +82,7 @@ from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
+from pyccel.ast import AnnotatedComment
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, \
                                  PyccelSemanticError
@@ -2398,6 +2399,10 @@ class Parser(object):
             left = self._annotate(expr.left)
             right = self._annotate(expr.right)
             return Concatinate(left, right)
+
+        elif isinstance(expr, AnnotatedComment):
+            return expr
+
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
