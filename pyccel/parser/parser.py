@@ -84,6 +84,7 @@ from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
+from pyccel.ast import AnnotatedComment
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, \
                                  PyccelSemanticError
@@ -1803,11 +1804,11 @@ class Parser(object):
                     else:
                         raise SystemExit('function not found in the interface')
 
+                # ARA: needed for functions defined only with a header
                 results = func.results
-                d_var = [self._infere_type(i, **settings) for i in
-                         results]
+                if results:
+                    d_var = [self._infere_type(i, **settings) for i in results]
 
-#                print('> d_var = {}'.format(d_var))
                 rhs = FunctionCall(func.rename(rhs.func.name),
                                    rhs.arguments, kind=rhs.func.kind)
             elif isinstance(rhs, ConstructorCall):
@@ -2071,16 +2072,8 @@ class Parser(object):
             # TODO improve
             #      move it to the ast like create_definition for FunctionHeader?
             name = expr.name
-            dtype = expr.dtypes[0]
-            attr = expr.dtypes[1]
-
-            rank = 0
-            for i in attr:
-                if isinstance(i, Slice):
-                    rank += 1
-
-            d_var = {}
-            d_var['rank'] = rank
+            d_var = expr.dtypes
+            dtype = d_var.pop('datatype')
 
             var = Variable(dtype, name, **d_var)
             self.insert_variable(var)
@@ -2450,6 +2443,10 @@ class Parser(object):
             left = self._annotate(expr.left)
             right = self._annotate(expr.right)
             return Concatinate(left, right)
+
+        elif isinstance(expr, AnnotatedComment):
+            return expr
+
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 

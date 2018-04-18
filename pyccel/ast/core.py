@@ -3776,9 +3776,8 @@ class VariableHeader(Header):
     name: str
         variable name
 
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
+    dtypes: dict
+        a dictionary for typing
 
     Examples
 
@@ -3786,18 +3785,8 @@ class VariableHeader(Header):
 
     # TODO dtypes should be a dictionary (useful in syntax)
     def __new__(cls, name, dtypes):
-        if not(iterable(dtypes)):
-            raise TypeError("Expecting dtypes to be iterable.")
-
-#        if isinstance(dtypes, str):
-#            types.append((datatype(dtypes), []))
-#        elif isinstance(dtypes, DataType):
-#            types.append((dtypes, []))
-#        elif isinstance(dtypes, (tuple, list)):
-#            if not(len(dtypes) in [2, 3]):
-#                raise ValueError("Expecting exactly 2 or 3 entries.")
-#        else:
-#            raise TypeError("Wrong element in dtypes.")
+        if not(isinstance(dtypes, dict)):
+            raise TypeError("Expecting dtypes to be a dict.")
 
         return Basic.__new__(cls, name, dtypes)
 
@@ -3808,10 +3797,6 @@ class VariableHeader(Header):
     @property
     def dtypes(self):
         return self._args[1]
-
-    def create_definition(self):
-        """Returns a Variable."""
-        raise NotImplementedError('TODO')
 
 # TODO rename dtypes to arguments
 class UnionType(Basic):
@@ -3864,12 +3849,6 @@ class FunctionHeader(Header):
         if results:
             if not(iterable(results)):
                 raise TypeError("Expecting results to be iterable.")
-
-            # TODO keep it?
-#            for d in results:
-#                print(d, type(d))
-#                if not isinstance(d, list):
-#                    raise ValueError("Expecting UnionType")
 
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
@@ -3947,10 +3926,12 @@ class FunctionHeader(Header):
                 args.append(arg)
 
             # ... factorize the following 2 blocks
-            # TODO why results is empty?
-            #results = []
-            results = self.results
-#            print('> results = {}'.format(results))
+            results = []
+            for i,d_var in enumerate(self.results):
+                dtype = d_var.pop('datatype')
+                var = Variable(dtype, 'res_{}'.format(i), **d_var)
+                results.append(var)
+
             func= FunctionDef(name, args, results, body,
                              local_vars=[],
                              global_vars=[],
