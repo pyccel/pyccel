@@ -3871,9 +3871,11 @@ class FunctionHeader(Header):
             if not(iterable(results)):
                 raise TypeError("Expecting results to be iterable.")
 
-            for d in results:
-                if not isinstance(d, list):
-                    raise ValueError("Expecting UnionType")
+            # TODO keep it?
+#            for d in results:
+#                print(d, type(d))
+#                if not isinstance(d, list):
+#                    raise ValueError("Expecting UnionType")
 
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
@@ -3962,9 +3964,11 @@ class FunctionHeader(Header):
                                rank=rank, shape=shape)
                 args.append(arg)
 
-        # ... factorize the following 2 blocks
-
-            results = []
+            # ... factorize the following 2 blocks
+            # TODO why results is empty?
+            #results = []
+            results = self.results
+#            print('> results = {}'.format(results))
             func= FunctionDef(name, args, results, body,
                              local_vars=[],
                              global_vars=[],
@@ -3974,6 +3978,7 @@ class FunctionHeader(Header):
                              is_static=is_static,
                              imports=imports)
             funcs += [func]
+
         return funcs
 
     def to_static(self):
