@@ -12,7 +12,7 @@ from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
-from pyccel.ast.core import MetaVariable
+from pyccel.ast.core import MetaVariable , UnionType
 
 DEBUG = False
 
@@ -40,8 +40,15 @@ class ListType(BasicStmt):
 
     @property
     def expr(self):
-        dtype = [str(i) for i in self.dtype]
-        return dtype,[]
+        dtypes = [str(i) for i in self.dtype]
+        if not (all(dtypes[0]==i for i in dtypes)):
+            raise TypeError('all element of the TypeList must have the same type')
+        d_var = {}
+        d_var['datatype'] = dtypes[0]
+        d_var['rank'] = len(dtypes)
+        d_var['is_pointer'] = len(dtypes)>0
+        d_var['allocatable'] = False
+        return d_var
 
 class Type(BasicStmt):
     """Base class representing a header type in the grammar."""
@@ -66,7 +73,12 @@ class Type(BasicStmt):
             trailer = [str(i) for i in trailer.args]
         else:
             trailer = []
-        return dtype, trailer
+        d_var={}
+        d_var['datatype']=dtype
+        d_var['rank'] = len(trailer)
+        d_var['allocatable'] = len(trailer)>0
+        d_var['is_pointer'] = False
+        return d_var
 
 class TypeHeader(BasicStmt):
     pass
@@ -123,10 +135,10 @@ class VariableHeaderStmt(BasicStmt):
 
     @property
     def expr(self):
-        dtype, trailer = self.dec.expr
+        dtype = self.dec.expr
         star = None
 
-        return VariableHeader(self.name, (dtype, trailer, star))
+        return VariableHeader(self.name, (dtype, star))
 
 class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""
@@ -160,10 +172,8 @@ class FunctionHeaderStmt(BasicStmt):
             if isinstance(dec,UnionTypeStmt):
                 l = []
                 for i in dec.dtypes:
-                    l += [i.expr +('',)]
-                dtypes +=[l]
-            else:
-                dtypes +=[[dec.expr + ('',)]]
+                    l += [i.expr]
+                dtypes += [UnionType(l)]
 
         if self.kind is None:
             kind = 'function'
@@ -177,13 +187,9 @@ class FunctionHeaderStmt(BasicStmt):
         results = []
         if self.results:
             results = self.results.expr
-        # TODO remove. debug still in progress
-        results = []
 
-        # TODO set results to self.results
-        #      why are we using []?
         if kind == 'method':
-            cls_instance = dtypes[0][0][0]
+            cls_instance = dtypes[0].args[0]['datatype']
             dtypes = dtypes[1:] # remove the attribut
             kind = 'procedure'
             if results:
@@ -287,6 +293,7 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x :: int'))
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
+    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
     print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))
