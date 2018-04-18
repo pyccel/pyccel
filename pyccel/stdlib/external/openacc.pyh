@@ -17,8 +17,9 @@
 #         + 
 #      - data movement routines (do we really need them?)
 
-__ignore_at_import__ = True
-__version__          = '2.5'
+
+#$ header metavar module_version='2.5'
+#$ header metavar ignore_at_import=True
 
 # ............................................................
 #            Runtime Library Routines for Fortran

@@ -7,8 +7,9 @@ from .core import Import
 from .core import Range, Len
 from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Sum, Rand
-from sympy import Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, \
-    cot, asin, acsc, acos, asec, atan, acot, atan2
+from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
+                   acsc, acos, asec, atan, acot, atan2, Mod)
+
 math_functions = {
     'Abs': Abs,
     'sqrt': sqrt,
@@ -54,6 +55,8 @@ def builtin_function(expr, args=None):
         return Len(*args)
     if name == 'sum':
         return Sum(*args)
+    if name == 'Mod':
+        return Mod(*args)
 
     return None
 

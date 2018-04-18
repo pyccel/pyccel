@@ -319,6 +319,8 @@ class FCodePrinter(CodePrinter):
 #            code = '{code}{line}'.format(code=code, line=line)
             code = '{code}\n{line}'.format(code=code, line=line)
 
+        # in some cases, the source is given as a string (when using metavar)
+        code = code.replace("'", '')
         return self._get_statement(code)
 
     def _print_TupleImport(self, expr):
@@ -354,6 +356,9 @@ class FCodePrinter(CodePrinter):
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
+            elif isinstance(f, Tuple):
+                for i in f:
+                    args.append("{}".format(self._print(i)))
             else:
                 args.append("{}".format(self._print(f)))
 
@@ -560,7 +565,7 @@ class FCodePrinter(CodePrinter):
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
         is_static = expr.static
-        
+
         if isinstance(shape, tuple) and len(shape) ==1:
             shape = shape[0]
         # ...
@@ -1914,11 +1919,11 @@ class FCodePrinter(CodePrinter):
 
         code = [line.lstrip(' \t') for line in code]
 
-        inc_keyword = ('do ', 'if(', 'if ', 'do\n', 
+        inc_keyword = ('do ', 'if(', 'if ', 'do\n',
                        'else', 'type', 'subroutine', 'function')
-        dec_keyword = ('end do', 'enddo', 'end if', 'endif', 
-                       'else', 'endtype', 'end type', 
-                       'endfunction', 'end function', 
+        dec_keyword = ('end do', 'enddo', 'end if', 'endif',
+                       'else', 'endtype', 'end type',
+                       'endfunction', 'end function',
                        'endsubroutine', 'end subroutine')
 
         increase = [int(any(map(line.startswith, inc_keyword)))

@@ -11,6 +11,7 @@ from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
+from pyccel.ast.core import MetaVariable
 
 DEBUG = False
 
@@ -80,7 +81,7 @@ class UnionTypeStmt(BasicStmt):
 
         super(UnionTypeStmt, self).__init__(**kwargs)
 
-        
+
 class VariableHeaderStmt(BasicStmt):
     """Base class representing a header statement in the grammar."""
 
@@ -140,8 +141,8 @@ class FunctionHeaderStmt(BasicStmt):
                 for i in dec.dtypes:
                     l += [i.expr +('',)]
                 dtypes +=[l]
-            else:       
-                dtypes +=[[dec.expr + ('',)]]                
+            else:
+                dtypes +=[[dec.expr + ('',)]]
 
         if self.kind is None:
             kind = 'function'
@@ -187,6 +188,32 @@ class ClassHeaderStmt(BasicStmt):
     def expr(self):
         options = [str(i) for i in self.options]
         return ClassHeader(self.name, options)
+
+
+class MetavarHeaderStmt(BasicStmt):
+    """Base class representing a metavar header statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a MetavarHeader statement.
+
+        name: str
+            metavar name
+        value: str
+            associated value
+        """
+        self.name = kwargs.pop('name')
+        self.value = kwargs.pop('value')
+
+        super(MetavarHeaderStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        # TODO further checking
+        name = str(self.name)
+        value = self.value
+        return MetaVariable(name, value)
+
 #################################################
 
 #################################################
@@ -195,7 +222,8 @@ class ClassHeaderStmt(BasicStmt):
 hdr_classes = [Header, TypeHeader,Type,ListType,UnionTypeStmt,
                FunctionHeaderStmt,
                ClassHeaderStmt,
-               VariableHeaderStmt]
+               VariableHeaderStmt,
+               MetavarHeaderStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -230,5 +258,4 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
-
-
+    print(parse(stmts="#$ header metavar module_name='mpi'"))

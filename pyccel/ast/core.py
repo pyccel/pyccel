@@ -1426,12 +1426,12 @@ dtype_registry = {'bool': Bool,
                   'str': String}
 
 
-def DataTypeFactory(name, argnames=["_name"], 
-                    BaseClass=CustomDataType, 
-                    prefix=None, 
-                    alias=None, 
-                    is_iterable=False, 
-                    is_with_construct=False, 
+def DataTypeFactory(name, argnames=["_name"],
+                    BaseClass=CustomDataType,
+                    prefix=None,
+                    alias=None,
+                    is_iterable=False,
+                    is_with_construct=False,
                     is_polymorphic=True):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
@@ -2186,20 +2186,20 @@ class Return(Basic):
 
     expr : sympy expr
         The expression to return.
-    
+
     stmts :represent assign stmts in the case of expression return
     """
 
     def __new__(cls, expr, stmts = None):
-        
+
         if stmts is None:
-            stmts = []        
+            stmts = []
         if not isinstance(stmts,list):
             raise TypeError('stmts should only be of type list')
         for i in stmts:
             if not isinstance(i, Assign):
                 raise TypeError('stmts should only be of type Assign')
-        
+
         return Basic.__new__(cls, expr, stmts)
 
     @property
@@ -2630,10 +2630,10 @@ class ClassDef(Basic):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
-    def __new__(cls, name, attributes=[], methods=[], 
+    def __new__(cls, name, attributes=[], methods=[],
                 options=['public'], imports=[], parent=[], interfaces=[]):
         # name
-        if isinstance(name, str): 
+        if isinstance(name, str):
             name = Symbol(name)
         elif not isinstance(name, Symbol):
             raise TypeError("Function name must be Symbol or string")
@@ -3452,6 +3452,27 @@ class IndexedElement(Indexed):
     def dtype(self):
         return self.base.dtype
 
+
+class MetaVariable(Basic):
+    """Represents the MetaVariable."""
+
+    def __new__(cls, name, value):
+        if not isinstance(name, str):
+            raise TypeError('name must be of type str')
+
+        # TODO check value
+
+        return Basic.__new__(cls, name, value)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def value(self):
+        return self._args[1]
+
+
 class String(Basic):
     """Represents the String"""
 
@@ -4092,7 +4113,7 @@ def is_simple_assign(expr):
         return False
 
 def is_valid_module(expr):
-    _module_stmt = (Comment, FunctionDef, ClassDef, 
+    _module_stmt = (Comment, FunctionDef, ClassDef,
                     FunctionHeader, ClassHeader, MethodHeader, Import)
 
     if isinstance(expr, (tuple, list, Tuple)):

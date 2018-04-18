@@ -2,8 +2,9 @@
 #
 # Conventions: - data are treated as str
 
-__ignore_at_import__ = True
-__version__          = '3.1'
+#$ header metavar module_name='mpi'
+#$ header metavar module_version='3.1'
+#
 
 # ............................................................
 #            MPI Constants
@@ -55,31 +56,31 @@ __version__          = '3.1'
 #          Point-to-Point Communication
 # ............................................................
 
-#$ header function mpi_recv (str, int, int, int, int, int, int [:], int)
-#$ header function mpi_send (str, int, int, int, int, int, int)
-#$ header function mpi_ssend (str, int, int, int, int, int, int)
-#$ header function mpi_bsend (str, int, int, int, int, int, int)
-#$ header function mpi_buffer_attach(str, int, int)
-#$ header function mpi_buffer_dettach(str, int, int)
+#$ header function mpi_recv (*, int, int, int, int, int, int [:], int)
+#$ header function mpi_send (*, int, int, int, int, int, int)
+#$ header function mpi_ssend (*, int, int, int, int, int, int)
+#$ header function mpi_bsend (*, int, int, int, int, int, int)
+#$ header function mpi_buffer_attach(*, int, int)
+#$ header function mpi_buffer_dettach(*, int, int)
 
-#$ header function mpi_irecv (str, int, int, int, int, int, int, int)
-#$ header function mpi_isend (str, int, int, int, int, int, int, int)
-#$ header function mpi_issend (str, int, int, int, int, int, int, int)
-#$ header function mpi_ibsend (str, int, int, int, int, int, int, int)
+#$ header function mpi_irecv (*, int, int, int, int, int, int, int)
+#$ header function mpi_isend (*, int, int, int, int, int, int, int)
+#$ header function mpi_issend (*, int, int, int, int, int, int, int)
+#$ header function mpi_ibsend (*, int, int, int, int, int, int, int)
 
-#$ header function mpi_sendrecv (str, int, int, int, int, str, int,int, int, int, int, int [:], int)
-#$ header function mpi_sendrecv_replace (str, int, int, int, int, int, int, int, int [:], int)
+#$ header function mpi_sendrecv (*, int, int, int, int, *, int,int, int, int, int, int [:], int)
+#$ header function mpi_sendrecv_replace (*, int, int, int, int, int, int, int, int [:], int)
 
 #$ header function mpi_barrier (int, int)
-#$ header function mpi_bcast (str, int, int, int, int, int)
-#$ header function mpi_scatter (str, int, int, str, int, int, int, int, int)
-#$ header function mpi_gather (str, int, int, str, int, int, int, int, int)
-#$ header function mpi_allgather (str, int, int, str, int, int, int, int)
-#$ header function mpi_gatherv(str, int, int, str, int [:], int [:], int, int, int, int)
-#$ header function mpi_alltoall (str, int, int, str, int, int, int, int)
+#$ header function mpi_bcast (*, int, int, int, int, int)
+#$ header function mpi_scatter (*, int, int, *, int, int, int, int, int)
+#$ header function mpi_gather (*, int, int, *, int, int, int, int, int)
+#$ header function mpi_allgather (*, int, int, *, int, int, int, int)
+#$ header function mpi_gatherv(*, int, int, *, int [:], int [:], int, int, int, int)
+#$ header function mpi_alltoall (*, int, int, *, int, int, int, int)
 
-#$ header function mpi_reduce (str, str, int, int, int, int, int, int)
-#$ header function mpi_allreduce (str, str, int, int, int, int, int)
+#$ header function mpi_reduce (*, *, int, int, int, int, int, int)
+#$ header function mpi_allreduce (*, *, int, int, int, int, int)
 
 #$ header function mpi_wait (int, int [:], int)
 #$ header function mpi_waitall (int, int [:], int [:,:], int)

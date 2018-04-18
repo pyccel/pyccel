@@ -7,5 +7,8 @@ python3 tests/parser/test_openacc.py
 python3 tests/syntax/test_syntax.py
 python3 tests/semantic/test_semantic.py
 python3 tests/codegen/test_codegen.py  
+python3 tests/blas/test_blas.py  
+python3 tests/lapack/test_lapack.py  
+python3 tests/mpi/test_mpi.py  
 
 cd tests/epyccel/ ; python3 test_epyccel.py ; cd ../.. 

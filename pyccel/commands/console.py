@@ -171,12 +171,14 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if args.syntax_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
+
     elif args.semantic_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
 
         settings = {}
         ast = pyccel.annotate(**settings)
+
     elif args.convert_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
@@ -192,14 +194,24 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
             print(code)
         else:
             codegen.export()
+
     elif not analysis:
-        build_file(filename, language, compiler,
-                   execute=execute, accelerator=accelerator,
-                   debug=debug, lint=lint, verbose=verbose, show=show,
-                   name=None, include=include,
-                   output_dir=output_dir,
-                   libdir=libdir, libs=libs,
-                   single_file=not(no_modules))
+        # TODO improve by compiling the generated file
+        pyccel = Parser(filename)
+        ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
+
+        name = os.path.basename(filename)
+        name = os.path.splitext(name)[0]
+        codegen = Codegen(ast, name)
+        code = codegen.doprint()
+        if show:
+            print(code)
+        else:
+            codegen.export()
+
     else:
         from pyccel.complexity.memory import MemComplexity
 

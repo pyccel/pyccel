@@ -8,12 +8,15 @@ Statement:
     VariableHeaderStmt
   | FunctionHeaderStmt 
   | ClassHeaderStmt
+  | MetavarHeaderStmt
 ;
 
 TrailerSubscriptList: '[' args*=':' [','] ']';
 
-Type: dtype=ID (trailer=TrailerSubscriptList)?;
-ListType : '[' dtype+=ID[','] ']';
+DataType: ID|STAR;
+
+Type: dtype=DataType (trailer=TrailerSubscriptList)?;
+ListType : '[' dtype+=DataType[','] ']';
 TypeHeader: Type|ListType ;
 UnionTypeStmt:  dtype+=TypeHeader['|'] ;
 
@@ -40,3 +43,8 @@ ClassOptions:
   | 'openmp'
   | 'openacc'
 ;
+
+MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
+MetavarValues: BOOL|STRING;
+
+STAR: '*';

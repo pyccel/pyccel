@@ -3,6 +3,6 @@ def f2(x, t=1, z=None):
     return y
 
 def f(x):
-    from toto import titi
+    from expressions import ai
     y = 2 * x
     return y

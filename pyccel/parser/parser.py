@@ -74,6 +74,8 @@ from pyccel.ast import Comment, EmptyLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast import VariableHeader
+from pyccel.ast import MetaVariable
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
@@ -90,7 +92,7 @@ from pyccel.parser.errors import Errors, PyccelSyntaxError, \
 from pyccel.parser.messages import *
 
 from collections import OrderedDict
-
+import importlib
 import sys
 
 # Useful for very coarse version differentiation.
@@ -131,27 +133,88 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy import FunctionClass
 
 import os
-
 #  ...
 
 #  ... utilities
-
 from sympy import srepr, sympify
 from sympy.printing.dot import dotprint
-
-import os
-
 
 def view_tree(expr):
     """Views a sympy expression tree."""
 
     print (srepr(expr))
+#  ...
 
+#  ... checking the validity of the filenames, using absolute paths
+def _is_valid_filename(filename, ext):
+    """Returns True if filename has the extension ext and exists."""
+    if not isinstance(filename, str):
+        return False
 
+    if not(ext == filename.split('.')[-1]):
+        return False
+    fname = os.path.abspath(filename)
+    return os.path.isfile(fname)
+
+def is_valid_filename_py(filename):
+    """Returns True if filename is an existing python file."""
+    return _is_valid_filename(filename, 'py')
+
+def is_valid_filename_pyh(filename):
+    """Returns True if filename is an existing pyccel header file."""
+    return _is_valid_filename(filename, 'pyh')
+#  ...
+
+#  ... useful functions for imports
+# TODO installed modules. must ask python (working version) where the module is
+#      installed
+def get_filename_from_import(module):
+    """Returns a valid filename with absolute path, that corresponds to the
+    definition of module.
+    The priority order is:
+        - header files (extension == pyh)
+        - python files (extension == py)
+    """
+    filename_pyh = '{}.pyh'.format(module)
+    filename_py  = '{}.py'.format(module)
+
+    if is_valid_filename_pyh(filename_pyh): return os.path.abspath(filename_pyh)
+    if is_valid_filename_py(filename_py): return os.path.abspath(filename_py)
+
+    source = module
+    if len(module.split('.')) > 1:
+        # we remove the last entry, since it can be a pyh file
+        source = '.'.join(i for i in module.split('.')[:-1])
+        _module = module.split('.')[-1]
+        filename_pyh = '{}.pyh'.format(_module)
+        filename_py  = '{}.py'.format(_module)
+
+    try:
+        package = importlib.import_module(source)
+        package_dir = str(package.__path__[0])
+    except:
+        errors = Errors()
+        errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
+                      symbol=source,
+                      blocker=True,
+                      severity='critical')
+
+    filename_pyh = os.path.join(package_dir, filename_pyh)
+    filename_py  = os.path.join(package_dir, filename_py)
+
+    if os.path.isfile(filename_pyh):
+        return filename_pyh
+    elif os.path.isfile(filename_py):
+        return filename_py
+
+    errors = Errors()
+    errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
+                  symbol=module,
+                  blocker=True,
+                  severity='critical')
 #  ...
 
 #  ...
-
 def _get_variable_name(var):
     """."""
 
@@ -161,8 +224,6 @@ def _get_variable_name(var):
         return str(var.base)
 
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
-
-
 #  ...
 
 # TODO use Double instead of Float? or add precision
@@ -208,6 +269,7 @@ class Parser(object):
         self._fst = None
         self._ast = None
         self._filename = None
+        self._metavars = {}
         self._namespace = {}
         self._namespace['imports'] = OrderedDict()
         self._namespace['variables'] = {}
@@ -235,7 +297,7 @@ class Parser(object):
             if not isinstance(headers, dict):
                 raise TypeError('Expecting a dict of headers')
 
-            for (key, value) in headers.items():
+            for (key, value) in list(headers.items()):
                 self._namespace['headers'][key] = value
 
         # check if inputs is a file
@@ -281,6 +343,10 @@ class Parser(object):
         return self._ast
 
     @property
+    def metavars(self):
+        return self._metavars
+
+    @property
     def current_class(self):
         return self._current_class
 
@@ -306,6 +372,14 @@ class Parser(object):
     def d_parsers(self):
         """Returns the d_parsers parser."""
         return self._d_parsers
+
+    @property
+    def is_header_file(self):
+        """Returns True if we are treating a header file."""
+        if self.filename:
+            return self.filename.split('.')[-1] == 'pyh'
+        else:
+            return False
 
     def append_parent(self, parent):
         """."""
@@ -364,6 +438,22 @@ class Parser(object):
         ast = self._annotate(ast, **settings)
         self._ast = ast
 
+        # in the case of a header file, we need to convert all headers to
+        # FunctionDef etc ...
+        if self.is_header_file:
+            for name,v in list(self.headers.items()):
+                if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
+                    F = self.get_function(name)
+                    if F is None:
+                        interfaces = v.create_definition()
+                        for F in interfaces:
+                            self.insert_function(F)
+                    else:
+                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
+                                      symbol=name,
+                                      blocker=True,
+                                      severity='critical')
+
         errors.check()
         self._semantic_done = True
 
@@ -385,9 +475,10 @@ class Parser(object):
             if verbose:
                 print('>>> treating :: {}'.format(source))
 
-            # TODO improve
-            f_name = '{}.py'.format(source)
-            q = Parser(f_name)
+            # get the absolute path corresponding to source
+            filename = get_filename_from_import(source)
+
+            q = Parser(filename)
             q.parse(d_parsers=d_parsers)
             d_parsers[source] = q
 
@@ -585,6 +676,7 @@ class Parser(object):
 
     def get_function(self, name):
         """."""
+        # TODO shall we keep the elif in _imports?
 
         func = None
         if name in self._namespace['functions']:
@@ -851,14 +943,7 @@ class Parser(object):
 
                 targets.append(s)
 
-            # TODO improve
             expr = Import(targets, source=source)
-#            if len(targets) == 1:
-#                expr = Import(targets, source=source)
-#
-#            else:
-#                expr = TupleImport(*targets)
-
             self.insert_import(expr)
             return expr
 
@@ -1162,7 +1247,14 @@ class Parser(object):
                     return acc_parse(stmts=stmt.value)
 
                 elif env.startswith('header'):
-                    return hdr_parse(stmts=stmt.value)
+                    expr = hdr_parse(stmts=stmt.value)
+                    if isinstance(expr, MetaVariable):
+                        # a metavar will not appear in the semantic stage.
+                        # but can be used to modify the ast
+                        self._metavars[str(expr.name)] = str(expr.value)
+                        return EmptyLine()
+                    else:
+                        return expr
 
                 else:
                     errors.report(PYCCEL_INVALID_HEADER, severity='error')
@@ -1763,6 +1855,7 @@ class Parser(object):
                     'atan',
                     'acot',
                     'atan2',
+                    'Mod',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                 else:
@@ -1900,9 +1993,7 @@ class Parser(object):
                 return Assigns(assigns)
             return expr_new
         elif isinstance(expr, For):
-
             # treatment of the index/indices
-
             if isinstance(expr.target, Symbol):
                 name = str(expr.target.name)
                 var = self.get_variable(name)
@@ -1918,16 +2009,36 @@ class Parser(object):
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
             return For(target, itr, body)
-        elif isinstance(expr, While):
 
+        elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
 
             return While(test, body)
-        elif isinstance(expr, If):
 
+        elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return If(*args)
+
+        elif isinstance(expr, VariableHeader):
+            # TODO improve
+            #      move it to the ast like create_definition for FunctionHeader?
+            name = expr.name
+            dtype = expr.dtypes[0]
+            attr = expr.dtypes[1]
+
+            rank = 0
+            for i in attr:
+                if isinstance(i, Slice):
+                    rank += 1
+
+            d_var = {}
+            d_var['rank'] = rank
+
+            var = Variable(dtype, name, **d_var)
+            self.insert_variable(var)
+            return expr
+
         elif isinstance(expr, FunctionHeader):
 
             # TODO should we return it and keep it in the AST?
@@ -2253,8 +2364,16 @@ class Parser(object):
                         else:
                             raise NotImplementedError('must report error')
                 else:
-                    # TODO improve
-                    p = self.d_parsers[expr.source]
+                    # in some cases (blas, lapack, openmp and openacc level-0)
+                    # the import should not appear in the final file
+                    # all metavars here, will have a prefix and suffix = __
+                    __ignore_at_import__ = False
+                    __module_name__ = None
+
+                    # we need to use str here since source has been defined
+                    # using repr.
+                    # TODO shall we improve it?
+                    p = self.d_parsers[str(expr.source)]
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -2264,7 +2383,22 @@ class Parser(object):
                             if k in expr.target:
                                 d_self[k] = v
 
+                    # ... meta variables
+                    if 'ignore_at_import' in list(p.metavars.keys()):
+                        __ignore_at_import__ = p.metavars['ignore_at_import']
+
+                    if 'module_name' in list(p.metavars.keys()):
+                        __module_name__ = p.metavars['module_name']
+                        expr = Import(expr.target, __module_name__)
+                    # ...
+
+                    if not __ignore_at_import__:
+                        return expr
+                    else:
+                        return EmptyLine()
+
             return expr
+
         elif isinstance(expr, Concatinate):
             left = self._annotate(expr.left)
             right = self._annotate(expr.right)
@@ -2276,18 +2410,6 @@ class Parser(object):
 class PyccelParser(Parser):
 
     pass
-
-def is_python_file(filename):
-    """Returns True if filename is an existing python file."""
-    if not isinstance(filename, str):
-        return False
-
-    name = os.path.basename(filename.split('.')[0])
-    ext  = filename.split('.')[-1]
-    if not(ext == 'py'):
-        return False
-    fname = os.path.abspath(filename)
-    return os.path.isfile(fname)
 
 
 ######################################################

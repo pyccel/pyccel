@@ -18,6 +18,9 @@ def test_class():
 def test_method():
     print (parse(stmts='#$ header method translate(Point, double, double)'))
 
+def test_metavar():
+    print (parse(stmts="#$ header metavar module_name='mpi'"))
+
 ######################
 if __name__ == '__main__':
     test_variable()
@@ -25,3 +28,4 @@ if __name__ == '__main__':
     test_function_static()
     test_class()
     test_method()
+    test_metavar()
