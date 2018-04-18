@@ -6,6 +6,7 @@
 # TODO: - remove 'star' from everywhere
 
 from os.path import join, dirname
+from sympy.utilities.iterables import iterable
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
@@ -70,6 +71,7 @@ class Type(BasicStmt):
 class TypeHeader(BasicStmt):
     pass
 
+# TODO must add expr property
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
         """
@@ -80,6 +82,25 @@ class UnionTypeStmt(BasicStmt):
         self.dtypes = kwargs.pop('dtype')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
+
+
+class HeaderResults(BasicStmt):
+    """Base class representing a HeaderResults in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a HeaderResults.
+
+        decs: list of TypeHeader
+        """
+        self.decs = kwargs.pop('decs')
+
+        super(HeaderResults, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        decs = [i.expr for i in self.decs]
+        return decs
 
 
 class VariableHeaderStmt(BasicStmt):
@@ -153,17 +174,25 @@ class FunctionHeaderStmt(BasicStmt):
         if self.static == 'static':
             is_static = True
 
+        results = []
+        if self.results:
+            results = self.results.expr
+        # TODO remove. debug still in progress
+        results = []
+
+        # TODO set results to self.results
+        #      why are we using []?
         if kind == 'method':
             cls_instance = dtypes[0][0][0]
             dtypes = dtypes[1:] # remove the attribut
             kind = 'procedure'
-            if self.results:
+            if results:
                 kind = 'function'
             return MethodHeader((cls_instance, self.name), dtypes, [],kind=kind )
         else:
             return FunctionHeader(self.name,
                                   dtypes,
-                                  results=[],
+                                  results=results,
                                   kind=kind,
                                   is_static=is_static)
 
@@ -219,7 +248,9 @@ class MetavarHeaderStmt(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
-hdr_classes = [Header, TypeHeader,Type,ListType,UnionTypeStmt,
+hdr_classes = [Header, TypeHeader,
+               Type, ListType, UnionTypeStmt,
+               HeaderResults,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,

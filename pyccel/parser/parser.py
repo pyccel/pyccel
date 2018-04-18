@@ -1732,6 +1732,8 @@ class Parser(object):
 
             if isinstance(rhs, FunctionCall):
                 func = rhs.func
+#                print('>>> {}'.format(type(func)))
+#                print('>>> {}'.format([i for i in func.results]))
 
                 # treating results
 
@@ -1769,6 +1771,7 @@ class Parser(object):
                 d_var = [self._infere_type(i, **settings) for i in
                          results]
 
+#                print('> d_var = {}'.format(d_var))
                 rhs = FunctionCall(func.rename(rhs.func.name),
                                    rhs.arguments, kind=rhs.func.kind)
             elif isinstance(rhs, ConstructorCall):
@@ -2428,7 +2431,7 @@ if __name__ == '__main__':
 
     settings = {}
     pyccel.annotate(**settings)
-    pyccel.view_namespace('variables')
+#    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()
 
 #    pyccel.dot('ast.gv')
