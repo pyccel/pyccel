@@ -1,4 +1,5 @@
 from numpy import zeros
+from numpy import shape
 
 #$ header function matmat(double [:,:], double [:,:], double [:,:])
 def matmat(a,b,c):
