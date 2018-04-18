@@ -3,7 +3,7 @@
 # We only list here what can not be described in the openacc grammar.
 #
 # TODO - devicetype is for the moment an integer. => need to add precision
-#      - change str to h_void* and d_void* in 
+#      - change * to h_void* and d_void* in 
 #         + acc_map_data
 #         + acc_unmap_data  
 #         + acc_deviceptr
@@ -52,18 +52,18 @@
 #$ header function acc_malloc(int) results(int)
 #$ header function acc_free(int)
 
-#$ header function acc_map_data(str, str, int)
-#$ header function acc_unmap_data(str)
+#$ header function acc_map_data(*, *, int)
+#$ header function acc_unmap_data(*)
 
-#$ header function acc_deviceptr(str) results(int)
-#$ header function acc_hostptr(str) results(int)
+#$ header function acc_deviceptr(*) results(int)
+#$ header function acc_hostptr(*) results(int)
 
-#$ header function acc_memcpy_to_device(str, str, int)
-#$ header function acc_memcpy_to_device_async(str, str, int, int)
-#$ header function acc_memcpy_from_device(str, str, int)
-#$ header function acc_memcpy_from_device_async(str, str, int, int)
-#$ header function acc_memcpy_device(str, str, int)
-#$ header function acc_memcpy_device_async(str, str, int, int)
+#$ header function acc_memcpy_to_device(*, *, int)
+#$ header function acc_memcpy_to_device_async(*, *, int, int)
+#$ header function acc_memcpy_from_device(*, *, int)
+#$ header function acc_memcpy_from_device_async(*, *, int, int)
+#$ header function acc_memcpy_device(*, *, int)
+#$ header function acc_memcpy_device_async(*, *, int, int)
 
 # ............................................................
 
