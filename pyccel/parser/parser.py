@@ -1689,7 +1689,6 @@ class Parser(object):
 
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
-
                 func = self.get_function(name)
                 if not func is None:
                     if isinstance(func, (FunctionDef, Interface)):
@@ -1767,11 +1766,11 @@ class Parser(object):
                     else:
                         raise SystemExit('function not found in the interface')
 
+                # ARA: needed for functions defined only with a header
                 results = func.results
-                d_var = [self._infere_type(i, **settings) for i in
-                         results]
+                if results:
+                    d_var = [self._infere_type(i, **settings) for i in results]
 
-#                print('> d_var = {}'.format(d_var))
                 rhs = FunctionCall(func.rename(rhs.func.name),
                                    rhs.arguments, kind=rhs.func.kind)
             elif isinstance(rhs, ConstructorCall):

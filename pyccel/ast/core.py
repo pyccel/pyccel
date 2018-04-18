@@ -3850,12 +3850,6 @@ class FunctionHeader(Header):
             if not(iterable(results)):
                 raise TypeError("Expecting results to be iterable.")
 
-            # TODO keep it?
-#            for d in results:
-#                print(d, type(d))
-#                if not isinstance(d, list):
-#                    raise ValueError("Expecting UnionType")
-
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
@@ -3932,10 +3926,12 @@ class FunctionHeader(Header):
                 args.append(arg)
 
             # ... factorize the following 2 blocks
-            # TODO why results is empty?
-            #results = []
-            results = self.results
-#            print('> results = {}'.format(results))
+            results = []
+            for i,d_var in enumerate(self.results):
+                dtype = d_var.pop('datatype')
+                var = Variable(dtype, 'res_{}'.format(i), **d_var)
+                results.append(var)
+
             func= FunctionDef(name, args, results, body,
                              local_vars=[],
                              global_vars=[],
