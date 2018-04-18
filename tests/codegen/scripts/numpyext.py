@@ -2,6 +2,7 @@ from numpy import zeros
 from numpy import ones
 from numpy import sum
 from numpy import array
+from numpy import shape
 
 a = array((1,2,3,5,8,5), 'float')
 b = array((5,8,6,9,8,2), 'int')
@@ -34,9 +35,8 @@ b2 = ones((n, 2*n))
 x = array([1.,2.,3.])
 z = x
 
-# TODO shape must be imported from pyccelext.core
-#nn = shape(x)
-#mm = shape(array([1.,2.,3.]))
+nn = shape(x)
+mm = shape(array([1.,2.,3.]))
 
 a = 2.
 b = int(a)
@@ -47,10 +47,10 @@ b = int(a)
 z1 = ones((n,m,2), 'double')
 print(sum(z1)==n*m*2)
 
-# TODO not working with python
-from numpy import random
-xr = random()
-print(xr)
+# TODO not working
+#from numpy.random import random
+#xr = random()
+#print(xr)
 
 # TODO not working
 #from numpy.random import rand

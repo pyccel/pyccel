@@ -45,10 +45,8 @@ def builtin_function(expr, args=None):
 
     if name == 'range':
         return Range(*args)
-    elif name == 'array':
+    if name == 'array':
         return Array(*args)
-    if name == 'shape':
-        return Shape(*args)
     if name == 'int':
         return Int(*args)
     if name == 'len':

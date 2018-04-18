@@ -1858,6 +1858,7 @@ class Parser(object):
                     'Mod',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
+                    d_var['datatype'] = 'double' #TODO improve what datatype shoud we give here
                 else:
                     raise NotImplementedError('TODO')
             else:
@@ -2117,7 +2118,7 @@ class Parser(object):
                 kind = header.kind
             else:
 
-                # TODO why are we doing this?
+                # this for the case of a function without arguments => no header
 
                 interfaces = [FunctionDef(name, [], [], [])]
 
