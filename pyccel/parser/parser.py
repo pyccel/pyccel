@@ -691,15 +691,17 @@ class Parser(object):
 
     def insert_function(self, func):
         """."""
+        container = self._namespace['functions']
+        if isinstance(self._current, DottedName):
+            name = self._current.name[0]
+            container = self._scope[name]['functions']
 
-        if not isinstance(func, (FunctionDef, Interface)):
-            raise TypeError('Expected a Function definition')
+        if isinstance(func, (FunctionDef, Interface)):
+            container[str(func.name)] = func
+        elif isinstance(func, SymbolicAssign) and isinstance(func.rhs, Lambda):
+            container[str(func.lhs)] = func.rhs
         else:
-            if isinstance(self._current, DottedName):
-                self._scope[self._current.name[0]]['functions'
-                        ][str(func.name)] = func
-            else:
-                self._namespace['functions'][str(func.name)] = func
+            raise TypeError('Expected a Function definition or a Lambda function')
 
     def remove(self, name):
         """."""
@@ -1540,31 +1542,33 @@ class Parser(object):
                 ls.append(a)
             if isinstance(expr, List):
                 return List(*ls)
+
             else:
                 return Tuple(*ls)
+
         elif isinstance(expr, (Integer, Float, String)):
             return expr
+
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
             return sympify(float(expr))
+
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
-
             return expr
-        elif isinstance(expr, Variable):
 
+        elif isinstance(expr, Variable):
             name = expr.name
             var = self.get_variable(name)
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               severity='error', blocker=True)
             return var
+
         elif isinstance(expr, str):
-
             return repr(expr)
-        elif isinstance(expr, (IndexedVariable, IndexedBase)):
 
+        elif isinstance(expr, (IndexedVariable, IndexedBase)):
             # an indexed variable is only defined if the associated variable is in
             # the namespace
-
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
@@ -1573,10 +1577,9 @@ class Parser(object):
             dtype = var.dtype
 
             # TODO add shape
-
             return IndexedVariable(name, dtype=dtype)
-        elif isinstance(expr, (IndexedElement, Indexed)):
 
+        elif isinstance(expr, (IndexedElement, Indexed)):
             name = str(expr.base)
             var = self.get_variable(name)
             if var is None:
@@ -1584,19 +1587,18 @@ class Parser(object):
                               severity='error', blocker=True)
 
             # TODO check consistency of indices with shape/rank
-
             args = tuple(expr.indices)
             dtype = var.dtype
             return IndexedVariable(name, dtype=dtype).__getitem__(*args)
-        elif isinstance(expr, Symbol):
 
+        elif isinstance(expr, Symbol):
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
                 raise PyccelSemanticError('Symbolic {name} variable is not allowed'.format(name=name))
             return var
-        elif isinstance(expr, DottedVariable):
 
+        elif isinstance(expr, DottedVariable):
             first = self._annotate(expr.args[0])
             attr_name = [i.name for i in first.cls_base.attributes]
             if isinstance(expr.args[1], Symbol) \
@@ -1606,6 +1608,7 @@ class Parser(object):
                         in i.decorators:
                         second = FunctionCall(i, (), kind=i.kind)
                         return DottedVariable(first, second)
+
             if not isinstance(expr.args[1], Function):
                 self._current_class = first.cls_base
                 second = self._annotate(expr.args[1])
@@ -1619,22 +1622,19 @@ class Parser(object):
                             args = []
                         second = FunctionCall(i, args, kind=i.kind)
             return DottedVariable(first, second)
+
         elif isinstance(expr, (Add, Mul, Pow, And, Or,
                                 Eq, Ne, Lt, Gt, Le, Ge)):
-
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
-
             args = expr.args
 
             # we treat the first element
-
             a = args[0]
             a_new = self._annotate(a, **settings)
             expr_new = a_new
 
             # then we treat the rest
-
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, (Add, Mul)):
@@ -1658,30 +1658,50 @@ class Parser(object):
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new)
             return expr_new
-        elif isinstance(expr, Function):
 
-            args = [self._annotate(i, **settings) for i in expr.args]
+        elif isinstance(expr, Lambda):
+#            # TODO we need a name here!!
+#            self.set_current_fun("__lambda__")
+#
+#            args = expr.variables
+#            for a in args:
+#                dtype = NativeSymbol()
+#                var = Variable(dtype, str(a.name))
+#                self.insert_variable(var)
+#
+#            self.set_current_fun(None)
+            return expr
+
+        elif isinstance(expr, Function):
+            # ... DEBUG
             name = str(type(expr).__name__)
+            func = self.get_function(name)
+
+            # ...
+            if not isinstance(func, Lambda):
+                args = [self._annotate(i, **settings) for i in expr.args]
+            else:
+                # here args are sympy symbol
+                args = expr.args
+            # ...
+
             F = pyccel_builtin_function(expr, args)
             if F:
                 return F
-            elif name in self._namespace['cls_constructs'].keys():
 
+            elif name in self._namespace['cls_constructs'].keys():
                 # TODO improve the test
                 #      we must not invoke the namespace like this, only through
                 #      appropriate methods like get_variable ...
-
                 cls = self.get_class(name)
                 d_methods = cls.methods_as_dict
                 method = d_methods.pop('__init__', None)
 
                 if method is None:
-
                     # TODO improve
                     #      we should not stop here, there will be cases where we
                     #      want to instantiate a class that has no __init__
                     #      construct
-
                     errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                                   severity='warning', blocker=True)
                 args = expr.args
@@ -1697,11 +1717,10 @@ class Parser(object):
 #                return MethodCall(method, args, cls_variable=None, kind=None)
 
                 return ConstructorCall(method, args, cls_variable=None)
-            else:
 
+            else:
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
-
                 func = self.get_function(name)
                 if not func is None:
                     if isinstance(func, (FunctionDef, Interface)):
@@ -1724,9 +1743,6 @@ class Parser(object):
         elif isinstance(expr, FunctionCall):
             return expr
 
-        elif isinstance(expr, Lambda):
-            return expr
-
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1734,7 +1750,7 @@ class Parser(object):
             rhs = expr.rhs
             exprs = rhs.atoms(Function)
             assigns = None
-            if len(exprs)>0 and not isinstance(rhs, Function):
+            if len(exprs)>0 and not isinstance(rhs, (Function, Lambda)):
                 #case of a function call in the rhs
                 assigns = []
                 for i in exprs:
@@ -1993,6 +2009,13 @@ class Parser(object):
                     expr_new = AliasAssign(lhs, rhs)
                 elif expr_new.is_symbolic_alias:
                     expr_new = SymbolicAssign(lhs, rhs)
+                    # in a symbolic assign, the rhs can be a lambda expression
+                    # it is then treated as a def node
+                    F = self.get_function(lhs)
+                    if F is None:
+                        self.insert_function(expr_new)
+                    else:
+                        raise NotImplementedError('TODO')
 
             if isinstance(expr, AugAssign):
                 expr_new = AugAssign(expr_new.lhs, expr.op,

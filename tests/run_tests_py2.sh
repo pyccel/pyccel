@@ -7,6 +7,7 @@ python tests/parser/test_openacc.py
 python tests/syntax/test_syntax.py
 python tests/semantic/test_semantic.py
 python tests/codegen/test_codegen.py  
+python tests/symbolic/test_symbolic.py  
 python tests/blas/test_blas.py  
 python tests/lapack/test_lapack.py  
 python tests/mpi/test_mpi.py  
