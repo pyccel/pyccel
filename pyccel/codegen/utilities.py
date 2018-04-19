@@ -7,6 +7,9 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import subprocess
 
+from pyccel.parser import Parser
+from pyccel.codegen import Codegen
+
 # TODO use constructor and a dict to map flags w.r.t the compiler
 _avail_compilers = ['gfortran', 'mpif90', 'pgfortran']
 
@@ -135,16 +138,22 @@ def compile_fortran(filename, compiler, flags,
     # ...
 # ...
 
-if __name__ == '__main__':
-    from pyccel.parser import Parser
-    from pyccel.codegen import Codegen
-    import sys
+def execute_pyccel(filename,
+                   compiler='gfortran',
+                   debug=False,
+                   accelerator=None,
+                   include=[],
+                   libdir=[],
+                   modules=[],
+                   libs=[],
+                   binary=None):
+    """Executes the full process:
+        - parsing the python code
+        - annotating the python code
+        - converting from python to fortran
+        - compiling the fortran code.
 
-    try:
-        filename = sys.argv[1]
-    except:
-        raise ValueError('Expecting an argument for filename')
-
+    """
     pyccel = Parser(filename)
     ast = pyccel.parse()
 
@@ -159,12 +168,6 @@ if __name__ == '__main__':
     fname = codegen.export()
 
     # ... constructs the compiler flags
-    compiler = 'gfortran'
-    debug = False
-    accelerator = None
-    include = []
-    libdir = []
-
     flags = construct_flags(compiler,
                             debug=debug,
                             accelerator=accelerator,
@@ -173,15 +176,21 @@ if __name__ == '__main__':
     # ...
 
     # ... compile fortran code
-    modules = []
-    libs = []
-    binary = None
-    is_module = False
-
     output, cmd = compile_fortran(fname, compiler, flags,
                                   binary=binary,
                                   verbose=False,
                                   modules=modules,
-                                  is_module=is_module,
+                                  is_module=codegen.is_module,
                                   libs=libs)
     # ...
+
+
+if __name__ == '__main__':
+    import sys
+
+    try:
+        filename = sys.argv[1]
+    except:
+        raise ValueError('Expecting an argument for filename')
+
+    execute_pyccel(filename)

@@ -6,9 +6,11 @@ import os
 import argparse
 
 # TODO add version
-#  --version             show program's version number and exit
+#  --version  show program's version number and exit
 
-from pyccel.codegen.utilities import construct_flags, compile_fortran
+from pyccel.codegen.utilities import construct_flags
+from pyccel.codegen.utilities import compile_fortran
+from pyccel.codegen.utilities import execute_pyccel
 
 class MyParser(argparse.ArgumentParser):
     """
@@ -184,38 +186,19 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
             codegen.export()
 
     elif not analysis:
-        pyccel = Parser(filename)
-        ast = pyccel.parse()
-
-        settings = {}
-        ast = pyccel.annotate(**settings)
-
-        name = os.path.basename(filename)
-        name = os.path.splitext(name)[0]
-        codegen = Codegen(ast, name)
-        code = codegen.doprint()
-        fname = codegen.export()
-
-        # ... constructs the compiler flags
-        flags = construct_flags(compiler,
-                                debug=debug,
-                                accelerator=accelerator,
-                                include=include,
-                                libdir=libdir)
-        # ...
-
-        # ... compile fortran code
         # TODO shall we add them in the cmd line?
         modules = []
         binary = None
 
-        output, cmd = compile_fortran(fname, compiler, flags,
-                                      binary=binary,
-                                      verbose=False,
-                                      modules=modules,
-                                      is_module=codegen.is_module,
-                                      libs=libs)
-        # ...
+        execute_pyccel(filename,
+                       compiler=compiler,
+                       debug=False,
+                       accelerator=accelerator,
+                       include=include,
+                       libdir=libdir,
+                       modules=modules,
+                       libs=libs,
+                       binary=binary)
 
     else:
         from pyccel.complexity.memory import MemComplexity
