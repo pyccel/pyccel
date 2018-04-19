@@ -39,7 +39,6 @@ def test_array_2():
 
     x = np.array([3, 4, 5, 6], dtype=int)
     y = f(x)
-    print(y)
     assert(np.allclose(y, np.array([2, 3, 4, 5])))
 
 def test_array_3():
