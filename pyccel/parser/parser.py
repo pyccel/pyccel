@@ -2320,21 +2320,16 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-
                 if not isinstance(expr,(PythonFunction, SympyFunction)):
                     body = self._annotate(expr.body, **settings)
                 else:
+                    # TODO improve: must call pylint to do further checking
                     body = expr.body
-
-
 
                 # find return stmt and results
                 # we keep the return stmt, in case of handling multi returns later
-
                 for stmt in body:
-
-                # TODO case of multiple calls to return
-
+                    # TODO case of multiple calls to return
                     if isinstance(stmt, Return):
                         #TODO improve the search of return in nested bodies
                         # like ifs,for stmts and while stmts
@@ -2342,7 +2337,6 @@ class Parser(object):
                         if isinstance(results, Symbol):
                             results = [results]
                             kind = 'function'
-
 
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()

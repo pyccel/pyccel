@@ -13,6 +13,7 @@ from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign , Assigns
 from pyccel.ast.core import Variable, DottedName
 from pyccel.ast.core import For, If, While
 from pyccel.ast.core import Is
+from pyccel.ast.core import PythonFunction, SympyFunction
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
 
@@ -183,7 +184,11 @@ class Codegen(object):
         decs = []
 
         for stmt in self.ast:
-            if isinstance(stmt, FunctionDef):
+            if isinstance(stmt, (PythonFunction, SympyFunction)):
+                continue
+            elif isinstance(stmt, EmptyLine):
+                continue
+            elif isinstance(stmt, FunctionDef):
                 routines += [stmt]
             elif isinstance(stmt, ClassDef):
                 classes += [stmt]
@@ -193,8 +198,6 @@ class Codegen(object):
                 modules += [stmt]
             elif isinstance(stmt, Interface):
                 interfaces += [stmt]
-            elif isinstance(stmt, EmptyLine):
-                continue
             else:
 
                 # TODO improve later, as in the old codegen
