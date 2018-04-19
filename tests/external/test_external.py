@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# TODO test if compiler exists before running mpi, openacc
+
 from pyccel.codegen.utilities import execute_pyccel
 import os
 
@@ -71,5 +73,5 @@ if __name__ == '__main__':
     test_blas()
     test_lapack()
     test_mpi()
-    test_openmp()
-    test_openacc()
+#    test_openmp()
+#    test_openacc()
