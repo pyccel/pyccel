@@ -1936,6 +1936,12 @@ class Parser(object):
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
+                elif name in ['Mod']: # functions that return an int
+                    d_var = {}
+                    d_var['datatype'] = 'int'
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
                 elif name in [
                     'Abs',
                     'sqrt',
