@@ -2260,6 +2260,7 @@ class Interface(Basic):
         return Interface(newname, self.functions)
 
 
+
 class FunctionDef(Basic):
     """Represents a function definition.
 
@@ -2465,17 +2466,17 @@ class FunctionDef(Basic):
                            kind=self.kind,
                            is_static=self.is_static)
 
-    def __call__(self, *args, **kwargs):
-        """Represents a call to the function."""
+  #  def __call__(self, *args, **kwargs):
+  #      """Represents a call to the function."""
         # TODO treat parametrized arguments.
         #      this will be done later, once it is validated for FunctionCall
 
         # we remove 'self' from arguments
-        f_args = self.arguments[1:]
-        args = list(args)
-        assert(len(args) == len(f_args))
+   #     f_args = self.arguments[1:]
+   #     args = list(args)
+   #     assert(len(args) == len(f_args))
 
-        return FunctionCall(self, args)
+   #     return FunctionCall(self, args)
 
     @property
     def is_procedure(self):
@@ -2512,6 +2513,42 @@ class FunctionDef(Basic):
             return False
 
         return True
+
+
+class SympyFunction(FunctionDef):
+    """Represents a function definition."""
+
+    def rename(self, newname):
+        """
+        Rename the SympyFunction name by creating a new SympyFunction with
+        newname.
+
+        newname: str
+            new name for the SympyFunction
+        """
+        return SympyFunction(newname, self.arguments,
+                           self.results, self.body,
+                           cls_name=self.cls_name)
+
+   
+
+class PythonFunction(FunctionDef):
+    """Represents a Python-Function definition."""
+
+
+
+    def rename(self, newname):
+        """
+        Rename the PythonFunction name by creating a new PythonFunction with
+        newname.
+
+        newname: str
+            new name for the PythonFunction
+        """
+        return PythonFunction(newname, self.arguments,
+                           self.results, self.body,
+                           cls_name=self.cls_name)
+
 
 
 class GetDefaultFunctionArg(Basic):

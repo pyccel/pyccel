@@ -63,7 +63,7 @@ from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign ,Assigns
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
-from pyccel.ast import FunctionDef, Interface
+from pyccel.ast import FunctionDef, Interface, PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For
@@ -281,6 +281,8 @@ class Parser(object):
         self._namespace['classes'] = {}
         self._namespace['functions'] = {}
         self._namespace['cls_constructs'] = {}
+        self._namespace['symbolic_functions'] = {}
+        self._namespace['python_functions'] = {}
         self._scope = {}  # represent the namespace of a function
         self._current_class = None
         self._current = None  # we use it to detect the current method or function
@@ -692,17 +694,66 @@ class Parser(object):
 
     def insert_function(self, func):
         """."""
-        container = self._namespace['functions']
+
+        if isinstance(func , SympyFunction):
+            self.insert_symbolic_function(func)
+        elif isinstance(func, PythonFunction):
+            self.insert_python_function(func)
+        elif isinstance(func, (FunctionDef, Interface)):
+            container = self._namespace['functions']
+            if isinstance(self._current, DottedName):
+                name = self._current.name[0]
+                container = self._scope[name]['functions']
+            container[str(func.name)] = func
+        else:
+            raise TypeError('Expected a Function definition')
+
+    def get_symbolic_function(self, name):
+        """."""
+        # TODO shall we keep the elif in _imports?
+
+        func = None
+        if name in self._namespace['symbolic_functions']:
+            func = self._namespace['symbolic_functions'][name]
+        elif name in self._imports:
+            func = self._imports[name]
+        return func
+
+    def insert_symbolic_function(self, func):
+        """."""
+        container = self._namespace['symbolic_functions']
         if isinstance(self._current, DottedName):
             name = self._current.name[0]
-            container = self._scope[name]['functions']
-
-        if isinstance(func, (FunctionDef, Interface)):
+            container = self._scope[name]['symbolic_functions']
+        if isinstance(func, SympyFunction):
             container[str(func.name)] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs, Lambda):
             container[str(func.lhs)] = func.rhs
         else:
-            raise TypeError('Expected a Function definition or a Lambda function')
+            raise TypeError('Expected a symbolic_function')
+ 
+
+    def get_python_function(self, name):
+        """."""
+        # TODO shall we keep the elif in _imports?
+        func = None
+        if name in self._namespace['python_functions']:
+            func = self._namespace['python_functions'][name]
+        elif name in self._imports:
+            func = self._imports[name]
+        return func
+
+    def insert_python_function(self, func):
+        """."""
+        container = self._namespace['python_functions']
+        if isinstance(self._current, DottedName):
+            name = self._current.name[0]
+            container = self._scope[name]['python_functions']
+
+        if isinstance(func, PythonFunction):
+            container[str(func.name)] = func
+        else:
+            raise TypeError('Expected a python_function')
 
     def remove(self, name):
         """."""
@@ -765,6 +816,8 @@ class Parser(object):
             self._scope[name] = {}
             self._scope[name]['variables'] = {}
             self._scope[name]['functions'] = {}
+            self._scope[name]['symbolic_functions'] = {}
+            self._scope[name]['python_functions'] = {}
         else:
             self._scope.pop(self._current)
             if isinstance(self._current, DottedName):
@@ -1110,19 +1163,14 @@ class Parser(object):
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
+            body = stmt.value
 
             if 'sympy' in decorators:
-                stmt.decorators.pop()
-                code = stmt.__str__()
-                g = {}
-                if PY2:
-                    exec(code) in {}, g
-                elif PY3:
-                    exec(code, g)
-
-                body=[Return(g[name.replace("'", '')](*arguments))]
+                return SympyFunction(name, arguments, [], body)
+            elif 'python' in decorators:
+                return PythonFunction(name, arguments, [], body)
             else:
-                body = self._fst_to_ast(stmt.value)
+                body = self._fst_to_ast(body)
 
             return FunctionDef(name,
                                arguments,
@@ -1279,7 +1327,12 @@ class Parser(object):
 
         elif isinstance(stmt, LambdaNode):
             expr = self._fst_to_ast(stmt.value)
-            args = self._fst_to_ast(stmt.arguments)
+            args = []
+            
+            for i in stmt.arguments:
+                var = self._fst_to_ast(i.name)
+                args += [var]
+                 
             return Lambda(args, expr)
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
@@ -1662,16 +1715,23 @@ class Parser(object):
             return expr_new
 
         elif isinstance(expr, Lambda):
-#            # TODO we need a name here!!
-#            self.set_current_fun("__lambda__")
-#
-#            args = expr.variables
-#            for a in args:
-#                dtype = NativeSymbol()
-#                var = Variable(dtype, str(a.name))
-#                self.insert_variable(var)
-#
-#            self.set_current_fun(None)
+            expr_names =set(map(str,expr.expr.atoms(Symbol)))
+            var_names = map(str, expr.variables)
+            if len(expr_names.difference(var_names))>0:
+                raise ValueError('Unknown variables in lambda definition ')
+            funcs = expr.expr.atoms(Function)
+            for func in funcs:
+                name = str(type(func).__name__)
+                f = self.get_symbolic_function(name)
+                if f is None:
+                    raise ValueError('Unknown function in lambda definition')
+                else:
+                    if isinstance(f, SympyFunction):
+                        f = FunctionCall(f,func.args)
+                    else:
+                        f =  f(*func.args)
+                    expr_new = expr.expr.subs(func, f)
+                    expr = Lambda(expr.variables, expr_new)
             return expr
 
         elif isinstance(expr, Function):
@@ -1923,6 +1983,11 @@ class Parser(object):
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
+                try:
+                    d_var
+                except:
+                    print rhs,type(rhs)
+                    print self._namespace['functions'].keys()
                 if isinstance(d_var, (list)):
                     if len(d_var)>1:
                         raise ValueError('can not assign multiple object into one variable')
@@ -2003,7 +2068,7 @@ class Parser(object):
                     allocatable = True
                 if dic['is_pointer']:
                     is_pointer = True
-                if dic['is_target'] and isinstance(rhs, Variable):
+                if 'is_target' in dic.keys() and dic['is_target'] and isinstance(rhs, Variable):
                     is_pointer = True 
                 if isinstance(expr_new.rhs, IndexedElement) \
                     and expr_new.lhs.rank > 0:
@@ -2024,9 +2089,9 @@ class Parser(object):
                     expr_new = SymbolicAssign(lhs, rhs)
                     # in a symbolic assign, the rhs can be a lambda expression
                     # it is then treated as a def node
-                    F = self.get_function(lhs)
+                    F = self.get_symbolic_function(lhs)
                     if F is None:
-                        self.insert_function(expr_new)
+                        self.insert_symbolic_function(expr_new)
                     else:
                         raise NotImplementedError('TODO')
 
@@ -2230,23 +2295,28 @@ class Parser(object):
 
                 # we annotate the body
 
-
-                body = self._annotate(expr.body, **settings)
+                if not isinstance(expr,(PythonFunction, SympyFunction)):
+                    body = self._annotate(expr.body, **settings)
+                else:
+                    body = expr.body
+                    
+                
 
                 # find return stmt and results
                 # we keep the return stmt, in case of handling multi returns later
 
                 for stmt in body:
 
-                    # TODO case of multiple calls to return
+                # TODO case of multiple calls to return
 
                     if isinstance(stmt, Return):
                         #TODO improve the search of return in nested bodies
                         # like ifs,for stmts and while stmts
                         results = stmt.expr
-                        if isinstance(results, Variable):
+                        if isinstance(results, Symbol):
                             results = [results]
                             kind = 'function'
+                
 
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
@@ -2260,13 +2330,19 @@ class Parser(object):
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
+                       # TODO should we add all the variables or only the ones used in the function 
 
-                        # TODO should we add all the variables or only the ones used in the function
 
-                func = FunctionDef(name,args,results,body,local_vars=local_vars,
-                                     global_vars=global_vars,cls_name=cls_name,
-                                      hide=hide,kind=kind,is_static=is_static,
-                                       imports=imports,decorators=decorators,)
+                if isinstance(expr, SympyFunction):
+                    func = SympyFunction(name,args,results,body,cls_name=cls_name)
+                elif isinstance(expr, PythonFunction):
+                    func = PythonFunction(name,args,results,body,cls_name=cls_name)
+                elif isinstance(expr, FunctionDef):
+                    func = FunctionDef(name,args,results,body,local_vars=local_vars,
+                                         global_vars=global_vars,cls_name=cls_name,
+                                          hide=hide,kind=kind,is_static=is_static,
+                                           imports=imports,decorators=decorators,)
+                
                 if cls_name:
                     cls = self.get_class(cls_name)
                     methods = list(cls.methods) + [func]
