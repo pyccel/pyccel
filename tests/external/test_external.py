@@ -49,15 +49,15 @@ def test_mpi():
 
     run('mpi', compiler='mpif90')
 
-#def test_openmp():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***      TESTING OPENMP       ***')
-#    print('***                           ***')
-#    print('*********************************')
-#
-#    run('openmp', accelerator='openmp')
-#
+def test_openmp():
+    print('*********************************')
+    print('***                           ***')
+    print('***      TESTING OPENMP       ***')
+    print('***                           ***')
+    print('*********************************')
+
+    run('openmp', accelerator='openmp')
+
 #def test_openacc():
 #    print('*********************************')
 #    print('***                           ***')
@@ -73,5 +73,5 @@ if __name__ == '__main__':
     test_blas()
     test_lapack()
     test_mpi()
-#    test_openmp()
+    test_openmp()
 #    test_openacc()

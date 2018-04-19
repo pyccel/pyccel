@@ -25,7 +25,7 @@ from redbaron import ForNode
 from redbaron import PrintNode
 from redbaron import DelNode
 from redbaron import DictNode, DictitemNode
-from redbaron import ForNode, WhileNode
+from redbaron import WhileNode
 from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
 from redbaron import DotNode, AtomtrailersNode
 from redbaron import CallNode
@@ -858,7 +858,30 @@ class Parser(object):
 
         # ...
         def _treat_iterable(stmt):
+            """
+            since redbaron puts the first comments after a block statement
+            inside the block, we need to remove them. this is in particular the
+            case when using openmp/openacc pragmas like #$ omp end loop
+            """
+            comments = []
+            for i, s in enumerate(stmt):
+                if isinstance(s, ForNode):
+                    # we loop from the end of the block
+                    body = [i for i in s.value]
+                    for e,t in enumerate(body[::-1]):
+                        if isinstance(t, CommentNode):
+                            comments.append(t)
+                            s.value.pop()
+                        else:
+                            break
+
+                    comments = comments[::-1]
+
             ls = [self._fst_to_ast(i) for i in stmt]
+            comments = [self._fst_to_ast(i) for i in comments]
+
+            ls += comments
+
             if isinstance(stmt, (list, ListNode)):
                 return List(*ls)
 
