@@ -49,23 +49,23 @@ def test_mpi():
 
     run('mpi', compiler='mpif90')
 
-def test_openmp():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING OPENMP       ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('openmp', accelerator='openmp')
-
-def test_openacc():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING OPENACC      ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('openacc', compiler='pgfortran', accelerator='openacc')
+#def test_openmp():
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***      TESTING OPENMP       ***')
+#    print('***                           ***')
+#    print('*********************************')
+#
+#    run('openmp', accelerator='openmp')
+#
+#def test_openacc():
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***      TESTING OPENACC      ***')
+#    print('***                           ***')
+#    print('*********************************')
+#
+#    run('openacc', compiler='pgfortran', accelerator='openacc')
 
 
 ######################
