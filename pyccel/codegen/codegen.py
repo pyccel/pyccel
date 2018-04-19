@@ -8,7 +8,7 @@ from pyccel.codegen.printing import fcode
 
 from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, \
     Import, Interface
-from pyccel.ast.core import Header, EmptyLine, Comment
+from pyccel.ast.core import Header, EmptyLine, NewLine, Comment
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign , Assigns
 from pyccel.ast.core import Variable, DottedName
 from pyccel.ast.core import For, If, While
@@ -193,6 +193,8 @@ class Codegen(object):
                 modules += [stmt]
             elif isinstance(stmt, Interface):
                 interfaces += [stmt]
+            elif isinstance(stmt, EmptyLine):
+                continue
             else:
 
                 # TODO improve later, as in the old codegen
@@ -229,7 +231,7 @@ class Codegen(object):
 
         #  ...
 
-        _stmts = (Header, EmptyLine, Comment)
+        _stmts = (Header, EmptyLine, NewLine, Comment)
         body = self.body
 
         ls = [i for i in body if not isinstance(i, _stmts)]

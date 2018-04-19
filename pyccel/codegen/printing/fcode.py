@@ -372,6 +372,9 @@ class FCodePrinter(CodePrinter):
         return '! {0} '.format(txt)
 
     def _print_EmptyLine(self, expr):
+        return ''
+
+    def _print_NewLine(self, expr):
         return '\n'
 
     def _print_AnnotatedComment(self, expr):

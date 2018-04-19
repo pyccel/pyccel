@@ -2530,7 +2530,7 @@ class SympyFunction(FunctionDef):
                            self.results, self.body,
                            cls_name=self.cls_name)
 
-   
+
 
 class PythonFunction(FunctionDef):
     """Represents a Python-Function definition."""
@@ -3272,6 +3272,25 @@ class EmptyLine(Basic):
 
     >>> from pyccel.ast.core import EmptyLine
     >>> EmptyLine()
+
+    """
+
+    def __new__(cls):
+        return Basic.__new__(cls)
+
+    def _sympystr(self, printer):
+        return ''
+
+class NewLine(Basic):
+    """Represents a NewLine in the code.
+
+    text : str
+       the comment line
+
+    Examples
+
+    >>> from pyccel.ast.core import NewLine
+    >>> NewLine()
 
     """
 
