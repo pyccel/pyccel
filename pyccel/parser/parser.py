@@ -1983,11 +1983,6 @@ class Parser(object):
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
-                try:
-                    d_var
-                except:
-                    print rhs,type(rhs)
-                    print self._namespace['functions'].keys()
                 if isinstance(d_var, (list)):
                     if len(d_var)>1:
                         raise ValueError('can not assign multiple object into one variable')
