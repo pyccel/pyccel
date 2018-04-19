@@ -1382,6 +1382,10 @@ class CustomDataType(DataType):
     def __init__(self, name='__UNDEFINED__'):
         self._name = name
 
+class NativeGeneric(DataType):
+    _name = 'Generic'
+    pass
+
 
 Bool    = NativeBool()
 Int     = NativeInteger()
@@ -1403,6 +1407,7 @@ NdArrayInt = NdArrayInt()
 NdArrayDouble = NdArrayDouble()
 NdArrayFloat = NdArrayFloat()
 NdArrayComplex = NdArrayComplex()
+Generic    = NativeGeneric()
 
 
 dtype_registry = {'bool': Bool,
@@ -1423,6 +1428,7 @@ dtype_registry = {'bool': Bool,
                   'ndarrayfloat': NdArrayFloat,
                   'ndarraydouble': NdArrayDouble,
                   'ndarraycomplex': NdArrayComplex,
+                  '*': Generic,
                   'str': String}
 
 
@@ -1871,9 +1877,11 @@ class Variable(Symbol):
                 is_optional=None,
                 shape=None, cls_base=None, cls_parameters=None):
 
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
+        # use str to make '*' work using py2
+        if isinstance(dtype, str) or (str(dtype) == '*'):
+            dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
+
             raise TypeError("datatype must be an instance of DataType.")
 
         if allocatable is None:
