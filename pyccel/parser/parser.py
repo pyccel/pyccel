@@ -72,7 +72,7 @@ from pyccel.ast import While
 from pyccel.ast import Print
 from pyccel.ast import Del
 from pyccel.ast import Assert
-from pyccel.ast import Comment, EmptyLine
+from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
@@ -731,7 +731,7 @@ class Parser(object):
             container[str(func.lhs)] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
- 
+
 
     def get_python_function(self, name):
         """."""
@@ -1289,7 +1289,7 @@ class Parser(object):
             return Assert(expr)
 
         elif isinstance(stmt, EndlNode):
-            return EmptyLine()
+            return NewLine()
 
         elif isinstance(stmt, CommentNode):
             # if annotated comment
@@ -1307,6 +1307,7 @@ class Parser(object):
                         # a metavar will not appear in the semantic stage.
                         # but can be used to modify the ast
                         self._metavars[str(expr.name)] = str(expr.value)
+                        #return NewLine()
                         return EmptyLine()
                     else:
                         return expr
@@ -1328,11 +1329,11 @@ class Parser(object):
         elif isinstance(stmt, LambdaNode):
             expr = self._fst_to_ast(stmt.value)
             args = []
-            
+
             for i in stmt.arguments:
                 var = self._fst_to_ast(i.name)
                 args += [var]
-                 
+
             return Lambda(args, expr)
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
@@ -1985,7 +1986,7 @@ class Parser(object):
                         d_var['is_target'] = False
                         d_var['is_pointer'] = True
                     #case of rhs is a target variable the lhs must be a pointer
-         
+
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
@@ -2070,7 +2071,7 @@ class Parser(object):
                 if dic['is_pointer']:
                     is_pointer = True
                 if 'is_target' in dic.keys() and dic['is_target'] and isinstance(rhs, Variable):
-                    is_pointer = True 
+                    is_pointer = True
                 if isinstance(expr_new.rhs, IndexedElement) \
                     and expr_new.lhs.rank > 0:
                     allocatable = True
@@ -2300,8 +2301,8 @@ class Parser(object):
                     body = self._annotate(expr.body, **settings)
                 else:
                     body = expr.body
-                    
-                
+
+
 
                 # find return stmt and results
                 # we keep the return stmt, in case of handling multi returns later
@@ -2317,7 +2318,7 @@ class Parser(object):
                         if isinstance(results, Symbol):
                             results = [results]
                             kind = 'function'
-                
+
 
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
@@ -2331,7 +2332,7 @@ class Parser(object):
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
-                       # TODO should we add all the variables or only the ones used in the function 
+                       # TODO should we add all the variables or only the ones used in the function
 
 
                 if isinstance(expr, SympyFunction):
@@ -2343,7 +2344,7 @@ class Parser(object):
                                          global_vars=global_vars,cls_name=cls_name,
                                           hide=hide,kind=kind,is_static=is_static,
                                            imports=imports,decorators=decorators,)
-                
+
                 if cls_name:
                     cls = self.get_class(cls_name)
                     methods = list(cls.methods) + [func]
@@ -2397,9 +2398,9 @@ class Parser(object):
 #                        self.insert_variable(get_func, name=get_func.namer
 
                 return funcs
-        elif isinstance(expr, EmptyLine):
-
+        elif isinstance(expr, (EmptyLine, NewLine)):
             return expr
+
         elif isinstance(expr, Print):
 
             args = self._annotate(expr.expr, **settings)
@@ -2494,6 +2495,7 @@ class Parser(object):
                     # all metavars here, will have a prefix and suffix = __
                     __ignore_at_import__ = False
                     __module_name__ = None
+                    __import_all__ = False
 
                     # we need to use str here since source has been defined
                     # using repr.
@@ -2512,6 +2514,9 @@ class Parser(object):
                     if 'ignore_at_import' in list(p.metavars.keys()):
                         __ignore_at_import__ = p.metavars['ignore_at_import']
 
+                    if 'import_all' in list(p.metavars.keys()):
+                        __import_all__ = p.metavars['import_all']
+
                     if 'module_name' in list(p.metavars.keys()):
                         __module_name__ = p.metavars['module_name']
                         expr = Import(expr.target, __module_name__)
@@ -2520,7 +2525,10 @@ class Parser(object):
                     if not __ignore_at_import__:
                         return expr
                     else:
-                        return EmptyLine()
+                        if __import_all__:
+                            return Import(__module_name__)
+                        else:
+                            return EmptyLine()
 
             return expr
 

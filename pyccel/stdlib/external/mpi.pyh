@@ -1,9 +1,14 @@
 # pyccel header for MPI.
 #
-# Conventions: - data are treated as str
+
+# On travis, 'use mpi, only: mpi_allgather' is not working
+# for this reason, we will ignore all imports 
+# and tell pyccel to add 'use mpi' using import_all
 
 #$ header metavar module_name='mpi'
 #$ header metavar module_version='3.1'
+#$ header metavar ignore_at_import=True
+#$ header metavar import_all=True
 #
 
 # ............................................................
