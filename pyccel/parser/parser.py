@@ -1190,9 +1190,15 @@ class Parser(object):
             body = stmt.value
 
             if 'sympy' in decorators:
-                return SympyFunction(name, arguments, [], body)
+                # TODO maybe we should run pylint here
+                func = SympyFunction(name, arguments, [], body)
+                self.insert_function(func)
+                return EmptyLine()
             elif 'python' in decorators:
-                return PythonFunction(name, arguments, [], body)
+                # TODO maybe we should run pylint here
+                func = PythonFunction(name, arguments, [], body)
+                self.insert_function(func)
+                return EmptyLine()
             else:
                 body = self._fst_to_ast(body)
 
@@ -2320,11 +2326,7 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-                if not isinstance(expr,(PythonFunction, SympyFunction)):
-                    body = self._annotate(expr.body, **settings)
-                else:
-                    # TODO improve: must call pylint to do further checking
-                    body = expr.body
+                body = self._annotate(expr.body, **settings)
 
                 # find return stmt and results
                 # we keep the return stmt, in case of handling multi returns later
@@ -2347,21 +2349,20 @@ class Parser(object):
                     if not var in args + results:
                         local_vars += [var]
 
+                # TODO should we add all the variables or only the ones used in the function
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
-                       # TODO should we add all the variables or only the ones used in the function
 
-
-                if isinstance(expr, SympyFunction):
-                    func = SympyFunction(name,args,results,body,cls_name=cls_name)
-                elif isinstance(expr, PythonFunction):
-                    func = PythonFunction(name,args,results,body,cls_name=cls_name)
-                elif isinstance(expr, FunctionDef):
-                    func = FunctionDef(name,args,results,body,local_vars=local_vars,
-                                         global_vars=global_vars,cls_name=cls_name,
-                                          hide=hide,kind=kind,is_static=is_static,
-                                           imports=imports,decorators=decorators,)
+                func = FunctionDef(name, args, results, body,
+                                   local_vars=local_vars,
+                                   global_vars=global_vars,
+                                   cls_name=cls_name,
+                                   hide=hide,
+                                   kind=kind,
+                                   is_static=is_static,
+                                   imports=imports,
+                                   decorators=decorators,)
 
                 if cls_name:
                     cls = self.get_class(cls_name)
