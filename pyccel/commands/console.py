@@ -44,16 +44,12 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     parser = MyParser(description='pyccel command line')
 
     # ...
-    parser.add_argument('--language', type=str, \
-                        help='Target language')
     parser.add_argument('--compiler', type=str, \
                         help='Used compiler')
     parser.add_argument('--openmp', action='store_true', \
                         help='uses openmp')
     parser.add_argument('--openacc', action='store_true', \
                         help='uses openacc')
-    parser.add_argument('--execute', action='store_true', \
-                        help='executes the binary file')
     parser.add_argument('--show', action='store_true', \
                         help='prints the generated file.')
     parser.add_argument('--debug', action='store_true', \
@@ -125,16 +121,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     filename = files[0]
 
-    if args.language:
-        language = args.language
-    else:
-        language = 'fortran'
-
     if compiler:
         if _which(compiler) is None:
             raise ValueError('Could not find {0}'.format(compiler))
-
-    execute = args.execute
 
     accelerator = None
     if openmp:
@@ -207,14 +196,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         code = codegen.doprint()
         fname = codegen.export()
 
-        # TODO get values from argparse
         # ... constructs the compiler flags
-        compiler = 'gfortran'
-        debug = False
-        accelerator = None
-        include = []
-        libdir = []
-
         flags = construct_flags(compiler,
                                 debug=debug,
                                 accelerator=accelerator,
@@ -223,16 +205,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         # ...
 
         # ... compile fortran code
+        # TODO shall we add them in the cmd line?
         modules = []
-        libs = []
         binary = None
-        is_module = False
 
         output, cmd = compile_fortran(fname, compiler, flags,
                                       binary=binary,
                                       verbose=False,
                                       modules=modules,
-                                      is_module=is_module,
+                                      is_module=codegen.is_module,
                                       libs=libs)
         # ...
 
