@@ -10,46 +10,46 @@
 #     - fix str in lapack.pyh headers
 
 from pyccel.stdlib.external.lapack import dgbtrf
-print('TODO')
+from pyccel.stdlib.external.lapack import dgbtrs
 
-#from pyccel.stdlib.external.lapack import dgbtrs
-#
-#from pyccel.stdlib.external.lapack import dgetrf
-#from pyccel.stdlib.external.lapack import dgecon
-#
-#from pyccel.stdlib.external.lapack import dgetrf
-#from pyccel.stdlib.external.lapack import dgetrs
-#
-#from pyccel.stdlib.external.lapack import dgetrf
-#from pyccel.stdlib.external.lapack import dgetri
-#
-#def test_1():
-#    n   = 25
-#    ml  = 1
-#    mu  = 1
-#    lda = 2 * ml + mu + 1
-#
-#    a = zeros((lda,n), double)
-#    b = zeros(n, double)
-#
-#    b[0]   = 1.0
-#    b[n-1] = 1.0
-#
-#    # Superdiagonal, Diagonal, Subdiagonal
-#    m = ml + mu
-#    a[m-1,1:n] = -1.0
-#    a[  m,0:n] =  2.0
-#    a[m+1,0:n-1] = -1.0
-#
-#    info = -1
-#    ipiv = zeros(n, int)
-#
-#    dgbtrf(n, n, ml, mu, a, lda, ipiv, info)
+from pyccel.stdlib.external.lapack import dgetrf
+from pyccel.stdlib.external.lapack import dgecon
+
+from pyccel.stdlib.external.lapack import dgetrf
+from pyccel.stdlib.external.lapack import dgetrs
+
+from pyccel.stdlib.external.lapack import dgetrf
+from pyccel.stdlib.external.lapack import dgetri
+
+from numpy import zeros
+
+def test_1():
+    n   = 25
+    ml  = 1
+    mu  = 1
+    lda = 2 * ml + mu + 1
+
+    a = zeros((lda,n))
+    b = zeros(n)
+
+    b[0]   = 1.0
+    b[n-1] = 1.0
+
+    # Superdiagonal, Diagonal, Subdiagonal
+    m = ml + mu
+    a[m-1,1:n] = -1.0
+    a[  m,0:n] =  2.0
+    a[m+1,0:n-1] = -1.0
+
+    info = -1
+    ipiv = zeros(n, 'int')
+
+    dgbtrf(n, n, ml, mu, a, lda, ipiv, info)
 #    assert(info == 0)
-#
-#    dgbtrs('n', n, ml, mu, 1, a, lda, ipiv, b, n, info)
+
+    dgbtrs('n', n, ml, mu, 1, a, lda, ipiv, b, n, info)
 #    assert(info == 0)
-#
+
 #def test_2():
 #    n = 3
 #    lda = n
