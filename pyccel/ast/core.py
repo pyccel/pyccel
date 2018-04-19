@@ -3221,7 +3221,7 @@ class ZerosLike(Function):
             raise TypeError('Unknown type for {name}, given '
                             '{dtype}'.format(dtype=type(rhs), name=rhs))
 
-# TODO: treat as a function
+
 class Print(Basic):
     """Represents a print function in the code.
 
@@ -3245,6 +3245,38 @@ class Print(Basic):
     @property
     def expr(self):
         return self._args[0]
+
+
+class SymbolicPrint(Basic):
+    """Represents a print function of symbolic expressions in the code.
+
+    expr : sympy expr
+        The expression to return.
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Print
+    >>> n,m = symbols('n,m')
+    >>> Print(('results', n,m))
+    Print((results, n, m))
+    """
+
+    def __new__(cls, expr):
+        if not iterable(expr):
+            raise TypeError('Expecting an iterable')
+
+        for i in expr:
+            if not isinstance(i, (Lambda, SymbolicAssign, SympyFunction)):
+                raise TypeError('Expecting Lambda, SymbolicAssign, '
+                                'SympyFunction for {}'.format(i))
+
+        return Basic.__new__(cls, expr)
+
+    @property
+    def expr(self):
+        return self._args[0]
+
 
 class Del(Basic):
     """Represents a memory deallocation in the code.

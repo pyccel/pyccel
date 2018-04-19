@@ -70,6 +70,7 @@ from pyccel.ast import For
 from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
+from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine, NewLine
@@ -2425,9 +2426,28 @@ class Parser(object):
             return expr
 
         elif isinstance(expr, Print):
-
             args = self._annotate(expr.expr, **settings)
-            return Print(args)
+            if len(args) == 0:
+                raise ValueError('no arguments given to print function')
+
+            is_symbolic = lambda var: (isinstance(var, Variable) and
+                                       isinstance(var.dtype, NativeSymbol))
+            test = all(is_symbolic(i) for i in args)
+            if not test:
+                raise ValueError('all arguments must be either symbolic or none of them')
+
+            if is_symbolic(args[0]):
+                _args = []
+                for a in args:
+                    f = self.get_symbolic_function(a.name)
+                    if f is None:
+                        _args.append(a)
+                    else:
+                        # TODO improve: how can we print SymbolicAssign as  lhs = rhs
+                        _args.append(f)
+                return SymbolicPrint(_args)
+            else:
+                return Print(args)
         elif isinstance(expr, Comment):
 
             return expr

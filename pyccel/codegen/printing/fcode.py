@@ -367,6 +367,15 @@ class FCodePrinter(CodePrinter):
         code = 'print *, {0}'.format(fs)
         return self._get_statement(code)
 
+    def _print_SymbolicPrint(self, expr):
+        # for every expression we will generate a print
+        _iprint = lambda e: "print *, 'sympy> {}'".format(e)
+        code = ''
+        for a in expr.expr:
+            code = '{code}{p}'.format(code=code, p=_iprint(a))
+        return self._get_statement(code)
+
+
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
         return '! {0} '.format(txt)
