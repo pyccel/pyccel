@@ -8,8 +8,7 @@ import argparse
 # TODO add version
 #  --version             show program's version number and exit
 
-
-from pyccel.codegen import build_file
+from pyccel.codegen.utilities import construct_flags, compile_fortran
 
 class MyParser(argparse.ArgumentParser):
     """
@@ -196,7 +195,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
             codegen.export()
 
     elif not analysis:
-        # TODO improve by compiling the generated file
         pyccel = Parser(filename)
         ast = pyccel.parse()
 
@@ -207,10 +205,36 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         name = os.path.splitext(name)[0]
         codegen = Codegen(ast, name)
         code = codegen.doprint()
-        if show:
-            print(code)
-        else:
-            codegen.export()
+        fname = codegen.export()
+
+        # TODO get values from argparse
+        # ... constructs the compiler flags
+        compiler = 'gfortran'
+        debug = False
+        accelerator = None
+        include = []
+        libdir = []
+
+        flags = construct_flags(compiler,
+                                debug=debug,
+                                accelerator=accelerator,
+                                include=include,
+                                libdir=libdir)
+        # ...
+
+        # ... compile fortran code
+        modules = []
+        libs = []
+        binary = None
+        is_module = False
+
+        output, cmd = compile_fortran(fname, compiler, flags,
+                                      binary=binary,
+                                      verbose=False,
+                                      modules=modules,
+                                      is_module=is_module,
+                                      libs=libs)
+        # ...
 
     else:
         from pyccel.complexity.memory import MemComplexity

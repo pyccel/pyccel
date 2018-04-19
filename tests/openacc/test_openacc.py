@@ -7,16 +7,16 @@ from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 import os
 
-def test_lapack():
+def test_openacc_core():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING LAPACK       ***')
+    print('***   TESTING OPENACC-CORE    ***')
     print('***                           ***')
     print('*********************************')
 
     init_dir = os.getcwd()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, 'scripts')
+    path_dir = os.path.join(base_dir, 'scripts/core')
 
     files = sorted(os.listdir(path_dir))
     files = [f for f in files if (f.endswith(".py"))]
@@ -42,4 +42,4 @@ def test_lapack():
 
 ######################
 if __name__ == '__main__':
-    test_lapack()
+    test_openacc_core()

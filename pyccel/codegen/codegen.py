@@ -312,6 +312,8 @@ class Codegen(object):
             f.write(line)
         f.close()
 
+        return filename
+
 
 class FCodegen(Codegen):
 
