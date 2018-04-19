@@ -50,11 +50,7 @@ script:
   - $PYTEST tests/syntax/test_syntax.py
   - $PYTEST tests/semantic/test_semantic.py
   - $PYTEST tests/codegen/test_codegen.py
-  - $PYTEST tests/blas/test_blas.py
-  - $PYTEST tests/lapack/test_lapack.py
-  - $PYTEST tests/mpi/test_mpi.py
-  - $PYTEST tests/openmp/test_openmp.py
-  - $PYTEST tests/openacc/test_openacc.py
+#  - $PYTEST tests/external/test_external.py
   - cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
 #  - python tests/test_pyccel.py --execute
 #  - python tests/test_pyccel_openmp.py --openmp --execute
