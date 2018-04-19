@@ -1877,6 +1877,12 @@ class Parser(object):
                     # in the ConsturcterCall
 
                     d_var['is_polymorphic'] = False
+                if d_var['is_target']:
+                    if isinstance(rhs, Symbol):
+                        d_var['is_target'] = False
+                        d_var['is_pointer'] = True
+                    #case of rhs is a target variable the lhs must be a pointer
+         
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
@@ -1960,6 +1966,8 @@ class Parser(object):
                     allocatable = True
                 if dic['is_pointer']:
                     is_pointer = True
+                if dic['is_target'] and isinstance(rhs, Variable):
+                    is_pointer = True 
                 if isinstance(expr_new.rhs, IndexedElement) \
                     and expr_new.lhs.rank > 0:
                     allocatable = True
