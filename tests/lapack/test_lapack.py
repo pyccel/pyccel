@@ -7,10 +7,10 @@ from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 import os
 
-def test_blas():
+def test_lapack():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING BLAS         ***')
+    print('***      TESTING LAPACK       ***')
     print('***                           ***')
     print('*********************************')
 
@@ -42,4 +42,4 @@ def test_blas():
 
 ######################
 if __name__ == '__main__':
-    test_blas()
+    test_lapack()
