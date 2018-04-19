@@ -18,7 +18,7 @@
 #      - data movement routines (do we really need them?)
 
 
-#$ header metavar module_name='omp_lib'
+#$ header metavar module_name='openacc'
 #$ header metavar module_version='2.5'
 
 # ............................................................

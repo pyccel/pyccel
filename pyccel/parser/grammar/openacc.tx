@@ -15,20 +15,20 @@ OpenaccStmt: '#$' 'acc' stmt=AccConstructOrDirective;
 AccConstructOrDirective:
     AccParallelConstruct 
   | AccKernelsConstruct
-//  | AccDataConstruct
-//  | AccEnterDataDirective
-//  | AccExitDataDirective
-//  | AccHostDataDirective
-//  | AccLoopConstruct
-//  | AccAtomicConstruct
-//  | AccDeclareDirective
-//  | AccInitDirective
-//  | AccShutDownDirective
-//  | AccSetDirective
-//  | AccUpdateDirective
-//  | AccRoutineDirective
-//  | AccWaitDirective
-//  | AccEndClause
+  | AccDataConstruct
+  | AccEnterDataDirective
+  | AccExitDataDirective
+  | AccHostDataDirective
+  | AccLoopConstruct
+  | AccAtomicConstruct
+  | AccDeclareDirective
+  | AccInitDirective
+  | AccShutDownDirective
+  | AccSetDirective
+  | AccUpdateDirective
+  | AccRoutineDirective
+  | AccWaitDirective
+  | AccEndClause
 ;
 ////////////////////////////////////////////////////
 
@@ -239,7 +239,7 @@ AccDefaultStatus: ('none' | 'present');
 AccAtomicStatus: ('read' | 'write' | 'update' | 'capture');
 AccWorkerArg: ('num' ':')? arg=INT ;
 AccVectorArg: ('length' ':')? arg=INT ;
-AccConstructs: ('parallel' | 'loop');
+AccConstructs: ('parallel' | 'loop' | 'kernels');
 
 AccGangArg: AccGangStaticArg | AccGangNumArg; 
 AccGangNumArg: ('num' ':')? arg=INT ;
