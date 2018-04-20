@@ -106,8 +106,6 @@ PY3 = sys.version_info[0] == 3
 ########################
 #  ... TODO should be moved to pyccel.ast
 
-from sympy.core.basic import Basic
-
 from pyccel.ast import Range
 from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
@@ -295,6 +293,8 @@ class Parser(object):
         # the following flags give us a status on the parsing stage
         self._syntax_done = False
         self._semantic_done = False
+        # current position for errors
+        self._bounding_box = None
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -387,6 +387,10 @@ class Parser(object):
             return self.filename.split('.')[-1] == 'pyh'
         else:
             return False
+
+    @property
+    def bounding_box(self):
+        return self._bounding_box
 
     def append_parent(self, parent):
         """."""
@@ -974,8 +978,11 @@ class Parser(object):
             rhs = self._fst_to_ast(stmt.value)
             if stmt.operator in ['+', '-', '*', '/']:
                 return AugAssign(lhs, stmt.operator, rhs)
-
-            return Assign(lhs, rhs)
+            else:
+                expr = Assign(lhs, rhs)
+                # we set the fst to keep track of needed information for errors
+                expr.set_fst(stmt)
+                return expr
 
         elif isinstance(stmt, NameNode):
             if isinstance(stmt.previous, DotNode):
@@ -1674,7 +1681,9 @@ class Parser(object):
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
-                raise PyccelSemanticError('Symbolic {name} variable is not allowed'.format(name=name))
+                errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              bounding_box=self.bounding_box,
+                              severity='error', blocker=True)
             return var
 
         elif isinstance(expr, DottedVariable):
@@ -1836,6 +1845,8 @@ class Parser(object):
             rhs = expr.rhs
             exprs = rhs.atoms(Function)
             assigns = None
+            # TODO unset position at the end of this part
+            self._bounding_box = expr.fst.absolute_bounding_box
 
             if len(exprs)>0 and not isinstance(rhs, (Function, Lambda)):
                 #case of a function call in the rhs

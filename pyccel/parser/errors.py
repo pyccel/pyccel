@@ -41,6 +41,8 @@ class ErrorInfo:
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.
+        if isinstance(column, (tuple, list)):
+            column = '-'.join(str(i) for i in column)
         self.column = column
         # Either 'error', 'critical', or 'warning'.
         self.severity = severity
@@ -72,7 +74,7 @@ class ErrorInfo:
             if not self.column:
                 text = '{text}: {line}'.format(text=text, line=self.line)
             else:
-                text = '{text}: {line},{column}'.format(text=text, line=self.line,
+                text = '{text}: [{line},{column}]'.format(text=text, line=self.line,
                                                      column=self.column)
 
         text = '{text}| {msg}'.format(text=text, msg=self.message)
@@ -158,6 +160,7 @@ class Errors:
                message,
                line = None,
                column = None,
+               bounding_box = None,
                blocker = False,
                severity = 'error',
                symbol = None,
@@ -167,6 +170,13 @@ class Errors:
         """
         if filename is None:
             filename = self.target['file']
+
+        # TODO improve: this works only for Assign
+        if bounding_box:
+            tl = bounding_box.top_left
+            br = bounding_box.bottom_right
+            line = tl.line
+            column = (tl.column, br.column)
 
         info = ErrorInfo(filename,
                          line=line,

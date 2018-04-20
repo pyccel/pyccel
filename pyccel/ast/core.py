@@ -8,7 +8,7 @@ from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational, Ne, Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic as sp_Basic
 from sympy.core.function import Function
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul, Pow
@@ -25,7 +25,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
@@ -49,6 +49,18 @@ from sympy.core.compatibility import is_sequence
 #      - Vector case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
+
+
+class Basic(sp_Basic):
+    """Basic class for Pyccel AST."""
+
+    def set_fst(self, fst):
+        """Sets the redbaron fst."""
+        self._fst = fst
+
+    @property
+    def fst(self):
+        return self._fst
 
 
 def subs(expr, new_elements):
@@ -346,6 +358,7 @@ class Assign(Basic):
                 return True
 
         return False
+
 
 class Assigns(Basic):
     """Represents a list of assignments for code generation.
