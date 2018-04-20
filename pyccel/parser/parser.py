@@ -1368,7 +1368,10 @@ class Parser(object):
 
             return Lambda(args, expr)
         elif isinstance(stmt, WithNode):
-            raise NotImplemented('TODO')
+            domain = self._fst_to_ast(stmt.contexts[0].value)
+            body   = self._fst_to_ast(stmt.value)
+            settings = None
+            return With(domain, body, settings)
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
@@ -1696,7 +1699,7 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == expr.args[1].name and 'property' \
                         in i.decorators:
-                        second = FunctionCall(i, (), kind=i.kind)
+                        second = FunctionCall(i, [], kind=i.kind)
                         return DottedVariable(first, second)
 
             if not isinstance(expr.args[1], Function):
@@ -1708,7 +1711,7 @@ class Parser(object):
                     if str(i.name) == str(type(expr.args[1]).__name__):
                         args = [self._annotate(arg) for arg in
                                 expr.args[1].args]
-                        if len(args) == 1 and args[0] == ():
+                        if args == ((),) or args ==[()]:
                             args = []
                         second = FunctionCall(i, args, kind=i.kind)
             return DottedVariable(first, second)
@@ -1812,7 +1815,8 @@ class Parser(object):
                 # without the class Variable, then we will treat it during the
                 # Assign annotation
 #                return MethodCall(method, args, cls_variable=None, kind=None)
-
+                if args == ((),) or args ==[()]:
+                    args = []
                 return ConstructorCall(method, args, cls_variable=None)
 
             else:
@@ -1821,7 +1825,7 @@ class Parser(object):
                 func = self.get_function(name)
                 if not func is None:
                     if isinstance(func, (FunctionDef, Interface)):
-                        if args == [()]:
+                        if args == ((),) or args ==[()]:
                             args = []
 
                             # case of a function that takes no argument
@@ -2582,6 +2586,14 @@ class Parser(object):
 
         elif isinstance(expr, AnnotatedComment):
             return expr
+        elif isinstance(expr, With):
+            domaine = self._annotate(expr.test)
+            parent = domaine.cls_base
+            if not parent.is_with_construct:
+                raise ValueError('with construct can only applied to '
+                                    'classes with __enter__ and __exit__ methods')
+            body = self._annotate(expr.body)
+            return With(domaine, body, None)
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
