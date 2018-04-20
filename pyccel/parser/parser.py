@@ -97,6 +97,7 @@ from pyccel.parser.messages import *
 from collections import OrderedDict
 import importlib
 import sys
+import traceback
 
 # Useful for very coarse version differentiation.
 PY2 = sys.version_info[0] == 2
@@ -199,7 +200,6 @@ def get_filename_from_import(module):
         errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
                       symbol=source,
-                      blocker=True,
                       severity='critical')
 
     filename_pyh = os.path.join(package_dir, filename_pyh)
@@ -213,7 +213,6 @@ def get_filename_from_import(module):
     errors = Errors()
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
                   symbol=module,
-                  blocker=True,
                   severity='critical')
 #  ...
 
@@ -295,6 +294,10 @@ class Parser(object):
         self._semantic_done = False
         # current position for errors
         self._bounding_box = None
+        # flag for blocking errors. if True, an error with this flag will cause
+        # Pyccel to stop
+        # TODO ERROR must be passed to the Parser __init__ as argument
+        self._blocking = False
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -392,6 +395,10 @@ class Parser(object):
     def bounding_box(self):
         return self._bounding_box
 
+    @property
+    def blocking(self):
+        return self._blocking
+
     def append_parent(self, parent):
         """."""
         # TODO check parent is not in parents
@@ -446,7 +453,16 @@ class Parser(object):
 
         # then we treat the current file
         ast = self.ast
-        ast = self._annotate(ast, **settings)
+        # we add the try/except to allow the parser to find all possible errors
+        try:
+            ast = self._annotate(ast, **settings)
+        except Exception as e:
+            errors.check()
+            # TODO ERROR this is usefull only for developpers
+            #      must be hidden for users
+            traceback.print_exc()
+            raise SystemExit(0)
+
         self._ast = ast
 
         # in the case of a header file, we need to convert all headers to
@@ -1402,10 +1418,11 @@ class Parser(object):
             print ('*** type inference for : ', type(expr))
 
         d_var = {}
-        d_var['datatype'] = None
+        #d_var['datatype'] = None
+        d_var['datatype'] = NativeSymbol()
         d_var['allocatable'] = None
         d_var['shape'] = None
-        d_var['rank'] = None
+        d_var['rank'] = 0
         d_var['is_pointer'] = None
         d_var['is_target'] = None
         d_var['is_polymorphic'] = None
@@ -1417,7 +1434,10 @@ class Parser(object):
 
         DEFAULT_FLOAT = settings.pop('default_float', 'double')
 
-        if isinstance(expr, Integer):
+        if isinstance(expr, type(None)):
+            return d_var
+
+        elif isinstance(expr, Integer):
             d_var['datatype'] = 'int'
             d_var['allocatable'] = False
             d_var['rank'] = 0
@@ -1544,13 +1564,16 @@ class Parser(object):
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
-            r_min = min(ranks)
-            r_max = max(ranks)
-            if not r_min == r_max:
-                if not r_min == 0:
-                    raise ValueError('cannot process arrays of different ranks.'
-                            )
-            rank = r_max
+            if ranks:
+                r_min = min(ranks)
+                r_max = max(ranks)
+                if not r_min == r_max:
+                    if not r_min == 0:
+                        raise ValueError('cannot process arrays of different ranks.'
+                                )
+                rank = r_max
+            else:
+                rank = 0
             # ...
 
             # ...
@@ -1571,6 +1594,7 @@ class Parser(object):
                 elif isinstance(i, (NativeDouble, NativeFloat)):
                     d_var['datatype'] = i
                     break
+
             d_var['allocatable'] = any(allocatables)
             d_var['is_pointer'] = any(pointers)
             d_var['shape'] = shape
@@ -1653,7 +1677,7 @@ class Parser(object):
                 # TODO ERROR not tested yet
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
             return var
 
         elif isinstance(expr, str):
@@ -1668,7 +1692,7 @@ class Parser(object):
                 # TODO ERROR not tested yet
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
             dtype = var.dtype
 
             # TODO add shape
@@ -1680,12 +1704,18 @@ class Parser(object):
             if var is None:
                 errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
 
             # TODO check consistency of indices with shape/rank
             args = tuple(expr.indices)
-            dtype = var.dtype
-            return IndexedVariable(name, dtype=dtype).__getitem__(*args)
+            # case of Pyccel ast Variable, IndexedVariable
+            # if not possible we use symbolic objects
+            if hasattr(var, 'dtype'):
+                dtype = var.dtype
+                return IndexedVariable(name, dtype=dtype).__getitem__(*args)
+            else:
+                return IndexedBase(name).__getitem__(*args)
+
 
         elif isinstance(expr, Symbol):
             name = str(expr.name)
@@ -1693,7 +1723,7 @@ class Parser(object):
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
             return var
 
         elif isinstance(expr, DottedVariable):
@@ -1845,7 +1875,7 @@ class Parser(object):
 
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
 
         elif isinstance(expr, FunctionCall):
             return expr
@@ -2065,7 +2095,7 @@ class Parser(object):
                     # TODO ERROR not tested yet
                     errors.report(UNDEFINED_VARIABLE, symbol=name,
                                   bounding_box=self.bounding_box,
-                                  severity='error', blocker=True)
+                                  severity='error', blocker=self.blocking)
 
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype)
@@ -2077,7 +2107,7 @@ class Parser(object):
                 if var is None:
                     errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
                                   bounding_box=self.bounding_box,
-                                  severity='error', blocker=True)
+                                  severity='error', blocker=self.blocking)
 
                 args = tuple(lhs.indices)
                 dtype = var.dtype
@@ -2184,7 +2214,7 @@ class Parser(object):
                 # TODO ERROR not tested yet
                 errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
 
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
@@ -2276,7 +2306,7 @@ class Parser(object):
                 # TODO ERROR wrong position
                 errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
 
             # we construct a FunctionDef from its header
             if header:
@@ -2334,7 +2364,7 @@ class Parser(object):
                                         errors.report(REDEFINING_VARIABLE,
                                                       symbol=n_name,
                                                       severity='error',
-                                                      blocker=True)
+                                                      blocker=self.blocking)
 
                                     self.insert_variable(n_arg)
                                     additional_args += [n_arg]
@@ -2524,14 +2554,14 @@ class Parser(object):
             if not isinstance(expr.rhs, Nil):
                 errors.report(PYCCEL_RESTRICTION_IS_RHS,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
 
             name = expr.lhs
             var = self.get_variable(str(name))
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
-                              severity='error', blocker=True)
+                              severity='error', blocker=self.blocking)
 
             return Is(var, expr.rhs)
 

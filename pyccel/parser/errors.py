@@ -51,7 +51,7 @@ class ErrorInfo:
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = blocker
+        self.blocker = blocker or (severity == 'critical')
 
     def __str__(self):
 
@@ -164,7 +164,8 @@ class Errors:
                blocker = False,
                severity = 'error',
                symbol = None,
-               filename = None):
+               filename = None,
+               verbose = False):
         """Report message at the given line using the current error context.
         stage: 'syntax', 'semantic' or 'codegen'
         """
@@ -185,6 +186,9 @@ class Errors:
                          message=message,
                          symbol=symbol,
                          blocker=blocker)
+
+        if verbose: print(info)
+
         if blocker:
             if info.stop_here(self.mode):
                 # we first print all messages
@@ -239,12 +243,13 @@ class Errors:
             print(self.__str__())
 
     def __str__(self):
-        text = ''
+        print_path = (len(self.error_info_map.keys()) > 1)
+        text = '[pyccel] :: {} stage\n'.format(self.parser_stage)
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
-            text += '>>> {path}\n'.format(path=path)
+            if print_path: text += ' filename :: {path}\n'.format(path=path)
             for err in errors:
-                text += str(err) + '\n'
+                text += ' ' + str(err) + '\n'
         return text
 
 if __name__ == '__main__':
