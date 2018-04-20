@@ -53,6 +53,7 @@ from sympy.core.compatibility import is_sequence
 
 class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
+    _fst = None
 
     def set_fst(self, fst):
         """Sets the redbaron fst."""

@@ -465,6 +465,8 @@ class Parser(object):
                                       blocker=True,
                                       severity='critical')
 
+#        print('++++++++++++++')
+#        print(errors.error_info_map)
         errors.check()
         self._semantic_done = True
 
@@ -1220,10 +1222,13 @@ class Parser(object):
             methods = self._fst_to_ast(methods)
             attributes = methods[0].arguments
             parent = [i.value for i in stmt.inherit_from]
-            return ClassDef(name=name,
+            expr = ClassDef(name=name,
                             attributes=attributes,
                             methods=methods,
                             parent=parent)
+            # we set the fst to keep track of needed information for errors
+            expr.set_fst(stmt)
+            return expr
 
         elif isinstance(stmt, AtomtrailersNode):
             return self._fst_to_ast(stmt.value)
@@ -1645,7 +1650,9 @@ class Parser(object):
             name = expr.name
             var = self.get_variable(name)
             if var is None:
+                # TODO ERROR not tested yet
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
             return var
 
@@ -1658,7 +1665,9 @@ class Parser(object):
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
+                # TODO ERROR not tested yet
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
             dtype = var.dtype
 
@@ -1670,6 +1679,7 @@ class Parser(object):
             var = self.get_variable(name)
             if var is None:
                 errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
 
             # TODO check consistency of indices with shape/rank
@@ -1798,7 +1808,8 @@ class Parser(object):
                     #      want to instantiate a class that has no __init__
                     #      construct
                     errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                                  severity='warning', blocker=True)
+                                  bounding_box=self.bounding_box,
+                                  severity='error', blocker=True)
                 args = expr.args
                 m_args = method.arguments[1:]  # we delete the self arg
 
@@ -1819,20 +1830,21 @@ class Parser(object):
                 func = self.get_function(name)
                 if not func is None:
                     if isinstance(func, (FunctionDef, Interface)):
+                        # case of a function that takes no argument
                         if args == [()]:
                             args = []
 
-                            # case of a function that takes no argument
-
                         if 'inline' in func.decorators:
                             return FunctionCall(func, args).inline
+
                         return FunctionCall(func, args)
+
                     else:
+                        # return Function(name)(*args)
                         return func(*args)
 
-                        # return Function(name)(*args)
-
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
 
         elif isinstance(expr, FunctionCall):
@@ -1846,7 +1858,11 @@ class Parser(object):
             exprs = rhs.atoms(Function)
             assigns = None
             # TODO unset position at the end of this part
-            self._bounding_box = expr.fst.absolute_bounding_box
+            if expr.fst:
+                self._bounding_box = expr.fst.absolute_bounding_box
+            else:
+                msg = 'Found a node without fst member ({})'.format(type(expr))
+                raise PyccelSemanticError(msg)
 
             if len(exprs)>0 and not isinstance(rhs, (Function, Lambda)):
                 #case of a function call in the rhs
@@ -1855,7 +1871,12 @@ class Parser(object):
                 for i in exprs:
                     var = self.create_variable(i)
                     rhs = rhs.subs(i,var)
-                    assigns += [Assign(var,i)]
+                    expr_new = Assign(var,i)
+
+                    # we set the fst to keep track of needed information for errors
+                    expr_new.set_fst(expr.fst)
+                    assigns.append(expr_new)
+
                 assigns = [self._annotate(i, **settings) for i in assigns]
 
             rhs = self._annotate(rhs, **settings)
@@ -2035,34 +2056,34 @@ class Parser(object):
                 var = self.get_variable(name)
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
+
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
-
                 # TODO check consistency of indices with shape/rank
-
                 name = str(lhs.name)
                 var = self.get_variable(name)
                 if var is None:
+                    # TODO ERROR not tested yet
                     errors.report(UNDEFINED_VARIABLE, symbol=name,
+                                  bounding_box=self.bounding_box,
                                   severity='error', blocker=True)
 
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype)
+
             elif isinstance(lhs, (IndexedElement, Indexed)):
-
                 # TODO check consistency of indices with shape/rank
-
                 name = str(lhs.base)
                 var = self.get_variable(name)
                 if var is None:
-                    errors.report(UNDEFINED_INDEXED_VARIABLE,
-                                  symbol=name, severity='error',
-                                  blocker=True)
+                    errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
+                                  bounding_box=self.bounding_box,
+                                  severity='error', blocker=True)
+
                 args = tuple(lhs.indices)
                 dtype = var.dtype
-                lhs = IndexedVariable(name,
-                        dtype=dtype).__getitem__(*args)
-            elif isinstance(lhs, DottedVariable):
+                lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
 
+            elif isinstance(lhs, DottedVariable):
                 dtype = d_var.pop('datatype')
                 name = lhs.args[0].name
                 if self._current == '__init__':
@@ -2075,13 +2096,11 @@ class Parser(object):
                     n_name = str(lhs.args[1].name)
                     attributes += [Variable(dtype, n_name, **d_var)]
 
-                     # update the attributes of the class and push it to the namespace
-
+                    # update the attributes of the class and push it to the namespace
                     self.insert_class(ClassDef(cls_name, attributes,
                             [], parent=parent))
 
-                     # update the self variable with the new attributes
-
+                    # update the self variable with the new attributes
                     dt = self.get_class_construct(cls_name)()
                     var = Variable(dt, 'self',
                                    cls_base=self.get_class(cls_name))
@@ -2091,6 +2110,7 @@ class Parser(object):
                 else:
                     lhs = self._annotate(lhs, **settings)
 
+            # TODO ERROR must pass fst
             expr_new = Assign(lhs, rhs, strict=False)
             if not isinstance(lhs, (list, Tuple, tuple)):
                 d_var = [d_var]
@@ -2149,6 +2169,7 @@ class Parser(object):
                 assigns += [expr_new]
                 return Assigns(assigns)
             return expr_new
+
         elif isinstance(expr, For):
             # treatment of the index/indices
             if isinstance(expr.target, Symbol):
@@ -2160,8 +2181,10 @@ class Parser(object):
                     self.insert_variable(target)
             else:
                 dtype = type(expr.target)
+                # TODO ERROR not tested yet
                 errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
-                              severity='error')
+                              bounding_box=self.bounding_box,
+                              severity='error', blocker=True)
 
             itr = self._annotate(expr.iterable, **settings)
             body = self._annotate(expr.body, **settings)
@@ -2232,10 +2255,9 @@ class Parser(object):
                         ls += [var]
                 return Return(ls, assigns)
             else:
-                raise NotImplementedError('only symbol or iterable are allowed for returns'
-                        )
-        elif isinstance(expr, FunctionDef):
+                raise NotImplementedError('only symbol or iterable are allowed for returns')
 
+        elif isinstance(expr, FunctionDef):
             name = str(expr.name)
             name = name.replace("'", '')  # remove quotes for str representation
             cls_name = expr.cls_name
@@ -2244,30 +2266,29 @@ class Parser(object):
             decorators = expr.decorators
             funcs = []
             is_static = False
+
             if cls_name:
                 header = self.get_header(cls_name + """.""" + name)
             else:
                 header = self.get_header(name)
+
             if expr.arguments and not header:
+                # TODO ERROR wrong position
                 errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
 
-                # we construct a FunctionDef from its header
-
+            # we construct a FunctionDef from its header
             if header:
                 interfaces = header.create_definition()
 
                 # is_static will be used for f2py
-
                 is_static = header.is_static
 
                 # get function kind from the header
-
                 kind = header.kind
             else:
-
                 # this for the case of a function without arguments => no header
-
                 interfaces = [FunctionDef(name, [], [], [])]
 
             for m in interfaces:
@@ -2309,8 +2330,12 @@ class Parser(object):
                                     # TODO clean namespace later
                                     var = self.get_variable(n_name)
                                     if not var is None:
-                                        # TODO report appropriate message
-                                        errors.report('variable already defined', symbol=n_name, severity='error', blocker=True)
+                                        # TODO ERROR not tested yet
+                                        errors.report(REDEFINING_VARIABLE,
+                                                      symbol=n_name,
+                                                      severity='error',
+                                                      blocker=True)
+
                                     self.insert_variable(n_arg)
                                     additional_args += [n_arg]
                                 # update shape
@@ -2468,10 +2493,10 @@ class Parser(object):
 
             methods = [self._annotate(i) for i in methods]
 
-            # remove the self object
-
             if not const:
-                raise SystemExit('missing contuctor in the class {0}'.format(name))
+                errors.report(UNDEFINED_INIT_METHOD, symbol=name,
+                              bounding_box=self.bounding_box,
+                              severity='error', blocker=True)
 
             methods = [const] + methods
             header = self.get_header(name)
@@ -2486,26 +2511,30 @@ class Parser(object):
                     interfaces += [i]
             return ClassDef(name, attributes, methods,
                             interfaces=interfaces, parent=parent)
+
         elif isinstance(expr, Pass):
-
             return Pass()
-        elif isinstance(expr, Del):
 
+        elif isinstance(expr, Del):
             ls = self._annotate(expr.variables)
             return Del(ls)
-        elif isinstance(expr, Is):
 
+        elif isinstance(expr, Is):
+            # TODO ERROR wrong position
             if not isinstance(expr.rhs, Nil):
                 errors.report(PYCCEL_RESTRICTION_IS_RHS,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
 
             name = expr.lhs
             var = self.get_variable(str(name))
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
+                              bounding_box=self.bounding_box,
                               severity='error', blocker=True)
 
             return Is(var, expr.rhs)
+
         elif isinstance(expr, Import):
 
             # TODO - must have a dict where to store things that have been
