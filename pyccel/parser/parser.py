@@ -43,6 +43,7 @@ from redbaron import ImportNode, FromImportNode
 from redbaron import DottedAsNameNode
 from redbaron import NameAsNameNode
 from redbaron import LambdaNode
+from redbaron import WithNode
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, \
                        NativeComplex
@@ -85,6 +86,7 @@ from pyccel.ast import Is
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment
+from pyccel.ast import With
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError, \
                                  PyccelSemanticError
@@ -1334,6 +1336,8 @@ class Parser(object):
                 args += [var]
                  
             return Lambda(args, expr)
+        elif isinstance(stmt, WithNode):
+            raise NotImplemented('TODO')
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
