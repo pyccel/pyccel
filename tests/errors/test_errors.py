@@ -11,29 +11,37 @@ from pyccel.codegen import Codegen
 from pyccel.parser.errors import Errors
 import os
 
-#def test_syntax_errors():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***   TESTING SYNTAX ERRORS   ***')
-#    print('***                           ***')
-#    print('*********************************')
-#
-#    init_dir = os.getcwd()
-#    base_dir = os.path.dirname(os.path.realpath(__file__))
-#    path_dir = os.path.join(base_dir, 'syntax')
-#
-#    files = sorted(os.listdir(path_dir))
-#    files = [f for f in files if (f.endswith(".py"))]
-#
-#    os.chdir(path_dir)
-#    for f in files:
-#        print('> testing {0}'.format(str(f)))
-#
-#        pyccel = Parser(f)
-#        ast = pyccel.parse()
-#
-#    os.chdir(init_dir)
-#    print('\n')
+def test_syntax_errors():
+    print('*********************************')
+    print('***                           ***')
+    print('***   TESTING SYNTAX ERRORS   ***')
+    print('***                           ***')
+    print('*********************************')
+
+    init_dir = os.getcwd()
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, 'syntax')
+
+    files = sorted(os.listdir(path_dir))
+    files = [f for f in files if (f.endswith(".py"))]
+
+    os.chdir(path_dir)
+    for f in files:
+        print('> testing {0}'.format(str(f)))
+
+        pyccel = Parser(f)
+
+        try:
+            ast = pyccel.parse()
+        except:
+            pass
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
+    os.chdir(init_dir)
+    print('\n')
 
 def test_semantic_errors():
     print('*********************************')
@@ -71,5 +79,5 @@ def test_semantic_errors():
 
 ######################
 if __name__ == '__main__':
-#    test_syntax_errors()
-    test_semantic_errors()
+    test_syntax_errors()
+#    test_semantic_errors()

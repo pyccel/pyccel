@@ -434,7 +434,15 @@ class Parser(object):
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
-        ast = self._fst_to_ast(self.fst)
+        # we add the try/except to allow the parser to find all possible errors
+        try:
+            ast = self._fst_to_ast(self.fst)
+        except Exception as e:
+            errors.check()
+            if self.show_traceback:
+                traceback.print_exc()
+            raise SystemExit(0)
+
         self._ast = ast
 
         errors.check()
@@ -470,8 +478,6 @@ class Parser(object):
             ast = self._annotate(ast, **settings)
         except Exception as e:
             errors.check()
-            # TODO ERROR this is usefull only for developpers
-            #      must be hidden for users
             if self.show_traceback:
                 traceback.print_exc()
             raise SystemExit(0)
@@ -1049,7 +1055,8 @@ class Parser(object):
 
         elif isinstance(stmt, FromImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
-                errors.report(PYCCEL_RESTRICTION_IMPORT, severity='error')
+                errors.report(PYCCEL_RESTRICTION_IMPORT,
+                              severity='error')
 
             source = self._fst_to_ast(stmt.value)
             if isinstance(source, DottedVariable):
@@ -1060,7 +1067,7 @@ class Parser(object):
                 s = self._fst_to_ast(i)
                 if s == '*':
                     errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
-                                  severity='critical')
+                                  severity='error')
 
                 targets.append(s)
 
@@ -1411,13 +1418,15 @@ class Parser(object):
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
             errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
-                          severity='critical', blocker=True)
+                          severity='error')
 
         elif isinstance(stmt, RaiseNode):
-            errors.report(PYCCEL_RESTRICTION_RAISE, severity='error')
+            errors.report(PYCCEL_RESTRICTION_RAISE,
+                          severity='error')
 
         elif isinstance(stmt, (YieldNode, YieldAtomNode)):
-            errors.report(PYCCEL_RESTRICTION_YIELD, severity='error')
+            errors.report(PYCCEL_RESTRICTION_YIELD,
+                          severity='error')
 
         else:
             raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
