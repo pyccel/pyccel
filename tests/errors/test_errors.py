@@ -80,4 +80,4 @@ def test_semantic_errors():
 ######################
 if __name__ == '__main__':
     test_syntax_errors()
-#    test_semantic_errors()
+    test_semantic_errors()

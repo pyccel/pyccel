@@ -981,7 +981,6 @@ class Parser(object):
                 value = self._fst_to_ast(i.value)
 
                 # sympy does not allow keys to be strings
-
                 if isinstance(key, str):
                     errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                                   severity='error')
@@ -1042,20 +1041,26 @@ class Parser(object):
 
         elif isinstance(stmt, ImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
-                errors.report(PYCCEL_RESTRICTION_IMPORT, severity='error')
+                errors.report(PYCCEL_RESTRICTION_IMPORT,
+                              bounding_box=stmt.absolute_bounding_box,
+                              severity='error')
 
             if isinstance(stmt.parent, DefNode):
-                errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF, severity='error')
+                errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF,
+                              bounding_box=stmt.absolute_bounding_box,
+                              severity='error')
 
             # in an import statement, we can have seperate target by commas
             ls = self._fst_to_ast(stmt.value)
             expr = Import(ls)
             self.insert_import(expr)
+            expr.set_fst(stmt)
             return expr
 
         elif isinstance(stmt, FromImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
                 errors.report(PYCCEL_RESTRICTION_IMPORT,
+                              bounding_box=stmt.absolute_bounding_box,
                               severity='error')
 
             source = self._fst_to_ast(stmt.value)
@@ -1067,14 +1072,15 @@ class Parser(object):
                 s = self._fst_to_ast(i)
                 if s == '*':
                     errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
+                                  bounding_box=stmt.absolute_bounding_box,
                                   severity='error')
 
                 targets.append(s)
 
             expr = Import(targets, source=source)
             self.insert_import(expr)
+            expr.set_fst(stmt)
             return expr
-
 
         elif isinstance(stmt, DelNode):
             arg = self._fst_to_ast(stmt.value)
@@ -1093,6 +1099,7 @@ class Parser(object):
 
             elif stmt.value == '~':
                 errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
+                              bounding_box=stmt.absolute_bounding_box,
                               severity='error')
             else:
                 raise PyccelSyntaxError('unknown/unavailable unary operator {node}'.format(node=type(stmt.value)))
@@ -1387,10 +1394,13 @@ class Parser(object):
                         #return NewLine()
                         return EmptyLine()
                     else:
+                        expr.set_fst(stmt)
                         return expr
 
                 else:
-                    errors.report(PYCCEL_INVALID_HEADER, severity='error')
+                    errors.report(PYCCEL_INVALID_HEADER,
+                                  bounding_box=stmt.absolute_bounding_box,
+                                  severity='error')
 
             else:
                 # TODO improve
@@ -1418,14 +1428,17 @@ class Parser(object):
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
             errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
+                          bounding_box=stmt.absolute_bounding_box,
                           severity='error')
 
         elif isinstance(stmt, RaiseNode):
             errors.report(PYCCEL_RESTRICTION_RAISE,
+                          bounding_box=stmt.absolute_bounding_box,
                           severity='error')
 
         elif isinstance(stmt, (YieldNode, YieldAtomNode)):
             errors.report(PYCCEL_RESTRICTION_YIELD,
+                          bounding_box=stmt.absolute_bounding_box,
                           severity='error')
 
         else:
