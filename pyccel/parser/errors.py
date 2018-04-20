@@ -171,7 +171,7 @@ class Errors:
         if filename is None:
             filename = self.target['file']
 
-        # TODO improve: this works only for Assign
+        # TODO improve. it is assumed here that tl and br have the same line
         if bounding_box:
             tl = bounding_box.top_left
             br = bounding_box.bottom_right
