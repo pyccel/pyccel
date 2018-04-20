@@ -255,7 +255,7 @@ class Parser(object):
 
     """ Class for a Parser."""
 
-    def __init__(self, inputs, debug=False, headers=None):
+    def __init__(self, inputs, debug=False, headers=None, show_traceback=True):
         """Parser constructor.
 
         inputs: str
@@ -266,6 +266,9 @@ class Parser(object):
 
         headers: list, tuple
             list of headers to append to the namespace
+
+        show_traceback: bool
+            prints Tracebacke exception if True
 
         """
         self._fst = None
@@ -298,6 +301,8 @@ class Parser(object):
         # Pyccel to stop
         # TODO ERROR must be passed to the Parser __init__ as argument
         self._blocking = False
+        # printing exception
+        self._show_traceback = show_traceback
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -399,6 +404,10 @@ class Parser(object):
     def blocking(self):
         return self._blocking
 
+    @property
+    def show_traceback(self):
+        return self._show_traceback
+
     def append_parent(self, parent):
         """."""
         # TODO check parent is not in parents
@@ -460,7 +469,8 @@ class Parser(object):
             errors.check()
             # TODO ERROR this is usefull only for developpers
             #      must be hidden for users
-            traceback.print_exc()
+            if self.show_traceback:
+                traceback.print_exc()
             raise SystemExit(0)
 
         self._ast = ast
