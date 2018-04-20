@@ -78,6 +78,8 @@ UNDEFINED_FUNCTION = 'Undefined function'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 
+REDEFINING_VARIABLE = 'Variable already defined'
+
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
 
 # warnings

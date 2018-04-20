@@ -41,6 +41,8 @@ class ErrorInfo:
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.
+        if isinstance(column, (tuple, list)):
+            column = '-'.join(str(i) for i in column)
         self.column = column
         # Either 'error', 'critical', or 'warning'.
         self.severity = severity
@@ -49,7 +51,7 @@ class ErrorInfo:
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = blocker
+        self.blocker = blocker or (severity == 'critical')
 
     def __str__(self):
 
@@ -72,7 +74,7 @@ class ErrorInfo:
             if not self.column:
                 text = '{text}: {line}'.format(text=text, line=self.line)
             else:
-                text = '{text}: {line},{column}'.format(text=text, line=self.line,
+                text = '{text}: [{line},{column}]'.format(text=text, line=self.line,
                                                      column=self.column)
 
         text = '{text}| {msg}'.format(text=text, msg=self.message)
@@ -158,15 +160,24 @@ class Errors:
                message,
                line = None,
                column = None,
+               bounding_box = None,
                blocker = False,
                severity = 'error',
                symbol = None,
-               filename = None):
+               filename = None,
+               verbose = False):
         """Report message at the given line using the current error context.
         stage: 'syntax', 'semantic' or 'codegen'
         """
         if filename is None:
             filename = self.target['file']
+
+        # TODO improve. it is assumed here that tl and br have the same line
+        if bounding_box:
+            tl = bounding_box.top_left
+            br = bounding_box.bottom_right
+            line = tl.line
+            column = (tl.column, br.column)
 
         info = ErrorInfo(filename,
                          line=line,
@@ -175,6 +186,9 @@ class Errors:
                          message=message,
                          symbol=symbol,
                          blocker=blocker)
+
+        if verbose: print(info)
+
         if blocker:
             if info.stop_here(self.mode):
                 # we first print all messages
@@ -229,12 +243,13 @@ class Errors:
             print(self.__str__())
 
     def __str__(self):
-        text = ''
+        print_path = (len(self.error_info_map.keys()) > 1)
+        text = '[pyccel] :: {} stage\n'.format(self.parser_stage)
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
-            text += '>>> {path}\n'.format(path=path)
+            if print_path: text += ' filename :: {path}\n'.format(path=path)
             for err in errors:
-                text += str(err) + '\n'
+                text += ' ' + str(err) + '\n'
         return text
 
 if __name__ == '__main__':
