@@ -58,14 +58,14 @@ def test_openmp():
 
     run('openmp', accelerator='openmp')
 
-def test_openacc():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING OPENACC      ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('openacc', compiler='pgfortran', accelerator='openacc')
+#def test_openacc():
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***      TESTING OPENACC      ***')
+#    print('***                           ***')
+#    print('*********************************')
+#
+#    run('openacc', compiler='pgfortran', accelerator='openacc')
 
 
 ######################
@@ -73,5 +73,5 @@ if __name__ == '__main__':
     test_blas()
     test_lapack()
     test_mpi()
-#    test_openmp()
+    test_openmp()
 #    test_openacc()

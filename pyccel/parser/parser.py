@@ -25,7 +25,7 @@ from redbaron import ForNode
 from redbaron import PrintNode
 from redbaron import DelNode
 from redbaron import DictNode, DictitemNode
-from redbaron import ForNode, WhileNode
+from redbaron import WhileNode
 from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
 from redbaron import DotNode, AtomtrailersNode
 from redbaron import CallNode
@@ -71,9 +71,10 @@ from pyccel.ast import For
 from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
+from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
-from pyccel.ast import Comment, EmptyLine
+from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
@@ -733,7 +734,7 @@ class Parser(object):
             container[str(func.lhs)] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
- 
+
 
     def get_python_function(self, name):
         """."""
@@ -860,7 +861,30 @@ class Parser(object):
 
         # ...
         def _treat_iterable(stmt):
+            """
+            since redbaron puts the first comments after a block statement
+            inside the block, we need to remove them. this is in particular the
+            case when using openmp/openacc pragmas like #$ omp end loop
+            """
+            comments = []
+            for i, s in enumerate(stmt):
+                if isinstance(s, ForNode):
+                    # we loop from the end of the block
+                    body = [i for i in s.value]
+                    for e,t in enumerate(body[::-1]):
+                        if isinstance(t, CommentNode):
+                            comments.append(t)
+                            s.value.pop()
+                        else:
+                            break
+
+                    comments = comments[::-1]
+
             ls = [self._fst_to_ast(i) for i in stmt]
+            comments = [self._fst_to_ast(i) for i in comments]
+
+            ls += comments
+
             if isinstance(stmt, (list, ListNode)):
                 return List(*ls)
 
@@ -1168,9 +1192,15 @@ class Parser(object):
             body = stmt.value
 
             if 'sympy' in decorators:
-                return SympyFunction(name, arguments, [], body)
+                # TODO maybe we should run pylint here
+                func = SympyFunction(name, arguments, [], body)
+                self.insert_function(func)
+                return EmptyLine()
             elif 'python' in decorators:
-                return PythonFunction(name, arguments, [], body)
+                # TODO maybe we should run pylint here
+                func = PythonFunction(name, arguments, [], body)
+                self.insert_function(func)
+                return EmptyLine()
             else:
                 body = self._fst_to_ast(body)
 
@@ -1291,7 +1321,7 @@ class Parser(object):
             return Assert(expr)
 
         elif isinstance(stmt, EndlNode):
-            return EmptyLine()
+            return NewLine()
 
         elif isinstance(stmt, CommentNode):
             # if annotated comment
@@ -1309,6 +1339,7 @@ class Parser(object):
                         # a metavar will not appear in the semantic stage.
                         # but can be used to modify the ast
                         self._metavars[str(expr.name)] = str(expr.value)
+                        #return NewLine()
                         return EmptyLine()
                     else:
                         return expr
@@ -1330,11 +1361,11 @@ class Parser(object):
         elif isinstance(stmt, LambdaNode):
             expr = self._fst_to_ast(stmt.value)
             args = []
-            
+
             for i in stmt.arguments:
                 var = self._fst_to_ast(i.name)
                 args += [var]
-                 
+
             return Lambda(args, expr)
         elif isinstance(stmt, WithNode):
             raise NotImplemented('TODO')
@@ -1989,7 +2020,7 @@ class Parser(object):
                         d_var['is_target'] = False
                         d_var['is_pointer'] = True
                     #case of rhs is a target variable the lhs must be a pointer
-         
+
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
@@ -2074,7 +2105,7 @@ class Parser(object):
                 if dic['is_pointer']:
                     is_pointer = True
                 if 'is_target' in dic.keys() and dic['is_target'] and isinstance(rhs, Variable):
-                    is_pointer = True 
+                    is_pointer = True
                 if isinstance(expr_new.rhs, IndexedElement) \
                     and expr_new.lhs.rank > 0:
                     allocatable = True
@@ -2299,21 +2330,12 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-
-                if not isinstance(expr,(PythonFunction, SympyFunction)):
-                    body = self._annotate(expr.body, **settings)
-                else:
-                    body = expr.body
-                    
-                
+                body = self._annotate(expr.body, **settings)
 
                 # find return stmt and results
                 # we keep the return stmt, in case of handling multi returns later
-
                 for stmt in body:
-
-                # TODO case of multiple calls to return
-
+                    # TODO case of multiple calls to return
                     if isinstance(stmt, Return):
                         #TODO improve the search of return in nested bodies
                         # like ifs,for stmts and while stmts
@@ -2321,7 +2343,6 @@ class Parser(object):
                         if isinstance(results, Symbol):
                             results = [results]
                             kind = 'function'
-                
 
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
@@ -2332,22 +2353,21 @@ class Parser(object):
                     if not var in args + results:
                         local_vars += [var]
 
+                # TODO should we add all the variables or only the ones used in the function
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
-                       # TODO should we add all the variables or only the ones used in the function 
 
+                func = FunctionDef(name, args, results, body,
+                                   local_vars=local_vars,
+                                   global_vars=global_vars,
+                                   cls_name=cls_name,
+                                   hide=hide,
+                                   kind=kind,
+                                   is_static=is_static,
+                                   imports=imports,
+                                   decorators=decorators,)
 
-                if isinstance(expr, SympyFunction):
-                    func = SympyFunction(name,args,results,body,cls_name=cls_name)
-                elif isinstance(expr, PythonFunction):
-                    func = PythonFunction(name,args,results,body,cls_name=cls_name)
-                elif isinstance(expr, FunctionDef):
-                    func = FunctionDef(name,args,results,body,local_vars=local_vars,
-                                         global_vars=global_vars,cls_name=cls_name,
-                                          hide=hide,kind=kind,is_static=is_static,
-                                           imports=imports,decorators=decorators,)
-                
                 if cls_name:
                     cls = self.get_class(cls_name)
                     methods = list(cls.methods) + [func]
@@ -2401,13 +2421,33 @@ class Parser(object):
 #                        self.insert_variable(get_func, name=get_func.namer
 
                 return funcs
-        elif isinstance(expr, EmptyLine):
-
+        elif isinstance(expr, (EmptyLine, NewLine)):
             return expr
-        elif isinstance(expr, Print):
 
+        elif isinstance(expr, Print):
             args = self._annotate(expr.expr, **settings)
-            return Print(args)
+            if len(args) == 0:
+                raise ValueError('no arguments given to print function')
+
+            is_symbolic = lambda var: (isinstance(var, Variable) and
+                                       isinstance(var.dtype, NativeSymbol))
+            test = all(is_symbolic(i) for i in args)
+            # TODO fix: not yet working because of mpi examples
+#            if not test:
+#                raise ValueError('all arguments must be either symbolic or none of them')
+
+            if is_symbolic(args[0]):
+                _args = []
+                for a in args:
+                    f = self.get_symbolic_function(a.name)
+                    if f is None:
+                        _args.append(a)
+                    else:
+                        # TODO improve: how can we print SymbolicAssign as  lhs = rhs
+                        _args.append(f)
+                return SymbolicPrint(_args)
+            else:
+                return Print(args)
         elif isinstance(expr, Comment):
 
             return expr
@@ -2498,6 +2538,7 @@ class Parser(object):
                     # all metavars here, will have a prefix and suffix = __
                     __ignore_at_import__ = False
                     __module_name__ = None
+                    __import_all__ = False
 
                     # we need to use str here since source has been defined
                     # using repr.
@@ -2516,6 +2557,9 @@ class Parser(object):
                     if 'ignore_at_import' in list(p.metavars.keys()):
                         __ignore_at_import__ = p.metavars['ignore_at_import']
 
+                    if 'import_all' in list(p.metavars.keys()):
+                        __import_all__ = p.metavars['import_all']
+
                     if 'module_name' in list(p.metavars.keys()):
                         __module_name__ = p.metavars['module_name']
                         expr = Import(expr.target, __module_name__)
@@ -2524,7 +2568,10 @@ class Parser(object):
                     if not __ignore_at_import__:
                         return expr
                     else:
-                        return EmptyLine()
+                        if __import_all__:
+                            return Import(__module_name__)
+                        else:
+                            return EmptyLine()
 
             return expr
 

@@ -1382,6 +1382,10 @@ class CustomDataType(DataType):
     def __init__(self, name='__UNDEFINED__'):
         self._name = name
 
+class NativeGeneric(DataType):
+    _name = 'Generic'
+    pass
+
 
 Bool    = NativeBool()
 Int     = NativeInteger()
@@ -1403,6 +1407,7 @@ NdArrayInt = NdArrayInt()
 NdArrayDouble = NdArrayDouble()
 NdArrayFloat = NdArrayFloat()
 NdArrayComplex = NdArrayComplex()
+Generic    = NativeGeneric()
 
 
 dtype_registry = {'bool': Bool,
@@ -1423,6 +1428,7 @@ dtype_registry = {'bool': Bool,
                   'ndarrayfloat': NdArrayFloat,
                   'ndarraydouble': NdArrayDouble,
                   'ndarraycomplex': NdArrayComplex,
+                  '*': Generic,
                   'str': String}
 
 
@@ -1871,9 +1877,11 @@ class Variable(Symbol):
                 is_optional=None,
                 shape=None, cls_base=None, cls_parameters=None):
 
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
+        # use str to make '*' work using py2
+        if isinstance(dtype, str) or (str(dtype) == '*'):
+            dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
+
             raise TypeError("datatype must be an instance of DataType.")
 
         if allocatable is None:
@@ -2530,7 +2538,7 @@ class SympyFunction(FunctionDef):
                            self.results, self.body,
                            cls_name=self.cls_name)
 
-   
+
 
 class PythonFunction(FunctionDef):
     """Represents a Python-Function definition."""
@@ -3213,7 +3221,7 @@ class ZerosLike(Function):
             raise TypeError('Unknown type for {name}, given '
                             '{dtype}'.format(dtype=type(rhs), name=rhs))
 
-# TODO: treat as a function
+
 class Print(Basic):
     """Represents a print function in the code.
 
@@ -3237,6 +3245,38 @@ class Print(Basic):
     @property
     def expr(self):
         return self._args[0]
+
+
+class SymbolicPrint(Basic):
+    """Represents a print function of symbolic expressions in the code.
+
+    expr : sympy expr
+        The expression to return.
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Print
+    >>> n,m = symbols('n,m')
+    >>> Print(('results', n,m))
+    Print((results, n, m))
+    """
+
+    def __new__(cls, expr):
+        if not iterable(expr):
+            raise TypeError('Expecting an iterable')
+
+        for i in expr:
+            if not isinstance(i, (Lambda, SymbolicAssign, SympyFunction)):
+                raise TypeError('Expecting Lambda, SymbolicAssign, '
+                                'SympyFunction for {}'.format(i))
+
+        return Basic.__new__(cls, expr)
+
+    @property
+    def expr(self):
+        return self._args[0]
+
 
 class Del(Basic):
     """Represents a memory deallocation in the code.
@@ -3272,6 +3312,25 @@ class EmptyLine(Basic):
 
     >>> from pyccel.ast.core import EmptyLine
     >>> EmptyLine()
+
+    """
+
+    def __new__(cls):
+        return Basic.__new__(cls)
+
+    def _sympystr(self, printer):
+        return ''
+
+class NewLine(Basic):
+    """Represents a NewLine in the code.
+
+    text : str
+       the comment line
+
+    Examples
+
+    >>> from pyccel.ast.core import NewLine
+    >>> NewLine()
 
     """
 

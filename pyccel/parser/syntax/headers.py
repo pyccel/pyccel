@@ -44,7 +44,7 @@ class ListType(BasicStmt):
         if not (all(dtypes[0]==i for i in dtypes)):
             raise TypeError('all element of the TypeList must have the same type')
         d_var = {}
-        d_var['datatype'] = dtypes[0]
+        d_var['datatype'] = str(dtypes[0])
         d_var['rank'] = len(dtypes)
         d_var['is_pointer'] = len(dtypes)>0
         d_var['allocatable'] = False

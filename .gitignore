@@ -1,3 +1,13 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+################
 *.pyc
 *.pyo
 .ipynb_checkpoints/
