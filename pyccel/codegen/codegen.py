@@ -183,7 +183,9 @@ class Codegen(object):
         decs = []
 
         for stmt in self.ast:
-            if isinstance(stmt, FunctionDef):
+            if isinstance(stmt, EmptyLine):
+                continue
+            elif isinstance(stmt, FunctionDef):
                 routines += [stmt]
             elif isinstance(stmt, ClassDef):
                 classes += [stmt]
@@ -193,8 +195,6 @@ class Codegen(object):
                 modules += [stmt]
             elif isinstance(stmt, Interface):
                 interfaces += [stmt]
-            elif isinstance(stmt, EmptyLine):
-                continue
             else:
 
                 # TODO improve later, as in the old codegen

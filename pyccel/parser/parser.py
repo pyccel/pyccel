@@ -70,6 +70,7 @@ from pyccel.ast import For
 from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
+from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine, NewLine
@@ -1224,9 +1225,15 @@ class Parser(object):
             body = stmt.value
 
             if 'sympy' in decorators:
-                return SympyFunction(name, arguments, [], body)
+                # TODO maybe we should run pylint here
+                func = SympyFunction(name, arguments, [], body)
+                self.insert_function(func)
+                return EmptyLine()
             elif 'python' in decorators:
-                return PythonFunction(name, arguments, [], body)
+                # TODO maybe we should run pylint here
+                func = PythonFunction(name, arguments, [], body)
+                self.insert_function(func)
+                return EmptyLine()
             else:
                 body = self._fst_to_ast(body)
 
@@ -2395,21 +2402,12 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-
-                if not isinstance(expr,(PythonFunction, SympyFunction)):
-                    body = self._annotate(expr.body, **settings)
-                else:
-                    body = expr.body
-
-
+                body = self._annotate(expr.body, **settings)
 
                 # find return stmt and results
                 # we keep the return stmt, in case of handling multi returns later
-
                 for stmt in body:
-
-                # TODO case of multiple calls to return
-
+                    # TODO case of multiple calls to return
                     if isinstance(stmt, Return):
                         #TODO improve the search of return in nested bodies
                         # like ifs,for stmts and while stmts
@@ -2417,7 +2415,6 @@ class Parser(object):
                         if isinstance(results, Symbol):
                             results = [results]
                             kind = 'function'
-
 
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
@@ -2428,21 +2425,20 @@ class Parser(object):
                     if not var in args + results:
                         local_vars += [var]
 
+                # TODO should we add all the variables or only the ones used in the function
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
-                       # TODO should we add all the variables or only the ones used in the function
 
-
-                if isinstance(expr, SympyFunction):
-                    func = SympyFunction(name,args,results,body,cls_name=cls_name)
-                elif isinstance(expr, PythonFunction):
-                    func = PythonFunction(name,args,results,body,cls_name=cls_name)
-                elif isinstance(expr, FunctionDef):
-                    func = FunctionDef(name,args,results,body,local_vars=local_vars,
-                                         global_vars=global_vars,cls_name=cls_name,
-                                          hide=hide,kind=kind,is_static=is_static,
-                                           imports=imports,decorators=decorators,)
+                func = FunctionDef(name, args, results, body,
+                                   local_vars=local_vars,
+                                   global_vars=global_vars,
+                                   cls_name=cls_name,
+                                   hide=hide,
+                                   kind=kind,
+                                   is_static=is_static,
+                                   imports=imports,
+                                   decorators=decorators,)
 
                 if cls_name:
                     cls = self.get_class(cls_name)
@@ -2501,9 +2497,29 @@ class Parser(object):
             return expr
 
         elif isinstance(expr, Print):
-
             args = self._annotate(expr.expr, **settings)
-            return Print(args)
+            if len(args) == 0:
+                raise ValueError('no arguments given to print function')
+
+            is_symbolic = lambda var: (isinstance(var, Variable) and
+                                       isinstance(var.dtype, NativeSymbol))
+            test = all(is_symbolic(i) for i in args)
+            # TODO fix: not yet working because of mpi examples
+#            if not test:
+#                raise ValueError('all arguments must be either symbolic or none of them')
+
+            if is_symbolic(args[0]):
+                _args = []
+                for a in args:
+                    f = self.get_symbolic_function(a.name)
+                    if f is None:
+                        _args.append(a)
+                    else:
+                        # TODO improve: how can we print SymbolicAssign as  lhs = rhs
+                        _args.append(f)
+                return SymbolicPrint(_args)
+            else:
+                return Print(args)
         elif isinstance(expr, Comment):
 
             return expr
