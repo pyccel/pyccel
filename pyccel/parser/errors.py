@@ -7,6 +7,27 @@ _cost_mode_register = {'developer': 0, 'user':30}
 _cost_register = {'warning': 10, 'error': 20, 'critical': 30}
 
 
+try:
+    from termcolor import colored
+    ERROR = colored('error', 'red', attrs=['blink', 'bold'])
+    WARNING = colored('warning', 'green', attrs=['blink'])
+    CRITICAL = colored('critical', 'magenta', attrs=['blink', 'bold'])
+
+    PYCCEL = colored('pyccel', attrs=['bold'])
+
+    def make_symbol(s):
+        return colored(str(s), attrs=['bold'])
+except:
+    ERROR = 'error'
+    WARNING = 'warning'
+    CRITICAL = 'critical'
+
+    PYCCEL = 'pyccel'
+
+    def make_symbol(s):
+        return str(s)
+
+
 class PyccelError(Exception):
     def __init__(self, message, errors=''):
 
@@ -55,17 +76,8 @@ class ErrorInfo:
 
     def __str__(self):
 
-#        from termcolor import colored, cprint
-#        warning  = colored('warning', 'green', attrs=['reverse', 'blink'])
-#        error = colored('error', 'red', attrs=['reverse', 'blink'])
-#        critical = colored('critical', 'magenta', attrs=['reverse', 'blink'])
-#
-#        _severity_registry = {'error': error, 'critical': critical, 'warning':
-#                              warning}
-
 #        _severity_registry = {'error': 'E', 'critical': 'C', 'warning': 'W'}
-        _severity_registry = {'error': 'error', 'critical': 'critical',
-                              'warning': 'warning'}
+        _severity_registry = {'error': ERROR, 'critical': CRITICAL, 'warning': WARNING}
 
         pattern = '|{severity}'
         text = pattern.format(severity=_severity_registry[self.severity])
@@ -80,7 +92,8 @@ class ErrorInfo:
         text = '{text}| {msg}'.format(text=text, msg=self.message)
 
         if self.symbol:
-            text = '{text} ({symbol})'.format(text=text, symbol=self.symbol)
+            symbol = make_symbol(self.symbol)
+            text = '{text} ({symbol})'.format(text=text, symbol=symbol)
 
         return text
 
@@ -244,7 +257,7 @@ class Errors:
 
     def __str__(self):
         print_path = (len(self.error_info_map.keys()) > 1)
-        text = '[pyccel] :: {} stage\n'.format(self.parser_stage)
+        text = '[{}] :: {} stage\n'.format(PYCCEL, self.parser_stage)
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
             if print_path: text += ' filename :: {path}\n'.format(path=path)
