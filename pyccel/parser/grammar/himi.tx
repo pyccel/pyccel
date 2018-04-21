@@ -4,9 +4,9 @@ HiMi:
 
 TypeStmt: 
     DeclareTypeStmt
-  | FunctionTypeStmt 
-//  | DeclareFunctionStmt
+  | DeclareFunctionStmt
   | DeclareVariableStmt
+  | FunctionTypeStmt // TODO to be removed. only for testing 
 ;
 
 Type:
@@ -14,10 +14,10 @@ Type:
   | ID 
 ;
 
-FunctionTypeStmt: domain=ID '->' codomain=ID;
+FunctionTypeStmt: domains+=ID['->'];
 
 DeclareTypeStmt:     name=ID '='  dtype=Type;
 DeclareVariableStmt: name=ID ':' dtype=ID;
-//DeclareFunctionStmt:  name=ID '::'  dtype=Type;
+DeclareFunctionStmt:  name=ID '::'  dtype=Type;
 
 

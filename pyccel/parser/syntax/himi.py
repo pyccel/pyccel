@@ -28,10 +28,11 @@ class VariableType(DataType):
 
 class FunctionType(DataType):
 
-    def __init__(self, domain, codomain):
-        self._domain = domain
-        self._codomain = codomain
-        self._name = '{V} -> {W}'.format(V=domain, W=codomain)
+    def __init__(self, domains):
+        self._domain = domains[0]
+        self._codomain = domains[1:]
+        self._domains = domains
+        self._name = ' -> '.join('{}'.format(V) for V in self._domains)
 
     @property
     def domain(self):
@@ -41,6 +42,14 @@ class FunctionType(DataType):
     def codomain(self):
         return self._codomain
 # ...
+
+
+def _construct_dtype(dtype):
+    """."""
+    if isinstance(dtype, FunctionTypeStmt):
+        return dtype.expr
+    else:
+        return datatype(str(dtype))
 
 
 class HiMi(object):
@@ -58,12 +67,6 @@ class DeclareTypeStmt(BasicStmt):
 
     def __init__(self, **kwargs):
         """
-        Constructor for a DeclareTypeStmt statement.
-
-        name: str
-            type name
-        dtype: str
-            datatype
         """
         self.name = kwargs.pop('name')
         self.dtype = kwargs.pop('dtype')
@@ -72,9 +75,9 @@ class DeclareTypeStmt(BasicStmt):
 
     @property
     def expr(self):
-        dtype = self.dtype
-        dtype = datatype(dtype)
         name = str(self.name)
+        dtype = _construct_dtype(self.dtype)
+
         return VariableType(dtype, name)
 
 
@@ -83,12 +86,6 @@ class DeclareVariableStmt(BasicStmt):
 
     def __init__(self, **kwargs):
         """
-        Constructor for a DeclareTypeStmt statement.
-
-        name: str
-            type name
-        dtype: str
-            datatype
         """
         self.name = kwargs.pop('name')
         self.dtype = kwargs.pop('dtype')
@@ -102,24 +99,44 @@ class DeclareVariableStmt(BasicStmt):
         return Variable(dtype, name)
 
 
+class DeclareFunctionStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+
+        """
+        self.name = kwargs.pop('name')
+        self.dtype = kwargs.pop('dtype')
+
+        super(DeclareFunctionStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        name = str(self.name)
+        dtype = _construct_dtype(self.dtype)
+
+        # TODO must return a TypedFunction
+        return Variable(dtype, name)
+
+
 class FunctionTypeStmt(BasicStmt):
     """."""
 
     def __init__(self, **kwargs):
         """
-        Constructor for a DeclareTypeStmt statement.
 
         """
-        self.domain = kwargs.pop('domain')
-        self.codomain = kwargs.pop('codomain')
+        self.domains = kwargs.pop('domains')
 
         super(FunctionTypeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        domain = datatype(str(self.domain))
-        codomain = datatype(str(self.codomain))
-        return FunctionType(domain, codomain)
+        domains = []
+        for d in self.domains:
+            domains.append(datatype(str(d)))
+        return FunctionType(domains)
 
 
 
@@ -131,6 +148,7 @@ class FunctionTypeStmt(BasicStmt):
 types_classes = [HiMi,
                  FunctionTypeStmt,
                  DeclareTypeStmt,
+                 DeclareFunctionStmt,
                  DeclareVariableStmt]
 
 def parse(filename=None, stmts=None, debug=False):
@@ -165,4 +183,6 @@ if __name__ == '__main__':
 #    print (parse(stmts='x : int'))
 #    print (parse(stmts='f :: int -> double'))
 #    print (parse(stmts='T = int -> double'))
-    print (parse(stmts='int -> double'))
+#    print (parse(stmts='T = int -> double -> double'))
+#    print (parse(stmts='int -> double')) # TODO to be removed. only for testing
+    print (parse(stmts='int -> double -> double')) # TODO to be removed. only for testing
