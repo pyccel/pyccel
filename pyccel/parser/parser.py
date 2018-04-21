@@ -172,7 +172,7 @@ def get_filename_from_import(module):
         errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
                       symbol=source,
-                      severity='critical')
+                      severity='fatal')
 
     filename_pyh = os.path.join(package_dir, filename_pyh)
     filename_py  = os.path.join(package_dir, filename_py)
@@ -185,7 +185,7 @@ def get_filename_from_import(module):
     errors = Errors()
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE,
                   symbol=module,
-                  severity='critical')
+                  severity='fatal')
 #  ...
 
 #  ...
@@ -266,15 +266,34 @@ class Parser(object):
                 self._namespace['headers'][key] = value
 
         # check if inputs is a file
-
         code = inputs
         if os.path.isfile(inputs):
+            # we don't use is_valid_filename_py since it uses absolute path
+            # file extension
+            ext = inputs.split('.')[-1]
+            if not(ext in ['py', 'pyh']):
+                errors = Errors()
+                errors.report(INVALID_FILE_EXTENSION,
+                              symbol=ext,
+                              severity='fatal')
+                errors.check()
+                raise SystemExit(0)
+
             code = read_file(inputs)
             self._filename = inputs
 
         self._code = code
 
-        red = RedBaron(code)
+        try:
+            red = RedBaron(code)
+        except Exception as e:
+            errors = Errors()
+            errors.report(INVALID_PYTHON_SYNTAX,
+                          symbol='\n'+str(e),
+                          severity='fatal')
+            errors.check()
+            raise SystemExit(0)
+
         red = fst_move_directives(red)
         self._fst = red
 
@@ -446,7 +465,7 @@ class Parser(object):
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                       symbol=name,
                                       blocker=True,
-                                      severity='critical')
+                                      severity='fatal')
 
 #        print('++++++++++++++')
 #        print(errors.error_info_map)

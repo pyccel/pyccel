@@ -4,14 +4,14 @@ DEFAULT_ERRORS_MODE = 'developer'
 #DEFAULT_ERRORS_MODE = 'user'
 
 _cost_mode_register = {'developer': 0, 'user':30}
-_cost_register = {'warning': 10, 'error': 20, 'critical': 30}
+_cost_register = {'warning': 10, 'error': 20, 'fatal': 30}
 
 
 try:
     from termcolor import colored
     ERROR = colored('error', 'red', attrs=['blink', 'bold'])
     WARNING = colored('warning', 'green', attrs=['blink'])
-    CRITICAL = colored('critical', 'magenta', attrs=['blink', 'bold'])
+    FATAL = colored('fatal', 'red', attrs=['blink', 'bold'])
 
     PYCCEL = colored('pyccel', attrs=['bold'])
 
@@ -20,7 +20,7 @@ try:
 except:
     ERROR = 'error'
     WARNING = 'warning'
-    CRITICAL = 'critical'
+    FATAL = 'fatal'
 
     PYCCEL = 'pyccel'
 
@@ -65,19 +65,19 @@ class ErrorInfo:
         if isinstance(column, (tuple, list)):
             column = '-'.join(str(i) for i in column)
         self.column = column
-        # Either 'error', 'critical', or 'warning'.
+        # Either 'error', 'fatal', or 'warning'.
         self.severity = severity
         # The error message.
         self.message = message
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = blocker or (severity == 'critical')
+        self.blocker = blocker or (severity == 'fatal')
 
     def __str__(self):
 
-#        _severity_registry = {'error': 'E', 'critical': 'C', 'warning': 'W'}
-        _severity_registry = {'error': ERROR, 'critical': CRITICAL, 'warning': WARNING}
+#        _severity_registry = {'error': 'E', 'fatal': 'C', 'warning': 'W'}
+        _severity_registry = {'error': ERROR, 'fatal': FATAL, 'warning': WARNING}
 
         pattern = '|{severity}'
         text = pattern.format(severity=_severity_registry[self.severity])
@@ -206,11 +206,6 @@ class Errors:
             if info.stop_here(self.mode):
                 # we first print all messages
                 self.check()
-#                if self.parser_stage == 'syntax':
-#                    raise PyccelSyntaxError(str(info))
-#                elif self.parser_stage == 'semantic':
-#                    raise PyccelSemanticError(str(info))
-                # TODO what shall we do here?
                 print(info)
                 raise SystemExit(0)
 
@@ -257,7 +252,11 @@ class Errors:
 
     def __str__(self):
         print_path = (len(self.error_info_map.keys()) > 1)
-        text = '[{}] :: {} stage\n'.format(PYCCEL, self.parser_stage)
+        text = '{}:'.format(PYCCEL)
+        if self.parser_stage:
+            text = '{text} [{stage}] \n'.format(text=text,
+                                                stage=self.parser_stage)
+
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
             if print_path: text += ' filename :: {path}\n'.format(path=path)

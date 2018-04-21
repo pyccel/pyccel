@@ -8,6 +8,9 @@ import argparse
 # TODO add version
 #  --version  show program's version number and exit
 
+from pyccel.parser.errors import Errors
+from pyccel.parser.messages import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
+from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.codegen.utilities import construct_flags
 from pyccel.codegen.utilities import compile_fortran
 from pyccel.codegen.utilities import execute_pyccel
@@ -122,6 +125,28 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ...
 
     filename = files[0]
+
+    # ... report error
+    if os.path.isfile(filename):
+        # we don't use is_valid_filename_py since it uses absolute path
+        # file extension
+        ext = filename.split('.')[-1]
+        if not(ext in ['py', 'pyh']):
+            errors = Errors()
+            errors.report(INVALID_FILE_EXTENSION,
+                          symbol=ext,
+                          severity='fatal')
+            errors.check()
+            raise SystemExit(0)
+    else:
+        # we use Pyccel error manager, although we can do it in other ways
+        errors = Errors()
+        errors.report(INVALID_FILE_DIRECTORY,
+                      symbol=filename,
+                      severity='fatal')
+        errors.check()
+        raise SystemExit(0)
+    # ...
 
     if compiler:
         if _which(compiler) is None:
