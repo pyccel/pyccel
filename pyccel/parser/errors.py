@@ -1,37 +1,37 @@
 from collections import OrderedDict
 
 # ...
-ERROR = 'error'
-INTERNAL = 'internal'
-WARNING = 'warning'
-FATAL = 'fatal'
+#ERROR = 'error'
+#INTERNAL = 'internal'
+#WARNING = 'warning'
+#FATAL = 'fatal'
+#
+#PYCCEL = 'pyccel'
+#
+#def make_symbol(s):
+#    return str(s)
 
-PYCCEL = 'pyccel'
+try:
+    from termcolor import colored
+    ERROR = colored('error', 'red', attrs=['blink', 'bold'])
+    INTERNAL = colored('internal', attrs=['blink', 'bold'])
+    WARNING = colored('warning', 'green', attrs=['blink'])
+    FATAL = colored('fatal', 'red', attrs=['blink', 'bold'])
 
-def make_symbol(s):
-    return str(s)
+    PYCCEL = colored('pyccel', attrs=['bold'])
 
-#try:
-#    from termcolor import colored
-#    ERROR = colored('error', 'red', attrs=['blink', 'bold'])
-#    INTERNAL = colored('internal', attrs=['blink', 'bold'])
-#    WARNING = colored('warning', 'green', attrs=['blink'])
-#    FATAL = colored('fatal', 'red', attrs=['blink', 'bold'])
-#
-#    PYCCEL = colored('pyccel', attrs=['bold'])
-#
-#    def make_symbol(s):
-#        return colored(str(s), attrs=['bold'])
-#except:
-#    ERROR = 'error'
-#    INTERNAL = 'internal'
-#    WARNING = 'warning'
-#    FATAL = 'fatal'
-#
-#    PYCCEL = 'pyccel'
-#
-#    def make_symbol(s):
-#        return str(s)
+    def make_symbol(s):
+        return colored(str(s), attrs=['bold'])
+except:
+    ERROR = 'error'
+    INTERNAL = 'internal'
+    WARNING = 'warning'
+    FATAL = 'fatal'
+
+    PYCCEL = 'pyccel'
+
+    def make_symbol(s):
+        return str(s)
 # ...
 
 _severity_registry = {'error': ERROR,
