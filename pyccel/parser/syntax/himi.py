@@ -28,15 +28,18 @@ class VariableType(DataType):
 
 class FunctionType(DataType):
 
-    def __init__(self, domain, codomain, alias):
-        self._alias = alias
+    def __init__(self, domain, codomain):
         self._domain = domain
         self._codomain = codomain
-        self._name = alias
+        self._name = '{V} -> {W}'.format(V=domain, W=codomain)
 
     @property
-    def alias(self):
-        return self._alias
+    def domain(self):
+        return self._domain
+
+    @property
+    def codomain(self):
+        return self._codomain
 # ...
 
 
@@ -51,7 +54,7 @@ class HiMi(object):
 
 
 class DeclareTypeStmt(BasicStmt):
-    """Base class representing a type declaration in the grammar."""
+    """."""
 
     def __init__(self, **kwargs):
         """
@@ -69,13 +72,14 @@ class DeclareTypeStmt(BasicStmt):
 
     @property
     def expr(self):
-        dtype = datatype(str(self.dtype))
+        dtype = self.dtype
+        dtype = datatype(dtype)
         name = str(self.name)
         return VariableType(dtype, name)
 
 
 class DeclareVariableStmt(BasicStmt):
-    """Base class representing a variable declaration in the grammar."""
+    """."""
 
     def __init__(self, **kwargs):
         """
@@ -98,30 +102,24 @@ class DeclareVariableStmt(BasicStmt):
         return Variable(dtype, name)
 
 
-class DeclareFunctionStmt(BasicStmt):
-    """Base class representing a function declaration in the grammar."""
+class FunctionTypeStmt(BasicStmt):
+    """."""
 
     def __init__(self, **kwargs):
         """
         Constructor for a DeclareTypeStmt statement.
 
-        name: str
-            type name
-        dtype: str
-            datatype
         """
-        self.name = kwargs.pop('name')
         self.domain = kwargs.pop('domain')
         self.codomain = kwargs.pop('codomain')
 
-        super(DeclareFunctionStmt, self).__init__(**kwargs)
+        super(FunctionTypeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        name = str(self.name)
         domain = datatype(str(self.domain))
         codomain = datatype(str(self.codomain))
-        return FunctionType(domain, codomain, name)
+        return FunctionType(domain, codomain)
 
 
 
@@ -131,9 +129,9 @@ class DeclareFunctionStmt(BasicStmt):
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
 types_classes = [HiMi,
+                 FunctionTypeStmt,
                  DeclareTypeStmt,
-                 DeclareVariableStmt,
-                 DeclareFunctionStmt]
+                 DeclareVariableStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -163,6 +161,8 @@ def parse(filename=None, stmts=None, debug=False):
 
 ######################
 if __name__ == '__main__':
-    print (parse(stmts='E = int'))
-    print (parse(stmts='x : int'))
-    print (parse(stmts='f :: int -> double'))
+#    print (parse(stmts='T = int'))
+#    print (parse(stmts='x : int'))
+#    print (parse(stmts='f :: int -> double'))
+#    print (parse(stmts='T = int -> double'))
+    print (parse(stmts='int -> double'))

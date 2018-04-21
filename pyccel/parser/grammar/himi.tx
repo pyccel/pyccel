@@ -4,12 +4,20 @@ HiMi:
 
 TypeStmt: 
     DeclareTypeStmt
-  | DeclareFunctionStmt
+  | FunctionTypeStmt 
+//  | DeclareFunctionStmt
   | DeclareVariableStmt
 ;
 
-DeclareTypeStmt:     name=ID '='  dtype=ID;
+Type:
+    FunctionTypeStmt
+  | ID 
+;
+
+FunctionTypeStmt: domain=ID '->' codomain=ID;
+
+DeclareTypeStmt:     name=ID '='  dtype=Type;
 DeclareVariableStmt: name=ID ':' dtype=ID;
-DeclareFunctionStmt:  name=ID '::'  domain=ID '->' codomain=ID;
+//DeclareFunctionStmt:  name=ID '::'  dtype=Type;
 
 
