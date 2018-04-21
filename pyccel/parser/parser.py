@@ -328,7 +328,29 @@ class Parser(object):
         self._code = code
 
         red = RedBaron(code)
-        self._fst = red
+
+        # ... preprocess fst for comments
+        get_comments = lambda y: y.filter(lambda x: isinstance(x, CommentNode))
+        get_loops = lambda y: y.filter(lambda x: isinstance(x, ForNode))
+
+        def wrap_inplace(x):
+            xs = get_loops(x)
+            for son in xs:
+                wrap_inplace(son)
+
+                cmts = get_comments(son)
+                for cmt in cmts:
+                    son.value.remove(cmt)
+
+                # insert right after the loop
+                i_son = x.index(son)
+                for i,cmt in enumerate(cmts):
+                    son.parent.insert(i_son+i+1, cmt)
+
+            return x
+        # ...
+
+        self._fst = wrap_inplace(red)
 
     @property
     def namespace(self):
@@ -904,24 +926,7 @@ class Parser(object):
             inside the block, we need to remove them. this is in particular the
             case when using openmp/openacc pragmas like #$ omp end loop
             """
-            comments = []
-            for i, s in enumerate(stmt):
-                if isinstance(s, ForNode):
-                    # we loop from the end of the block
-                    body = [i for i in s.value]
-                    for e,t in enumerate(body[::-1]):
-                        if isinstance(t, CommentNode):
-                            comments.append(t)
-                            s.value.pop()
-                        else:
-                            break
-
-                    comments = comments[::-1]
-
             ls = [self._fst_to_ast(i) for i in stmt]
-            comments = [self._fst_to_ast(i) for i in comments]
-
-            ls += comments
 
             if isinstance(stmt, (list, ListNode)):
                 return List(*ls)
