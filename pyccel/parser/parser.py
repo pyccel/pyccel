@@ -2079,6 +2079,17 @@ class Parser(object):
                 var = self.get_variable(name)
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
+                else:
+                    # TODO ERROR check type compatibility
+                    if (str(lhs.dtype) != str(var.dtype)):
+                        # TODO must be changed to error after validation
+                        txt = '|{name}| {old} <-> {new}'.format(name=name,
+                                                                old=var.dtype,
+                                                                new=lhs.dtype)
+                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                                      symbol=txt,
+                                      bounding_box=self.bounding_box,
+                                      severity='internal', blocker=False)
 
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
                 # TODO check consistency of indices with shape/rank

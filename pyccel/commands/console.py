@@ -9,6 +9,7 @@ import argparse
 #  --version  show program's version number and exit
 
 from pyccel.parser.errors import Errors
+from pyccel.parser.errors import ErrorsMode
 from pyccel.parser.messages import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.codegen.utilities import construct_flags
@@ -49,43 +50,43 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     parser = MyParser(description='pyccel command line')
 
     # ...
-    parser.add_argument('--compiler', type=str, \
-                        help='Used compiler')
-    parser.add_argument('--openmp', action='store_true', \
-                        help='uses openmp')
-    parser.add_argument('--openacc', action='store_true', \
-                        help='uses openacc')
-    parser.add_argument('--show', action='store_true', \
-                        help='prints the generated file.')
-    parser.add_argument('--debug', action='store_true', \
-                        help='compiles the code in a debug mode.')
-    parser.add_argument('--output-dir', type=str, \
-                        help='Output directory.')
-
     parser.add_argument('-x', '--syntax-only', action='store_true',
                         help='Using pyccel for Syntax Checking')
     parser.add_argument('-e', '--semantic-only', action='store_true',
                         help='Using pyccel for Semantic Checking')
     parser.add_argument('-t', '--convert-only', action='store_true',
                         help='Converts pyccel files only without build')
-    parser.add_argument('-s', '--lint', action='store_true', \
-                        help='Uses PyLint for static checking.')
 
-    parser.add_argument('--no-modules', action='store_true',
-                        help='adds used modules to the generated file')
+
+    parser.add_argument('--compiler', type=str, \
+                        help='Used compiler')
+    parser.add_argument('--openmp', action='store_true', \
+                        help='uses openmp')
+    parser.add_argument('--openacc', action='store_true', \
+                        help='uses openacc')
+    parser.add_argument('--debug', action='store_true', \
+                        help='compiles the code in a debug mode.')
+
+
     parser.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
-    parser.add_argument('--analysis', action='store_true', \
-                        help='enables code analysis mode.')
-    # TODO: remove local_vars later, by using Annotated Comments
-    parser.add_argument('--local_vars', type=str, \
-                        help='local variables on fast memory.')
     parser.add_argument('--include', type=str, \
                         help='path to include directory.')
     parser.add_argument('--libdir', type=str, \
                         help='path to lib directory.')
     parser.add_argument('--libs', type=str, \
                         help='list of libraries to link with.')
+
+
+    parser.add_argument('--developer-mode', action='store_true', \
+                        help='shows internal messages if True')
+    parser.add_argument('--output-dir', type=str, \
+                        help='Output directory.')
+
+    # TODO move to another cmd line
+#    parser.add_argument('--analysis', action='store_true', \
+#                        help='enables code analysis mode.')
+
 
     if not files:
         parser.add_argument('files', metavar='N', type=str, nargs='+',
@@ -158,11 +159,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if openacc:
         accelerator = "openacc"
 
-    lint    =  args.lint
     debug    = args.debug
     verbose  = args.verbose
-    show     = args.show
-    analysis = args.analysis
     include  = args.include
     libdir   = args.libdir
     libs     = args.libs
@@ -173,10 +171,14 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         libdir = []
     if not libs:
         libs = []
+    # ...
 
-    no_modules = True
-    if not(args.no_modules is None):
-        no_modules = args.no_modules
+    # ...
+    if args.developer_mode:
+        # this will initialize the singelton ErrorsMode
+        # making this settings available everywhere
+        err_mode = ErrorsMode()
+        err_mode.set_mode('developer')
     # ...
 
     # ...
@@ -205,12 +207,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         name = os.path.splitext(name)[0]
         codegen = Codegen(ast, name)
         code = codegen.doprint()
-        if show:
-            print(code)
-        else:
-            codegen.export()
+        codegen.export()
 
-    elif not analysis:
+    else:
         # TODO shall we add them in the cmd line?
         modules = []
         binary = None
@@ -225,12 +224,14 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        libs=libs,
                        binary=binary)
 
-    else:
-        from pyccel.complexity.memory import MemComplexity
-
-        local_vars = []
-        if args.local_vars:
-            local_vars = args.local_vars.split(',')
-        complexity = MemComplexity(filename)
-        complexity.intensity(verbose=True, local_vars=local_vars)
+#    elif analysis:
+#        # TODO move to another cmd line
+#
+#        from pyccel.complexity.memory import MemComplexity
+#
+#        local_vars = []
+#        if args.local_vars:
+#            local_vars = args.local_vars.split(',')
+#        complexity = MemComplexity(filename)
+#        complexity.intensity(verbose=True, local_vars=local_vars)
     # ...

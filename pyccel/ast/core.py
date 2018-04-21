@@ -1895,7 +1895,6 @@ class Variable(Symbol):
         if isinstance(dtype, str) or (str(dtype) == '*'):
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
-
             raise TypeError("datatype must be an instance of DataType.")
 
         if allocatable is None:
@@ -1996,6 +1995,18 @@ class Variable(Symbol):
     @property
     def is_optional(self):
         return self._args[10]
+
+    @property
+    def is_ndarray(self):
+        """user friendly method to check if the variable is an ndarray:
+            1. have a rank > 0
+            2. dtype is one among {int, bool, float, double, complex}
+        """
+        if self.rank == 0: return False
+        return isinstance(self.dtype, (NativeInteger, NativeBool, NativeFloat,
+                                       NativeDouble, NativeComplex))
+
+
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):

@@ -1,31 +1,47 @@
 from collections import OrderedDict
 
-DEFAULT_ERRORS_MODE = 'developer'
-#DEFAULT_ERRORS_MODE = 'user'
+# ...
+ERROR = 'error'
+INTERNAL = 'internal'
+WARNING = 'warning'
+FATAL = 'fatal'
 
-_cost_mode_register = {'developer': 0, 'user':30}
-_cost_register = {'warning': 10, 'error': 20, 'fatal': 30}
+PYCCEL = 'pyccel'
+
+def make_symbol(s):
+    return str(s)
+
+#try:
+#    from termcolor import colored
+#    ERROR = colored('error', 'red', attrs=['blink', 'bold'])
+#    INTERNAL = colored('internal', attrs=['blink', 'bold'])
+#    WARNING = colored('warning', 'green', attrs=['blink'])
+#    FATAL = colored('fatal', 'red', attrs=['blink', 'bold'])
+#
+#    PYCCEL = colored('pyccel', attrs=['bold'])
+#
+#    def make_symbol(s):
+#        return colored(str(s), attrs=['bold'])
+#except:
+#    ERROR = 'error'
+#    INTERNAL = 'internal'
+#    WARNING = 'warning'
+#    FATAL = 'fatal'
+#
+#    PYCCEL = 'pyccel'
+#
+#    def make_symbol(s):
+#        return str(s)
+# ...
+
+_severity_registry = {'error': ERROR,
+                      'internal': INTERNAL,
+                      'fatal': FATAL,
+                      'warning': WARNING}
 
 
-try:
-    from termcolor import colored
-    ERROR = colored('error', 'red', attrs=['blink', 'bold'])
-    WARNING = colored('warning', 'green', attrs=['blink'])
-    FATAL = colored('fatal', 'red', attrs=['blink', 'bold'])
-
-    PYCCEL = colored('pyccel', attrs=['bold'])
-
-    def make_symbol(s):
-        return colored(str(s), attrs=['bold'])
-except:
-    ERROR = 'error'
-    WARNING = 'warning'
-    FATAL = 'fatal'
-
-    PYCCEL = 'pyccel'
-
-    def make_symbol(s):
-        return str(s)
+def make_symbol(s):
+    return str(s)
 
 
 class PyccelError(Exception):
@@ -76,9 +92,6 @@ class ErrorInfo:
 
     def __str__(self):
 
-#        _severity_registry = {'error': 'E', 'fatal': 'C', 'warning': 'W'}
-        _severity_registry = {'error': ERROR, 'fatal': FATAL, 'warning': WARNING}
-
         pattern = '|{severity}'
         text = pattern.format(severity=_severity_registry[self.severity])
 
@@ -97,9 +110,6 @@ class ErrorInfo:
 
         return text
 
-    def stop_here(self, mode):
-        """Returns True or False meaning depending on the Errors mode"""
-        return _cost_register[self.severity] >= _cost_mode_register[mode]
 
 def _singleton(cls):
     """
@@ -112,6 +122,24 @@ def _singleton(cls):
         return instances[cls]
     return getinstance
 
+
+@_singleton
+class ErrorsMode:
+    """Developper or User mode.
+    pyccel command line will set it.
+    """
+    def __init__(self):
+        self._mode = 'user'
+
+    @property
+    def value(self):
+        return self._mode
+
+    def set_mode(self, mode):
+        assert(mode in ['user', 'developer'])
+        self._mode = mode
+
+
 @_singleton
 class Errors:
     """Container for compile errors.
@@ -121,7 +149,7 @@ class Errors:
         self.error_info_map = None
         self._target = None
         self._parser_stage = None
-        self._mode = DEFAULT_ERRORS_MODE
+        self._mode = ErrorsMode().value
 
         self.initialize()
 
@@ -182,6 +210,10 @@ class Errors:
         """Report message at the given line using the current error context.
         stage: 'syntax', 'semantic' or 'codegen'
         """
+        # filter internal errors
+        if (self.mode == 'user') and (severity == 'internal'):
+            return
+
         if filename is None:
             filename = self.target['file']
 
@@ -203,11 +235,10 @@ class Errors:
         if verbose: print(info)
 
         if blocker:
-            if info.stop_here(self.mode):
-                # we first print all messages
-                self.check()
-                print(info)
-                raise SystemExit(0)
+            # we first print all messages
+            self.check()
+            print(info)
+            raise SystemExit(0)
 
         self.add_error_info(info)
 
@@ -259,6 +290,7 @@ class Errors:
 
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
+
             if print_path: text += ' filename :: {path}\n'.format(path=path)
             for err in errors:
                 text += ' ' + str(err) + '\n'
