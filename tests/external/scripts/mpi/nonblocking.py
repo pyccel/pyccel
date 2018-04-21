@@ -30,8 +30,8 @@ x = zeros(n)
 y = zeros(n)
 
 if rank == 0:
-    x = 1.0
-    y = 2.0
+    x[:] = 1.0
+    y[:] = 2.0
 
 # ...
 tag0 = 1234

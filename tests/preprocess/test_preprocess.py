@@ -3,6 +3,7 @@
 # Note that we need to change the directory for tests involving the import
 # statement
 
+from pyccel.parser.errors import Errors
 from pyccel.parser import Parser
 import os
 
@@ -26,6 +27,10 @@ def test_preprocess():
 
         pyccel = Parser(f)
         print(pyccel.fst)
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
 
     os.chdir(init_dir)
     print('\n')

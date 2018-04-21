@@ -7,6 +7,7 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import subprocess
 
+from pyccel.parser.errors import Errors
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 
@@ -166,6 +167,10 @@ def execute_pyccel(filename,
     codegen = Codegen(ast, name)
     code = codegen.doprint()
     fname = codegen.export()
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
 
     # ... constructs the compiler flags
     flags = construct_flags(compiler,

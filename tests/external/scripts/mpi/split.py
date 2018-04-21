@@ -31,9 +31,9 @@ m      = 8
 a = zeros(m, 'int')
 
 if rank_in_world == 1:
-    a = 1
+    a[:] = 1
 if rank_in_world == 2:
-    a = 2
+    a[:] = 2
 
 key = rank_in_world
 if rank_in_world == 1:

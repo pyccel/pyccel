@@ -2080,16 +2080,25 @@ class Parser(object):
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
                 else:
-                    # TODO ERROR check type compatibility
+                    # TODO improve check type compatibility
                     if (str(lhs.dtype) != str(var.dtype)):
-                        # TODO must be changed to error after validation
                         txt = '|{name}| {old} <-> {new}'.format(name=name,
                                                                 old=var.dtype,
                                                                 new=lhs.dtype)
-                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                                      symbol=txt,
-                                      bounding_box=self.bounding_box,
-                                      severity='internal', blocker=False)
+
+                        # case where the rhs is of native type
+                        # TODO add other native types
+                        if isinstance(rhs, (Integer, Float)):
+                            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                                          symbol=txt,
+                                          bounding_box=self.bounding_box,
+                                          severity='error', blocker=False)
+
+                        else:
+                            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                                          symbol=txt,
+                                          bounding_box=self.bounding_box,
+                                          severity='internal', blocker=False)
 
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
                 # TODO check consistency of indices with shape/rank
