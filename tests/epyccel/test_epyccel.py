@@ -71,7 +71,7 @@ def test_array_4():
 def test_array_5():
     header = '#$ header procedure f2_py(int, int, double [:,:])'
     def f2_py(m1, m2, x):
-        x = 0.
+        x[:,:] = 0.
         for i in range(0, m1):
             for j in range(0, m2):
                 x[i,j] = (i+j) * 1.
