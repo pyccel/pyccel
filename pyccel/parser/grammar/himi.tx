@@ -1,0 +1,11 @@
+HiMi:
+  statements*=TypeStmt
+;
+
+TypeStmt: 
+    DeclareVariableStmt
+  | DeclareTypeStmt
+;
+
+DeclareTypeStmt:     name=ID '='  dtype=ID;
+DeclareVariableStmt: name=ID '::' dtype=ID;

@@ -1400,6 +1400,18 @@ class NativeGeneric(DataType):
     _name = 'Generic'
     pass
 
+class AliasDataType(DataType):
+    _name = '__UNDEFINED__'
+
+    def __init__(self, alias, rhs):
+        self._alias = alias
+        self._rhs = rhs
+        self._name = rhs._name
+
+    @property
+    def alias(self):
+        return self._alias
+
 
 Bool    = NativeBool()
 Int     = NativeInteger()
