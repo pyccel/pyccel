@@ -45,8 +45,7 @@ from redbaron import NameAsNameNode
 from redbaron import LambdaNode
 from redbaron import WithNode
 
-from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, \
-                       NativeComplex
+from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import NativeBool
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeIntegerList
@@ -88,89 +87,59 @@ from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment
 from pyccel.ast import With
-
-from pyccel.parser.errors import Errors, PyccelSyntaxError, \
-                                 PyccelSemanticError
-
-# TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
-
-from pyccel.parser.messages import *
-
-from collections import OrderedDict
-import importlib
-import sys
-import traceback
-
-# Useful for very coarse version differentiation.
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
-
-########################
-#  ... TODO should be moved to pyccel.ast
-
 from pyccel.ast import Range
 from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 
+from pyccel.parser.utilities import omp_statement, acc_statement
+from pyccel.parser.utilities import fst_move_directives
+from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
+from pyccel.parser.utilities import read_file
+
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
+from pyccel.parser.errors import (Errors, PyccelSyntaxError,
+                                  PyccelSemanticError)
+
+# TODO - remove import * and only import what we need
+#      - use OrderedDict whenever it is possible
+from pyccel.parser.messages import *
+
+
 from sympy import Symbol, sympify
 from sympy import Tuple
 from sympy import NumberSymbol, Number
+from sympy import Integer, Float
 from sympy import Add, Mul, Pow, floor, Mod
+from sympy import FunctionClass
+from sympy import Lambda
 from sympy.core.expr import Expr
+from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.core.containers import Dict
+from sympy.core.function import Function, FunctionClass
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy import Integer, Float
-from sympy.core.containers import Dict
-from sympy.core.function import Function, FunctionClass
-from sympy.utilities.iterables import iterable
 from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy import FunctionClass
-from sympy import Lambda
+from sympy.utilities.iterables import iterable
 
+from collections import OrderedDict
 
+import traceback
+import importlib
 import os
-#  ...
+import sys
 
-#  ... utilities
-from sympy import srepr, sympify
-from sympy.printing.dot import dotprint
 
-def view_tree(expr):
-    """Views a sympy expression tree."""
+# Useful for very coarse version differentiation.
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
-    print (srepr(expr))
-#  ...
-
-#  ... checking the validity of the filenames, using absolute paths
-def _is_valid_filename(filename, ext):
-    """Returns True if filename has the extension ext and exists."""
-    if not isinstance(filename, str):
-        return False
-
-    if not(ext == filename.split('.')[-1]):
-        return False
-    fname = os.path.abspath(filename)
-    return os.path.isfile(fname)
-
-def is_valid_filename_py(filename):
-    """Returns True if filename is an existing python file."""
-    return _is_valid_filename(filename, 'py')
-
-def is_valid_filename_pyh(filename):
-    """Returns True if filename is an existing pyccel header file."""
-    return _is_valid_filename(filename, 'pyh')
-#  ...
 
 #  ... useful functions for imports
 # TODO installed modules. must ask python (working version) where the module is
@@ -230,28 +199,6 @@ def _get_variable_name(var):
 
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 #  ...
-
-# TODO use Double instead of Float? or add precision
-
-def datatype_from_redbaron(node):
-    """Returns the pyccel datatype of a RedBaron Node."""
-
-    if isinstance(node, IntNode):
-        return NativeInteger()
-    elif isinstance(node, FloatNode):
-        return NativeFloat()
-    elif isinstance(node, ComplexNode):
-        return NativeComplex()
-    else:
-        raise NotImplementedError('TODO')
-
-def _read_file(filename):
-    """Returns the source code from a filename."""
-
-    f = open(filename)
-    code = f.read()
-    f.close()
-    return code
 
 
 class Parser(object):
@@ -322,35 +269,14 @@ class Parser(object):
 
         code = inputs
         if os.path.isfile(inputs):
-            code = _read_file(inputs)
+            code = read_file(inputs)
             self._filename = inputs
 
         self._code = code
 
         red = RedBaron(code)
-
-        # ... preprocess fst for comments
-        get_comments = lambda y: y.filter(lambda x: isinstance(x, CommentNode))
-        get_loops = lambda y: y.filter(lambda x: isinstance(x, ForNode))
-
-        def wrap_inplace(x):
-            xs = get_loops(x)
-            for son in xs:
-                wrap_inplace(son)
-
-                cmts = get_comments(son)
-                for cmt in cmts:
-                    son.value.remove(cmt)
-
-                # insert right after the loop
-                i_son = x.index(son)
-                for i,cmt in enumerate(cmts):
-                    son.parent.insert(i_son+i+1, cmt)
-
-            return x
-        # ...
-
-        self._fst = wrap_inplace(red)
+        red = fst_move_directives(red)
+        self._fst = red
 
     @property
     def namespace(self):

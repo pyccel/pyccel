@@ -25,7 +25,7 @@ def run(test_dir, **settings):
 def test_blas():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING BLAS         ***')
+    print('***  TESTING EXTERNAL/BLAS    ***')
     print('***                           ***')
     print('*********************************')
 
@@ -34,7 +34,7 @@ def test_blas():
 def test_lapack():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING LAPACK       ***')
+    print('***  TESTING EXTERNAL/LAPACK  ***')
     print('***                           ***')
     print('*********************************')
 
@@ -43,7 +43,7 @@ def test_lapack():
 def test_mpi():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING MPI          ***')
+    print('***  TESTING EXTERNAL/MPI     ***')
     print('***                           ***')
     print('*********************************')
 
@@ -52,7 +52,7 @@ def test_mpi():
 def test_openmp():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING OPENMP       ***')
+    print('***  TESTING EXTERNAL/OPENMP  ***')
     print('***                           ***')
     print('*********************************')
 
@@ -61,7 +61,7 @@ def test_openmp():
 #def test_openacc():
 #    print('*********************************')
 #    print('***                           ***')
-#    print('***      TESTING OPENACC      ***')
+#    print('***  TESTING EXTERNAL/OPENACC ***')
 #    print('***                           ***')
 #    print('*********************************')
 #
