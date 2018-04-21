@@ -8,7 +8,7 @@ from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational, Ne, Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic as sp_Basic
 from sympy.core.function import Function
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul, Pow
@@ -25,7 +25,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
@@ -49,6 +49,19 @@ from sympy.core.compatibility import is_sequence
 #      - Vector case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
+
+
+class Basic(sp_Basic):
+    """Basic class for Pyccel AST."""
+    _fst = None
+
+    def set_fst(self, fst):
+        """Sets the redbaron fst."""
+        self._fst = fst
+
+    @property
+    def fst(self):
+        return self._fst
 
 
 def subs(expr, new_elements):
@@ -346,6 +359,7 @@ class Assign(Basic):
                 return True
 
         return False
+
 
 class Assigns(Basic):
     """Represents a list of assignments for code generation.
@@ -1881,7 +1895,6 @@ class Variable(Symbol):
         if isinstance(dtype, str) or (str(dtype) == '*'):
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
-
             raise TypeError("datatype must be an instance of DataType.")
 
         if allocatable is None:
@@ -1982,6 +1995,18 @@ class Variable(Symbol):
     @property
     def is_optional(self):
         return self._args[10]
+
+    @property
+    def is_ndarray(self):
+        """user friendly method to check if the variable is an ndarray:
+            1. have a rank > 0
+            2. dtype is one among {int, bool, float, double, complex}
+        """
+        if self.rank == 0: return False
+        return isinstance(self.dtype, (NativeInteger, NativeBool, NativeFloat,
+                                       NativeDouble, NativeComplex))
+
+
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):

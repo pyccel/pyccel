@@ -30,8 +30,8 @@ x = zeros(nx)
 y = zeros((3,2))
 
 if rank == 0:
-    x = 1.0
-    y = 1.0
+    x[:] = 1.0
+    y[:,:] = 1.0
 
 source = 0
 dest   = 1
@@ -51,7 +51,7 @@ if rank == dest:
 # ...
 tag2 = 5678
 if rank == source:
-    x    = 0.0
+    x[:] = 0.0
     x[1] = 2.0
     mpi_send(x[1], 1, MPI_DOUBLE, dest, tag2, comm, ierr)
     print("> test 2: processor ", rank, " sent ", x[1])
@@ -75,7 +75,7 @@ if rank == dest:
 # ...
 tag4 = 8765
 if rank == source:
-    y    = 0.0
+    y[:,:] = 0.0
     y[1,1] = 2.0
     mpi_send(y[1,1], 1, MPI_DOUBLE, dest, tag4, comm, ierr)
     print("> test 4: processor ", rank, " sent ", y[1,1])

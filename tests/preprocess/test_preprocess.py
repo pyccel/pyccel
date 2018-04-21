@@ -3,14 +3,14 @@
 # Note that we need to change the directory for tests involving the import
 # statement
 
-from pyccel.parser import Parser
 from pyccel.parser.errors import Errors
+from pyccel.parser import Parser
 import os
 
-def test_syntax():
+def test_preprocess():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING SYNTAX       ***')
+    print('***     TESTING preprocess    ***')
     print('***                           ***')
     print('*********************************')
 
@@ -26,7 +26,7 @@ def test_syntax():
         print('> testing {0}'.format(str(f)))
 
         pyccel = Parser(f)
-        ast = pyccel.parse()
+        print(pyccel.fst)
 
         # reset Errors singleton
         errors = Errors()
@@ -37,4 +37,4 @@ def test_syntax():
 
 ######################
 if __name__ == '__main__':
-    test_syntax()
+    test_preprocess()

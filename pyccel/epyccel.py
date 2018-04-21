@@ -1,5 +1,6 @@
 
 from pyccel.parser.syntax.headers import parse
+from pyccel.parser.errors import Errors
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 from pyccel.ast.core import FunctionHeader
@@ -154,6 +155,10 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
     code = codegen.doprint()
 #    codegen.export()
     # ...
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
 
 #    # ...
 #    filename = '{name}.f90'.format(name=name)

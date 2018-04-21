@@ -78,7 +78,13 @@ UNDEFINED_FUNCTION = 'Undefined function'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 
+REDEFINING_VARIABLE = 'Variable already defined'
+
 INVALID_FOR_ITERABLE = 'Invalid iterable object in For statement'
+
+INVALID_FILE_DIRECTORY = 'No file or directory of this name'
+INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` of `pyh`, but found'
+INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'

@@ -28,7 +28,7 @@ nx = 4
 x = zeros(nx)
 
 if rank == 0:
-    x = 1.0
+    x[:] = 1.0
 
 source = 0
 dest   = 1
