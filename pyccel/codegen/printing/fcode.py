@@ -1047,7 +1047,9 @@ class FCodePrinter(CodePrinter):
 #                elif not isinstance(stmt, list): # for list of Results
 #                    body.append(stmt)
 
+        # TODO ARA look for all lhs in the function body
         list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
+
         for arg in expr.arguments:
             if arg in list(expr.results) + list_lhs:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
