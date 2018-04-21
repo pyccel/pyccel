@@ -4,7 +4,7 @@ from pyccel.parser.syntax.himi import parse
 
 def test_himi_declare():
     print (parse(stmts='E = int'))
-    print (parse(stmts='x :: int'))
+    print (parse(stmts='x : int'))
 
 
 ######################

@@ -10,10 +10,35 @@ from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast import DataType, datatype, AliasDataType
+from pyccel.ast import DataType, datatype
 from pyccel.ast import Variable
 
-DEBUG = False
+
+# ...
+class VariableType(DataType):
+
+    def __init__(self, rhs, alias):
+        self._alias = alias
+        self._rhs = rhs
+        self._name = rhs._name
+
+    @property
+    def alias(self):
+        return self._alias
+
+class FunctionType(DataType):
+
+    def __init__(self, domain, codomain, alias):
+        self._alias = alias
+        self._domain = domain
+        self._codomain = codomain
+        self._name = alias
+
+    @property
+    def alias(self):
+        return self._alias
+# ...
+
 
 class HiMi(object):
     """Class for HiMi syntax."""
@@ -46,7 +71,7 @@ class DeclareTypeStmt(BasicStmt):
     def expr(self):
         dtype = datatype(str(self.dtype))
         name = str(self.name)
-        return AliasDataType(name, dtype)
+        return VariableType(dtype, name)
 
 
 class DeclareVariableStmt(BasicStmt):
@@ -68,9 +93,35 @@ class DeclareVariableStmt(BasicStmt):
 
     @property
     def expr(self):
-        dtype = datatype(str(self.dtype))
         name = str(self.name)
+        dtype = datatype(str(self.dtype))
         return Variable(dtype, name)
+
+
+class DeclareFunctionStmt(BasicStmt):
+    """Base class representing a function declaration in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a DeclareTypeStmt statement.
+
+        name: str
+            type name
+        dtype: str
+            datatype
+        """
+        self.name = kwargs.pop('name')
+        self.domain = kwargs.pop('domain')
+        self.codomain = kwargs.pop('codomain')
+
+        super(DeclareFunctionStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        name = str(self.name)
+        domain = datatype(str(self.domain))
+        codomain = datatype(str(self.codomain))
+        return FunctionType(domain, codomain, name)
 
 
 
@@ -81,7 +132,8 @@ class DeclareVariableStmt(BasicStmt):
 # lists.
 types_classes = [HiMi,
                  DeclareTypeStmt,
-                 DeclareVariableStmt]
+                 DeclareVariableStmt,
+                 DeclareFunctionStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -111,5 +163,6 @@ def parse(filename=None, stmts=None, debug=False):
 
 ######################
 if __name__ == '__main__':
-    print(parse(stmts='E = int'))
-    print(parse(stmts='x :: int'))
+    print (parse(stmts='E = int'))
+    print (parse(stmts='x : int'))
+    print (parse(stmts='f :: int -> double'))

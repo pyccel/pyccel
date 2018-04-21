@@ -3,9 +3,13 @@ HiMi:
 ;
 
 TypeStmt: 
-    DeclareVariableStmt
-  | DeclareTypeStmt
+    DeclareTypeStmt
+  | DeclareFunctionStmt
+  | DeclareVariableStmt
 ;
 
 DeclareTypeStmt:     name=ID '='  dtype=ID;
-DeclareVariableStmt: name=ID '::' dtype=ID;
+DeclareVariableStmt: name=ID ':' dtype=ID;
+DeclareFunctionStmt:  name=ID '::'  domain=ID '->' codomain=ID;
+
+
