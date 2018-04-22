@@ -49,6 +49,7 @@ from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
+from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
                              Len,
@@ -1048,11 +1049,7 @@ class FCodePrinter(CodePrinter):
 #                    body.append(stmt)
 
         # ... TODO improve to treat variables that are assigned within blocks: if, etc
-        assigned_symbols = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
-        symbols = []
-        for a in assigned_symbols :
-            symbols += list(a.free_symbols)
-        symbols = set(symbols)
+        symbols = get_assigned_symbols(expr)
         assigned_names = [str(i) for i in symbols]
         # ...
 

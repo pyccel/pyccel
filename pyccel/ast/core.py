@@ -4298,6 +4298,37 @@ def get_initial_value(expr, var):
     return Nil()
 # ...
 
+# ... TODO treat other statements
+def get_assigned_symbols(expr):
+    """Returns all assigned symbols (as sympy Symbol) in the AST.
+
+    expr: Expression
+        any AST valid expression
+    """
+
+    if iterable(expr):
+        symbols = []
+        for a in expr:
+            symbols += get_assigned_symbols(a)
+        symbols = set(symbols)
+        symbols = list(symbols)
+        return symbols
+
+    elif isinstance(expr, (Assign, AugAssign)):
+        if expr.lhs is None:
+            raise TypeError('Found None lhs')
+
+        free_symbols = expr.lhs.free_symbols
+        if free_symbols:
+            symbols = list(free_symbols)
+        return symbols
+
+    elif isinstance(expr, FunctionDef):
+        return get_assigned_symbols(expr.body)
+
+    return []
+# ...
+
 # ... TODO: improve and make it recursive
 def get_iterable_ranges(it, var_name=None):
     """Returns ranges of an iterable object."""
