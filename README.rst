@@ -61,8 +61,8 @@ Depending on the Python version, you can run *tests/run_tests_py2.sh* or *tests/
 
 Continuous testing runs on travis: <https://travis-ci.org/ratnania/pyccel>
 
-Reporting bugs
-==============
+Known bugs
+==========
 
 We are trying to maintain a list of *known bugs*, see `bugs/README.rst`__
 
@@ -71,9 +71,7 @@ We are trying to maintain a list of *known bugs*, see `bugs/README.rst`__
 Contributing
 ============
 
-See `CONTRIBUTING.rst`__
-
-.. __: CONTRIBUTING.rst
+TODO
 
 .. |build-status| image:: https://travis-ci.org/pyccel/pyccel.svg?branch=master
     :alt: build status
