@@ -2053,6 +2053,19 @@ class Variable(Symbol):
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.dtype, self.name,
+                self.rank,
+                self.allocatable,
+                self.is_pointer,
+                self.is_polymorphic,
+                self.is_optional,
+                self.shape,
+                self.cls_base,
+                self.cls_parameters,)
+        return args
+
 
 class DottedVariable(AtomicExpr, Boolean):
     """
