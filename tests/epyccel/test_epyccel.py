@@ -52,8 +52,6 @@ def test_array_3():
     x = np.random.random((2, 3))
     y = f(x)
 
-# TODO to fix: not working anymore because of x[:].
-#      must improve how we compute the out/inout arguments within a function
 def test_array_4():
     header = '#$ header procedure f1_py(int, double [:])'
     def f1_py(m1, x):
@@ -70,8 +68,6 @@ def test_array_4():
     x_expected = np.array([0., 1., 2.])
     assert(np.allclose(x, x_expected))
 
-# TODO to fix: not working anymore because of x[:,:].
-#      must improve how we compute the out/inout arguments within a function
 def test_array_5():
     header = '#$ header procedure f2_py(int, int, double [:,:])'
     def f2_py(m1, m2, x):
@@ -102,5 +98,5 @@ if __name__ == '__main__':
     test_array_1()
     test_array_2()
     test_array_3()
-#    test_array_4()
-#    test_array_5()
+    test_array_4()
+    test_array_5()

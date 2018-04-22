@@ -1047,11 +1047,18 @@ class FCodePrinter(CodePrinter):
 #                elif not isinstance(stmt, list): # for list of Results
 #                    body.append(stmt)
 
-        # TODO ARA look for all lhs in the function body
-        list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
+        # ... TODO improve to treat variables that are assigned within blocks: if, etc
+        assigned_symbols = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
+        symbols = []
+        for a in assigned_symbols :
+            symbols += list(a.free_symbols)
+        symbols = set(symbols)
+        assigned_names = [str(i) for i in symbols]
+        # ...
 
+        results_names = [str(i) for i in expr.results]
         for arg in expr.arguments:
-            if arg in list(expr.results) + list_lhs:
+            if str(arg) in results_names + assigned_names:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
             elif str(arg) == 'self':
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
