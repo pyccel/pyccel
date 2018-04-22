@@ -3,7 +3,7 @@ Welcome to Pyccel
 
 |build-status| |docs|
 
->>>>> **Attention: We are refactoring Pyccel for the moment** <<<<<<
+>>>>> **Note: We are refactoring Pyccel for the moment** <<<<<<
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -32,16 +32,15 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 Install
 *******
 
-run::
+all Python dependencies can be installed using (here given for *python3*, use **pip** for *python2*)::
 
-  python setup.py install --prefix=MY_INSTALL_PATH
+  sudo -H pip3 install -r requirements.txt
+
+then install **pyccel** using::
+
+  sudo pip3 install .
 
 this will install a *python* library **pyccel** and a *binary* called **pyccel**.
-
-If **prefix** is not given, you will need to be in *sudo* mode. Otherwise, you will need to update your *.bashrc* or *.bash_profile* file with::
-
-  export PYTHONPATH=MY_INSTALL_PATH/lib/python2.7/site-packages/:$PYTHONPATH
-  export PATH=MY_INSTALL_PATH/bin:$PATH
 
 Reading the docs
 ================
@@ -58,18 +57,21 @@ Then, direct your browser to ``_build/html/index.html``.
 Testing
 =======
 
-To run tests, use::
-
-   python tests/test_pyccel.py 
+Depending on the Python version, you can run *tests/run_tests_py2.sh* or *tests/run_tests_py3.sh*.
 
 Continuous testing runs on travis: <https://travis-ci.org/ratnania/pyccel>
+
+Known bugs
+==========
+
+We are trying to maintain a list of *known bugs*, see `bugs/README.rst`__
+
+.. __: bugs/README.rst
 
 Contributing
 ============
 
-See `CONTRIBUTING.rst`__
-
-.. __: CONTRIBUTING.rst
+TODO
 
 .. |build-status| image:: https://travis-ci.org/pyccel/pyccel.svg?branch=master
     :alt: build status
