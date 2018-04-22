@@ -2754,6 +2754,9 @@ if __name__ == '__main__':
     settings = {}
     pyccel.annotate(**settings)
 
+#    for s in pyccel.ast:
+#        print(type(s))
+
     # export the ast
     pyccel.dump()
 
