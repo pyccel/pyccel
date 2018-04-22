@@ -16,12 +16,16 @@ _avail_compilers = ['gfortran', 'mpif90', 'pgfortran']
 
 # TODO add opt flags, etc... look at f2py interface in numpy
 def construct_flags(compiler,
+                    fflags=None,
                     debug=False,
                     accelerator=None,
                     include=[],
                     libdir=[]):
     """
     Constructs compiling flags for a given compiler.
+
+    fflags: str
+        Fortran compiler flags. Default is `-O2`
 
     compiler: str
         used compiler for the target language.
@@ -43,7 +47,11 @@ def construct_flags(compiler,
     if not(compiler in _avail_compilers):
         raise ValueError("Only {0} are available.".format(_avail_compilers))
 
-    flags = " -O2 "
+    if not fflags:
+        fflags = '-O2'
+
+    # make sure there are spaces
+    flags = " {} ".format(fflags)
     if compiler == "gfortran":
         if debug:
             flags += " -fbounds-check "
@@ -141,6 +149,7 @@ def compile_fortran(filename, compiler, flags,
 
 def execute_pyccel(filename,
                    compiler='gfortran',
+                   fflags=None,
                    debug=False,
                    accelerator=None,
                    include=[],
@@ -174,6 +183,7 @@ def execute_pyccel(filename,
 
     # ... constructs the compiler flags
     flags = construct_flags(compiler,
+                            fflags=fflags,
                             debug=debug,
                             accelerator=accelerator,
                             include=include,

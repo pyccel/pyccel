@@ -70,6 +70,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     parser.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
+
+    parser.add_argument('--fflags', type=str, \
+                        help='Fortran compiler flags.')
     parser.add_argument('--include', type=str, \
                         help='path to include directory.')
     parser.add_argument('--libdir', type=str, \
@@ -159,11 +162,12 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if openacc:
         accelerator = "openacc"
 
-    debug    = args.debug
-    verbose  = args.verbose
-    include  = args.include
-    libdir   = args.libdir
-    libs     = args.libs
+    debug   = args.debug
+    verbose = args.verbose
+    include = args.include
+    fflags  = args.fflags
+    libdir  = args.libdir
+    libs    = args.libs
 
     if not include:
         include = []
@@ -216,6 +220,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
         execute_pyccel(filename,
                        compiler=compiler,
+                       fflags=fflags,
                        debug=False,
                        accelerator=accelerator,
                        include=include,
