@@ -4323,8 +4323,11 @@ def get_assigned_symbols(expr):
             symbols = list(free_symbols)
         return symbols
 
-    elif isinstance(expr, FunctionDef):
+    elif isinstance(expr, (FunctionDef, For, While)):
         return get_assigned_symbols(expr.body)
+
+    elif isinstance(expr, If):
+        return get_assigned_symbols(expr.bodies)
 
     return []
 # ...
