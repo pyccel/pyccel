@@ -4318,9 +4318,16 @@ def get_assigned_symbols(expr):
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
-        free_symbols = expr.lhs.free_symbols
-        if free_symbols:
+        try:
+            free_symbols = expr.lhs.free_symbols
             symbols = list(free_symbols)
+        except:
+            # TODO must raise an Exception here
+            #      this occurs only when parsing lapack.pyh
+            symbols = []
+#            print(type(expr.lhs), expr.lhs)
+#            print(expr)
+#            raise SystemExit('ERROR')
         return symbols
 
     elif isinstance(expr, (FunctionDef, For, While)):
