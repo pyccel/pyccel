@@ -753,7 +753,7 @@ class FCodePrinter(CodePrinter):
         elif isinstance(expr.rhs, ConstructorCall):
             func = expr.rhs.func
             name = str(func.name)
-            this = expr.rhs.this
+            #this = expr.rhs.this
 
             # TODO uncomment later
 
@@ -934,7 +934,18 @@ class FCodePrinter(CodePrinter):
         interface += 'end interface\n'
         return interface
 
+    
 
+    def _print_With(self, expr):
+        test = 'call '+self._print(expr.test) + '%__enter__()'
+        body = '\n'.join(self._print(i) for i in expr.body)
+        end = 'call '+self._print(expr.test) + '%__exit__()'
+        code = ('{test}\n'
+               '{body}\n'
+               '{end}').format(test=test, body=body, end=end)
+        #TODO return code later
+        return ''
+       
     def _print_Block(self, expr):
 
         decs=[]
