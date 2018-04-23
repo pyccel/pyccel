@@ -963,12 +963,12 @@ class Parser(object):
             lhs = self._fst_to_ast(stmt.target)
             rhs = self._fst_to_ast(stmt.value)
             if stmt.operator in ['+', '-', '*', '/']:
-                return AugAssign(lhs, stmt.operator, rhs)
+                expr = AugAssign(lhs, stmt.operator, rhs)
             else:
                 expr = Assign(lhs, rhs)
                 # we set the fst to keep track of needed information for errors
-                expr.set_fst(stmt)
-                return expr
+            expr.set_fst(stmt)
+            return expr
 
         elif isinstance(stmt, NameNode):
             if isinstance(stmt.previous, DotNode):
