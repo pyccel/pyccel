@@ -43,54 +43,63 @@ def _which(program):
 
     return None
 
+# TODO - remove output_dir froms args
+#      - remove files from args
+#      but quickstart and build are still calling it for the moment
 def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfortran'):
     """
     pyccel console command.
     """
     parser = MyParser(description='pyccel command line')
 
+    parser.add_argument('files', metavar='N', type=str, nargs='+',
+                        help='a Pyccel file')
+
+    # ... compiler syntax, semantic and codegen
+    group = parser.add_argument_group('Pyccel compiling stages')
+    group.add_argument('-x', '--syntax-only', action='store_true',
+                       help='Using pyccel for Syntax Checking')
+    group.add_argument('-e', '--semantic-only', action='store_true',
+                       help='Using pyccel for Semantic Checking')
+    group.add_argument('-t', '--convert-only', action='store_true',
+                       help='Converts pyccel files only without build')
     # ...
-    parser.add_argument('-x', '--syntax-only', action='store_true',
-                        help='Using pyccel for Syntax Checking')
-    parser.add_argument('-e', '--semantic-only', action='store_true',
-                        help='Using pyccel for Semantic Checking')
-    parser.add_argument('-t', '--convert-only', action='store_true',
-                        help='Converts pyccel files only without build')
 
+    # ... backend compiler options
+    group = parser.add_argument_group('Backend compiler options')
+    group.add_argument('--compiler', type=str, \
+                       help='Used compiler')
+    group.add_argument('--fflags', type=str, \
+                       help='Fortran compiler flags.')
+    group.add_argument('--debug', action='store_true', \
+                       help='compiles the code in a debug mode.')
+    group.add_argument('--include', type=str, \
+                       help='path to include directory.')
+    group.add_argument('--libdir', type=str, \
+                       help='path to lib directory.')
+    group.add_argument('--libs', type=str, \
+                       help='list of libraries to link with.')
+    # ...
 
-    parser.add_argument('--compiler', type=str, \
-                        help='Used compiler')
-    parser.add_argument('--openmp', action='store_true', \
-                        help='uses openmp')
-    parser.add_argument('--openacc', action='store_true', \
-                        help='uses openacc')
-    parser.add_argument('--debug', action='store_true', \
-                        help='compiles the code in a debug mode.')
+    # ... Accelerators
+    group = parser.add_argument_group('Accelerators options')
+    group.add_argument('--openmp', action='store_true', \
+                       help='uses openmp')
+    group.add_argument('--openacc', action='store_true', \
+                       help='uses openacc')
+    # ...
 
-
-    parser.add_argument('--verbose', action='store_true', \
+    # ... Other options
+    group = parser.add_argument_group('Other options')
+    group.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
-    parser.add_argument('--include', type=str, \
-                        help='path to include directory.')
-    parser.add_argument('--libdir', type=str, \
-                        help='path to lib directory.')
-    parser.add_argument('--libs', type=str, \
-                        help='list of libraries to link with.')
-
-
-    parser.add_argument('--developer-mode', action='store_true', \
-                        help='shows internal messages if True')
-    parser.add_argument('--output-dir', type=str, \
-                        help='Output directory.')
+    group.add_argument('--developer-mode', action='store_true', \
+                        help='shows internal messages')
+    # ...
 
     # TODO move to another cmd line
 #    parser.add_argument('--analysis', action='store_true', \
 #                        help='enables code analysis mode.')
-
-
-    if not files:
-        parser.add_argument('files', metavar='N', type=str, nargs='+',
-                            help='a Pyccel file')
     # ...
 
     # ...
@@ -109,9 +118,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     if not openacc:
         openacc = args.openacc
-
-    if not output_dir:
-        output_dir = args.output_dir
 
     if args.convert_only or args.syntax_only or args.semantic_only:
         compiler = None
@@ -159,11 +165,12 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if openacc:
         accelerator = "openacc"
 
-    debug    = args.debug
-    verbose  = args.verbose
-    include  = args.include
-    libdir   = args.libdir
-    libs     = args.libs
+    debug   = args.debug
+    verbose = args.verbose
+    include = args.include
+    fflags  = args.fflags
+    libdir  = args.libdir
+    libs    = args.libs
 
     if not include:
         include = []
@@ -216,6 +223,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
         execute_pyccel(filename,
                        compiler=compiler,
+                       fflags=fflags,
                        debug=False,
                        accelerator=accelerator,
                        include=include,

@@ -49,6 +49,7 @@ from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
 from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
 from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
+from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
                              Len,
@@ -1058,9 +1059,14 @@ class FCodePrinter(CodePrinter):
 #                elif not isinstance(stmt, list): # for list of Results
 #                    body.append(stmt)
 
-        list_lhs = [a.lhs for a in expr.body if isinstance(a, (Assign, AugAssign))]
+        # ... TODO improve to treat variables that are assigned within blocks: if, etc
+        symbols = get_assigned_symbols(expr)
+        assigned_names = [str(i) for i in symbols]
+        # ...
+
+        results_names = [str(i) for i in expr.results]
         for arg in expr.arguments:
-            if arg in list(expr.results) + list_lhs:
+            if str(arg) in results_names + assigned_names:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
             elif str(arg) == 'self':
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
