@@ -248,8 +248,20 @@ class MetavarHeaderStmt(BasicStmt):
         value = self.value
         return MetaVariable(name, value)
 
+
 class InterfaceStmt(BasicStmt):
+      """ class represent the header interface statement"""
+
       def __init__(self, **kwargs):
+          """
+          Constructor of Interface statement
+          
+          name: str
+          
+          args: list of funciton names
+         
+          """
+
           self.name = kwargs.pop('name')
           self.args = kwargs.pop('args')
           super(InterfaceStmt, self).__init__(**kwargs)
@@ -257,6 +269,7 @@ class InterfaceStmt(BasicStmt):
       @property
       def expr(self):
           return InterfaceHeader(self.name, self.args)
+
 
 #################################################
 

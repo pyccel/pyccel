@@ -672,6 +672,10 @@ class With(Basic):
     @property
     def settings(self):
         return self._args[2]
+    
+    @property
+    def block(self):
+        return ''
 
 class Range(Basic):
     """

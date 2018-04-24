@@ -77,7 +77,7 @@ from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast import VariableHeader
+from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
@@ -2270,6 +2270,16 @@ class Parser(object):
 
             self.insert_header(expr)
             return expr
+        elif isinstance(expr, InterfaceHeader):
+            container = self.namespace['functions']
+            #TODO improve test all possible containers
+            if set(expr.funcs).issubset(container.keys()):
+                name = expr.name
+                funcs = []
+                for i in expr.funcs:
+                    funcs += [container[i]]
+                
+            return Interface(name, funcs)
         elif isinstance(expr, Return):
 
             results = expr.expr
@@ -2592,6 +2602,7 @@ class Parser(object):
             return Is(var, expr.rhs)
 
         elif isinstance(expr, Import):
+            
 
             # TODO - must have a dict where to store things that have been
             #        imported
@@ -2620,6 +2631,7 @@ class Parser(object):
                     # using repr.
                     # TODO shall we improve it?
                     p = self.d_parsers[str(expr.source)]
+                   
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -2648,7 +2660,6 @@ class Parser(object):
                             return Import(__module_name__)
                         else:
                             return EmptyLine()
-
             return expr
 
         elif isinstance(expr, Concatinate):
