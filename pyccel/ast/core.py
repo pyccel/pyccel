@@ -4028,10 +4028,15 @@ class FunctionHeader(Header):
         funcs = []
         dtypes = []
         for i in self.dtypes:
-            dtypes += [i.args]
+            if isinstance(i, UnionType):
+                dtypes += [i.args]
+            elif isinstance(i, dict):
+                dtypes += [[i]]
+            else:
+                raise TypeError('element must be of type UnionType or dict')
         for args_ in product(*dtypes):
             args = []
-            for d in args_:
+            for i, d in enumerate(args_):
                 dtype    = d['datatype']
                 allocatable = d['allocatable']
                 is_pointer = d['is_pointer']
@@ -4124,7 +4129,7 @@ class MethodHeader(FunctionHeader):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, UnionType):
+            if not isinstance(d, UnionType) and not isinstance(d, dict):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:

@@ -172,7 +172,10 @@ class FunctionHeaderStmt(BasicStmt):
                 l = []
                 for i in dec.dtypes:
                     l += [i.expr]
-                dtypes += [UnionType(l)]
+                if len(l)>1:
+                    dtypes += [UnionType(l)]
+                else:
+                    dtypes += [l[0]]
 
         if self.kind is None:
             kind = 'function'
@@ -188,7 +191,11 @@ class FunctionHeaderStmt(BasicStmt):
             results = self.results.expr
 
         if kind == 'method':
-            cls_instance = dtypes[0].args[0]['datatype']
+            dtype = dtypes[0]
+            if isinstance(dtype, UnionType):
+                cls_instance = dtype.args[0]['datatype']
+            else:
+                cls_instance = dtype['datatype']
             dtypes = dtypes[1:] # remove the attribut
             kind = 'procedure'
             if results:
