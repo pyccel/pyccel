@@ -1903,8 +1903,8 @@ class Parser(object):
                 else:
                     raise SystemExit('function not found in the interface')
 
-            
-            if func.hide:
+            hide = expr.func.hide
+            if hide:
                 new_func = func
             else:
                 new_func = func.rename(expr.func.name)

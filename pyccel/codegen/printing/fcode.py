@@ -161,13 +161,14 @@ class FCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         interfaces = ''
         if expr.interfaces:
-            interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+            interfaces = '\n'.join(self._print(i) for i in expr.interfaces if not i.hide)
             for interface in expr.interfaces:
-                for i in interface.functions:
-                    body = ('{body}\n'
-                            '{sep}\n'
-                            '{f}\n'
-                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+                if not interface.hide:
+                    for i in interface.functions:
+                        body = ('{body}\n'
+                                '{sep}\n'
+                                '{f}\n'
+                                '{sep}\n').format(body=body, sep=sep, f=self._print(i))
 
         if expr.funcs:
             for i in expr.funcs:
