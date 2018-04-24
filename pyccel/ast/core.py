@@ -70,7 +70,7 @@ def subs(expr, new_elements):
 
     new_elements : list of tuples like [(x,2)(y,3)]
     """
-    if len(new_elements)==0:
+    if len(list(new_elements))==0:
         return expr
     if isinstance(expr, (list, tuple, Tuple)):
         return [subs(expr, new_elements) for i in expr]
