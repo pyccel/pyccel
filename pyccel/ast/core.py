@@ -70,6 +70,8 @@ def subs(expr, new_elements):
 
     new_elements : list of tuples like [(x,2)(y,3)]
     """
+    if len(new_elements)==0:
+        return expr
     if isinstance(expr, (list, tuple, Tuple)):
         return [subs(expr, new_elements) for i in expr]
     elif isinstance(expr, (Expr, Assign)):
@@ -675,7 +677,19 @@ class With(Basic):
     
     @property
     def block(self):
-        return ''
+        methods = self.test.cls_base.methods
+        for i in methods:
+            if str(i.name)=='__enter__':
+                enter = i
+            elif str(i.name) =='__exit__':
+                exit = i
+        enter = FunctionCall(enter,[]).inline
+        exit = FunctionCall(exit, []).inline
+        #TODO check if enter is empty or not first
+        body = enter.body
+        body += self.body
+        body += exit.body
+        return Block('with', [], body)
 
 class Range(Basic):
     """

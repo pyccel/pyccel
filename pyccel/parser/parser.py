@@ -2676,7 +2676,7 @@ class Parser(object):
                 raise ValueError('with construct can only applied to '
                                     'classes with __enter__ and __exit__ methods')
             body = self._annotate(expr.body)
-            return With(domaine, body, None)
+            return With(domaine, body, None).block
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
