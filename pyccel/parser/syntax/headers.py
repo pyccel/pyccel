@@ -12,7 +12,7 @@ from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
-from pyccel.ast.core import MetaVariable , UnionType
+from pyccel.ast.core import MetaVariable , UnionType, InterfaceHeader
 
 DEBUG = False
 
@@ -248,6 +248,16 @@ class MetavarHeaderStmt(BasicStmt):
         value = self.value
         return MetaVariable(name, value)
 
+class InterfaceStmt(BasicStmt):
+      def __init__(self, **kwargs):
+          self.name = kwargs.pop('name')
+          self.args = kwargs.pop('args')
+          super(InterfaceStmt, self).__init__(**kwargs)
+      
+      @property
+      def expr(self):
+          return InterfaceHeader(self.name, self.args)
+
 #################################################
 
 #################################################
@@ -259,7 +269,7 @@ hdr_classes = [Header, TypeHeader,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,
-               MetavarHeaderStmt]
+               MetavarHeaderStmt,InterfaceStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -296,3 +306,4 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))
+    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))

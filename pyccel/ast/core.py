@@ -3920,14 +3920,6 @@ class VariableHeader(Header):
         return self._args[1]
 
 # TODO rename dtypes to arguments
-class UnionType(Basic):
-
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
-
-    @property
-    def args(self):
-        return self._args[0]
 
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
@@ -4221,6 +4213,33 @@ def is_valid_module(expr):
 # ...
 
 # ...
+class InterfaceHeader(Basic):
+    
+    def __new__(cls, name, funcs):
+        if not isinstance(name,str):
+            raise TypeError('name should of type str')
+        if not all([isinstance(i, str) for i in funcs]):
+            raise TypeError('functions name must be of type str')
+        return Basic.__new__(cls, name, funcs)
+
+      
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def funcs(self):
+        return self._args[1]
+
+class UnionType(Basic):
+
+    def __new__(cls, args):
+        return Basic.__new__(cls, args)
+
+    @property
+    def args(self):
+        return self._args[0]
+
 def get_initial_value(expr, var):
     """Returns the first assigned value to var in the Expression expr.
 
