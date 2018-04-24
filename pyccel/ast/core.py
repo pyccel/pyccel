@@ -2278,6 +2278,10 @@ class Interface(Basic):
     @property
     def functions(self):
         return self._args[1]
+   
+    @property
+    def hide(self):
+        return self.functions[0].hide or self._args[2]
 
     @property
     def global_vars(self):
@@ -2286,10 +2290,6 @@ class Interface(Basic):
     @property
     def cls_name(self):
         return self.functions[0].cls_name
-
-    @property
-    def hide(self):
-        return self.functions[0].hide
 
     @property
     def kind(self):
