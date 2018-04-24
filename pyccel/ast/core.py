@@ -2264,12 +2264,12 @@ class Return(Basic):
 class Interface(Basic):
     """Represent an Interface"""
 
-    def __new__(cls, name, functions):
+    def __new__(cls, name, functions, hide=False):
         if not isinstance(name, str):
             raise TypeError("Expecting an str")
         if not isinstance(functions, list):
             raise TypeError("Expecting a list")
-        return Basic.__new__(cls, name, functions)
+        return Basic.__new__(cls, name, functions, hide)
 
     @property
     def name(self):

@@ -1862,19 +1862,59 @@ class Parser(object):
                             args = []
 
                         if 'inline' in func.decorators:
-                            return FunctionCall(func, args).inline
-
-                        return FunctionCall(func, args)
+                            return self._annotate(FunctionCall(func, args), **settings).inline
+                        
+                        return self._annotate(FunctionCall(func, args), **settings)
 
                     else:
                         # return Function(name)(*args)
                         return func(*args)
-
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
 
         elif isinstance(expr, FunctionCall):
+            func = expr.func
+            arg_dvar = [self._infere_type(i, **settings) for i in
+                            expr.arguments]
+            if isinstance(func, Interface):
+                if isinstance(func, Interface):
+                    f_dvar = [[self._infere_type(j, **settings)
+                              for j in i.arguments] for i in
+                              func.functions]
+                    j = -1
+                    for i in f_dvar:
+                        j += 1
+                        found = True
+                        for (idx, dt) in enumerate(arg_dvar):
+
+                            # TODO imporve add the other verification shape,rank,pointer,...
+
+                            dtype1 = dt['datatype'].__str__()
+                            dtype2 = i[idx]['datatype'].__str__()
+                            found = found and (dtype1 in dtype2
+                                    or dtype2 in dtype1)
+                            found = found and dt['rank'] \
+                                == i[idx]['rank']
+                            found = found and dt['shape'] \
+                                == i[idx]['shape']
+                        if found:
+                            break
+                    if found:
+                        func = func.functions[j]
+                    else:
+                        raise SystemExit('function not found in the interface')
+
+                results = func.results
+                if results:
+                    d_var = [self._infere_type(i, **settings) for i in results]
+                if func.hide:
+                    new_func = func
+                else:
+                    new_func = func.rename(expr.func.name)
+                expr = FunctionCall(new_func, expr.arguments, kind=expr.func.kind)  
+
+                
             return expr
 
         elif isinstance(expr, Expr):
@@ -1911,49 +1951,10 @@ class Parser(object):
             # d_var can be a list of dictionaries
 
             if isinstance(rhs, FunctionCall):
-                func = rhs.func
-#                print('>>> {}'.format(type(func)))
-#                print('>>> {}'.format([i for i in func.results]))
-
-                # treating results
-
-                arg_dvar = [self._infere_type(i, **settings) for i in
-                            rhs.arguments]
-
-                if isinstance(func, Interface):
-                    f_dvar = [[self._infere_type(j, **settings)
-                              for j in i.arguments] for i in
-                              func.functions]
-                    j = -1
-                    for i in f_dvar:
-                        j += 1
-                        found = True
-                        for (idx, dt) in enumerate(arg_dvar):
-
-                            # TODO imporve add the other verification shape,rank,pointer,...
-
-                            dtype1 = dt['datatype'].__str__()
-                            dtype2 = i[idx]['datatype'].__str__()
-                            found = found and (dtype1 in dtype2
-                                    or dtype2 in dtype1)
-                            found = found and dt['rank'] \
-                                == i[idx]['rank']
-                            found = found and dt['shape'] \
-                                == i[idx]['shape']
-                        if found:
-                            break
-                    if found:
-                        func = func.functions[j]
-                    else:
-                        raise SystemExit('function not found in the interface')
-
                 # ARA: needed for functions defined only with a header
-                results = func.results
+                results = rhs.func.results
                 if results:
                     d_var = [self._infere_type(i, **settings) for i in results]
-
-                rhs = FunctionCall(func.rename(rhs.func.name),
-                                   rhs.arguments, kind=rhs.func.kind)
             elif isinstance(rhs, ConstructorCall):
 
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
@@ -2278,8 +2279,9 @@ class Parser(object):
                 funcs = []
                 for i in expr.funcs:
                     funcs += [container[i]]
-                
-            return Interface(name, funcs)
+            expr = Interface(name, funcs, hide = True)
+            container[name] = expr   
+            return expr
         elif isinstance(expr, Return):
 
             results = expr.expr
