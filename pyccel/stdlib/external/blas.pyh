@@ -31,8 +31,8 @@
 #$ header function isamax(int, float [:], int, int)
 #$ header function idamax(int, double [:], int, int)
 
-#$ header function saxpy(int, float, float [:], int, float [:], float [:])
-#$ header function daxpy(int, double, double [:], int, double [:], double [:])
+#$ header function saxpy(int, float, float [:], int, float [:], int)
+#$ header function daxpy(int, double, double [:], int, double [:], int)
 
 #$ header function scopy(int, float [:], int, float [:], int)
 #$ header function dcopy(int, double [:], int, double [:], int)

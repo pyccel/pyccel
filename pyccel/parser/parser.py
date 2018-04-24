@@ -77,7 +77,7 @@ from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast import VariableHeader
+from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
@@ -963,12 +963,12 @@ class Parser(object):
             lhs = self._fst_to_ast(stmt.target)
             rhs = self._fst_to_ast(stmt.value)
             if stmt.operator in ['+', '-', '*', '/']:
-                return AugAssign(lhs, stmt.operator, rhs)
+                expr = AugAssign(lhs, stmt.operator, rhs)
             else:
                 expr = Assign(lhs, rhs)
                 # we set the fst to keep track of needed information for errors
-                expr.set_fst(stmt)
-                return expr
+            expr.set_fst(stmt)
+            return expr
 
         elif isinstance(stmt, NameNode):
             if isinstance(stmt.previous, DotNode):
@@ -1862,19 +1862,55 @@ class Parser(object):
                             args = []
 
                         if 'inline' in func.decorators:
-                            return FunctionCall(func, args).inline
-
-                        return FunctionCall(func, args)
+                            return self._annotate(FunctionCall(func, args), **settings).inline
+                        
+                        return self._annotate(FunctionCall(func, args), **settings)
 
                     else:
                         # return Function(name)(*args)
                         return func(*args)
-
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
 
         elif isinstance(expr, FunctionCall):
+            func = expr.func
+            arg_dvar = [self._infere_type(i, **settings) for i in
+                            expr.arguments]
+            if isinstance(func, Interface):
+                f_dvar = [[self._infere_type(j, **settings)
+                           for j in i.arguments] for i in
+                           func.functions]
+                j = -1
+                for i in f_dvar:
+                    j += 1
+                    found = True
+                    for (idx, dt) in enumerate(arg_dvar):
+                        # TODO imporve add the other verification shape,rank,pointer,...
+                        
+                        dtype1 = dt['datatype'].__str__()
+                        dtype2 = i[idx]['datatype'].__str__()
+                        found  = found and (dtype1 in dtype2
+                              or dtype2 in dtype1)
+                        found = found and dt['rank'] \
+                              == i[idx]['rank']
+                       # found = found and dt['shape'] \
+                       #       == i[idx]['shape']
+                    if found:
+                        break
+                if found:
+                    func = func.functions[j]
+                else:
+                    raise SystemExit('function not found in the interface')
+
+            
+            if func.hide:
+                new_func = func
+            else:
+                new_func = func.rename(expr.func.name)
+            expr = FunctionCall(new_func, expr.arguments, kind=expr.func.kind)  
+
+                
             return expr
 
         elif isinstance(expr, Expr):
@@ -1911,49 +1947,10 @@ class Parser(object):
             # d_var can be a list of dictionaries
 
             if isinstance(rhs, FunctionCall):
-                func = rhs.func
-#                print('>>> {}'.format(type(func)))
-#                print('>>> {}'.format([i for i in func.results]))
-
-                # treating results
-
-                arg_dvar = [self._infere_type(i, **settings) for i in
-                            rhs.arguments]
-
-                if isinstance(func, Interface):
-                    f_dvar = [[self._infere_type(j, **settings)
-                              for j in i.arguments] for i in
-                              func.functions]
-                    j = -1
-                    for i in f_dvar:
-                        j += 1
-                        found = True
-                        for (idx, dt) in enumerate(arg_dvar):
-
-                            # TODO imporve add the other verification shape,rank,pointer,...
-
-                            dtype1 = dt['datatype'].__str__()
-                            dtype2 = i[idx]['datatype'].__str__()
-                            found = found and (dtype1 in dtype2
-                                    or dtype2 in dtype1)
-                            found = found and dt['rank'] \
-                                == i[idx]['rank']
-                            found = found and dt['shape'] \
-                                == i[idx]['shape']
-                        if found:
-                            break
-                    if found:
-                        func = func.functions[j]
-                    else:
-                        raise SystemExit('function not found in the interface')
-
                 # ARA: needed for functions defined only with a header
-                results = func.results
+                results = rhs.func.results
                 if results:
                     d_var = [self._infere_type(i, **settings) for i in results]
-
-                rhs = FunctionCall(func.rename(rhs.func.name),
-                                   rhs.arguments, kind=rhs.func.kind)
             elif isinstance(rhs, ConstructorCall):
 
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
@@ -2269,6 +2266,17 @@ class Parser(object):
             # TODO should we return it and keep it in the AST?
 
             self.insert_header(expr)
+            return expr
+        elif isinstance(expr, InterfaceHeader):
+            container = self.namespace['functions']
+            #TODO improve test all possible containers
+            if set(expr.funcs).issubset(container.keys()):
+                name = expr.name
+                funcs = []
+                for i in expr.funcs:
+                    funcs += [container[i]]
+            expr = Interface(name, funcs, hide = True)
+            container[name] = expr   
             return expr
         elif isinstance(expr, Return):
 
@@ -2592,6 +2600,7 @@ class Parser(object):
             return Is(var, expr.rhs)
 
         elif isinstance(expr, Import):
+            
 
             # TODO - must have a dict where to store things that have been
             #        imported
@@ -2620,6 +2629,7 @@ class Parser(object):
                     # using repr.
                     # TODO shall we improve it?
                     p = self.d_parsers[str(expr.source)]
+                   
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -2648,7 +2658,6 @@ class Parser(object):
                             return Import(__module_name__)
                         else:
                             return EmptyLine()
-
             return expr
 
         elif isinstance(expr, Concatinate):
@@ -2665,7 +2674,7 @@ class Parser(object):
                 raise ValueError('with construct can only applied to '
                                     'classes with __enter__ and __exit__ methods')
             body = self._annotate(expr.body)
-            return With(domaine, body, None)
+            return With(domaine, body, None).block
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))

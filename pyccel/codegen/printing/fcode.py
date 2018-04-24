@@ -936,15 +936,16 @@ class FCodePrinter(CodePrinter):
 
     
 
-    def _print_With(self, expr):
-        test = 'call '+self._print(expr.test) + '%__enter__()'
-        body = '\n'.join(self._print(i) for i in expr.body)
-        end = 'call '+self._print(expr.test) + '%__exit__()'
-        code = ('{test}\n'
-               '{body}\n'
-               '{end}').format(test=test, body=body, end=end)
+   # def _print_With(self, expr):
+   #     test = 'call '+self._print(expr.test) + '%__enter__()'
+   #     body = '\n'.join(self._print(i) for i in expr.body)
+   #     end = 'call '+self._print(expr.test) + '%__exit__()'
+   #     code = ('{test}\n'
+   #            '{body}\n'
+   #            '{end}').format(test=test, body=body, end=end)
         #TODO return code later
-        return ''
+  #      expr.block
+  #      return ''
        
     def _print_Block(self, expr):
 
