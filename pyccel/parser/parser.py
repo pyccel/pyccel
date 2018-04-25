@@ -2441,13 +2441,13 @@ class Parser(object):
                 # find return stmt and results
                 returns = self._collect_returns_stmt(body)
                 results = []
-                if len(returns)>1:
-                    raise PyccelSemanticError('multiple returns not available yet')
+                
+                        
                 for stmt in returns:
-                    results = stmt.expr
-                    if isinstance(results, Symbol):
-                        results = [results]
-                        kind = 'function'
+                    results += stmt.expr
+                results = list(set(results))
+                if len(results)>1:
+                    raise PyccelSemanticError('multiple returns with different variables not available yet')
                     
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
