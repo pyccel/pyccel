@@ -453,20 +453,31 @@ class Parser(object):
 
         # in the case of a header file, we need to convert all headers to
         # FunctionDef etc ...
+        
         if self.is_header_file:
-            for name,v in list(self.headers.items()):
+            target = []
+            for parent in self.parents:
+                for  key,item in parent.imports.items():
+                      if get_filename_from_import(key)==self.filename:
+                          target += item
+            target = set(target)
+            target = target.intersection(self.headers.keys())
+#            print(target)
+  
+            for name in list(target):
+                v = self.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
                     F = self.get_function(name)
                     if F is None:
                         interfaces = v.create_definition()
                         for F in interfaces:
                             self.insert_function(F)
+            
                     else:
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                       symbol=name,
                                       blocker=True,
-                                      severity='fatal')
-
+                                      severity='fatal')    
 #        print('++++++++++++++')
 #        print(errors.error_info_map)
         errors.check()
@@ -598,7 +609,7 @@ class Parser(object):
     def insert_import(self, expr):
         """."""
         # TODO improve
-
+        
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
 
@@ -613,8 +624,11 @@ class Parser(object):
             source = str(source)
             if not(source in pyccel_builtin_import_registery):
                 for t in expr.target:
-                    name = str(t)
-                    self._namespace['imports'][source] = name
+                    name = [str(t)]
+                    if not source in self._namespace['imports'].keys():
+                        self._namespace['imports'][source] = []
+                    self._namespace['imports'][source] += name
+
 
 
     def get_variable(self, name):
