@@ -9,6 +9,7 @@ Statement:
   | FunctionHeaderStmt 
   | ClassHeaderStmt
   | MetavarHeaderStmt
+  | InterfaceStmt
 ;
 
 TrailerSubscriptList: '[' args*=':' [','] ']';
@@ -48,3 +49,6 @@ MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
 
 STAR: '*';
+
+InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
+

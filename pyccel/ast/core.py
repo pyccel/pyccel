@@ -70,6 +70,8 @@ def subs(expr, new_elements):
 
     new_elements : list of tuples like [(x,2)(y,3)]
     """
+    if len(list(new_elements))==0:
+        return expr
     if isinstance(expr, (list, tuple, Tuple)):
         return [subs(expr, new_elements) for i in expr]
     elif isinstance(expr, (Expr, Assign)):
@@ -672,6 +674,22 @@ class With(Basic):
     @property
     def settings(self):
         return self._args[2]
+    
+    @property
+    def block(self):
+        methods = self.test.cls_base.methods
+        for i in methods:
+            if str(i.name)=='__enter__':
+                enter = i
+            elif str(i.name) =='__exit__':
+                exit = i
+        enter = FunctionCall(enter,[]).inline
+        exit = FunctionCall(exit, []).inline
+        #TODO check if enter is empty or not first
+        body = enter.body
+        body += self.body
+        body += exit.body
+        return Block('with', [], body)
 
 class Range(Basic):
     """
@@ -2246,12 +2264,12 @@ class Return(Basic):
 class Interface(Basic):
     """Represent an Interface"""
 
-    def __new__(cls, name, functions):
+    def __new__(cls, name, functions, hide=False):
         if not isinstance(name, str):
             raise TypeError("Expecting an str")
         if not isinstance(functions, list):
             raise TypeError("Expecting a list")
-        return Basic.__new__(cls, name, functions)
+        return Basic.__new__(cls, name, functions, hide)
 
     @property
     def name(self):
@@ -2260,6 +2278,10 @@ class Interface(Basic):
     @property
     def functions(self):
         return self._args[1]
+   
+    @property
+    def hide(self):
+        return self.functions[0].hide or self._args[2]
 
     @property
     def global_vars(self):
@@ -2268,10 +2290,6 @@ class Interface(Basic):
     @property
     def cls_name(self):
         return self.functions[0].cls_name
-
-    @property
-    def hide(self):
-        return self.functions[0].hide
 
     @property
     def kind(self):
@@ -3920,14 +3938,6 @@ class VariableHeader(Header):
         return self._args[1]
 
 # TODO rename dtypes to arguments
-class UnionType(Basic):
-
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
-
-    @property
-    def args(self):
-        return self._args[0]
 
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
@@ -4018,10 +4028,15 @@ class FunctionHeader(Header):
         funcs = []
         dtypes = []
         for i in self.dtypes:
-            dtypes += [i.args]
+            if isinstance(i, UnionType):
+                dtypes += [i.args]
+            elif isinstance(i, dict):
+                dtypes += [[i]]
+            else:
+                raise TypeError('element must be of type UnionType or dict')
         for args_ in product(*dtypes):
             args = []
-            for d in args_:
+            for i, d in enumerate(args_):
                 dtype    = d['datatype']
                 allocatable = d['allocatable']
                 is_pointer = d['is_pointer']
@@ -4114,7 +4129,7 @@ class MethodHeader(FunctionHeader):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, UnionType):
+            if not isinstance(d, UnionType) and not isinstance(d, dict):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
@@ -4221,6 +4236,33 @@ def is_valid_module(expr):
 # ...
 
 # ...
+class InterfaceHeader(Basic):
+    
+    def __new__(cls, name, funcs):
+        if not isinstance(name,str):
+            raise TypeError('name should of type str')
+        if not all([isinstance(i, str) for i in funcs]):
+            raise TypeError('functions name must be of type str')
+        return Basic.__new__(cls, name, funcs)
+
+      
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def funcs(self):
+        return self._args[1]
+
+class UnionType(Basic):
+
+    def __new__(cls, args):
+        return Basic.__new__(cls, args)
+
+    @property
+    def args(self):
+        return self._args[0]
+
 def get_initial_value(expr, var):
     """Returns the first assigned value to var in the Expression expr.
 

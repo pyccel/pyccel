@@ -161,13 +161,14 @@ class FCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         interfaces = ''
         if expr.interfaces:
-            interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+            interfaces = '\n'.join(self._print(i) for i in expr.interfaces if not i.hide)
             for interface in expr.interfaces:
-                for i in interface.functions:
-                    body = ('{body}\n'
-                            '{sep}\n'
-                            '{f}\n'
-                            '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+                if not interface.hide:
+                    for i in interface.functions:
+                        body = ('{body}\n'
+                                '{sep}\n'
+                                '{f}\n'
+                                '{sep}\n').format(body=body, sep=sep, f=self._print(i))
 
         if expr.funcs:
             for i in expr.funcs:
@@ -936,15 +937,16 @@ class FCodePrinter(CodePrinter):
 
     
 
-    def _print_With(self, expr):
-        test = 'call '+self._print(expr.test) + '%__enter__()'
-        body = '\n'.join(self._print(i) for i in expr.body)
-        end = 'call '+self._print(expr.test) + '%__exit__()'
-        code = ('{test}\n'
-               '{body}\n'
-               '{end}').format(test=test, body=body, end=end)
+   # def _print_With(self, expr):
+   #     test = 'call '+self._print(expr.test) + '%__enter__()'
+   #     body = '\n'.join(self._print(i) for i in expr.body)
+   #     end = 'call '+self._print(expr.test) + '%__exit__()'
+   #     code = ('{test}\n'
+   #            '{body}\n'
+   #            '{end}').format(test=test, body=body, end=end)
         #TODO return code later
-        return ''
+  #      expr.block
+  #      return ''
        
     def _print_Block(self, expr):
 
