@@ -2444,10 +2444,11 @@ class Parser(object):
                 
                         
                 for stmt in returns:
-                    results += stmt.expr
-                results = list(set(results))
-                if len(results)>1:
+                    results += [set(stmt.expr)]
+                if not all(i==results[0] for i in results):
                     raise PyccelSemanticError('multiple returns with different variables not available yet')
+                if len(results)>0:
+                    results = list(results[0])
                     
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
