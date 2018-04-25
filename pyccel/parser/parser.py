@@ -869,6 +869,18 @@ class Parser(object):
             self.set_class_construct(str(expr.name), dtype)
         else:
             raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
+    
+    def _collect_returns_stmt(self,ast):
+        vars_ = []
+        for stmt in ast:
+            if isinstance(stmt, (For,While)):
+                vars_ += self._collect_returns_stmt(stmt.body)
+            elif isinstance(stmt, If):
+                vars_ += self._collect_returns_stmt(stmt.bodies)
+            elif isinstance(stmt, Return):
+                vars_ +=[stmt]
+                         
+        return vars_
 
     def _fst_to_ast(self, stmt):
         """Creates AST from FST."""
@@ -2427,17 +2439,16 @@ class Parser(object):
                 body = self._annotate(expr.body, **settings)
 
                 # find return stmt and results
-                # we keep the return stmt, in case of handling multi returns later
-                for stmt in body:
-                    # TODO case of multiple calls to return
-                    if isinstance(stmt, Return):
-                        #TODO improve the search of return in nested bodies
-                        # like ifs,for stmts and while stmts
-                        results = stmt.expr
-                        if isinstance(results, Symbol):
-                            results = [results]
-                            kind = 'function'
-
+                returns = self._collect_returns_stmt(body)
+                results = []
+                if len(returns)>1:
+                    raise PyccelSemanticError('multiple returns not available yet')
+                for stmt in returns:
+                    results = stmt.expr
+                    if isinstance(results, Symbol):
+                        results = [results]
+                        kind = 'function'
+                    
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
                     var = Variable(dt, 'self',
