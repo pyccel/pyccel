@@ -733,7 +733,6 @@ class Parser(object):
     def get_symbolic_function(self, name):
         """."""
         # TODO shall we keep the elif in _imports?
-
         func = None
         if name in self._namespace['symbolic_functions']:
             func = self._namespace['symbolic_functions'][name]
@@ -1206,6 +1205,7 @@ class Parser(object):
                 cls_name = None
 
             name = self._fst_to_ast(stmt.name)
+            name = name.replace("'", '')
             arguments = self._fst_to_ast(stmt.arguments)
             results = []
             local_vars = []
@@ -1214,16 +1214,17 @@ class Parser(object):
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
+            stmt.decorators.pop()
             body = stmt.value
 
             if 'sympy' in decorators:
                 # TODO maybe we should run pylint here
-                func = SympyFunction(name, arguments, [], body)
+                func = SympyFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
             elif 'python' in decorators:
                 # TODO maybe we should run pylint here
-                func = PythonFunction(name, arguments, [], body)
+                func = PythonFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
             else:
@@ -1832,8 +1833,9 @@ class Parser(object):
         elif isinstance(expr, Function):
             # ... DEBUG
             name = str(type(expr).__name__)
+            
             func = self.get_function(name)
-
+            
             # ...
             if not isinstance(func, Lambda):
                 args = [self._annotate(i, **settings) for i in expr.args]
@@ -1841,8 +1843,10 @@ class Parser(object):
                 # here args are sympy symbol
                 args = expr.args
             # ...
-
+            if name== 'lambdify':
+                args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
+
             if F:
                 return F
 
@@ -1967,8 +1971,13 @@ class Parser(object):
                     assigns.append(expr_new)
 
                 assigns = [self._annotate(i, **settings) for i in assigns]
-
             rhs = self._annotate(rhs, **settings)
+            
+            if isinstance(rhs, FunctionDef):
+                #case of using lambdfify then the rhs is a functiondef
+                rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
+                return rhs
+          
 
             # d_var can be a list of dictionaries
 
@@ -2445,8 +2454,10 @@ class Parser(object):
                         
                 for stmt in returns:
                     results += [set(stmt.expr)]
+
                 if not all(i==results[0] for i in results):
                     raise PyccelSemanticError('multiple returns with different variables not available yet')
+
                 if len(results)>0:
                     results = list(results[0])
                     
@@ -2455,6 +2466,7 @@ class Parser(object):
                     var = Variable(dt, 'self',
                                    cls_base=self.get_class(cls_name))
                     args = [var] + args
+
                 for var in self.get_variables():
                     if not var in args + results:
                         local_vars += [var]
