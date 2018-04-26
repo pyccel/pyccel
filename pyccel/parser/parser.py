@@ -120,7 +120,7 @@ from sympy import Lambda
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
-from sympy.core.function import Function, FunctionClass
+from sympy.core.function import Function, FunctionClass, Application
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
@@ -1214,16 +1214,17 @@ class Parser(object):
             kind = 'function'
             imports = []
             decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
-            stmt.decorators.pop()
             body = stmt.value
 
             if 'sympy' in decorators:
                 # TODO maybe we should run pylint here
+                stmt.decorators.pop()
                 func = SympyFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
             elif 'python' in decorators:
                 # TODO maybe we should run pylint here
+                stmt.decorators.pop()
                 func = PythonFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
@@ -1830,7 +1831,7 @@ class Parser(object):
                     expr = Lambda(expr.variables, expr_new)
             return expr
 
-        elif isinstance(expr, Function):
+        elif isinstance(expr, (Application)):
             # ... DEBUG
             name = str(type(expr).__name__)
             
@@ -1845,8 +1846,8 @@ class Parser(object):
             # ...
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
+           
             F = pyccel_builtin_function(expr, args)
-
             if F:
                 return F
 
@@ -1942,7 +1943,7 @@ class Parser(object):
 
                 
             return expr
-
+         
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1974,8 +1975,11 @@ class Parser(object):
             rhs = self._annotate(rhs, **settings)
             
             if isinstance(rhs, FunctionDef):
-                #case of using lambdfify then the rhs is a functiondef
+                #case of using lambdify then the rhs is a functiondef
+                for i in rhs.body:
+                    i.set_fst(expr.fst)
                 rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
+                raise SystemExit('1979##########')
                 return rhs
           
 
@@ -2238,7 +2242,7 @@ class Parser(object):
                 assigns_ = assigns[:]
                 for i in assigns_:
                     target = isinstance(i.rhs.func, FunctionDef) and not(i.rhs.func.is_procedure)
-                    if  target or isinstance(i.rhs.func, (Function, FunctionClass)):
+                    if  target or isinstance(i.rhs.func, Application):
                         expr_new = expr_new.subs(i.lhs,i.rhs)
                         assigns.remove(i)
                         self.remove(i.lhs.name)

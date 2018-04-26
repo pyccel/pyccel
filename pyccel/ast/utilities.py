@@ -5,9 +5,10 @@ from sympy.core.function import Function
 from .core import DottedName
 from .core import Import
 from .core import Range, Len
-from .core import FunctionDef, Return
+from .core import FunctionDef, Return, Assign
 from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Sum, Rand
+from sympy import Symbol
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
                    acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
 
@@ -66,9 +67,13 @@ def builtin_function(expr, args=None):
        f_name = str(args.name)
        code = g[f_name]
        args_ = args.arguments
-       expr = code(*args_)
+       expr_ = code(*args_)
        f_arguments = list(expr.free_symbols)
-       func = FunctionDef(f_name, f_arguments, [], [Return(expr)],decorators = args.decorators)
+       result = Symbol('result')
+       body = [Assign(result,expr_),Return(result)]
+       for i in body:
+           i.set_fst(expr)
+       func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
        return func
 
     return None
