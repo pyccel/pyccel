@@ -12,7 +12,7 @@ from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
-from pyccel.ast.core import MetaVariable , UnionType
+from pyccel.ast.core import MetaVariable , UnionType, InterfaceHeader
 
 DEBUG = False
 
@@ -172,7 +172,10 @@ class FunctionHeaderStmt(BasicStmt):
                 l = []
                 for i in dec.dtypes:
                     l += [i.expr]
-                dtypes += [UnionType(l)]
+                if len(l)>1:
+                    dtypes += [UnionType(l)]
+                else:
+                    dtypes += [l[0]]
 
         if self.kind is None:
             kind = 'function'
@@ -188,7 +191,11 @@ class FunctionHeaderStmt(BasicStmt):
             results = self.results.expr
 
         if kind == 'method':
-            cls_instance = dtypes[0].args[0]['datatype']
+            dtype = dtypes[0]
+            if isinstance(dtype, UnionType):
+                cls_instance = dtype.args[0]['datatype']
+            else:
+                cls_instance = dtype['datatype']
             dtypes = dtypes[1:] # remove the attribut
             kind = 'procedure'
             if results:
@@ -248,6 +255,29 @@ class MetavarHeaderStmt(BasicStmt):
         value = self.value
         return MetaVariable(name, value)
 
+
+class InterfaceStmt(BasicStmt):
+      """ class represent the header interface statement"""
+
+      def __init__(self, **kwargs):
+          """
+          Constructor of Interface statement
+          
+          name: str
+          
+          args: list of funciton names
+         
+          """
+
+          self.name = kwargs.pop('name')
+          self.args = kwargs.pop('args')
+          super(InterfaceStmt, self).__init__(**kwargs)
+      
+      @property
+      def expr(self):
+          return InterfaceHeader(self.name, self.args)
+
+
 #################################################
 
 #################################################
@@ -259,7 +289,7 @@ hdr_classes = [Header, TypeHeader,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,
-               MetavarHeaderStmt]
+               MetavarHeaderStmt,InterfaceStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -296,3 +326,4 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))
+    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
