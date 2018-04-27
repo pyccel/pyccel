@@ -133,6 +133,7 @@ from collections import OrderedDict
 
 import traceback
 import importlib
+import pickle
 import os
 import sys
 
@@ -378,6 +379,67 @@ class Parser(object):
     @property
     def show_traceback(self):
         return self._show_traceback
+
+    # TODO shall we need to export the Parser too?
+    def dump(self, filename=None):
+        """Dump the current ast using Pickle.
+
+        filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+        # ...
+        use_home_dir = False
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            use_home_dir = True
+            name = os.path.basename(self.filename)
+            filename = '{}.pyccel'.format(name)
+
+        # check extension
+        if not (filename.split('.')[-1] == 'pyccel'):
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        # we are only exporting the AST.
+        f = open(filename, 'wb')
+        pickle.dump(self.ast, f, protocol=2)
+        f.close()
+        print('> exported :', self.ast)
+
+    # TODO shall we need to load the Parser too?
+    def load(self, filename=None):
+        """Load the current ast using Pickle.
+
+        filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+        # ...
+        use_home_dir = False
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            use_home_dir = True
+            name = os.path.basename(self.filename)
+            filename = '{}.pyccel'.format(name)
+
+        # check extension
+        if not (filename.split('.')[-1] == 'pyccel'):
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        f = open(filename, 'rb')
+        self._ast = pickle.load(f)
+        f.close()
+        print('> loaded   :', self.ast)
 
     def append_parent(self, parent):
         """."""
@@ -2730,6 +2792,16 @@ if __name__ == '__main__':
 
     settings = {}
     pyccel.annotate(**settings)
+
+#    for s in pyccel.ast:
+#        print(type(s))
+
+    # export the ast
+    pyccel.dump()
+
+    # load the ast
+    pyccel.load()
+
 #    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()
 
