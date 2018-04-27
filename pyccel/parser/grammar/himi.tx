@@ -1,0 +1,23 @@
+HiMi:
+  statements*=TypeStmt
+;
+
+TypeStmt: 
+    DeclareTypeStmt
+  | DeclareFunctionStmt
+  | DeclareVariableStmt
+  | FunctionTypeStmt // TODO to be removed. only for testing 
+;
+
+Type:
+    FunctionTypeStmt
+  | ID 
+;
+
+FunctionTypeStmt: domains+=ID['->'];
+
+DeclareTypeStmt:     name=ID '='  dtype=Type;
+DeclareVariableStmt: name=ID ':' dtype=ID;
+DeclareFunctionStmt:  name=ID '::'  dtype=Type;
+
+
