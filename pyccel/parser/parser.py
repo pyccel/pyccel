@@ -121,7 +121,7 @@ from sympy import Lambda
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
-from sympy.core.function import Function, FunctionClass
+from sympy.core.function import Function, FunctionClass, Application
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
@@ -796,7 +796,6 @@ class Parser(object):
     def get_symbolic_function(self, name):
         """."""
         # TODO shall we keep the elif in _imports?
-
         func = None
         if name in self._namespace['symbolic_functions']:
             func = self._namespace['symbolic_functions'][name]
@@ -1269,6 +1268,7 @@ class Parser(object):
                 cls_name = None
 
             name = self._fst_to_ast(stmt.name)
+            name = name.replace("'", '')
             arguments = self._fst_to_ast(stmt.arguments)
             results = []
             local_vars = []
@@ -1281,12 +1281,14 @@ class Parser(object):
 
             if 'sympy' in decorators:
                 # TODO maybe we should run pylint here
-                func = SympyFunction(name, arguments, [], body)
+                stmt.decorators.pop()
+                func = SympyFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
             elif 'python' in decorators:
                 # TODO maybe we should run pylint here
-                func = PythonFunction(name, arguments, [], body)
+                stmt.decorators.pop()
+                func = PythonFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
             else:
@@ -1895,11 +1897,12 @@ class Parser(object):
                     expr = Lambda(expr.variables, expr_new)
             return expr
 
-        elif isinstance(expr, Function):
+        elif isinstance(expr, (Application)):
             # ... DEBUG
             name = str(type(expr).__name__)
+            
             func = self.get_function(name)
-
+            
             # ...
             if not isinstance(func, Lambda):
                 args = [self._annotate(i, **settings) for i in expr.args]
@@ -1907,7 +1910,9 @@ class Parser(object):
                 # here args are sympy symbol
                 args = expr.args
             # ...
-
+            if name== 'lambdify':
+                args = self.get_symbolic_function(str(expr.args[0]))
+           
             F = pyccel_builtin_function(expr, args)
             if F:
                 return F
@@ -2004,7 +2009,7 @@ class Parser(object):
 
 
             return expr
-
+         
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -2033,8 +2038,16 @@ class Parser(object):
                     assigns.append(expr_new)
 
                 assigns = [self._annotate(i, **settings) for i in assigns]
-
             rhs = self._annotate(rhs, **settings)
+            
+            if isinstance(rhs, FunctionDef):
+                #case of using lambdify then the rhs is a functiondef
+                for i in rhs.body:
+                    i.set_fst(expr.fst)
+                rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
+                raise SystemExit('1979##########')
+                return rhs
+          
 
             # d_var can be a list of dictionaries
 
@@ -2295,7 +2308,7 @@ class Parser(object):
                 assigns_ = assigns[:]
                 for i in assigns_:
                     target = isinstance(i.rhs.func, FunctionDef) and not(i.rhs.func.is_procedure)
-                    if  target or isinstance(i.rhs.func, (Function, FunctionClass)):
+                    if  target or isinstance(i.rhs.func, Application):
                         expr_new = expr_new.subs(i.lhs,i.rhs)
                         assigns.remove(i)
                         self.remove(i.lhs.name)
@@ -2511,8 +2524,10 @@ class Parser(object):
 
                 for stmt in returns:
                     results += [set(stmt.expr)]
+
                 if not all(i==results[0] for i in results):
                     raise PyccelSemanticError('multiple returns with different variables not available yet')
+
                 if len(results)>0:
                     results = list(results[0])
 
@@ -2521,6 +2536,7 @@ class Parser(object):
                     var = Variable(dt, 'self',
                                    cls_base=self.get_class(cls_name))
                     args = [var] + args
+
                 for var in self.get_variables():
                     if not var in args + results:
                         local_vars += [var]
