@@ -1,6 +1,5 @@
 # this file can be used by developers to run all tests localy before travis
 
-python tests/ast/test_ast.py
 python tests/parser/test_headers.py
 python tests/parser/test_openmp.py
 python tests/parser/test_openacc.py
