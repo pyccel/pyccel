@@ -55,7 +55,7 @@ script:
   - $PYTEST tests/errors/test_errors.py
   - $PYTEST tests/preprocess/test_preprocess.py
 # this test must be executed with python, since we are calling mpif90 inside it
-  - python tests/external/test_external.py
+  - python tests/internal/test_internal.py
   - cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
 #  - python tests/test_pyccel.py --execute
 #  - python tests/test_pyccel_openmp.py --openmp --execute
