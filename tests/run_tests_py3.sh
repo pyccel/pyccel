@@ -9,6 +9,6 @@ python3 tests/semantic/test_semantic.py
 python3 tests/codegen/test_codegen.py  
 python3 tests/errors/test_errors.py  
 python3 tests/preprocess/test_preprocess.py
-python3 tests/external/test_external.py  
+python3 tests/internal/test_internal.py  
 
 cd tests/epyccel/ ; python3 test_epyccel.py ; cd ../.. 

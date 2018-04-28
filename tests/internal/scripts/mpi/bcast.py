@@ -1,13 +1,13 @@
 # coding: utf-8
 
-from pyccel.stdlib.external.mpi import mpi_init
-from pyccel.stdlib.external.mpi import mpi_finalize
-from pyccel.stdlib.external.mpi import mpi_comm_size
-from pyccel.stdlib.external.mpi import mpi_comm_rank
-from pyccel.stdlib.external.mpi import mpi_comm_world
-from pyccel.stdlib.external.mpi import mpi_status_size
-from pyccel.stdlib.external.mpi import mpi_bcast
-from pyccel.stdlib.external.mpi import MPI_INTEGER
+from pyccel.stdlib.internal.mpi import mpi_init
+from pyccel.stdlib.internal.mpi import mpi_finalize
+from pyccel.stdlib.internal.mpi import mpi_comm_size
+from pyccel.stdlib.internal.mpi import mpi_comm_rank
+from pyccel.stdlib.internal.mpi import mpi_comm_world
+from pyccel.stdlib.internal.mpi import mpi_status_size
+from pyccel.stdlib.internal.mpi import mpi_bcast
+from pyccel.stdlib.internal.mpi import MPI_INTEGER
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
