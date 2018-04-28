@@ -867,6 +867,30 @@ class Parser(object):
         else:
             raise TypeError('Expected a python_function')
 
+
+    def get_macro(self, name):
+        """."""
+        # TODO shall we keep the elif in _imports?
+        macro = None
+        if name in self._namespace['macros']:
+            macro = self._namespace['macros'][name]
+        # TODO uncomment
+#        elif name in self._imports:
+#            macro = self._imports[name]
+        return macro
+
+    def insert_macro(self, macro):
+        """."""
+        container = self._namespace['macros']
+        if isinstance(self._current, DottedName):
+            name = self._current.name[0]
+            container = self._scope[name]['macros']
+
+        if isinstance(macro, MacroFunction):
+            container[str(macro.name)] = macro
+        else:
+            raise TypeError('Expected a macro')
+
     def remove(self, name):
         """."""
         #TODO improve to checkt each level of scoping
@@ -1985,7 +2009,15 @@ class Parser(object):
             else:
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
-                func = self.get_function(name)
+
+                # first we check if it is a macro, in this case, we will create
+                # an appropriate FunctionCall
+                macro = self.get_macro(name)
+                if not macro is None:
+                    func = macro.master
+                else:
+                    func = self.get_function(name)
+
                 if not func is None:
                     if isinstance(func, (FunctionDef, Interface)):
                         # case of a function that takes no argument
@@ -2835,7 +2867,10 @@ class Parser(object):
             name = expr.name
             args = expr.arguments
             master_args = expr.master_arguments
-            return MacroFunction(name, args, f, master_args)
+            macro = MacroFunction(name, args, f, master_args)
+            self.insert_macro(macro)
+
+            return macro
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
