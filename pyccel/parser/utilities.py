@@ -38,6 +38,23 @@ def is_valid_filename_pyh(filename):
     return _is_valid_filename(filename, 'pyh')
 #  ...
 
+#  ...
+def header_statement(stmt, accel):
+    """Returns stmt if a header statement. otherwise it returns None.
+    this function can be used as the following
+    >>> if header_statement(stmt):
+        # do stuff
+        ...
+
+    """
+    if not isinstance(stmt, CommentNode): None
+    if not stmt.value.startswith('#$'): None
+
+    header = stmt.value[2:].lstrip()
+    if not directive.startswith('header'): None
+
+    return stmt.value
+#  ...
 
 # ... utilities for parsing OpenMP/OpenACC directives
 def accelerator_statement(stmt, accel):
@@ -145,7 +162,16 @@ def reconstruct_pragma_multilines(header):
     """Must be called once we visit an annotated comment, to get the remaining
     parts of a statement written on multiple lines."""
 
-    _is_pragma = lambda x: isinstance(x, CommentNode) and x.value.startswith('#$')
+    def _is_pragma(x):
+        if not(isinstance(x, CommentNode) and x.value.startswith('#$')):
+            return False
+        env = x.value[2:].lstrip()
+        if (env.startswith('header') or
+            env.startswith('omp') or
+            env.startswith('acc')):
+            return False
+        return True
+
     _ignore_stmt = lambda x: isinstance(x, (EndlNode, CommentNode)) and not _is_pragma(x)
 
     ls = []
