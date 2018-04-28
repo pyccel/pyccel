@@ -27,7 +27,7 @@ from redbaron import DelNode
 from redbaron import DictNode, DictitemNode
 from redbaron import WhileNode
 from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
-from redbaron import DotNode, AtomtrailersNode
+from redbaron import DotNode
 from redbaron import CallNode
 from redbaron import CallArgumentNode
 from redbaron import AssertNode
@@ -44,6 +44,7 @@ from redbaron import DottedAsNameNode
 from redbaron import NameAsNameNode
 from redbaron import LambdaNode
 from redbaron import WithNode
+from redbaron import AtomtrailersNode
 
 from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, NativeComplex
 from pyccel.ast import NativeBool
@@ -133,6 +134,7 @@ from collections import OrderedDict
 
 import traceback
 import importlib
+import pickle
 import os
 import sys
 
@@ -379,6 +381,67 @@ class Parser(object):
     def show_traceback(self):
         return self._show_traceback
 
+    # TODO shall we need to export the Parser too?
+    def dump(self, filename=None):
+        """Dump the current ast using Pickle.
+
+        filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+        # ...
+        use_home_dir = False
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            use_home_dir = True
+            name = os.path.basename(self.filename)
+            filename = '{}.pyccel'.format(name)
+
+        # check extension
+        if not (filename.split('.')[-1] == 'pyccel'):
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        # we are only exporting the AST.
+        f = open(filename, 'wb')
+        pickle.dump(self.ast, f, protocol=2)
+        f.close()
+        print('> exported :', self.ast)
+
+    # TODO shall we need to load the Parser too?
+    def load(self, filename=None):
+        """Load the current ast using Pickle.
+
+        filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+        # ...
+        use_home_dir = False
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            use_home_dir = True
+            name = os.path.basename(self.filename)
+            filename = '{}.pyccel'.format(name)
+
+        # check extension
+        if not (filename.split('.')[-1] == 'pyccel'):
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        f = open(filename, 'rb')
+        self._ast = pickle.load(f)
+        f.close()
+        print('> loaded   :', self.ast)
+
     def append_parent(self, parent):
         """."""
         # TODO check parent is not in parents
@@ -454,7 +517,7 @@ class Parser(object):
 
         # in the case of a header file, we need to convert all headers to
         # FunctionDef etc ...
-        
+
         if self.is_header_file:
             target = []
             for parent in self.parents:
@@ -464,7 +527,7 @@ class Parser(object):
             target = set(target)
             target = target.intersection(self.headers.keys())
 #            print(target)
-  
+
             for name in list(target):
                 v = self.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v, MethodHeader):
@@ -473,12 +536,12 @@ class Parser(object):
                         interfaces = v.create_definition()
                         for F in interfaces:
                             self.insert_function(F)
-            
+
                     else:
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                       symbol=name,
                                       blocker=True,
-                                      severity='fatal')    
+                                      severity='fatal')
 #        print('++++++++++++++')
 #        print(errors.error_info_map)
         errors.check()
@@ -610,7 +673,7 @@ class Parser(object):
     def insert_import(self, expr):
         """."""
         # TODO improve
-        
+
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
 
@@ -869,7 +932,7 @@ class Parser(object):
             self.set_class_construct(str(expr.name), dtype)
         else:
             raise TypeError('header of type{0} is not supported'.format(str(type(expr))))
-    
+
     def _collect_returns_stmt(self,ast):
         vars_ = []
         for stmt in ast:
@@ -879,7 +942,7 @@ class Parser(object):
                 vars_ += self._collect_returns_stmt(stmt.bodies)
             elif isinstance(stmt, Return):
                 vars_ +=[stmt]
-                         
+
         return vars_
 
     def _fst_to_ast(self, stmt):
@@ -1304,7 +1367,9 @@ class Parser(object):
 
         elif isinstance(stmt, CallNode):
             args = self._fst_to_ast(stmt.value)
-            f_name = str(stmt.previous)
+            # TODO we must use self._fst_to_ast(stmt.previous.value)
+            #      but it is not working for the moment
+            f_name = str(stmt.previous.value)
             if len(args) == 0:
                 args = ((), )
             func = Function(f_name)(*args)
@@ -1323,10 +1388,11 @@ class Parser(object):
             return self._fst_to_ast(stmt.value)
 
         elif isinstance(stmt, ForNode):
-            target = self._fst_to_ast(stmt.iterator)
-            iter = self._fst_to_ast(stmt.target)
+            iterator = self._fst_to_ast(stmt.iterator)
+            iterable = self._fst_to_ast(stmt.target)
             body = self._fst_to_ast(stmt.value)
-            return For(target, iter, body, strict=False)
+            expr = For(iterator, iterable, body, strict=False)
+            return expr
 
         elif isinstance(stmt, IfelseblockNode):
             args = self._fst_to_ast(stmt.value)
@@ -1895,7 +1961,7 @@ class Parser(object):
 
                         if 'inline' in func.decorators:
                             return self._annotate(FunctionCall(func, args), **settings).inline
-                        
+
                         return self._annotate(FunctionCall(func, args), **settings)
 
                     else:
@@ -1919,7 +1985,7 @@ class Parser(object):
                     found = True
                     for (idx, dt) in enumerate(arg_dvar):
                         # TODO imporve add the other verification shape,rank,pointer,...
-                        
+
                         dtype1 = dt['datatype'].__str__()
                         dtype2 = i[idx]['datatype'].__str__()
                         found  = found and (dtype1 in dtype2
@@ -1940,9 +2006,9 @@ class Parser(object):
                 new_func = func
             else:
                 new_func = func.rename(expr.func.name)
-            expr = FunctionCall(new_func, expr.arguments, kind=expr.func.kind)  
+            expr = FunctionCall(new_func, expr.arguments, kind=expr.func.kind)
 
-                
+
             return expr
          
         elif isinstance(expr, Expr):
@@ -2316,7 +2382,7 @@ class Parser(object):
                 for i in expr.funcs:
                     funcs += [container[i]]
             expr = Interface(name, funcs, hide = True)
-            container[name] = expr   
+            container[name] = expr
             return expr
         elif isinstance(expr, Return):
 
@@ -2455,8 +2521,8 @@ class Parser(object):
                 # find return stmt and results
                 returns = self._collect_returns_stmt(body)
                 results = []
-                
-                        
+
+
                 for stmt in returns:
                     results += [set(stmt.expr)]
 
@@ -2465,7 +2531,7 @@ class Parser(object):
 
                 if len(results)>0:
                     results = list(results[0])
-                    
+
                 if arg and cls_name:
                     dt = self.get_class_construct(cls_name)()
                     var = Variable(dt, 'self',
@@ -2643,7 +2709,7 @@ class Parser(object):
             return Is(var, expr.rhs)
 
         elif isinstance(expr, Import):
-            
+
 
             # TODO - must have a dict where to store things that have been
             #        imported
@@ -2672,7 +2738,7 @@ class Parser(object):
                     # using repr.
                     # TODO shall we improve it?
                     p = self.d_parsers[str(expr.source)]
-                   
+
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -2743,6 +2809,16 @@ if __name__ == '__main__':
 
     settings = {}
     pyccel.annotate(**settings)
+
+#    for s in pyccel.ast:
+#        print(type(s))
+
+    # export the ast
+    pyccel.dump()
+
+    # load the ast
+    pyccel.load()
+
 #    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()
 

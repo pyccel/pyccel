@@ -2071,6 +2071,19 @@ class Variable(Symbol):
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.dtype, self.name,
+                self.rank,
+                self.allocatable,
+                self.is_pointer,
+                self.is_polymorphic,
+                self.is_optional,
+                self.shape,
+                self.cls_base,
+                self.cls_parameters,)
+        return args
+
 
 class DottedVariable(AtomicExpr, Boolean):
     """
@@ -2260,6 +2273,12 @@ class Return(Basic):
     @property
     def stmts(self):
         return self._args[1]
+
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.expr, self.stmts)
+        return args
+
 
 class Interface(Basic):
     """Represent an Interface"""
@@ -2564,6 +2583,22 @@ class FunctionDef(Basic):
             return False
 
         return True
+
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.name,
+                self.arguments,
+                self.results,
+                self.body,
+                self.local_vars,
+                self.global_vars,
+                self.cls_name,
+                self.hide,
+                self.kind,
+                self.is_static,
+                self.imports,
+                self.decorators,)
+        return args
 
 
 class SympyFunction(FunctionDef):
@@ -3481,6 +3516,12 @@ class AnnotatedComment(Basic):
     def txt(self):
         return self._args[1]
 
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.accel, self.txt,)
+        return args
+
+
 class IndexedVariable(IndexedBase):
     """
     Represents an indexed variable, like x in x[i], in the code.
@@ -3969,6 +4010,12 @@ class VariableHeader(Header):
 
 # TODO rename dtypes to arguments
 
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        # TODO improve after renaming the args property
+        args = (self._args[0],)
+        return args
+
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
@@ -4117,6 +4164,16 @@ class FunctionHeader(Header):
                               self.results,
                               self.kind,
                               True)
+
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.func,
+                self.dtypes,
+                self.results,
+                self.kind,
+                self.is_static,)
+        return args
+
 
 # TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):
