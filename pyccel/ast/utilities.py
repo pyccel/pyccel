@@ -59,6 +59,8 @@ def builtin_function(expr, args=None):
         return Mod(*args)
     if name == 'Max':
         return Max(*args)
+    if name == 'Sum':
+        return Sum(*args)
     
     if name == 'lambdify':
        code = compile(args.body[0],'','single')
@@ -71,8 +73,6 @@ def builtin_function(expr, args=None):
        f_arguments = list(expr.free_symbols)
        result = Symbol('result')
        body = [Assign(result,expr_),Return(result)]
-       for i in body:
-           i.set_fst(expr)
        func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
        return func
 
