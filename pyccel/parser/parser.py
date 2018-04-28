@@ -80,6 +80,7 @@ from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
+from pyccel.ast import MacroFunction
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
@@ -234,6 +235,7 @@ class Parser(object):
         self._namespace['variables'] = {}
         self._namespace['classes'] = {}
         self._namespace['functions'] = {}
+        self._namespace['macros'] = {}
         self._namespace['cls_constructs'] = {}
         self._namespace['symbolic_functions'] = {}
         self._namespace['python_functions'] = {}
@@ -312,6 +314,30 @@ class Parser(object):
     @property
     def imports(self):
         return self.namespace['imports']
+
+    @property
+    def functions(self):
+        return self.namespace['functions']
+
+    @property
+    def variables(self):
+        return self.namespace['variables']
+
+    @property
+    def classes(self):
+        return self.namespace['classes']
+
+    @property
+    def python_functions(self):
+        return self.namespace['python_functions']
+
+    @property
+    def symbolic_functions(self):
+        return self.namespace['symbolic_functions']
+
+    @property
+    def macros(self):
+        return self.namespace['macros']
 
     @property
     def filename(self):
@@ -2717,7 +2743,6 @@ class Parser(object):
 
         elif isinstance(expr, Import):
 
-
             # TODO - must have a dict where to store things that have been
             #        imported
             #      - should not use namespace
@@ -2783,6 +2808,7 @@ class Parser(object):
 
         elif isinstance(expr, AnnotatedComment):
             return expr
+
         elif isinstance(expr, With):
             domaine = self._annotate(expr.test)
             parent = domaine.cls_base
@@ -2791,6 +2817,25 @@ class Parser(object):
                                     'classes with __enter__ and __exit__ methods')
             body = self._annotate(expr.body)
             return With(domaine, body, None).block
+
+        elif isinstance(expr, MacroFunction):
+            # we change here the master name to its FunctionDef
+            f_name = expr.master
+            header = self.get_header(f_name)
+            if header is None:
+                errors.report(PYCCEL_MISSING_HEADER,
+                              symbol=f_name,
+                              bounding_box=self.bounding_box,
+                              severity='error', blocker=self.blocking)
+
+            f = header.create_definition()
+            # TODO -> Said: must handle interface
+            f = f[0]
+
+            name = expr.name
+            args = expr.arguments
+            master_args = expr.master_arguments
+            return MacroFunction(name, args, f, master_args)
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
@@ -2820,11 +2865,13 @@ if __name__ == '__main__':
 #    for s in pyccel.ast:
 #        print(type(s))
 
-    # export the ast
-    pyccel.dump()
-
-    # load the ast
-    pyccel.load()
+#    # ... using Pickle
+#    # export the ast
+#    pyccel.dump()
+#
+#    # load the ast
+#    pyccel.load()
+#    # ...
 
 #    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()

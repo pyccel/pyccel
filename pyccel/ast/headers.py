@@ -383,16 +383,17 @@ class Macro(Header):
 class MacroFunction(Header):
     """."""
 
-    def __new__(cls, name, args, master_name, master_args):
+    def __new__(cls, name, args, master, master_args):
         if not isinstance(name, str):
             raise TypeError('name must be of type str')
 
-        if not isinstance(master_name, str):
-            raise TypeError('master_name must be of type str')
+        # master can be a string or FunctionDef
+        if not isinstance(master, (str, FunctionDef)):
+            raise ValueError('Expecting a master name of FunctionDef')
 
         # TODO check types of args and master_args
 
-        return Basic.__new__(cls, name, args, master_name, master_args)
+        return Basic.__new__(cls, name, args, master, master_args)
 
     @property
     def name(self):
@@ -403,7 +404,7 @@ class MacroFunction(Header):
         return self._args[1]
 
     @property
-    def master_name(self):
+    def master(self):
         return self._args[2]
 
     @property
