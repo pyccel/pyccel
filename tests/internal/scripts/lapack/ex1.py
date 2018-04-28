@@ -6,17 +6,17 @@
 
 # TODO: - assert
 
-from pyccel.stdlib.external.lapack import dgbtrf
-from pyccel.stdlib.external.lapack import dgbtrs
+from pyccel.stdlib.internal.lapack import dgbtrf
+from pyccel.stdlib.internal.lapack import dgbtrs
 
-from pyccel.stdlib.external.lapack import dgetrf
-from pyccel.stdlib.external.lapack import dgecon
+from pyccel.stdlib.internal.lapack import dgetrf
+from pyccel.stdlib.internal.lapack import dgecon
 
-from pyccel.stdlib.external.lapack import dgetrf
-from pyccel.stdlib.external.lapack import dgetrs
+from pyccel.stdlib.internal.lapack import dgetrf
+from pyccel.stdlib.internal.lapack import dgetrs
 
-from pyccel.stdlib.external.lapack import dgetrf
-from pyccel.stdlib.external.lapack import dgetri
+from pyccel.stdlib.internal.lapack import dgetrf
+from pyccel.stdlib.internal.lapack import dgetri
 
 from numpy import zeros
 

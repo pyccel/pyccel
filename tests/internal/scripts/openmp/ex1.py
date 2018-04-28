@@ -1,8 +1,8 @@
 # coding: utf-8
 
-from pyccel.stdlib.external.openmp import omp_get_num_threads
-from pyccel.stdlib.external.openmp import omp_get_max_threads
-from pyccel.stdlib.external.openmp import omp_get_thread_num
+from pyccel.stdlib.internal.openmp import omp_get_num_threads
+from pyccel.stdlib.internal.openmp import omp_get_max_threads
+from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
 n_threads = omp_get_num_threads()
 print("> threads number : ", n_threads)

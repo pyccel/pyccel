@@ -3,7 +3,7 @@ from pyccel.parser.syntax.headers import parse
 from pyccel.parser.errors import Errors
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
-from pyccel.ast.core import FunctionHeader
+from pyccel.ast import FunctionHeader
 
 import inspect
 import subprocess

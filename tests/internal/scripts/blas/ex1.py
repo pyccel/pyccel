@@ -6,7 +6,7 @@
 
 # TODO add saxpy test
 
-from pyccel.stdlib.external.blas import daxpy
+from pyccel.stdlib.internal.blas import daxpy
 from numpy import zeros
 
 def test_daxpy():

@@ -3,7 +3,8 @@
 """This file contains different utilities for the Parser."""
 
 from redbaron import (CommentNode, ForNode, DefNode, WithNode,
-                      IfNode, ElseNode, ElifNode, IfelseblockNode)
+                      IfNode, ElseNode, ElifNode, IfelseblockNode,
+                      EndlNode)
 
 from sympy import srepr, sympify
 from sympy.printing.dot import dotprint
@@ -37,6 +38,23 @@ def is_valid_filename_pyh(filename):
     return _is_valid_filename(filename, 'pyh')
 #  ...
 
+#  ...
+def header_statement(stmt, accel):
+    """Returns stmt if a header statement. otherwise it returns None.
+    this function can be used as the following
+    >>> if header_statement(stmt):
+        # do stuff
+        ...
+
+    """
+    if not isinstance(stmt, CommentNode): None
+    if not stmt.value.startswith('#$'): None
+
+    header = stmt.value[2:].lstrip()
+    if not directive.startswith('header'): None
+
+    return stmt.value
+#  ...
 
 # ... utilities for parsing OpenMP/OpenACC directives
 def accelerator_statement(stmt, accel):
@@ -137,6 +155,41 @@ def fst_move_directives(x):
     # ...
 
     return x
+# ...
+
+# ...
+def reconstruct_pragma_multilines(header):
+    """Must be called once we visit an annotated comment, to get the remaining
+    parts of a statement written on multiple lines."""
+
+    def _is_pragma(x):
+        if not(isinstance(x, CommentNode) and x.value.startswith('#$')):
+            return False
+        env = x.value[2:].lstrip()
+        if (env.startswith('header') or
+            env.startswith('omp') or
+            env.startswith('acc')):
+            return False
+        return True
+
+    _ignore_stmt = lambda x: isinstance(x, (EndlNode, CommentNode)) and not _is_pragma(x)
+
+    ls = []
+    node = header.next
+    while _is_pragma(node) or _ignore_stmt(node):
+        # append the pragma stmt
+        if _is_pragma(node):
+            ls.append(node.value)
+
+        # look if there are comments or empty lines
+        node = node.next
+        if _ignore_stmt(node):
+            node = node.next
+
+    txt = ' '.join(i for i in ls)
+    txt = txt.replace('#$', '')
+    txt = '{} {}'.format(header.value, txt)
+    return txt
 # ...
 
 

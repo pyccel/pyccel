@@ -11,8 +11,8 @@ from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
-from pyccel.ast.core import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
+from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 
 DEBUG = False
 
@@ -262,17 +262,17 @@ class InterfaceStmt(BasicStmt):
       def __init__(self, **kwargs):
           """
           Constructor of Interface statement
-          
+
           name: str
-          
+
           args: list of funciton names
-         
+
           """
 
           self.name = kwargs.pop('name')
           self.args = kwargs.pop('args')
           super(InterfaceStmt, self).__init__(**kwargs)
-      
+
       @property
       def expr(self):
           return InterfaceHeader(self.name, self.args)

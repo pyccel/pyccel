@@ -11,10 +11,6 @@ from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import DottedName
 from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
 from pyccel.ast.core import Assign, Declare, AugAssign
-from pyccel.ast.core import NativeBool, NativeFloat
-from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.core import DataType
-from pyccel.ast.core import DataTypeFactory
 from pyccel.ast.core import Block, ParallelBlock
 from pyccel.ast.core import Range, Tile, Tensor
 from pyccel.ast.core import Comment
@@ -26,6 +22,10 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, With, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall, ConstructorCall
+from pyccel.ast.datatypes import NativeBool, NativeFloat
+from pyccel.ast.datatypes import NativeComplex, NativeDouble, NativeInteger
+from pyccel.ast.datatypes import DataType
+from pyccel.ast.datatypes import DataTypeFactory
 
 from pyccel.ast.parallel.basic import Basic
 
