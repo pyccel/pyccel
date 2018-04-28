@@ -30,13 +30,10 @@ from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import DataType, is_pyccel_datatype
-from pyccel.ast.core import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.core import CustomDataType, String
+from pyccel.ast.core import String
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
-from pyccel.ast.core import Vector, Stencil
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
@@ -45,9 +42,6 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.core import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
-from pyccel.ast.core import NativeRange, NativeTensor
 from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
@@ -56,6 +50,12 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              IndexedElement, Slice, List,
                              DottedName, AsName, DottedVariable,
                              Print, If)
+from pyccel.ast.datatypes import DataType, is_pyccel_datatype
+from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
+from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeSymbol
+from pyccel.ast.datatypes import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
+from pyccel.ast.datatypes import NativeRange, NativeTensor
+from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -440,35 +440,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
-
-    def _print_Vector(self, expr):
-        lhs = self._print(expr.lhs)
-
-        _iprint = lambda a, b: '{start}:{stop}'.format(start=a, stop=b)
-        bounds = ','.join(_iprint(a, b) for a, b in zip(expr.starts, expr.stops))
-
-        # TODO use init_value
-        code = ('allocate({lhs}({bounds}))\n'
-                '{lhs} = 0.0d0').format(lhs=lhs, bounds=bounds)
-
-        return self._get_statement(code)
-
-    def _print_Stencil(self, expr):
-        lhs = self._print(expr.lhs)
-
-        _iprint = lambda a, b: '{start}:{stop}'.format(start=a, stop=b)
-        bounds = ','.join(_iprint(a, b) for a, b in zip(expr.starts, expr.stops))
-        pads   = ','.join('-{0}:{0}'.format(self._print(i)) for i in expr.pads)
-
-        # TODO use init_value
-        code = ('allocate({lhs}({pads}, {bounds}))\n'
-                '{lhs} = 0.0d0').format(lhs=lhs, bounds=bounds, pads=pads)
-
-        return self._get_statement(code)
-
-  #  def _print_Array(self,expr):
-  #      code   = self._print(expr.ls)
-  #      return code
 
     def _print_ZerosLike(self, expr):
         lhs = self._print(expr.lhs)
@@ -890,12 +861,6 @@ class FCodePrinter(CodePrinter):
         return 'character(len=280)'
         #TODO fix improve later
 
-    def _print_NativeVector(self, expr):
-        return 'real(kind=8)'
-
-    def _print_NativeStencil(self, expr):
-        return 'real(kind=8)'
-
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
@@ -935,7 +900,7 @@ class FCodePrinter(CodePrinter):
         interface += 'end interface\n'
         return interface
 
-    
+
 
    # def _print_With(self, expr):
    #     test = 'call '+self._print(expr.test) + '%__enter__()'
@@ -947,7 +912,7 @@ class FCodePrinter(CodePrinter):
         #TODO return code later
   #      expr.block
   #      return ''
-       
+
     def _print_Block(self, expr):
 
         decs=[]

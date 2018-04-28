@@ -6,7 +6,7 @@ from pyccel.ast.core import Basic
 from pyccel.ast.core import Variable
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import ClassDef
-from pyccel.ast.core import datatype, DataTypeFactory, UnionType
+from pyccel.ast.datatypes import datatype, DataTypeFactory, UnionType
 
 class Header(Basic):
     pass

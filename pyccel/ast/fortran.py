@@ -10,9 +10,9 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
 from .core import Variable, IndexedElement, IndexedVariable
-from .core import DataType, datatype
-from .core import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
-                   NativeBool)
+from .datatypes import DataType, datatype
+from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
+                        NativeBool)
 
 # TODO: - implement all the following objects
 class Ceil(Function):

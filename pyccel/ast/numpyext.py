@@ -11,10 +11,10 @@ from sympy.core.basic import Basic
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from .core import Variable, IndexedElement, IndexedVariable, List
-from .core import DataType, datatype
-from .core import NativeInteger, NativeFloat, NativeDouble, \
-    NativeComplex, NativeBool, String
+from .core import (Variable, IndexedElement, IndexedVariable, List, String)
+from .datatypes import DataType, datatype
+from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
+                        NativeBool)
 
 
 class Array(Function):
