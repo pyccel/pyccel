@@ -535,8 +535,10 @@ class FCodePrinter(CodePrinter):
                 shape.append(s)
             if len(shape) == 1:
                 shape = shape[0]
-            else:
-                shape = ' ,'.join(s for s in shape)
+
+        if not(expr.index is None):
+            shape = shape[expr.index]
+
         code = '{}'.format(self._print(shape))
         return self._get_statement(code)
     # ...

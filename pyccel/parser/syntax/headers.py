@@ -322,6 +322,7 @@ class MacroStmt(BasicStmt):
         """
         self.arg = kwargs.pop('arg')
         self.macro = kwargs.pop('macro')
+        self.parameter = kwargs.pop('parameter', None)
 
         super(MacroStmt, self).__init__(**kwargs)
 
@@ -329,7 +330,8 @@ class MacroStmt(BasicStmt):
     def expr(self):
         name = str(self.macro)
         arg  = str(self.arg)
-        return construct_macro(name, arg)
+        parameter = self.parameter
+        return construct_macro(name, arg, parameter=parameter)
 
 # ...
 
@@ -416,4 +418,5 @@ if __name__ == '__main__':
 #    print(parse(stmts="#$ header metavar module_name='mpi'"))
 #    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
 #    print(parse(stmts='#$ header function _f(int, int [:])'))
-    print(parse(stmts='#$ header macro f(x) := _f(x, x.shape, x.dtype)'))
+    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
+    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))

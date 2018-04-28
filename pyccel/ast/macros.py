@@ -28,8 +28,26 @@ class MacroShape(Macro):
     """."""
     _name = 'shape'
 
+    def __new__(cls, argument, index=None):
+        obj = Macro.__new__(cls, argument)
+        obj._index = index
+        return obj
 
-def construct_macro(name, argument):
+    @property
+    def index(self):
+        return self._index
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        if self.index is None:
+            return 'MacroShape({})'.format(sstr(self.argument))
+        else:
+            return 'MacroShape({}, {})'.format(sstr(self.argument),
+                                               sstr(self.index))
+
+
+
+def construct_macro(name, argument, parameter=None):
     """."""
     # TODO add available macros: shape, len, dtype
     if not isinstance(name, str):
@@ -37,4 +55,4 @@ def construct_macro(name, argument):
 
     argument = sympify(argument)
     if name == 'shape':
-        return MacroShape(argument)
+        return MacroShape(argument, index=parameter)

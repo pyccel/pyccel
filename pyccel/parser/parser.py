@@ -95,6 +95,7 @@ from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast import Macro
+from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -2030,8 +2031,17 @@ class Parser(object):
 
                     _args = []
                     for a in macro.master_arguments:
+#                        if isinstance(a, MacroShape):
+#                            print('>>>>>>>>>>>< ', a.index)
+#                            new = MacroShape(a.name,
+#                                             correspondance[a.argument.name],
+#                                             index=a.index)
                         if isinstance(a, Macro):
-                            new = construct_macro(a.name, correspondance[a.argument.name])
+                            new = construct_macro(a.name,
+                                                  correspondance[a.argument.name])
+                            # TODO improve
+                            if isinstance(new, MacroShape):
+                                new._index = a.index
                         else:
                             # TODO improve for other Nodes
                             new = correspondance[a.name]

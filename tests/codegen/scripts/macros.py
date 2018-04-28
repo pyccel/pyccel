@@ -51,6 +51,19 @@ def f2d(nm, a):
 #def f2d1(n,m):
 #    x = zeros((n, m), 'int')
 #    __f2d(x)
+
+#$ header function k2d(int, int, int [:,:])
+#$ header macro __k2d(x) := k2d(x.shape[0], x.shape[1], x)
+def k2d(n, m, a):
+    for i in range(0, n):
+        for j in range(0, m):
+            a[i,j] = i*j
+
+#$ header function k2d1(int, int)
+def k2d1(n, m):
+    x = zeros((n, m), 'int')
+    __k2d(x)
+
 # .....................................
 
 
@@ -69,6 +82,9 @@ b = zeros((4,3), 'int')
 # TODO not working yet
 #      gfortran error: ‘nm’ must be ALLOCATABLE
 #__f2d(b)
+
+__k2d(b)
+k2d1(3,5)
 # ...
 
 print('hello world')
