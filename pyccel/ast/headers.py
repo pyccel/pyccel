@@ -1,5 +1,7 @@
 # coding: utf-8
 
+# TODO must use Header.__new__ rather than Basic.__new__
+
 from sympy.utilities.iterables import iterable
 
 from pyccel.ast.core import Basic
@@ -341,6 +343,7 @@ class ClassHeader(Header):
         return self._args[1]
 
 
+# TODO must extend Header rather than Basic
 class InterfaceHeader(Basic):
 
     def __new__(cls, name, funcs):
@@ -359,4 +362,51 @@ class InterfaceHeader(Basic):
     def funcs(self):
         return self._args[1]
 
+
+class Macro(Header):
+    """."""
+
+    def __new__(cls, name, arg):
+        if not isinstance(name, str):
+            raise TypeError('name must be of type str')
+
+        return Basic.__new__(cls, name, arg)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def arg(self):
+        return self._args[1]
+
+class MacroFunction(Header):
+    """."""
+
+    def __new__(cls, name, args, master_name, master_args):
+        if not isinstance(name, str):
+            raise TypeError('name must be of type str')
+
+        if not isinstance(master_name, str):
+            raise TypeError('master_name must be of type str')
+
+        # TODO check types of args and master_args
+
+        return Basic.__new__(cls, name, args, master_name, master_args)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def arguments(self):
+        return self._args[1]
+
+    @property
+    def master_name(self):
+        return self._args[2]
+
+    @property
+    def master_arguments(self):
+        return self._args[3]
 

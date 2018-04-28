@@ -5,7 +5,8 @@ Header:
 HeaderStmt: '#$' 'header' stmt=Statement;
 
 Statement:
-    VariableHeaderStmt
+    FunctionMacroStmt 
+  | VariableHeaderStmt
   | FunctionHeaderStmt 
   | ClassHeaderStmt
   | MetavarHeaderStmt
@@ -48,7 +49,22 @@ ClassOptions:
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
 
-STAR: '*';
-
 InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
+
+ListArgsStmt: args*=ID[','];
+ListAnnotatedArgsStmt: args*=IdOrMacroStmt[','];
+IdOrMacroStmt: MacroStmt | ID;
+MacroStmt: arg=ID '.' macro=AvailableMacro;
+
+FunctionMacroStmt: 
+  'macro' name=ID '(' args=ListArgsStmt ')' 
+  ':=' 
+  master_name=ID '(' master_args=ListAnnotatedArgsStmt ')'
+;
+
+STAR: '*';
+AvailableMacro: 
+    'shape'
+  | 'dtype'
+;
 

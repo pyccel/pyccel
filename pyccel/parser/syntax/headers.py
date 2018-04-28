@@ -3,16 +3,18 @@
 """
 """
 
-# TODO: - remove 'star' from everywhere
-
 from os.path import join, dirname
+
 from sympy.utilities.iterables import iterable
+from sympy.core import Symbol
+
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast import Macro, MacroFunction
 
 DEBUG = False
 
@@ -277,6 +279,87 @@ class InterfaceStmt(BasicStmt):
       def expr(self):
           return InterfaceHeader(self.name, self.args)
 
+# ...
+class ListArgsStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(ListArgsStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        return self.args
+
+class ListAnnotatedArgsStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(ListAnnotatedArgsStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = []
+        for a in self.args:
+            if isinstance(a, MacroStmt):
+                args.append(a.expr)
+            else:
+                args.append(Symbol(str(a)))
+        return args
+
+class MacroStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.arg = kwargs.pop('arg')
+        self.macro = kwargs.pop('macro')
+
+        super(MacroStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        name = str(self.macro)
+        arg  = str(self.arg)
+        return Macro(name, arg)
+
+# ...
+
+
+class FunctionMacroStmt(BasicStmt):
+    """Base class representing an alias function statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a FunctionMacroStmt statement
+
+        name: str
+            function name
+        master: str
+            master function name
+        """
+        self.name = kwargs.pop('name')
+        self.args = kwargs.pop('args')
+        self.master_name = kwargs.pop('master_name')
+        self.master_args = kwargs.pop('master_args')
+
+        super(FunctionMacroStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        name = str(self.name)
+        args = self.args.expr
+        master_name = str(self.master_name)
+        master_args = self.master_args.expr
+        return MacroFunction(name, args, master_name, master_args)
 
 #################################################
 
@@ -289,7 +372,12 @@ hdr_classes = [Header, TypeHeader,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,
-               MetavarHeaderStmt,InterfaceStmt]
+               MetavarHeaderStmt,
+               InterfaceStmt,
+               ListArgsStmt,
+               ListAnnotatedArgsStmt,
+               MacroStmt,
+               FunctionMacroStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -319,11 +407,13 @@ def parse(filename=None, stmts=None, debug=False):
 
 ######################
 if __name__ == '__main__':
-    print(parse(stmts='#$ header variable x :: int'))
-    print(parse(stmts='#$ header variable x float [:, :]'))
-    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
-    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-    print(parse(stmts='#$ header class Square(public)'))
-    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
-    print(parse(stmts="#$ header metavar module_name='mpi'"))
-    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
+#    print(parse(stmts='#$ header variable x :: int'))
+#    print(parse(stmts='#$ header variable x float [:, :]'))
+#    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
+#    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
+#    print(parse(stmts='#$ header class Square(public)'))
+#    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
+#    print(parse(stmts="#$ header metavar module_name='mpi'"))
+#    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
+#    print(parse(stmts='#$ header function _f(int, int [:])'))
+    print(parse(stmts='#$ header macro f(x) := _f(x, x.shape, x.dtype)'))
