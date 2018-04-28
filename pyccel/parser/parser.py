@@ -127,6 +127,7 @@ from sympy.logic.boolalg import Not
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.utilities.iterables import iterable
+from sympy import Sum as Summation, Heaviside, KroneckerDelta
 
 from collections import OrderedDict
 

@@ -3170,6 +3170,36 @@ class Random(Function):
 
 
 # TODO: improve with __new__ from Function and add example
+
+class Sum(Function):
+    """Represents a Sympy Sum Function.
+       
+       body: Expr
+       Sympy Expr in which the sum will be performed.
+   
+       iterator:
+       a tuple  that containts the index of the sum and it's range.
+    """
+    def __new__(cls, body, iterator,stmts=None):
+        if not isinstance(iterator, (tuple,Tuple)):
+             raise TypeError('iterator must be a tuple')
+        if not len(iterator)==3:
+             raise ValueError('iterator must be of lenght 3')
+        return Basic.__new__(cls, body, iterator,stmts)
+  
+    @property
+    def body(self):
+        return self._args[0]
+  
+    @property
+    def iterator(self):
+        return self._args[1]
+ 
+    @property
+    def stmts(self):
+        return self._args[2]
+   
+
 class Len(Function):
     """
     Represents a 'len' expression in the code.
