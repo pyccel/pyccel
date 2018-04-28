@@ -10,7 +10,7 @@ from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Sum, Rand
 from sympy import Symbol
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
-                   acsc, acos, asec, atan, acot, atan2, Mod, Max, Min, Sum)
+                   acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
 
 math_functions = {
     'Abs': Abs,
