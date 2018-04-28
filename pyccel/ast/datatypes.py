@@ -103,6 +103,7 @@ class NdArrayComplex(NdArray, NativeComplex):
     _name = 'NdArrayComplex'
     pass
 
+# TODO to be removed
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
 
@@ -112,6 +113,37 @@ class CustomDataType(DataType):
 class NativeGeneric(DataType):
     _name = 'Generic'
     pass
+
+
+# ...
+class VariableType(DataType):
+
+    def __init__(self, rhs, alias):
+        self._alias = alias
+        self._rhs = rhs
+        self._name = rhs._name
+
+    @property
+    def alias(self):
+        return self._alias
+
+class FunctionType(DataType):
+
+    def __init__(self, domains):
+        self._domain = domains[0]
+        self._codomain = domains[1:]
+        self._domains = domains
+        self._name = ' -> '.join('{}'.format(V) for V in self._domains)
+
+    @property
+    def domain(self):
+        return self._domain
+
+    @property
+    def codomain(self):
+        return self._codomain
+# ...
+
 
 
 Bool    = NativeBool()
@@ -289,3 +321,5 @@ def datatype(arg):
                 return Double
         else:
             return infer_dtype(arg)
+
+
