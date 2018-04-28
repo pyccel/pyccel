@@ -96,6 +96,7 @@ from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registe
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
+from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
 
@@ -1424,13 +1425,16 @@ class Parser(object):
             if stmt.value.startswith('#$'):
                 env = stmt.value[2:].lstrip()
                 if env.startswith('omp'):
-                    return omp_parse(stmts=stmt.value)
+                    txt = reconstruct_pragma_multilines(stmt)
+                    return omp_parse(stmts=txt)
 
                 elif env.startswith('acc'):
-                    return acc_parse(stmts=stmt.value)
+                    txt = reconstruct_pragma_multilines(stmt)
+                    return acc_parse(stmts=txt)
 
                 elif env.startswith('header'):
-                    expr = hdr_parse(stmts=stmt.value)
+                    txt = reconstruct_pragma_multilines(stmt)
+                    expr = hdr_parse(stmts=txt)
                     if isinstance(expr, MetaVariable):
                         # a metavar will not appear in the semantic stage.
                         # but can be used to modify the ast
@@ -1442,9 +1446,12 @@ class Parser(object):
                         return expr
 
                 else:
-                    errors.report(PYCCEL_INVALID_HEADER,
-                                  bounding_box=stmt.absolute_bounding_box,
-                                  severity='error')
+                    # TODO an info should be reported saying that either we
+                    # found a multiline pragma or an invalid pragma statement
+                    return NewLine()
+#                    errors.report(PYCCEL_INVALID_HEADER,
+#                                  bounding_box=stmt.absolute_bounding_box,
+#                                  severity='error')
 
             else:
                 # TODO improve
@@ -1900,9 +1907,9 @@ class Parser(object):
         elif isinstance(expr, (Application)):
             # ... DEBUG
             name = str(type(expr).__name__)
-            
+
             func = self.get_function(name)
-            
+
             # ...
             if not isinstance(func, Lambda):
                 args = [self._annotate(i, **settings) for i in expr.args]
@@ -1912,7 +1919,7 @@ class Parser(object):
             # ...
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
-           
+
             F = pyccel_builtin_function(expr, args)
             if F:
                 return F
@@ -2009,7 +2016,7 @@ class Parser(object):
 
 
             return expr
-         
+
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -2039,7 +2046,7 @@ class Parser(object):
 
                 assigns = [self._annotate(i, **settings) for i in assigns]
             rhs = self._annotate(rhs, **settings)
-            
+
             if isinstance(rhs, FunctionDef):
                 #case of using lambdify then the rhs is a functiondef
                 for i in rhs.body:
@@ -2047,7 +2054,7 @@ class Parser(object):
                 rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
                 raise SystemExit('1979##########')
                 return rhs
-          
+
 
             # d_var can be a list of dictionaries
 
