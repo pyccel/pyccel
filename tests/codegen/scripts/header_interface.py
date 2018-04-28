@@ -1,5 +1,5 @@
-from pyccel.stdlib.external.blas import daxpy
-from pyccel.stdlib.external.blas import saxpy
+from pyccel.stdlib.internal.blas import daxpy
+from pyccel.stdlib.internal.blas import saxpy
 
 #$header interface axpy=daxpy|saxpy
 
