@@ -94,6 +94,8 @@ from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast import Macro
+from pyccel.ast import construct_macro
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -2015,6 +2017,29 @@ class Parser(object):
                 macro = self.get_macro(name)
                 if not macro is None:
                     func = macro.master
+
+                    # TODO improve
+                    if len(args) == 0:
+                        raise NotImplementedError('TODO')
+
+                    # ... create the appropriate arguments
+                    correspondance = {}
+                    for (a_macro, arg) in zip(macro.arguments, args):
+                        # TODO improve name for other Nodes
+                        correspondance[a_macro.name] = arg
+
+                    _args = []
+                    for a in macro.master_arguments:
+                        if isinstance(a, Macro):
+                            new = construct_macro(a.name, correspondance[a.argument.name])
+                        else:
+                            # TODO improve for other Nodes
+                            new = correspondance[a.name]
+
+                        _args.append(new)
+
+                    args = _args
+                    # ...
                 else:
                     func = self.get_function(name)
 

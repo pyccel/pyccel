@@ -517,6 +517,27 @@ class FCodePrinter(CodePrinter):
         # TODO use the appropriate precision from rhs
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
 
+    # ... MACROS
+    def _print_MacroShape(self, expr):
+        var = expr.argument
+        if not isinstance(var, Variable):
+            raise TypeError('Expecting a variable')
+        shape = var.shape
+        if shape is None:
+            # TODO: to be validated
+            print('TODO: to be validated')
+            rank = var.rank
+            shape = []
+            for i in range(0, rank):
+                l = 'lbound({0},{1})'.format(var, str(i+1))
+                u = 'ubound({0},{1})'.format(var, str(i+1))
+                s = '{u}-{l}'.format(u=u, l=l)
+                shape.append(s)
+            shape = Tuple(*tuple(shape))
+        code = '{}'.format(self._print(shape))
+        return self._get_statement(code)
+    # ...
+
     def _print_Declare(self, expr):
         # ... ignored declarations
         # we don't print the declaration if iterable object

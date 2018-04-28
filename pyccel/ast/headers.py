@@ -3,12 +3,14 @@
 # TODO must use Header.__new__ rather than Basic.__new__
 
 from sympy.utilities.iterables import iterable
+from sympy.core import Symbol
+from sympy import sympify
 
-from pyccel.ast.core import Basic
-from pyccel.ast.core import Variable
-from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import ClassDef
-from pyccel.ast.datatypes import datatype, DataTypeFactory, UnionType
+from .core import Basic
+from .core import Variable
+from .core import FunctionDef
+from .core import ClassDef
+from .datatypes import datatype, DataTypeFactory, UnionType
 
 class Header(Basic):
     pass
@@ -362,36 +364,20 @@ class InterfaceHeader(Basic):
     def funcs(self):
         return self._args[1]
 
-
-class Macro(Header):
-    """."""
-
-    def __new__(cls, name, arg):
-        if not isinstance(name, str):
-            raise TypeError('name must be of type str')
-
-        return Basic.__new__(cls, name, arg)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def arg(self):
-        return self._args[1]
-
 class MacroFunction(Header):
     """."""
 
     def __new__(cls, name, args, master, master_args):
-        if not isinstance(name, str):
+        if not isinstance(name, (str, Symbol)):
             raise TypeError('name must be of type str')
 
         # master can be a string or FunctionDef
         if not isinstance(master, (str, FunctionDef)):
             raise ValueError('Expecting a master name of FunctionDef')
 
-        # TODO check types of args and master_args
+        # we sympify everything since a macro is operating on symbols
+        args = [sympify(a) for a in args]
+        master_args = [sympify(a) for a in master_args]
 
         return Basic.__new__(cls, name, args, master, master_args)
 
@@ -410,4 +396,3 @@ class MacroFunction(Header):
     @property
     def master_arguments(self):
         return self._args[3]
-

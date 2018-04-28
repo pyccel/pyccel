@@ -14,7 +14,7 @@ from textx.export import metamodel_export, model_export
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
-from pyccel.ast import Macro, MacroFunction
+from pyccel.ast import construct_macro, MacroFunction
 
 DEBUG = False
 
@@ -329,7 +329,7 @@ class MacroStmt(BasicStmt):
     def expr(self):
         name = str(self.macro)
         arg  = str(self.arg)
-        return Macro(name, arg)
+        return construct_macro(name, arg)
 
 # ...
 
