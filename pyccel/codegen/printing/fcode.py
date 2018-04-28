@@ -521,19 +521,22 @@ class FCodePrinter(CodePrinter):
     def _print_MacroShape(self, expr):
         var = expr.argument
         if not isinstance(var, Variable):
-            raise TypeError('Expecting a variable')
+            raise TypeError('Expecting a variable, given {}'.format(type(var)))
         shape = var.shape
         if shape is None:
-            # TODO: to be validated
-            print('TODO: to be validated')
             rank = var.rank
             shape = []
             for i in range(0, rank):
-                l = 'lbound({0},{1})'.format(var, str(i+1))
-                u = 'ubound({0},{1})'.format(var, str(i+1))
-                s = '{u}-{l}'.format(u=u, l=l)
+                l = 'lbound({var},{i})'.format(var=self._print(var),
+                                               i=self._print(i+1))
+                u = 'ubound({var},{i})'.format(var=self._print(var),
+                                               i=self._print(i+1))
+                s = '{u}-{l}+1'.format(u=u, l=l)
                 shape.append(s)
-            shape = Tuple(*tuple(shape))
+            if len(shape) == 1:
+                shape = shape[0]
+            else:
+                shape = ' ,'.join(s for s in shape)
         code = '{}'.format(self._print(shape))
         return self._get_statement(code)
     # ...

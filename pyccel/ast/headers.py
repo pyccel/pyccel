@@ -199,6 +199,9 @@ class FunctionHeader(Header):
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var)
                 results.append(var)
+                # we put back dtype otherwise macro will crash when it tries to
+                # call create_definition
+                d_var['datatype'] = dtype
 
             func= FunctionDef(name, args, results, body,
                              local_vars=[],
