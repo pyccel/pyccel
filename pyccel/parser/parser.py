@@ -2031,15 +2031,12 @@ class Parser(object):
 
                     _args = []
                     for a in macro.master_arguments:
-#                        if isinstance(a, MacroShape):
-#                            print('>>>>>>>>>>>< ', a.index)
-#                            new = MacroShape(a.name,
-#                                             correspondance[a.argument.name],
-#                                             index=a.index)
                         if isinstance(a, Macro):
                             new = construct_macro(a.name,
                                                   correspondance[a.argument.name])
                             # TODO improve
+                            #      otherwise, we get the following error
+                            # TypeError: __new__() got multiple values for argument 'index'
                             if isinstance(new, MacroShape):
                                 new._index = a.index
                         else:
