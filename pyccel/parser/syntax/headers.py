@@ -300,7 +300,34 @@ class MacroArg(BasicStmt):
         else:
             optional = False
 
-        return MacroSymbol(self.arg, optional)
+        return MacroSymbol(self.arg, is_optional=optional)
+
+class MacroMasterArg(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.arg = kwargs.pop('arg')
+        self.default = kwargs.pop('default', None)
+
+        super(MacroMasterArg, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        arg = self.arg
+        default = self.default
+        if isinstance(arg, MacroStmt):
+            if not(self.default is None):
+                raise ValueError('No choice is allowed together with a MacroStmt')
+
+            arg = arg.expr
+        else:
+            arg = Symbol(str(arg))
+            if isinstance(arg, Symbol):
+                arg = MacroSymbol(arg.name, default=default)
+
+        return arg
 
 class ListArgsStmt(BasicStmt):
     """."""
@@ -343,12 +370,7 @@ class ListAnnotatedArgsStmt(BasicStmt):
 
     @property
     def expr(self):
-        args = []
-        for a in self.args:
-            if isinstance(a, MacroStmt):
-                args.append(a.expr)
-            else:
-                args.append(Symbol(str(a)))
+        args = [a.expr for a in self.args]
         return args
 
 class MacroStmt(BasicStmt):
@@ -425,6 +447,7 @@ hdr_classes = [Header, TypeHeader,
                ListAnnotatedArgsStmt,
                MacroStmt,
                MacroArg,
+               MacroMasterArg,
                FunctionMacroStmt]
 
 def parse(filename=None, stmts=None, debug=False):
@@ -468,6 +491,7 @@ if __name__ == '__main__':
 #    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
 #    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
 #    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx)"))
+#    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx)"))
+    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
 #    print(parse(stmts='#$ header macro _dswap(x, incx|1, y, incy|1) := dswap(x.shape, x, incx, y, incy)'))
 

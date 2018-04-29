@@ -27,9 +27,9 @@ class Macro(AtomicExpr):
 
 class MacroSymbol(Symbol):
     """    """
-    def __new__(cls, name, is_optional=False):
+    def __new__(cls, name, is_optional=False, default=None):
 
-        return Basic.__new__(cls, name, is_optional)
+        return Basic.__new__(cls, name, is_optional, default)
 
     @property
     def name(self):
@@ -38,6 +38,21 @@ class MacroSymbol(Symbol):
     @property
     def is_optional(self):
         return self._args[1]
+
+    @property
+    def default(self):
+        return self._args[2]
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        default = ''
+        if not(self.default is None):
+            default = '| {}'.format(sstr(self.default))
+        name = sstr(self.name)
+        txt = '{name} {default}'.format(name=name, default=default)
+        if self.is_optional:
+            txt = 'optional({})'.format(txt.strip())
+        return txt
 
 
 class MacroShape(Macro):
