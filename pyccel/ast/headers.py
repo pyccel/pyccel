@@ -370,7 +370,7 @@ class InterfaceHeader(Basic):
 class MacroFunction(Header):
     """."""
 
-    def __new__(cls, name, args, master, master_args):
+    def __new__(cls, name, args, master, master_args, results=None):
         if not isinstance(name, (str, Symbol)):
             raise TypeError('name must be of type str')
 
@@ -382,7 +382,10 @@ class MacroFunction(Header):
         args = [sympify(a) for a in args]
         master_args = [sympify(a) for a in master_args]
 
-        return Basic.__new__(cls, name, args, master, master_args)
+        if not(results is None):
+            results = [sympify(a) for a in results]
+
+        return Basic.__new__(cls, name, args, master, master_args, results)
 
     @property
     def name(self):
@@ -399,3 +402,7 @@ class MacroFunction(Header):
     @property
     def master_arguments(self):
         return self._args[3]
+
+    @property
+    def results(self):
+        return self._args[4]

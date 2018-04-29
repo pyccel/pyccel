@@ -57,8 +57,9 @@ IdOrMacroStmt: MacroStmt | ID;
 MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
 MacroParameter: INT | ID ;
 
+// TODO shall we add also results to the master call?
 FunctionMacroStmt: 
-  'macro' name=ID '(' args=ListArgsStmt ')' 
+  'macro' ('(' results=ListArgsStmt ')' ',')? name=ID '(' args=ListArgsStmt ')' 
   ':=' 
   master_name=ID '(' master_args=ListAnnotatedArgsStmt ')'
 ;

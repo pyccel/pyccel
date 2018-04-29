@@ -349,6 +349,7 @@ class FunctionMacroStmt(BasicStmt):
             master function name
         """
         self.name = kwargs.pop('name')
+        self.results = kwargs.pop('results')
         self.args = kwargs.pop('args')
         self.master_name = kwargs.pop('master_name')
         self.master_args = kwargs.pop('master_args')
@@ -361,7 +362,13 @@ class FunctionMacroStmt(BasicStmt):
         args = self.args.expr
         master_name = str(self.master_name)
         master_args = self.master_args.expr
-        return MacroFunction(name, args, master_name, master_args)
+
+        results = self.results
+        if not (self.results is None):
+            results = self.results.expr
+
+        return MacroFunction(name, args, master_name, master_args,
+                             results=results)
 
 #################################################
 
@@ -409,14 +416,16 @@ def parse(filename=None, stmts=None, debug=False):
 
 ######################
 if __name__ == '__main__':
-#    print(parse(stmts='#$ header variable x :: int'))
-#    print(parse(stmts='#$ header variable x float [:, :]'))
-#    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
-#    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-#    print(parse(stmts='#$ header class Square(public)'))
-#    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
-#    print(parse(stmts="#$ header metavar module_name='mpi'"))
-#    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
-#    print(parse(stmts='#$ header function _f(int, int [:])'))
+    print(parse(stmts='#$ header variable x :: int'))
+    print(parse(stmts='#$ header variable x float [:, :]'))
+    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
+    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
+    print(parse(stmts='#$ header class Square(public)'))
+    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
+    print(parse(stmts="#$ header metavar module_name='mpi'"))
+    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
+    print(parse(stmts='#$ header function _f(int, int [:])'))
     print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
     print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
+    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+
