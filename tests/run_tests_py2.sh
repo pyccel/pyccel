@@ -7,6 +7,7 @@ python tests/syntax/test_syntax.py
 python tests/semantic/test_semantic.py
 python tests/codegen/test_codegen.py  
 python tests/errors/test_errors.py  
+python tests/warnings/test_warnings.py  
 python tests/preprocess/test_preprocess.py
 python tests/internal/test_internal.py  
 

@@ -53,6 +53,16 @@ def k2d1(n, m):
 
 # .....................................
 
+# .....................................
+#       macros with results
+# .....................................
+#$ header function h(int, int [:], int [:])
+#$ header macro (y), __h(x) := h(x.shape, x, y)
+
+def h(n, a, b):
+    b[:] = a[:]
+# .....................................
+
 
 # ... 1d array
 a = zeros(4, 'int')
@@ -70,6 +80,12 @@ b = zeros((4,3), 'int')
 
 __k2d(b)
 k2d1(3,5)
+# ...
+
+# ... macros with results
+a1 = zeros(4, 'int')
+b1 = zeros(4, 'int')
+b1 = __f(a1)
 # ...
 
 print('hello world')

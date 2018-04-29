@@ -52,6 +52,7 @@ script:
   - $PYTEST tests/semantic/test_semantic.py
   - $PYTEST tests/codegen/test_codegen.py
   - $PYTEST tests/errors/test_errors.py
+  - $PYTEST tests/warnings/test_warnings.py
   - $PYTEST tests/preprocess/test_preprocess.py
 # this test must be executed with python, since we are calling mpif90 inside it
   - python tests/internal/test_internal.py
