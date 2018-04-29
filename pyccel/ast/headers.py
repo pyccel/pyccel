@@ -11,6 +11,7 @@ from .core import Variable
 from .core import FunctionDef
 from .core import ClassDef
 from .datatypes import datatype, DataTypeFactory, UnionType
+from .macros import Macro, MacroShape, construct_macro
 
 class Header(Basic):
     pass
@@ -406,3 +407,58 @@ class MacroFunction(Header):
     @property
     def results(self):
         return self._args[4]
+
+    def apply(self, args, results=None):
+        """returns the appropriate arguments."""
+        # TODO improve
+        if len(args) == 0:
+            raise NotImplementedError('TODO')
+
+        # ...
+        d_arguments = {}
+        for (a_macro, arg) in zip(self.arguments, args):
+            # TODO improve name for other Nodes
+            d_arguments[a_macro.name] = arg
+        argument_keys = list(d_arguments.keys())
+        # ...
+
+        # ...
+        d_results = {}
+        if not(results is None) and not(self.results is None):
+            for (r_macro, r) in zip(self.results, results):
+                # TODO improve name for other Nodes
+                d_results[r_macro.name] = r
+        result_keys = list(d_results.keys())
+        # ...
+
+#        print('> argument_keys = ', argument_keys)
+#        print('> result_keys = ', result_keys)
+#        print('> args = ', args)
+#        print('> results = ', results)
+
+        _args = []
+        for a in self.master_arguments:
+            if isinstance(a, Macro):
+                new = construct_macro(a.name,
+                                      d_arguments[a.argument.name])
+                # TODO improve
+                #      otherwise, we get the following error
+                # TypeError: __new__() got multiple values for argument 'index'
+                if isinstance(new, MacroShape):
+                    new._index = a.index
+
+            elif a.name in argument_keys:
+                # TODO improve for other Nodes
+                new = d_arguments[a.name]
+
+            elif a.name in result_keys:
+                # TODO improve for other Nodes
+                new = d_results[a.name]
+
+            else:
+                # TODO what to do here?
+                pass
+
+            _args.append(new)
+
+        return _args

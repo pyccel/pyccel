@@ -19,19 +19,6 @@ def f1(n):
 ##$ header function f2(int [:])
 #def f2(x):
 #    __f(x)
-
-#$ header function g(int, int [:]) results(int)
-#$ header macro __g(x) := g(x.shape, x)
-def g(n, a):
-    r = 0
-    for i in range(0, n):
-        r += a[i]
-    return r
-
-#$ header function g1(int [:]) results(int)
-def g1(x):
-    v = __g(x)
-    return v
 # .....................................
 
 
@@ -73,8 +60,6 @@ __f(a)
 f1(5)
 # TODO not working yet
 #f2(a)
-v = __g(a)
-v = g1(a)
 # ...
 
 # ... 2d array

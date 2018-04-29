@@ -2021,33 +2021,8 @@ class Parser(object):
                 if not macro is None:
                     func = macro.master
 
-                    # TODO improve
-                    if len(args) == 0:
-                        raise NotImplementedError('TODO')
-
                     # ... create the appropriate arguments
-                    correspondance = {}
-                    for (a_macro, arg) in zip(macro.arguments, args):
-                        # TODO improve name for other Nodes
-                        correspondance[a_macro.name] = arg
-
-                    _args = []
-                    for a in macro.master_arguments:
-                        if isinstance(a, Macro):
-                            new = construct_macro(a.name,
-                                                  correspondance[a.argument.name])
-                            # TODO improve
-                            #      otherwise, we get the following error
-                            # TypeError: __new__() got multiple values for argument 'index'
-                            if isinstance(new, MacroShape):
-                                new._index = a.index
-                        else:
-                            # TODO improve for other Nodes
-                            new = correspondance[a.name]
-
-                        _args.append(new)
-
-                    args = _args
+                    args = macro.apply(args)
                     # ...
                 else:
                     func = self.get_function(name)
@@ -2066,6 +2041,7 @@ class Parser(object):
                     else:
                         # return Function(name)(*args)
                         return func(*args)
+
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2138,8 +2114,48 @@ class Parser(object):
                     assigns.append(expr_new)
 
                 assigns = [self._annotate(i, **settings) for i in assigns]
+
+            # check if rhs is a call to a macro
+            if isinstance(rhs, Function):
+                name = str(type(rhs).__name__)
+                macro = self.get_macro(name)
+                if not macro is None:
+                    func = macro.master
+
+                    # ...
+                    # all terms in lhs must be already declared and available in
+                    # the namespace
+                    # TODO use a list/tuple here
+                    lhs = [expr.lhs]
+                    results = []
+                    for a in lhs:
+                        _name = None
+                        if isinstance(a, Symbol):
+                            _name = a.name
+                        else:
+                            raise NotImplementedError('TODO')
+
+                        var = self.get_variable(_name)
+                        if var is None:
+                            errors.report(UNDEFINED_VARIABLE, symbol=_name,
+                                          bounding_box=self.bounding_box,
+                                          severity='error', blocker=self.blocking)
+                        results.append(var)
+                    # ...
+
+                    args = [self._annotate(i, **settings) for i in rhs.args]
+                    args = macro.apply(args, results=results)
+
+                    # TODO treate interface case
+                    if isinstance(func, FunctionDef):
+                        return self._annotate(FunctionCall(func, args), **settings)
+                    else:
+                        raise NotImplementedError('TODO')
+
+
             rhs = self._annotate(rhs, **settings)
 
+            # TODO said shall we keep this?
             if isinstance(rhs, FunctionDef):
                 #case of using lambdify then the rhs is a functiondef
                 for i in rhs.body:
@@ -2148,14 +2164,13 @@ class Parser(object):
                 raise SystemExit('1979##########')
                 return rhs
 
-
             # d_var can be a list of dictionaries
-
             if isinstance(rhs, FunctionCall):
                 # ARA: needed for functions defined only with a header
                 results = rhs.func.results
                 if results:
                     d_var = [self._infere_type(i, **settings) for i in results]
+
             elif isinstance(rhs, ConstructorCall):
 
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
@@ -2177,6 +2192,7 @@ class Parser(object):
                 d_var['is_polymorphic'] = False
                 d_var['cls_base'] = cls
                 d_var['is_pointer'] = False
+
             elif isinstance(rhs, Function):
 
                 name = str(type(rhs).__name__)
@@ -2191,6 +2207,7 @@ class Parser(object):
                     d_var['shape'] = rhs.shape
                     d_var['rank'] = rhs.rank
                     d_var['is_pointer'] = False
+
                 elif name in ['Array']:
 
                     dvar = self._infere_type(rhs.arg, **settings)
@@ -2212,6 +2229,7 @@ class Parser(object):
                         d_var['datatype'] = 'ndarray' + dtype
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
+
                 elif name in ['Len', 'Sum', 'Rand']:
                     d_var = {}
                     d_var['datatype'] = rhs.dtype
@@ -2221,12 +2239,14 @@ class Parser(object):
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
+
                 elif name in ['Mod']: # functions that return an int
                     d_var = {}
                     d_var['datatype'] = 'int'
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
+
                 elif name in [
                     'Abs',
                     'sqrt',
@@ -2250,8 +2270,10 @@ class Parser(object):
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = 'double' #TODO improve what datatype shoud we give here
+
                 else:
                     raise NotImplementedError('TODO')
+
             else:
                 d_var = self._infere_type(rhs, **settings)
                 if d_var['datatype'
@@ -2901,7 +2923,8 @@ class Parser(object):
             name = expr.name
             args = expr.arguments
             master_args = expr.master_arguments
-            macro = MacroFunction(name, args, f, master_args)
+            results = expr.results
+            macro = MacroFunction(name, args, f, master_args, results=results)
             self.insert_macro(macro)
 
             return macro
