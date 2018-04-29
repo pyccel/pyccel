@@ -1,4 +1,4 @@
-#$ header function f(int, int)
+#$ header function f(int, int) &
 #$                 results (int)
 
 def f(a,b):
@@ -6,8 +6,8 @@ def f(a,b):
     return c
 
 
-#$ header function g(int, int)
-#$                 results
+#$ header function g(int, int) &
+#$                 results &
 #$ (int, int)
 
 def g(a,b):

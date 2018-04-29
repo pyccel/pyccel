@@ -162,6 +162,7 @@ def reconstruct_pragma_multilines(header):
     """Must be called once we visit an annotated comment, to get the remaining
     parts of a statement written on multiple lines."""
 
+    # ...
     def _is_pragma(x):
         if not(isinstance(x, CommentNode) and x.value.startswith('#$')):
             return False
@@ -173,10 +174,22 @@ def reconstruct_pragma_multilines(header):
         return True
 
     _ignore_stmt = lambda x: isinstance(x, (EndlNode, CommentNode)) and not _is_pragma(x)
+    def _is_multiline(x):
+        # we use tr/except to avoid treating nodes without .value
+        try:
+            return x.value.rstrip().endswith('&')
+        except:
+            return False
+
+    condition = lambda x: (_is_multiline(x.parent) and (_is_pragma(x) or _ignore_stmt(x)))
+    # ...
+
+    if not _is_multiline(header):
+        return header.value
 
     ls = []
     node = header.next
-    while _is_pragma(node) or _ignore_stmt(node):
+    while condition(node):
         # append the pragma stmt
         if _is_pragma(node):
             ls.append(node.value)
@@ -188,7 +201,8 @@ def reconstruct_pragma_multilines(header):
 
     txt = ' '.join(i for i in ls)
     txt = txt.replace('#$', '')
-    txt = '{} {}'.format(header.value, txt)
+    txt = txt.replace('&', '')
+    txt = '{} {}'.format(header.value.replace('&', ''), txt)
     return txt
 # ...
 

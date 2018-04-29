@@ -484,7 +484,9 @@ class Parser(object):
 
     def parse(self, d_parsers=None, verbose=False):
         """converts redbaron fst to sympy ast."""
+
         if self.syntax_done:
+            print('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -518,6 +520,7 @@ class Parser(object):
     def annotate(self, **settings):
         """."""
         if self.semantic_done:
+            print('> semantic analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -572,8 +575,6 @@ class Parser(object):
                                       symbol=name,
                                       blocker=True,
                                       severity='fatal')
-#        print('++++++++++++++')
-#        print(errors.error_info_map)
         errors.check()
         self._semantic_done = True
 
@@ -1494,10 +1495,11 @@ class Parser(object):
                         # but can be used to modify the ast
                         self._metavars[str(expr.name)] = str(expr.value)
                         #return NewLine()
-                        return EmptyLine()
+                        expr = EmptyLine()
                     else:
                         expr.set_fst(stmt)
-                        return expr
+
+                    return expr
 
                 else:
                     # TODO an info should be reported saying that either we
@@ -2924,7 +2926,7 @@ if __name__ == '__main__':
         raise ValueError('Expecting an argument for filename')
 
     pyccel = Parser(filename)
-    pyccel.parse()
+    pyccel.parse(verbose=True)
 
     settings = {}
     pyccel.annotate(**settings)
