@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from sympy.core.expr import AtomicExpr
+from sympy.core import Symbol
 from sympy import sympify
 
 from .core import Basic
@@ -22,6 +23,21 @@ class Macro(AtomicExpr):
     @property
     def name(self):
         return self._name
+
+
+class MacroSymbol(Symbol):
+    """    """
+    def __new__(cls, name, is_optional=False):
+
+        return Basic.__new__(cls, name, is_optional)
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def is_optional(self):
+        return self._args[1]
 
 
 class MacroShape(Macro):

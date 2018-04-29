@@ -456,8 +456,8 @@ class MacroFunction(Header):
                 new = d_results[a.name]
 
             else:
-                # TODO what to do here?
-                pass
+                # TODO
+                new = a
 
             _args.append(new)
 

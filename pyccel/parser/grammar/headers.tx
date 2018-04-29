@@ -51,20 +51,26 @@ MetavarValues: BOOL|STRING;
 
 InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
 
-ListArgsStmt: args*=ID[','];
+MacroArg: arg=ID (optional='?')?;
+ListArgsStmt: args*=MacroArg[','];
+ListResultsStmt: args*=ID[','];
 ListAnnotatedArgsStmt: args*=IdOrMacroStmt[','];
-IdOrMacroStmt: MacroStmt | ID;
+IdOrMacroStmt: MacroStmt | INT | NUMBER | ID;
 MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
-MacroParameter: INT | ID ;
+MacroParameter: INT | ID;
+
+//MacroChoiceStmt: value= IdOrMacroStmt '|' default=IdOrMacroStmt;
 
 // TODO shall we add also results to the master call?
 FunctionMacroStmt: 
-  'macro' ('(' results=ListArgsStmt ')' ',')? name=ID '(' args=ListArgsStmt ')' 
+  'macro' ('(' results=ListResultsStmt ')' ',')? 
+  name=ID '(' args=ListArgsStmt ')' 
   ':=' 
   master_name=ID '(' master_args=ListAnnotatedArgsStmt ')'
 ;
 
 STAR: '*';
+OPTIONAL: '!';
 AvailableMacro: 
     'shape'
   | 'dtype'
