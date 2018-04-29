@@ -2913,20 +2913,22 @@ class Parser(object):
             f_name = expr.master
             header = self.get_header(f_name)
             if header is None:
-                errors.report(PYCCEL_MISSING_HEADER,
-                              symbol=f_name,
-                              bounding_box=self.bounding_box,
-                              severity='error', blocker=self.blocking)
-
-            f = header.create_definition()
-            # TODO -> Said: must handle interface
-            f = f[0]
+                func = self.get_function(f_name)
+                if func is None:
+                    errors.report(MACRO_MISSING_HEADER_OR_FUNC,
+                                  symbol=f_name,
+                                  bounding_box=self.bounding_box,
+                                  severity='error', blocker=self.blocking)
+            else:
+                interfaces = header.create_definition()
+                # TODO -> Said: must handle interface
+                func = interfaces[0]
 
             name = expr.name
             args = expr.arguments
             master_args = expr.master_arguments
             results = expr.results
-            macro = MacroFunction(name, args, f, master_args, results=results)
+            macro = MacroFunction(name, args, func, master_args, results=results)
             self.insert_macro(macro)
 
             return macro
