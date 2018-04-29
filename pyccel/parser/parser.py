@@ -2125,8 +2125,10 @@ class Parser(object):
                     # ...
                     # all terms in lhs must be already declared and available in
                     # the namespace
-                    # TODO use a list/tuple here
-                    lhs = [expr.lhs]
+                    lhs = expr.lhs
+                    if not iterable(expr.lhs):
+                        lhs = [expr.lhs]
+
                     results = []
                     for a in lhs:
                         _name = None
