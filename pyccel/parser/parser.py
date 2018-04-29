@@ -2120,6 +2120,7 @@ class Parser(object):
                 name = str(type(rhs).__name__)
                 macro = self.get_macro(name)
                 if not macro is None:
+                    # TODO check types from FunctionDef
                     func = macro.master
 
                     # ...

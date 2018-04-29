@@ -11,7 +11,7 @@ from .core import Variable
 from .core import FunctionDef
 from .core import ClassDef
 from .datatypes import datatype, DataTypeFactory, UnionType
-from .macros import Macro, MacroShape, construct_macro
+from .macros import Macro, MacroSymbol, MacroShape, construct_macro
 
 class Header(Basic):
     pass
@@ -455,6 +455,9 @@ class MacroFunction(Header):
                 # TODO improve for other Nodes
                 new = d_results[a.name]
 
+            elif isinstance(a, MacroSymbol) and not(a.default is None):
+                # case of a default value, if the argument is optional
+                new = a.default
             else:
                 # TODO
                 new = a

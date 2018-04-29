@@ -7,6 +7,7 @@ from os.path import join, dirname
 
 from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
+from sympy import sympify
 
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
@@ -324,6 +325,7 @@ class MacroMasterArg(BasicStmt):
             arg = arg.expr
         else:
             arg = Symbol(str(arg))
+            default = sympify(default)
             if isinstance(arg, Symbol):
                 arg = MacroSymbol(arg.name, default=default)
 
