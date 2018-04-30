@@ -408,6 +408,9 @@ class MacroFunction(Header):
     def results(self):
         return self._args[4]
 
+    # TODO: must be moved to annotation, once we add AliasVariables
+    #       this is needed if we have to create a pointer or allocate a new
+    #       variable to store the result
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
         # TODO improve

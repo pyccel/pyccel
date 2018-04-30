@@ -25,6 +25,9 @@ def test_macro():
     print (parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
     print (parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
     print (parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+    print (parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
+    print (parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
+    print (parse(stmts='#$ header macro _dswap(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)'))
 
 ######################
 if __name__ == '__main__':

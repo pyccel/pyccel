@@ -26,43 +26,43 @@ def run(test_dir, **settings):
 def test_blas():
     print('*********************************')
     print('***                           ***')
-    print('***  TESTING INTERNAL/BLAS    ***')
+    print('***    TESTING MACRO/BLAS     ***')
     print('***                           ***')
     print('*********************************')
 
     run('blas', libs='blas')
 
-def test_lapack():
-    print('*********************************')
-    print('***                           ***')
-    print('***  TESTING INTERNAL/LAPACK  ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('lapack', libs=['blas', 'lapack'])
-
-def test_mpi():
-    print('*********************************')
-    print('***                           ***')
-    print('***  TESTING INTERNAL/MPI     ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('mpi', compiler='mpif90')
-
-def test_openmp():
-    print('*********************************')
-    print('***                           ***')
-    print('***  TESTING INTERNAL/OPENMP  ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('openmp', accelerator='openmp')
+#def test_lapack():
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***    TESTING MACRO/LAPACK   ***')
+#    print('***                           ***')
+#    print('*********************************')
+#
+#    run('lapack', libs=['blas', 'lapack'])
+#
+#def test_mpi():
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***    TESTING MACRO/MPI      ***')
+#    print('***                           ***')
+#    print('*********************************')
+#
+#    run('mpi', compiler='mpif90')
+#
+#def test_openmp():
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***    TESTING MACRO/OPENMP   ***')
+#    print('***                           ***')
+#    print('*********************************')
+#
+#    run('openmp', accelerator='openmp')
 
 #def test_openacc():
 #    print('*********************************')
 #    print('***                           ***')
-#    print('***  TESTING INTERNAL/OPENACC ***')
+#    print('***    TESTING MACRO/OPENACC  ***')
 #    print('***                           ***')
 #    print('*********************************')
 #
@@ -72,7 +72,7 @@ def test_openmp():
 ######################
 if __name__ == '__main__':
     test_blas()
-    test_lapack()
-    test_mpi()
-    test_openmp()
+#    test_lapack()
+#    test_mpi()
+#    test_openmp()
 #    test_openacc()
