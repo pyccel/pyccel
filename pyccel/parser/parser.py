@@ -80,6 +80,7 @@ from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
+from pyccel.ast import MacroFunction
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
@@ -93,9 +94,13 @@ from pyccel.ast import List
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast import Macro
+from pyccel.ast import MacroShape
+from pyccel.ast import construct_macro
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
+from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
 
@@ -233,6 +238,7 @@ class Parser(object):
         self._namespace['variables'] = {}
         self._namespace['classes'] = {}
         self._namespace['functions'] = {}
+        self._namespace['macros'] = {}
         self._namespace['cls_constructs'] = {}
         self._namespace['symbolic_functions'] = {}
         self._namespace['python_functions'] = {}
@@ -311,6 +317,30 @@ class Parser(object):
     @property
     def imports(self):
         return self.namespace['imports']
+
+    @property
+    def functions(self):
+        return self.namespace['functions']
+
+    @property
+    def variables(self):
+        return self.namespace['variables']
+
+    @property
+    def classes(self):
+        return self.namespace['classes']
+
+    @property
+    def python_functions(self):
+        return self.namespace['python_functions']
+
+    @property
+    def symbolic_functions(self):
+        return self.namespace['symbolic_functions']
+
+    @property
+    def macros(self):
+        return self.namespace['macros']
 
     @property
     def filename(self):
@@ -454,7 +484,9 @@ class Parser(object):
 
     def parse(self, d_parsers=None, verbose=False):
         """converts redbaron fst to sympy ast."""
+
         if self.syntax_done:
+            print('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -488,6 +520,7 @@ class Parser(object):
     def annotate(self, **settings):
         """."""
         if self.semantic_done:
+            print('> semantic analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -542,8 +575,6 @@ class Parser(object):
                                       symbol=name,
                                       blocker=True,
                                       severity='fatal')
-#        print('++++++++++++++')
-#        print(errors.error_info_map)
         errors.check()
         self._semantic_done = True
 
@@ -839,6 +870,30 @@ class Parser(object):
             container[str(func.name)] = func
         else:
             raise TypeError('Expected a python_function')
+
+
+    def get_macro(self, name):
+        """."""
+        # TODO shall we keep the elif in _imports?
+        macro = None
+        if name in self._namespace['macros']:
+            macro = self._namespace['macros'][name]
+        # TODO uncomment
+#        elif name in self._imports:
+#            macro = self._imports[name]
+        return macro
+
+    def insert_macro(self, macro):
+        """."""
+        container = self._namespace['macros']
+        if isinstance(self._current, DottedName):
+            name = self._current.name[0]
+            container = self._scope[name]['macros']
+
+        if isinstance(macro, MacroFunction):
+            container[str(macro.name)] = macro
+        else:
+            raise TypeError('Expected a macro')
 
     def remove(self, name):
         """."""
@@ -1425,27 +1480,34 @@ class Parser(object):
             if stmt.value.startswith('#$'):
                 env = stmt.value[2:].lstrip()
                 if env.startswith('omp'):
-                    return omp_parse(stmts=stmt.value)
+                    txt = reconstruct_pragma_multilines(stmt)
+                    return omp_parse(stmts=txt)
 
                 elif env.startswith('acc'):
-                    return acc_parse(stmts=stmt.value)
+                    txt = reconstruct_pragma_multilines(stmt)
+                    return acc_parse(stmts=txt)
 
                 elif env.startswith('header'):
-                    expr = hdr_parse(stmts=stmt.value)
+                    txt = reconstruct_pragma_multilines(stmt)
+                    expr = hdr_parse(stmts=txt)
                     if isinstance(expr, MetaVariable):
                         # a metavar will not appear in the semantic stage.
                         # but can be used to modify the ast
                         self._metavars[str(expr.name)] = str(expr.value)
                         #return NewLine()
-                        return EmptyLine()
+                        expr = EmptyLine()
                     else:
                         expr.set_fst(stmt)
-                        return expr
+
+                    return expr
 
                 else:
-                    errors.report(PYCCEL_INVALID_HEADER,
-                                  bounding_box=stmt.absolute_bounding_box,
-                                  severity='error')
+                    # TODO an info should be reported saying that either we
+                    # found a multiline pragma or an invalid pragma statement
+                    return NewLine()
+#                    errors.report(PYCCEL_INVALID_HEADER,
+#                                  bounding_box=stmt.absolute_bounding_box,
+#                                  severity='error')
 
             else:
                 # TODO improve
@@ -1901,9 +1963,9 @@ class Parser(object):
         elif isinstance(expr, (Application)):
             # ... DEBUG
             name = str(type(expr).__name__)
-            
+
             func = self.get_function(name)
-            
+
             # ...
             if not isinstance(func, Lambda):
                 args = [self._annotate(i, **settings) for i in expr.args]
@@ -1913,7 +1975,7 @@ class Parser(object):
             # ...
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
-           
+
             F = pyccel_builtin_function(expr, args)
             if F:
                 return F
@@ -1952,7 +2014,19 @@ class Parser(object):
             else:
                 # if it is a user-defined function, we return a FunctionCall
                 # TODO shall we keep it, or do this only in the Assign?
-                func = self.get_function(name)
+
+                # first we check if it is a macro, in this case, we will create
+                # an appropriate FunctionCall
+                macro = self.get_macro(name)
+                if not macro is None:
+                    func = macro.master
+
+                    # ... create the appropriate arguments
+                    args = macro.apply(args)
+                    # ...
+                else:
+                    func = self.get_function(name)
+
                 if not func is None:
                     if isinstance(func, (FunctionDef, Interface)):
                         # case of a function that takes no argument
@@ -1967,6 +2041,7 @@ class Parser(object):
                     else:
                         # return Function(name)(*args)
                         return func(*args)
+
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2010,7 +2085,7 @@ class Parser(object):
 
 
             return expr
-         
+
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -2039,8 +2114,51 @@ class Parser(object):
                     assigns.append(expr_new)
 
                 assigns = [self._annotate(i, **settings) for i in assigns]
+
+            # check if rhs is a call to a macro
+            if isinstance(rhs, Function):
+                name = str(type(rhs).__name__)
+                macro = self.get_macro(name)
+                if not macro is None:
+                    # TODO check types from FunctionDef
+                    func = macro.master
+
+                    # ...
+                    # all terms in lhs must be already declared and available in
+                    # the namespace
+                    lhs = expr.lhs
+                    if not iterable(expr.lhs):
+                        lhs = [expr.lhs]
+
+                    results = []
+                    for a in lhs:
+                        _name = None
+                        if isinstance(a, Symbol):
+                            _name = a.name
+                        else:
+                            raise NotImplementedError('TODO')
+
+                        var = self.get_variable(_name)
+                        if var is None:
+                            errors.report(UNDEFINED_VARIABLE, symbol=_name,
+                                          bounding_box=self.bounding_box,
+                                          severity='error', blocker=self.blocking)
+                        results.append(var)
+                    # ...
+
+                    args = [self._annotate(i, **settings) for i in rhs.args]
+                    args = macro.apply(args, results=results)
+
+                    # TODO treate interface case
+                    if isinstance(func, FunctionDef):
+                        return self._annotate(FunctionCall(func, args), **settings)
+                    else:
+                        raise NotImplementedError('TODO')
+
+
             rhs = self._annotate(rhs, **settings)
-            
+
+            # TODO said shall we keep this?
             if isinstance(rhs, FunctionDef):
                 #case of using lambdify then the rhs is a functiondef
                 for i in rhs.body:
@@ -2048,15 +2166,14 @@ class Parser(object):
                 rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
                 raise SystemExit('1979##########')
                 return rhs
-          
 
             # d_var can be a list of dictionaries
-
             if isinstance(rhs, FunctionCall):
                 # ARA: needed for functions defined only with a header
                 results = rhs.func.results
                 if results:
                     d_var = [self._infere_type(i, **settings) for i in results]
+
             elif isinstance(rhs, ConstructorCall):
 
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
@@ -2078,6 +2195,7 @@ class Parser(object):
                 d_var['is_polymorphic'] = False
                 d_var['cls_base'] = cls
                 d_var['is_pointer'] = False
+
             elif isinstance(rhs, Function):
 
                 name = str(type(rhs).__name__)
@@ -2092,6 +2210,7 @@ class Parser(object):
                     d_var['shape'] = rhs.shape
                     d_var['rank'] = rhs.rank
                     d_var['is_pointer'] = False
+
                 elif name in ['Array']:
 
                     dvar = self._infere_type(rhs.arg, **settings)
@@ -2113,6 +2232,7 @@ class Parser(object):
                         d_var['datatype'] = 'ndarray' + dtype
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
+
                 elif name in ['Len', 'Sum', 'Rand']:
                     d_var = {}
                     d_var['datatype'] = rhs.dtype
@@ -2122,12 +2242,14 @@ class Parser(object):
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
+
                 elif name in ['Mod']: # functions that return an int
                     d_var = {}
                     d_var['datatype'] = 'int'
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
+
                 elif name in [
                     'Abs',
                     'sqrt',
@@ -2151,8 +2273,10 @@ class Parser(object):
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = 'double' #TODO improve what datatype shoud we give here
+
                 else:
                     raise NotImplementedError('TODO')
+
             else:
                 d_var = self._infere_type(rhs, **settings)
                 if d_var['datatype'
@@ -2710,7 +2834,6 @@ class Parser(object):
 
         elif isinstance(expr, Import):
 
-
             # TODO - must have a dict where to store things that have been
             #        imported
             #      - should not use namespace
@@ -2776,6 +2899,7 @@ class Parser(object):
 
         elif isinstance(expr, AnnotatedComment):
             return expr
+
         elif isinstance(expr, With):
             domaine = self._annotate(expr.test)
             parent = domaine.cls_base
@@ -2784,6 +2908,31 @@ class Parser(object):
                                     'classes with __enter__ and __exit__ methods')
             body = self._annotate(expr.body)
             return With(domaine, body, None).block
+
+        elif isinstance(expr, MacroFunction):
+            # we change here the master name to its FunctionDef
+            f_name = expr.master
+            header = self.get_header(f_name)
+            if header is None:
+                func = self.get_function(f_name)
+                if func is None:
+                    errors.report(MACRO_MISSING_HEADER_OR_FUNC,
+                                  symbol=f_name,
+                                  bounding_box=self.bounding_box,
+                                  severity='error', blocker=self.blocking)
+            else:
+                interfaces = header.create_definition()
+                # TODO -> Said: must handle interface
+                func = interfaces[0]
+
+            name = expr.name
+            args = expr.arguments
+            master_args = expr.master_arguments
+            results = expr.results
+            macro = MacroFunction(name, args, func, master_args, results=results)
+            self.insert_macro(macro)
+
+            return macro
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
@@ -2805,7 +2954,7 @@ if __name__ == '__main__':
         raise ValueError('Expecting an argument for filename')
 
     pyccel = Parser(filename)
-    pyccel.parse()
+    pyccel.parse(verbose=True)
 
     settings = {}
     pyccel.annotate(**settings)
@@ -2813,11 +2962,13 @@ if __name__ == '__main__':
 #    for s in pyccel.ast:
 #        print(type(s))
 
-    # export the ast
-    pyccel.dump()
-
-    # load the ast
-    pyccel.load()
+#    # ... using Pickle
+#    # export the ast
+#    pyccel.dump()
+#
+#    # load the ast
+#    pyccel.load()
+#    # ...
 
 #    pyccel.view_namespace('variables')
 #    pyccel.print_namespace()

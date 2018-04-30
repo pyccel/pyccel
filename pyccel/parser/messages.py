@@ -69,6 +69,8 @@ PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
+PYCCEL_MISSING_HEADER = 'Cannot find associated header'
+MACRO_MISSING_HEADER_OR_FUNC = 'Cannot find associated header/FunctionDef to macro'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 
 IMPORTING_EXISTING_IDENTIFIED = \

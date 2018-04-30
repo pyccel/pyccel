@@ -21,6 +21,11 @@ def test_method():
 def test_metavar():
     print (parse(stmts="#$ header metavar module_name='mpi'"))
 
+def test_macro():
+    print (parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
+    print (parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
+    print (parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+
 ######################
 if __name__ == '__main__':
     test_variable()
@@ -29,3 +34,4 @@ if __name__ == '__main__':
     test_class()
     test_method()
     test_metavar()
+    test_macro()

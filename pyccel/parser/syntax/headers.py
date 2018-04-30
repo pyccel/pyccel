@@ -3,16 +3,20 @@
 """
 """
 
-# TODO: - remove 'star' from everywhere
-
 from os.path import join, dirname
+
 from sympy.utilities.iterables import iterable
+from sympy.core import Symbol
+from sympy import sympify
+
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
-from pyccel.ast.core import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
+from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast import construct_macro, MacroFunction
+from pyccel.ast import MacroSymbol
 
 DEBUG = False
 
@@ -262,21 +266,170 @@ class InterfaceStmt(BasicStmt):
       def __init__(self, **kwargs):
           """
           Constructor of Interface statement
-          
+
           name: str
-          
+
           args: list of funciton names
-         
+
           """
 
           self.name = kwargs.pop('name')
           self.args = kwargs.pop('args')
           super(InterfaceStmt, self).__init__(**kwargs)
-      
+
       @property
       def expr(self):
           return InterfaceHeader(self.name, self.args)
 
+# ...
+class MacroArg(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.arg = kwargs.pop('arg')
+        self.optional = kwargs.pop('optional')
+
+        super(MacroArg, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        optional = self.optional
+        if self.optional:
+            optional = True
+        else:
+            optional = False
+
+        return MacroSymbol(self.arg, is_optional=optional)
+
+class MacroMasterArg(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.arg = kwargs.pop('arg')
+        self.default = kwargs.pop('default', None)
+
+        super(MacroMasterArg, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        arg = self.arg
+        default = self.default
+        if isinstance(arg, MacroStmt):
+            if not(self.default is None):
+                raise ValueError('No choice is allowed together with a MacroStmt')
+
+            arg = arg.expr
+        else:
+            arg = Symbol(str(arg))
+            default = sympify(default)
+            if isinstance(arg, Symbol):
+                arg = MacroSymbol(arg.name, default=default)
+
+        return arg
+
+class ListArgsStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(ListArgsStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = [a.expr for a in self.args]
+        return args
+
+class ListResultsStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(ListResultsStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        return self.args
+
+class ListAnnotatedArgsStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(ListAnnotatedArgsStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        args = [a.expr for a in self.args]
+        return args
+
+class MacroStmt(BasicStmt):
+    """."""
+
+    def __init__(self, **kwargs):
+        """
+        """
+        self.arg = kwargs.pop('arg')
+        self.macro = kwargs.pop('macro')
+        self.parameter = kwargs.pop('parameter', None)
+
+        super(MacroStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        name = str(self.macro)
+        arg  = str(self.arg)
+        parameter = self.parameter
+        return construct_macro(name, arg, parameter=parameter)
+
+# ...
+
+
+class FunctionMacroStmt(BasicStmt):
+    """Base class representing an alias function statement in the grammar."""
+
+    def __init__(self, **kwargs):
+        """
+        Constructor for a FunctionMacroStmt statement
+
+        name: str
+            function name
+        master: str
+            master function name
+        """
+        self.name = kwargs.pop('name')
+        self.results = kwargs.pop('results')
+        self.args = kwargs.pop('args')
+        self.master_name = kwargs.pop('master_name')
+        self.master_args = kwargs.pop('master_args')
+
+        super(FunctionMacroStmt, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        name = str(self.name)
+        args = self.args.expr
+        master_name = str(self.master_name)
+        master_args = self.master_args.expr
+
+        results = self.results
+        if not (self.results is None):
+            results = self.results.expr
+
+        return MacroFunction(name, args, master_name, master_args,
+                             results=results)
 
 #################################################
 
@@ -289,7 +442,15 @@ hdr_classes = [Header, TypeHeader,
                FunctionHeaderStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,
-               MetavarHeaderStmt,InterfaceStmt]
+               MetavarHeaderStmt,
+               InterfaceStmt,
+               ListArgsStmt,
+               ListResultsStmt,
+               ListAnnotatedArgsStmt,
+               MacroStmt,
+               MacroArg,
+               MacroMasterArg,
+               FunctionMacroStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -319,11 +480,20 @@ def parse(filename=None, stmts=None, debug=False):
 
 ######################
 if __name__ == '__main__':
-    print(parse(stmts='#$ header variable x :: int'))
-    print(parse(stmts='#$ header variable x float [:, :]'))
-    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
-    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-    print(parse(stmts='#$ header class Square(public)'))
-    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
-    print(parse(stmts="#$ header metavar module_name='mpi'"))
-    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
+#    print(parse(stmts='#$ header variable x :: int'))
+#    print(parse(stmts='#$ header variable x float [:, :]'))
+#    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
+#    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
+#    print(parse(stmts='#$ header class Square(public)'))
+#    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
+#    print(parse(stmts="#$ header metavar module_name='mpi'"))
+#    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
+#    print(parse(stmts='#$ header function _f(int, int [:])'))
+#    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
+#    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
+#    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+#    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
+#    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx)"))
+    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
+#    print(parse(stmts='#$ header macro _dswap(x, incx|1, y, incy|1) := dswap(x.shape, x, incx, y, incy)'))
+

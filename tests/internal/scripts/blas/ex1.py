@@ -1,8 +1,3 @@
-from pyccel.stdlib.internal.blas import daxpy
-from pyccel.stdlib.internal.blas import saxpy
-
-#$header interface axpy=daxpy|saxpy
-
 # > Usage:
 #
 #   pyccel test.py -t
@@ -10,6 +5,8 @@ from pyccel.stdlib.internal.blas import saxpy
 #   ./a.out
 
 # TODO add saxpy test
+
+from pyccel.stdlib.internal.blas import daxpy
 from numpy import zeros
 
 def test_daxpy():
@@ -30,6 +27,6 @@ def test_daxpy():
     sy[1] = 4.0
     sy[3] = 6.0
 
-    axpy(n, sa, sx, incx, sy, incy)
+    daxpy(n, sa, sx, incx, sy, incy)
 
 test_daxpy()

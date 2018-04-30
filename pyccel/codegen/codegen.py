@@ -6,13 +6,12 @@ import os
 
 from pyccel.codegen.printing import fcode
 
-from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, \
-    Import, Interface
-from pyccel.ast.core import Header, EmptyLine, NewLine, Comment
-from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign , Assigns
-from pyccel.ast.core import Variable, DottedName
-from pyccel.ast.core import For, If, While
-from pyccel.ast.core import Is
+from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
+from pyccel.ast import Header, EmptyLine, NewLine, Comment
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign , Assigns
+from pyccel.ast import Variable, DottedName
+from pyccel.ast import For, If, While
+from pyccel.ast import Is
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
 

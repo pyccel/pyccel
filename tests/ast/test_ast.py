@@ -2,10 +2,10 @@ from sympy import symbols, MatrixSymbol, Matrix, Idx, Range
 from sympy.utilities.pytest import raises
 
 
-from pyccel.ast.core import (Assign, AugAssign, datatype,
-                             Bool, Int, Float, Double, Void,
-                             IndexedVariable,
-                             For, Variable, FunctionDef)
+from pyccel.ast import (Assign, AugAssign, datatype,
+                        Bool, Int, Float, Double, Void,
+                        IndexedVariable,
+                        For, Variable, FunctionDef)
 
 n = Variable('int', 'n')
 x = Variable('double', 'x')
