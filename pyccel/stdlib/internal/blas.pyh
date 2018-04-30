@@ -49,12 +49,12 @@
 #$ header function dnrm2(int, double [:], int) results(double)
 # .......................................
 
-## .......................................
-##             LEVEL-2
-## .......................................
-##$ header function sgemv (str, int, int, float, float[:,:], int, float[:], int, float, float[:], int)
-##$ header function dgemv (str, int, int, double, double[:,:], int, double[:], int, double, double[:], int)
-#
+# .......................................
+#             LEVEL-2
+# .......................................
+#$ header function sgemv (str, int, int, float, float[:,:], int, float[:], int, float, float[:], int)
+#$ header function dgemv (str, int, int, double, double[:,:], int, double[:], int, double, double[:], int)
+
 ##$ header function sgbmv (str, int, int, int, int, float, float[:,:], int, float[:], int, float, float[:], int)
 ##$ header function dgbmv (str, int, int, int, int, double, double[:,:], int, double[:], int, double, double[:], int)
 #
