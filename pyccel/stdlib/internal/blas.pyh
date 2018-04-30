@@ -1,4 +1,6 @@
 # pyccel header for BLAS.
+#
+# TODO functions snrm2, etc must have results
 
 #$ header metavar module_version='3.8'
 #$ header metavar ignore_at_import=True
@@ -44,7 +46,7 @@
 #$ header function dsdot(int, double [:], int, double [:], int)
 
 #$ header function snrm2(int, float [:], int)
-#$ header function dnrm2(int, double [:], int)
+#$ header function dnrm2(int, double [:], int) results(double)
 # .......................................
 
 ## .......................................

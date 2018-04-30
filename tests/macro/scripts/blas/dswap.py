@@ -16,22 +16,13 @@ b[1] = 4.0
 b[2] = 9.0
 b[3] = 2.0
 
-#print('--- before swap')
-#print(a)
-#print(b)
+print('--- before swap')
+print(a)
+print(b)
 
-#$ header macro dswap_v1(x, incx, y, incy) := dswap(x.shape, x, incx, y, incy)
-dswap_v1(a, 1, b, 1)
+#$ header macro (x, y), _dswap(x, y, n?, incx?, incy?) := dswap(n|x.shape, x, incx|1, y, incy|1)
+a,b = _dswap(a, b)
 
-#$ header macro dswap_v2(x, incx, y, incy?) := dswap(x.shape, x, incx, y, incy|1)
-dswap_v2(a, 1, b)
-
-#$ header macro dswap_v3(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)
-dswap_v3(a, b)
-
-#$ header macro (x, y), dswap_v4(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)
-a,b = dswap_v4(a, b)
-
-#print('--- after swap')
-#print(a)
-#print(b)
+print('--- after swap')
+print(a)
+print(b)
