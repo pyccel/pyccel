@@ -32,15 +32,15 @@ def test_blas():
 
     run('blas', libs='blas')
 
-#def test_lapack():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***    TESTING MACRO/LAPACK   ***')
-#    print('***                           ***')
-#    print('*********************************')
-#
-#    run('lapack', libs=['blas', 'lapack'])
-#
+def test_lapack():
+    print('*********************************')
+    print('***                           ***')
+    print('***    TESTING MACRO/LAPACK   ***')
+    print('***                           ***')
+    print('*********************************')
+
+    run('lapack', libs=['blas', 'lapack'])
+
 #def test_mpi():
 #    print('*********************************')
 #    print('***                           ***')
@@ -49,7 +49,7 @@ def test_blas():
 #    print('*********************************')
 #
 #    run('mpi', compiler='mpif90')
-#
+
 #def test_openmp():
 #    print('*********************************')
 #    print('***                           ***')
@@ -72,7 +72,7 @@ def test_blas():
 ######################
 if __name__ == '__main__':
     test_blas()
-#    test_lapack()
+    test_lapack()
 #    test_mpi()
 #    test_openmp()
 #    test_openacc()

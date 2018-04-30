@@ -1,8 +1,5 @@
-from numpy import zeros
-
 from pyccel.stdlib.internal.blas import dswap
-
-
+from numpy import zeros
 
 n   = 4
 

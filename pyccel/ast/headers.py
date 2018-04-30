@@ -460,7 +460,18 @@ class MacroFunction(Header):
                     new = d_results[a.name]
 
                 elif not(a.default is None):
-                    new = a.default
+                    default = a.default
+                    if isinstance(default, Macro):
+                        new = construct_macro(default.name,
+                                              d_arguments[default.argument.name])
+                        # TODO improve
+                        #      otherwise, we get the following error
+                        # TypeError: __new__() got multiple values for argument 'index'
+                        if isinstance(new, MacroShape):
+                            new._index = default.index
+
+                    else:
+                        new = default
 
                 else:
                     raise NotImplementedError('TODO')
