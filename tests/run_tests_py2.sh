@@ -10,5 +10,6 @@ python tests/errors/test_errors.py
 python tests/warnings/test_warnings.py  
 python tests/preprocess/test_preprocess.py
 python tests/internal/test_internal.py  
+python tests/macro/test_macro.py  
 
 cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 

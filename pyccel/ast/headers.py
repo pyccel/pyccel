@@ -408,13 +408,17 @@ class MacroFunction(Header):
     def results(self):
         return self._args[4]
 
+    # TODO: must be moved to annotation, once we add AliasVariables
+    #       this is needed if we have to create a pointer or allocate a new
+    #       variable to store the result
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
         # TODO improve
         if len(args) == 0:
             raise NotImplementedError('TODO')
 
-        # ...
+        # ... TODO - must be a dict in order to use keywords argument (with '=')
+        #            in the macro definition
         d_arguments = {}
         for (a_macro, arg) in zip(self.arguments, args):
             # TODO improve name for other Nodes
@@ -422,7 +426,8 @@ class MacroFunction(Header):
         argument_keys = list(d_arguments.keys())
         # ...
 
-        # ...
+        # ... TODO - must be a dict in order to use keywords argument (with '=')
+        #            in the macro definition
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
@@ -431,13 +436,13 @@ class MacroFunction(Header):
         result_keys = list(d_results.keys())
         # ...
 
-#        print('> argument_keys = ', argument_keys)
-#        print('> result_keys = ', result_keys)
-#        print('> args = ', args)
-#        print('> results = ', results)
+        # ... initialize new args with None
+        newargs = []
+        for i in range(0, len(self.master_arguments)):
+            newargs.append(None)
+        # ...
 
-        _args = []
-        for a in self.master_arguments:
+        for i,a in enumerate(self.master_arguments):
             if isinstance(a, Macro):
                 new = construct_macro(a.name,
                                       d_arguments[a.argument.name])
@@ -447,21 +452,34 @@ class MacroFunction(Header):
                 if isinstance(new, MacroShape):
                     new._index = a.index
 
-            elif a.name in argument_keys:
-                # TODO improve for other Nodes
-                new = d_arguments[a.name]
+            elif isinstance(a, MacroSymbol):
+                if a.name in argument_keys:
+                    new = d_arguments[a.name]
 
-            elif a.name in result_keys:
-                # TODO improve for other Nodes
-                new = d_results[a.name]
+                elif a.name in result_keys:
+                    new = d_results[a.name]
 
-            elif isinstance(a, MacroSymbol) and not(a.default is None):
-                # case of a default value, if the argument is optional
-                new = a.default
+                elif not(a.default is None):
+                    default = a.default
+                    if isinstance(default, Macro):
+                        new = construct_macro(default.name,
+                                              d_arguments[default.argument.name])
+                        # TODO improve
+                        #      otherwise, we get the following error
+                        # TypeError: __new__() got multiple values for argument 'index'
+                        if isinstance(new, MacroShape):
+                            new._index = default.index
+
+                    else:
+                        new = default
+
+                else:
+                    raise NotImplementedError('TODO')
+
             else:
-                # TODO
+                # TODO improve
                 new = a
 
-            _args.append(new)
+            newargs[i] = new
 
-        return _args
+        return newargs
