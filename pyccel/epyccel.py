@@ -1,6 +1,8 @@
 
 from pyccel.parser.syntax.headers import parse
 from pyccel.parser.errors import Errors
+from pyccel.parser.errors import PyccelError
+
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 from pyccel.ast import FunctionHeader
@@ -152,21 +154,30 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
         print (code)
         print ('------')
 
-    # ...
-    pyccel = Parser(code, headers={str(name): header})
-    ast = pyccel.parse()
+    try:
+        # ...
+        pyccel = Parser(code, headers={str(name): header})
+        ast = pyccel.parse()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+        settings = {}
+        ast = pyccel.annotate(**settings)
 
-    codegen = Codegen(ast, name)
-    code = codegen.doprint()
-#    codegen.export()
-    # ...
+        codegen = Codegen(ast, name)
+        code = codegen.doprint()
+#        codegen.export()
+        # ...
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
+    except:
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
+        raise PyccelError('Could not convert to Fortran')
+
 
 #    # ...
 #    filename = '{name}.f90'.format(name=name)
