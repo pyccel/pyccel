@@ -360,10 +360,15 @@ class Assigns(Basic):
     """
 
     def __new__(cls, assigns):
+             ls = []
              for i in assigns:
-                 if not isinstance(i, Assign):
+                 if isinstance(i,Assigns):
+                     ls += i.stmts
+                 elif isinstance(i, Assign):
+                     ls += [i]
+                 else:
                      raise TypeError('assigns object must contain a list of assign stmts')
-             return Basic.__new__(cls, assigns)
+             return Basic.__new__(cls, ls)
 
     def _sympystr(self, printer):
         sstr = printer.doprint

@@ -2106,15 +2106,7 @@ class Parser(object):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
         elif isinstance(expr, (Assign, AugAssign)):
-            rhs = expr.rhs
-            exprs = []
-            from sympy import preorder_traversal
-            ls = list(preorder_traversal(rhs))
-            ls = ls[1:]
-            for i in ls:
-                if isinstance(i,(Application, Summation)):
-                    exprs += [i]
-            assigns = None
+
             # TODO unset position at the end of this part
             if expr.fst:
                 self._bounding_box = expr.fst.absolute_bounding_box
@@ -2122,7 +2114,16 @@ class Parser(object):
                 msg = 'Found a node without fst member ({})'.format(type(expr))
                 raise PyccelSemanticError(msg)
 
-            if len(exprs)>0 and not isinstance(rhs, (Application, Lambda)):
+            rhs = expr.rhs
+            exprs = []
+            from sympy import preorder_traversal
+            ls = list(preorder_traversal(rhs))
+            ls = ls[1:]
+            for i in ls:
+                if isinstance(i, (Application, Summation)):
+                    exprs += [i]
+            assigns = None
+            if len(exprs)>0 and not isinstance(rhs, Lambda):
                 #case of a function call in the rhs
                 assigns = []
                 exprs = exprs[::-1]
