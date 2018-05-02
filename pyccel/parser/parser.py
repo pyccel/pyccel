@@ -185,7 +185,6 @@ def get_filename_from_import(module):
 
     filename_pyh = os.path.join(package_dir, filename_pyh)
     filename_py  = os.path.join(package_dir, filename_py)
-    print filename_py
 
     if os.path.isfile(filename_pyh):
         return filename_pyh
