@@ -2122,7 +2122,7 @@ class Parser(object):
                 msg = 'Found a node without fst member ({})'.format(type(expr))
                 raise PyccelSemanticError(msg)
 
-            if len(exprs)>0:
+            if len(exprs)>0 and not isinstance(rhs, (Application, Lambda)):
                 #case of a function call in the rhs
                 assigns = []
                 exprs = exprs[::-1]
