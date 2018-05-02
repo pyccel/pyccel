@@ -367,10 +367,10 @@ class Assigns(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        stmt = self.stmts[-1]
-        for i in self.stmts[:-1]:
-            stmt.sub(i.lhs, i.rhs)
-        return '{0} := {1}'.format(sstr(stmt.lhs), sstr(stmt.rhs))
+        s=''
+        for i in self.stmts:
+            s = s +'\n{0} := {1}'.format(sstr(i.lhs), sstr(i.rhs))
+        return s
 
     @property
     def stmts(self):
@@ -1957,29 +1957,24 @@ class Return(Basic):
     stmts :represent assign stmts in the case of expression return
     """
 
-    def __new__(cls, expr, stmts = None):
+    def __new__(cls, expr, stmt = None):
+   
+        if stmt and not isinstance(stmt, (Assign, Assigns)):
+            raise TypeError('stmt should only be of type Assign')
 
-        if stmts is None:
-            stmts = []
-        if not isinstance(stmts,list):
-            raise TypeError('stmts should only be of type list')
-        for i in stmts:
-            if not isinstance(i, Assign):
-                raise TypeError('stmts should only be of type Assign')
-
-        return Basic.__new__(cls, expr, stmts)
+        return Basic.__new__(cls, expr, stmt)
 
     @property
     def expr(self):
         return self._args[0]
 
     @property
-    def stmts(self):
+    def stmt(self):
         return self._args[1]
 
     def __getnewargs__(self):
         """used for Pickling self."""
-        args = (self.expr, self.stmts)
+        args = (self.expr, self.stmt)
         return args
 
 
@@ -2909,7 +2904,7 @@ class Random(Function):
 
 # TODO: improve with __new__ from Function and add example
 
-class Sum(Function):
+class SumFunction(Basic):
     """Represents a Sympy Sum Function.
        
        body: Expr
