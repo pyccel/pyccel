@@ -8,7 +8,7 @@ from .core import Range, Len
 from .core import FunctionDef, Return, Assign
 from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Rand,Sum
-from sympy import Symbol
+from sympy import Symbol, Lambda
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
                    acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
 
@@ -62,6 +62,14 @@ def builtin_function(expr, args=None):
         return Sum(*args)
     
     if name == 'lambdify':
+       if isinstance(args, Lambda):
+           expr_ = args.expr
+           expr_ = Return(expr_)
+           expr_.set_fst(expr)
+           f_arguments = args.variables
+           func = FunctionDef('lambda', f_arguments, [], [expr_])
+           return func
+           
        code = compile(args.body[0],'','single')
        g={} 
        eval(code,g)

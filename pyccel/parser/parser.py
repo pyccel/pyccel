@@ -2180,15 +2180,17 @@ class Parser(object):
                         return self._annotate(FunctionCall(func, args), **settings)
                     else:
                         raise NotImplementedError('TODO')
-            rhs = self._annotate(rhs, **settings)
             
+            rhs = self._annotate(rhs, **settings)
                 
             if isinstance(rhs, FunctionDef):
-                #case of using lambdify then the rhs is a functiondef
+                #case of lambdify
+                rhs = rhs.rename(str(expr.lhs))
                 for i in rhs.body:
                     i.set_fst(expr.fst)
-                rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
+                rhs = self._annotate(rhs, **settings)
                 return rhs
+            
             # d_var can be a list of dictionaries
             elif isinstance(rhs, FunctionCall):
                 # ARA: needed for functions defined only with a header
@@ -2537,12 +2539,13 @@ class Parser(object):
             results = expr.expr
             new_vars = []
             assigns = []
+            
 
             if not isinstance(results, (list,Tuple,List)):
                 results = [results]
 
             for result in results:
-                if isinstance(results, Expr) and not isinstance(results, Symbol):
+                if isinstance(result, Expr) and not isinstance(result, Symbol):
                     new_vars += [self.create_variable(result)]
                     assigns += [Assign(new_vars[-1], result)]
                     assigns[-1].set_fst(expr.fst)
@@ -2553,7 +2556,8 @@ class Parser(object):
             else:
                 assigns = [self._annotate(assign, **settings) for assign in assigns]
                 new_vars = [self._annotate(i, **settings) for i in new_vars]
-                return Return(new_vars,results)
+                assigns = Assigns(assigns)
+                return Return(new_vars,assigns)
 
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
@@ -2563,7 +2567,8 @@ class Parser(object):
             kind = 'function'
             decorators = expr.decorators
             funcs = []
-            is_static = False
+            is_static = False 
+            
 
             if cls_name:
                 header = self.get_header(cls_name + """.""" + name)
@@ -2588,7 +2593,6 @@ class Parser(object):
             else:
                 # this for the case of a function without arguments => no header
                 interfaces = [FunctionDef(name, [], [], [])]
-
             for m in interfaces:
                 args = []
                 results = []
@@ -2653,7 +2657,7 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-                body = self._annotate(expr.body, **settings)
+                body = [self._annotate(i, **settings) for i in expr.body]
                 # find return stmt and results
                 returns = self._collect_returns_stmt(body)
                 results = []
@@ -2682,7 +2686,6 @@ class Parser(object):
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
-
                 func = FunctionDef(name, args, results, body,
                                    local_vars=local_vars,
                                    global_vars=global_vars,
