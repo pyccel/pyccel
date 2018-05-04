@@ -2039,7 +2039,6 @@ class Parser(object):
                         return self._annotate(FunctionCall(func, args), **settings)
 
                     else:
-                        # return Function(name)(*args)
                         return func(*args)
 
                 errors.report(UNDEFINED_FUNCTION, symbol=name,

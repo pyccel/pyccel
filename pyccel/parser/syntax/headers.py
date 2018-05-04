@@ -269,7 +269,7 @@ class InterfaceStmt(BasicStmt):
 
           name: str
 
-          args: list of funciton names
+          args: list of function names
 
           """
 
@@ -295,7 +295,6 @@ class MacroArg(BasicStmt):
 
     @property
     def expr(self):
-        optional = self.optional
         if self.optional:
             optional = True
         else:
