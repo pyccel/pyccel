@@ -97,6 +97,7 @@ from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registe
 from pyccel.ast import Macro
 from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
+from pyccel.ast import SumFunction
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -559,7 +560,6 @@ class Parser(object):
                           target += item
             target = set(target)
             target = target.intersection(self.headers.keys())
-#            print(target)
 
             for name in list(target):
                 v = self.headers[name]
@@ -704,7 +704,6 @@ class Parser(object):
     def insert_import(self, expr):
         """."""
         # TODO improve
-
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
 
@@ -958,6 +957,7 @@ class Parser(object):
             self._scope[name]['functions'] = {}
             self._scope[name]['symbolic_functions'] = {}
             self._scope[name]['python_functions'] = {}
+            self._scope[name]['macros'] = {}
         else:
             self._scope.pop(self._current)
             if isinstance(self._current, DottedName):
@@ -1867,12 +1867,17 @@ class Parser(object):
                 dtype = var.dtype
                 return IndexedVariable(name, dtype=dtype).__getitem__(*args)
             else:
-                return IndexedBase(name).__getitem__(*args)
+                return IndexedBase(name).__getitem__(args)
 
 
         elif isinstance(expr, Symbol):
             name = str(expr.name)
             var = self.get_variable(name)
+            if var is None:
+                var = self.get_function(name)
+            if var is None:
+                var = self.get_symbolic_function(name)
+            
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
@@ -1975,7 +1980,6 @@ class Parser(object):
             # ...
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
-
             F = pyccel_builtin_function(expr, args)
             if F:
                 return F
@@ -2084,14 +2088,24 @@ class Parser(object):
 
 
             return expr
+        elif isinstance(expr, Summation):
+            # treatment of the index/indices
+            if isinstance(expr.args[1][0], Symbol):
+                name = str(expr.args[1][0].name)
+                var = self.get_variable(name)
+                target = var
+                if var is None:
+                    target = Variable('int', name, rank=0)
+                    self.insert_variable(target)
+            itr = self._annotate(expr.args[1], **settings)
+            body = self._annotate(expr.args[0], **settings)
+            return SumFunction(body,itr)
 
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
         elif isinstance(expr, (Assign, AugAssign)):
-            rhs = expr.rhs
-            exprs = rhs.atoms(Function)
-            assigns = None
+
             # TODO unset position at the end of this part
             if expr.fst:
                 self._bounding_box = expr.fst.absolute_bounding_box
@@ -2099,23 +2113,36 @@ class Parser(object):
                 msg = 'Found a node without fst member ({})'.format(type(expr))
                 raise PyccelSemanticError(msg)
 
-            if len(exprs)>0 and not isinstance(rhs, (Function, Lambda)):
+            rhs = expr.rhs
+            exprs = []
+            from sympy import preorder_traversal
+            ls = list(preorder_traversal(rhs))
+            ls = ls[1:]
+            for i in ls:
+                if isinstance(i, (Application, Summation)):
+                    exprs += [i]
+            assigns = None
+            if len(exprs)>0 and not isinstance(rhs, Lambda):
                 #case of a function call in the rhs
-
                 assigns = []
-                for i in exprs:
-                    var = self.create_variable(i)
-                    rhs = rhs.subs(i,var)
-                    expr_new = Assign(var,i)
+                exprs = exprs[::-1]
+                for i in range(len(exprs)):
+                    var = self.create_variable(exprs[i])
+                    rhs = rhs.replace(exprs[i], var)
+                    for j in range(i+1,len(exprs)):
+                        exprs[j] = exprs[j].replace(exprs[i], var)
+                    expr_new = Assign(var,exprs[i])
+                    
 
+          
                     # we set the fst to keep track of needed information for errors
                     expr_new.set_fst(expr.fst)
                     assigns.append(expr_new)
 
+              
                 assigns = [self._annotate(i, **settings) for i in assigns]
-
             # check if rhs is a call to a macro
-            if isinstance(rhs, Function):
+            if isinstance(rhs, Application):
                 name = str(type(rhs).__name__)
                 macro = self.get_macro(name)
                 if not macro is None:
@@ -2153,28 +2180,25 @@ class Parser(object):
                         return self._annotate(FunctionCall(func, args), **settings)
                     else:
                         raise NotImplementedError('TODO')
-
-
+            
             rhs = self._annotate(rhs, **settings)
-
-            # TODO said shall we keep this?
+                
             if isinstance(rhs, FunctionDef):
-                #case of using lambdify then the rhs is a functiondef
+                #case of lambdify
+                rhs = rhs.rename(str(expr.lhs))
                 for i in rhs.body:
                     i.set_fst(expr.fst)
-                rhs = self._annotate(rhs.rename(str(expr.lhs)), **settings)
-                raise SystemExit('1979##########')
+                rhs = self._annotate(rhs, **settings)
                 return rhs
-
+            
             # d_var can be a list of dictionaries
-            if isinstance(rhs, FunctionCall):
+            elif isinstance(rhs, FunctionCall):
                 # ARA: needed for functions defined only with a header
                 results = rhs.func.results
                 if results:
                     d_var = [self._infere_type(i, **settings) for i in results]
 
             elif isinstance(rhs, ConstructorCall):
-
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
                 cls = self.get_class(cls_name)
 
@@ -2272,9 +2296,12 @@ class Parser(object):
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = 'double' #TODO improve what datatype shoud we give here
-
+                
                 else:
-                    raise NotImplementedError('TODO')
+                     raise NotImplementedError('TODO')
+
+            elif isinstance(rhs , SumFunction):
+                d_var = self._infere_type(rhs.body, **settings)
 
             else:
                 d_var = self._infere_type(rhs, **settings)
@@ -2510,36 +2537,27 @@ class Parser(object):
         elif isinstance(expr, Return):
 
             results = expr.expr
-            if isinstance(results, (Expr, Symbol)):
-                var = self._annotate(results, **settings)
-                if isinstance(var, Expr) and not isinstance(var, Symbol):
-                    new_var =self.create_variable(var)
-                    stmt = self._annotate(Assign(new_var,var))
-                    if isinstance(stmt, Assigns):
-                        stmt = stmt.stmts
-                        new_var = stmt[-1].lhs
-                    else:
-                        new_var =stmt.lhs
-                        stmt = [stmt]
-                    #in the case of expression, we return an assign also
-                    return Return([new_var],stmt)
-                return Return([var])
-            elif isinstance(results, (list, tuple, Tuple)):
-                ls = []
-                assigns = []
-                for i in results:
-                    var = self._annotate(i, **settings)
-                    if isinstance(var, Expr) and not isinstance(var, Symbol):
-                        new_var =self.create_variable(var)
-                        stmt = self._annotate(Assign(new_var,var))
-                        new_var = stmt.lhs
-                        ls += [new_var]
-                        assigns +=[stmt]
-                    else:
-                        ls += [var]
-                return Return(ls, assigns)
+            new_vars = []
+            assigns = []
+            
+
+            if not isinstance(results, (list,Tuple,List)):
+                results = [results]
+
+            for result in results:
+                if isinstance(result, Expr) and not isinstance(result, Symbol):
+                    new_vars += [self.create_variable(result)]
+                    assigns += [Assign(new_vars[-1], result)]
+                    assigns[-1].set_fst(expr.fst)
+            
+            if len(assigns)==0:
+                results = [self._annotate(result, **settings) for result in results]
+                return Return(results)
             else:
-                raise NotImplementedError('only symbol or iterable are allowed for returns')
+                assigns = [self._annotate(assign, **settings) for assign in assigns]
+                new_vars = [self._annotate(i, **settings) for i in new_vars]
+                assigns = Assigns(assigns)
+                return Return(new_vars,assigns)
 
         elif isinstance(expr, FunctionDef):
             name = str(expr.name)
@@ -2549,7 +2567,8 @@ class Parser(object):
             kind = 'function'
             decorators = expr.decorators
             funcs = []
-            is_static = False
+            is_static = False 
+            
 
             if cls_name:
                 header = self.get_header(cls_name + """.""" + name)
@@ -2574,7 +2593,6 @@ class Parser(object):
             else:
                 # this for the case of a function without arguments => no header
                 interfaces = [FunctionDef(name, [], [], [])]
-
             for m in interfaces:
                 args = []
                 results = []
@@ -2639,8 +2657,7 @@ class Parser(object):
                                 name=str(a_new.name))
 
                 # we annotate the body
-                body = self._annotate(expr.body, **settings)
-
+                body = [self._annotate(i, **settings) for i in expr.body]
                 # find return stmt and results
                 returns = self._collect_returns_stmt(body)
                 results = []
@@ -2669,7 +2686,6 @@ class Parser(object):
                 for var in self.get_variables('parent'):
                     if not var in args + results + local_vars:
                         global_vars += [var]
-
                 func = FunctionDef(name, args, results, body,
                                    local_vars=local_vars,
                                    global_vars=global_vars,
@@ -2709,7 +2725,6 @@ class Parser(object):
 #                        get_func = GetDefaultFunctionArg(a, func)
 #                        # TODO shall we check first that it is not in the namespace?
 #                        self.insert_variable(get_func, name=get_func.namer
-
                 return funcs[0]
             else:
                 funcs = [f.rename(str(f.name) + '_' + str(i)) for (i,
