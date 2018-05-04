@@ -468,6 +468,9 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
+    def _print_SumFunction(self, expr):
+        return str(expr)
+
     def _print_Len(self, expr):
         return self._get_statement('size(%s,1)'%(self._print(expr.arg)))
 
@@ -500,11 +503,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_Max(self, expr):
         args = expr.args
-        if len(args) == 1:
-            arg = args[0]
-            code = 'maxval({0})'.format(self._print(arg))
-        else:
-            raise ValueError("Expecting one argument for the moment.")
+        args = ','.join(self._print(arg) for arg in args)
+        code = 'max({0})'.format(args)
         return self._get_statement(code)
 
     def _print_Dot(self, expr):
@@ -1045,12 +1045,10 @@ class FCodePrinter(CodePrinter):
                     pass
                 elif isinstance(stmt, FunctionDef):
                     functions += [stmt]
-                elif not isinstance(stmt, Return): # for list of Results
+                elif not isinstance(stmt, Return):
                     body.append(stmt)
                 elif isinstance(stmt,Return):
-                    body += stmt.stmts
-#                elif not isinstance(stmt, list): # for list of Results
-#                    body.append(stmt)
+                    body += [stmt]
 
         # ... TODO improve to treat variables that are assigned within blocks: if, etc
         symbols = get_assigned_symbols(expr)
@@ -1098,11 +1096,11 @@ class FCodePrinter(CodePrinter):
         return ''
 
     def _print_Return(self, expr):
-        stmts = ''
-        for i in expr.stmts:
-            stmts += self._print(i)+'\n'
-        stmts +='return'
-        return stmts
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        code +='return'
+        return code
 
     def _print_Del(self, expr):
         # TODO: treate class case

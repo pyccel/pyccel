@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from sympy.core.function import Function
+from sympy.core.function import Application
 from .core import DottedName
 from .core import Import
 from .core import Range, Len
 from .core import FunctionDef, Return, Assign
 from .numpyext import Zeros, Ones
-from .numpyext import Array, Shape, Int, Sum, Rand
-from sympy import Symbol
+from .numpyext import Array, Shape, Int, Rand,Sum
+from sympy import Symbol, Lambda
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
                    acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
 
@@ -35,11 +35,10 @@ math_functions = {
 
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
-
-    if not (isinstance(expr, Function) or isinstance(expr, str)):
+    if not (isinstance(expr, Application) or isinstance(expr, str)):
         raise TypeError('Expecting a string or a Function class')
 
-    if isinstance(expr, Function):
+    if isinstance(expr, Application):
         name = str(type(expr).__name__)
 
     if isinstance(expr, str):
@@ -63,6 +62,14 @@ def builtin_function(expr, args=None):
         return Sum(*args)
     
     if name == 'lambdify':
+       if isinstance(args, Lambda):
+           expr_ = args.expr
+           expr_ = Return(expr_)
+           expr_.set_fst(expr)
+           f_arguments = args.variables
+           func = FunctionDef('lambda', f_arguments, [], [expr_])
+           return func
+           
        code = compile(args.body[0],'','single')
        g={} 
        eval(code,g)
@@ -70,9 +77,10 @@ def builtin_function(expr, args=None):
        code = g[f_name]
        args_ = args.arguments
        expr_ = code(*args_)
-       f_arguments = list(expr.free_symbols)
-       result = Symbol('result')
-       body = [Assign(result,expr_),Return(result)]
+       f_arguments = list(expr_.free_symbols)
+       expr_ = Return(expr_)
+       expr_.set_fst(expr)
+       body = [expr_]
        func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
        return func
 
