@@ -96,6 +96,8 @@ def compile_fortran(filename, compiler, flags,
     if binary is None:
         if not is_module:
             binary = os.path.splitext(os.path.basename(filename))[0]
+        else:
+            binary = ''
 
     o_code = ''
     if not is_module:
@@ -151,6 +153,7 @@ def execute_pyccel(filename,
                    compiler='gfortran',
                    fflags=None,
                    debug=False,
+                   verbose=False,
                    accelerator=None,
                    include=[],
                    libdir=[],
@@ -193,11 +196,13 @@ def execute_pyccel(filename,
     # ... compile fortran code
     output, cmd = compile_fortran(fname, compiler, flags,
                                   binary=binary,
-                                  verbose=False,
+                                  verbose=verbose,
                                   modules=modules,
                                   is_module=codegen.is_module,
                                   libs=libs)
     # ...
+
+    return output, cmd
 
 
 if __name__ == '__main__':

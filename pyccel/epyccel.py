@@ -5,12 +5,32 @@ from pyccel.parser.errors import PyccelError
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
+from pyccel.codegen.utilities import execute_pyccel
 from pyccel.ast import FunctionHeader
 
 import inspect
 import subprocess
 import importlib
 import sys
+
+def get_source_function(func):
+    if not callable(func):
+        raise TypeError('Expecting a callable function')
+
+    lines = inspect.getsourcelines(func)
+    lines = lines[0]
+    # remove indentation if the first line is indented
+    a = lines[0]
+    leading_spaces = len(a) - len(a.lstrip())
+    code = ''
+    for a in lines:
+        if leading_spaces > 0:
+            line = a[leading_spaces:]
+        else:
+            line = a
+        code = '{code}{line}'.format(code=code, line=line)
+
+    return code
 
 
 def compile_fortran(source, modulename, extra_args=''):
@@ -26,6 +46,7 @@ def compile_fortran(source, modulename, extra_args=''):
         f.close()
 
         args = ' -c -m {} {} {}'.format(modulename, filename, extra_args)
+        import sys
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
 
         output = subprocess.check_output(cmd, shell=True)
@@ -35,7 +56,8 @@ def compile_fortran(source, modulename, extra_args=''):
         f.close()
 
 
-def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
+def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
+            d_functions={}):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -56,6 +78,10 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
 
     name: str
         name of the function, if it is given as a string
+
+    d_functions: dict
+        dictionary of used functions, the key is the function name, and the
+        value is a tuple (func, header) where func is a python function.
 
 
     Examples
@@ -133,18 +159,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
 
     # ... get the function source code
     if callable(func):
-        lines = inspect.getsourcelines(func)
-        lines = lines[0]
-        # remove indentation if the first line is indented
-        a = lines[0]
-        leading_spaces = len(a) - len(a.lstrip())
-        code = ''
-        for a in lines:
-            if leading_spaces > 0:
-                line = a[leading_spaces:]
-            else:
-                line = a
-            code = '{code}{line}'.format(code=code, line=line)
+        code = get_source_function(func)
     else:
         code = func
     # ...
@@ -153,6 +168,59 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
         print ('------')
         print (code)
         print ('------')
+
+    # ...
+    code_module = ''
+    if d_functions:
+
+        sep = '-'*40
+        sep = '# {sep}'.format(sep=sep)
+
+        for k, (f,h) in list(d_functions.items()):
+            code_f = get_source_function(f)
+
+            code_module = '{h}\n{f}\n{code}'.format(h=h,
+                                                    f=code_f,
+                                                    code=code_module)
+    # ...
+
+    modules = []
+    extra_args = ''
+
+    # TODO add dependencies other than functions
+    if d_functions:
+        # ... we create a module for dependencies
+        #module_name = 'mod_dep_'+ name
+        module_name = 'mod_pyccel'
+        dep_filename = module_name + '.py'
+        # ...
+
+        # ... export the python code of the module
+        f = open(dep_filename, 'w')
+        for line in code_module:
+            f.write(line)
+        f.close()
+        # ...
+
+        # ... TODO flags
+        settings = {}
+        settings['fflags'] = '-fPIC -O2'
+        output, cmd = execute_pyccel(dep_filename, verbose=False, **settings)
+
+        modules.append(module_name)
+        extra_args = ' mod_pyccel.o '
+        # ...
+
+        # ... add import to initial code
+        f_names = list(d_functions.keys())
+        f_names = ', '.join(f for f in f_names)
+
+        import_stmt = 'from {mod} import {f_names}'.format(mod=module_name,
+                                                          f_names=f_names)
+        code = '{IMPORT}\n{code}'.format(IMPORT=import_stmt, code=code)
+        # ...
+
+    # ...
 
     try:
         # ...
@@ -178,45 +246,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
 
         raise PyccelError('Could not convert to Fortran')
 
-
-#    # ...
-#    filename = '{name}.f90'.format(name=name)
-#    # ...
-#
-#    # ...
-#    def _format_libs(ls):
-#        if not ls:
-#            ls = ''
-#        elif isinstance(ls, (tuple, list)):
-#            ls = ' '.join(i for i in ls)
-#        elif not isinstance(ls, str):
-#            raise TypeError('Expecting a list or a string for libs')
-#        return ls
-#
-#    def _format_modules(ls):
-#        if isinstance(ls, (tuple, list)):
-#            ls = ''.join('{}.o '.format(m) for m in ls)
-#        else:
-#            raise TypeError('Expecting a list/tuple')
-#        return ls
-#    # ...
-#
-#    # TODO improve
-#    flags  = '--quiet -c'
-#
-#    binary = name
-#    compiler = 'f2py'
-#    libs = _format_libs(libs)
-#    deps_o = _format_modules(modules)
-
-    # TODO update compile_fortran args with these ones and then remove this line
-#    cmd = 'f2py {flags} {deps_o} {filename} -m {binary} {libs}'.format(flags=flags,
-#                                                                       filename=filename,
-#                                                                       binary=binary,
-#                                                                       libs=libs,
-#                                                                       deps_o=deps_o)
-
-    output, cmd = compile_fortran(code, name)
+    output, cmd = compile_fortran(code, name, extra_args=extra_args)
 
     if verbose:
         print(cmd)
