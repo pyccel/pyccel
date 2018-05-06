@@ -15,8 +15,9 @@ from textx.export import metamodel_export, model_export
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
-from pyccel.ast import construct_macro, MacroFunction
+from pyccel.ast import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast import MacroSymbol
+from pyccel.ast import DottedName
 
 DEBUG = False
 
@@ -411,27 +412,56 @@ class FunctionMacroStmt(BasicStmt):
         master: str
             master function name
         """
-        self.name = kwargs.pop('name')
+        
+        self.name = tuple(kwargs.pop('name'))
         self.results = kwargs.pop('results')
         self.args = kwargs.pop('args')
-        self.master_name = kwargs.pop('master_name')
+        self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
 
         super(FunctionMacroStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        name = str(self.name)
-        args = self.args.expr
-        master_name = str(self.master_name)
-        master_args = self.master_args.expr
+
+        if len(self.name)>1:
+            name = DottedName(*self.name)
+        else:
+            name = str(self.name[0])
+
+        args = self.args
+        if not (args is None):
+            args = args.expr
+        else:
+            args = []
+
+        if len(self.master_name)==1:
+            master_name = str(self.master_name[0])
+        else:
+            raise NotImplementedError('TODO')
+
+        master_args = self.master_args        
+        if not (master_args is None):
+            master_args = master_args.expr
+        else:
+            master_args = []
 
         results = self.results
-        if not (self.results is None):
-            results = self.results.expr
-
+        if not (results is None):
+            results = results.expr
+        else:
+            results = []
+       
+        if len(args + master_args + results) == 0:
+            return MacroVariable(name, master_name)
+        if not isinstance(name, str):
+            #we treat the other all the names except the last one  as arguments
+            # so that we always have a name of type str
+            args = list(name.name[:-1]) + list(args)
+            name = name.name[-1]
         return MacroFunction(name, args, master_name, master_args,
                              results=results)
+
 
 #################################################
 
@@ -497,5 +527,6 @@ if __name__ == '__main__':
 #    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
 #    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
 #    print(parse(stmts='#$ header macro _dswap(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | x.shape)"))
+#    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | x.shape)"))
+    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
 

@@ -208,9 +208,18 @@ class FCodePrinter(CodePrinter):
         name = 'prog_{0}'.format(self._print(expr.name))
         name = name.replace('.', '_')
         modules = ''
+        mpi = False
+        #we use this to detect of we are using so that we can add
+        # mpi_init and mpi_finalize in the code instruction
+        # TODO should we find a better way to do this? 
+        for i in expr.imports:
+            if i.source=='mpi4py':
+                mpi = True
+            
         imports = '\n'.join(self._print(i) for i in expr.imports)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
+        
         decs    = expr.declarations
         func_in_func = False
         for func in expr.funcs:
@@ -259,6 +268,11 @@ class FCodePrinter(CodePrinter):
                 funcs = 'contains\n{0}'.format(funcs)
             # ...
         decs = '\n'.join(self._print(i) for i in decs)
+        if mpi:
+            #TODO shuold we add them in this place or do a search to put them in the right place
+            body = 'call mpi_init(ierr)\n'+body+'\ncall mpi_finalize(ierr)'
+            decs = decs +'\ninteger :: ierr = -1'
+
         return ('{modules}\n'
                 'program {name}\n'
                 '{imports}\n'
@@ -291,6 +305,8 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source == 'numpy':
             return ''
+        if source == 'mpi4py':
+            return 'use mpi'
 
         code = ''
         for i in expr.target:

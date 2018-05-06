@@ -64,11 +64,17 @@ MacroParameter: INT | ID;
 
 // TODO shall we add also results to the master call?
 FunctionMacroStmt: 
-  'macro' ('(' results=ListResultsStmt ')' ',')? 
-  name=ID '(' args=ListArgsStmt ')' 
-  ':=' 
-  master_name=ID '(' master_args=ListAnnotatedArgsStmt ')'
+  'macro' ('(' results=ListResultsStmt ')' ',')?
+  name+=ID['.'] ('(' args=ListArgsStmt ')')? 
+  ':='
+  master_name+=ID['.'] ('(' master_args=ListAnnotatedArgsStmt ')')?
 ;
+
+//VariableMacroStmt:
+//  'macro' name+=ID['.'] ':=' master_name+=ID['.']
+//;
+
+
 // ****************
 
 STAR: '*';

@@ -8,8 +8,9 @@ from sympy import sympify
 
 from .core import Basic
 from .core import Variable
-from .core import FunctionDef
+from .core import FunctionDef, Interface
 from .core import ClassDef
+from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroSymbol, MacroShape, construct_macro
 
@@ -373,15 +374,18 @@ class MacroFunction(Header):
 
     def __new__(cls, name, args, master, master_args, results=None):
         if not isinstance(name, (str, Symbol)):
-            raise TypeError('name must be of type str')
+            raise TypeError('name must be of type str or Symbol')
 
         # master can be a string or FunctionDef
-        if not isinstance(master, (str, FunctionDef)):
+        if not isinstance(master, (str, FunctionDef, Interface)):
             raise ValueError('Expecting a master name of FunctionDef')
 
         # we sympify everything since a macro is operating on symbols
-        args = [sympify(a) for a in args]
-        master_args = [sympify(a) for a in master_args]
+        if not(args is None):
+            args = [sympify(a) for a in args]
+
+        if not(master_args is None):
+            master_args = [sympify(a) for a in master_args]
 
         if not(results is None):
             results = [sympify(a) for a in results]
@@ -414,17 +418,19 @@ class MacroFunction(Header):
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
         # TODO improve
-        if len(args) == 0:
-            raise NotImplementedError('TODO')
+        d_arguments = {}
+        if len(args) > 0:
+            for (a_macro, arg) in zip(self.arguments, args):
+                # TODO improve name for other Nodes
+                d_arguments[a_macro.name] = arg
+        argument_keys = list(d_arguments.keys())
+        #else:
+            #raise NotImplementedError('TODO')
 
         # ... TODO - must be a dict in order to use keywords argument (with '=')
         #            in the macro definition
-        d_arguments = {}
-        for (a_macro, arg) in zip(self.arguments, args):
-            # TODO improve name for other Nodes
-            d_arguments[a_macro.name] = arg
-        argument_keys = list(d_arguments.keys())
-        # ...
+        
+               # ...
 
         # ... TODO - must be a dict in order to use keywords argument (with '=')
         #            in the macro definition
@@ -483,3 +489,29 @@ class MacroFunction(Header):
             newargs[i] = new
 
         return newargs
+
+class MacroVariable(Header):
+    """."""
+
+    def __new__(cls, name,  master):
+        if not isinstance(name, (str, Symbol, DottedName)):
+            raise TypeError('name must be of type str or DottedName')
+
+    
+        if not isinstance(master, (str, Variable, DottedVariable)):
+            raise ValueError('Expecting a master name of Variable')
+
+        
+        return Basic.__new__(cls, name, master)
+
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def master(self):
+        return self._args[1]
+
+
+
