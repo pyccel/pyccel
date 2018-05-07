@@ -1896,6 +1896,15 @@ class ValuedVariable(Variable):
         return '{0}={1}'.format(name, value)
 
 
+class Constant(ValuedVariable):
+    """
+
+    Examples
+
+    """
+    pass
+
+
 class Argument(Symbol):
     """An abstract Argument data structure.
 
@@ -2911,10 +2920,10 @@ class Random(Function):
 
 class Sum(Function):
     """Represents a Sympy Sum Function.
-       
+
        body: Expr
        Sympy Expr in which the sum will be performed.
-   
+
        iterator:
        a tuple  that containts the index of the sum and it's range.
     """
@@ -2924,19 +2933,19 @@ class Sum(Function):
         if not len(iterator)==3:
              raise ValueError('iterator must be of lenght 3')
         return Basic.__new__(cls, body, iterator,stmts)
-  
+
     @property
     def body(self):
         return self._args[0]
-  
+
     @property
     def iterator(self):
         return self._args[1]
- 
+
     @property
     def stmts(self):
         return self._args[2]
-   
+
 
 class Len(Function):
     """

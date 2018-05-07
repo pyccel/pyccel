@@ -6,11 +6,14 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len
 from .core import FunctionDef, Return, Assign
+from .core import Constant
 from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Sum, Rand
 from sympy import Symbol
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
                    acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
+
+import scipy.constants as sc_constants
 
 math_functions = {
     'Abs': Abs,
@@ -31,6 +34,10 @@ math_functions = {
     'acot': acot,
     'atan2': atan2,
     }
+
+scipy_constants = {
+    'pi': Constant('double', 'pi', value=sc_constants.pi),
+                  }
 
 
 def builtin_function(expr, args=None):
@@ -61,10 +68,10 @@ def builtin_function(expr, args=None):
         return Max(*args)
     if name == 'Sum':
         return Sum(*args)
-    
+
     if name == 'lambdify':
        code = compile(args.body[0],'','single')
-       g={} 
+       g={}
        eval(code,g)
        f_name = str(args.name)
        code = g[f_name]
@@ -130,11 +137,19 @@ def builtin_import(expr):
 
         if target in math_functions.keys():
             return (target, math_functions[target])
+
     elif source == 'math':
 
         target = str(expr.target[0])
+
         if target in math_functions.keys():
             return (target, math_functions[target])
 
-    return (None, None)
+    elif source == 'scipy':
+        # TODO improve: source must be scipy.constants
+        #      - use dynamic import?
+        target = str(expr.target[0])
+        if target in scipy_constants.keys():
+            return (target, scipy_constants[target])
 
+    return (None, None)

@@ -740,10 +740,11 @@ class Parser(object):
                 var = self._scope[self._current]['variables'][name]
         if isinstance(self._current, DottedName):
             if name in self._scope[self._current.name[0]]['variables']:
-                var = self._scope[self._current.name[0]]['variables'
-                        ][name]
+                var = self._scope[self._current.name[0]]['variables'][name]
         if name in self._namespace['variables']:
             var = self._namespace['variables'][name]
+        elif name in self._imports:
+            var = self._imports[name]
         return var
 
     def get_variables(self, source=None):
@@ -1590,13 +1591,13 @@ class Parser(object):
         if isinstance(expr, type(None)):
             return d_var
 
-        elif isinstance(expr, Integer):
+        elif isinstance(expr, (Integer, int)):
             d_var['datatype'] = 'int'
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
 
-        elif isinstance(expr, Float):
+        elif isinstance(expr, (Float, float)):
             d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
@@ -1816,6 +1817,15 @@ class Parser(object):
 
         elif isinstance(expr, (Integer, Float, String)):
             return expr
+
+        elif isinstance(expr, int):
+            return Integer(expr)
+
+        elif isinstance(expr, float):
+            return Float(expr)
+
+        elif isinstance(expr, complex):
+            raise NotImplementedError('TODO: Complex case')
 
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
             return sympify(float(expr))
@@ -2847,6 +2857,9 @@ class Parser(object):
                             # TODO remove: not up to date with Said devs on
                             # scoping
                             self._imports[name] = atom
+                        elif name in self._imports:
+                            errors.report(FOUND_DUPLICATED_IMPORT,
+                                          symbol=name, severity='warning')
                         else:
                             raise NotImplementedError('must report error')
                 else:

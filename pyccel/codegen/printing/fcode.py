@@ -289,7 +289,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO - improve
         # importing of pyccel extensions is not printed
-        if source == 'numpy':
+        if source in ['numpy', 'scipy', 'itertools']:
             return ''
 
         code = ''
@@ -399,6 +399,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
+
+    def _print_Constant(self, expr):
+        return self._print(expr.value)
 
     def _print_ValuedArgument(self, expr):
         name = self._print(expr.name)
