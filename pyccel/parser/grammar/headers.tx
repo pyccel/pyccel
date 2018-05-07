@@ -56,7 +56,7 @@ ListArgsStmt: args*=MacroArg[','];
 ListResultsStmt: args*=ID[','];
 ListAnnotatedArgsStmt: args*=MacroMasterArg[','];
 
-MacroArg: arg=ID (optional='?')?;
+MacroArg: arg=ID ('=' value=MacroParameter)? (optional='?')? ;
 MacroMasterArgBasic: MacroStmt | INT | NUMBER | ID;
 MacroMasterArg: arg=MacroMasterArgBasic ('|' default=MacroMasterArgBasic)?;
 MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;

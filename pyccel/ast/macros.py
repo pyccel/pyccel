@@ -26,7 +26,7 @@ class Macro(AtomicExpr):
 
 
 class MacroSymbol(Symbol):
-    """    """
+    """."""
     def __new__(cls, name, is_optional=False, default=None):
 
         return Basic.__new__(cls, name, is_optional, default)

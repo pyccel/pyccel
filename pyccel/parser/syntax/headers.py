@@ -16,7 +16,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast import construct_macro, MacroFunction, MacroVariable
-from pyccel.ast import MacroSymbol
+from pyccel.ast import MacroSymbol, ValuedArgument
 from pyccel.ast import DottedName
 
 DEBUG = False
@@ -291,6 +291,7 @@ class MacroArg(BasicStmt):
         """
         self.arg = kwargs.pop('arg')
         self.optional = kwargs.pop('optional')
+        self.value = kwargs.pop('value')
 
         super(MacroArg, self).__init__(**kwargs)
 
@@ -300,6 +301,8 @@ class MacroArg(BasicStmt):
             optional = True
         else:
             optional = False
+        if self.value:
+            return ValuedArgument(self.arg, self.value)
 
         return MacroSymbol(self.arg, is_optional=optional)
 
@@ -329,8 +332,8 @@ class MacroMasterArg(BasicStmt):
                 default = default.expr
             else:
                 default = sympify(default)
-            if isinstance(arg, Symbol):
-                arg = MacroSymbol(arg.name, default=default)
+            
+            arg = MacroSymbol(arg.name, default=default)
 
         return arg
 
@@ -528,5 +531,6 @@ if __name__ == '__main__':
 #    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
 #    print(parse(stmts='#$ header macro _dswap(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)'))
 #    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | x.shape)"))
-    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
+#    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
+    print(parse(stmts="#$ header macro _dswap(y=x, incx?) := dswap(x.shape, x, incx | x.shape)"))
 

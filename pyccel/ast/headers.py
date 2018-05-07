@@ -417,23 +417,19 @@ class MacroFunction(Header):
     #       variable to store the result
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
-        # TODO improve
+
         d_arguments = {}
         if len(args) > 0:
+            #TODO reorder the args when we introduce valuedvariables 
+            #so that they are in the same order as the self.arguments
             for (a_macro, arg) in zip(self.arguments, args):
                 # TODO improve name for other Nodes
                 d_arguments[a_macro.name] = arg
         argument_keys = list(d_arguments.keys())
-        #else:
-            #raise NotImplementedError('TODO')
 
         # ... TODO - must be a dict in order to use keywords argument (with '=')
         #            in the macro definition
-        
-               # ...
 
-        # ... TODO - must be a dict in order to use keywords argument (with '=')
-        #            in the macro definition
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
@@ -443,9 +439,7 @@ class MacroFunction(Header):
         # ...
 
         # ... initialize new args with None
-        newargs = []
-        for i in range(0, len(self.master_arguments)):
-            newargs.append(None)
+        newargs = [None]*len(self.master_arguments)
         # ...
 
         for i,a in enumerate(self.master_arguments):

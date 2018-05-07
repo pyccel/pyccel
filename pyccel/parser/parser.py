@@ -1429,6 +1429,7 @@ class Parser(object):
             #      but it is not working for the moment
             f_name = str(stmt.previous.value)
             if len(args) == 0:
+                #case of no a functioncall with no arguments
                 args = ((), )
             func = Function(f_name)(*args)
             parent = stmt.parent
@@ -1693,11 +1694,11 @@ class Parser(object):
             return d_var
 
         elif isinstance(expr, DottedVariable):
-            if isinstance(expr.args[0], DottedVariable):
-                self._current_class = expr.args[0].args[1].cls_base
+            if isinstance(expr.lhs, DottedVariable):
+                self._current_class = expr.lhs.rhs.cls_base
             else:
-                self._current_class = expr.args[0].cls_base
-            d_var = self._infere_type(expr.args[1])
+                self._current_class = expr.lhs.cls_base
+            d_var = self._infere_type(expr.rhs)
             self._current_class = None
             return d_var
 
@@ -1880,7 +1881,7 @@ class Parser(object):
                 var = self.get_function(name)
             if var is None:
                 var = self.get_symbolic_function(name)
-            
+
             if var is None:
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
@@ -1888,35 +1889,35 @@ class Parser(object):
             return var
 
         elif isinstance(expr, DottedVariable):
-            first = self._annotate(expr.args[0])
+            first = self._annotate(expr.lhs)
             attr_name = []
             if first.cls_base:
                 attr_name = [i.name for i in first.cls_base.attributes]
             name = None
-            
-            if isinstance(expr.args[1], Symbol) \
-                and not expr.args[1].name in attr_name:
+
+            if isinstance(expr.rhs, Symbol) \
+                and not expr.rhs.name in attr_name:
                 for i in first.cls_base.methods:
-                    if str(i.name) == expr.args[1].name and 'property' \
+                    if str(i.name) == expr.rhs.name and 'property' \
                         in i.decorators:
                         second = FunctionCall(i, [], kind=i.kind)
                         return DottedVariable(first, second)
 
-            if not isinstance(expr.args[1], Application):
-                
+            if not isinstance(expr.rhs, Application):
+
                 self._current_class = first.cls_base
-                second = self._annotate(expr.args[1], **settings)
+                second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
             else:
-                m_name = str(type(expr.args[1]).__name__)
+                m_name = str(type(expr.rhs).__name__)
 
-                args = [self._annotate(arg, **settings) for arg in expr.args[1].args]
+                args = [self._annotate(arg, **settings) for arg in expr.rhs.args]
                 if args == ((),) or args ==[()]:
-                    args = [] 
+                    args = []
 
                 for i in first.cls_base.methods:
-                    if str(i.name) == m_name:  
-                        second = FunctionCall(i, args, kind=i.kind)   
+                    if str(i.name) == m_name:
+                        second = FunctionCall(i, args, kind=i.kind)
                         break
             return DottedVariable(first, second)
 
@@ -1988,6 +1989,7 @@ class Parser(object):
             else:
                 # here args are sympy symbol
                 args = expr.args
+
             # ...
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
@@ -2125,35 +2127,35 @@ class Parser(object):
 
             rhs = expr.rhs
             exprs = []
-            from sympy import preorder_traversal
-            ls = [rhs]
+            #from sympy import preorder_traversal
+            ls = []
             #ls = list(preorder_traversal(rhs))
-            
-            
-            ls = ls[1:]
-            for i in ls:
-                if isinstance(i, (Application, Summation)):
-                    exprs += [i]
+
+            #TODO improve later
+            #ls = ls[1:]
+            #for i in ls:
+            #    if isinstance(i, (Application, Summation)):
+            #        exprs += [i]
             assigns = None
-            if len(exprs)>0 and not isinstance(rhs, Lambda):
+            #if len(exprs)>0 and not isinstance(rhs, Lambda):
                 #case of a function call in the rhs
-                assigns = []
-                exprs = exprs[::-1]
-                for i in range(len(exprs)):
-                    var = self.create_variable(exprs[i])
-                    rhs = rhs.replace(exprs[i], var)
-                    for j in range(i+1,len(exprs)):
-                        exprs[j] = exprs[j].replace(exprs[i], var)
-                    expr_new = Assign(var,exprs[i])
-                    
+            #    assigns = []
+            #    exprs = exprs[::-1]
+            #    for i in range(len(exprs)):
+            #        var = self.create_variable(exprs[i])
+            #        rhs = rhs.replace(exprs[i], var)
+            #        for j in range(i+1,len(exprs)):
+            #            exprs[j] = exprs[j].replace(exprs[i], var)
+            #        expr_new = Assign(var,exprs[i])
 
-          
+
+
                     # we set the fst to keep track of needed information for errors
-                    expr_new.set_fst(expr.fst)
-                    assigns.append(expr_new)
+            #        expr_new.set_fst(expr.fst)
+            #        assigns.append(expr_new)
 
-              
-                assigns = [self._annotate(i, **settings) for i in assigns]
+
+            #    assigns = [self._annotate(i, **settings) for i in assigns]
             # check if rhs is a call to a macro
             if isinstance(rhs, Application):
                 name = str(type(rhs).__name__)
@@ -2177,7 +2179,7 @@ class Parser(object):
                             _name = a.name
                         else:
                             raise NotImplementedError('TODO')
-                 
+
                         var = self.get_variable(_name)
                         if var is None:
                             errors.report(UNDEFINED_VARIABLE, symbol=_name,
@@ -2193,9 +2195,9 @@ class Parser(object):
                         return self._annotate(FunctionCall(func, args), **settings)
                     else:
                         raise NotImplementedError('TODO')
-            
+
             elif isinstance(rhs, DottedVariable):
-                var = rhs.args[1]
+                var = rhs.rhs
                 if isinstance(var, Application):
                     name = str(type(var).__name__)
                 elif isinstance(var, (IndexedElement, Indexed)):
@@ -2209,7 +2211,7 @@ class Parser(object):
                     if isinstance(macro, MacroVariable):
                         self.insert_variable(master)
                         #TODO should we do this or find a better way
-                        rhs = master 
+                        rhs = master
                     else:
                         name = macro.name
                         master_args = macro.master_arguments
@@ -2224,7 +2226,7 @@ class Parser(object):
                                 _name = a.name
                             else:
                                 raise NotImplementedError('TODO')
-                 
+
                             var = self.get_variable(_name)
                             if var is None:
                                 errors.report(UNDEFINED_VARIABLE, symbol=_name,
@@ -2232,26 +2234,26 @@ class Parser(object):
                                           severity='error', blocker=self.blocking)
                             results.append(var)
                         # ...
-                        args = rhs.args[1].args
+                        args = rhs.rhs.args
                         if args == ((),) or args ==[()]:
                             args = []
-                        args = [rhs.args[0]] + list(args)
+                        args = [rhs.lhs] + list(args)
                         args = [self._annotate(i, **settings) for i in args]
-                        
-                        
+
+
                         args = macro.apply(args, results=results)
                         # TODO treate interface case
-                        
+
                         if isinstance(master, FunctionDef):
                             return self._annotate(FunctionCall(master, args), **settings)
                         else:
                             raise NotImplementedError('TODO')
 
-                        
-                        
-            
+
+
+
             rhs = self._annotate(rhs, **settings)
-                
+
             if isinstance(rhs, FunctionDef):
                 #case of lambdify
                 rhs = rhs.rename(str(expr.lhs))
@@ -2259,7 +2261,7 @@ class Parser(object):
                     i.set_fst(expr.fst)
                 rhs = self._annotate(rhs, **settings)
                 return rhs
-            
+
             # d_var can be a list of dictionaries
             elif isinstance(rhs, FunctionCall):
                 # ARA: needed for functions defined only with a header
@@ -2365,7 +2367,7 @@ class Parser(object):
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = 'double' #TODO improve what datatype shoud we give here
-                
+
                 else:
                      raise NotImplementedError('TODO')
 
@@ -2454,7 +2456,7 @@ class Parser(object):
 
             elif isinstance(lhs, DottedVariable):
                 dtype = d_var.pop('datatype')
-                name = lhs.args[0].name
+                name = lhs.lhs.name
                 if self._current == '__init__':
                     cls_name = str(self.get_variable('self'
                                    ).cls_base.name)
@@ -2462,7 +2464,7 @@ class Parser(object):
                     attributes = cls.attributes
                     parent = cls.parent
                     attributes = list(attributes)
-                    n_name = str(lhs.args[1].name)
+                    n_name = str(lhs.rhs.name)
                     attributes += [Variable(dtype, n_name, **d_var)]
 
                     # update the attributes of the class and push it to the namespace
@@ -2608,7 +2610,7 @@ class Parser(object):
             results = expr.expr
             new_vars = []
             assigns = []
-            
+
 
             if not isinstance(results, (list,Tuple,List)):
                 results = [results]
@@ -2618,7 +2620,7 @@ class Parser(object):
                     new_vars += [self.create_variable(result)]
                     assigns += [Assign(new_vars[-1], result)]
                     assigns[-1].set_fst(expr.fst)
-            
+
             if len(assigns)==0:
                 results = [self._annotate(result, **settings) for result in results]
                 return Return(results)
@@ -2636,8 +2638,8 @@ class Parser(object):
             kind = 'function'
             decorators = expr.decorators
             funcs = []
-            is_static = False 
-            
+            is_static = False
+
 
             if cls_name:
                 header = self.get_header(cls_name + """.""" + name)
@@ -2718,10 +2720,6 @@ class Parser(object):
                             args += additional_args
 
                         args.append(a_new)
-
-                        # TODO add scope and store already declared variables there,
-                        #      then retrieve them
-
                         self.insert_variable(a_new,
                                 name=str(a_new.name))
 
@@ -2763,8 +2761,7 @@ class Parser(object):
                                    kind=kind,
                                    is_static=is_static,
                                    imports=imports,
-                                   decorators=decorators,)
-
+                                   decorators=decorators)
                 if cls_name:
                     cls = self.get_class(cls_name)
                     methods = list(cls.methods) + [func]
