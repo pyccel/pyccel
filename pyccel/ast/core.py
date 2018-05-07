@@ -1815,27 +1815,33 @@ class DottedVariable(AtomicExpr, Boolean):
         return Basic.__new__(cls, args[0], args[1])
 
     @property
-    def args(self):
-        return [self._args[0], self._args[1]]
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
     @property
     def rank(self):
         return self._args[1].rank
+
     @property
     def dtype(self):
         return self._args[1].dtype
 
     @property
     def name(self):
-        if isinstance(self.args[0], DottedVariable):
-            name_0 = self.args[0].name
+        if isinstance(self.lhs, DottedVariable):
+            name_0 = self.lhs.name
         else:
-            name_0 = str(self.args[0])
-        if isinstance(self.args[1], Function):
-            name_1 = str(type(self.args[1]).__name__)
-        elif isinstance(self.args[1], (Symbol, Variable)):
-            name_1 = self.args[1].name
+            name_0 = str(self.lhs)
+        if isinstance(self.rhs, Function):
+            name_1 = str(type(self.rhs).__name__)
+        elif isinstance(self.rhs, Symbol):
+            name_1 = self.rhs.name
         else:
-            name_1 = str(self.args[1])
+            name_1 = str(self.rhs)
         return name_0 + '.' + name_1
 
     def __str__(self):
@@ -1852,7 +1858,7 @@ class DottedVariable(AtomicExpr, Boolean):
     def names(self):
         """Return list of names as strings."""
         ls = []
-        for i in self.args:
+        for i in [self.lhs, self.rhs]:
             if not isinstance(i, DottedVariable):
                 ls.append(str(i))
             else:
@@ -1927,9 +1933,9 @@ class ValuedArgument(Basic):
 
     def __new__(cls, expr, value):
         if isinstance(expr, str):
-            expr = Argument(expr)
-
-        if not isinstance(expr, Argument):
+            expr = Symbol(expr)
+        #TODO should we turn back to Argument
+        if not isinstance(expr, Symbol):
             raise TypeError('Expecting an argument')
 
         return Basic.__new__(cls, expr, value)

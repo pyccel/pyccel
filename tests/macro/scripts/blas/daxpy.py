@@ -20,6 +20,6 @@ b[3] = 2.0
 
 alpha = 2.0
 
-#$ header macro (y), _daxpy(x, y, alpha?, n?, incx?, incy?) := daxpy(n|x.shape, alpha|1, x, incx|1, y, incy|1)
+#$ header macro (y), _daxpy(x, y, alpha=1, n=x.shape, incx=1, incy=1) := daxpy(n, alpha, x, incx, y, incy)
 b = _daxpy(a, b, alpha)
 print(b)
