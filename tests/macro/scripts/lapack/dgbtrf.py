@@ -17,6 +17,6 @@ a[m+1,0:n-1] = -1.0
 info = -1
 ipiv = zeros(n, 'int')
 
-#$ header macro (ab, ipiv, info), dgbtrf_v1(ab, kl, ku, m?, n?, ldab?) := dgbtrf(m|ab.shape[1], n|ab.shape[1], kl, ku, ab, ldab|ab.shape[0], ipiv, info)
+#$ header macro (ab, ipiv, info), dgbtrf_v1(ab, kl, ku, m=ab.shape[1], n=ab.shape[1], ldab=ab.shape[0]) := dgbtrf(m, n, kl, ku, ab, ldab, ipiv, info)
 
 a, ipiv, info = dgbtrf_v1(a, ml, mu)

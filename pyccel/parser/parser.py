@@ -1444,7 +1444,13 @@ class Parser(object):
                 return func
 
         elif isinstance(stmt, CallArgumentNode):
-            return self._fst_to_ast(stmt.value)
+            target = stmt.target
+            val = self._fst_to_ast(stmt.value)
+            if target:
+                target = self._fst_to_ast(target)
+                return ValuedArgument(target, val)
+            
+            return val
 
         elif isinstance(stmt, ForNode):
             iterator = self._fst_to_ast(stmt.iterator)
@@ -1792,6 +1798,9 @@ class Parser(object):
                 d_var_left['shape'] = tuple(map(operator.add,
                         d_var_right['shape'], d_var_left['shape']))
             return d_var_left
+        elif isinstance(expr, ValuedArgument):
+            return self._infere_type(expr.value)
+        
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -1909,6 +1918,23 @@ class Parser(object):
                 second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
             else:
+                name = str(type(expr.rhs).__name__)
+                macro = self.get_macro(name)
+                if not(macro is None):
+                    master = macro.master
+                    name = macro.name
+                    master_args = macro.master_arguments
+                    args = expr.rhs.args
+                    if args == ((),) or args ==[()]:
+                        args = []
+                    args = [expr.lhs] + list(args)
+                    args = [self._annotate(i, **settings) for i in args]
+                    args = macro.apply(args)
+                    if isinstance(master, FunctionDef):
+                        return self._annotate(FunctionCall(master, args), **settings)
+                    else:
+                        raise NotImplementedError('TODO')
+
                 m_name = str(type(expr.rhs).__name__)
 
                 args = [self._annotate(arg, **settings) for arg in expr.rhs.args]
@@ -2206,7 +2232,7 @@ class Parser(object):
                     name = str(var.name)
 
                 macro = self.get_macro(name)
-                if macro:
+                if not(macro is None):
                     master = macro.master
                     if isinstance(macro, MacroVariable):
                         self.insert_variable(master)
@@ -3032,6 +3058,8 @@ class Parser(object):
                     # TODO -> Said: must handle interface
             expr = MacroVariable(expr.name, var)
             self.insert_macro(expr)
+            return expr
+        elif isinstance(expr, ValuedArgument):
             return expr
 
         else:

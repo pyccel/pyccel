@@ -270,8 +270,9 @@ class FCodePrinter(CodePrinter):
         decs = '\n'.join(self._print(i) for i in decs)
         if mpi:
             #TODO shuold we add them in this place or do a search to put them in the right place
-            body = 'call mpi_init(ierr)\n'+body+'\ncall mpi_finalize(ierr)'
-            decs = decs +'\ninteger :: ierr = -1'
+            body = 'call mpi_init(ierr)\n'+'\nallocate(status(0:-1 + mpi_status_size)) \n status = 0'+body+'\ncall mpi_finalize(ierr)'
+            
+            decs = decs +'\ninteger :: ierr = -1' + '\n integer, allocatable :: status (:)'
 
         return ('{modules}\n'
                 'program {name}\n'
@@ -558,6 +559,12 @@ class FCodePrinter(CodePrinter):
         code = '{}'.format(self._print(shape))
         return self._get_statement(code)
     # ...
+    def _print_MacroType(self, expr):
+        return 'MPI_INT'
+
+    def _print_MacroCount(self, expr):
+        from operator import mul
+        return str(reduce(mul, expr.argument.shape))
 
     def _print_Declare(self, expr):
         # ... ignored declarations

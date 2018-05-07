@@ -8,11 +8,12 @@ from sympy import sympify
 
 from .core import Basic
 from .core import Variable
+from .core import ValuedArgument
 from .core import FunctionDef, Interface
 from .core import ClassDef
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
-from .macros import Macro, MacroSymbol, MacroShape, construct_macro
+from .macros import Macro, MacroShape, construct_macro
 
 class Header(Basic):
     pass
@@ -417,68 +418,90 @@ class MacroFunction(Header):
     #       variable to store the result
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
-
+   
+        
         d_arguments = {}
         if len(args) > 0:
             #TODO reorder the args when we introduce valuedvariables 
             #so that they are in the same order as the self.arguments
-            for (a_macro, arg) in zip(self.arguments, args):
-                # TODO improve name for other Nodes
-                d_arguments[a_macro.name] = arg
-        argument_keys = list(d_arguments.keys())
+            sorted_args = []
+            unsorted_args = []
+            j = -1
+            for ind, i in enumerate(args):
+                if not isinstance(i, ValuedArgument):
+                    sorted_args.append(i)
+                else:
+                    j=ind
+                    break
+            if j>0:
+                unsorted_args = args[j:]
+                for i in unsorted_args:
+                    if not isinstance(i, ValuedArgument):
+                        raise ValueError('variable not allowed after an optional argument')
 
-        # ... TODO - must be a dict in order to use keywords argument (with '=')
-        #            in the macro definition
+            for i in self.arguments[len(sorted_args):]:
+                if not isinstance(i, ValuedArgument):
+                    raise ValueError('variable not allowed after an optional argument')
+       
+             
 
+            for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
+                d_arguments[arg.name] = val
+
+            d_unsorted_args = {}
+            for arg in self.arguments[len(sorted_args):]:
+                d_unsorted_args[arg.name] = arg.value
+            
+            for arg in unsorted_args:
+                if arg.name in d_unsorted_args.keys():
+                    d_unsorted_args[arg.name] = arg.value
+                else:
+                    raise ValueError('Unknown valued argument')
+            d_arguments.update(d_unsorted_args)
+            for i in d_arguments.keys():
+                arg = d_arguments[i]
+                if isinstance(arg, Macro):
+                    d_arguments[i] = construct_macro(arg.name,
+                                      d_arguments[arg.argument.name])
+                    if isinstance(arg, MacroShape):
+                        d_arguments[i]._index = arg.index
+            
+                
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
                 # TODO improve name for other Nodes
                 d_results[r_macro.name] = r
-        result_keys = list(d_results.keys())
         # ...
 
         # ... initialize new args with None
         newargs = [None]*len(self.master_arguments)
         # ...
+        argument_keys = d_arguments.keys()
+        result_keys = d_results.keys()
+        for i,arg in enumerate(self.master_arguments):
+            
+            if isinstance(arg, Symbol):
+                if arg.name in argument_keys:
+                    new = d_arguments[arg.name]
 
-        for i,a in enumerate(self.master_arguments):
-            if isinstance(a, Macro):
-                new = construct_macro(a.name,
-                                      d_arguments[a.argument.name])
-                # TODO improve
-                #      otherwise, we get the following error
-                # TypeError: __new__() got multiple values for argument 'index'
-                if isinstance(new, MacroShape):
-                    new._index = a.index
-
-            elif isinstance(a, MacroSymbol):
-                if a.name in argument_keys:
-                    new = d_arguments[a.name]
-
-                elif a.name in result_keys:
-                    new = d_results[a.name]
-
-                elif not(a.default is None):
-                    default = a.default
-                    if isinstance(default, Macro):
-                        new = construct_macro(default.name,
-                                              d_arguments[default.argument.name])
-                        # TODO improve
-                        #      otherwise, we get the following error
-                        # TypeError: __new__() got multiple values for argument 'index'
-                        if isinstance(new, MacroShape):
-                            new._index = default.index
-
-                    else:
-                        new = default
-
+                elif arg.name in result_keys:
+                    new = d_results[arg.name]
                 else:
-                    raise NotImplementedError('TODO')
-
-            else:
-                # TODO improve
-                new = a
+                    new = arg
+               #TODO uncomment later
+               #     raise ValueError('Unknown variable name')
+            elif isinstance(arg, Macro):
+                if arg.argument.name in argument_keys:
+                    new = d_arguments[arg.argument.name]
+                elif arg.argument.name in result_keys:
+                    new = d_results[arg.argument.name]
+                else:
+                    raise ValueError('Unkonwn variable name')
+ 
+                new = construct_macro(arg.name, new)
+                if isinstance(arg, MacroShape):
+                        new._index = arg.index
 
             newargs[i] = new
 

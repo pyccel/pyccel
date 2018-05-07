@@ -1933,9 +1933,9 @@ class ValuedArgument(Basic):
 
     def __new__(cls, expr, value):
         if isinstance(expr, str):
-            expr = Argument(expr)
-
-        if not isinstance(expr, Argument):
+            expr = Symbol(expr)
+        #TODO should we turn back to Argument
+        if not isinstance(expr, Symbol):
             raise TypeError('Expecting an argument')
 
         return Basic.__new__(cls, expr, value)

@@ -13,6 +13,6 @@ a[3] = 5.0
 
 alpha = 2.0
 
-#$ header macro (x), _dscal(alpha, x, n?, incx?) := dscal(n|x.shape, alpha, x, incx|1)
+#$ header macro (x), _dscal(alpha, x, n=x.shape, incx=1) := dscal(n, alpha, x, incx)
 a = _dscal(alpha, a)
 print(a)

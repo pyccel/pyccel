@@ -16,7 +16,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast import construct_macro, MacroFunction, MacroVariable
-from pyccel.ast import MacroSymbol, ValuedArgument
+from pyccel.ast import ValuedArgument
 from pyccel.ast import DottedName
 
 DEBUG = False
@@ -290,96 +290,22 @@ class MacroArg(BasicStmt):
         """
         """
         self.arg = kwargs.pop('arg')
-        self.optional = kwargs.pop('optional')
-        self.value = kwargs.pop('value')
+        self.value = kwargs.pop('value',None)
 
         super(MacroArg, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        if self.optional:
-            optional = True
-        else:
-            optional = False
-        if self.value:
-            return ValuedArgument(self.arg, self.value)
-
-        return MacroSymbol(self.arg, is_optional=optional)
-
-class MacroMasterArg(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.arg = kwargs.pop('arg')
-        self.default = kwargs.pop('default', None)
-
-        super(MacroMasterArg, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        arg = self.arg
-        default = self.default
-        if isinstance(arg, MacroStmt):
-            if not(self.default is None):
-                raise ValueError('No choice is allowed together with a MacroStmt')
-
-            arg = arg.expr
-        else:
-            arg = Symbol(str(arg))
-            if isinstance(default, MacroStmt):
-                default = default.expr
+        arg = Symbol(str(self.arg))
+        value = self.value
+        if not(value is None): 
+            if isinstance(value, MacroStmt):
+                value = value.expr
             else:
-                default = sympify(default)
-            
-            arg = MacroSymbol(arg.name, default=default)
-
+                value = sympify(str(value))
+            return ValuedArgument(arg, value)
         return arg
 
-class ListArgsStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
-
-        super(ListArgsStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        args = [a.expr for a in self.args]
-        return args
-
-class ListResultsStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
-
-        super(ListResultsStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        return self.args
-
-class ListAnnotatedArgsStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
-
-        super(ListAnnotatedArgsStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        args = [a.expr for a in self.args]
-        return args
 
 class MacroStmt(BasicStmt):
     """."""
@@ -417,10 +343,11 @@ class FunctionMacroStmt(BasicStmt):
         """
         
         self.name = tuple(kwargs.pop('name'))
-        self.results = kwargs.pop('results')
+        self.results = kwargs.pop('results',None)
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
+
 
         super(FunctionMacroStmt, self).__init__(**kwargs)
 
@@ -432,38 +359,41 @@ class FunctionMacroStmt(BasicStmt):
         else:
             name = str(self.name[0])
 
-        args = self.args
-        if not (args is None):
-            args = args.expr
-        else:
-            args = []
+        args = []
+        for i in self.args:
+            if isinstance(i, MacroArg):
+                args.append(i.expr)
+            else:
+                raise TypeError('argument must be of type MacroArg')
+     
 
         if len(self.master_name)==1:
             master_name = str(self.master_name[0])
         else:
             raise NotImplementedError('TODO')
 
-        master_args = self.master_args        
-        if not (master_args is None):
-            master_args = master_args.expr
-        else:
-            master_args = []
+        master_args = []
+        for i in self.master_args:
+            if isinstance(i, MacroStmt):
+                master_args.append(i.expr)
+            else:
+                master_args.append(Symbol(str(i)))       
+       
 
         results = self.results
-        if not (results is None):
-            results = results.expr
-        else:
+        if (results is None):
             results = []
+
        
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
+
         if not isinstance(name, str):
             #we treat the other all the names except the last one  as arguments
             # so that we always have a name of type str
             args = list(name.name[:-1]) + list(args)
             name = name.name[-1]
-        return MacroFunction(name, args, master_name, master_args,
-                             results=results)
+        return MacroFunction(name, args, master_name, master_args, results=results)
 
 
 #################################################
@@ -479,12 +409,8 @@ hdr_classes = [Header, TypeHeader,
                VariableHeaderStmt,
                MetavarHeaderStmt,
                InterfaceStmt,
-               ListArgsStmt,
-               ListResultsStmt,
-               ListAnnotatedArgsStmt,
                MacroStmt,
                MacroArg,
-               MacroMasterArg,
                FunctionMacroStmt]
 
 def parse(filename=None, stmts=None, debug=False):
@@ -513,6 +439,7 @@ def parse(filename=None, stmts=None, debug=False):
     else:
         return stmts
 
+
 ######################
 if __name__ == '__main__':
 #    print(parse(stmts='#$ header variable x :: int'))
@@ -524,13 +451,13 @@ if __name__ == '__main__':
 #    print(parse(stmts="#$ header metavar module_name='mpi'"))
 #    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
 #    print(parse(stmts='#$ header function _f(int, int [:])'))
-#    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
-#    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
-#    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
-#    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
-#    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
-#    print(parse(stmts='#$ header macro _dswap(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)'))
-#    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | x.shape)"))
-#    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
-    print(parse(stmts="#$ header macro _dswap(y=x, incx?) := dswap(x.shape, x, incx | x.shape)"))
+    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
+    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
+    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
+    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
+    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
+    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
+    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
+    print(parse(stmts="#$ header macro _dswap(y=x, incx=y.shape) := dswap(y.shape, y, incx)"))
 
