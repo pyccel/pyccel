@@ -5,7 +5,7 @@ rank = -1
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 
-data = [0,0]
+
 
 if rank == 0:
     data = [7,4]

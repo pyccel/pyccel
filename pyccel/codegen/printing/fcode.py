@@ -560,7 +560,15 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
     # ...
     def _print_MacroType(self, expr):
-        return 'MPI_INT'
+        dtype = self._print(expr.argument.dtype)
+        if dtype == 'integer':
+            return 'MPI_INT'
+        elif dtype == 'double':
+            return 'MPI_DOUBLE'
+        elif dtype == 'float':
+            return 'MPI_FLOAT'
+        else:
+            raise NotImplementedError('TODO')
 
     def _print_MacroCount(self, expr):
         from operator import mul
