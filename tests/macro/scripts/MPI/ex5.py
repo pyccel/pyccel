@@ -28,15 +28,15 @@ color = rank_in_world % two
 
 newcomm = -1
 
-newcomm = comm.split(color, key)
+newcomm = comm.Split(color, key)
 
 # Broadcast of the message by the rank process master of
 # each communicator to the processes of its group
-newcomm.mpi_bcast(a, master)
+newcomm.bcast(a, master)
 
 print("> processor ", rank_in_world, " has a = ", a)
 
 # Destruction of the communicators
-newcomm.free()
+newcomm.Free()
 
 
