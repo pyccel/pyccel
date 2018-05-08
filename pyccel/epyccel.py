@@ -8,6 +8,8 @@ from pyccel.codegen import Codegen
 from pyccel.codegen.utilities import execute_pyccel
 from pyccel.ast import FunctionHeader
 
+from collections import OrderedDict
+
 import inspect
 import subprocess
 import importlib
@@ -57,7 +59,7 @@ def compile_fortran(source, modulename, extra_args=''):
 
 
 def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
-            d_functions={}):
+            context=None):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -79,9 +81,9 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
     name: str
         name of the function, if it is given as a string
 
-    d_functions: dict
-        dictionary of used functions, the key is the function name, and the
-        value is a tuple (func, header) where func is a python function.
+    context: ContextPyccel, list/tuple
+        a Pyccel context for user defined functions and other dependencies
+        needed to compile func. it also be a list/tuple of ContextPyccel
 
 
     Examples
@@ -169,58 +171,30 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
         print (code)
         print ('------')
 
-    # ...
-    code_module = ''
-    if d_functions:
-
-        sep = '-'*40
-        sep = '# {sep}'.format(sep=sep)
-
-        for k, (f,h) in list(d_functions.items()):
-            code_f = get_source_function(f)
-
-            code_module = '{h}\n{f}\n{code}'.format(h=h,
-                                                    f=code_f,
-                                                    code=code_module)
-    # ...
-
-    modules = []
     extra_args = ''
 
-    # TODO add dependencies other than functions
-    if d_functions:
-        # ... we create a module for dependencies
-        #module_name = 'mod_dep_'+ name
-        module_name = 'mod_pyccel'
-        dep_filename = module_name + '.py'
-        # ...
+    if context:
+        if isinstance(context, ContextPyccel):
+            context = [context]
+        elif isinstance(context, (list, tuple)):
+            for i in context:
+                assert(isinstance(i, ContextPyccel))
+        else:
+            raise TypeError('Expecting a ContextPyccel or list/tuple of ContextPyccel')
 
-        # ... export the python code of the module
-        f = open(dep_filename, 'w')
-        for line in code_module:
-            f.write(line)
-        f.close()
-        # ...
+        imports = []
+        names_o = []
+        for i in context:
+            names_o.append('{name}.o'.format(name=i.name))
+            imports.append(i.imports)
 
-        # ... TODO flags
-        settings = {}
-        settings['fflags'] = '-fPIC -O2'
-        output, cmd = execute_pyccel(dep_filename, verbose=False, **settings)
-
-        modules.append(module_name)
-        extra_args = ' mod_pyccel.o '
+        extra_args = ' '.join(i for i in names_o)
+        imports = '\n'.join(i for i in imports)
         # ...
 
         # ... add import to initial code
-        f_names = list(d_functions.keys())
-        f_names = ', '.join(f for f in f_names)
-
-        import_stmt = 'from {mod} import {f_names}'.format(mod=module_name,
-                                                          f_names=f_names)
-        code = '{IMPORT}\n{code}'.format(IMPORT=import_stmt, code=code)
+        code = '{imports}\n{code}'.format(imports=imports, code=code)
         # ...
-
-    # ...
 
     try:
         # ...
@@ -232,7 +206,6 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
 
         codegen = Codegen(ast, name)
         code = codegen.doprint()
-#        codegen.export()
         # ...
 
         # reset Errors singleton
@@ -268,3 +241,128 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
     f = getattr(module, name)
 
     return f
+
+
+# TODO check what we are inserting
+class ContextPyccel(object):
+    """Class for interactive use of Pyccel. It can be used within an IPython
+    session, Jupyter Notebook or ipyccel command line."""
+    def __init__(self, name):
+        self._name = 'mod_{}'.format(name)
+        self._constants = OrderedDict()
+        self._functions = OrderedDict()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def constants(self):
+        return self._constants
+
+    @property
+    def functions(self):
+        return self._functions
+
+    def __str__(self):
+        # line separator
+        sep = '# ' + '.'*30 + '\n'
+
+        # ... constants
+        # TODO remove # if we want to export constants too
+        constants = '\n'.join('#{k} = {v}'.format(k=k,v=v) for k,v in list(self.constants.items()))
+        # ...
+
+        # ... functions
+        functions = ''
+        for k, (f,h) in list(self.functions.items()):
+            code_f = get_source_function(f)
+
+            functions = '{h}\n{f}\n{functions}'.format(h=h, f=code_f, functions=functions)
+        # ...
+
+        code = '{sep}{constants}\n{sep}{functions}'.format(sep=sep,
+                                                           constants=constants,
+                                                           functions=functions)
+
+        return code
+
+    def insert_constant(self, d, value=None):
+        """Inserts constants in the namespace.
+
+        d: str, dict
+            an identifier string or a dictionary of the form {'a': value_a, 'b': value_b} where `a` and
+            `b` are the constants identifiers and value_a, value_b their
+            associated values.
+
+        value: int, float, complex, str
+            value used if d is a string
+
+        """
+        if isinstance(d, str):
+            if value is None:
+                raise ValueError('Expecting a not None value')
+
+            self._constants[d] = value
+
+        elif isinstance(d, (dict, OrderedDict)):
+            for k,v in list(d.items()):
+                self._constants[k] = v
+
+        else:
+            raise ValueError('Expecting d to be a string or dict/OrderedDict')
+
+
+    def insert_function(self, func, types, kind='function', results=None):
+        """Inserts a function in the namespace."""
+        # function name
+        name = func.__name__
+
+        # ... construct a header from d_types
+        assert(isinstance(types, (list, tuple)))
+
+        types = ', '.join('{}'.format(i) for i in types)
+
+        header = '#$ header {kind} {name}'.format(name=name, kind=kind)
+        header = '{header}({types})'.format(header=header, types=types)
+
+        if results:
+            results = ', '.join('{}'.format(i) for i in results)
+            header = '{header} results({results})'.format(header=header, results=results)
+        # ...
+
+        self._functions[name] = (func, header)
+
+    # TODO add other things to import apart from functions
+    @property
+    def imports(self):
+        """Returns available imports from the context as a string."""
+        f_names = list(self.functions.keys())
+        f_names = ', '.join(f for f in f_names)
+
+        import_stmt = 'from {mod} import {f_names}'.format(mod=self.name,
+                                                          f_names=f_names)
+
+        return import_stmt
+
+    def compile(self, **settings):
+        """Convert to Fortran and compile the context."""
+        code = self.__str__()
+
+        # ... export the python code of the module
+        filename = '{}.py'.format(self.name)
+        f = open(filename, 'w')
+        for line in code:
+            f.write(line)
+        f.close()
+        # ...
+
+        # ...
+        verbose = settings.pop('verbose', False)
+
+        if not('fflags' in list(settings.keys())):
+            settings['fflags'] = '-fPIC -O2'
+        # ...
+
+        output, cmd = execute_pyccel(filename, verbose=verbose, **settings)
+        return output, cmd
