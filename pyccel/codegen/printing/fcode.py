@@ -411,6 +411,14 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
+        import numpy
+        shape = numpy.shape(expr)
+        if len(shape)>1:
+            import functools
+            import operator
+            arg = functools.reduce(operator.concat, expr)
+            elements = ','.join(self._print(i) for i in arg)
+            return 'reshape((/ '+ elements + ' /), '+ self._print(Tuple(*shape)) + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)
 
@@ -563,16 +571,36 @@ class FCodePrinter(CodePrinter):
         dtype = self._print(expr.argument.dtype)
         if dtype == 'integer':
             return 'MPI_INT'
-        elif dtype == 'double':
+        elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'float':
+        elif dtype == 'real(kind=4)':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
 
     def _print_MacroCount(self, expr):
+        var = expr.argument
+        if isinstance(var, Variable):
+            shape = var.shape
+        elif isinstance(var, IndexedElement):
+            shape = []
+            for (s, i) in zip(var.base.shape, var.indices):
+                if isinstance(i, Slice):
+                    if i.start is None and i.end is None:
+                        shape.append(s)
+                    elif i.start is None:
+                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
+                            shape.append(i.end)
+                    elif i.end is None:
+                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
+                            shape.append(s-i.start)
+        else:
+            raise NotImplementedError('TODO')
+
+        if shape is None or len(shape)==0:
+            return '1'
         from operator import mul
-        return str(reduce(mul, expr.argument.shape))
+        return str(reduce(mul, shape ))
 
     def _print_Declare(self, expr):
         # ... ignored declarations

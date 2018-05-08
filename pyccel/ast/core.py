@@ -3293,6 +3293,8 @@ class IndexedVariable(IndexedBase):
     @property
     def name(self):
         return self._args[0]
+ 
+  
 
     # TODO what about kw_args in __new__?
     def clone(self, name):

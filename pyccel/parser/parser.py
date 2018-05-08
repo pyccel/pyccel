@@ -1852,6 +1852,7 @@ class Parser(object):
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
             # an indexed variable is only defined if the associated variable is in
             # the namespace
+            #TODO we don't actualy pass by this condition should we remove it and use the other ?
             name = str(expr.name)
             var = self.get_variable(name)
             if var is None:
@@ -1860,9 +1861,10 @@ class Parser(object):
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
             dtype = var.dtype
+            shape = var.shape
 
             # TODO add shape
-            return IndexedVariable(name, dtype=dtype)
+            return IndexedVariable(name, dtype=dtype, shape = shape)
 
         elif isinstance(expr, (IndexedElement, Indexed)):
             name = str(expr.base)
@@ -1878,7 +1880,8 @@ class Parser(object):
             # if not possible we use symbolic objects
             if hasattr(var, 'dtype'):
                 dtype = var.dtype
-                return IndexedVariable(name, dtype=dtype).__getitem__(*args)
+                shape = var.shape
+                return IndexedVariable(name, dtype=dtype, shape=shape).__getitem__(*args)
             else:
                 return IndexedBase(name).__getitem__(args)
 
@@ -2250,6 +2253,8 @@ class Parser(object):
                             _name = None
                             if isinstance(a, Symbol):
                                 _name = a.name
+                            elif isinstance(a, Indexed):
+                                _name = str(a.base)
                             else:
                                 raise NotImplementedError('TODO')
 
