@@ -1916,10 +1916,16 @@ class Parser(object):
                         return DottedVariable(first, second)
 
             if not isinstance(expr.rhs, Application):
+                macro = self.get_macro(expr.rhs.name)
+                if macro:
+                    return macro.master
 
                 self._current_class = first.cls_base
                 second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
+                macro = self.get_macro(second.name)
+                if macro:
+                    return macro.master
             else:
                 name = str(type(expr.rhs).__name__)
                 macro = self.get_macro(name)
