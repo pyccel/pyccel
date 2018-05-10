@@ -1,3 +1,4 @@
+# coding: utf-8
 
 from pyccel.parser.syntax.headers import parse
 from pyccel.parser.errors import Errors
