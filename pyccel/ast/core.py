@@ -360,17 +360,22 @@ class Assigns(Basic):
     """
 
     def __new__(cls, assigns):
+             ls = []
              for i in assigns:
-                 if not isinstance(i, Assign):
+                 if isinstance(i,Assigns):
+                     ls += i.stmts
+                 elif isinstance(i, Assign):
+                     ls += [i]
+                 else:
                      raise TypeError('assigns object must contain a list of assign stmts')
-             return Basic.__new__(cls, assigns)
+             return Basic.__new__(cls, ls)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        stmt = self.stmts[-1]
-        for i in self.stmts[:-1]:
-            stmt.sub(i.lhs, i.rhs)
-        return '{0} := {1}'.format(sstr(stmt.lhs), sstr(stmt.rhs))
+        s=''
+        for i in self.stmts:
+            s = s +'\n{0} := {1}'.format(sstr(i.lhs), sstr(i.rhs))
+        return s
 
     @property
     def stmts(self):
@@ -1810,27 +1815,33 @@ class DottedVariable(AtomicExpr, Boolean):
         return Basic.__new__(cls, args[0], args[1])
 
     @property
-    def args(self):
-        return [self._args[0], self._args[1]]
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
     @property
     def rank(self):
         return self._args[1].rank
+
     @property
     def dtype(self):
         return self._args[1].dtype
 
     @property
     def name(self):
-        if isinstance(self.args[0], DottedVariable):
-            name_0 = self.args[0].name
+        if isinstance(self.lhs, DottedVariable):
+            name_0 = self.lhs.name
         else:
-            name_0 = str(self.args[0])
-        if isinstance(self.args[1], Function):
-            name_1 = str(type(self.args[1]).__name__)
-        elif isinstance(self.args[1], (Symbol, Variable)):
-            name_1 = self.args[1].name
+            name_0 = str(self.lhs)
+        if isinstance(self.rhs, Function):
+            name_1 = str(type(self.rhs).__name__)
+        elif isinstance(self.rhs, Symbol):
+            name_1 = self.rhs.name
         else:
-            name_1 = str(self.args[1])
+            name_1 = str(self.rhs)
         return name_0 + '.' + name_1
 
     def __str__(self):
@@ -1847,7 +1858,7 @@ class DottedVariable(AtomicExpr, Boolean):
     def names(self):
         """Return list of names as strings."""
         ls = []
-        for i in self.args:
+        for i in [self.lhs, self.rhs]:
             if not isinstance(i, DottedVariable):
                 ls.append(str(i))
             else:
@@ -1931,9 +1942,9 @@ class ValuedArgument(Basic):
 
     def __new__(cls, expr, value):
         if isinstance(expr, str):
-            expr = Argument(expr)
-
-        if not isinstance(expr, Argument):
+            expr = Symbol(expr)
+        #TODO should we turn back to Argument
+        if not isinstance(expr, Symbol):
             raise TypeError('Expecting an argument')
 
         return Basic.__new__(cls, expr, value)
@@ -1966,29 +1977,24 @@ class Return(Basic):
     stmts :represent assign stmts in the case of expression return
     """
 
-    def __new__(cls, expr, stmts = None):
+    def __new__(cls, expr, stmt = None):
+   
+        if stmt and not isinstance(stmt, (Assign, Assigns)):
+            raise TypeError('stmt should only be of type Assign')
 
-        if stmts is None:
-            stmts = []
-        if not isinstance(stmts,list):
-            raise TypeError('stmts should only be of type list')
-        for i in stmts:
-            if not isinstance(i, Assign):
-                raise TypeError('stmts should only be of type Assign')
-
-        return Basic.__new__(cls, expr, stmts)
+        return Basic.__new__(cls, expr, stmt)
 
     @property
     def expr(self):
         return self._args[0]
 
     @property
-    def stmts(self):
+    def stmt(self):
         return self._args[1]
 
     def __getnewargs__(self):
         """used for Pickling self."""
-        args = (self.expr, self.stmts)
+        args = (self.expr, self.stmt)
         return args
 
 
@@ -2918,7 +2924,7 @@ class Random(Function):
 
 # TODO: improve with __new__ from Function and add example
 
-class Sum(Function):
+class SumFunction(Basic):
     """Represents a Sympy Sum Function.
 
        body: Expr
@@ -3296,6 +3302,8 @@ class IndexedVariable(IndexedBase):
     @property
     def name(self):
         return self._args[0]
+ 
+  
 
     # TODO what about kw_args in __new__?
     def clone(self, name):

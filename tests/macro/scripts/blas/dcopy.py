@@ -11,6 +11,6 @@ a[1] = 3.0
 a[2] = 4.0
 a[3] = 5.0
 
-#$ header macro (y), _dcopy(x, y, n?, incx?, incy?) := dcopy(n|x.shape, x, incx|1, y, incy|1)
+#$ header macro (y), _dcopy(x, y, n=x.shape, incx=1, incy=1) := dcopy(n, x, incx, y, incy)
 b = _dcopy(a, b)
 print(b)
