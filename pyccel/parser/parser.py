@@ -1297,7 +1297,7 @@ class Parser(object):
                 return Ge(first, second, evaluate=False)
 
             elif op == 'is':
-                return Is(first, second, evaluate=False)
+                return Is(first, second)
 
             else:
                 raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(op)))
