@@ -124,6 +124,8 @@ from sympy import Integer, Float
 from sympy import Add, Mul, Pow, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
+from sympy import UnevaluatedExpr
+from sympy import srepr
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
@@ -1202,43 +1204,55 @@ class Parser(object):
                 raise PyccelSyntaxError('unknown/unavailable unary operator {node}'.format(node=type(stmt.value)))
 
         elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
-
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
+            first = UnevaluatedExpr(first)
             if stmt.value == '+':
                 if isinstance(first, (String, List)) or isinstance(second,
                         (String, List)):
                     return Concatinate(first, second)
-
-                return Add(first, second)
+                second = UnevaluatedExpr(second)
+                return Add(first, second, evaluate=False)
 
             elif stmt.value == '*':
                 if isinstance(first, List):
-                    return Dlist(first[0],second)
-                return Mul(first, second)
+                    return Dlist(first[0], second)
+                second = UnevaluatedExpr(second)
+                return Mul(first, second, evaluate=False)
 
             elif stmt.value == '-':
-                second = Mul(-1, second)
-                return Add(first, second)
+                if isinstance(stmt.second, BinaryOperatorNode):
+                    args = second.args
+                    second = second._new_rawargs(-args[0], args[1])
+                else:
+                    second = UnevaluatedExpr(second)
+                    second = Mul(-1, second)
+                return Add(first, second, evaluate=False)
 
             elif stmt.value == '/':
+                second = UnevaluatedExpr(second)
                 second = Pow(second, -1)
-                return Mul(first, second)
+                return Mul(first, second, evaluate=False)
 
             elif stmt.value == 'and':
-                return And(first, second)
+                second = UnevaluatedExpr(second)
+                return And(first, second, evaluate=False)
 
             elif stmt.value == 'or':
-                return Or(first, second)
+                second = UnevaluatedExpr(second)
+                return Or(first, second, evaluate=False)
 
             elif stmt.value == '**':
-                return Pow(first, second)
+                second = UnevaluatedExpr(second)
+                return Pow(first, second, evaluate=False)
 
             elif stmt.value == '//':
+                second = UnevaluatedExpr(second)
                 second = Pow(second, -1)
-                return floor(Mul(first, second))
+                return floor(Mul(first, second, evaluate=False))
 
             elif stmt.value == '%':
+                second = UnevaluatedExpr(second)
                 return Mod(first, second)
 
             else:
@@ -1971,6 +1985,9 @@ class Parser(object):
                         second = FunctionCall(i, args, kind=i.kind)
                         break
             return DottedVariable(first, second)
+ 
+        elif isinstance(expr, UnevaluatedExpr):
+            return self._annotate(expr.doit(), **settings)
 
         elif isinstance(expr, (Add, Mul, Pow, And, Or,
                                 Eq, Ne, Lt, Gt, Le, Ge)):
@@ -2006,7 +2023,7 @@ class Parser(object):
                     expr_new = Gt(expr_new, a_new)
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new)
-            return expr_new
+            return expr_new.doit()
 
         elif isinstance(expr, Lambda):
             expr_names =set(map(str,expr.expr.atoms(Symbol)))
@@ -3094,6 +3111,7 @@ class Parser(object):
                 raise PyccelSemanticError('list initialisation of dimesion > 1 not yet supported')   
             shape = self._annotate(expr.length, **settings)
             return Dlist(val, shape)
+
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
