@@ -1,9 +1,13 @@
 # coding: utf-8
 
-from sympy.core.singleton import Singleton
-from sympy.core.compatibility import with_metaclass
 
 from .basic import Basic
+
+from sympy.core.singleton import Singleton
+from sympy.core.compatibility import with_metaclass
+from sympy import sympify
+from sympy import ImmutableDenseMatrix
+
 
 class DataType(with_metaclass(Singleton, Basic)):
     """Base class representing native datatypes"""
@@ -322,4 +326,4 @@ def datatype(arg):
         else:
             return infer_dtype(arg)
 
-
+from .core import Variable, IndexedVariable, IndexedElement

@@ -47,7 +47,7 @@ from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
                              Len,
-                             IndexedElement, Slice, List,
+                             IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              Print, If)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
@@ -270,7 +270,7 @@ class FCodePrinter(CodePrinter):
         decs = '\n'.join(self._print(i) for i in decs)
         if mpi:
             #TODO shuold we add them in this place or do a search to put them in the right place
-            body = 'call mpi_init(ierr)\n'+'\nallocate(status(0:-1 + mpi_status_size)) \n status = 0'+body+'\ncall mpi_finalize(ierr)'
+            body = 'call mpi_init(ierr)\n'+'\nallocate(status(0:-1 + mpi_status_size)) \n status = 0\n'+body+'\ncall mpi_finalize(ierr)'
             
             decs = decs +'\ninteger :: ierr = -1' + '\n integer, allocatable :: status (:)'
 
@@ -411,6 +411,14 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
+        import numpy
+        shape = numpy.shape(expr)
+        if len(shape)>1:
+            import functools
+            import operator
+            arg = functools.reduce(operator.concat, expr)
+            elements = ','.join(self._print(i) for i in arg)
+            return 'reshape((/ '+ elements + ' /), '+ self._print(Tuple(*shape)) + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '(/ {0} /)'.format(fs)
 
@@ -560,11 +568,38 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
     # ...
     def _print_MacroType(self, expr):
-        return 'MPI_INT'
+        dtype = self._print(expr.argument.dtype)
+        if dtype == 'integer':
+            return 'MPI_INT'
+        elif dtype == 'real(kind=8)':
+            return 'MPI_DOUBLE'
+        elif dtype == 'real(kind=4)':
+            return 'MPI_FLOAT'
+        else:
+            raise NotImplementedError('TODO')
 
     def _print_MacroCount(self, expr):
+        var = expr.argument
+        if isinstance(var, Variable):
+            shape = var.shape
+        elif isinstance(var, IndexedElement):
+            shape = []
+            for (s, i) in zip(var.base.shape, var.indices):
+                if isinstance(i, Slice):
+                    if i.start is None and i.end is None:
+                        shape.append(s)
+                    elif i.start is None:
+                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
+                            shape.append(i.end)
+                    elif i.end is None:
+                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
+                            shape.append(s-i.start)
+        else:
+            raise NotImplementedError('TODO')
+        if shape is None or len(shape)==0:
+            return '1'
         from operator import mul
-        return str(reduce(mul, expr.argument.shape))
+        return str(reduce(mul, shape ))
 
     def _print_Declare(self, expr):
         # ... ignored declarations
@@ -697,6 +732,11 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
+        if isinstance(rhs, Dlist):
+            return 'allocate({lhs}(0:{length}-1))\n {lhs} = {init_value}'.format(
+            lhs = self._print(lhs),
+            length=self._print(rhs.length),
+            init_value=self._print(rhs.val))
         # TODO improve
         op = '=>'
         if isinstance(lhs, Variable) and (lhs.rank > 0)  and (not lhs.is_pointer or not isinstance(rhs, Atom)):
