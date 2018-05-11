@@ -1206,18 +1206,15 @@ class Parser(object):
         elif isinstance(stmt, (BinaryOperatorNode, BooleanOperatorNode)):
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
-            first = UnevaluatedExpr(first)
             if stmt.value == '+':
                 if isinstance(first, (String, List)) or isinstance(second,
                         (String, List)):
                     return Concatinate(first, second)
-                second = UnevaluatedExpr(second)
                 return Add(first, second, evaluate=False)
 
             elif stmt.value == '*':
                 if isinstance(first, List):
                     return Dlist(first[0], second)
-                second = UnevaluatedExpr(second)
                 return Mul(first, second, evaluate=False)
 
             elif stmt.value == '-':
@@ -1225,34 +1222,27 @@ class Parser(object):
                     args = second.args
                     second = second._new_rawargs(-args[0], args[1])
                 else:
-                    second = UnevaluatedExpr(second)
                     second = Mul(-1, second)
                 return Add(first, second, evaluate=False)
 
             elif stmt.value == '/':
-                second = UnevaluatedExpr(second)
                 second = Pow(second, -1)
                 return Mul(first, second, evaluate=False)
 
             elif stmt.value == 'and':
-                second = UnevaluatedExpr(second)
                 return And(first, second, evaluate=False)
 
             elif stmt.value == 'or':
-                second = UnevaluatedExpr(second)
                 return Or(first, second, evaluate=False)
 
             elif stmt.value == '**':
-                second = UnevaluatedExpr(second)
                 return Pow(first, second, evaluate=False)
 
             elif stmt.value == '//':
-                second = UnevaluatedExpr(second)
-                second = Pow(second, -1)
+                second = Pow(second, -1, evaluate=False)
                 return floor(Mul(first, second, evaluate=False))
 
             elif stmt.value == '%':
-                second = UnevaluatedExpr(second)
                 return Mod(first, second)
 
             else:
@@ -1289,22 +1279,22 @@ class Parser(object):
             second = self._fst_to_ast(stmt.second)
             op = self._fst_to_ast(stmt.value)
             if op == '==':
-                return Eq(first, second)
+                return Eq(first, second, evaluate=False)
 
             elif op == '!=':
-                return Ne(first, second)
+                return Ne(first, second, evaluate=False)
 
             elif op == '<':
-                return Lt(first, second)
+                return Lt(first, second, evaluate=False)
 
             elif op == '>':
-                return Gt(first, second)
+                return Gt(first, second, evaluate=False)
 
             elif op == '<=':
-                return Le(first, second)
+                return Le(first, second, evaluate=False)
 
             elif op == '>=':
-                return Ge(first, second)
+                return Ge(first, second, evaluate=False)
 
             elif op == 'is':
                 return Is(first, second)
@@ -2004,26 +1994,26 @@ class Parser(object):
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, (Add, Mul)):
-                    expr_new = expr._new_rawargs(expr_new, a_new)
+                    expr_new = expr._new_rawargs(expr_new, a_new).doit()
                 elif isinstance(expr, Pow):
-                    expr_new = Pow(expr_new, a_new)
+                    expr_new = Pow(expr_new, a_new).doit()
                 elif isinstance(expr, And):
-                    expr_new = And(expr_new, a_new)
+                    expr_new = And(expr_new, a_new).doit()
                 elif isinstance(expr, Or):
-                    expr_new = Or(expr_new, a_new)
+                    expr_new = Or(expr_new, a_new).doit()
                 elif isinstance(expr, Eq):
-                    expr_new = Eq(expr_new, a_new)
+                    expr_new = Eq(expr_new, a_new).doit()
                 elif isinstance(expr, Ne):
-                    expr_new = Ne(expr_new, a_new)
+                    expr_new = Ne(expr_new, a_new).doit()
                 elif isinstance(expr, Lt):
-                    expr_new = Lt(expr_new, a_new)
+                    expr_new = Lt(expr_new, a_new).doit()
                 elif isinstance(expr, Le):
-                    expr_new = Le(expr_new, a_new)
+                    expr_new = Le(expr_new, a_new).doit()
                 elif isinstance(expr, Gt):
-                    expr_new = Gt(expr_new, a_new)
+                    expr_new = Gt(expr_new, a_new).doit()
                 elif isinstance(expr, Ge):
-                    expr_new = Ge(expr_new, a_new)
-            return expr_new.doit()
+                    expr_new = Ge(expr_new, a_new).doit()
+            return expr_new
 
         elif isinstance(expr, Lambda):
             expr_names =set(map(str,expr.expr.atoms(Symbol)))
