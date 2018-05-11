@@ -58,9 +58,9 @@ MacroArg: arg=Args ('=' value=MacroValue)?;
 MacroValue: MacroStmt | INT | NUMBER | ID;
 Args: ID|MacroList;
 //TODO INT|NUMBER error
-MacroList : Leftpar ls+=MacroArg[','] Rightpar ;
-Leftpar : '['|'(' ;
-Rightpar : ']'|')';
+MacroList : Leftopen ls+=MacroArg[','] Rightclose ;
+Leftopen : '['|'(' ;
+Rightclose : ']'|')';
 
 MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
 MacroParameter: INT|ID ;
