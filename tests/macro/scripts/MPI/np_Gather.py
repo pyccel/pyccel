@@ -1,15 +1,13 @@
-from mppy4py import MPI
+from mpi4py import MPI
+from numpy import zeros
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
 size = -1
 rank = -1
-
-
-
-comm = mpi_comm_world
-mpi_comm_size(comm, size, ierr)
-mpi_comm_rank(comm, rank, ierr)
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
 
 master    = 1
 nb_values = 8
@@ -27,9 +25,7 @@ print('I, process ', rank, 'sent my values array : ', values)
 # ...
 data = zeros(nb_values, 'int')
 
-mpi_gather (values, block_length, MPI_INTEGER,
-            data,   block_length, MPI_INTEGER,
-            master, comm, ierr)
+comm.Gather(values, data,master)
 # ...
 
 if rank == master:

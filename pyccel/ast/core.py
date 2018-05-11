@@ -225,6 +225,25 @@ class List(Tuple):
     """Represent lists in the code with dynamic memory management."""
     pass
 
+class Dlist(Basic):
+    """ this is equivalent to the zeros function of numpy arrays for the python list.
+        
+    value : Expr 
+           a sympy expression which represents the initilized value of the list
+  
+    shape : the shape of the array
+    """
+    def __new__(cls, val, length):
+        return Basic.__new__(cls, val, length)
+
+    @property
+    def val(self):
+        return self._args[0]
+
+    @property
+    def length(self):
+        return self._args[1]
+
 
 class Assign(Basic):
     """Represents variable assignment for code generation.
@@ -1666,8 +1685,8 @@ class Variable(Symbol):
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
 
-        if isinstance(shape, Tuple) and len(shape) == 1:
-            shape = shape[0]
+      #  if isinstance(shape, Tuple) and len(shape) == 1:
+      #      shape = shape[0]
 
 #        if not shape==None:
 #            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):

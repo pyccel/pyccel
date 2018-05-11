@@ -90,7 +90,7 @@ from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment
 from pyccel.ast import With
 from pyccel.ast import Range
-from pyccel.ast import List
+from pyccel.ast import List, Dlist
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -1213,6 +1213,8 @@ class Parser(object):
                 return Add(first, second)
 
             elif stmt.value == '*':
+                if isinstance(first, List):
+                    return Dlist(first[0],second)
                 return Mul(first, second)
 
             elif stmt.value == '-':
@@ -1800,6 +1802,19 @@ class Parser(object):
             return d_var_left
         elif isinstance(expr, ValuedArgument):
             return self._infere_type(expr.value)
+
+        elif isinstance(expr, Dlist):
+            import numpy
+            d = self._infere_type(expr.val, **settings)
+
+            # TODO must check that it is consistent with pyccel's rules
+
+            d_var['datatype'] = d['datatype']
+            d_var['rank'] = d['rank'] + 1
+            d_var['shape'] = (expr.length,)  # TODO improve
+            d_var['allocatable'] = False
+            d_var['is_pointer'] = True
+            return d_var
         
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
@@ -1916,16 +1931,17 @@ class Parser(object):
                         return DottedVariable(first, second)
 
             if not isinstance(expr.rhs, Application):
-                macro = self.get_macro(expr.rhs.name)
+                if isinstance(expr.rhs, (Indexed, IndexedElement)):
+                    rhs_name = str(expr.rhs.base)
+                else:
+                    rhs_name = expr.rhs.name
+                macro = self.get_macro(rhs_name)
                 if macro:
                     return macro.master
 
                 self._current_class = first.cls_base
                 second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
-                macro = self.get_macro(second.name)
-                if macro:
-                    return macro.master
             else:
                 name = str(type(expr.rhs).__name__)
                 macro = self.get_macro(name)
@@ -2429,7 +2445,6 @@ class Parser(object):
                         d_var['is_target'] = False
                         d_var['is_pointer'] = True
                     #case of rhs is a target variable the lhs must be a pointer
-
 
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
@@ -3072,6 +3087,13 @@ class Parser(object):
             return expr
         elif isinstance(expr, ValuedArgument):
             return expr
+        
+        elif isinstance(expr, Dlist):
+            val = self._annotate(expr.val, **settings)
+            if isinstance(val, (Tuple,list,tuple)):
+                raise PyccelSemanticError('list initialisation of dimesion > 1 not yet supported')   
+            shape = self._annotate(expr.length, **settings)
+            return Dlist(val, shape)
 
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))

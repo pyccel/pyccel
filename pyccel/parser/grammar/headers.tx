@@ -54,10 +54,13 @@ InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
 // **** macros ****
 
 
-MacroArg: arg=ID ('=' value=MacroValue)?;
+MacroArg: arg=Args ('=' value=MacroValue)?;
 MacroValue: MacroStmt | INT | NUMBER | ID;
+Args: ID|MacroList;
 //TODO INT|NUMBER error
-
+MacroList : Leftpar ls+=MacroArg[','] Rightpar ;
+Leftpar : '['|'(' ;
+Rightpar : ']'|')';
 
 MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
 MacroParameter: INT|ID ;

@@ -9,8 +9,8 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-
-x = [0.,0.,0.,0.]
+n = 10
+x = [0.]*n
 
 if rank == 0:
     x[:] = 1.0
