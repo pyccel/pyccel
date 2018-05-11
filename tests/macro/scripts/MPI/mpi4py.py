@@ -68,14 +68,16 @@ from pyccel.stdlib.internal.mpi import MPI_MAXLOC
 from pyccel.stdlib.internal.mpi import MPI_MINLOC       
 from pyccel.stdlib.internal.mpi import MPI_LAND        
 from pyccel.stdlib.internal.mpi import MPI_LOR          
-from pyccel.stdlib.internal.mpi import MPI_LXOR         
+from pyccel.stdlib.internal.mpi import MPI_LXOR  
+from pyccel.stdlib.internal.mpi import MPI_INTEGER
+from pyccel.stdlib.internal.mpi import MPI_DOUBLE       
 
 
 class MPI_:
     def __init__(self):
         self.COMM_WORLD = 0
-        self.INT        = 0
-        self.DOUBLE     = 0.
+        self.INT        = MPI_INTEGER
+        self.DOUBLE     = MPI_DOUBLE
         self.SUM        = MPI_SUM
         self.PROD       = MPI_PROD
         self.MAX        = MPI_MAX
@@ -85,6 +87,8 @@ class MPI_:
         self.LAND       = MPI_LAND
         self.LOR        = MPI_LOR
         self.LXOR       = MPI_LXOR
+
+
 
 MPI = MPI_()
 
@@ -98,34 +102,63 @@ MPI = MPI_()
 #$ header macro x.LAND       := MPI_LAND
 #$ header macro x.LOR        := MPI_LOR
 #$ header macro x.LXOR       := MPI_LXOR
+#$ header macro x.INT        := MPI_INTEGER
+#$ header macro x.DOUBLE     := MPI_DOUBLE
 
 
 #$ header macro (x), y.Get_rank() := mpi_comm_rank(y,x,ierr)
 #$ header macro (x), y.Get_size() := mpi_comm_size(y,x,ierr)
 
+
+#......................
+#lower-case letter functions
+#......................
+
 #$ header macro  y.send(data, dest, tag=0)  := mpi_send(data, data.count, data.dtype, dest ,tag, y, ierr)
 #$ header macro  y.ssend(data, dest, tag=0) := mpi_ssend(data, data.count, data.dtype, dest ,tag, y, ierr)
 #$ header macro  y.bsend(data, dest, tag=0) := mpi_bsend(data, data.count, data.dtype, dest ,tag, y, ierr)
 
-#$ header macro  (req),y.isend(data, dest, tag=0)  := mpi_send(data, data.count, data.dtype, dest ,tag, y, req, ierr)
-#$ header macro  (req),y.issend(data, dest, tag=0) := mpi_send(data, data.count, data.dtype, dest ,tag, y, req, ierr)
-#$ header macro  (req),y.ibsend(data, dest, tag=0) := mpi_send(data, data.count, data.dtype, dest ,tag, y, req, ierr)
-
+#$ header macro  (req),y.isend(data, dest, tag=0)  := mpi_isend(data, data.count, data.dtype, dest ,tag, y, req, ierr)
+#$ header macro  (req),y.issend(data, dest, tag=0) := mpi_issend(data, data.count, data.dtype, dest ,tag, y, req, ierr)
+#$ header macro  (req),y.ibsend(data, dest, tag=0) := mpi_ibsend(data, data.count, data.dtype, dest ,tag, y, req, ierr)
 
 #$ header macro (x), y.recv(source=0, tag=0) := mpi_recv(x, x.count, x.dtype, source ,tag, y, status, ierr)
-##$ header macro (req), y.irecv(source=0, tag=0) := mpi_recv(x, x.count, x.dtype, source, tag, y, status, ierr)
 
-
-#$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, status, ierr)
-
+#$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, status, ierr) 
 
 #$ header macro (x),y.reduce(data, op=MPI_SUM, root=0) := mpi_reduce(data, x, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro (x),y.allreduce(data, op=MPI_SUM) := mpi_allreduce(data, x, data.count, data.dtype, op , y, ierr)
-##$ header macro (x),y.scatter(data, root=0) := mpi_scatter(data, data.count, data.dtype, x, x_count, data.dtype, root, y, ierr)
 
+#$ header macro  y.bcast(data, root=0) := mpi_bcast(data, data.count, data.dtype, root, y, ierr)
+#$ header macro  (x),y.gather(data, root=0) := mpi_gather(data, data.count, data.dtype, x, x.count, x.dtype, root, y, ierr)
+
+#.....................
+##$ header macro (x),y.scatter
+##$ header macro (req), y.irecv 
+##$ header macro y.alltoall
+#not_working for the moment
+#.....................
+
+
+#......................
+#upper-case letter functions
+#......................
 
 #$ header macro (x), y.Split(color=0, key=0) := mpi_comm_split(y, color, key, x, ierr)
-#$ header macro  y.bcast(data, root=0) := mpi_bcast(data, data.count, data.dtype, root, y, ierr)
 #$ header macro y.Free() := mpi_comm_free(y, ierr)
 #$ header macro (datatype),y.Create_vector(count, blocklength, stride) := mpi_type_vector(count, blocklength, stride, y.dtype, datatype, ierr)
 #$ header macro x.Commit() := mpi_type_commit(x,ierr)
+
+
+#$ header macro  y.Send([data, dtype=data.dtype], dest=0, tag=0)  := mpi_send(data, data.count, dtype, dest ,tag, y, ierr)
+#$ header macro  y.Recv([data, dtype=data.dtype], source=0, tag=0) := mpi_recv(data, data.count, data.dtype, source ,tag, y, status, ierr)
+#$ header macro (x), y.Sendrecv(sendobj, dest, sendtag=0, recvbuf=x, source=ANY_SOURCE, recvtag=ANY_TAG, Stat=status) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, recvbuf, recvbuf.count, recvbuf.dtype, source , recvtag, y, status, ierr) 
+
+#$ header macro y.Reduce(data, recvbuf, op=MPI_SUM, root=0) := mpi_reduce(data, recvbuf, data.count, data.dtype, op ,root, y, ierr)
+#$ header macro y.Allreduce(data, recvbuf, op=MPI_SUM) := mpi_allreduce(data, recvbuf, data.count, data.dtype, op , y, ierr)
+
+
+#$ header macro  y.Gather(data, recvbuf, root=0) := mpi_gather(data, data.count, data.dtype, recvbuf, recvbuf.count, recvbuf.dtype, root, y, ierr)
+
+#$ header macro  y.Bcast(data, root=0) := mpi_bcast(data, data.count, data.dtype, root, y, ierr)
+

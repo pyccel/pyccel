@@ -11,7 +11,7 @@ from sympy import sympify
 
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
-
+from sympy import Tuple
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
@@ -37,7 +37,7 @@ class ListType(BasicStmt):
         """
         Constructor for a TypeHeader.
 
-        dtype: list fo str
+        dtype: list of str
         """
         self.dtype = kwargs.pop('dtype')
 
@@ -88,7 +88,7 @@ class Type(BasicStmt):
 class TypeHeader(BasicStmt):
     pass
 
-# TODO must add expr property
+
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
         """
@@ -99,7 +99,16 @@ class UnionTypeStmt(BasicStmt):
         self.dtypes = kwargs.pop('dtype')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
-
+    
+    @property
+    def expr(self):
+        l = []
+        for i in self.dtypes:
+            l += [i.expr]
+        if len(l)>1:
+            return UnionType(l)
+        else:
+            return l[0]
 
 class HeaderResults(BasicStmt):
     """Base class representing a HeaderResults in the grammar."""
@@ -174,13 +183,7 @@ class FunctionHeaderStmt(BasicStmt):
         dtypes = []
         for dec in self.decs:
             if isinstance(dec,UnionTypeStmt):
-                l = []
-                for i in dec.dtypes:
-                    l += [i.expr]
-                if len(l)>1:
-                    dtypes += [UnionType(l)]
-                else:
-                    dtypes += [l[0]]
+                dtypes += [dec.expr]
 
         if self.kind is None:
             kind = 'function'
@@ -296,7 +299,10 @@ class MacroArg(BasicStmt):
 
     @property
     def expr(self):
-        arg = Symbol(str(self.arg))
+        arg_ = self.arg
+        if isinstance(arg_, MacroList):
+            return Tuple(*arg_.expr)
+        arg = Symbol(str(arg_))
         value = self.value
         if not(value is None): 
             if isinstance(value, MacroStmt):
@@ -328,6 +334,23 @@ class MacroStmt(BasicStmt):
 
 # ...
 
+class MacroList(BasicStmt):
+     """ reresent a MacroList statement"""
+     def __init__(self, **kwargs):
+         ls = []
+         for i in kwargs.pop('ls'):
+             if isinstance(i, MacroArg):
+                 ls.append(i.expr)
+             else:
+                 ls.append(i)
+         self.ls = ls
+         
+         super(MacroList, self).__init__(**kwargs)
+
+     @property
+     def expr(self):
+         return self.ls
+
 
 class FunctionMacroStmt(BasicStmt):
     """Base class representing an alias function statement in the grammar."""
@@ -347,7 +370,6 @@ class FunctionMacroStmt(BasicStmt):
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
-
 
         super(FunctionMacroStmt, self).__init__(**kwargs)
 
@@ -411,6 +433,7 @@ hdr_classes = [Header, TypeHeader,
                InterfaceStmt,
                MacroStmt,
                MacroArg,
+               MacroList,
                FunctionMacroStmt]
 
 def parse(filename=None, stmts=None, debug=False):
@@ -451,13 +474,13 @@ if __name__ == '__main__':
 #    print(parse(stmts="#$ header metavar module_name='mpi'"))
 #    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
 #    print(parse(stmts='#$ header function _f(int, int [:])'))
-    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
-    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
-    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
-    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
-    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
-    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
-    print(parse(stmts="#$ header macro _dswap(y=x, incx=y.shape) := dswap(y.shape, y, incx)"))
+#    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
+#    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
+#    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+#    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
+#    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
+#    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
+#    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
+#    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
+    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape) := dswap(y.shape, y, incx)"))
 

@@ -4,7 +4,7 @@
 
 from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
-from sympy import sympify
+from sympy import sympify, Tuple
 
 from .core import Basic
 from .core import Variable
@@ -418,12 +418,9 @@ class MacroFunction(Header):
     #       variable to store the result
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
-   
-        
         d_arguments = {}
         if len(args) > 0:
-            #TODO reorder the args when we introduce valuedvariables 
-            #so that they are in the same order as the self.arguments
+
             sorted_args = []
             unsorted_args = []
             j = -1
@@ -446,7 +443,23 @@ class MacroFunction(Header):
              
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
-                d_arguments[arg.name] = val
+                if not isinstance(arg, Tuple):
+                    d_arguments[arg.name] = val
+                else:
+                    if not isinstance(val, (list, Tuple,tuple)):
+                        val = [val]
+                    #TODO improve add more checks and generalize
+                    if len(val)>len(arg):
+                        raise ValueError('length mismatch of argument and its value ')
+                    elif len(val)<len(arg):
+                        for val_ in arg[len(val):]:
+                            if isinstance(val_, ValuedArgument):
+                                val +=Tuple(val_.value,)
+                            else:
+                                val +=Tuple(val_)
+
+                    for arg_,val_ in zip(arg,val):
+                        d_arguments[arg_.name] = val_
 
             d_unsorted_args = {}
             for arg in self.arguments[len(sorted_args):]:
@@ -484,6 +497,8 @@ class MacroFunction(Header):
             if isinstance(arg, Symbol):
                 if arg.name in argument_keys:
                     new = d_arguments[arg.name]
+                    if isinstance(new, Symbol) and new.name in result_keys:
+                        new = d_results[new.name]
 
                 elif arg.name in result_keys:
                     new = d_results[arg.name]
@@ -494,6 +509,8 @@ class MacroFunction(Header):
             elif isinstance(arg, Macro):
                 if arg.argument.name in argument_keys:
                     new = d_arguments[arg.argument.name]
+                    if isinstance(new, Symbol) and new.name in result_keys:
+                        new = d_results[new.name]
                 elif arg.argument.name in result_keys:
                     new = d_results[arg.argument.name]
                 else:
@@ -504,7 +521,6 @@ class MacroFunction(Header):
                         new._index = arg.index
 
             newargs[i] = new
-
         return newargs
 
 class MacroVariable(Header):

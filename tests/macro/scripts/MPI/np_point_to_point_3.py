@@ -1,4 +1,5 @@
 from mpi4py import MPI
+from numpy import zeros
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
 
@@ -10,8 +11,8 @@ size = comm.Get_size()
 
 nx = 4
 ny = 3 * 2
-x = [0., 0., 0., 0.]
-y = [[0.,0.],[0.,0.],[0.,0.]]
+x = zeros(nx)
+y = zeros((3,2))
 
 if rank == 0:
     x[:] = 1.0

@@ -1,4 +1,5 @@
 from mpi4py import MPI
+from numpy import zeros
 
 size = -1
 rank_in_world = -1
@@ -10,7 +11,7 @@ size = comm.Get_size()
 master = 0
 m      = 8
 
-a = [0, 0, 0, 0, 0, 0, 0, 0]
+a = zeros(m, 'int')
 
 if rank_in_world == 1:
     a[:] = 1
@@ -32,7 +33,7 @@ newcomm = comm.Split(color, key)
 
 # Broadcast of the message by the rank process master of
 # each communicator to the processes of its group
-newcomm.bcast(a, master)
+newcomm.Bcast(a, master)
 
 print("> processor ", rank_in_world, " has a = ", a)
 
