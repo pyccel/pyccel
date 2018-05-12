@@ -124,8 +124,6 @@ from sympy import Integer, Float
 from sympy import Add, Mul, Pow, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
-from sympy import UnevaluatedExpr
-from sympy import srepr
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
@@ -1218,7 +1216,7 @@ class Parser(object):
                 return Mul(first, second, evaluate=False)
 
             elif stmt.value == '-':
-                if isinstance(stmt.second, BinaryOperatorNode):
+                if isinstance(stmt.second, BinaryOperatorNode) and isinstance(second, (Add, Mul)):
                     args = second.args
                     second = second._new_rawargs(-args[0], args[1])
                 else:
@@ -1975,10 +1973,6 @@ class Parser(object):
                         second = FunctionCall(i, args, kind=i.kind)
                         break
             return DottedVariable(first, second)
- 
-        elif isinstance(expr, UnevaluatedExpr):
-            return self._annotate(expr.doit(), **settings)
-
         elif isinstance(expr, (Add, Mul, Pow, And, Or,
                                 Eq, Ne, Lt, Gt, Le, Ge)):
             # we reconstruct the arithmetic expressions using the annotated
