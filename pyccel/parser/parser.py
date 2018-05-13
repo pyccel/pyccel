@@ -128,6 +128,7 @@ from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
 from sympy.core.function import Function, FunctionClass, Application
+from sympy.core.numbers import ImaginaryUnit
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
@@ -1104,7 +1105,7 @@ class Parser(object):
             return Float(stmt.value)
 
         elif isinstance(stmt, ComplexNode):
-            raise NotImplementedError('ComplexNode not yet available')
+            return sympify(stmt.value)
 
         elif isinstance(stmt, AssignmentNode):
             lhs = self._fst_to_ast(stmt.target)
@@ -1621,6 +1622,12 @@ class Parser(object):
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
+        elif isinstance(expr ,ImaginaryUnit):
+            d_var['datatype'] = 'complex'
+            d_var['allocatable'] = False
+            d_var['rank'] = 0
+            return d_var
+            
 
         elif isinstance(expr, Variable):
             name = expr.name
@@ -1757,7 +1764,8 @@ class Parser(object):
                 if isinstance(i, str):
                     if i == 'float' or i == 'double':
                         d_var['datatype'] = i
-                        break
+                    if i == 'complex':
+                        d_var['datatype'] = i
                 elif isinstance(i, (NativeDouble, NativeFloat)):
                     d_var['datatype'] = i
                     break
@@ -1844,7 +1852,7 @@ class Parser(object):
             else:
                 return Tuple(*ls)
 
-        elif isinstance(expr, (Integer, Float, String)):
+        elif isinstance(expr, (Integer, Float, String, ImaginaryUnit)):
             return expr
 
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
