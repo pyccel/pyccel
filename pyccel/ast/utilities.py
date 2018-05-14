@@ -10,6 +10,7 @@ from .core import Constant
 from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Rand,Sum
 from sympy import Symbol, Lambda
+from sympy import I
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
                    acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
 
@@ -67,6 +68,9 @@ def builtin_function(expr, args=None):
         return Max(*args)
     if name == 'Sum':
         return Sum(*args)
+    elif name == 'complex':
+        return args[0]+I*args[1]
+    
 
     if name == 'lambdify':
        if isinstance(args, Lambda):

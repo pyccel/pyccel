@@ -128,6 +128,7 @@ from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
 from sympy.core.function import Function, FunctionClass, Application
+from sympy.core.numbers import ImaginaryUnit
 from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
@@ -209,6 +210,39 @@ def _get_variable_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 #  ...
 
+def atomic(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Derivatives, Functions and Symbols. Don't
+    return any 'atoms' that are inside such quantities unless
+    they also appear outside, too.
+
+    Examples
+    ========
+
+    >>> from sympy import Derivative, Function, cos
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.basic import _atomic
+    >>> f = Function('f')
+    >>> atomic(x + y)
+    {x, y}
+    >>> atomic(x + f(y))
+    {x, f(y)}
+    
+    """
+    from sympy import preorder_traversal
+    pot = preorder_traversal(e)
+    seen = set()
+    free = e.free_symbols
+    atoms = set()
+    for p in pot:
+        if p in seen:
+            pot.skip()
+            continue
+        seen.add(p)
+        if isinstance(p, (DottedVariable, Function)):
+            pot.skip()
+            atoms.add(p)
+    return atoms
 
 class Parser(object):
 
@@ -1105,7 +1139,7 @@ class Parser(object):
             return Float(stmt.value)
 
         elif isinstance(stmt, ComplexNode):
-            raise NotImplementedError('ComplexNode not yet available')
+            return sympify(stmt.value)
 
         elif isinstance(stmt, AssignmentNode):
             lhs = self._fst_to_ast(stmt.target)
@@ -1622,6 +1656,12 @@ class Parser(object):
             d_var['allocatable'] = False
             d_var['rank'] = 0
             return d_var
+        elif isinstance(expr ,ImaginaryUnit):
+            d_var['datatype'] = 'complex'
+            d_var['allocatable'] = False
+            d_var['rank'] = 0
+            return d_var
+            
 
         elif isinstance(expr, Variable):
             name = expr.name
@@ -1758,7 +1798,8 @@ class Parser(object):
                 if isinstance(i, str):
                     if i == 'float' or i == 'double':
                         d_var['datatype'] = i
-                        break
+                    if i == 'complex':
+                        d_var['datatype'] = i
                 elif isinstance(i, (NativeDouble, NativeFloat)):
                     d_var['datatype'] = i
                     break
@@ -1845,7 +1886,7 @@ class Parser(object):
             else:
                 return Tuple(*ls)
 
-        elif isinstance(expr, (Integer, Float, String)):
+        elif isinstance(expr, (Integer, Float, String, ImaginaryUnit)):
             return expr
 
         elif isinstance(expr, int):

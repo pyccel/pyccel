@@ -9,7 +9,8 @@ python tests/codegen/test_codegen.py
 python tests/errors/test_errors.py  
 python tests/warnings/test_warnings.py  
 python tests/preprocess/test_preprocess.py
-python tests/internal/test_internal.py  
-python tests/macro/test_macro.py  
+python tests/internal/test_internal.py
+python tests/external/test_external.py  
+python tests/macro/test_macro.py
 
 cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
