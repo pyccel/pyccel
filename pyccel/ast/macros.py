@@ -25,35 +25,6 @@ class Macro(AtomicExpr):
         return self._name
 
 
-class MacroSymbol(Symbol):
-    """    """
-    def __new__(cls, name, is_optional=False, default=None):
-
-        return Basic.__new__(cls, name, is_optional, default)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def is_optional(self):
-        return self._args[1]
-
-    @property
-    def default(self):
-        return self._args[2]
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        default = ''
-        if not(self.default is None):
-            default = '| {}'.format(sstr(self.default))
-        name = sstr(self.name)
-        txt = '{name} {default}'.format(name=name, default=default)
-        if self.is_optional:
-            txt = 'optional({})'.format(txt.strip())
-        return txt
-
 
 class MacroShape(Macro):
     """."""
@@ -76,6 +47,34 @@ class MacroShape(Macro):
             return 'MacroShape({}, {})'.format(sstr(self.argument),
                                                sstr(self.index))
 
+class MacroType(Macro):
+    """."""
+    _name = 'dtype'
+
+    def __new__(cls, argument):
+        return Macro.__new__(cls, argument)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'MacroType({})'.format(sstr(self.argument))
+        
+
+
+    
+
+class MacroCount(Macro):
+    """."""
+    _name = 'count'
+
+    def __new__(cls, argument):
+        return Macro.__new__(cls, argument)
+   
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'MacroCount({})'.format(sstr(self.argument))
+   
+    
+    
 
 
 def construct_macro(name, argument, parameter=None):
@@ -87,3 +86,8 @@ def construct_macro(name, argument, parameter=None):
     argument = sympify(argument)
     if name == 'shape':
         return MacroShape(argument, index=parameter)
+    elif name == 'dtype':
+        return MacroType(argument)
+    elif name == 'count':
+        return MacroCount(argument)
+

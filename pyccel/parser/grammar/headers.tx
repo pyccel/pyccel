@@ -52,29 +52,38 @@ MetavarValues: BOOL|STRING;
 InterfaceStmt: 'interface' name=ID '=' args+=ID['|'];
 
 // **** macros ****
-ListArgsStmt: args*=MacroArg[','];
-ListResultsStmt: args*=ID[','];
-ListAnnotatedArgsStmt: args*=MacroMasterArg[','];
 
-MacroArg: arg=ID (optional='?')?;
-MacroMasterArgBasic: MacroStmt | INT | NUMBER | ID;
-MacroMasterArg: arg=MacroMasterArgBasic ('|' default=MacroMasterArgBasic)?;
+
+MacroArg: arg=Args ('=' value=MacroValue)?;
+MacroValue: MacroStmt | INT | NUMBER | ID;
+Args: ID|MacroList;
+//TODO INT|NUMBER error
+MacroList : Leftopen ls+=MacroArg[','] Rightclose ;
+Leftopen : '['|'(' ;
+Rightclose : ']'|')';
+
 MacroStmt: arg=ID '.' macro=AvailableMacro ('[' parameter=MacroParameter ']')?;
-MacroParameter: INT | ID;
+MacroParameter: INT|ID ;
+
+AvailableMacro: 
+    'shape'
+  | 'dtype'
+  | 'count'
+  
+;
+
 
 // TODO shall we add also results to the master call?
+
 FunctionMacroStmt: 
-  'macro' ('(' results=ListResultsStmt ')' ',')? 
-  name=ID '(' args=ListArgsStmt ')' 
-  ':=' 
-  master_name=ID '(' master_args=ListAnnotatedArgsStmt ')'
+  'macro' ('(' results*=ID[','] ')' ',')?
+  name+=ID['.'] ('(' args*=MacroArg[','] ')')? 
+  ':='
+  master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
 ;
+
 // ****************
 
 STAR: '*';
 OPTIONAL: '!';
-AvailableMacro: 
-    'shape'
-  | 'dtype'
-;
 

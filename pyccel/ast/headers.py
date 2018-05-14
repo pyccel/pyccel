@@ -4,14 +4,16 @@
 
 from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
-from sympy import sympify
+from sympy import sympify, Tuple
 
 from .core import Basic
 from .core import Variable
-from .core import FunctionDef
+from .core import ValuedArgument
+from .core import FunctionDef, Interface
 from .core import ClassDef
+from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
-from .macros import Macro, MacroSymbol, MacroShape, construct_macro
+from .macros import Macro, MacroShape, construct_macro
 
 class Header(Basic):
     pass
@@ -373,15 +375,18 @@ class MacroFunction(Header):
 
     def __new__(cls, name, args, master, master_args, results=None):
         if not isinstance(name, (str, Symbol)):
-            raise TypeError('name must be of type str')
+            raise TypeError('name must be of type str or Symbol')
 
         # master can be a string or FunctionDef
-        if not isinstance(master, (str, FunctionDef)):
+        if not isinstance(master, (str, FunctionDef, Interface)):
             raise ValueError('Expecting a master name of FunctionDef')
 
         # we sympify everything since a macro is operating on symbols
-        args = [sympify(a) for a in args]
-        master_args = [sympify(a) for a in master_args]
+        if not(args is None):
+            args = [sympify(a) for a in args]
+
+        if not(master_args is None):
+            master_args = [sympify(a) for a in master_args]
 
         if not(results is None):
             results = [sympify(a) for a in results]
@@ -413,73 +418,133 @@ class MacroFunction(Header):
     #       variable to store the result
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
-        # TODO improve
-        if len(args) == 0:
-            raise NotImplementedError('TODO')
-
-        # ... TODO - must be a dict in order to use keywords argument (with '=')
-        #            in the macro definition
         d_arguments = {}
-        for (a_macro, arg) in zip(self.arguments, args):
-            # TODO improve name for other Nodes
-            d_arguments[a_macro.name] = arg
-        argument_keys = list(d_arguments.keys())
-        # ...
+        if len(args) > 0:
 
-        # ... TODO - must be a dict in order to use keywords argument (with '=')
-        #            in the macro definition
+            sorted_args = []
+            unsorted_args = []
+            j = -1
+            for ind, i in enumerate(args):
+                if not isinstance(i, ValuedArgument):
+                    sorted_args.append(i)
+                else:
+                    j=ind
+                    break
+            if j>0:
+                unsorted_args = args[j:]
+                for i in unsorted_args:
+                    if not isinstance(i, ValuedArgument):
+                        raise ValueError('variable not allowed after an optional argument')
+
+            for i in self.arguments[len(sorted_args):]:
+                if not isinstance(i, ValuedArgument):
+                    raise ValueError('variable not allowed after an optional argument')
+       
+             
+
+            for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
+                if not isinstance(arg, Tuple):
+                    d_arguments[arg.name] = val
+                else:
+                    if not isinstance(val, (list, Tuple,tuple)):
+                        val = [val]
+                    #TODO improve add more checks and generalize
+                    if len(val)>len(arg):
+                        raise ValueError('length mismatch of argument and its value ')
+                    elif len(val)<len(arg):
+                        for val_ in arg[len(val):]:
+                            if isinstance(val_, ValuedArgument):
+                                val +=Tuple(val_.value,)
+                            else:
+                                val +=Tuple(val_)
+
+                    for arg_,val_ in zip(arg,val):
+                        d_arguments[arg_.name] = val_
+
+            d_unsorted_args = {}
+            for arg in self.arguments[len(sorted_args):]:
+                d_unsorted_args[arg.name] = arg.value
+            
+            for arg in unsorted_args:
+                if arg.name in d_unsorted_args.keys():
+                    d_unsorted_args[arg.name] = arg.value
+                else:
+                    raise ValueError('Unknown valued argument')
+            d_arguments.update(d_unsorted_args)
+            for i in d_arguments.keys():
+                arg = d_arguments[i]
+                if isinstance(arg, Macro):
+                    d_arguments[i] = construct_macro(arg.name,
+                                      d_arguments[arg.argument.name])
+                    if isinstance(arg, MacroShape):
+                        d_arguments[i]._index = arg.index
+            
+                
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
                 # TODO improve name for other Nodes
                 d_results[r_macro.name] = r
-        result_keys = list(d_results.keys())
         # ...
 
         # ... initialize new args with None
-        newargs = []
-        for i in range(0, len(self.master_arguments)):
-            newargs.append(None)
+        newargs = [None]*len(self.master_arguments)
         # ...
+        argument_keys = d_arguments.keys()
+        result_keys = d_results.keys()
+        for i,arg in enumerate(self.master_arguments):
+            
+            if isinstance(arg, Symbol):
+                if arg.name in argument_keys:
+                    new = d_arguments[arg.name]
+                    if isinstance(new, Symbol) and new.name in result_keys:
+                        new = d_results[new.name]
 
-        for i,a in enumerate(self.master_arguments):
-            if isinstance(a, Macro):
-                new = construct_macro(a.name,
-                                      d_arguments[a.argument.name])
-                # TODO improve
-                #      otherwise, we get the following error
-                # TypeError: __new__() got multiple values for argument 'index'
-                if isinstance(new, MacroShape):
-                    new._index = a.index
-
-            elif isinstance(a, MacroSymbol):
-                if a.name in argument_keys:
-                    new = d_arguments[a.name]
-
-                elif a.name in result_keys:
-                    new = d_results[a.name]
-
-                elif not(a.default is None):
-                    default = a.default
-                    if isinstance(default, Macro):
-                        new = construct_macro(default.name,
-                                              d_arguments[default.argument.name])
-                        # TODO improve
-                        #      otherwise, we get the following error
-                        # TypeError: __new__() got multiple values for argument 'index'
-                        if isinstance(new, MacroShape):
-                            new._index = default.index
-
-                    else:
-                        new = default
-
+                elif arg.name in result_keys:
+                    new = d_results[arg.name]
                 else:
-                    raise NotImplementedError('TODO')
-
-            else:
-                # TODO improve
-                new = a
+                    new = arg
+               #TODO uncomment later
+               #     raise ValueError('Unknown variable name')
+            elif isinstance(arg, Macro):
+                if arg.argument.name in argument_keys:
+                    new = d_arguments[arg.argument.name]
+                    if isinstance(new, Symbol) and new.name in result_keys:
+                        new = d_results[new.name]
+                elif arg.argument.name in result_keys:
+                    new = d_results[arg.argument.name]
+                else:
+                    raise ValueError('Unkonwn variable name')
+ 
+                new = construct_macro(arg.name, new)
+                if isinstance(arg, MacroShape):
+                        new._index = arg.index
 
             newargs[i] = new
-
         return newargs
+
+class MacroVariable(Header):
+    """."""
+
+    def __new__(cls, name,  master):
+        if not isinstance(name, (str, Symbol, DottedName)):
+            raise TypeError('name must be of type str or DottedName')
+
+    
+        if not isinstance(master, (str, Variable, DottedVariable)):
+            raise ValueError('Expecting a master name of Variable')
+
+        
+        return Basic.__new__(cls, name, master)
+
+
+    @property
+    def name(self):
+        return self._args[0]
+
+    @property
+    def master(self):
+        return self._args[1]
+
+
+

@@ -1,6 +1,8 @@
 
 from pyccel.parser.syntax.headers import parse
 from pyccel.parser.errors import Errors
+from pyccel.parser.errors import PyccelError
+
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 from pyccel.ast import FunctionHeader
@@ -33,7 +35,7 @@ def compile_fortran(source, modulename, extra_args=''):
         f.close()
 
 
-def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
+def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -51,6 +53,9 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
 
     libs: list, tuple
         list of libraries
+
+    name: str
+        name of the function, if it is given as a string
 
 
     Examples
@@ -82,10 +87,13 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
     """
     assert(callable(func) or isinstance(func, str))
 
-    if isinstance(func, str):
-        raise NotImplementedError('Treat the case of string source code')
-
-    name = func.__name__
+    # ...
+    if callable(func):
+        name = func.__name__
+    elif name is None:
+        # case of func as a string
+        raise ValueError('function name must be provided, in the case of func string')
+    # ...
 
     # ...
     if isinstance(inputs, str):
@@ -123,20 +131,22 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
         raise NotImplementedError('TODO')
     # ...
 
-    # ...
-    # get the function source code
-    lines = inspect.getsourcelines(func)
-    lines = lines[0]
-    # remove indentation if the first line is indented
-    a = lines[0]
-    leading_spaces = len(a) - len(a.lstrip())
-    code = ''
-    for a in lines:
-        if leading_spaces > 0:
-            line = a[leading_spaces:]
-        else:
-            line = a
-        code = '{code}{line}'.format(code=code, line=line)
+    # ... get the function source code
+    if callable(func):
+        lines = inspect.getsourcelines(func)
+        lines = lines[0]
+        # remove indentation if the first line is indented
+        a = lines[0]
+        leading_spaces = len(a) - len(a.lstrip())
+        code = ''
+        for a in lines:
+            if leading_spaces > 0:
+                line = a[leading_spaces:]
+            else:
+                line = a
+            code = '{code}{line}'.format(code=code, line=line)
+    else:
+        code = func
     # ...
 
     if verbose:
@@ -144,21 +154,30 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[]):
         print (code)
         print ('------')
 
-    # ...
-    pyccel = Parser(code, headers={str(name): header})
-    ast = pyccel.parse()
+    try:
+        # ...
+        pyccel = Parser(code, headers={str(name): header})
+        ast = pyccel.parse()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+        settings = {}
+        ast = pyccel.annotate(**settings)
 
-    codegen = Codegen(ast, name)
-    code = codegen.doprint()
-#    codegen.export()
-    # ...
+        codegen = Codegen(ast, name)
+        code = codegen.doprint()
+#        codegen.export()
+        # ...
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
+    except:
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
+        raise PyccelError('Could not convert to Fortran')
+
 
 #    # ...
 #    filename = '{name}.f90'.format(name=name)

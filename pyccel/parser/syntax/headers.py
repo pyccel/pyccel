@@ -11,12 +11,13 @@ from sympy import sympify
 
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
-
+from sympy import Tuple
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
-from pyccel.ast import construct_macro, MacroFunction
-from pyccel.ast import MacroSymbol
+from pyccel.ast import construct_macro, MacroFunction, MacroVariable
+from pyccel.ast import ValuedArgument
+from pyccel.ast import DottedName
 
 DEBUG = False
 
@@ -36,7 +37,7 @@ class ListType(BasicStmt):
         """
         Constructor for a TypeHeader.
 
-        dtype: list fo str
+        dtype: list of str
         """
         self.dtype = kwargs.pop('dtype')
 
@@ -87,7 +88,7 @@ class Type(BasicStmt):
 class TypeHeader(BasicStmt):
     pass
 
-# TODO must add expr property
+
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
         """
@@ -98,7 +99,16 @@ class UnionTypeStmt(BasicStmt):
         self.dtypes = kwargs.pop('dtype')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
-
+    
+    @property
+    def expr(self):
+        l = []
+        for i in self.dtypes:
+            l += [i.expr]
+        if len(l)>1:
+            return UnionType(l)
+        else:
+            return l[0]
 
 class HeaderResults(BasicStmt):
     """Base class representing a HeaderResults in the grammar."""
@@ -173,13 +183,7 @@ class FunctionHeaderStmt(BasicStmt):
         dtypes = []
         for dec in self.decs:
             if isinstance(dec,UnionTypeStmt):
-                l = []
-                for i in dec.dtypes:
-                    l += [i.expr]
-                if len(l)>1:
-                    dtypes += [UnionType(l)]
-                else:
-                    dtypes += [l[0]]
+                dtypes += [dec.expr]
 
         if self.kind is None:
             kind = 'function'
@@ -269,7 +273,7 @@ class InterfaceStmt(BasicStmt):
 
           name: str
 
-          args: list of funciton names
+          args: list of function names
 
           """
 
@@ -289,94 +293,25 @@ class MacroArg(BasicStmt):
         """
         """
         self.arg = kwargs.pop('arg')
-        self.optional = kwargs.pop('optional')
+        self.value = kwargs.pop('value',None)
 
         super(MacroArg, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        optional = self.optional
-        if self.optional:
-            optional = True
-        else:
-            optional = False
-
-        return MacroSymbol(self.arg, is_optional=optional)
-
-class MacroMasterArg(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.arg = kwargs.pop('arg')
-        self.default = kwargs.pop('default', None)
-
-        super(MacroMasterArg, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        arg = self.arg
-        default = self.default
-        if isinstance(arg, MacroStmt):
-            if not(self.default is None):
-                raise ValueError('No choice is allowed together with a MacroStmt')
-
-            arg = arg.expr
-        else:
-            arg = Symbol(str(arg))
-            if isinstance(default, MacroStmt):
-                default = default.expr
+        arg_ = self.arg
+        if isinstance(arg_, MacroList):
+            return Tuple(*arg_.expr)
+        arg = Symbol(str(arg_))
+        value = self.value
+        if not(value is None): 
+            if isinstance(value, MacroStmt):
+                value = value.expr
             else:
-                default = sympify(default)
-            if isinstance(arg, Symbol):
-                arg = MacroSymbol(arg.name, default=default)
-
+                value = sympify(str(value))
+            return ValuedArgument(arg, value)
         return arg
 
-class ListArgsStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
-
-        super(ListArgsStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        args = [a.expr for a in self.args]
-        return args
-
-class ListResultsStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
-
-        super(ListResultsStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        return self.args
-
-class ListAnnotatedArgsStmt(BasicStmt):
-    """."""
-
-    def __init__(self, **kwargs):
-        """
-        """
-        self.args = kwargs.pop('args')
-
-        super(ListAnnotatedArgsStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        args = [a.expr for a in self.args]
-        return args
 
 class MacroStmt(BasicStmt):
     """."""
@@ -399,6 +334,23 @@ class MacroStmt(BasicStmt):
 
 # ...
 
+class MacroList(BasicStmt):
+     """ reresent a MacroList statement"""
+     def __init__(self, **kwargs):
+         ls = []
+         for i in kwargs.pop('ls'):
+             if isinstance(i, MacroArg):
+                 ls.append(i.expr)
+             else:
+                 ls.append(i)
+         self.ls = ls
+         
+         super(MacroList, self).__init__(**kwargs)
+
+     @property
+     def expr(self):
+         return self.ls
+
 
 class FunctionMacroStmt(BasicStmt):
     """Base class representing an alias function statement in the grammar."""
@@ -412,27 +364,59 @@ class FunctionMacroStmt(BasicStmt):
         master: str
             master function name
         """
-        self.name = kwargs.pop('name')
-        self.results = kwargs.pop('results')
+        
+        self.name = tuple(kwargs.pop('name'))
+        self.results = kwargs.pop('results',None)
         self.args = kwargs.pop('args')
-        self.master_name = kwargs.pop('master_name')
+        self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
 
         super(FunctionMacroStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        name = str(self.name)
-        args = self.args.expr
-        master_name = str(self.master_name)
-        master_args = self.master_args.expr
+
+        if len(self.name)>1:
+            name = DottedName(*self.name)
+        else:
+            name = str(self.name[0])
+
+        args = []
+        for i in self.args:
+            if isinstance(i, MacroArg):
+                args.append(i.expr)
+            else:
+                raise TypeError('argument must be of type MacroArg')
+     
+
+        if len(self.master_name)==1:
+            master_name = str(self.master_name[0])
+        else:
+            raise NotImplementedError('TODO')
+
+        master_args = []
+        for i in self.master_args:
+            if isinstance(i, MacroStmt):
+                master_args.append(i.expr)
+            else:
+                master_args.append(Symbol(str(i)))       
+       
 
         results = self.results
-        if not (self.results is None):
-            results = self.results.expr
+        if (results is None):
+            results = []
 
-        return MacroFunction(name, args, master_name, master_args,
-                             results=results)
+       
+        if len(args + master_args + results) == 0:
+            return MacroVariable(name, master_name)
+
+        if not isinstance(name, str):
+            #we treat the other all the names except the last one  as arguments
+            # so that we always have a name of type str
+            args = list(name.name[:-1]) + list(args)
+            name = name.name[-1]
+        return MacroFunction(name, args, master_name, master_args, results=results)
+
 
 #################################################
 
@@ -447,12 +431,9 @@ hdr_classes = [Header, TypeHeader,
                VariableHeaderStmt,
                MetavarHeaderStmt,
                InterfaceStmt,
-               ListArgsStmt,
-               ListResultsStmt,
-               ListAnnotatedArgsStmt,
                MacroStmt,
                MacroArg,
-               MacroMasterArg,
+               MacroList,
                FunctionMacroStmt]
 
 def parse(filename=None, stmts=None, debug=False):
@@ -481,6 +462,7 @@ def parse(filename=None, stmts=None, debug=False):
     else:
         return stmts
 
+
 ######################
 if __name__ == '__main__':
 #    print(parse(stmts='#$ header variable x :: int'))
@@ -496,7 +478,9 @@ if __name__ == '__main__':
 #    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
 #    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
 #    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
-#    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | 1)"))
-#    print(parse(stmts='#$ header macro _dswap(x, y, incx?, incy?) := dswap(x.shape, x, incx|1, y, incy|1)'))
-    print(parse(stmts="#$ header macro _dswap(x, incx?) := dswap(x.shape, x, incx | x.shape)"))
+#    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
+#    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
+#    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
+#    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
+    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape) := dswap(y.shape, y, incx)"))
 
