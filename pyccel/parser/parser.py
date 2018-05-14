@@ -210,6 +210,39 @@ def _get_variable_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 #  ...
 
+def atomic(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Derivatives, Functions and Symbols. Don't
+    return any 'atoms' that are inside such quantities unless
+    they also appear outside, too.
+
+    Examples
+    ========
+
+    >>> from sympy import Derivative, Function, cos
+    >>> from sympy.abc import x, y
+    >>> from sympy.core.basic import _atomic
+    >>> f = Function('f')
+    >>> atomic(x + y)
+    {x, y}
+    >>> atomic(x + f(y))
+    {x, f(y)}
+    
+    """
+    from sympy import preorder_traversal
+    pot = preorder_traversal(e)
+    seen = set()
+    free = e.free_symbols
+    atoms = set()
+    for p in pot:
+        if p in seen:
+            pot.skip()
+            continue
+        seen.add(p)
+        if isinstance(p, (DottedVariable, Function)):
+            pot.skip()
+            atoms.add(p)
+    return atoms
 
 class Parser(object):
 

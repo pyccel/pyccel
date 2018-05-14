@@ -151,7 +151,14 @@ MPI = MPI_()
 
 
 #$ header macro  y.Send([data, dtype=data.dtype], dest=0, tag=0)  := mpi_send(data, data.count, dtype, dest ,tag, y, ierr)
-#$ header macro  y.Recv([data, dtype=data.dtype], source=0, tag=0) := mpi_recv(data, data.count, data.dtype, source ,tag, y, status, ierr)
+#$ header macro  y.Recv([data, dtype=data.dtype], source=ANY_SOURCE, tag=ANY_TAG) := mpi_recv(data, data.count, data.dtype, source ,tag, y, status, ierr)
+
+#$ header macro  (req),y.Isend([data, dtype=data.dtype], dest=0, tag=0)  := mpi_isend(data, data.count, dtype, dest ,tag, y, req, ierr)
+#$ header macro  (req),y.Issend([data, dtype=data.dtype], dest=0, tag=0)  := mpi_issend(data, data.count, dtype, dest ,tag, y, ierr)
+#$ header macro  (req),y.Ibsend([data, dtype=data.dtype], dest=0, tag=0)  := mpi_ibsend(data, data.count, dtype, dest ,tag, y, ierr)
+#$ header macro  (req),y.Irecv([data, dtype=data.dtype], source=ANY_SOURCE, tag=ANY_TAG) := mpi_irecv(data, data.count, dtype, source ,tag, y, req, ierr)
+
+
 #$ header macro (x), y.Sendrecv(sendobj, dest, sendtag=0, recvbuf=x, source=ANY_SOURCE, recvtag=ANY_TAG, Stat=status) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, recvbuf, recvbuf.count, recvbuf.dtype, source , recvtag, y, status, ierr) 
 
 #$ header macro y.Reduce(data, recvbuf, op=MPI_SUM, root=0) := mpi_reduce(data, recvbuf, data.count, data.dtype, op ,root, y, ierr)
