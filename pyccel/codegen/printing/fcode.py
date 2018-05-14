@@ -63,6 +63,9 @@ from pyccel.ast.parallel.mpi     import MPI
 from pyccel.ast.parallel.openmp  import OMP_For
 from pyccel.ast.parallel.openacc import ACC_For
 
+import functools
+import operator
+
 
 # TODO: add examples
 # TODO: use _get_statement when returning a string
@@ -304,7 +307,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO - improve
         # importing of pyccel extensions is not printed
-        if source == 'numpy':
+        if source in ['numpy', 'scipy', 'itertools']:
             return ''
         if source == 'mpi4py':
             return 'use mpi'
@@ -414,8 +417,6 @@ class FCodePrinter(CodePrinter):
         import numpy
         shape = numpy.shape(expr)
         if len(shape)>1:
-            import functools
-            import operator
             arg = functools.reduce(operator.concat, expr)
             elements = ','.join(self._print(i) for i in arg)
             return 'reshape((/ '+ elements + ' /), '+ self._print(Tuple(*shape)) + ')'
@@ -424,6 +425,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
+
+    def _print_Constant(self, expr):
+        return self._print(expr.value)
 
     def _print_ValuedArgument(self, expr):
         name = self._print(expr.name)
@@ -598,8 +602,7 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError('TODO')
         if shape is None or len(shape)==0:
             return '1'
-        from operator import mul
-        return str(reduce(mul, shape ))
+        return str(functools.reduce(operator.mul, shape ))
 
     def _print_Declare(self, expr):
         # ... ignored declarations
