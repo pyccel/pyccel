@@ -210,39 +210,49 @@ def _get_variable_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 #  ...
 
-def atomic(e):
+def _atomic(e):
     """Return atom-like quantities as far as substitution is
-    concerned: Derivatives, Functions and Symbols. Don't
-    return any 'atoms' that are inside such quantities unless
-    they also appear outside, too.
-
-    Examples
-    ========
-
-    >>> from sympy import Derivative, Function, cos
-    >>> from sympy.abc import x, y
-    >>> from sympy.core.basic import _atomic
-    >>> f = Function('f')
-    >>> atomic(x + y)
-    {x, y}
-    >>> atomic(x + f(y))
-    {x, f(y)}
-    
+    concerned: Functions and DottedVarviables. we don't
+    return atoms that are inside such quantities too 
     """
     from sympy import preorder_traversal
+    from collections import OrderedDict
     pot = preorder_traversal(e)
     seen = set()
     free = e.free_symbols
-    atoms = set()
+    atom_functions = OrderedDict()
+    atom_dotted_var = OrderedDict()
+    
     for p in pot:
         if p in seen:
             pot.skip()
             continue
         seen.add(p)
-        if isinstance(p, (DottedVariable, Function)):
+        if isinstance(p, Application):
             pot.skip()
-            atoms.add(p)
-    return atoms
+            atom_functions[p] = None
+        elif isinstance(p, DottedVariable) and isinstance(p.rhs, Application):
+            pot.skip()
+            atom_dotted_vars[p] = None
+    
+    return atom_functions, atom_dotted_vars
+
+def atom(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Functions and DottedVarviables. contrary to _atom we
+    return atoms that are inside such quantities too
+    """
+    ls = []
+    ls.append(_atom(e))
+    ls_ = []
+    while len(ls[-1][0]+ls[-1][1])>0:
+        for i in ls[-1][0]:
+            ls_.append(_atom(i))
+        for i in ls[-1][1]:
+    
+    
+   
+
 
 class Parser(object):
 
