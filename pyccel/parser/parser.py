@@ -1504,7 +1504,34 @@ class Parser(object):
         elif isinstance(stmt, ForNode):
             iterator = self._fst_to_ast(stmt.iterator)
             iterable = self._fst_to_ast(stmt.target)
-            body = self._fst_to_ast(stmt.value)
+            body = list(self._fst_to_ast(stmt.value))
+            name = type(iterable).__name__
+            if name == 'Symbol':
+                indx = self.create_variable(iterable)
+                assign = Assign(iterator,IndexedBase(iterable)[indx])
+                assign.set_fst(stmt)
+                iterable = Function('range')(Function('len')(iterable))
+                iterator = indx
+                body = [assign] + body      
+            elif name == 'zip':
+                zip_args = iterable.args
+                indx = self.create_variable(zip_args)
+                for i in range(len(zip_args)):
+                    assign = Assign(iterator[i],IndexedBase(iterable.args[i])[indx])
+                    assign.set_fst(stmt)
+                    body = [assign] + body
+                
+                iterable = Function('range')(Function('len')(iterable.args[0]))    
+                iterator = indx
+            elif name == 'enumerate':
+                indx = iterator.args[0]
+                var = iterator.args[1]
+                assign = Assign(var, IndexedBase(iterable.args[0])[indx])
+                assign.set_fst(stmt)
+                iterable = Function('range')(Function('len')(iterable.args[0]))
+                iterator = indx
+                body = [assign] + body
+              
             expr = For(iterator, iterable, body, strict=False)
             return expr
       
@@ -2691,22 +2718,27 @@ class Parser(object):
 
         elif isinstance(expr, For):
             # treatment of the index/indices
+            itr = expr.iterable
+            body = list(expr.body)
             if isinstance(expr.target, Symbol):
                 name = str(expr.target.name)
                 var = self.get_variable(name)
                 target = var
                 if var is None:
-                    target = Variable('int', name, rank=0)
-                    self.insert_variable(target)
+                    name_ = type(itr).__name__
+                    if name_ == 'range':
+                        target = Variable('int', name, rank=0)
+                        self.insert_variable(target)
+                        
             else:
                 dtype = type(expr.target)
                 # TODO ERROR not tested yet
                 errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
-
-            itr = self._annotate(expr.iterable, **settings)
-            body = self._annotate(expr.body, **settings)
+  
+            itr = self._annotate(itr, **settings)
+            body = self._annotate(body, **settings)
             return For(target, itr, body)
         
         elif isinstance(expr, FunctionalFor):
