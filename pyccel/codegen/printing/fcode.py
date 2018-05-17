@@ -46,7 +46,7 @@ from pyccel.ast.core import Range, Tensor, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
-                             Len,
+                             Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              Print, If)
@@ -1283,6 +1283,12 @@ class FCodePrinter(CodePrinter):
         start = self._print(expr.start)
         stop  = self._print(expr.stop)
         return '{0}, {1}'.format(start, stop)
+
+    def _print_FunctionalFor(self, expr):
+        allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
+        allocate ='allocate({0}({1}))'.format(expr.target.name, allocate)
+        loops = '\n'.join(self._print(i) for i in expr.loops)
+        return allocate + '\n' + loops
 
     def _print_For(self, expr):
         prolog = ''

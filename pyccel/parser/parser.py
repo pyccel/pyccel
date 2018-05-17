@@ -16,6 +16,8 @@ from redbaron import ClassNode
 from redbaron import TupleNode, ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
+from redbaron import ListComprehensionNode
+from redbaron import ComprehensionLoopNode
 from redbaron import NodeList
 from redbaron import DotProxyList
 from redbaron import ReturnNode
@@ -67,7 +69,7 @@ from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
 from pyccel.ast import FunctionDef, Interface, PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
-from pyccel.ast import For
+from pyccel.ast import For, FunctionalFor
 from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
@@ -124,6 +126,7 @@ from sympy import Integer, Float
 from sympy import Add, Mul, Pow, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
+from sympy import ceiling         
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
@@ -133,7 +136,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-from sympy.tensor import Idx, Indexed, IndexedBase
+from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables import iterable
 from sympy import Sum as Summation, Heaviside, KroneckerDelta
 
@@ -210,39 +213,49 @@ def _get_variable_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 #  ...
 
-def atomic(e):
+def _atomic(e):
     """Return atom-like quantities as far as substitution is
-    concerned: Derivatives, Functions and Symbols. Don't
-    return any 'atoms' that are inside such quantities unless
-    they also appear outside, too.
-
-    Examples
-    ========
-
-    >>> from sympy import Derivative, Function, cos
-    >>> from sympy.abc import x, y
-    >>> from sympy.core.basic import _atomic
-    >>> f = Function('f')
-    >>> atomic(x + y)
-    {x, y}
-    >>> atomic(x + f(y))
-    {x, f(y)}
-    
+    concerned: Functions and DottedVarviables. we don't
+    return atoms that are inside such quantities too 
     """
     from sympy import preorder_traversal
+    from collections import OrderedDict
     pot = preorder_traversal(e)
     seen = set()
     free = e.free_symbols
-    atoms = set()
+    atom_functions = OrderedDict()
+    atom_dotted_var = OrderedDict()
+    
     for p in pot:
         if p in seen:
             pot.skip()
             continue
         seen.add(p)
-        if isinstance(p, (DottedVariable, Function)):
+        if isinstance(p, Application):
             pot.skip()
-            atoms.add(p)
-    return atoms
+            atom_functions[p] = None
+        elif isinstance(p, DottedVariable) and isinstance(p.rhs, Application):
+            pot.skip()
+            atom_dotted_vars[p] = None
+    
+    return atom_functions, atom_dotted_vars
+
+def atom(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Functions and DottedVarviables. contrary to _atom we
+    return atoms that are inside such quantities too
+    """
+    ls = []
+    ls.append(_atom(e))
+    ls_ = []
+    while len(ls[-1][0]+ls[-1][1])>0:
+        for i in ls[-1][0]:
+            ls_.append(_atom(i))
+#        for i in ls[-1][1]:
+    
+    
+   
+
 
 class Parser(object):
 
@@ -1427,10 +1440,7 @@ class Parser(object):
             if isinstance(stmt.previous.previous, DotNode):
                 return self._fst_to_ast(stmt.previous.previous)
 
-             # elif isinstance(stmt.previous,GetitemNode):
-             #    return self._fst_to_ast(stmt.previous.previous)
-
-            name = Symbol(str(stmt.previous.value))
+            name = str(stmt.previous.value)
             stmt.parent.remove(stmt.previous)
             stmt.parent.remove(stmt)
             if not hasattr(args, '__iter__'):
@@ -1494,9 +1504,42 @@ class Parser(object):
         elif isinstance(stmt, ForNode):
             iterator = self._fst_to_ast(stmt.iterator)
             iterable = self._fst_to_ast(stmt.target)
-            body = self._fst_to_ast(stmt.value)
+            body = list(self._fst_to_ast(stmt.value))
+            name = type(iterable).__name__
+            if name == 'Symbol':
+                indx = self.create_variable(iterable)
+                assign = Assign(iterator,IndexedBase(iterable)[indx])
+                assign.set_fst(stmt)
+                iterable = Function('range')(Function('len')(iterable))
+                iterator = indx
+                body = [assign] + body      
+            elif name == 'zip':
+                zip_args = iterable.args
+                indx = self.create_variable(zip_args)
+                for i in range(len(zip_args)):
+                    assign = Assign(iterator[i],IndexedBase(iterable.args[i])[indx])
+                    assign.set_fst(stmt)
+                    body = [assign] + body
+                
+                iterable = Function('range')(Function('len')(iterable.args[0]))    
+                iterator = indx
+            elif name == 'enumerate':
+                indx = iterator.args[0]
+                var = iterator.args[1]
+                assign = Assign(var, IndexedBase(iterable.args[0])[indx])
+                assign.set_fst(stmt)
+                iterable = Function('range')(Function('len')(iterable.args[0]))
+                iterator = indx
+                body = [assign] + body
+              
             expr = For(iterator, iterable, body, strict=False)
             return expr
+      
+        elif isinstance(stmt, ComprehensionLoopNode):
+            iterator = self._fst_to_ast(stmt.iterator)
+            iterable = self._fst_to_ast(stmt.target)
+            return For(iterator, iterable, [], strict=False)
+            
 
         elif isinstance(stmt, IfelseblockNode):
             args = self._fst_to_ast(stmt.value)
@@ -1583,7 +1626,33 @@ class Parser(object):
             body   = self._fst_to_ast(stmt.value)
             settings = None
             return With(domain, body, settings)
-
+     
+        elif isinstance(stmt, ListComprehensionNode):
+            result = self._fst_to_ast(stmt.result)
+            generators = list(self._fst_to_ast(stmt.generators))
+            target = self._fst_to_ast(stmt.parent.target)
+            args = [i.target for i in generators]
+            index = self.create_variable(target+result)
+            target = IndexedBase(target)[index]
+            target = Assign(target, result)
+            assign1 = Assign(index,0)
+            assign1.set_fst(stmt)
+            target.set_fst(stmt)
+            generators[-1].insert2body(target)
+            assign2 = Assign(index,index+1)
+            assign2.set_fst(stmt)
+            generators[-1].insert2body(assign2)
+              
+            indexes = [generators[-1].target]
+            while len(generators)>1:
+                F = generators.pop()
+                generators[-1].insert2body(F)
+                indexes.append(generators[-1].target)
+            indexes = indexes[::-1]
+            for i in range(len(indexes)):
+                indexes[i]=Symbol(indexes[i].name, integer=True)
+            return FunctionalFor([assign1,generators[-1]], target, indexes, index)
+    
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
             errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
@@ -1623,7 +1692,7 @@ class Parser(object):
         #d_var['datatype'] = None
         d_var['datatype'] = NativeSymbol()
         d_var['allocatable'] = None
-        d_var['shape'] = None
+        d_var['shape'] = ()
         d_var['rank'] = 0
         d_var['is_pointer'] = None
         d_var['is_target'] = None
@@ -1702,7 +1771,7 @@ class Parser(object):
                     if isinstance(i, Slice):
                         shape.append(i)
             else:
-                shape = None
+                shape = ()
 
             rank = max(0, var.rank - expr.rank)
             if rank > 0:
@@ -1732,7 +1801,7 @@ class Parser(object):
         elif isinstance(expr, Range):
             d_var['datatype'] = NativeRange()
             d_var['allocatable'] = False
-            d_var['shape'] = None
+            d_var['shape'] = ()
             d_var['rank'] = 0
             d_var['cls_base'] = expr  # TODO: shall we keep it?
             return d_var
@@ -1785,7 +1854,7 @@ class Parser(object):
             # ...
 
             # ...
-            shape = None
+            shape = ()
             for s in shapes:
                 if s:
                     shape = s
@@ -2366,6 +2435,8 @@ class Parser(object):
                     i.set_fst(expr.fst)
                 rhs = self._annotate(rhs, **settings)
                 return rhs
+            if isinstance(rhs, FunctionalFor):
+                return rhs
 
             # d_var can be a list of dictionaries
             elif isinstance(rhs, FunctionCall):
@@ -2385,7 +2456,7 @@ class Parser(object):
                 d_var = {}
                 d_var['datatype'] = dtype
                 d_var['allocatable'] = False
-                d_var['shape'] = None
+                d_var['shape'] =()
                 d_var['rank'] = 0
                 d_var['is_target'] = True
 
@@ -2647,23 +2718,108 @@ class Parser(object):
 
         elif isinstance(expr, For):
             # treatment of the index/indices
+            itr = expr.iterable
+            body = list(expr.body)
             if isinstance(expr.target, Symbol):
                 name = str(expr.target.name)
                 var = self.get_variable(name)
                 target = var
                 if var is None:
-                    target = Variable('int', name, rank=0)
-                    self.insert_variable(target)
+                    name_ = type(itr).__name__
+                    if name_ == 'range':
+                        target = Variable('int', name, rank=0)
+                        self.insert_variable(target)
+                        
             else:
                 dtype = type(expr.target)
                 # TODO ERROR not tested yet
                 errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
-
-            itr = self._annotate(expr.iterable, **settings)
-            body = self._annotate(expr.body, **settings)
+  
+            itr = self._annotate(itr, **settings)
+            body = self._annotate(body, **settings)
             return For(target, itr, body)
+        
+        elif isinstance(expr, FunctionalFor):
+            target = expr.target
+            loops = expr.loops[1]
+            indexes = expr.indexes
+            index = expr.index
+            names = []
+            idx = []
+            for i in indexes:
+                name = str(i.name)
+                names.append(name)
+                var = Variable('int', name, rank=0)
+                self.insert_variable(var)
+                idx.append(var)
+            
+            var_name = str(target.lhs.base)
+            
+            d_var = self._infere_type(target.rhs, **settings)
+            dtype = d_var.pop('datatype')
+            d_var['rank'] += 1
+            shape = list(d_var['shape'])
+            d_var['is_pointer'] = True
+            dims = [] 
+            body = loops
+            while isinstance(body, For):
+                a = body.iterable
+                if not type(a).__name__=='range':
+                    raise NotImplementedError('TODO')
+                args = list(a.args)
+                stop = None
+                start = 0
+                step = 1
+                for i in range(len(args)):
+                    for j in args[i].atoms(Symbol):
+                        if j.name in names:
+                            args[i]=args[i].subs(j,Symbol(j.name, integer=True))
+                            
+                if len(args)==1:
+                    stop = args[0]
+                elif len(args)==2:
+                    start = args[0]
+                    stop =  args[1]
+                else:
+                    start = args[0]
+                    stop = args[1]
+                    step = args[2]
+                size = (stop-start)/step
+                dims.append((size, step, start, stop))
+                body = body.body[0]
+            dim = dims[-1][0]
+            #we now calculate the size of the array which will be allocated
+            for i in range(len(dims)-1,0,-1):
+                size = dims[i-1][0]
+                step = dims[i-1][1]
+                start= dims[i-1][2]
+
+                if not size.is_integer: 
+                    size = ceiling(size)
+
+                if not dim.is_integer:
+                    dim = ceiling(dim)
+
+                dim = Summation(dim.subs(indexes[i-1],start+step*indexes[i-1]),
+                                                     (indexes[i-1],0, size -1))
+                dim = dim.doit()
+
+            if isinstance(dim, Summation):
+                raise NotImplementedError('TODO')
+            #TODO find faster way to calculate dim when step>1 and not isinstance(dim, Sum)
+            #maybe use the c++ library of sympy
+            shape.append(dim)
+            d_var['shape'] = Tuple(*shape)
+            var = Variable(dtype, var_name, **d_var)
+            self.insert_variable(var)
+            loops = [self._annotate(i, **settings) for i in expr.loops]
+            target = self._annotate(target, **settings)
+            index = self._annotate(index, **settings)
+            return FunctionalFor(loops, var, idx, index)
+            
+
 
         elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)

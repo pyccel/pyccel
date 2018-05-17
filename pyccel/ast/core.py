@@ -1265,6 +1265,32 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
+  
+    def insert2body(self, stmt):
+        self.body.append(stmt)
+
+class FunctionalFor(Basic):
+    """."""
+  
+    def __new__(cls, loops, target, indexes, index =None):
+        return Basic.__new__(cls, loops, target, indexes, index)
+  
+    @property
+    def loops(self):
+        return self._args[0]
+ 
+    @property
+    def target(self):
+        return self._args[1]
+
+    @property
+    def indexes(self):
+        return self._args[2]
+
+    @property
+    def index(self):
+        return self._args[3]
+    
 
 class ForIterator(For):
     """Class that describes iterable classes defined by the user."""
@@ -1314,24 +1340,6 @@ class ForIterator(For):
 # The following are defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
-
-
-class EqualityStmt(Relational):
-    """Represents a relational equality expression in the code."""
-    def __new__(cls, lhs, rhs):
-        lhs = sympify(lhs)
-        rhs = sympify(rhs)
-        return Relational.__new__(cls, lhs, rhs)
-    @property
-    def canonical(self):
-        return self
-
-class NotequalStmt(Relational):
-    """Represents a relational not equality expression in the code."""
-    def __new__(cls, lhs, rhs):
-        lhs = sympify(lhs)
-        rhs = sympify(rhs)
-        return Relational.__new__(cls, lhs, rhs)
 
 
 class Is(Basic):
@@ -1684,14 +1692,9 @@ class Variable(Symbol):
 
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
-
-      #  if isinstance(shape, Tuple) and len(shape) == 1:
-      #      shape = shape[0]
-
-#        if not shape==None:
-#            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
-#                raise TypeError("shape must be an instance of int or tuple of int")
-
+        
+        if rank == 0:
+            shape = ()
         # TODO improve order of arguments
         return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
                              cls_base, cls_parameters,
