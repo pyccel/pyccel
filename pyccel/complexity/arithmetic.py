@@ -15,7 +15,6 @@ from sympy.utilities.iterables import iterable
 
 from pyccel.ast import (For, Assign, Declare, Variable,
                         datatype, While, NativeFloat,
-                        EqualityStmt, NotequalStmt,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
                         IndexedVariable, Slice, If,
