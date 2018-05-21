@@ -42,7 +42,7 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Range, Tensor, Block
+from pyccel.ast.core import Range, Product, Block , Zip, Enumerate
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
@@ -770,7 +770,7 @@ class FCodePrinter(CodePrinter):
 
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
-        if isinstance(expr.rhs, (Range, Tensor)):
+        if isinstance(expr.rhs, (Range, Product)):
             return ''
 
         if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
@@ -1318,18 +1318,23 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
-        if not isinstance(expr.iterable, (Range, Tensor)):
+        if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate)):
             msg  = "Only iterable currently supported are Range, "
-            msg += "Tensor"
+            msg += "Product"
             raise NotImplementedError(msg)
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
                                        prolog, epilog)
-        elif isinstance(expr.iterable, Tensor):
-            for i, a in zip(expr.target, expr.iterable.ranges):
-                prolog, epilog = _do_range(i, a, \
+        elif isinstance(expr.iterable, Product):
+            for i, a in zip(expr.target, expr.iterable.args):
+                itr_=Range(a.shape[0])
+                prolog, epilog = _do_range(i, itr_, \
                                            prolog, epilog)
+        elif isinstance(expr.iterable, (Zip, Enumerate)):
+            itr_=Range(expr.iterable.element.shape[0])
+            prolog, epilog = _do_range(expr.target, itr_, \
+                                       prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
 
@@ -1632,6 +1637,7 @@ class FCodePrinter(CodePrinter):
     # .....................................................
 
     def _print_ForIterator(self, expr):
+        return self._print_For(expr)
         depth = expr.depth
 
         prolog = ''

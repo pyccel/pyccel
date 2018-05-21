@@ -707,6 +707,54 @@ class With(Basic):
         body += exit.body
         return Block('with', [], body)
 
+class Product(Basic):
+    """
+    Represents a Product stmt.
+
+    """
+    def __new__(cls, *args):
+        if not isinstance(args, (tuple, list, Tuple)):
+            raise TypeError('args must be an iterable')
+        elif len(args)<2:
+            raise ValueError('args must be of lenght > 2')
+        return Basic.__new__(cls,*args)
+    
+    @property
+    def elements(self):
+        return self._args
+
+
+
+class Zip(Basic):
+    """
+    Represents a zip stmt.
+
+    """
+    def __new__(cls, *args):
+        if not isinstance(args, (tuple, list, Tuple)):
+            raise TypeError('args must be an iterable')
+        elif len(args)<2:
+            raise ValueError('args must be of lenght > 2')
+        return Basic.__new__(cls,*args)
+    
+    @property
+    def element(self):
+        return self._args[0]
+
+class Enumerate(Basic):
+    """
+    Reresents the enumerate stmt
+  
+    """    
+    def __new__(cls, arg):
+        if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
+            raise TypeError('Expecting an arg of valid type')
+        return Basic.__new__(cls, arg)
+    @property
+    def element(self):
+        return self._args[0]
+
+
 class Range(Basic):
     """
     Represents a range.
@@ -1240,7 +1288,7 @@ class For(Basic):
             target = sympify(target)
 
             cond_iter = iterable(iter)
-            cond_iter = cond_iter or (isinstance(iter, (Range, Tensor)))
+            cond_iter = cond_iter or (isinstance(iter, (Range, Product , Enumerate, Zip)))
             cond_iter = cond_iter or (isinstance(iter, Variable)
                                       and is_iterable_datatype(iter.dtype))
             cond_iter = cond_iter or (isinstance(iter, ConstructorCall)
@@ -1294,15 +1342,21 @@ class FunctionalFor(Basic):
 
 class ForIterator(For):
     """Class that describes iterable classes defined by the user."""
+    def __new__(cls, target, iter, body, strict=True):
 
-    @property
-    def target(self):
-        ts = super(ForIterator, self).target
+        if isinstance(iter, Symbol):
+            iter = Range(Len(iter))
+        return For.__new__(cls, target, iter, body, strict)
 
-        if not(len(ts) == self.depth):
-            raise ValueError('wrong number of targets')
+    #TODO uncomment later when we intriduce iterators
+    #@property
+    #def target(self):
+    #    ts = super(ForIterator, self).target
 
-        return ts
+    #    if not(len(ts) == self.depth):
+    #        raise ValueError('wrong number of targets')
+
+    #    return ts
 
     @property
     def depth(self):
@@ -1743,6 +1797,10 @@ class Variable(Symbol):
     @property
     def is_optional(self):
         return self._args[10]
+
+    @property
+    def is_integer(self):
+        return isinstance(self.dtype, NativeInteger) and self.rank==0
 
     @property
     def is_ndarray(self):
@@ -2993,6 +3051,10 @@ class Len(Function):
     @property
     def dtype(self):
         return 'int'
+
+    @property
+    def is_integer(self):
+        return True
 
 
 # TODO - add examples

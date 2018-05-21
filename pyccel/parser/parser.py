@@ -69,7 +69,7 @@ from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
 from pyccel.ast import FunctionDef, Interface, PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
-from pyccel.ast import For, FunctionalFor
+from pyccel.ast import For, FunctionalFor, ForIterator
 from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
@@ -91,8 +91,8 @@ from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment
 from pyccel.ast import With
-from pyccel.ast import Range
-from pyccel.ast import List, Dlist
+from pyccel.ast import Range, Zip, Enumerate, Product
+from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -137,7 +137,7 @@ from sympy.logic.boolalg import true, false
 from sympy.logic.boolalg import Not
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.tensor import Indexed, IndexedBase
-from sympy.utilities.iterables import iterable
+from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy import Sum as Summation, Heaviside, KroneckerDelta
 
 from collections import OrderedDict
@@ -1505,40 +1505,16 @@ class Parser(object):
             iterator = self._fst_to_ast(stmt.iterator)
             iterable = self._fst_to_ast(stmt.target)
             body = list(self._fst_to_ast(stmt.value))
-            name = type(iterable).__name__
-            if name == 'Symbol':
-                indx = self.create_variable(iterable)
-                assign = Assign(iterator,IndexedBase(iterable)[indx])
-                assign.set_fst(stmt)
-                iterable = Function('range')(Function('len')(iterable))
-                iterator = indx
-                body = [assign] + body      
-            elif name == 'zip':
-                zip_args = iterable.args
-                indx = self.create_variable(zip_args)
-                for i in range(len(zip_args)):
-                    assign = Assign(iterator[i],IndexedBase(iterable.args[i])[indx])
-                    assign.set_fst(stmt)
-                    body = [assign] + body
-                
-                iterable = Function('range')(Function('len')(iterable.args[0]))    
-                iterator = indx
-            elif name == 'enumerate':
-                indx = iterator.args[0]
-                var = iterator.args[1]
-                assign = Assign(var, IndexedBase(iterable.args[0])[indx])
-                assign.set_fst(stmt)
-                iterable = Function('range')(Function('len')(iterable.args[0]))
-                iterator = indx
-                body = [assign] + body
-              
             expr = For(iterator, iterable, body, strict=False)
+            expr.set_fst(stmt)
             return expr
       
         elif isinstance(stmt, ComprehensionLoopNode):
             iterator = self._fst_to_ast(stmt.iterator)
             iterable = self._fst_to_ast(stmt.target)
-            return For(iterator, iterable, [], strict=False)
+            expr = For(iterator, iterable, [], strict=False)
+            expr.set_fst(stmt)
+            return expr
             
 
         elif isinstance(stmt, IfelseblockNode):
@@ -1649,8 +1625,6 @@ class Parser(object):
                 generators[-1].insert2body(F)
                 indexes.append(generators[-1].target)
             indexes = indexes[::-1]
-            for i in range(len(indexes)):
-                indexes[i]=Symbol(indexes[i].name, integer=True)
             return FunctionalFor([assign1,generators[-1]], target, indexes, index)
     
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
@@ -1765,7 +1739,7 @@ class Parser(object):
 
             d_var['datatype'] = var.dtype
 
-            if iterable(var.shape):
+            if sympy_iterable(var.shape):
                 shape = []
                 for (s, i) in zip(var.shape, expr.indices):
                     if isinstance(i, Slice):
@@ -2341,7 +2315,7 @@ class Parser(object):
                     # the namespace
                     #TODO improve
                     lhs = expr.lhs
-                    if not iterable(expr.lhs):
+                    if not sympy_iterable(expr.lhs):
                         lhs = [expr.lhs]
 
                     results = []
@@ -2388,7 +2362,7 @@ class Parser(object):
                         name = macro.name
                         master_args = macro.master_arguments
                         lhs = expr.lhs
-                        if not iterable(expr.lhs):
+                        if not sympy_iterable(expr.lhs):
                             lhs = [expr.lhs]
 
                         results = []
@@ -2718,43 +2692,71 @@ class Parser(object):
 
         elif isinstance(expr, For):
             # treatment of the index/indices
-            itr = expr.iterable
-            body = list(expr.body)
-            if isinstance(expr.target, Symbol):
-                name = str(expr.target.name)
+            iterable = self._annotate(expr.iterable, **settings)
+            body = list(expr.body) 
+            iterator = expr.target
+
+            if isinstance(iterable, Variable):
+                indx = self.create_variable(iterable)
+                assign = Assign(iterator,IndexedBase(iterable)[indx])
+                assign.set_fst(expr.fst)
+                iterator = indx
+                body = [assign] + body
+            elif isinstance(iterable, Zip):
+                args = iterable.args
+                indx = self.create_variable(args)
+                for i in range(len(args)):
+                    assign = Assign(iterator[i],IndexedBase(args[i])[indx])
+                    assign.set_fst(expr.fst)
+                    body = [assign] + body   
+                iterator = indx
+            elif isinstance(iterable, Enumerate):
+                indx = iterator.args[0]
+                var = iterator.args[1]
+                assign = Assign(var, IndexedBase(iterable.args[0])[indx])
+                assign.set_fst(expr.fst)
+                iterator = indx
+                body = [assign] + body
+            elif isinstance(iterable, Product):
+                args = iterable.args
+                iterator = list(iterator)
+                for i in range(len(args)):
+                    indx = self.create_variable(i)
+                    assign = Assign(iterator[i],IndexedBase(args[i])[indx])
+                    assign.set_fst(expr.fst)
+                    body = [assign] + body
+                    iterator[i] = indx
+            if isinstance(iterator, Symbol):
+                name = str(iterator.name)
                 var = self.get_variable(name)
                 target = var
                 if var is None:
-                    name_ = type(itr).__name__
-                    if name_ == 'range':
-                        target = Variable('int', name, rank=0)
-                        self.insert_variable(target)
-                        
+                    target = Variable('int', name, rank=0)
+                    self.insert_variable(target)
+            elif isinstance(iterator, list):
+                target = []
+                for i in iterator:
+                    name = str(i.name)
+                    var = Variable('int', name, rank=0)
+                    self.insert_variable(var)
+                    target.append(var) 
             else:
-                dtype = type(expr.target)
+                dtype = type(iterator)
                 # TODO ERROR not tested yet
                 errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
-  
-            itr = self._annotate(itr, **settings)
             body = self._annotate(body, **settings)
-            return For(target, itr, body)
+            
+            if isinstance(iterable, Variable):
+                return ForIterator(target, iterable, body)
+            return For(target, iterable, body)
         
         elif isinstance(expr, FunctionalFor):
             target = expr.target
             loops = expr.loops[1]
-            indexes = expr.indexes
             index = expr.index
-            names = []
-            idx = []
-            for i in indexes:
-                name = str(i.name)
-                names.append(name)
-                var = Variable('int', name, rank=0)
-                self.insert_variable(var)
-                idx.append(var)
-            
+            indexes = expr.indexes  
             var_name = str(target.lhs.base)
             
             d_var = self._infere_type(target.rhs, **settings)
@@ -2765,47 +2767,60 @@ class Parser(object):
             dims = [] 
             body = loops
             while isinstance(body, For):
-                a = body.iterable
-                if not type(a).__name__=='range':
-                    raise NotImplementedError('TODO')
-                args = list(a.args)
+                a = self._annotate(body.iterable, **settings)
                 stop = None
                 start = 0
                 step = 1
-                for i in range(len(args)):
-                    for j in args[i].atoms(Symbol):
-                        if j.name in names:
-                            args[i]=args[i].subs(j,Symbol(j.name, integer=True))
-                            
-                if len(args)==1:
-                    stop = args[0]
-                elif len(args)==2:
-                    start = args[0]
-                    stop =  args[1]
+                var = body.target
+                if isinstance(a, Range):
+                    var = Variable('int',var.name)
+                    stop = a.stop
+                    start = a.start
+                    step = a.step
+                elif isinstance(a, (Zip, Enumerate)):
+                    dvar = self._infere_type(a.element, **settings)
+                    dtype = dvar.pop('datatype')
+                    if dvar['rank']>0:
+                        dvar['rank'] -= 1
+                        dvar['shape'] = dvar['shape'][1:]
+                    if dvar['rank'] == 0:
+                        dvar['allocatable'] = dvar['is_pointer'] = False
+                    var = Variable(dtype , var.name, **dvar)
+                    stop = a.element.shape[0]
+                elif isinstance(a, Variable):
+                    dvar = self._infere_type(a, **settings)
+                    dtype = dvar.pop('datatype')
+                    if dvar['rank']>0:
+                        dvar['rank'] -= 1
+                        dvar['shape'] = dvar['shape'][1:]
+                    if dvar['rank'] == 0:
+                        dvar['allocatable'] = dvar['is_pointer'] = False
+                    var = Variable(dtype , var.name, **dvar)
+                    stop = a.shape[0]
                 else:
-                    start = args[0]
-                    stop = args[1]
-                    step = args[2]
+                    raise NotImplementedError('TODO')
+                self.insert_variable(var)
+
                 size = (stop-start)/step
                 dims.append((size, step, start, stop))
                 body = body.body[0]
             dim = dims[-1][0]
             #we now calculate the size of the array which will be allocated
+            for i in range(len(indexes)):
+                var = self.get_variable(indexes[i].name)
+                if var is None:
+                    raise ValueError('variable not found')
+                indexes[i] = var
+
             for i in range(len(dims)-1,0,-1):
                 size = dims[i-1][0]
                 step = dims[i-1][1]
                 start= dims[i-1][2]
-
-                if not size.is_integer: 
-                    size = ceiling(size)
-
-                if not dim.is_integer:
-                    dim = ceiling(dim)
-
+                size = ceiling(size)
+                dim = ceiling(dim)
                 dim = Summation(dim.subs(indexes[i-1],start+step*indexes[i-1]),
-                                                     (indexes[i-1],0, size -1))
+                                                    (indexes[i-1],0, size -1))
                 dim = dim.doit()
-
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
             #TODO find faster way to calculate dim when step>1 and not isinstance(dim, Sum)
@@ -2817,7 +2832,7 @@ class Parser(object):
             loops = [self._annotate(i, **settings) for i in expr.loops]
             target = self._annotate(target, **settings)
             index = self._annotate(index, **settings)
-            return FunctionalFor(loops, var, idx, index)
+            return FunctionalFor(loops, var, indexes, index)
             
 
 
