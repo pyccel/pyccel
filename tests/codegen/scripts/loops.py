@@ -42,4 +42,9 @@ for i1,j1 in zip(x1, y1):
 for i1,j1 in enumerate(x1):
     print i1,j1
 
+from itertools import product
+for i2,j2 in product(x1, y1):
+    print i2,j2
+
+
 

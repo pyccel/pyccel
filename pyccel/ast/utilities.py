@@ -167,7 +167,7 @@ def builtin_import(expr):
     elif source == 'itertools':
         target = str(expr.target[0])
         
-        if target == 'array':
+        if target == 'product':
             return (target, Product)
         
     

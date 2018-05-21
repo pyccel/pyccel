@@ -2695,6 +2695,7 @@ class Parser(object):
             iterable = self._annotate(expr.iterable, **settings)
             body = list(expr.body) 
             iterator = expr.target
+
             if isinstance(iterable, Variable):
                 indx = self.create_variable(iterable)
                 assign = Assign(iterator,IndexedBase(iterable)[indx])
@@ -2717,15 +2718,28 @@ class Parser(object):
                 iterator = indx
                 body = [assign] + body
             elif isinstance(iterable, Product):
-                raise NotImplementedError('TODO')
-
+                args = iterable.args
+                iterator = list(iterator)
+                for i in range(len(args)):
+                    indx = self.create_variable(i)
+                    assign = Assign(iterator[i],IndexedBase(args[i])[indx])
+                    assign.set_fst(expr.fst)
+                    body = [assign] + body
+                    iterator[i] = indx
             if isinstance(iterator, Symbol):
                 name = str(iterator.name)
                 var = self.get_variable(name)
                 target = var
                 if var is None:
                     target = Variable('int', name, rank=0)
-                    self.insert_variable(target)    
+                    self.insert_variable(target)
+            elif isinstance(iterator, list):
+                target = []
+                for i in iterator:
+                    name = str(i.name)
+                    var = Variable('int', name, rank=0)
+                    self.insert_variable(var)
+                    target.append(var) 
             else:
                 dtype = type(iterator)
                 # TODO ERROR not tested yet

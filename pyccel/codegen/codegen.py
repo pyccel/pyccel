@@ -157,6 +157,8 @@ class Codegen(object):
                 if isinstance(stmt, For):
                     if isinstance(stmt.target, Variable):
                         vars_ += [stmt.target] + collect_vars(stmt.body)
+                    else:
+                        vars_ += stmt.target + collect_vars(stmt.body)
                 elif isinstance(stmt, FunctionalFor):
                     vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
                 elif isinstance(stmt, If):

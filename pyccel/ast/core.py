@@ -1288,7 +1288,7 @@ class For(Basic):
             target = sympify(target)
 
             cond_iter = iterable(iter)
-            cond_iter = cond_iter or (isinstance(iter, (Range, Tensor , Enumerate, Zip)))
+            cond_iter = cond_iter or (isinstance(iter, (Range, Product , Enumerate, Zip)))
             cond_iter = cond_iter or (isinstance(iter, Variable)
                                       and is_iterable_datatype(iter.dtype))
             cond_iter = cond_iter or (isinstance(iter, ConstructorCall)
