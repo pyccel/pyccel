@@ -42,7 +42,7 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Range, Tensor, Block
+from pyccel.ast.core import Range, Tensor, Block , Zip, Enumerate
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
@@ -1318,7 +1318,7 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
-        if not isinstance(expr.iterable, (Range, Tensor)):
+        if not isinstance(expr.iterable, (Range, Tensor , Zip, Enumerate)):
             msg  = "Only iterable currently supported are Range, "
             msg += "Tensor"
             raise NotImplementedError(msg)
@@ -1330,6 +1330,10 @@ class FCodePrinter(CodePrinter):
             for i, a in zip(expr.target, expr.iterable.ranges):
                 prolog, epilog = _do_range(i, a, \
                                            prolog, epilog)
+        elif isinstance(expr.iterable, (Zip, Enumerate)):
+            itr_=Range(Len(expr.iterable.element))
+            prolog, epilog = _do_range(expr.target, itr_, \
+                                       prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
 
@@ -1632,6 +1636,7 @@ class FCodePrinter(CodePrinter):
     # .....................................................
 
     def _print_ForIterator(self, expr):
+        return self._print_For(expr)
         depth = expr.depth
 
         prolog = ''

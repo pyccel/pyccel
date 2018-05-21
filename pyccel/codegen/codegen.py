@@ -10,7 +10,7 @@ from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
 from pyccel.ast import Header, EmptyLine, NewLine, Comment
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign , Assigns
 from pyccel.ast import Variable, DottedName
-from pyccel.ast import For, If, While, FunctionalFor
+from pyccel.ast import For, If, While, FunctionalFor, ForIterator
 from pyccel.ast import Is
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
@@ -158,7 +158,7 @@ class Codegen(object):
                     if isinstance(stmt.target, Variable):
                         vars_ += [stmt.target] + collect_vars(stmt.body)
                 elif isinstance(stmt, FunctionalFor):
-                    vars_ += [stmt.target] + stmt.indexes +[stmt.loops[0].lhs]
+                    vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
                 elif isinstance(stmt, If):
                     vars_ += collect_vars(stmt.bodies)
                 elif isinstance(stmt, While):
