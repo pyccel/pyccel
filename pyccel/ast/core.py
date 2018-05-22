@@ -1799,10 +1799,6 @@ class Variable(Symbol):
         return self._args[10]
 
     @property
-    def is_integer(self):
-        return isinstance(self.dtype, NativeInteger) and self.rank==0
-
-    @property
     def is_ndarray(self):
         """user friendly method to check if the variable is an ndarray:
             1. have a rank > 0

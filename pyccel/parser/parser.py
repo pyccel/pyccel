@@ -2804,22 +2804,25 @@ class Parser(object):
                 size = (stop-start)/step
                 dims.append((size, step, start, stop))
                 body = body.body[0]
-            dim = dims[-1][0]
             #we now calculate the size of the array which will be allocated
             for i in range(len(indexes)):
                 var = self.get_variable(indexes[i].name)
                 if var is None:
                     raise ValueError('variable not found')
                 indexes[i] = var
-
+            
+            dim = dims[-1][0]
             for i in range(len(dims)-1,0,-1):
                 size = dims[i-1][0]
                 step = dims[i-1][1]
                 start= dims[i-1][2]
                 size = ceiling(size)
                 dim = ceiling(dim)
-                dim = Summation(dim.subs(indexes[i-1],start+step*indexes[i-1]),
-                                                    (indexes[i-1],0, size -1))
+                print dim,'before'
+                print indexes[i-1],start+step*indexes[i-1]
+                dim = dim.subs(indexes[i-1],start+step*indexes[i-1])
+                print dim,'after'
+                dim = Summation(dim, (indexes[i-1],0, size -1))
                 dim = dim.doit()
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
