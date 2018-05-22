@@ -15,6 +15,7 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
+from sympy.core.assumptions import StdFactKB
 
 #from sympy.sets.fancysets import Range as sm_Range
 
@@ -1750,9 +1751,26 @@ class Variable(Symbol):
         if rank == 0:
             shape = ()
         # TODO improve order of arguments
-        return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
+        obj = Basic.__new__(cls, dtype, name, rank, allocatable, shape,
                              cls_base, cls_parameters,
                              is_pointer, is_target, is_polymorphic, is_optional)
+
+        assumptions ={}
+        if isinstance(dtype, NativeInteger): 
+            assumptions['integer'] = True
+        elif isinstance(dtype, (NativeFloat,NativeDouble)):
+            assumptions['real'] = True
+        elif isinstance(dtype, NativeComplex):
+            assumptions['complex'] = True
+        else:
+            raise TypeError('Undefined datatype')
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+        
+        
+     
 
     @property
     def dtype(self):
@@ -1888,7 +1906,23 @@ class DottedVariable(AtomicExpr, Boolean):
                             ' got instead {0} of type {1}'.format(str(args[1]),
                                                                   type(args[1])))
 
-        return Basic.__new__(cls, args[0], args[1])
+        obj =  Basic.__new__(cls, args[0], args[1])
+        assumptions ={}
+        if isinstance(args[1], Variable):
+            dtype = args[1].dtype
+            if isinstance(dtype, NativeInteger): 
+                assumptions['integer'] = True
+            elif isinstance(dtype, (NativeFloat,NativeDouble)):
+                assumptions['real'] = True
+            elif isinstance(dtype, NativeComplex):
+                assumptions['complex'] = True
+            else:
+                raise TypeError('Undefined datatype')
+
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def lhs(self):
@@ -3033,12 +3067,14 @@ class Len(Function):
     """
     Represents a 'len' expression in the code.
     """
-    # TODO : remove later
-    def __str__(self):
-        return "len"
 
     def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'integer':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def arg(self):
@@ -3047,11 +3083,6 @@ class Len(Function):
     @property
     def dtype(self):
         return 'int'
-
-    @property
-    def is_integer(self):
-        return True
-
 
 # TODO - add examples
 class ZerosLike(Function):

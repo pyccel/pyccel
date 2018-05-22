@@ -1942,7 +1942,7 @@ class Parser(object):
             raise NotImplementedError('TODO: Complex case')
 
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
-            return sympify(float(expr))
+            return Float(float(expr))
 
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             return expr
@@ -2818,10 +2818,7 @@ class Parser(object):
                 start= dims[i-1][2]
                 size = ceiling(size)
                 dim = ceiling(dim)
-                print dim,'before'
-                print indexes[i-1],start+step*indexes[i-1]
                 dim = dim.subs(indexes[i-1],start+step*indexes[i-1])
-                print dim,'after'
                 dim = Summation(dim, (indexes[i-1],0, size -1))
                 dim = dim.doit()
             if isinstance(dim, Summation):
