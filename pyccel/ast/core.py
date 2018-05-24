@@ -53,7 +53,7 @@ from .basic import Basic
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeFloat, NativeDouble,
                         NativeComplex,
-                        NativeRange, NativeTensor)
+                        NativeRange, NativeTensor, NativeString)
 
 
 
@@ -1756,13 +1756,14 @@ class Variable(Symbol):
                              is_pointer, is_target, is_polymorphic, is_optional)
 
         assumptions ={}
+        alloweddtypes = (NativeBool, NativeRange, NativeString)
         if isinstance(dtype, NativeInteger): 
             assumptions['integer'] = True
         elif isinstance(dtype, (NativeFloat,NativeDouble)):
             assumptions['real'] = True
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
-        else:
+        elif not isinstance(dtype, alloweddtypes):
             raise TypeError('Undefined datatype')
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
@@ -1916,7 +1917,7 @@ class DottedVariable(AtomicExpr, Boolean):
                 assumptions['real'] = True
             elif isinstance(dtype, NativeComplex):
                 assumptions['complex'] = True
-            else:
+            elif not isinstance(dtype, NativeBool):
                 raise TypeError('Undefined datatype')
 
         ass_copy = assumptions.copy()

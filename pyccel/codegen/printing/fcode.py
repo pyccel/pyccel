@@ -49,7 +49,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If)
+                             Print, If, Nil)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeSymbol
@@ -240,10 +240,15 @@ class FCodePrinter(CodePrinter):
             for i in expr.funcs:
                 variables += i.global_vars
             variables =list(set(variables))
-            for dec in decs:
+            for i in range(len(decs)):
                 #remove variables that are declared in the modules
-                if dec.variable in variables:
-                    decs.remove(dec)
+                if decs[i].variable in variables:
+                    decs[i] = None
+            decs_ = []
+            for i in decs:
+                if i:
+                    decs_.append(i)
+            decs = decs_
 
             module_utils = Module(expr.name, list(variables),
                                   expr.funcs, expr.interfaces, expr.classes,
@@ -1160,6 +1165,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pass(self, expr):
         return ''
+   
+    def _print_Nil(self, expr):
+        return ''
 
     def _print_Return(self, expr):
         code = ''
@@ -1822,25 +1830,18 @@ class FCodePrinter(CodePrinter):
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
 
-    def _print_FunctionCall(self, expr):
+    def _print_Function(self, expr):
         # for the moment, this is only used if the function has not arguments
-        func = expr.func
-        name = func.name
-        name = self._print(name)
+        args = expr.args
+        name = type(expr).__name__
 
         # ...
-        code_args = ''
-        if not(expr.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
+ 
+        
+        code_args = ', '.join(self._print(i) for i in args)
 
         code = '{0}({1})'.format(name, code_args)
-        # ...
-
-        # ...
-        if func.is_procedure:
-            code = 'call {0}'.format(code)
-        # ...
-
+       
         return self._get_statement(code)
 
 
