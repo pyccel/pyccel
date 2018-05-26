@@ -1760,7 +1760,8 @@ class Variable(Symbol):
 
         assumptions ={}
         class_type = cls_base or dtype.__class__.__name__.startswith('Pyccel')
-        alloweddtypes = (NativeBool, NativeRange, NativeString, NativeGeneric)
+        alloweddtypes = (NativeBool, NativeRange, NativeString,
+                        NativeSymbol, NativeGeneric)
         if isinstance(dtype, NativeInteger): 
             assumptions['integer'] = True
         elif isinstance(dtype, (NativeFloat,NativeDouble)):
