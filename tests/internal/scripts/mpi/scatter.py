@@ -26,7 +26,7 @@ mpi_comm_rank(comm, rank, ierr)
 master    = 1
 nb_values = 8
 
-block_length = nb_values / size
+block_length = nb_values // size
 
 data = zeros(block_length, 'int')
 

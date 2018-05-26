@@ -59,7 +59,7 @@ from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
 from pyccel.ast import String
 from pyccel.ast import datatype, DataTypeFactory
-from pyccel.ast import Nil
+from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign ,Assigns
@@ -99,7 +99,7 @@ from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registe
 from pyccel.ast import Macro
 from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
-from pyccel.ast import SumFunction
+from pyccel.ast import SumFunction, Subroutine
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -127,7 +127,6 @@ from sympy import Add, Mul, Pow, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
 from sympy import ceiling
-from sympy.core.basic import _atomic as sympy_atomic
 
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
@@ -219,7 +218,7 @@ def _get_name(var):
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
-    concerned: Functions and DottedVarviables. we don't
+    concerned: Functions and DottedVarviables, Variables. we don't
     return atoms that are inside such quantities too 
     """
     from sympy import preorder_traversal
@@ -227,22 +226,18 @@ def _atomic(e):
     pot = preorder_traversal(e)
     seen = set()
     free = e.free_symbols
-    atom_functions = OrderedDict()
-    atom_dotted_var = OrderedDict()
+    atoms_ = set()
     
     for p in pot:
         if p in seen:
             pot.skip()
             continue
         seen.add(p)
-        if isinstance(p, Application):
+        if isinstance(p, (Application, DottedVariable ,Variable)):
             pot.skip()
-            atom_functions[p] = None
-        elif isinstance(p, DottedVariable) and isinstance(p.rhs, Application):
-            pot.skip()
-            atom_dotted_vars[p] = None
-    
-    return atom_functions, atom_dotted_vars
+            atoms_.add(p)
+    return atoms_
+
 def _dtype(expr):
     if expr.is_integer:
         return 'int'
@@ -256,6 +251,13 @@ def _dtype(expr):
         raise TypeError('Unknown datatype {0}'.format(str(expr)))
 
 def str_dtype(dtype):
+    if isinstance(dtype, str):
+       if dtype == 'int':
+           return 'integer'
+       elif dtype in ['double', 'float']:
+           return 'real'
+       else:
+           return dtype
     if isinstance(dtype, NativeInteger): 
         return 'integer'
     elif isinstance(dtype, (NativeFloat,NativeDouble)):
@@ -273,14 +275,7 @@ def atom(e):
     concerned: Functions and DottedVarviables. contrary to _atom we
     return atoms that are inside such quantities too
     """
-    ls = []
-    ls.append(_atom(e))
-    ls_ = []
-    while len(ls[-1][0]+ls[-1][1])>0:
-        for i in ls[-1][0]:
-            ls_.append(_atom(i))
-#        for i in ls[-1][1]:
-    
+    pass
     
    
 
@@ -1314,7 +1309,7 @@ class Parser(object):
 
             elif stmt.value == '//':
                 second = Pow(second, -1, evaluate=False)
-                return floor(Mul(first, second, evaluate=False))
+                return Function('int')(Mul(first, second, evaluate=False))
 
             elif stmt.value == '%':
                 return Mod(first, second)
@@ -1840,9 +1835,10 @@ class Parser(object):
 
         elif isinstance(expr, Expr):
             ds = [self._infere_type(i, **settings) for i 
-            in sympy_atomic(expr) if isinstance(i, Variable)]
+            in _atomic(expr) if isinstance(i, (Variable, DottedVariable))]
             #we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
+            # so we assume all functions
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
@@ -1960,7 +1956,7 @@ class Parser(object):
             return Float(expr)
 
         elif isinstance(expr, complex):
-            raise NotImplementedError('TODO: Complex case')
+            return sympify(expr)
 
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
             return Float(float(expr))
@@ -2043,7 +2039,7 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == expr.rhs.name and 'property' \
                         in i.decorators:
-                        second = Function(expr.rhs)(Nil())
+                        second = Function(expr.rhs.name)(Nil())
                         expr = DottedVariable(first, second)
                         d_var = self._infere_type(i.results[0], **settings)
                         dtype = d_var['datatype']
@@ -2058,7 +2054,7 @@ class Parser(object):
                     return macro.master
 
                 self._current_class = first.cls_base
-                secfond = self._annotate(expr.rhs, **settings)
+                second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
             else:
                 macro = self.get_macro(rhs_name)
@@ -2071,19 +2067,25 @@ class Parser(object):
                     args = [self._annotate(i, **settings) for i in args]
                     args = macro.apply(args)
                     if isinstance(master, FunctionDef):
-                        return Function(master.name)(*args)
+                        return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO case of interface')
                 args = [self._annotate(arg, **settings) for arg in expr.rhs.args]
                 for i in first.cls_base.methods:
-                    if str(i.name) == rhs_name:
-                        second = Function(i.name)(*args)
-                        expr   = DottedVariable(first, second)
-                        d_var = self._infere_type(i.results[0], **settings)
-                        dtype = d_var['datatype']
-                        assumptions ={str_dtype(dtype):True}
-                        expr._assumptions = StdFactKB(assumptions)
-                        expr._assumptions._generator = assumptions.copy()
+                    if str(i.name.name) == rhs_name:
+                        if len(i.results)==1:
+                            second = Function(i.name.name)(*args)
+                            d_var = self._infere_type(i.results[0], **settings)
+                            dtype = d_var['datatype']
+                            assumptions ={str_dtype(dtype):True}
+                            expr._assumptions = StdFactKB(assumptions)
+                            expr._assumptions._generator = assumptions.copy()
+                        elif len(i.results)==0:
+                            second = Subroutine(i.name.name)(*args)
+                        elif len(i.results)>1:
+                            raise NotImplementedError('TODO case multiple return variables')
+
+                        expr = DottedVariable(first, second)
                         return expr
             return DottedVariable(first, second)
         elif isinstance(expr, (Add, Mul, Pow, And, Or,
@@ -2100,8 +2102,10 @@ class Parser(object):
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                if isinstance(expr, (Add, Mul)):
-                    expr_new = expr._new_rawargs(expr_new, a_new).doit()
+                if isinstance(expr, Add):
+                    expr_new = Add(expr_new, a_new)
+                elif isinstance(expr, Mul):
+                    expr_new = Mul(expr_new, a_new)
                 elif isinstance(expr, Pow):
                     expr_new = Pow(expr_new, a_new)
                 elif isinstance(expr, And):
@@ -2120,7 +2124,10 @@ class Parser(object):
                     expr_new = Gt(expr_new, a_new)
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new)
-            return expr_new.doit()
+            #TODO fix bug when we put expr_new.doit() for the indexedvariable
+            # somehow sympy creats new object and we loose the info
+            # for the types
+            return expr_new
 
         elif isinstance(expr, Lambda):
             expr_names =set(map(str,expr.expr.atoms(Symbol)))
@@ -2193,6 +2200,7 @@ class Parser(object):
             else:
                 # first we check if it is a macro, in this case, we will create
                 # an appropriate FunctionCall
+                
                 macro = self.get_macro(name)
                 if not(macro is None):
                     args = [self._annotate(i, **settings) 
@@ -2215,6 +2223,7 @@ class Parser(object):
 
                         if isinstance(func, FunctionDef):
                             results = func.results
+                            f_args = func.arguments
                         elif isinstance(func, Interface):
                             arg_dvar = [self._infere_type(i, **settings) 
                                        for i in args]
@@ -2232,30 +2241,45 @@ class Parser(object):
                                                    or dtype2 in dtype1)
                                     found  = found and dt['rank'] \
                                            == i[idx]['rank']
-                                    if found:
-                                       break
                                 if found:
-                                    results = func.functions[j].results
-                                else:
-                                    raise SystemExit('function not found in the interface')
-                            if not func.hide:
-                                name = func.functions[j].name
-                        expr = Function(name)(*args)
+                                    break
+
+                            if found:
+                                results = func.functions[j].results
+                                f_args = func.functions[j].arguments
+                            else:
+                                raise SystemExit('function not found in the interface')
+
+                            if func.hide:
+                                #hide means here print the real function's name
+                                name = str(func.functions[j].name)
+                        #add the messing argument in the case of optional arguments
+                        if not(len(args) == len(f_args)):
+                            n = len(args)
+                            for i in f_args[n:]:
+                                if not isinstance(i, ValuedVariable):
+                                    raise TypeError('Expecting a valued variable')
+                                if not isinstance(i.value, Nil):
+                                    args.append(ValuedArgument(i.name, i.value))
+
+                        
                         if len(results)==1:
+                            expr = Function(name)(*args)
                             d_var = self._infere_type(results[0], *settings)
                             dtype = d_var['datatype']
                             assumptions ={str_dtype(dtype):True}
                             expr._assumptions = StdFactKB(assumptions)
                             expr._assumptions._generator = assumptions.copy()
+                        elif len(results) == 0:
+                            return Subroutine(name)(*args)
                         elif len(results)>1:
-                            raise NotImplementedError('TODO')
+                            return Function(name)(*args)
                         return expr
 
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
         elif isinstance(expr, (Assign, AugAssign)):
-
             # TODO unset position at the end of this part
             if expr.fst:
                 self._bounding_box = expr.fst.absolute_bounding_box
@@ -2281,7 +2305,7 @@ class Parser(object):
 
                     results = []
                     for a in lhs:
-                        _name = get_name(a)
+                        _name = _get_name(a)
                         var = self.get_variable(_name)
                         if var is None:
                             errors.report(UNDEFINED_VARIABLE, symbol=_name,
@@ -2289,10 +2313,11 @@ class Parser(object):
                                           severity='error', blocker=self.blocking)
                         results.append(var)
                     # ...
+                    
                     args = [self._annotate(i, **settings) for i in rhs.args]
                     args = macro.apply(args, results=results)
-                    if isinstance(func, FunctionDef):
-                        return Function(master.name)(*args)
+                    if isinstance(master, FunctionDef):
+                        return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO treate interface case')
 
@@ -2329,10 +2354,11 @@ class Parser(object):
                         # TODO treate interface case
 
                         if isinstance(master, FunctionDef):
-                            return Function(master.name)(*args)
+                            return Subroutine(str(master.name))(*args)
                         else:
                             raise NotImplementedError('TODO')
             rhs = self._annotate(rhs, **settings)
+  
             if isinstance(rhs, FunctionDef):
                 #case of lambdify
                 rhs = rhs.rename(_get_name(expr.lhs))
@@ -2373,8 +2399,12 @@ class Parser(object):
                     results = func.results
                     if results:
                         d_var = [self._infere_type(i, **settings) for i in results]
-
-                elif name in ['Zeros', 'Ones', 'Shape', 'Int']:
+                elif isinstance(func, Interface):
+                     d_var = [self._infere_type(i, **settings) for i in func.functions[0].results]
+                     # TODO imporve this will not work for the case of different completly different
+                     # and not only the datatype
+                     d_var[0]['datatype'] = _dtype(rhs)
+                elif name in ['Zeros', 'Ones', 'Shape']:
 
                     # TODO improve
 
@@ -2418,7 +2448,7 @@ class Parser(object):
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
 
-                elif name in ['Mod']: # functions that return an int
+                elif name in ['Mod','Int']: # functions that return an int
                     d_var = {}
                     d_var['datatype'] = 'int'
                     d_var['rank'] = 0
@@ -2444,7 +2474,7 @@ class Parser(object):
                     'atan',
                     'acot',
                     'atan2',
-                    'Mod',
+                    'floor',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = _dtype(rhs) 
@@ -2483,6 +2513,7 @@ class Parser(object):
                         d_var = d_var[0]
                 name = _get_name(lhs)
                 dtype = d_var.pop('datatype')
+
                 lhs = Variable(dtype, name, **d_var)
                 var = self.get_variable(name)
                 if var is None:
@@ -2674,13 +2705,6 @@ class Parser(object):
             loops = expr.loops[1]
             index = expr.index
             indexes = expr.indexes  
-            var_name = _get_name(target.lhs)
-            
-            d_var = self._infere_type(target.rhs, **settings)
-            dtype = d_var.pop('datatype')
-            d_var['rank'] += 1
-            shape = list(d_var['shape'])
-            d_var['is_pointer'] = True
             dims = [] 
             body = loops
             while isinstance(body, For):
@@ -2742,12 +2766,20 @@ class Parser(object):
                 raise NotImplementedError('TODO')
             #TODO find faster way to calculate dim when step>1 and not isinstance(dim, Sum)
             #maybe use the c++ library of sympy
+            
+            #we annotate the target.rhs to infere the type of the list created
+            rhs = self._annotate(target.rhs, **settings)
+            d_var = self._infere_type(rhs, **settings)
+            dtype = d_var.pop('datatype')
+            d_var['rank'] += 1
+            shape = list(d_var['shape'])
+            d_var['is_pointer'] = True
             shape.append(dim)
             d_var['shape'] = Tuple(*shape)
+            var_name = _get_name(target.lhs)
             var = Variable(dtype, var_name, **d_var)
             self.insert_variable(var)
             loops = [self._annotate(i, **settings) for i in expr.loops]
-            target = self._annotate(target, **settings)
             index = self._annotate(index, **settings)
             return FunctionalFor(loops, var, indexes, index)
             
