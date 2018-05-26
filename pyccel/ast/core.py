@@ -15,6 +15,7 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
+from sympy.core.assumptions import StdFactKB
 
 #from sympy.sets.fancysets import Range as sm_Range
 
@@ -28,7 +29,7 @@ from sympy.core.basic import Atom
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, UndefinedFunction
 from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy import Integral, Symbol
@@ -52,7 +53,7 @@ from .basic import Basic
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeFloat, NativeDouble,
                         NativeComplex,
-                        NativeRange, NativeTensor)
+                        NativeRange, NativeTensor, NativeString, NativeGeneric)
 
 
 
@@ -1654,6 +1655,9 @@ class Nil(Basic):
         sstr = printer.doprint
         return sstr('None')
 
+class Void(Basic):
+    pass
+
 
 class Variable(Symbol):
     """Represents a typed variable.
@@ -1750,9 +1754,29 @@ class Variable(Symbol):
         if rank == 0:
             shape = ()
         # TODO improve order of arguments
-        return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
+        obj = Basic.__new__(cls, dtype, name, rank, allocatable, shape,
                              cls_base, cls_parameters,
                              is_pointer, is_target, is_polymorphic, is_optional)
+
+        assumptions ={}
+        class_type = cls_base or dtype.__class__.__name__.startswith('Pyccel')
+        alloweddtypes = (NativeBool, NativeRange, NativeString,
+                        NativeSymbol, NativeGeneric)
+        if isinstance(dtype, NativeInteger): 
+            assumptions['integer'] = True
+        elif isinstance(dtype, (NativeFloat,NativeDouble)):
+            assumptions['real'] = True
+        elif isinstance(dtype, NativeComplex):
+            assumptions['complex'] = True
+        elif not isinstance(dtype, alloweddtypes) and not class_type:
+            raise TypeError('Undefined datatype')
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+        
+        
+     
 
     @property
     def dtype(self):
@@ -1797,10 +1821,6 @@ class Variable(Symbol):
     @property
     def is_optional(self):
         return self._args[10]
-
-    @property
-    def is_integer(self):
-        return isinstance(self.dtype, NativeInteger) and self.rank==0
 
     @property
     def is_ndarray(self):
@@ -1892,7 +1912,26 @@ class DottedVariable(AtomicExpr, Boolean):
                             ' got instead {0} of type {1}'.format(str(args[1]),
                                                                   type(args[1])))
 
-        return Basic.__new__(cls, args[0], args[1])
+        obj =  Basic.__new__(cls, args[0], args[1])
+        assumptions ={}
+        if isinstance(args[1], (Variable, IndexedVariable, IndexedElement)):
+            dtype = args[1].dtype
+            class_type = isinstance(args[1], Variable) and args[1].cls_base \
+             or dtype.__class__.__name__.startswith('Pyccel')
+            alloweddtypes = (NativeBool, NativeRange, NativeString)
+            if isinstance(dtype, NativeInteger) or args[1].is_integer: 
+                assumptions['integer'] = True
+            elif isinstance(dtype, (NativeFloat,NativeDouble)) or args[1].is_real:
+                assumptions['real'] = True
+            elif isinstance(dtype, NativeComplex) or args[1].is_complex:
+                assumptions['complex'] = True
+            elif not isinstance(dtype, alloweddtypes) and not class_type:
+                raise TypeError('Undefined datatype')
+
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def lhs(self):
@@ -2973,6 +3012,10 @@ class Declare(Basic):
     def static(self):
         return self._args[4]
 
+class Subroutine(UndefinedFunction):
+    pass
+
+
 class Break(Basic):
     """Represents a break in the code."""
     pass
@@ -3037,12 +3080,14 @@ class Len(Function):
     """
     Represents a 'len' expression in the code.
     """
-    # TODO : remove later
-    def __str__(self):
-        return "len"
 
     def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'integer':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def arg(self):
@@ -3051,11 +3096,6 @@ class Len(Function):
     @property
     def dtype(self):
         return 'int'
-
-    @property
-    def is_integer(self):
-        return True
-
 
 # TODO - add examples
 class ZerosLike(Function):
@@ -3363,11 +3403,12 @@ class IndexedVariable(IndexedBase):
     """
 
     def __new__(cls, label, shape=None, dtype=None, **kw_args):
-        if dtype:
-            if isinstance(dtype, str):
-                dtype = datatype(dtype)
-            elif not isinstance(dtype, DataType):
-                raise TypeError("datatype must be an instance of DataType.")
+        if dtype is None:
+            raise TypeError("datatype must be provided")
+        if isinstance(dtype, str):
+            dtype = datatype(dtype)
+        elif not isinstance(dtype, DataType):
+            raise TypeError("datatype must be an instance of DataType.")
 
         obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
         obj._dtype = dtype
@@ -3377,7 +3418,9 @@ class IndexedVariable(IndexedBase):
 
         if self.shape and len(self.shape) != len(args):
             raise IndexException("Rank mismatch.")
-        return IndexedElement(self, *args)
+        assumptions ={}
+        obj = IndexedElement(self, *args)
+        return obj
 
     @property
     def dtype(self):
@@ -3435,8 +3478,22 @@ class IndexedElement(Indexed):
                 return base[args[0]]
             else:
                 return base[args]
-
-        return Expr.__new__(cls, base, *args, **kw_args)
+        obj = Expr.__new__(cls, base, *args, **kw_args)
+        alloweddtypes = (NativeBool, NativeRange, NativeString)
+        dtype = obj.base.dtype
+        assumptions = {}
+        if isinstance(dtype, NativeInteger): 
+            assumptions['integer'] = True
+        elif isinstance(dtype, (NativeFloat,NativeDouble)):
+            assumptions['real'] = True
+        elif isinstance(dtype, NativeComplex):
+            assumptions['complex'] = True
+        elif not isinstance(dtype, alloweddtypes):
+            raise TypeError('Undefined datatype')
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def rank(self):

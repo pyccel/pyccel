@@ -59,7 +59,7 @@ from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
 from pyccel.ast import String
 from pyccel.ast import datatype, DataTypeFactory
-from pyccel.ast import Nil
+from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign ,Assigns
@@ -99,7 +99,7 @@ from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registe
 from pyccel.ast import Macro
 from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
-from pyccel.ast import SumFunction
+from pyccel.ast import SumFunction, Subroutine
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -126,7 +126,8 @@ from sympy import Integer, Float
 from sympy import Add, Mul, Pow, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
-from sympy import ceiling         
+from sympy import ceiling
+
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.core.containers import Dict
@@ -138,6 +139,7 @@ from sympy.logic.boolalg import Not
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables import iterable as sympy_iterable
+from sympy.core.assumptions import StdFactKB
 from sympy import Sum as Summation, Heaviside, KroneckerDelta
 
 from collections import OrderedDict
@@ -202,20 +204,21 @@ def get_filename_from_import(module):
 #  ...
 
 #  ...
-def _get_variable_name(var):
+def _get_name(var):
     """."""
 
-    if isinstance(var, (Variable, IndexedVariable)):
+    if isinstance(var, (Symbol, IndexedVariable, IndexedBase)):
         return str(var)
-    elif isinstance(var, IndexedElement):
+    elif isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
-
+    if isinstance(var, Application):
+        return str(type(var).__name__)
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
-#  ...
+
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
-    concerned: Functions and DottedVarviables. we don't
+    concerned: Functions and DottedVarviables, Variables. we don't
     return atoms that are inside such quantities too 
     """
     from sympy import preorder_traversal
@@ -223,36 +226,56 @@ def _atomic(e):
     pot = preorder_traversal(e)
     seen = set()
     free = e.free_symbols
-    atom_functions = OrderedDict()
-    atom_dotted_var = OrderedDict()
+    atoms_ = set()
     
     for p in pot:
         if p in seen:
             pot.skip()
             continue
         seen.add(p)
-        if isinstance(p, Application):
+        if isinstance(p, (Application, DottedVariable ,Variable)):
             pot.skip()
-            atom_functions[p] = None
-        elif isinstance(p, DottedVariable) and isinstance(p.rhs, Application):
-            pot.skip()
-            atom_dotted_vars[p] = None
-    
-    return atom_functions, atom_dotted_vars
+            atoms_.add(p)
+    return atoms_
+
+def _dtype(expr):
+    if expr.is_integer:
+        return 'int'
+    elif expr.is_real:
+        return 'double'
+    elif expr.is_complex:
+        return 'complex'
+    elif expr.is_Boolean:
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(expr)))
+
+def str_dtype(dtype):
+    if isinstance(dtype, str):
+       if dtype == 'int':
+           return 'integer'
+       elif dtype in ['double', 'float']:
+           return 'real'
+       else:
+           return dtype
+    if isinstance(dtype, NativeInteger): 
+        return 'integer'
+    elif isinstance(dtype, (NativeFloat,NativeDouble)):
+        return 'real'
+    elif isinstance(dtype, NativeComplex):
+        return 'complex'
+    elif isinstance(dtype, NativeBool):
+        return  'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
+         
 
 def atom(e):
     """Return atom-like quantities as far as substitution is
     concerned: Functions and DottedVarviables. contrary to _atom we
     return atoms that are inside such quantities too
     """
-    ls = []
-    ls.append(_atom(e))
-    ls_ = []
-    while len(ls[-1][0]+ls[-1][1])>0:
-        for i in ls[-1][0]:
-            ls_.append(_atom(i))
-#        for i in ls[-1][1]:
-    
+    pass
     
    
 
@@ -1286,7 +1309,7 @@ class Parser(object):
 
             elif stmt.value == '//':
                 second = Pow(second, -1, evaluate=False)
-                return floor(Mul(first, second, evaluate=False))
+                return Function('int')(Mul(first, second, evaluate=False))
 
             elif stmt.value == '%':
                 return Mod(first, second)
@@ -1478,8 +1501,8 @@ class Parser(object):
             #      but it is not working for the moment
             f_name = str(stmt.previous.value)
             if len(args) == 0:
-                #case of no a functioncall with no arguments
-                args = ((), )
+                #case of functioncall with no arguments
+                args = (Nil(),)
             func = Function(f_name)(*args)
             parent = stmt.parent
             if stmt.previous.previous \
@@ -1732,7 +1755,7 @@ class Parser(object):
 
         elif isinstance(expr, IndexedElement):
             d_var['datatype'] = expr.dtype
-            name = str(expr.base)
+            name = _get_name(expr)
             var = self.get_variable(name)
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
@@ -1750,18 +1773,16 @@ class Parser(object):
             rank = max(0, var.rank - expr.rank)
             if rank > 0:
                 d_var['allocatable'] = var.allocatable
+                d_var['is_pointer'] = var.is_pointer
 
             d_var['shape'] = shape
             d_var['rank'] = rank
 
-#            # TODO pointer or allocatable case
-#            d_var['is_pointer'] = var.is_pointer
-#            d_var['allocatable'] = var.allocatable
 
             return d_var
 
         elif isinstance(expr, IndexedVariable):
-            name = str(expr)
+            name = _get_name(expr)
             var = self.get_variable(name)
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
@@ -1802,12 +1823,22 @@ class Parser(object):
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
+        elif isinstance(expr, Application):
+            name = _get_name(expr)
+            func = self.get_function(name)
+            if isinstance(func, FunctionDef):
+                d_var = self._infere_type(func.results[0], **settings)
+            else:
+                d_var = self._infere_type(expr.args[0], **settings)
+                d_var['datatype'] = _dtype(expr)
+            return d_var
 
         elif isinstance(expr, Expr):
-            #ds = [self._infere_type(i, **settings) for i in expr.atoms(Symbol)]
-            #TODO should we keep it or use the other
-            ds = [self._infere_type(i, **settings) for i in expr.args]
-            dtypes = [d['datatype'] for d in ds]
+            ds = [self._infere_type(i, **settings) for i 
+            in _atomic(expr) if isinstance(i, (Variable, DottedVariable))]
+            #we only look for atomic expression of type Variable
+            # because we don't allow functions that returns an array in an expression
+            # so we assume all functions
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
@@ -1815,13 +1846,12 @@ class Parser(object):
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
-            if ranks:
+            if any(ranks):
                 r_min = min(ranks)
                 r_max = max(ranks)
                 if not r_min == r_max:
                     if not r_min == 0:
-                        raise ValueError('cannot process arrays of different ranks.'
-                                )
+                        raise ValueError('cannot process arrays of different ranks.')
                 rank = r_max
             else:
                 rank = 0
@@ -1833,20 +1863,7 @@ class Parser(object):
                 if s:
                     shape = s
             # ...
-
-            d_var['datatype'] = 'int'
-
-            # TODO imporve to hadle all possible types (complex ,ndarray , ...)
-            for i in dtypes:
-                if isinstance(i, str):
-                    if i == 'float' or i == 'double':
-                        d_var['datatype'] = i
-                    if i == 'complex':
-                        d_var['datatype'] = i
-                elif isinstance(i, (NativeDouble, NativeFloat)):
-                    d_var['datatype'] = i
-                    break
-
+            d_var['datatype'] = _dtype(expr)
             d_var['allocatable'] = any(allocatables)
             d_var['is_pointer'] = any(pointers)
             d_var['shape'] = shape
@@ -1939,10 +1956,10 @@ class Parser(object):
             return Float(expr)
 
         elif isinstance(expr, complex):
-            raise NotImplementedError('TODO: Complex case')
+            return sympify(expr)
 
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
-            return sympify(float(expr))
+            return Float(float(expr))
 
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
             return expr
@@ -1973,12 +1990,10 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
             dtype = var.dtype
             shape = var.shape
-
-            # TODO add shape
             return IndexedVariable(name, dtype=dtype, shape = shape)
 
         elif isinstance(expr, (IndexedElement, Indexed)):
-            name = str(expr.base)
+            name = _get_name(expr)
             var = self.get_variable(name)
             if var is None:
                 errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
@@ -1998,7 +2013,7 @@ class Parser(object):
 
 
         elif isinstance(expr, Symbol):
-            name = str(expr.name)
+            name = _get_name(expr)
             var = self.get_variable(name)
             if var is None:
                 var = self.get_function(name)
@@ -2013,6 +2028,7 @@ class Parser(object):
 
         elif isinstance(expr, DottedVariable):
             first = self._annotate(expr.lhs)
+            rhs_name = _get_name(expr.rhs)
             attr_name = []
             if first.cls_base:
                 attr_name = [i.name for i in first.cls_base.attributes]
@@ -2023,14 +2039,16 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == expr.rhs.name and 'property' \
                         in i.decorators:
-                        second = FunctionCall(i, [], kind=i.kind)
-                        return DottedVariable(first, second)
+                        second = Function(expr.rhs.name)(Nil())
+                        expr = DottedVariable(first, second)
+                        d_var = self._infere_type(i.results[0], **settings)
+                        dtype = d_var['datatype']
+                        assumptions ={str_dtype(dtype):True}
+                        expr._assumptions = StdFactKB(assumptions)
+                        expr._assumptions._generator = assumptions.copy()
+                        return expr
 
             if not isinstance(expr.rhs, Application):
-                if isinstance(expr.rhs, (Indexed, IndexedElement)):
-                    rhs_name = str(expr.rhs.base)
-                else:
-                    rhs_name = expr.rhs.name
                 macro = self.get_macro(rhs_name)
                 if macro:
                     return macro.master
@@ -2039,33 +2057,36 @@ class Parser(object):
                 second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
             else:
-                name = str(type(expr.rhs).__name__)
-                macro = self.get_macro(name)
+                macro = self.get_macro(rhs_name)
                 if not(macro is None):
                     master = macro.master
                     name = macro.name
                     master_args = macro.master_arguments
                     args = expr.rhs.args
-                    if args == ((),) or args ==[()]:
-                        args = []
                     args = [expr.lhs] + list(args)
                     args = [self._annotate(i, **settings) for i in args]
                     args = macro.apply(args)
                     if isinstance(master, FunctionDef):
-                        return self._annotate(FunctionCall(master, args), **settings)
+                        return Subroutine(str(master.name))(*args)
                     else:
-                        raise NotImplementedError('TODO')
-
-                m_name = str(type(expr.rhs).__name__)
-
+                        raise NotImplementedError('TODO case of interface')
                 args = [self._annotate(arg, **settings) for arg in expr.rhs.args]
-                if args == ((),) or args ==[()]:
-                    args = []
-
                 for i in first.cls_base.methods:
-                    if str(i.name) == m_name:
-                        second = FunctionCall(i, args, kind=i.kind)
-                        break
+                    if str(i.name.name) == rhs_name:
+                        if len(i.results)==1:
+                            second = Function(i.name.name)(*args)
+                            d_var = self._infere_type(i.results[0], **settings)
+                            dtype = d_var['datatype']
+                            assumptions ={str_dtype(dtype):True}
+                            expr._assumptions = StdFactKB(assumptions)
+                            expr._assumptions._generator = assumptions.copy()
+                        elif len(i.results)==0:
+                            second = Subroutine(i.name.name)(*args)
+                        elif len(i.results)>1:
+                            raise NotImplementedError('TODO case multiple return variables')
+
+                        expr = DottedVariable(first, second)
+                        return expr
             return DottedVariable(first, second)
         elif isinstance(expr, (Add, Mul, Pow, And, Or,
                                 Eq, Ne, Lt, Gt, Le, Ge)):
@@ -2081,26 +2102,31 @@ class Parser(object):
             # then we treat the rest
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
-                if isinstance(expr, (Add, Mul)):
-                    expr_new = expr._new_rawargs(expr_new, a_new).doit()
+                if isinstance(expr, Add):
+                    expr_new = Add(expr_new, a_new)
+                elif isinstance(expr, Mul):
+                    expr_new = Mul(expr_new, a_new)
                 elif isinstance(expr, Pow):
-                    expr_new = Pow(expr_new, a_new).doit()
+                    expr_new = Pow(expr_new, a_new)
                 elif isinstance(expr, And):
-                    expr_new = And(expr_new, a_new).doit()
+                    expr_new = And(expr_new, a_new)
                 elif isinstance(expr, Or):
-                    expr_new = Or(expr_new, a_new).doit()
+                    expr_new = Or(expr_new, a_new)
                 elif isinstance(expr, Eq):
-                    expr_new = Eq(expr_new, a_new).doit()
+                    expr_new = Eq(expr_new, a_new)
                 elif isinstance(expr, Ne):
-                    expr_new = Ne(expr_new, a_new).doit()
+                    expr_new = Ne(expr_new, a_new)
                 elif isinstance(expr, Lt):
-                    expr_new = Lt(expr_new, a_new).doit()
+                    expr_new = Lt(expr_new, a_new)
                 elif isinstance(expr, Le):
-                    expr_new = Le(expr_new, a_new).doit()
+                    expr_new = Le(expr_new, a_new)
                 elif isinstance(expr, Gt):
-                    expr_new = Gt(expr_new, a_new).doit()
+                    expr_new = Gt(expr_new, a_new)
                 elif isinstance(expr, Ge):
-                    expr_new = Ge(expr_new, a_new).doit()
+                    expr_new = Ge(expr_new, a_new)
+            #TODO fix bug when we put expr_new.doit() for the indexedvariable
+            # somehow sympy creats new object and we loose the info
+            # for the types
             return expr_new
 
         elif isinstance(expr, Lambda):
@@ -2110,7 +2136,7 @@ class Parser(object):
                 raise ValueError('Unknown variables in lambda definition ')
             funcs = expr.expr.atoms(Function)
             for func in funcs:
-                name = str(type(func).__name__)
+                name = _get_name(func)
                 f = self.get_symbolic_function(name)
                 if f is None:
                     raise ValueError('Unknown function in lambda definition')
@@ -2121,130 +2147,6 @@ class Parser(object):
                         f =  f(*func.args)
                     expr_new = expr.expr.subs(func, f)
                     expr = Lambda(expr.variables, expr_new)
-            return expr
-
-        elif isinstance(expr, Application):
-            # ... DEBUG
-            name = str(type(expr).__name__)
-
-            func = self.get_function(name)
-
-            # ...
-            if not isinstance(func, Lambda):
-                args = [self._annotate(i, **settings) for i in expr.args]
-            else:
-                # here args are sympy symbol
-                args = expr.args
-
-            # ...
-            if name== 'lambdify':
-                args = self.get_symbolic_function(str(expr.args[0]))
-            F = pyccel_builtin_function(expr, args)
-            if F:
-                return F
-
-            elif name in self._namespace['cls_constructs'].keys():
-                # TODO improve the test
-                #      we must not invoke the namespace like this, only through
-                #      appropriate methods like get_variable ...
-                cls = self.get_class(name)
-                d_methods = cls.methods_as_dict
-                method = d_methods.pop('__init__', None)
-
-                if method is None:
-                    # TODO improve
-                    #      we should not stop here, there will be cases where we
-                    #      want to instantiate a class that has no __init__
-                    #      construct
-                    errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                                  bounding_box=self.bounding_box,
-                                  severity='error', blocker=True)
-                args = expr.args
-                m_args = method.arguments[1:]  # we delete the self arg
-
-                # TODO check compatibility
-                # TODO treat parametrized arguments.
-                #      this will be done later, once it is validated for FunctionCall
-
-                # the only thing we can do here, is to return a MethodCall,
-                # without the class Variable, then we will treat it during the
-                # Assign annotation
-#                return MethodCall(method, args, cls_variable=None, kind=None)
-                if args == ((),) or args ==[()]:
-                    args = []
-                return ConstructorCall(method, args, cls_variable=None)
-
-            else:
-                # if it is a user-defined function, we return a FunctionCall
-                # TODO shall we keep it, or do this only in the Assign?
-
-                # first we check if it is a macro, in this case, we will create
-                # an appropriate FunctionCall
-                if args == ((),) or args ==[()]:
-                    args = []
-                macro = self.get_macro(name)
-                if not macro is None:
-                    func = macro.master
-                    # ... create the appropriate arguments
-                    args = macro.apply(args)
-                    # ...
-                else:
-                    func = self.get_function(name)
-
-                if not func is None:
-                    if isinstance(func, (FunctionDef, Interface)):
-                        # case of a function that takes no argument
-
-                        if 'inline' in func.decorators:
-                            return self._annotate(FunctionCall(func, args), **settings).inline
-
-                        return self._annotate(FunctionCall(func, args), **settings)
-
-                    else:
-                        return func(*args)
-
-                errors.report(UNDEFINED_FUNCTION, symbol=name,
-                              bounding_box=self.bounding_box,
-                              severity='error', blocker=self.blocking)
-
-        elif isinstance(expr, FunctionCall):
-            func = expr.func
-            arg_dvar = [self._infere_type(i, **settings) for i in
-                            expr.arguments]
-            if isinstance(func, Interface):
-                f_dvar = [[self._infere_type(j, **settings)
-                           for j in i.arguments] for i in
-                           func.functions]
-                j = -1
-                for i in f_dvar:
-                    j += 1
-                    found = True
-                    for (idx, dt) in enumerate(arg_dvar):
-                        # TODO imporve add the other verification shape,rank,pointer,...
-
-                        dtype1 = dt['datatype'].__str__()
-                        dtype2 = i[idx]['datatype'].__str__()
-                        found  = found and (dtype1 in dtype2
-                              or dtype2 in dtype1)
-                        found = found and dt['rank'] \
-                              == i[idx]['rank']
-                       # found = found and dt['shape'] \
-                       #       == i[idx]['shape']
-                    if found:
-                        break
-                if found:
-                    func = func.functions[j]
-                else:
-                    raise SystemExit('function not found in the interface')
-
-            hide = expr.func.hide
-            if hide:
-                new_func = func
-            else:
-                new_func = func.rename(expr.func.name)
-            expr = FunctionCall(new_func, expr.arguments, kind=expr.func.kind)
-
-
             return expr
         elif isinstance(expr, Summation):
             # treatment of the index/indices
@@ -2259,11 +2161,125 @@ class Parser(object):
             body = self._annotate(expr.args[0], **settings)
             return SumFunction(body,itr)
 
+        elif isinstance(expr, Application):
+            # ... DEBUG
+            name = _get_name(expr)
+            func = self.get_function(name)
+            args = [self._annotate(arg, **settings) for arg in expr.args]
+            if name== 'lambdify':
+                args = self.get_symbolic_function(str(expr.args[0]))
+            F = pyccel_builtin_function(expr, args)
+            if F: 
+                return F
+
+            elif name in self._namespace['cls_constructs'].keys():
+                # TODO improve the test
+                # we must not invoke the namespace like this
+                cls = self.get_class(name)
+                d_methods = cls.methods_as_dict
+                method = d_methods.pop('__init__', None)
+
+                if method is None:
+                    # TODO improve case of class with the no __init__
+                    errors.report(UNDEFINED_INIT_METHOD, symbol=name,
+                                  bounding_box=self.bounding_box,
+                                  severity='error', blocker=True)
+                args = expr.args
+                m_args = method.arguments[1:]  # we delete the self arg
+
+                # TODO check compatibility
+                # TODO treat parametrized arguments.
+                #      this will be done later, once it is validated for FunctionCall
+
+                # the only thing we can do here, is to return a MethodCall,
+                # without the class Variable, then we will treat it during the
+                # Assign annotation
+#                return MethodCall(method, args, cls_variable=None, kind=None)
+                return ConstructorCall(method, args, cls_variable=None)
+
+            else:
+                # first we check if it is a macro, in this case, we will create
+                # an appropriate FunctionCall
+                
+                macro = self.get_macro(name)
+                if not(macro is None):
+                    args = [self._annotate(i, **settings) 
+                                       for i in args]
+                    func = macro.master
+                    args = macro.apply(args)
+                else:
+                    func = self.get_function(name)
+
+                if func is None:
+                    errors.report(UNDEFINED_FUNCTION, symbol=name,
+                          bounding_box=self.bounding_box,
+                          severity='error', blocker=self.blocking)
+                else:
+                    if not isinstance(func, (FunctionDef, Interface)):
+                        return func(*args)
+                    else:
+                        if 'inline' in func.decorators:
+                            return _inline(func, args)
+
+                        if isinstance(func, FunctionDef):
+                            results = func.results
+                            f_args = func.arguments
+                        elif isinstance(func, Interface):
+                            arg_dvar = [self._infere_type(i, **settings) 
+                                       for i in args]
+                            f_dvar = [[self._infere_type(j, **settings)
+                            for j in i.arguments] for i in
+                            func.functions]
+                            j = -1
+                            for i in f_dvar:
+                                j += 1
+                                found = True
+                                for (idx, dt) in enumerate(arg_dvar):
+                                    dtype1 = str_dtype(dt['datatype'])
+                                    dtype2 = str_dtype(i[idx]['datatype'])
+                                    found  = found and (dtype1 in dtype2
+                                                   or dtype2 in dtype1)
+                                    found  = found and dt['rank'] \
+                                           == i[idx]['rank']
+                                if found:
+                                    break
+
+                            if found:
+                                results = func.functions[j].results
+                                f_args = func.functions[j].arguments
+                            else:
+                                raise SystemExit('function not found in the interface')
+
+                            if func.hide:
+                                #hide means here print the real function's name
+                                name = str(func.functions[j].name)
+                        #add the messing argument in the case of optional arguments
+                        if not(len(args) == len(f_args)):
+                            n = len(args)
+                            for i in f_args[n:]:
+                                if not isinstance(i, ValuedVariable):
+                                    raise TypeError('Expecting a valued variable')
+                                if not isinstance(i.value, Nil):
+                                    args.append(ValuedArgument(i.name, i.value))
+
+                        
+                        if len(results)==1:
+                            expr = Function(name)(*args)
+                            d_var = self._infere_type(results[0], *settings)
+                            dtype = d_var['datatype']
+                            assumptions ={str_dtype(dtype):True}
+                            expr._assumptions = StdFactKB(assumptions)
+                            expr._assumptions._generator = assumptions.copy()
+                        elif len(results) == 0:
+                            return Subroutine(name)(*args)
+                        elif len(results)>1:
+                            return Function(name)(*args)
+                        return expr
+
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
         elif isinstance(expr, (Assign, AugAssign)):
-
             # TODO unset position at the end of this part
             if expr.fst:
                 self._bounding_box = expr.fst.absolute_bounding_box
@@ -2272,60 +2288,24 @@ class Parser(object):
                 raise PyccelSemanticError(msg)
 
             rhs = expr.rhs
-            exprs = []
-            #from sympy import preorder_traversal
-            ls = []
-            #ls = list(preorder_traversal(rhs))
-
-            #TODO improve later
-            #ls = ls[1:]
-            #for i in ls:
-            #    if isinstance(i, (Application, Summation)):
-            #        exprs += [i]
+            lhs = expr.lhs
             assigns = None
-            #if len(exprs)>0 and not isinstance(rhs, Lambda):
-                #case of a function call in the rhs
-            #    assigns = []
-            #    exprs = exprs[::-1]
-            #    for i in range(len(exprs)):
-            #        var = self.create_variable(exprs[i])
-            #        rhs = rhs.replace(exprs[i], var)
-            #        for j in range(i+1,len(exprs)):
-            #            exprs[j] = exprs[j].replace(exprs[i], var)
-            #        expr_new = Assign(var,exprs[i])
-
-
-
-                    # we set the fst to keep track of needed information for errors
-            #        expr_new.set_fst(expr.fst)
-            #        assigns.append(expr_new)
-
-
-            #    assigns = [self._annotate(i, **settings) for i in assigns]
-            # check if rhs is a call to a macro
+      
             if isinstance(rhs, Application):
-                name = str(type(rhs).__name__)
+                name = _get_name(rhs)
                 macro = self.get_macro(name)
-                if not macro is None:
+                if not(macro is None):
                     # TODO check types from FunctionDef
-                    func = macro.master
-
-                    # ...
+                    master = macro.master
                     # all terms in lhs must be already declared and available
                     # the namespace
                     #TODO improve
-                    lhs = expr.lhs
-                    if not sympy_iterable(expr.lhs):
-                        lhs = [expr.lhs]
+                    if not sympy_iterable(lhs):
+                        lhs = [lhs]
 
                     results = []
                     for a in lhs:
-                        _name = None
-                        if isinstance(a, Symbol):
-                            _name = a.name
-                        else:
-                            raise NotImplementedError('TODO')
-
+                        _name = _get_name(a)
                         var = self.get_variable(_name)
                         if var is None:
                             errors.report(UNDEFINED_VARIABLE, symbol=_name,
@@ -2333,48 +2313,31 @@ class Parser(object):
                                           severity='error', blocker=self.blocking)
                         results.append(var)
                     # ...
+                    
                     args = [self._annotate(i, **settings) for i in rhs.args]
                     args = macro.apply(args, results=results)
-
-                    # TODO treate interface case
-                    if isinstance(func, FunctionDef):
-                        return self._annotate(FunctionCall(func, args), **settings)
+                    if isinstance(master, FunctionDef):
+                        return Subroutine(str(master.name))(*args)
                     else:
-                        raise NotImplementedError('TODO')
+                        raise NotImplementedError('TODO treate interface case')
 
             elif isinstance(rhs, DottedVariable):
                 var = rhs.rhs
-                if isinstance(var, Application):
-                    name = str(type(var).__name__)
-                elif isinstance(var, (IndexedElement, Indexed)):
-                    name = str(var.base)
-                else:
-                    name = str(var.name)
-
+                name = _get_name(var)
                 macro = self.get_macro(name)
                 if not(macro is None):
                     master = macro.master
                     if isinstance(macro, MacroVariable):
                         self.insert_variable(master)
-                        #TODO should we do this or find a better way
                         rhs = master
                     else:
                         name = macro.name
                         master_args = macro.master_arguments
-                        lhs = expr.lhs
-                        if not sympy_iterable(expr.lhs):
-                            lhs = [expr.lhs]
-
+                        if not sympy_iterable(lhs):
+                            lhs = [lhs]
                         results = []
                         for a in lhs:
-                            _name = None
-                            if isinstance(a, Symbol):
-                                _name = a.name
-                            elif isinstance(a, Indexed):
-                                _name = str(a.base)
-                            else:
-                                raise NotImplementedError('TODO')
-
+                            _name = _get_name(a)
                             var = self.get_variable(_name)
                             if var is None:
                                 errors.report(UNDEFINED_VARIABLE, symbol=_name,
@@ -2383,8 +2346,6 @@ class Parser(object):
                             results.append(var)
                         # ...
                         args = rhs.rhs.args
-                        if args == ((),) or args ==[()]:
-                            args = []
                         args = [rhs.lhs] + list(args)
                         args = [self._annotate(i, **settings) for i in args]
 
@@ -2393,18 +2354,14 @@ class Parser(object):
                         # TODO treate interface case
 
                         if isinstance(master, FunctionDef):
-                            return self._annotate(FunctionCall(master, args), **settings)
+                            return Subroutine(str(master.name))(*args)
                         else:
                             raise NotImplementedError('TODO')
-
-
-
-
             rhs = self._annotate(rhs, **settings)
-
+  
             if isinstance(rhs, FunctionDef):
                 #case of lambdify
-                rhs = rhs.rename(str(expr.lhs))
+                rhs = rhs.rename(_get_name(expr.lhs))
                 for i in rhs.body:
                     i.set_fst(expr.fst)
                 rhs = self._annotate(rhs, **settings)
@@ -2413,13 +2370,7 @@ class Parser(object):
                 return rhs
 
             # d_var can be a list of dictionaries
-            elif isinstance(rhs, FunctionCall):
-                # ARA: needed for functions defined only with a header
-                results = rhs.func.results
-                if results:
-                    d_var = [self._infere_type(i, **settings) for i in results]
-
-            elif isinstance(rhs, ConstructorCall):
+            if isinstance(rhs, ConstructorCall):
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
                 cls = self.get_class(cls_name)
 
@@ -2440,10 +2391,20 @@ class Parser(object):
                 d_var['cls_base'] = cls
                 d_var['is_pointer'] = False
 
-            elif isinstance(rhs, Function):
-
-                name = str(type(rhs).__name__)
-                if name in ['Zeros', 'Ones', 'Shape', 'Int']:
+            elif isinstance(rhs, Application):
+                # ARA: needed for functions defined only with a header
+                name = _get_name(rhs)
+                func = self.get_function(name)
+                if isinstance(func, FunctionDef):
+                    results = func.results
+                    if results:
+                        d_var = [self._infere_type(i, **settings) for i in results]
+                elif isinstance(func, Interface):
+                     d_var = [self._infere_type(i, **settings) for i in func.functions[0].results]
+                     # TODO imporve this will not work for the case of different completly different
+                     # and not only the datatype
+                     d_var[0]['datatype'] = _dtype(rhs)
+                elif name in ['Zeros', 'Ones', 'Shape']:
 
                     # TODO improve
 
@@ -2487,7 +2448,7 @@ class Parser(object):
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
 
-                elif name in ['Mod']: # functions that return an int
+                elif name in ['Mod','Int']: # functions that return an int
                     d_var = {}
                     d_var['datatype'] = 'int'
                     d_var['rank'] = 0
@@ -2513,10 +2474,10 @@ class Parser(object):
                     'atan',
                     'acot',
                     'atan2',
-                    'Mod',
+                    'floor',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = 'double' #TODO improve what datatype shoud we give here
+                    d_var['datatype'] = _dtype(rhs) 
 
                 else:
                      raise NotImplementedError('TODO')
@@ -2550,8 +2511,9 @@ class Parser(object):
                         raise ValueError('can not assign multiple object into one variable')
                     elif len(d_var)==1:
                         d_var = d_var[0]
-                name = lhs.name
+                name = _get_name(lhs)
                 dtype = d_var.pop('datatype')
+
                 lhs = Variable(dtype, name, **d_var)
                 var = self.get_variable(name)
                 if var is None:
@@ -2579,7 +2541,7 @@ class Parser(object):
 
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
                 # TODO check consistency of indices with shape/rank
-                name = str(lhs.name)
+                name = _get_name(lhs)
                 var = self.get_variable(name)
                 if var is None:
                     # TODO ERROR not tested yet
@@ -2592,7 +2554,7 @@ class Parser(object):
 
             elif isinstance(lhs, (IndexedElement, Indexed)):
                 # TODO check consistency of indices with shape/rank
-                name = str(lhs.base)
+                name = _get_name(lhs)
                 var = self.get_variable(name)
                 if var is None:
                     errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
@@ -2674,20 +2636,6 @@ class Parser(object):
             if isinstance(expr, AugAssign):
                 expr_new = AugAssign(expr_new.lhs, expr.op,
                         expr_new.rhs)
-            if assigns and len(assigns)>0:
-                #remove the Assignments that have rhs a function and not a subroutine
-                assigns_ = assigns[:]
-                for i in assigns_:
-                    target = isinstance(i.rhs.func, FunctionDef) and not(i.rhs.func.is_procedure)
-                    if  target or isinstance(i.rhs.func, Application):
-                        expr_new = expr_new.subs(i.lhs,i.rhs)
-                        assigns.remove(i)
-                        self.remove(i.lhs.name)
-
-
-            if assigns and len(assigns)>0:
-                assigns += [expr_new]
-                return Assigns(assigns)
             return expr_new
 
         elif isinstance(expr, For):
@@ -2727,7 +2675,7 @@ class Parser(object):
                     body = [assign] + body
                     iterator[i] = indx
             if isinstance(iterator, Symbol):
-                name = str(iterator.name)
+                name = iterator.name
                 var = self.get_variable(name)
                 target = var
                 if var is None:
@@ -2757,13 +2705,6 @@ class Parser(object):
             loops = expr.loops[1]
             index = expr.index
             indexes = expr.indexes  
-            var_name = str(target.lhs.base)
-            
-            d_var = self._infere_type(target.rhs, **settings)
-            dtype = d_var.pop('datatype')
-            d_var['rank'] += 1
-            shape = list(d_var['shape'])
-            d_var['is_pointer'] = True
             dims = [] 
             body = loops
             while isinstance(body, For):
@@ -2804,33 +2745,41 @@ class Parser(object):
                 size = (stop-start)/step
                 dims.append((size, step, start, stop))
                 body = body.body[0]
-            dim = dims[-1][0]
             #we now calculate the size of the array which will be allocated
             for i in range(len(indexes)):
                 var = self.get_variable(indexes[i].name)
                 if var is None:
                     raise ValueError('variable not found')
                 indexes[i] = var
-
+            
+            dim = dims[-1][0]
             for i in range(len(dims)-1,0,-1):
                 size = dims[i-1][0]
                 step = dims[i-1][1]
                 start= dims[i-1][2]
                 size = ceiling(size)
                 dim = ceiling(dim)
-                dim = Summation(dim.subs(indexes[i-1],start+step*indexes[i-1]),
-                                                    (indexes[i-1],0, size -1))
+                dim = dim.subs(indexes[i-1],start+step*indexes[i-1])
+                dim = Summation(dim, (indexes[i-1],0, size -1))
                 dim = dim.doit()
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
             #TODO find faster way to calculate dim when step>1 and not isinstance(dim, Sum)
             #maybe use the c++ library of sympy
+            
+            #we annotate the target.rhs to infere the type of the list created
+            rhs = self._annotate(target.rhs, **settings)
+            d_var = self._infere_type(rhs, **settings)
+            dtype = d_var.pop('datatype')
+            d_var['rank'] += 1
+            shape = list(d_var['shape'])
+            d_var['is_pointer'] = True
             shape.append(dim)
             d_var['shape'] = Tuple(*shape)
+            var_name = _get_name(target.lhs)
             var = Variable(dtype, var_name, **d_var)
             self.insert_variable(var)
             loops = [self._annotate(i, **settings) for i in expr.loops]
-            target = self._annotate(target, **settings)
             index = self._annotate(index, **settings)
             return FunctionalFor(loops, var, indexes, index)
             
@@ -2839,7 +2788,6 @@ class Parser(object):
         elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
-
             return While(test, body)
 
         elif isinstance(expr, If):
@@ -3021,12 +2969,12 @@ class Parser(object):
                     args = [var] + args
 
                 for var in self.get_variables():
-                    if not var in args + results:
+                    if not(var in args + results):
                         local_vars += [var]
 
                 # TODO should we add all the variables or only the ones used in the function
                 for var in self.get_variables('parent'):
-                    if not var in args + results + local_vars:
+                    if not(var in args + results + local_vars):
                         global_vars += [var]
                 func = FunctionDef(name, args, results, body,
                                    local_vars=local_vars,
@@ -3321,7 +3269,8 @@ class Parser(object):
             shape = self._annotate(expr.length, **settings)
             return Dlist(val, shape)
 
-
+        elif isinstance(expr, Nil):
+            return expr
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 

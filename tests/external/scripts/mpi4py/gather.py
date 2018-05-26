@@ -11,7 +11,7 @@ size = comm.Get_size()
 master    = 1
 nb_values = 8
 
-block_length = nb_values / size
+block_length = nb_values // size
 
 # ...
 values = [0]*block_length
