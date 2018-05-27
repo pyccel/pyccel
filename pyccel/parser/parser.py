@@ -875,8 +875,12 @@ class Parser(object):
         func = None
         if name in self._namespace['functions']:
             func = self._namespace['functions'][name]
+            if self._current == name and not func.is_recursive:
+                func = func.set_recursive()
+                self._namespace['functions'][name] = func
+
         elif name in self._imports:
-            func = self._imports[name]
+            func = self._imports[name]        
         return func
 
     def insert_function(self, func):
@@ -1389,7 +1393,9 @@ class Parser(object):
                 return ValuedArgument(arg, value)
 
         elif isinstance(stmt, ReturnNode):
-            return Return(self._fst_to_ast(stmt.value))
+            expr = Return(self._fst_to_ast(stmt.value))
+            expr.set_fst(stmt)
+            return expr
 
         elif isinstance(stmt, PassNode):
             return Pass()
@@ -2841,7 +2847,9 @@ class Parser(object):
             for result in results:
                 if isinstance(result, Expr) and not isinstance(result, Symbol):
                     new_vars += [self.create_variable(result)]
-                    assigns += [Assign(new_vars[-1], result)]
+                    stmt = Assign(new_vars[-1], result)
+                    stmt.set_fst(expr.fst)
+                    assigns += [stmt]
                     assigns[-1].set_fst(expr.fst)
 
             if len(assigns)==0:
@@ -2945,6 +2953,11 @@ class Parser(object):
                         args.append(a_new)
                         self.insert_variable(a_new,
                                 name=str(a_new.name))
+               
+                if len(interfaces)==1 and len(interfaces[0].results)==1:
+                    #case of recursive function
+                    #TODO improve
+                    self.insert_function(interfaces[0])
 
                 # we annotate the body
                 body = [self._annotate(i, **settings) for i in expr.body]
@@ -2976,6 +2989,12 @@ class Parser(object):
                 for var in self.get_variables('parent'):
                     if not(var in args + results + local_vars):
                         global_vars += [var]
+
+                is_recursive = True
+                func_ = self.get_function(name)
+                if not(func_ is None) and func_.is_recursive:
+                    is_recursive = True
+  
                 func = FunctionDef(name, args, results, body,
                                    local_vars=local_vars,
                                    global_vars=global_vars,
@@ -2984,7 +3003,8 @@ class Parser(object):
                                    kind=kind,
                                    is_static=is_static,
                                    imports=imports,
-                                   decorators=decorators)
+                                   decorators=decorators,
+                                   is_recursive = is_recursive)
                 if cls_name:
                     cls = self.get_class(cls_name)
                     methods = list(cls.methods) + [func]

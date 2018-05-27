@@ -2240,7 +2240,7 @@ class FunctionDef(Basic):
                 cls_name=None, hide=False,
                 kind='function',
                 is_static=False,
-                imports=[], decorators=[]):
+                imports=[], decorators=[],is_recursive = False):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2302,7 +2302,7 @@ class FunctionDef(Basic):
                              local_vars, global_vars,
                              cls_name, hide,
                              kind, is_static,
-                             imports, decorators)
+                             imports, decorators, is_recursive)
 
     @property
     def name(self):
@@ -2352,9 +2352,25 @@ class FunctionDef(Basic):
     def decorators(self):
         return self._args[11]
 
+    @property
+    def is_recursive(self):
+        return self._args[12]
+
     def print_body(self):
         for s in self.body:
             print (s)
+ 
+    def set_recursive(self):
+        return FunctionDef(self.name, self.arguments,
+                           self.results, self.body,
+                           local_vars=self.local_vars,
+                           global_vars=self.global_vars,
+                           cls_name=self.cls_name,
+                           hide=self.hide,
+                           kind=self.kind,
+                           is_static=self.is_static,
+                           is_recursive = True)
+
 
     def rename(self, newname):
         """
@@ -2371,19 +2387,9 @@ class FunctionDef(Basic):
                            cls_name=self.cls_name,
                            hide=self.hide,
                            kind=self.kind,
-                           is_static=self.is_static)
+                           is_static=self.is_static,
+                           is_recursive = self.is_recursive)
 
-  #  def __call__(self, *args, **kwargs):
-  #      """Represents a call to the function."""
-        # TODO treat parametrized arguments.
-        #      this will be done later, once it is validated for FunctionCall
-
-        # we remove 'self' from arguments
-   #     f_args = self.arguments[1:]
-   #     args = list(args)
-   #     assert(len(args) == len(f_args))
-
-   #     return FunctionCall(self, args)
 
     @property
     def is_procedure(self):
@@ -2434,7 +2440,8 @@ class FunctionDef(Basic):
                 self.kind,
                 self.is_static,
                 self.imports,
-                self.decorators,)
+                self.decorators,
+                self.is_recursive)
         return args
 
 
