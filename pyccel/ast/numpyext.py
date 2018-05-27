@@ -8,9 +8,11 @@ from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
-from sympy import Integer
+from sympy import Integer, Add, Mul, Pow
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy.core.assumptions import StdFactKB
+
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String)
 from .datatypes import DataType, datatype
@@ -210,9 +212,14 @@ class Int(Function):
 
     def __new__(cls, arg):
         if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex)):
+                          NativeDouble, NativeComplex,Mul,Add,Pow)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'integer':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def arg(self):

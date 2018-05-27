@@ -4,12 +4,12 @@
 from sympy.core.function import Application
 from .core import DottedName
 from .core import Import
-from .core import Range, Len
+from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
 from .core import Constant
 from .numpyext import Zeros, Ones
-from .numpyext import Array, Shape, Int, Rand,Sum
-from sympy import Symbol, Lambda
+from .numpyext import Array, Shape, Int, Rand, Sum
+from sympy import Symbol, Lambda, floor
 from sympy import I
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
                    acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
@@ -51,9 +51,12 @@ def builtin_function(expr, args=None):
 
     if isinstance(expr, str):
         name = expr
-
     if name == 'range':
         return Range(*args)
+    elif name == 'zip':
+        return Zip(*args)
+    elif name == 'enumerate':
+        return Enumerate(*args)
     if name == 'array':
         return Array(*args)
     if name == 'int':
@@ -66,8 +69,8 @@ def builtin_function(expr, args=None):
         return Mod(*args)
     if name == 'Max':
         return Max(*args)
-    if name == 'Sum':
-        return Sum(*args)
+    if name == 'floor':
+        return floor(*args)
     elif name == 'complex':
         return args[0]+I*args[1]
     
@@ -163,5 +166,12 @@ def builtin_import(expr):
         target = str(expr.target[0])
         if target in scipy_constants.keys():
             return (target, scipy_constants[target])
+    elif source == 'itertools':
+        target = str(expr.target[0])
+        
+        if target == 'product':
+            return (target, Product)
+        
+    
 
     return (None, None)

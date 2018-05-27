@@ -37,19 +37,19 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
-from pyccel.ast.core import FunctionCall, MethodCall
+from pyccel.ast.core import FunctionCall, MethodCall , Subroutine
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Range, Tensor, Block
+from pyccel.ast.core import Range, Product, Block , Zip, Enumerate
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
                              Declare, ValuedVariable,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If)
+                             Print, If, Nil)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeSymbol
@@ -240,10 +240,11 @@ class FCodePrinter(CodePrinter):
             for i in expr.funcs:
                 variables += i.global_vars
             variables =list(set(variables))
-            for dec in decs:
+            for i in range(len(decs)):
                 #remove variables that are declared in the modules
-                if dec.variable in variables:
-                    decs.remove(dec)
+                if decs[i].variable in variables:
+                    decs[i] = None
+            decs = [i for i in decs if i]
 
             module_utils = Module(expr.name, list(variables),
                                   expr.funcs, expr.interfaces, expr.classes,
@@ -437,21 +438,19 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_DottedVariable(self, expr):
-        if isinstance(expr.args[1], FunctionCall):
+        if isinstance(expr.args[1], Function):
             func = expr.args[1].func
-            name = func.name
-            name = self._print(name)
+            name = func.__name__
             # ...
             code_args = ''
-            if not(expr.args[1].arguments) is None:
-                code_args = ', '.join(self._print(i) for i in expr.args[1].arguments)
-                code = '{0}({1})'.format(name, code_args)
+            code_args = ', '.join(self._print(i) for i in expr.args[1].args)
+            code = '{0}({1})'.format(name, code_args)
                 # ...
                 # ...
-                code = '{0}%{1}'.format(self._print(expr.args[0]), code)
-                if func.is_procedure:
-                    code = 'call {0}'.format(code)
-                return code
+            code = '{0}%{1}'.format(self._print(expr.args[0]), code)
+            if isinstance(func, Subroutine):
+                code = 'call {0}'.format(code)
+            return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
     def _print_DottedName(self, expr):
@@ -562,8 +561,8 @@ class FCodePrinter(CodePrinter):
                                                i=self._print(i+1))
                 s = '{u}-{l}+1'.format(u=u, l=l)
                 shape.append(s)
-            if len(shape) == 1:
-                shape = shape[0]
+        if len(shape) == 1:
+            shape = shape[0]
 
         if not(expr.index is None):
             shape = shape[expr.index]
@@ -770,7 +769,7 @@ class FCodePrinter(CodePrinter):
 
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
-        if isinstance(expr.rhs, (Range, Tensor)):
+        if isinstance(expr.rhs, (Range, Product)):
             return ''
 
         if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
@@ -805,11 +804,6 @@ class FCodePrinter(CodePrinter):
 
             return self._get_statement(code)
 
-        #elif isinstance(expr.rhs, Random):
-        #    lhs = self._print(expr.lhs)
-        #    code = 'call random_number({0})'.format(lhs)
-        #    return self._get_statement(code)
-
         elif isinstance(expr.rhs, FunctionDef):
             rhs_code = self._print(expr.rhs.name)
             is_procedure = expr.rhs.is_procedure
@@ -817,7 +811,6 @@ class FCodePrinter(CodePrinter):
         elif isinstance(expr.rhs, ConstructorCall):
             func = expr.rhs.func
             name = str(func.name)
-            #this = expr.rhs.this
 
             # TODO uncomment later
 
@@ -838,48 +831,21 @@ class FCodePrinter(CodePrinter):
 
             code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
-        elif isinstance(expr.rhs, FunctionCall):
+        elif isinstance(expr.rhs, Function):
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, Tuple)):
-                lhs_code = ', '.join(self._print(i) for i in expr.lhs)
-            rhs_code = self._print(expr.rhs.name)
-            func = expr.rhs.func
-            if func.cls_name:
-                # TODO: do we keep this?
-                if isinstance(expr.lhs, (tuple, list, Tuple)):
-                    raise TypeError('Expecting a single lhs')
-                rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
-
-            is_procedure = func.is_procedure
-            args = expr.rhs.arguments
-            f_args = func.arguments
-
-            # convert args to list, to avoid the tuple case
-            args = list(args)
-
-            # TODO improve this
-            if not(len(args) == len(f_args)):
-                n = len(args)
-                for i in f_args[n:]:
-                    if not isinstance(i, ValuedVariable):
-                        raise TypeError('Expecting a valued variable')
-
-                    if not isinstance(i.value, Nil):
-                        args.append(ValuedArgument(i.name, i.value))
-
+            name = type(expr.rhs).__name__
+            rhs_code = self._print(name)
+            args = expr.rhs.args
             code_args = ', '.join(self._print(i) for i in args)
 
-            # TODO check this for MPI
-            if is_procedure:
-                if expr.lhs in expr.rhs.arguments:
-                    #avoid repetition if the lhs is also an argument
-                    code = 'call {0}({1})'.format(rhs_code, code_args)
-                else:
-                    code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
-            else:
-                rhs_code = '{0}({1})'.format(rhs_code, code_args)
-                code = '{0} = {1}'.format(lhs_code, rhs_code)
+            if isinstance(expr.lhs, (tuple, list, Tuple)):
+                lhs_code = ', '.join(self._print(i) for i in expr.lhs)
+                code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
+                return self._get_statement(code)
+           
+            rhs_code = '{0}({1})'.format(rhs_code, code_args)
+            code = '{0} = {1}'.format(lhs_code, rhs_code)
 
             return self._get_statement(code)
 
@@ -1160,6 +1126,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pass(self, expr):
         return ''
+   
+    def _print_Nil(self, expr):
+        return ''
 
     def _print_Return(self, expr):
         code = ''
@@ -1318,18 +1287,23 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
-        if not isinstance(expr.iterable, (Range, Tensor)):
+        if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate)):
             msg  = "Only iterable currently supported are Range, "
-            msg += "Tensor"
+            msg += "Product"
             raise NotImplementedError(msg)
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
                                        prolog, epilog)
-        elif isinstance(expr.iterable, Tensor):
-            for i, a in zip(expr.target, expr.iterable.ranges):
-                prolog, epilog = _do_range(i, a, \
+        elif isinstance(expr.iterable, Product):
+            for i, a in zip(expr.target, expr.iterable.args):
+                itr_=Range(a.shape[0])
+                prolog, epilog = _do_range(i, itr_, \
                                            prolog, epilog)
+        elif isinstance(expr.iterable, (Zip, Enumerate)):
+            itr_=Range(expr.iterable.element.shape[0])
+            prolog, epilog = _do_range(expr.target, itr_, \
+                                       prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
 
@@ -1632,6 +1606,7 @@ class FCodePrinter(CodePrinter):
     # .....................................................
 
     def _print_ForIterator(self, expr):
+        return self._print_For(expr)
         depth = expr.depth
 
         prolog = ''
@@ -1792,17 +1767,6 @@ class FCodePrinter(CodePrinter):
     def _print_Header(self, expr):
         return ''
 
-    def _print_Function(self, expr):
-        # All constant function args are evaluated as floats
-        prec =  self._settings['precision']
-        args = [N(a, prec) for a in expr.args]
-        eval_expr = expr.func(*args)
-        if not isinstance(eval_expr, Function):
-            code = self._print(eval_expr)
-        else:
-            code = CodePrinter._print_Function(self, expr.func(*args))
-        return self._get_statement(code)
-
     def _print_ConstructorCall(self, expr):
         func = expr.func
         name = func.name
@@ -1816,25 +1780,19 @@ class FCodePrinter(CodePrinter):
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
 
-    def _print_FunctionCall(self, expr):
-        # for the moment, this is only used if the function has not arguments
-        func = expr.func
-        name = func.name
-        name = self._print(name)
 
-        # ...
-        code_args = ''
-        if not(expr.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
+
+    def _print_Function(self, expr):
+        # for the moment, this is only used if the function has not arguments
+        args = expr.args
+        name = type(expr).__name__
+
+        code_args = ', '.join(self._print(i) for i in args)
 
         code = '{0}({1})'.format(name, code_args)
-        # ...
-
-        # ...
-        if func.is_procedure:
-            code = 'call {0}'.format(code)
-        # ...
-
+        if isinstance(expr.func, Subroutine):
+            code = 'call ' + code
+       
         return self._get_statement(code)
 
 
