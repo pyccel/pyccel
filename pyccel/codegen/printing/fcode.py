@@ -1040,9 +1040,11 @@ class FCodePrinter(CodePrinter):
             ret_type = self._print(result.dtype)
 
             func_type = 'function'
-
+            rec = ''
+            if expr.is_recursive:
+                rec = 'recursive '
             if result.allocatable or (result.rank > 0):
-                sig = 'function {0}'.format(name)
+                sig = '{0}function {1}'.format(rec, name)
                 var = Variable(result.dtype, result.name, \
                              rank=result.rank, \
                              allocatable=True, \
@@ -1051,7 +1053,7 @@ class FCodePrinter(CodePrinter):
                 dec = Declare(result.dtype, var)
                 decs[str(var)] = dec
             else:
-                sig = '{0} function {1}'.format(ret_type, name)
+                sig = '{0} {1}function {2}'.format(ret_type, rec, name)
                 func_end  = ' result({0})'.format(result.name)
         else:
             # TODO compute intent
