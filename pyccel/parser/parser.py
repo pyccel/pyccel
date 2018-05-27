@@ -2990,7 +2990,8 @@ class Parser(object):
                     if not(var in args + results + local_vars):
                         global_vars += [var]
 
-                is_recursive = True
+                is_recursive = False
+                self.set_current_fun(None)
                 func_ = self.get_function(name)
                 if not(func_ is None) and func_.is_recursive:
                     is_recursive = True
@@ -3014,16 +3015,13 @@ class Parser(object):
                     self.insert_class(ClassDef(cls_name,
                             cls.attributes, methods, parent=cls.parent))
 
-                self.set_current_fun(None)
                 funcs += [func]
 
             if len(funcs) == 1:  # insert function def into namespace
 
                 # TODO checking
 
-                F = self.get_function(name)
-                if F is None and not cls_name:
-                    self.insert_function(funcs[0])
+                self.insert_function(funcs[0])
 
 #                    # TODO uncomment and improve this part later.
 #                    #      it will allow for handling parameters of different dtypes
@@ -3042,9 +3040,7 @@ class Parser(object):
                 # TODO checking
 
                 funcs = Interface(name, funcs)
-                F = self.get_function(name)
-                if F is None and not cls_name:
-                    self.insert_function(funcs)
+                self.insert_function(funcs)
 
 #                    # TODO uncomment and improve this part later.
 #                    #      it will allow for handling parameters of different dtypes
