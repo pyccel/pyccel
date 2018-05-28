@@ -4,6 +4,7 @@
 # statement
 
 from pyccel.parser import Parser
+from pyccel.parser.errors import Errors
 import os
 
 def test_semantic():
@@ -29,6 +30,10 @@ def test_semantic():
 
         settings = {}
         ast = pyccel.annotate(**settings)
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
 
     os.chdir(init_dir)
     print('\n')

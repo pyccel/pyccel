@@ -8,13 +8,11 @@ from sympy.tensor.indexed import Idx
 
 from pyccel.parser.parser  import PyccelParser
 
-from pyccel.ast import (For, Assign, Declare, Variable, \
-                        datatype, While, NativeFloat, \
-                        EqualityStmt, NotequalStmt, \
-                        FunctionDef, Import, Print, \
-                        Comment, AnnotatedComment, \
-                        IndexedVariable, Slice, If, \
-                        Vector, \
+from pyccel.ast import (For, Assign, Declare, Variable,
+                        datatype, While, NativeFloat,
+                        FunctionDef, Import, Print,
+                        Comment, AnnotatedComment,
+                        IndexedVariable, Slice, If,
                         Zeros, Ones, Array, Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic      import Complexity

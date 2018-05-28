@@ -38,8 +38,10 @@ z = x
 nn = shape(x)
 mm = shape(array([1.,2.,3.]))
 
-a = 2.
-b = int(a)
+a[:] = 2.
+
+# TODO must give an error. Incompatible type
+#b = int(a)
 
 # TODO not working yet
 #tt = zeros_like(x)

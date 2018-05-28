@@ -1,18 +1,19 @@
 # coding: utf-8
 
 # TODO test if compiler exists before running mpi, openacc
+#      execute the binary file
 
 from pyccel.codegen.utilities import execute_pyccel
 import os
 
-def run(test_dir, **settings):
+def run(test_dir , **settings):
     init_dir = os.getcwd()
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, os.path.join('scripts', test_dir))
 
     files = sorted(os.listdir(path_dir))
-    files = [f for f in files if (f.endswith(".py"))]
-
+    files = [f for f in files if (f.endswith(".py") and 'mpi4py' not in f)]
+    
     os.chdir(path_dir)
     for f in files:
         print('> testing {0}'.format(str(f)))
@@ -22,56 +23,16 @@ def run(test_dir, **settings):
     os.chdir(init_dir)
     print('\n')
 
-def test_blas():
+def test_mpi4py():
     print('*********************************')
     print('***                           ***')
-    print('***      TESTING BLAS         ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('blas', libs='blas')
-
-def test_lapack():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING LAPACK       ***')
+    print('***  TESTING EXTERNAL/MPI4PY  ***')
     print('***                           ***')
     print('*********************************')
 
-    run('lapack', libs=['blas', 'lapack'])
-
-def test_mpi():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING MPI          ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('mpi', compiler='mpif90')
-
-def test_openmp():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING OPENMP       ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('openmp', accelerator='openmp')
-
-#def test_openacc():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***      TESTING OPENACC      ***')
-#    print('***                           ***')
-#    print('*********************************')
-#
-#    run('openacc', compiler='pgfortran', accelerator='openacc')
+    run('mpi4py', compiler='mpif90')
 
 
 ######################
 if __name__ == '__main__':
-    test_blas()
-    test_lapack()
-    test_mpi()
-    test_openmp()
-#    test_openacc()
+    test_mpi4py()

@@ -8,13 +8,16 @@ from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
+from sympy import Integer, Add, Mul, Pow
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
+from sympy.core.assumptions import StdFactKB
 
-from .core import Variable, IndexedElement, IndexedVariable, List
-from .core import DataType, datatype
-from .core import NativeInteger, NativeFloat, NativeDouble, \
-    NativeComplex, NativeBool, String
+
+from .core import (Variable, IndexedElement, IndexedVariable, List, String)
+from .datatypes import DataType, datatype
+from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
+                        NativeBool)
 
 
 class Array(Function):
@@ -209,9 +212,14 @@ class Int(Function):
 
     def __new__(cls, arg):
         if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex)):
+                          NativeDouble, NativeComplex,Mul,Add,Pow)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'integer':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def arg(self):
@@ -255,7 +263,7 @@ class Zeros(Function):
     # TODO improve
 
     def __new__(cls, shape, dtype=None):
-
+        
         if isinstance(shape, list):
 
             # this is a correction. otherwise it is not working on LRZ
@@ -264,7 +272,7 @@ class Zeros(Function):
                 shape = Tuple(*(sympify(i) for i in shape[0]))
             else:
                 shape = Tuple(*(sympify(i) for i in shape))
-        elif isinstance(shape, int):
+        elif isinstance(shape, (int, Integer, Symbol)):
             shape = Tuple(sympify(shape))
         else:
             shape = shape
@@ -276,7 +284,6 @@ class Zeros(Function):
             dtype = datatype('ndarray' + dtype.arg.replace('\'', ''))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
-
         return Basic.__new__(cls, shape, dtype)
 
     @property

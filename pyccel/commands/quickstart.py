@@ -158,7 +158,6 @@ def generate(d, silent=False):
         d['suffix-library'] = suffix_library
 
     mkdir_p(builddir)
-#    mkdir_p(path.join(srcdir, 'external'))
 
     # ...
     project = d['path']

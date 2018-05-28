@@ -1,17 +1,54 @@
 from collections import OrderedDict
 
-DEFAULT_ERRORS_MODE = 'developer'
-#DEFAULT_ERRORS_MODE = 'user'
+# ...
+#ERROR = 'error'
+#INTERNAL = 'internal'
+#WARNING = 'warning'
+#FATAL = 'fatal'
+#
+#PYCCEL = 'pyccel'
+#
+#def make_symbol(s):
+#    return str(s)
 
-_cost_mode_register = {'developer': 0, 'user':30}
-_cost_register = {'warning': 10, 'error': 20, 'critical': 30}
+try:
+    from termcolor import colored
+    ERROR = colored('error', 'red', attrs=['blink', 'bold'])
+    INTERNAL = colored('internal', attrs=['blink', 'bold'])
+    WARNING = colored('warning', 'green', attrs=['blink'])
+    FATAL = colored('fatal', 'red', attrs=['blink', 'bold'])
+
+    PYCCEL = colored('pyccel', attrs=['bold'])
+
+    def make_symbol(s):
+        return colored(str(s), attrs=['bold'])
+except:
+    ERROR = 'error'
+    INTERNAL = 'internal'
+    WARNING = 'warning'
+    FATAL = 'fatal'
+
+    PYCCEL = 'pyccel'
+
+    def make_symbol(s):
+        return str(s)
+# ...
+
+_severity_registry = {'error': ERROR,
+                      'internal': INTERNAL,
+                      'fatal': FATAL,
+                      'warning': WARNING}
+
+
+def make_symbol(s):
+    return str(s)
 
 
 class PyccelError(Exception):
     def __init__(self, message, errors=''):
 
         # Call the base class constructor with the parameters it needs
-        super(PyccelException, self).__init__(message)
+        super(PyccelError, self).__init__(message)
 
         # Now for your custom code...
         self.errors = errors
@@ -41,29 +78,19 @@ class ErrorInfo:
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.
+        if isinstance(column, (tuple, list)):
+            column = '-'.join(str(i) for i in column)
         self.column = column
-        # Either 'error', 'critical', or 'warning'.
+        # Either 'error', 'fatal', or 'warning'.
         self.severity = severity
         # The error message.
         self.message = message
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = blocker
+        self.blocker = blocker or (severity == 'fatal')
 
     def __str__(self):
-
-#        from termcolor import colored, cprint
-#        warning  = colored('warning', 'green', attrs=['reverse', 'blink'])
-#        error = colored('error', 'red', attrs=['reverse', 'blink'])
-#        critical = colored('critical', 'magenta', attrs=['reverse', 'blink'])
-#
-#        _severity_registry = {'error': error, 'critical': critical, 'warning':
-#                              warning}
-
-#        _severity_registry = {'error': 'E', 'critical': 'C', 'warning': 'W'}
-        _severity_registry = {'error': 'error', 'critical': 'critical',
-                              'warning': 'warning'}
 
         pattern = '|{severity}'
         text = pattern.format(severity=_severity_registry[self.severity])
@@ -72,19 +99,17 @@ class ErrorInfo:
             if not self.column:
                 text = '{text}: {line}'.format(text=text, line=self.line)
             else:
-                text = '{text}: {line},{column}'.format(text=text, line=self.line,
+                text = '{text}: [{line},{column}]'.format(text=text, line=self.line,
                                                      column=self.column)
 
         text = '{text}| {msg}'.format(text=text, msg=self.message)
 
         if self.symbol:
-            text = '{text} ({symbol})'.format(text=text, symbol=self.symbol)
+            symbol = make_symbol(self.symbol)
+            text = '{text} ({symbol})'.format(text=text, symbol=symbol)
 
         return text
 
-    def stop_here(self, mode):
-        """Returns True or False meaning depending on the Errors mode"""
-        return _cost_register[self.severity] >= _cost_mode_register[mode]
 
 def _singleton(cls):
     """
@@ -97,6 +122,24 @@ def _singleton(cls):
         return instances[cls]
     return getinstance
 
+
+@_singleton
+class ErrorsMode:
+    """Developper or User mode.
+    pyccel command line will set it.
+    """
+    def __init__(self):
+        self._mode = 'user'
+
+    @property
+    def value(self):
+        return self._mode
+
+    def set_mode(self, mode):
+        assert(mode in ['user', 'developer'])
+        self._mode = mode
+
+
 @_singleton
 class Errors:
     """Container for compile errors.
@@ -106,7 +149,7 @@ class Errors:
         self.error_info_map = None
         self._target = None
         self._parser_stage = None
-        self._mode = DEFAULT_ERRORS_MODE
+        self._mode = ErrorsMode().value
 
         self.initialize()
 
@@ -158,15 +201,28 @@ class Errors:
                message,
                line = None,
                column = None,
+               bounding_box = None,
                blocker = False,
                severity = 'error',
                symbol = None,
-               filename = None):
+               filename = None,
+               verbose = False):
         """Report message at the given line using the current error context.
         stage: 'syntax', 'semantic' or 'codegen'
         """
+        # filter internal errors
+        if (self.mode == 'user') and (severity == 'internal'):
+            return
+
         if filename is None:
             filename = self.target['file']
+
+        # TODO improve. it is assumed here that tl and br have the same line
+        if bounding_box:
+            tl = bounding_box.top_left
+            br = bounding_box.bottom_right
+            line = tl.line
+            column = (tl.column, br.column)
 
         info = ErrorInfo(filename,
                          line=line,
@@ -175,17 +231,14 @@ class Errors:
                          message=message,
                          symbol=symbol,
                          blocker=blocker)
+
+        if verbose: print(info)
+
         if blocker:
-            if info.stop_here(self.mode):
-                # we first print all messages
-                self.check()
-#                if self.parser_stage == 'syntax':
-#                    raise PyccelSyntaxError(str(info))
-#                elif self.parser_stage == 'semantic':
-#                    raise PyccelSemanticError(str(info))
-                # TODO what shall we do here?
-                print(info)
-                raise SystemExit(0)
+            # we first print all messages
+            self.check()
+            print(info)
+            raise SystemExit(0)
 
         self.add_error_info(info)
 
@@ -229,12 +282,18 @@ class Errors:
             print(self.__str__())
 
     def __str__(self):
-        text = ''
+        print_path = (len(self.error_info_map.keys()) > 1)
+        text = '{}:'.format(PYCCEL)
+        if self.parser_stage:
+            text = '{text} [{stage}] \n'.format(text=text,
+                                                stage=self.parser_stage)
+
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
-            text += '>>> {path}\n'.format(path=path)
+
+            if print_path: text += ' filename :: {path}\n'.format(path=path)
             for err in errors:
-                text += str(err) + '\n'
+                text += ' ' + str(err) + '\n'
         return text
 
 if __name__ == '__main__':

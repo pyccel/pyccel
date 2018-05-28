@@ -45,15 +45,19 @@ install:
 script:
 #  - pytest # or py.test for Python versions 3.5 and below
   - if [[ $TRAVIS_PYTHON_VERSION == 3.4 || $TRAVIS_PYTHON_VERSION == 3.5 ]]; then export PYTEST=py.test ;else export PYTEST=pytest ; fi
-  - $PYTEST tests/ast/test_ast.py
   - $PYTEST tests/parser/test_headers.py
   - $PYTEST tests/parser/test_openmp.py
   - $PYTEST tests/parser/test_openacc.py
   - $PYTEST tests/syntax/test_syntax.py
   - $PYTEST tests/semantic/test_semantic.py
   - $PYTEST tests/codegen/test_codegen.py
+  - $PYTEST tests/errors/test_errors.py
+  - $PYTEST tests/warnings/test_warnings.py
+  - $PYTEST tests/preprocess/test_preprocess.py
 # this test must be executed with python, since we are calling mpif90 inside it
+  - python tests/internal/test_internal.py
   - python tests/external/test_external.py
+  - python tests/macro/test_macro.py
   - cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
 #  - python tests/test_pyccel.py --execute
 #  - python tests/test_pyccel_openmp.py --openmp --execute

@@ -4,6 +4,7 @@
 # statement
 
 from pyccel.parser import Parser
+from pyccel.parser.errors import Errors
 import os
 
 def test_syntax():
@@ -26,6 +27,10 @@ def test_syntax():
 
         pyccel = Parser(f)
         ast = pyccel.parse()
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
 
     os.chdir(init_dir)
     print('\n')

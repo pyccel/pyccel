@@ -1,14 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from sympy.core.function import Function
+from sympy.core.function import Application
 from .core import DottedName
 from .core import Import
-from .core import Range, Len
+from .core import Range, Len , Enumerate, Zip, Product
+from .core import FunctionDef, Return, Assign
+from .core import Constant
 from .numpyext import Zeros, Ones
-from .numpyext import Array, Shape, Int, Sum, Rand
+from .numpyext import Array, Shape, Int, Rand, Sum
+from sympy import Symbol, Lambda, floor
+from sympy import I
 from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
-                   acsc, acos, asec, atan, acot, atan2, Mod)
+                   acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
+
+import scipy.constants as sc_constants
 
 math_functions = {
     'Abs': Abs,
@@ -30,21 +36,27 @@ math_functions = {
     'atan2': atan2,
     }
 
+scipy_constants = {
+    'pi': Constant('double', 'pi', value=sc_constants.pi),
+                  }
+
 
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
-
-    if not (isinstance(expr, Function) or isinstance(expr, str)):
+    if not (isinstance(expr, Application) or isinstance(expr, str)):
         raise TypeError('Expecting a string or a Function class')
 
-    if isinstance(expr, Function):
+    if isinstance(expr, Application):
         name = str(type(expr).__name__)
 
     if isinstance(expr, str):
         name = expr
-
     if name == 'range':
         return Range(*args)
+    elif name == 'zip':
+        return Zip(*args)
+    elif name == 'enumerate':
+        return Enumerate(*args)
     if name == 'array':
         return Array(*args)
     if name == 'int':
@@ -55,6 +67,36 @@ def builtin_function(expr, args=None):
         return Sum(*args)
     if name == 'Mod':
         return Mod(*args)
+    if name == 'Max':
+        return Max(*args)
+    if name == 'floor':
+        return floor(*args)
+    elif name == 'complex':
+        return args[0]+I*args[1]
+    
+
+    if name == 'lambdify':
+       if isinstance(args, Lambda):
+           expr_ = args.expr
+           expr_ = Return(expr_)
+           expr_.set_fst(expr)
+           f_arguments = args.variables
+           func = FunctionDef('lambda', f_arguments, [], [expr_])
+           return func
+           
+       code = compile(args.body[0],'','single')
+       g={}
+       eval(code,g)
+       f_name = str(args.name)
+       code = g[f_name]
+       args_ = args.arguments
+       expr_ = code(*args_)
+       f_arguments = list(expr_.free_symbols)
+       expr_ = Return(expr_)
+       expr_.set_fst(expr)
+       body = [expr_]
+       func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
+       return func
 
     return None
 
@@ -110,11 +152,26 @@ def builtin_import(expr):
 
         if target in math_functions.keys():
             return (target, math_functions[target])
+
     elif source == 'math':
 
         target = str(expr.target[0])
+
         if target in math_functions.keys():
             return (target, math_functions[target])
 
-    return (None, None)
+    elif source == 'scipy':
+        # TODO improve: source must be scipy.constants
+        #      - use dynamic import?
+        target = str(expr.target[0])
+        if target in scipy_constants.keys():
+            return (target, scipy_constants[target])
+    elif source == 'itertools':
+        target = str(expr.target[0])
+        
+        if target == 'product':
+            return (target, Product)
+        
+    
 
+    return (None, None)

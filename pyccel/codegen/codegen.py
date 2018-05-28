@@ -6,13 +6,12 @@ import os
 
 from pyccel.codegen.printing import fcode
 
-from pyccel.ast.core import FunctionDef, ClassDef, Module, Program, \
-    Import, Interface
-from pyccel.ast.core import Header, EmptyLine, NewLine, Comment
-from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign , Assigns
-from pyccel.ast.core import Variable, DottedName
-from pyccel.ast.core import For, If, While
-from pyccel.ast.core import Is
+from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
+from pyccel.ast import Header, EmptyLine, NewLine, Comment
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign , Assigns
+from pyccel.ast import Variable, DottedName
+from pyccel.ast import For, If, While, FunctionalFor, ForIterator
+from pyccel.ast import Is
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
 
@@ -158,6 +157,10 @@ class Codegen(object):
                 if isinstance(stmt, For):
                     if isinstance(stmt.target, Variable):
                         vars_ += [stmt.target] + collect_vars(stmt.body)
+                    else:
+                        vars_ += stmt.target + collect_vars(stmt.body)
+                elif isinstance(stmt, FunctionalFor):
+                    vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
                 elif isinstance(stmt, If):
                     vars_ += collect_vars(stmt.bodies)
                 elif isinstance(stmt, While):
@@ -183,7 +186,9 @@ class Codegen(object):
         decs = []
 
         for stmt in self.ast:
-            if isinstance(stmt, FunctionDef):
+            if isinstance(stmt, EmptyLine):
+                continue
+            elif isinstance(stmt, FunctionDef):
                 routines += [stmt]
             elif isinstance(stmt, ClassDef):
                 classes += [stmt]
@@ -193,8 +198,6 @@ class Codegen(object):
                 modules += [stmt]
             elif isinstance(stmt, Interface):
                 interfaces += [stmt]
-            elif isinstance(stmt, EmptyLine):
-                continue
             else:
 
                 # TODO improve later, as in the old codegen

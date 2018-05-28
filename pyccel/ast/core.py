@@ -8,7 +8,6 @@ from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational, Ne, Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
-from sympy.core.basic import Basic
 from sympy.core.function import Function
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul, Pow
@@ -16,6 +15,7 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
+from sympy.core.assumptions import StdFactKB
 
 #from sympy.sets.fancysets import Range as sm_Range
 
@@ -25,11 +25,11 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
-from sympy.core.basic import Basic, Atom
+from sympy.core.basic import Atom
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.compatibility import string_types
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, UndefinedFunction
 from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy import Integral, Symbol
@@ -46,9 +46,15 @@ from sympy.core.compatibility import is_sequence
 #      - Zeros, Ones, Array cases
 #      - AnnotatedComment case
 #      - Slice case
-#      - Vector case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
+
+from .basic import Basic
+from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                        NativeInteger, NativeBool, NativeFloat, NativeDouble,
+                        NativeComplex,
+                        NativeRange, NativeTensor, NativeString, NativeGeneric)
+
 
 
 def subs(expr, new_elements):
@@ -57,6 +63,8 @@ def subs(expr, new_elements):
 
     new_elements : list of tuples like [(x,2)(y,3)]
     """
+    if len(list(new_elements))==0:
+        return expr
     if isinstance(expr, (list, tuple, Tuple)):
         return [subs(expr, new_elements) for i in expr]
     elif isinstance(expr, (Expr, Assign)):
@@ -218,6 +226,25 @@ class List(Tuple):
     """Represent lists in the code with dynamic memory management."""
     pass
 
+class Dlist(Basic):
+    """ this is equivalent to the zeros function of numpy arrays for the python list.
+        
+    value : Expr 
+           a sympy expression which represents the initilized value of the list
+  
+    shape : the shape of the array
+    """
+    def __new__(cls, val, length):
+        return Basic.__new__(cls, val, length)
+
+    @property
+    def val(self):
+        return self._args[0]
+
+    @property
+    def length(self):
+        return self._args[1]
+
 
 class Assign(Basic):
     """Represents variable assignment for code generation.
@@ -347,22 +374,28 @@ class Assign(Basic):
 
         return False
 
+
 class Assigns(Basic):
     """Represents a list of assignments for code generation.
     """
 
     def __new__(cls, assigns):
+             ls = []
              for i in assigns:
-                 if not isinstance(i, Assign):
+                 if isinstance(i,Assigns):
+                     ls += i.stmts
+                 elif isinstance(i, Assign):
+                     ls += [i]
+                 else:
                      raise TypeError('assigns object must contain a list of assign stmts')
-             return Basic.__new__(cls, assigns)
+             return Basic.__new__(cls, ls)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        stmt = self.stmts[-1]
-        for i in self.stmts[:-1]:
-            stmt.sub(i.lhs, i.rhs)
-        return '{0} := {1}'.format(sstr(stmt.lhs), sstr(stmt.rhs))
+        s=''
+        for i in self.stmts:
+            s = s +'\n{0} := {1}'.format(sstr(i.lhs), sstr(i.rhs))
+        return s
 
     @property
     def stmts(self):
@@ -658,6 +691,70 @@ class With(Basic):
     @property
     def settings(self):
         return self._args[2]
+
+    @property
+    def block(self):
+        methods = self.test.cls_base.methods
+        for i in methods:
+            if str(i.name)=='__enter__':
+                enter = i
+            elif str(i.name) =='__exit__':
+                exit = i
+        enter = FunctionCall(enter,[]).inline
+        exit = FunctionCall(exit, []).inline
+        #TODO check if enter is empty or not first
+        body = enter.body
+        body += self.body
+        body += exit.body
+        return Block('with', [], body)
+
+class Product(Basic):
+    """
+    Represents a Product stmt.
+
+    """
+    def __new__(cls, *args):
+        if not isinstance(args, (tuple, list, Tuple)):
+            raise TypeError('args must be an iterable')
+        elif len(args)<2:
+            raise ValueError('args must be of lenght > 2')
+        return Basic.__new__(cls,*args)
+    
+    @property
+    def elements(self):
+        return self._args
+
+
+
+class Zip(Basic):
+    """
+    Represents a zip stmt.
+
+    """
+    def __new__(cls, *args):
+        if not isinstance(args, (tuple, list, Tuple)):
+            raise TypeError('args must be an iterable')
+        elif len(args)<2:
+            raise ValueError('args must be of lenght > 2')
+        return Basic.__new__(cls,*args)
+    
+    @property
+    def element(self):
+        return self._args[0]
+
+class Enumerate(Basic):
+    """
+    Reresents the enumerate stmt
+  
+    """    
+    def __new__(cls, arg):
+        if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
+            raise TypeError('Expecting an arg of valid type')
+        return Basic.__new__(cls, arg)
+    @property
+    def element(self):
+        return self._args[0]
+
 
 class Range(Basic):
     """
@@ -1192,7 +1289,7 @@ class For(Basic):
             target = sympify(target)
 
             cond_iter = iterable(iter)
-            cond_iter = cond_iter or (isinstance(iter, (Range, Tensor)))
+            cond_iter = cond_iter or (isinstance(iter, (Range, Product , Enumerate, Zip)))
             cond_iter = cond_iter or (isinstance(iter, Variable)
                                       and is_iterable_datatype(iter.dtype))
             cond_iter = cond_iter or (isinstance(iter, ConstructorCall)
@@ -1217,18 +1314,50 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
+  
+    def insert2body(self, stmt):
+        self.body.append(stmt)
+
+class FunctionalFor(Basic):
+    """."""
+  
+    def __new__(cls, loops, target, indexes, index =None):
+        return Basic.__new__(cls, loops, target, indexes, index)
+  
+    @property
+    def loops(self):
+        return self._args[0]
+ 
+    @property
+    def target(self):
+        return self._args[1]
+
+    @property
+    def indexes(self):
+        return self._args[2]
+
+    @property
+    def index(self):
+        return self._args[3]
+    
 
 class ForIterator(For):
     """Class that describes iterable classes defined by the user."""
+    def __new__(cls, target, iter, body, strict=True):
 
-    @property
-    def target(self):
-        ts = super(ForIterator, self).target
+        if isinstance(iter, Symbol):
+            iter = Range(Len(iter))
+        return For.__new__(cls, target, iter, body, strict)
 
-        if not(len(ts) == self.depth):
-            raise ValueError('wrong number of targets')
+    #TODO uncomment later when we intriduce iterators
+    #@property
+    #def target(self):
+    #    ts = super(ForIterator, self).target
 
-        return ts
+    #    if not(len(ts) == self.depth):
+    #        raise ValueError('wrong number of targets')
+
+    #    return ts
 
     @property
     def depth(self):
@@ -1266,313 +1395,6 @@ class ForIterator(For):
 # The following are defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
-
-
-class DataType(with_metaclass(Singleton, Basic)):
-    """Base class representing native datatypes"""
-    _name = '__UNDEFINED__'
-
-    @property
-    def name(self):
-        return self._name
-
-    def __str__(self):
-        return str(self.name).lower()
-
-class NativeBool(DataType):
-    _name = 'Bool'
-    pass
-
-class NativeInteger(DataType):
-    _name = 'Int'
-
-class NativeFloat(DataType):
-    _name = 'Float'
-    pass
-
-class NativeDouble(DataType):
-    _name = 'Double'
-    pass
-
-class NativeComplex(DataType):
-    _name = 'Complex'
-    pass
-
-class NativeString(DataType):
-    _name = 'String'
-    pass
-
-class NativeVoid(DataType):
-    _name = 'Void'
-    pass
-
-class NativeNil(DataType):
-    _name = 'Nil'
-    pass
-
-class NativeList(DataType):
-    _name = 'List'
-    pass
-
-class NativeIntegerList(NativeInteger, NativeList):
-    _name = 'IntegerList'
-    pass
-
-class NativeFloatList(NativeFloat, NativeList):
-    _name = 'FloatList'
-    pass
-
-class NativeDoubleList(NativeDouble, NativeList):
-    _name = 'DoubleList'
-    pass
-
-class NativeComplexList(NativeComplex, NativeList):
-    _name = 'ComplexList'
-    pass
-
-class NativeRange(DataType):
-    _name = 'Range'
-    pass
-
-class NativeTensor(DataType):
-    _name = 'Tensor'
-    pass
-
-class NativeParallelRange(NativeRange):
-    _name = 'ParallelRange'
-    pass
-
-# TODO remove later
-class NativeVector(DataType):
-    _name = 'Vector'
-    pass
-
-# TODO remove later
-class NativeStencil(DataType):
-    _name = 'Stencil'
-    pass
-
-class NativeSymbol(DataType):
-    _name = 'Symbol'
-    pass
-
-class NdArray(DataType):
-    _name = 'NdArray'
-    pass
-
-class NdArrayInt(NdArray, NativeInteger):
-    _name = 'NdArrayInt'
-    pass
-
-class NdArrayFloat(NdArray, NativeFloat):
-    _name = 'NdArrayFloat'
-    pass
-
-class NdArrayDouble(NdArray, NativeDouble):
-    _name = 'NdArrayDouble'
-    pass
-
-class NdArrayComplex(NdArray, NativeComplex):
-    _name = 'NdArrayComplex'
-    pass
-
-class CustomDataType(DataType):
-    _name = '__UNDEFINED__'
-
-    def __init__(self, name='__UNDEFINED__'):
-        self._name = name
-
-class NativeGeneric(DataType):
-    _name = 'Generic'
-    pass
-
-
-Bool    = NativeBool()
-Int     = NativeInteger()
-Float   = NativeFloat()
-Double  = NativeDouble()
-Complex = NativeComplex()
-Void    = NativeVoid()
-Nil     = NativeNil()
-String  = NativeString()
-_Vector = NativeVector()
-_Stencil = NativeStencil()
-_Symbol = NativeSymbol()
-IntegerList = NativeIntegerList()
-FloatList = NativeFloatList()
-DoubleList = NativeDoubleList()
-ComplexList = NativeComplexList()
-NdArray = NdArray()
-NdArrayInt = NdArrayInt()
-NdArrayDouble = NdArrayDouble()
-NdArrayFloat = NdArrayFloat()
-NdArrayComplex = NdArrayComplex()
-Generic    = NativeGeneric()
-
-
-dtype_registry = {'bool': Bool,
-                  'int': Int,
-                  'float': Float,
-                  'double': Double,
-                  'complex': Complex,
-                  'void': Void,
-                  'nil': Nil,
-                  'vector': _Vector,
-                  'stencil': _Stencil,
-                  'symbol': _Symbol,
-                  '*int': IntegerList,
-                  '*float': FloatList,
-                  '*double': DoubleList,
-                  '*complex': ComplexList,
-                  'ndarrayint': NdArrayInt,
-                  'ndarrayfloat': NdArrayFloat,
-                  'ndarraydouble': NdArrayDouble,
-                  'ndarraycomplex': NdArrayComplex,
-                  '*': Generic,
-                  'str': String}
-
-
-def DataTypeFactory(name, argnames=["_name"],
-                    BaseClass=CustomDataType,
-                    prefix=None,
-                    alias=None,
-                    is_iterable=False,
-                    is_with_construct=False,
-                    is_polymorphic=True):
-    def __init__(self, **kwargs):
-        for key, value in list(kwargs.items()):
-            # here, the argnames variable is the one passed to the
-            # DataTypeFactory call
-            if key not in argnames:
-                raise TypeError("Argument %s not valid for %s"
-                    % (key, self.__class__.__name__))
-            setattr(self, key, value)
-        BaseClass.__init__(self, name=name[:-len("Class")])
-
-    if prefix is None:
-        prefix = 'Pyccel'
-    else:
-        prefix = 'Pyccel{0}'.format(prefix)
-
-    newclass = type(prefix + name, (BaseClass,),
-                    {"__init__":          __init__,
-                     "_name":             name,
-                     "prefix":            prefix,
-                     "alias":             alias,
-                     "is_iterable":       is_iterable,
-                     "is_with_construct": is_with_construct,
-                     "is_polymorphic":    is_polymorphic})
-    return newclass
-
-def is_pyccel_datatype(expr):
-    return isinstance(expr, CustomDataType)
-#    if not isinstance(expr, DataType):
-#        raise TypeError('Expecting a DataType instance')
-#    name = expr.__class__.__name__
-#    return name.startswith('Pyccel')
-
-# TODO improve and remove try/except
-def is_iterable_datatype(dtype):
-    """Returns True if dtype is an iterable class."""
-    try:
-        if is_pyccel_datatype(dtype):
-            return dtype.is_iterable
-        elif isinstance(dtype, (NativeRange, NativeTensor)):
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-def get_default_value(dtype):
-    """Returns the default value of a native datatype."""
-    if isinstance(dtype, NativeInteger):
-        value = 0
-    elif isinstance(dtype, NativeFloat):
-        value = 0.0
-    elif isinstance(dtype, NativeDouble):
-        value = 0.0
-    elif isinstance(dtype, NativeComplex):
-        value = 0.0
-    elif isinstance(dtype, NativeBool):
-        value = BooleanFalse()
-    else:
-        raise TypeError('Unknown type')
-    return value
-
-
-# TODO improve and remove try/except
-def is_with_construct_datatype(dtype):
-    """Returns True if dtype is an with_construct class."""
-    try:
-        if is_pyccel_datatype(dtype):
-            return dtype.is_with_construct
-        else:
-            return False
-    except:
-        return False
-
-# TODO check the use of floats
-def datatype(arg):
-    """Returns the datatype singleton for the given dtype.
-
-    arg : str or sympy expression
-        If a str ('bool', 'int', 'float', 'double', or 'void'), return the
-        singleton for the corresponding dtype. If a sympy expression, return
-        the datatype that best fits the expression. This is determined from the
-        assumption system. For more control, use the `DataType` class directly.
-
-    Returns:
-        DataType
-
-    """
-    def infer_dtype(arg):
-        if arg.is_integer:
-            return Int
-        elif arg.is_Boolean:
-            return Bool
-        else:
-            return Double
-
-    if isinstance(arg, str):
-        if arg.lower() not in dtype_registry:
-            raise ValueError("Unrecognized datatype " + arg)
-        return dtype_registry[arg]
-    elif isinstance(arg, (Variable, IndexedVariable, IndexedElement)):
-        if isinstance(arg.dtype, DataType):
-            return dtype_registry[arg.dtype.name.lower()]
-        else:
-            raise TypeError('Expecting a DataType')
-    else:
-        arg = sympify(arg)
-        if isinstance(arg, ImmutableDenseMatrix):
-            dts = [infer_dtype(i) for i in arg]
-            if all([i is Bool for i in dts]):
-                return Bool
-            elif all([i is Int for i in dts]):
-                return Int
-            else:
-                return Double
-        else:
-            return infer_dtype(arg)
-
-class EqualityStmt(Relational):
-    """Represents a relational equality expression in the code."""
-    def __new__(cls, lhs, rhs):
-        lhs = sympify(lhs)
-        rhs = sympify(rhs)
-        return Relational.__new__(cls, lhs, rhs)
-    @property
-    def canonical(self):
-        return self
-
-class NotequalStmt(Relational):
-    """Represents a relational not equality expression in the code."""
-    def __new__(cls, lhs, rhs):
-        lhs = sympify(lhs)
-        rhs = sympify(rhs)
-        return Relational.__new__(cls, lhs, rhs)
 
 
 class Is(Basic):
@@ -1833,6 +1655,9 @@ class Nil(Basic):
         sstr = printer.doprint
         return sstr('None')
 
+class Void(Basic):
+    pass
+
 
 class Variable(Symbol):
     """Represents a typed variable.
@@ -1881,7 +1706,6 @@ class Variable(Symbol):
         if isinstance(dtype, str) or (str(dtype) == '*'):
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
-
             raise TypeError("datatype must be an instance of DataType.")
 
         if allocatable is None:
@@ -1926,18 +1750,33 @@ class Variable(Symbol):
 
         if not isinstance(rank, int):
             raise TypeError("rank must be an instance of int.")
-
-        if isinstance(shape, Tuple) and len(shape) == 1:
-            shape = shape[0]
-
-#        if not shape==None:
-#            if  (not isinstance(shape,int) and not isinstance(shape,tuple) and not all(isinstance(n, int) for n in shape)):
-#                raise TypeError("shape must be an instance of int or tuple of int")
-
+        
+        if rank == 0:
+            shape = ()
         # TODO improve order of arguments
-        return Basic.__new__(cls, dtype, name, rank, allocatable, shape,
+        obj = Basic.__new__(cls, dtype, name, rank, allocatable, shape,
                              cls_base, cls_parameters,
                              is_pointer, is_target, is_polymorphic, is_optional)
+
+        assumptions ={}
+        class_type = cls_base or dtype.__class__.__name__.startswith('Pyccel')
+        alloweddtypes = (NativeBool, NativeRange, NativeString,
+                        NativeSymbol, NativeGeneric)
+        if isinstance(dtype, NativeInteger): 
+            assumptions['integer'] = True
+        elif isinstance(dtype, (NativeFloat,NativeDouble)):
+            assumptions['real'] = True
+        elif isinstance(dtype, NativeComplex):
+            assumptions['complex'] = True
+        elif not isinstance(dtype, alloweddtypes) and not class_type:
+            raise TypeError('Undefined datatype')
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+        
+        
+     
 
     @property
     def dtype(self):
@@ -1982,6 +1821,18 @@ class Variable(Symbol):
     @property
     def is_optional(self):
         return self._args[10]
+
+    @property
+    def is_ndarray(self):
+        """user friendly method to check if the variable is an ndarray:
+            1. have a rank > 0
+            2. dtype is one among {int, bool, float, double, complex}
+        """
+        if self.rank == 0: return False
+        return isinstance(self.dtype, (NativeInteger, NativeBool, NativeFloat,
+                                       NativeDouble, NativeComplex))
+
+
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
@@ -2028,6 +1879,19 @@ class Variable(Symbol):
                    cls_base=self.cls_base,
                    cls_parameters=self.cls_parameters)
 
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.dtype, self.name,
+                self.rank,
+                self.allocatable,
+                self.is_pointer,
+                self.is_polymorphic,
+                self.is_optional,
+                self.shape,
+                self.cls_base,
+                self.cls_parameters,)
+        return args
+
 
 class DottedVariable(AtomicExpr, Boolean):
     """
@@ -2048,30 +1912,55 @@ class DottedVariable(AtomicExpr, Boolean):
                             ' got instead {0} of type {1}'.format(str(args[1]),
                                                                   type(args[1])))
 
-        return Basic.__new__(cls, args[0], args[1])
+        obj =  Basic.__new__(cls, args[0], args[1])
+        assumptions ={}
+        if isinstance(args[1], (Variable, IndexedVariable, IndexedElement)):
+            dtype = args[1].dtype
+            class_type = isinstance(args[1], Variable) and args[1].cls_base \
+             or dtype.__class__.__name__.startswith('Pyccel')
+            alloweddtypes = (NativeBool, NativeRange, NativeString)
+            if isinstance(dtype, NativeInteger) or args[1].is_integer: 
+                assumptions['integer'] = True
+            elif isinstance(dtype, (NativeFloat,NativeDouble)) or args[1].is_real:
+                assumptions['real'] = True
+            elif isinstance(dtype, NativeComplex) or args[1].is_complex:
+                assumptions['complex'] = True
+            elif not isinstance(dtype, alloweddtypes) and not class_type:
+                raise TypeError('Undefined datatype')
+
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
-    def args(self):
-        return [self._args[0], self._args[1]]
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
     @property
     def rank(self):
         return self._args[1].rank
+
     @property
     def dtype(self):
         return self._args[1].dtype
 
     @property
     def name(self):
-        if isinstance(self.args[0], DottedVariable):
-            name_0 = self.args[0].name
+        if isinstance(self.lhs, DottedVariable):
+            name_0 = self.lhs.name
         else:
-            name_0 = str(self.args[0])
-        if isinstance(self.args[1], Function):
-            name_1 = str(type(self.args[1]).__name__)
-        elif isinstance(self.args[1], (Symbol, Variable)):
-            name_1 = self.args[1].name
+            name_0 = str(self.lhs)
+        if isinstance(self.rhs, Function):
+            name_1 = str(type(self.rhs).__name__)
+        elif isinstance(self.rhs, Symbol):
+            name_1 = self.rhs.name
         else:
-            name_1 = str(self.args[1])
+            name_1 = str(self.rhs)
         return name_0 + '.' + name_1
 
     def __str__(self):
@@ -2088,7 +1977,7 @@ class DottedVariable(AtomicExpr, Boolean):
     def names(self):
         """Return list of names as strings."""
         ls = []
-        for i in self.args:
+        for i in [self.lhs, self.rhs]:
             if not isinstance(i, DottedVariable):
                 ls.append(str(i))
             else:
@@ -2137,6 +2026,15 @@ class ValuedVariable(Variable):
         return '{0}={1}'.format(name, value)
 
 
+class Constant(ValuedVariable):
+    """
+
+    Examples
+
+    """
+    pass
+
+
 class Argument(Symbol):
     """An abstract Argument data structure.
 
@@ -2163,9 +2061,9 @@ class ValuedArgument(Basic):
 
     def __new__(cls, expr, value):
         if isinstance(expr, str):
-            expr = Argument(expr)
-
-        if not isinstance(expr, Argument):
+            expr = Symbol(expr)
+        #TODO should we turn back to Argument
+        if not isinstance(expr, Symbol):
             raise TypeError('Expecting an argument')
 
         return Basic.__new__(cls, expr, value)
@@ -2198,35 +2096,36 @@ class Return(Basic):
     stmts :represent assign stmts in the case of expression return
     """
 
-    def __new__(cls, expr, stmts = None):
+    def __new__(cls, expr, stmt = None):
+   
+        if stmt and not isinstance(stmt, (Assign, Assigns)):
+            raise TypeError('stmt should only be of type Assign')
 
-        if stmts is None:
-            stmts = []
-        if not isinstance(stmts,list):
-            raise TypeError('stmts should only be of type list')
-        for i in stmts:
-            if not isinstance(i, Assign):
-                raise TypeError('stmts should only be of type Assign')
-
-        return Basic.__new__(cls, expr, stmts)
+        return Basic.__new__(cls, expr, stmt)
 
     @property
     def expr(self):
         return self._args[0]
 
     @property
-    def stmts(self):
+    def stmt(self):
         return self._args[1]
+
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.expr, self.stmt)
+        return args
+
 
 class Interface(Basic):
     """Represent an Interface"""
 
-    def __new__(cls, name, functions):
+    def __new__(cls, name, functions, hide=False):
         if not isinstance(name, str):
             raise TypeError("Expecting an str")
         if not isinstance(functions, list):
             raise TypeError("Expecting a list")
-        return Basic.__new__(cls, name, functions)
+        return Basic.__new__(cls, name, functions, hide)
 
     @property
     def name(self):
@@ -2237,16 +2136,16 @@ class Interface(Basic):
         return self._args[1]
 
     @property
+    def hide(self):
+        return self.functions[0].hide or self._args[2]
+
+    @property
     def global_vars(self):
         return self.functions[0].global_vars
 
     @property
     def cls_name(self):
         return self.functions[0].cls_name
-
-    @property
-    def hide(self):
-        return self.functions[0].hide
 
     @property
     def kind(self):
@@ -2341,7 +2240,7 @@ class FunctionDef(Basic):
                 cls_name=None, hide=False,
                 kind='function',
                 is_static=False,
-                imports=[], decorators=[]):
+                imports=[], decorators=[],is_recursive = False):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2403,7 +2302,7 @@ class FunctionDef(Basic):
                              local_vars, global_vars,
                              cls_name, hide,
                              kind, is_static,
-                             imports, decorators)
+                             imports, decorators, is_recursive)
 
     @property
     def name(self):
@@ -2453,9 +2352,25 @@ class FunctionDef(Basic):
     def decorators(self):
         return self._args[11]
 
+    @property
+    def is_recursive(self):
+        return self._args[12]
+
     def print_body(self):
         for s in self.body:
             print (s)
+ 
+    def set_recursive(self):
+        return FunctionDef(self.name, self.arguments,
+                           self.results, self.body,
+                           local_vars=self.local_vars,
+                           global_vars=self.global_vars,
+                           cls_name=self.cls_name,
+                           hide=self.hide,
+                           kind=self.kind,
+                           is_static=self.is_static,
+                           is_recursive = True)
+
 
     def rename(self, newname):
         """
@@ -2472,19 +2387,9 @@ class FunctionDef(Basic):
                            cls_name=self.cls_name,
                            hide=self.hide,
                            kind=self.kind,
-                           is_static=self.is_static)
+                           is_static=self.is_static,
+                           is_recursive = self.is_recursive)
 
-  #  def __call__(self, *args, **kwargs):
-  #      """Represents a call to the function."""
-        # TODO treat parametrized arguments.
-        #      this will be done later, once it is validated for FunctionCall
-
-        # we remove 'self' from arguments
-   #     f_args = self.arguments[1:]
-   #     args = list(args)
-   #     assert(len(args) == len(f_args))
-
-   #     return FunctionCall(self, args)
 
     @property
     def is_procedure(self):
@@ -2521,6 +2426,23 @@ class FunctionDef(Basic):
             return False
 
         return True
+
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.name,
+                self.arguments,
+                self.results,
+                self.body,
+                self.local_vars,
+                self.global_vars,
+                self.cls_name,
+                self.hide,
+                self.kind,
+                self.is_static,
+                self.imports,
+                self.decorators,
+                self.is_recursive)
+        return args
 
 
 class SympyFunction(FunctionDef):
@@ -3097,6 +3019,10 @@ class Declare(Basic):
     def static(self):
         return self._args[4]
 
+class Subroutine(UndefinedFunction):
+    pass
+
+
 class Break(Basic):
     """Represents a break in the code."""
     pass
@@ -3127,16 +3053,48 @@ class Random(Function):
 
 
 # TODO: improve with __new__ from Function and add example
+
+class SumFunction(Basic):
+    """Represents a Sympy Sum Function.
+
+       body: Expr
+       Sympy Expr in which the sum will be performed.
+
+       iterator:
+       a tuple  that containts the index of the sum and it's range.
+    """
+    def __new__(cls, body, iterator,stmts=None):
+        if not isinstance(iterator, (tuple,Tuple)):
+             raise TypeError('iterator must be a tuple')
+        if not len(iterator)==3:
+             raise ValueError('iterator must be of lenght 3')
+        return Basic.__new__(cls, body, iterator,stmts)
+
+    @property
+    def body(self):
+        return self._args[0]
+
+    @property
+    def iterator(self):
+        return self._args[1]
+
+    @property
+    def stmts(self):
+        return self._args[2]
+
+
 class Len(Function):
     """
     Represents a 'len' expression in the code.
     """
-    # TODO : remove later
-    def __str__(self):
-        return "len"
 
     def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'integer':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def arg(self):
@@ -3145,7 +3103,6 @@ class Len(Function):
     @property
     def dtype(self):
         return 'int'
-
 
 # TODO - add examples
 class ZerosLike(Function):
@@ -3221,7 +3178,7 @@ class ZerosLike(Function):
             raise TypeError('Unknown type for {name}, given '
                             '{dtype}'.format(dtype=type(rhs), name=rhs))
 
-# TODO: treat as a function
+
 class Print(Basic):
     """Represents a print function in the code.
 
@@ -3245,6 +3202,38 @@ class Print(Basic):
     @property
     def expr(self):
         return self._args[0]
+
+
+class SymbolicPrint(Basic):
+    """Represents a print function of symbolic expressions in the code.
+
+    expr : sympy expr
+        The expression to return.
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Print
+    >>> n,m = symbols('n,m')
+    >>> Print(('results', n,m))
+    Print((results, n, m))
+    """
+
+    def __new__(cls, expr):
+        if not iterable(expr):
+            raise TypeError('Expecting an iterable')
+
+        for i in expr:
+            if not isinstance(i, (Lambda, SymbolicAssign, SympyFunction)):
+                raise TypeError('Expecting Lambda, SymbolicAssign, '
+                                'SympyFunction for {}'.format(i))
+
+        return Basic.__new__(cls, expr)
+
+    @property
+    def expr(self):
+        return self._args[0]
+
 
 class Del(Basic):
     """Represents a memory deallocation in the code.
@@ -3376,6 +3365,12 @@ class AnnotatedComment(Basic):
     def txt(self):
         return self._args[1]
 
+    def __getnewargs__(self):
+        """used for Pickling self."""
+        args = (self.accel, self.txt,)
+        return args
+
+
 class IndexedVariable(IndexedBase):
     """
     Represents an indexed variable, like x in x[i], in the code.
@@ -3415,11 +3410,12 @@ class IndexedVariable(IndexedBase):
     """
 
     def __new__(cls, label, shape=None, dtype=None, **kw_args):
-        if dtype:
-            if isinstance(dtype, str):
-                dtype = datatype(dtype)
-            elif not isinstance(dtype, DataType):
-                raise TypeError("datatype must be an instance of DataType.")
+        if dtype is None:
+            raise TypeError("datatype must be provided")
+        if isinstance(dtype, str):
+            dtype = datatype(dtype)
+        elif not isinstance(dtype, DataType):
+            raise TypeError("datatype must be an instance of DataType.")
 
         obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
         obj._dtype = dtype
@@ -3429,7 +3425,9 @@ class IndexedVariable(IndexedBase):
 
         if self.shape and len(self.shape) != len(args):
             raise IndexException("Rank mismatch.")
-        return IndexedElement(self, *args)
+        assumptions ={}
+        obj = IndexedElement(self, *args)
+        return obj
 
     @property
     def dtype(self):
@@ -3438,6 +3436,8 @@ class IndexedVariable(IndexedBase):
     @property
     def name(self):
         return self._args[0]
+ 
+  
 
     # TODO what about kw_args in __new__?
     def clone(self, name):
@@ -3485,8 +3485,22 @@ class IndexedElement(Indexed):
                 return base[args[0]]
             else:
                 return base[args]
-
-        return Expr.__new__(cls, base, *args, **kw_args)
+        obj = Expr.__new__(cls, base, *args, **kw_args)
+        alloweddtypes = (NativeBool, NativeRange, NativeString)
+        dtype = obj.base.dtype
+        assumptions = {}
+        if isinstance(dtype, NativeInteger): 
+            assumptions['integer'] = True
+        elif isinstance(dtype, (NativeFloat,NativeDouble)):
+            assumptions['real'] = True
+        elif isinstance(dtype, NativeComplex):
+            assumptions['complex'] = True
+        elif not isinstance(dtype, alloweddtypes):
+            raise TypeError('Undefined datatype')
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
     @property
     def rank(self):
@@ -3515,26 +3529,6 @@ class IndexedElement(Indexed):
     @property
     def dtype(self):
         return self.base.dtype
-
-
-class MetaVariable(Basic):
-    """Represents the MetaVariable."""
-
-    def __new__(cls, name, value):
-        if not isinstance(name, str):
-            raise TypeError('name must be of type str')
-
-        # TODO check value
-
-        return Basic.__new__(cls, name, value)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def value(self):
-        return self._args[1]
 
 
 class String(Basic):
@@ -3722,415 +3716,6 @@ class If(Basic):
             b += i[1]
         return b
 
-# TODO: to improve
-class Vector(Basic):
-    """Represents variable assignment using a vector for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    starts : int or list of integers
-
-    stops : int or list of integers
-
-    Examples
-
-    >>> from pyccel.ast.core import Vector
-    """
-
-    def __new__(cls, lhs, starts, stops):
-        # ...
-        lhs = sympify(lhs)
-        # ...
-
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-
-        return Basic.__new__(cls, lhs, starts, stops)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def starts(self):
-        return self._args[1]
-
-    @property
-    def stops(self):
-        return self._args[2]
-
-    @property
-    def name(self):
-        return str(self.lhs)
-
-    @property
-    def dtype(self):
-        return NativeDouble()
-
-# TODO: to improve
-class Stencil(Basic):
-    """Represents variable assignment using a stencil for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    starts : int or list of integers
-
-    stops : int or list of integers
-
-    pads : int or list of integers
-
-    Examples
-
-    >>> from pyccel.ast.core import Vector
-    """
-
-    def __new__(cls, lhs, starts, stops, pads):
-        # ...
-        lhs = sympify(lhs)
-        # ...
-
-        # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
-        if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-
-        return Basic.__new__(cls, lhs, starts, stops, pads)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def starts(self):
-        return self._args[1]
-
-    @property
-    def stops(self):
-        return self._args[2]
-
-    @property
-    def pads(self):
-        return self._args[3]
-
-    @property
-    def name(self):
-        return str(self.lhs)
-
-    @property
-    def dtype(self):
-        return NativeDouble()
-
-class Header(Basic):
-    pass
-
-# TODO rename dtypes to arguments
-class VariableHeader(Header):
-    """Represents a variable header in the code.
-
-    name: str
-        variable name
-
-    dtypes: dict
-        a dictionary for typing
-
-    Examples
-
-    """
-
-    # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, name, dtypes):
-        if not(isinstance(dtypes, dict)):
-            raise TypeError("Expecting dtypes to be a dict.")
-
-        return Basic.__new__(cls, name, dtypes)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def dtypes(self):
-        return self._args[1]
-
-# TODO rename dtypes to arguments
-class UnionType(Basic):
-
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
-
-    @property
-    def args(self):
-        return self._args[0]
-
-class FunctionHeader(Header):
-    """Represents function/subroutine header in the code.
-
-    func: str
-        function/subroutine name
-
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
-
-    results: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
-
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
-    is_static: bool
-        True if we want to pass arrays in f2py mode. every argument of type
-        array will be preceeded by its shape, the later will appear in the
-        argument declaration. default value: False
-
-    Examples
-
-    >>> from pyccel.ast.core import FunctionHeader
-    >>> FunctionHeader('f', ['double'])
-    FunctionHeader(f, [(NativeDouble(), [])])
-    """
-
-    # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, func, dtypes,
-                results=None,
-                kind='function',
-                is_static=False):
-        func = str(func)
-        if not(iterable(dtypes)):
-            raise TypeError("Expecting dtypes to be iterable.")
-
-        if results:
-            if not(iterable(results)):
-                raise TypeError("Expecting results to be iterable.")
-
-        if not isinstance(kind, str):
-            raise TypeError("Expecting a string for kind.")
-
-        if not (kind in ['function', 'procedure']):
-            raise ValueError("kind must be one among {'function', 'procedure'}")
-
-        if not isinstance(is_static, bool):
-            raise TypeError('is_static must be a boolean')
-
-        return Basic.__new__(cls, func, dtypes, results, kind, is_static)
-
-    @property
-    def func(self):
-        return self._args[0]
-
-    @property
-    def dtypes(self):
-        return self._args[1]
-
-    @property
-    def results(self):
-        return self._args[2]
-
-    @property
-    def kind(self):
-        return self._args[3]
-
-    @property
-    def is_static(self):
-        return self._args[4]
-
-    def create_definition(self):
-        """Returns a FunctionDef with empy body."""
-        # TODO factorize what can be factorized
-        from itertools import product
-
-        name = str(self.func)
-
-        body      = []
-        cls_name  = None
-        hide      = False
-        kind      = self.kind
-        is_static = self.is_static
-        imports   = []
-        funcs = []
-        dtypes = []
-        for i in self.dtypes:
-            dtypes += [i.args]
-        for args_ in product(*dtypes):
-            args = []
-            for d in args_:
-                dtype    = d['datatype']
-                allocatable = d['allocatable']
-                is_pointer = d['is_pointer']
-                rank = d['rank']
-                if rank>0 and allocatable:#case of ndarray
-                    if dtype in ['int', 'double', 'float', 'complex']:
-                        allocatable = True
-                        dtype = 'ndarray'+dtype
-
-                shape  = None
-                if isinstance(dtype, str):
-                    try:
-                        dtype = datatype(dtype)
-                    except:
-                        #TODO check if it's a class type before
-                        if isinstance(dtype, str):
-                            dtype =  DataTypeFactory(str(dtype), ("_name"))()
-                            is_pointer = True
-                arg_name = 'arg_{0}'.format(str(i))
-                arg = Variable(dtype, arg_name,
-                               allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape)
-                args.append(arg)
-
-            # ... factorize the following 2 blocks
-            results = []
-            for i,d_var in enumerate(self.results):
-                dtype = d_var.pop('datatype')
-                var = Variable(dtype, 'res_{}'.format(i), **d_var)
-                results.append(var)
-
-            func= FunctionDef(name, args, results, body,
-                             local_vars=[],
-                             global_vars=[],
-                             cls_name=cls_name,
-                             hide=hide,
-                             kind=kind,
-                             is_static=is_static,
-                             imports=imports)
-            funcs += [func]
-
-        return funcs
-
-    def to_static(self):
-        """returns a static function header. needed for f2py"""
-        return FunctionHeader(self.func,
-                              self.dtypes,
-                              self.results,
-                              self.kind,
-                              True)
-
-# TODO to be improved => use FunctionHeader
-class MethodHeader(FunctionHeader):
-    """Represents method header in the code.
-
-    name: iterable
-        method name as a list/tuple
-
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
-
-    results: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
-
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
-    is_static: bool
-        True if we want to pass arrays in f2py mode. every argument of type
-        array will be preceeded by its shape, the later will appear in the
-        argument declaration. default value: False
-
-    Examples
-
-    >>> from pyccel.ast.core import MethodHeader
-    >>> m = MethodHeader(('point', 'rotate'), ['double'])
-    >>> m
-    MethodHeader((point, rotate), [(NativeDouble(), [])], [])
-    >>> m.name
-    'point.rotate'
-    """
-
-    def __new__(cls, name, dtypes, results=None, kind='function', is_static=False):
-        if not isinstance(name, (list, tuple)):
-            raise TypeError("Expecting a list/tuple of strings.")
-
-        if not(iterable(dtypes)):
-            raise TypeError("Expecting dtypes to be iterable.")
-
-        for d in dtypes:
-            if not isinstance(d, UnionType):
-                raise TypeError("Wrong element in dtypes.")
-
-        for d in results:
-            if not isinstance(d, UnionType):
-                raise TypeError("Wrong element in dtypes.")
-
-
-        if not isinstance(kind, str):
-            raise TypeError("Expecting a string for kind.")
-
-        if not (kind in ['function', 'procedure']):
-            raise ValueError("kind must be one among {'function', 'procedure'}")
-
-        if not isinstance(is_static, bool):
-            raise TypeError('is_static must be a boolean')
-
-        return Basic.__new__(cls, name, dtypes, results, kind, is_static)
-
-    @property
-    def name(self):
-        _name = self._args[0]
-        if isinstance(_name, str):
-            return _name
-        else:
-            return '.'.join(str(n) for n in _name)
-
-    @property
-    def dtypes(self):
-        return self._args[1]
-
-    @property
-    def results(self):
-        return self._args[2]
-
-    @property
-    def kind(self):
-        return self._args[3]
-
-    @property
-    def is_static(self):
-        return self._args[4]
-
-class ClassHeader(Header):
-    """Represents class header in the code.
-
-    name: str
-        class name
-
-    options: str, list, tuple
-        a list of options
-
-    Examples
-
-    >>> from pyccel.ast.core import ClassHeader
-    >>> ClassHeader('Matrix', ('abstract', 'public'))
-    ClassHeader(Matrix, (abstract, public))
-    """
-
-    def __new__(cls, name, options):
-        if not(iterable(options)):
-            raise TypeError("Expecting options to be iterable.")
-
-        return Basic.__new__(cls, name, options)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def options(self):
-        return self._args[1]
-
-numbers = []
 
 def is_simple_assign(expr):
     if not isinstance(expr, Assign):
@@ -4143,27 +3728,10 @@ def is_simple_assign(expr):
         return True
     else:
         return False
-
-def is_valid_module(expr):
-    _module_stmt = (Comment, FunctionDef, ClassDef,
-                    FunctionHeader, ClassHeader, MethodHeader, Import)
-
-    if isinstance(expr, (tuple, list, Tuple)):
-        is_module = True
-        for stmt in expr:
-            if not is_valid_module(stmt):
-                is_module = False
-                break
-        return is_module
-    elif isinstance(expr, _module_stmt):
-        return True
-    elif isinstance(expr, Assign):
-        return is_simple_assign(expr)
-    else:
-        return False
 # ...
 
 # ...
+
 def get_initial_value(expr, var):
     """Returns the first assigned value to var in the Expression expr.
 
@@ -4239,6 +3807,47 @@ def get_initial_value(expr, var):
     # ...
 
     return Nil()
+# ...
+
+# ... TODO treat other statements
+def get_assigned_symbols(expr):
+    """Returns all assigned symbols (as sympy Symbol) in the AST.
+
+    expr: Expression
+        any AST valid expression
+    """
+
+    if iterable(expr):
+        symbols = []
+        for a in expr:
+            symbols += get_assigned_symbols(a)
+        symbols = set(symbols)
+        symbols = list(symbols)
+        return symbols
+
+    elif isinstance(expr, (Assign, AugAssign)):
+        if expr.lhs is None:
+            raise TypeError('Found None lhs')
+
+        try:
+            free_symbols = expr.lhs.free_symbols
+            symbols = list(free_symbols)
+        except:
+            # TODO must raise an Exception here
+            #      this occurs only when parsing lapack.pyh
+            symbols = []
+#            print(type(expr.lhs), expr.lhs)
+#            print(expr)
+#            raise SystemExit('ERROR')
+        return symbols
+
+    elif isinstance(expr, (FunctionDef, For, While)):
+        return get_assigned_symbols(expr.body)
+
+    elif isinstance(expr, If):
+        return get_assigned_symbols(expr.bodies)
+
+    return []
 # ...
 
 # ... TODO: improve and make it recursive

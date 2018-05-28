@@ -5,6 +5,7 @@
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
+from pyccel.parser.errors import Errors
 import os
 
 def test_symbolic():
@@ -36,6 +37,10 @@ def test_symbolic():
 
         codegen = Codegen(ast, name)
         code = codegen.doprint()
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
 
     os.chdir(init_dir)
     print('\n')
