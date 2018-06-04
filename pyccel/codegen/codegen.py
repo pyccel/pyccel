@@ -12,6 +12,7 @@ from pyccel.ast import Assign, AliasAssign, SymbolicAssign , Assigns
 from pyccel.ast import Variable, DottedName
 from pyccel.ast import For, If, While, FunctionalFor, ForIterator
 from pyccel.ast import Is
+from pyccel.ast import GeneratorComprehension as GC
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
 
@@ -159,6 +160,8 @@ class Codegen(object):
                         vars_ += [stmt.target] + collect_vars(stmt.body)
                     else:
                         vars_ += stmt.target + collect_vars(stmt.body)
+                elif isinstance(stmt, GC):
+                    vars_ += [stmt.target] + stmt.indexes
                 elif isinstance(stmt, FunctionalFor):
                     vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
                 elif isinstance(stmt, If):

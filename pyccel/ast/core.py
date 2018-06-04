@@ -1339,7 +1339,22 @@ class FunctionalFor(Basic):
     @property
     def index(self):
         return self._args[3]
-    
+
+class GeneratorComprehension(Basic):
+    pass
+
+class FunctionalSum(FunctionalFor,GeneratorComprehension):
+    pass
+
+class FunctionalMax(FunctionalFor,GeneratorComprehension):
+    pass
+
+class FunctionalMin(FunctionalFor,GeneratorComprehension):
+    pass
+
+class FunctionalMap(FunctionalFor,GeneratorComprehension):
+    pass
+
 
 class ForIterator(For):
     """Class that describes iterable classes defined by the user."""
@@ -2240,7 +2255,7 @@ class FunctionDef(Basic):
                 cls_name=None, hide=False,
                 kind='function',
                 is_static=False,
-                imports=[], decorators=[],is_recursive = False):
+                imports=[], decorators={}, header=None, is_recursive=False):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2293,16 +2308,15 @@ class FunctionDef(Basic):
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
 
-        if not iterable(decorators):
-            raise TypeError("imports must be an iterable")
-
+        if not isinstance(decorators, dict):
+            raise TypeError("decorators must be a dict")
         return Basic.__new__(cls, name,
                              arguments, results,
                              body,
                              local_vars, global_vars,
                              cls_name, hide,
                              kind, is_static,
-                             imports, decorators, is_recursive)
+                             imports, decorators,header ,is_recursive)
 
     @property
     def name(self):
@@ -2353,8 +2367,11 @@ class FunctionDef(Basic):
         return self._args[11]
 
     @property
-    def is_recursive(self):
+    def header(self):
         return self._args[12]
+    @property
+    def is_recursive(self):
+        return self._args[13]
 
     def print_body(self):
         for s in self.body:
@@ -2369,6 +2386,7 @@ class FunctionDef(Basic):
                            hide=self.hide,
                            kind=self.kind,
                            is_static=self.is_static,
+                           header = self.header,
                            is_recursive = True)
 
 
@@ -2388,6 +2406,7 @@ class FunctionDef(Basic):
                            hide=self.hide,
                            kind=self.kind,
                            is_static=self.is_static,
+                           header = self.header,
                            is_recursive = self.is_recursive)
 
 
@@ -2441,6 +2460,7 @@ class FunctionDef(Basic):
                 self.is_static,
                 self.imports,
                 self.decorators,
+                self.header,
                 self.is_recursive)
         return args
 

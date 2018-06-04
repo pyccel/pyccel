@@ -526,7 +526,8 @@ class FCodePrinter(CodePrinter):
             arg = args[0]
             code = 'minval({0})'.format(self._print(arg))
         else:
-            raise ValueError("Expecting one argument for the moment.")
+            code = ','.join(self._print(arg) for arg in args)
+            code = 'min('+code+')'
         return self._get_statement(code)
 
     def _print_Max(self, expr):
@@ -1256,10 +1257,12 @@ class FCodePrinter(CodePrinter):
         return '{0}, {1}'.format(start, stop)
 
     def _print_FunctionalFor(self, expr):
-        allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
-        allocate ='allocate({0}({1}))'.format(expr.target.name, allocate)
+        allocate = ''
+        if len(expr.target.shape)>0:
+            allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
+            allocate ='allocate({0}({1}))\n'.format(expr.target.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
-        return allocate + '\n' + loops
+        return allocate + loops
 
     def _print_For(self, expr):
         prolog = ''

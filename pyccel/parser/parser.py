@@ -17,7 +17,7 @@ from redbaron import TupleNode, ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
 from redbaron import ListComprehensionNode
-from redbaron import ComprehensionLoopNode
+from redbaron import ComprehensionLoopNode,ArgumentGeneratorComprehensionNode
 from redbaron import NodeList
 from redbaron import DotProxyList
 from redbaron import ReturnNode
@@ -42,7 +42,7 @@ from redbaron import YieldAtomNode
 from redbaron import BreakNode
 from redbaron import GetitemNode, SliceNode
 from redbaron import ImportNode, FromImportNode
-from redbaron import DottedAsNameNode
+from redbaron import DottedAsNameNode,DecoratorNode
 from redbaron import NameAsNameNode
 from redbaron import LambdaNode
 from redbaron import WithNode
@@ -69,7 +69,8 @@ from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
 from pyccel.ast import FunctionDef, Interface, PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
-from pyccel.ast import For, FunctionalFor, ForIterator
+from pyccel.ast import For, FunctionalFor, ForIterator, GeneratorComprehension
+from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast import If
 from pyccel.ast import While
 from pyccel.ast import Print
@@ -1413,19 +1414,29 @@ class Parser(object):
             results = []
             local_vars = []
             global_vars = []
+            header = None
             hide = False
             kind = 'function'
             imports = []
-            decorators = [i.value.value[0].value for i in stmt.decorators]  # TODO improve later
+            # TODO improve later
+            decorators = {}
+            for i in stmt.decorators:
+                decorators.update(self._fst_to_ast(i))
+            if 'types' in decorators.keys():
+                # extract the types to construct a header
+                types = [i.name for i in decorators['types']]
+                txt = '#$ header '+name+'(' + ','.join(types[:len(arguments)])+')'
+                txt += 'results('+','.join(types[len(arguments):])+')'
+                header = hdr_parse(stmts=txt)
             body = stmt.value
 
-            if 'sympy' in decorators:
+            if 'sympy' in decorators.keys():
                 # TODO maybe we should run pylint here
                 stmt.decorators.pop()
                 func = SympyFunction(name, arguments, [], [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
-            elif 'python' in decorators:
+            elif 'python' in decorators.keys():
                 # TODO maybe we should run pylint here
                 stmt.decorators.pop()
                 func = PythonFunction(name, arguments, [], [stmt.__str__()])
@@ -1444,7 +1455,8 @@ class Parser(object):
                                hide=hide,
                                kind=kind,
                                imports=imports,
-                               decorators=decorators)
+                               decorators=decorators,
+                               header=header)
 
         elif isinstance(stmt, ClassNode):
             name = self._fst_to_ast(stmt.name)
@@ -1464,14 +1476,29 @@ class Parser(object):
             return self._fst_to_ast(stmt.value)
 
         elif isinstance(stmt, GetitemNode):
-            parent = stmt.parent
-            args = self._fst_to_ast(stmt.value)
-            if isinstance(stmt.previous.previous, DotNode):
-                return self._fst_to_ast(stmt.previous.previous)
+            ch = stmt
+            args = []
+            while isinstance(ch, GetitemNode):
+                val = self._fst_to_ast(ch.value)
+                if isinstance(val, Tuple):
+                    args += val
+                else:
+                    args.append(val)
+                ch = ch.previous
+            args.reverse()
+            parent = ch
 
-            name = str(stmt.previous.value)
-            stmt.parent.remove(stmt.previous)
-            stmt.parent.remove(stmt)
+
+            if isinstance(parent.previous, DotNode):
+                return self._fst_to_ast(parent.previous)
+
+            name = str(parent.value)
+            stmt.parent.remove(parent)
+
+            while isinstance(stmt,GetitemNode):
+                tmp= stmt.previous
+                stmt.parent.remove(stmt)
+                stmt = tmp
             if not hasattr(args, '__iter__'):
                 args = [args]
             args = tuple(args)
@@ -1502,9 +1529,11 @@ class Parser(object):
             return DottedVariable(pre, suf)
 
         elif isinstance(stmt, CallNode):
-            args = self._fst_to_ast(stmt.value)
+            if isinstance(stmt.value[0], ArgumentGeneratorComprehensionNode):
+                return self._fst_to_ast(stmt.value[0]) 
             # TODO we must use self._fst_to_ast(stmt.previous.value)
             #      but it is not working for the moment
+            args = self._fst_to_ast(stmt.value)
             f_name = str(stmt.previous.value)
             if len(args) == 0:
                 #case of functioncall with no arguments
@@ -1529,7 +1558,12 @@ class Parser(object):
                 return ValuedArgument(target, val)
             
             return val
-
+      
+        elif isinstance(stmt, DecoratorNode):
+            name = stmt.value.dumps()
+            args = [self._fst_to_ast(i) for i in stmt.call.value]
+            return {name:args}
+        
         elif isinstance(stmt, ForNode):
             iterator = self._fst_to_ast(stmt.iterator)
             iterable = self._fst_to_ast(stmt.target)
@@ -1541,10 +1575,44 @@ class Parser(object):
         elif isinstance(stmt, ComprehensionLoopNode):
             iterator = self._fst_to_ast(stmt.iterator)
             iterable = self._fst_to_ast(stmt.target)
+            ifs = stmt.ifs
             expr = For(iterator, iterable, [], strict=False)
             expr.set_fst(stmt)
             return expr
-            
+
+        elif isinstance(stmt, ArgumentGeneratorComprehensionNode):
+            result = self._fst_to_ast(stmt.result)
+            generators = self._fst_to_ast(stmt.generators)
+            parent = stmt.parent.parent.parent
+            if isinstance(parent, AssignmentNode):
+                lhs = self._fst_to_ast(parent.target)
+                name = parent.value[0].value
+            else:
+                NotImplementedError('TODO')
+           
+            ass_ = Assign(lhs,0)
+            ass_.set_fst(parent)
+            if name == 'sum':
+                body = AugAssign(lhs,'+',result)
+            else:
+                body = Assign(lhs,Function(name)(lhs,result))
+            target = body
+            body.set_fst(parent)
+            indexes = []
+            generators = list(generators)
+            while len(generators)>0:
+                indexes.append(generators[-1].target)
+                generators[-1].insert2body(body)
+                body = generators.pop()
+            indexes = indexes[::-1]
+            if name == 'sum' :
+                return FunctionalSum([ass_,body], target, indexes, None)
+            elif name == 'min':
+                return FunctionalMin([ass_,body], target, indexes, None)
+            elif name == 'max':
+                return FunctionalMax([ass_,body], target, indexes, None)
+            else:
+                raise NotImplementedError('TODO')
 
         elif isinstance(stmt, IfelseblockNode):
             args = self._fst_to_ast(stmt.value)
@@ -1635,11 +1703,11 @@ class Parser(object):
         elif isinstance(stmt, ListComprehensionNode):
             result = self._fst_to_ast(stmt.result)
             generators = list(self._fst_to_ast(stmt.generators))
-            target = self._fst_to_ast(stmt.parent.target)
+            lhs = self._fst_to_ast(stmt.parent.target)
             args = [i.target for i in generators]
             index = self.create_variable(target+result)
-            target = IndexedBase(target)[index]
-            target = Assign(target, result)
+            target = IndexedBase(lhs)[index]
+            target = Assign(lhs, result)
             assign1 = Assign(index,0)
             assign1.set_fst(stmt)
             target.set_fst(stmt)
@@ -1948,7 +2016,6 @@ class Parser(object):
                 ls.append(a)
             if isinstance(expr, List):
                 return List(*ls)
-
             else:
                 return Tuple(*ls)
 
@@ -2044,7 +2111,7 @@ class Parser(object):
                 and not expr.rhs.name in attr_name:
                 for i in first.cls_base.methods:
                     if str(i.name) == expr.rhs.name and 'property' \
-                        in i.decorators:
+                        in i.decorators.keys():
                         second = Function(expr.rhs.name)(Nil())
                         expr = DottedVariable(first, second)
                         d_var = self._infere_type(i.results[0], **settings)
@@ -2224,7 +2291,7 @@ class Parser(object):
                     if not isinstance(func, (FunctionDef, Interface)):
                         return func(*args)
                     else:
-                        if 'inline' in func.decorators:
+                        if 'inline' in func.decorators.keys():
                             return _inline(func, args)
 
                         if isinstance(func, FunctionDef):
@@ -2444,12 +2511,9 @@ class Parser(object):
                     else:
                         raise TypeError('list of type {0} not supported'.format(str(dtype)))
 
-                elif name in ['Len', 'Sum', 'Rand']:
+                elif name in ['Len', 'Sum', 'Rand','Min','Max']:
                     d_var = {}
-                    d_var['datatype'] = rhs.dtype
-                    if name in ['Sum']:
-                        dvar = self._infere_type(rhs.arg, **settings)
-                        d_var['datatype'] = dvar['datatype']
+                    d_var['datatype'] = _dtype(rhs)
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
@@ -2705,14 +2769,36 @@ class Parser(object):
             if isinstance(iterable, Variable):
                 return ForIterator(target, iterable, body)
             return For(target, iterable, body)
+
+        elif isinstance(expr, GeneratorComprehension):
+            loops = [self._annotate(i, **settings) for i in expr.loops]
+            target = expr.target 
+            indexes = expr.indexes
+            for i in range(len(indexes)):
+                var = self.get_variable(indexes[i].name)
+                if var is None:
+                    raise ValueError('variable not found')
+                indexes[i] = var
+       
+            rhs = self._annotate(target.rhs, **settings)
+            lhs_name = _get_name(target.lhs)
+            d_var = self._infere_type(rhs, **settings)
+            dtype = d_var.pop('datatype')
+            lhs = Variable(dtype, lhs_name, **d_var)
+            self.insert_variable(lhs)
+            if isinstance(expr, FunctionalSum):
+                return FunctionalSum(loops, lhs, indexes)
+            elif isinstance(expr, FunctionalMin):
+                return FunctionalMin(loops, lhs, indexes)
+            elif isinstance(expr, FunctionalMax):
+                return FunctionalMax(loops, lhs, indexes)
         
         elif isinstance(expr, FunctionalFor):
-            target = expr.target
-            loops = expr.loops[1]
+            target = expr.target 
             index = expr.index
-            indexes = expr.indexes  
-            dims = [] 
-            body = loops
+            indexes = expr.indexes
+            dims = []
+            body = expr.loops[1]
             while isinstance(body, For):
                 a = self._annotate(body.iterable, **settings)
                 stop = None
@@ -2775,6 +2861,7 @@ class Parser(object):
             
             #we annotate the target.rhs to infere the type of the list created
             rhs = self._annotate(target.rhs, **settings)
+            lhs_name = _get_name(target.lhs)
             d_var = self._infere_type(rhs, **settings)
             dtype = d_var.pop('datatype')
             d_var['rank'] += 1
@@ -2782,14 +2869,11 @@ class Parser(object):
             d_var['is_pointer'] = True
             shape.append(dim)
             d_var['shape'] = Tuple(*shape)
-            var_name = _get_name(target.lhs)
-            var = Variable(dtype, var_name, **d_var)
-            self.insert_variable(var)
+            lhs = Variable(dtype, lhs_name, **d_var)
+            self.insert_variable(lhs)
             loops = [self._annotate(i, **settings) for i in expr.loops]
             index = self._annotate(index, **settings)
-            return FunctionalFor(loops, var, indexes, index)
-            
-
+            return FunctionalFor(loops, lhs, indexes, index)
 
         elif isinstance(expr, While):
             test = self._annotate(expr.test, **settings)
@@ -2870,13 +2954,13 @@ class Parser(object):
             decorators = expr.decorators
             funcs = []
             is_static = False
-
-
-            if cls_name:
-                header = self.get_header(cls_name + """.""" + name)
-            else:
-                header = self.get_header(name)
-
+            header = expr.header 
+            if header is None:
+                if cls_name:
+                    header = self.get_header(cls_name + """.""" + name)
+                else:
+                    header = self.get_header(name)
+                
             if expr.arguments and not header:
                 # TODO ERROR wrong position
                 errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,

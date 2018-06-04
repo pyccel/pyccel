@@ -67,8 +67,10 @@ def builtin_function(expr, args=None):
         return Sum(*args)
     if name == 'Mod':
         return Mod(*args)
-    if name == 'Max':
+    if name in ['max', 'Max']:
         return Max(*args)
+    if name in ['min', 'Min']:
+        return Min(*args)
     if name == 'floor':
         return floor(*args)
     elif name == 'complex':
