@@ -3662,6 +3662,19 @@ class Slice(Basic):
             end = sstr(self.end)
         return '{0} : {1}'.format(start, end)
 
+    def __str__(self):
+        if self.start is None:
+            start = ''
+        else:
+            start = str(self.start)
+        if self.end is None:
+            end = ''
+        else:
+            end = str(self.end)
+        return '{0} : {1}'.format(start, end)
+
+
+
 class Assert(Basic):
     """Represents a assert statement in the code.
 
@@ -3725,6 +3738,8 @@ class If(Basic):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a Relational,"
                     " Boolean, Is, or a built-in bool." % (cond, type(cond)))
+            if not isinstance(ce[1], (list,Tuple,tuple)):
+                raise TypeError('body is not iterable')
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
@@ -3735,6 +3750,10 @@ class If(Basic):
         for i in self._args:
             b += i[1]
         return b
+
+class IfTernaryOperator(If):
+    """class for the Ternery operator"""
+    pass
 
 
 def is_simple_assign(expr):

@@ -29,6 +29,7 @@ from redbaron import DelNode
 from redbaron import DictNode, DictitemNode
 from redbaron import WhileNode
 from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
+from redbaron import TernaryOperatorNode
 from redbaron import DotNode
 from redbaron import CallNode
 from redbaron import CallArgumentNode
@@ -71,7 +72,7 @@ from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For, FunctionalFor, ForIterator, GeneratorComprehension
 from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast import If
+from pyccel.ast import If, IfTernaryOperator
 from pyccel.ast import While
 from pyccel.ast import Print
 from pyccel.ast import SymbolicPrint
@@ -1424,9 +1425,19 @@ class Parser(object):
                 decorators.update(self._fst_to_ast(i))
             if 'types' in decorators.keys():
                 # extract the types to construct a header
-                types = [i.name for i in decorators['types']]
+                types = []
+                for i in decorators['types']:
+                    if isinstance(i, Symbol):
+                        arg = i.name
+                    elif isinstance(i, Indexed):
+                        arg = str(i.base)+'['+':'*i.rank+']'
+                        types.append(arg)
+                    elif isinstance(i, Tuple):
+                        arg = '['+','.join(el.name for el in i)+']'
+                    types.append(arg)
                 txt = '#$ header '+name+'(' + ','.join(types[:len(arguments)])+')'
-                txt += 'results('+','.join(types[len(arguments):])+')'
+                if len(types[len(arguments):])>0:
+                    txt += ' results('+','.join(types[len(arguments):])+')'
                 header = hdr_parse(stmts=txt)
             body = stmt.value
 
@@ -1529,7 +1540,8 @@ class Parser(object):
             return DottedVariable(pre, suf)
 
         elif isinstance(stmt, CallNode):
-            if isinstance(stmt.value[0], ArgumentGeneratorComprehensionNode):
+            if len(stmt.value)>0 and isinstance(stmt.value[0], 
+                ArgumentGeneratorComprehensionNode):
                 return self._fst_to_ast(stmt.value[0]) 
             # TODO we must use self._fst_to_ast(stmt.previous.value)
             #      but it is not working for the moment
@@ -1561,7 +1573,9 @@ class Parser(object):
       
         elif isinstance(stmt, DecoratorNode):
             name = stmt.value.dumps()
-            args = [self._fst_to_ast(i) for i in stmt.call.value]
+            args = []
+            if stmt.call:
+                args = [self._fst_to_ast(i) for i in stmt.call.value]
             return {name:args}
         
         elif isinstance(stmt, ForNode):
@@ -1627,6 +1641,15 @@ class Parser(object):
             test = True
             body = self._fst_to_ast(stmt.value)
             return Tuple(test, body)
+ 
+        elif isinstance(stmt, TernaryOperatorNode):
+            test1 = self._fst_to_ast(stmt.value)
+            first = self._fst_to_ast(stmt.first)
+            second = self._fst_to_ast(stmt.second)
+            args = [Tuple(test1, [first]), Tuple(True, [second])]
+            expr = IfTernaryOperator(*args)
+            expr.set_fst(stmt)
+            return expr
 
         elif isinstance(stmt, WhileNode):
             test = self._fst_to_ast(stmt.test)
@@ -1705,7 +1728,7 @@ class Parser(object):
             generators = list(self._fst_to_ast(stmt.generators))
             lhs = self._fst_to_ast(stmt.parent.target)
             args = [i.target for i in generators]
-            index = self.create_variable(target+result)
+            index = self.create_variable(lhs+result)
             target = IndexedBase(lhs)[index]
             target = Assign(lhs, result)
             assign1 = Assign(index,0)
@@ -2238,6 +2261,16 @@ class Parser(object):
             # ... DEBUG
             name = _get_name(expr)
             func = self.get_function(name)
+            args = list(expr.args)
+            for i,arg in enumerate(expr.args):
+                if isinstance(arg, IfTernaryOperator):
+                    new_args1 = args[:i]+list(arg.args[0][1])+args[i+1:]
+                    func1 = Function(name)(*new_args1)
+                    new_args2 = args[:i]+list(arg.args[1][1])+args[i+1:]
+                    func2 = Function(name)(*new_args2)
+                    expr = IfTernaryOperator(Tuple(arg.args[0][0],[func1]),Tuple(arg.args[1][0],[func2]))
+                    expr.set_fst(arg.fst)
+                    return self._annotate(expr, **settings)
             args = [self._annotate(arg, **settings) for arg in expr.args]
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
@@ -2430,8 +2463,28 @@ class Parser(object):
                             return Subroutine(str(master.name))(*args)
                         else:
                             raise NotImplementedError('TODO')
+
+
+
+               
             rhs = self._annotate(rhs, **settings)
-  
+
+            if isinstance(rhs, If):
+                args = rhs.args
+                new_args = []
+                for arg in args:
+                    if len(arg[1])!=1:
+                        raise ValueError('IfTernaryOperator body must be of length 1') 
+                    result = arg[1][0]
+                    if isinstance(expr, Assign):
+                        body = Assign(lhs,result)
+                    else:
+                        body = AugAssign(lhs, expr.op,result)
+                    body.set_fst(expr.fst)
+                    new_args.append([arg[0],[body]])
+                expr = If(*new_args)
+                return self._annotate(expr, **settings)
+                 
             if isinstance(rhs, FunctionDef):
                 #case of lambdify
                 rhs = rhs.rename(_get_name(expr.lhs))
@@ -2441,6 +2494,7 @@ class Parser(object):
                 return rhs
             if isinstance(rhs, FunctionalFor):
                 return rhs
+     
 
             # d_var can be a list of dictionaries
             if isinstance(rhs, ConstructorCall):
@@ -2779,9 +2833,10 @@ class Parser(object):
                 if var is None:
                     raise ValueError('variable not found')
                 indexes[i] = var
-       
             rhs = self._annotate(target.rhs, **settings)
             lhs_name = _get_name(target.lhs)
+            if isinstance(rhs, If):
+                rhs = rhs.bodies[0]
             d_var = self._infere_type(rhs, **settings)
             dtype = d_var.pop('datatype')
             lhs = Variable(dtype, lhs_name, **d_var)
@@ -2879,7 +2934,7 @@ class Parser(object):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
             return While(test, body)
-
+      
         elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return If(*args)
