@@ -2330,7 +2330,6 @@ class Parser(object):
                     func = self.get_function(name)
 
                 if func is None:
-                    print func
                     errors.report(UNDEFINED_FUNCTION, symbol=name,
                           bounding_box=self.bounding_box,
                           severity='error', blocker=self.blocking)
