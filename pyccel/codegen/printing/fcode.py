@@ -308,7 +308,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO - improve
         # importing of pyccel extensions is not printed
-        if source in ['numpy', 'scipy', 'itertools']:
+        if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
         if source == 'mpi4py':
             return 'use mpi'
@@ -526,7 +526,8 @@ class FCodePrinter(CodePrinter):
             arg = args[0]
             code = 'minval({0})'.format(self._print(arg))
         else:
-            raise ValueError("Expecting one argument for the moment.")
+            code = ','.join(self._print(arg) for arg in args)
+            code = 'min('+code+')'
         return self._get_statement(code)
 
     def _print_Max(self, expr):
@@ -576,7 +577,7 @@ class FCodePrinter(CodePrinter):
             return 'MPI_INT'
         elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'real(kind=4)':
+        elif dtype == 'real':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
@@ -749,7 +750,7 @@ class FCodePrinter(CodePrinter):
                         rhs = i
                         break
             #TODO improve we only need to allocate the variable without setting it to zero
-            stmt = ZerosLike(lhs, rhs)
+            stmt = ZerosLike(lhs=lhs, rhs=rhs)
             code += self._print(stmt)
             code += '\n'
             op = '='
@@ -774,7 +775,10 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
             return expr.rhs.fprint(self._print, expr.lhs)
-
+        
+        if isinstance(expr.rhs, ZerosLike):
+            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.args[1]))
+        
         elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
@@ -858,7 +862,7 @@ class FCodePrinter(CodePrinter):
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs_code, expr.like)
+            stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
             code += self._print(stmt)
             code += '\n'
         if not is_procedure:
@@ -903,7 +907,7 @@ class FCodePrinter(CodePrinter):
         return 'real'
 
     def _print_NativeDouble(self, expr):
-        return 'real(kind=8)'
+        return 'real'
 
     def _print_NativeComplex(self, expr):
         # TODO add precision
@@ -1256,10 +1260,12 @@ class FCodePrinter(CodePrinter):
         return '{0}, {1}'.format(start, stop)
 
     def _print_FunctionalFor(self, expr):
-        allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
-        allocate ='allocate({0}({1}))'.format(expr.target.name, allocate)
+        allocate = ''
+        if len(expr.target.shape)>0:
+            allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
+            allocate ='allocate({0}({1}))\n'.format(expr.target.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
-        return allocate + '\n' + loops
+        return allocate + loops
 
     def _print_For(self, expr):
         prolog = ''

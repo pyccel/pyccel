@@ -12,6 +12,7 @@ from sympy import Integer, Add, Mul, Pow
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
+from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String)
@@ -83,7 +84,6 @@ class Array(Function):
 
 
 class Sum(Function):
-
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -366,4 +366,88 @@ class Ones(Zeros):
         else:
             raise TypeError('Unknown type')
         return value
+ 
+
+class Sqrt(Function):
+    def __new__(cls,arg):
+        obj = sqrt(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Asin(Function):
+    def __new__(cls,arg):
+        obj = asin(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Acos(Function):
+    def __new__(cls,arg):
+        obj = acos(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Asec(Function):
+    def __new__(cls,arg):
+        obj = asec(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Atan(Function):
+    def __new__(cls,arg):
+        obj = atan(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Acot(Function):
+    def __new__(cls,arg):
+        obj = acot(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+
+class Acsc(Function):
+    def __new__(cls,arg):
+        obj = acsc(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+
+class Log(Function):
+    def __new__(cls,arg):
+        obj = log(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
 

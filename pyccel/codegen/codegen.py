@@ -12,6 +12,7 @@ from pyccel.ast import Assign, AliasAssign, SymbolicAssign , Assigns
 from pyccel.ast import Variable, DottedName
 from pyccel.ast import For, If, While, FunctionalFor, ForIterator
 from pyccel.ast import Is
+from pyccel.ast import GeneratorComprehension as GC
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
 
