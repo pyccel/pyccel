@@ -371,7 +371,7 @@ class Assign(Basic):
                 return isinstance(rhs.dtype, NativeSymbol)
             elif isinstance(rhs, Symbol):
                 return True
-
+        
         return False
 
 
@@ -3146,13 +3146,14 @@ class ZerosLike(Function):
     >>> z = ZerosLike(y)
     """
     # TODO improve in the spirit of assign
-    def __new__(cls, lhs, rhs):
+    def __new__(cls, rhs=None,lhs=None):
         if isinstance(lhs, str):
             lhs = Symbol(lhs)
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, \
                       Indexed, Idx, Variable)
-        if not isinstance(lhs, assignable):
+     
+        if lhs and not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
 
         return Basic.__new__(cls, lhs, rhs)

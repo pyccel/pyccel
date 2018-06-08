@@ -151,8 +151,9 @@ import importlib
 import pickle
 import os
 import sys
-
-
+import re
+strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]') 
+#use this to delete ansi_escape characters from a string  
 # Useful for very coarse version differentiation.
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -161,6 +162,9 @@ PY3 = sys.version_info[0] == 3
 #  ... useful functions for imports
 # TODO installed modules. must ask python (working version) where the module is
 #      installed
+
+
+
 def get_filename_from_import(module):
     """Returns a valid filename with absolute path, that corresponds to the
     definition of module.
@@ -795,8 +799,6 @@ class Parser(object):
                         self._namespace['imports'][source] = []
                     self._namespace['imports'][source] += name
 
-
-
     def get_variable(self, name):
         """."""
 
@@ -816,6 +818,7 @@ class Parser(object):
             var = self._namespace['variables'][name]
         elif name in self._imports:
             var = self._imports[name]
+
         return var
 
     def get_variables(self, source=None):
@@ -873,14 +876,13 @@ class Parser(object):
     def get_function(self, name):
         """."""
         # TODO shall we keep the elif in _imports?
-
         func = None
         if name in self._namespace['functions']:
             func = self._namespace['functions'][name]
             if self._current == name and not func.is_recursive:
                 func = func.set_recursive()
                 self._namespace['functions'][name] = func
-
+        
         elif name in self._imports:
             func = self._imports[name]        
         return func
@@ -1117,7 +1119,7 @@ class Parser(object):
         elif isinstance(stmt, DottedAsNameNode):
             names = []
             for a in stmt.value:
-                names.append(str(a.value))
+                names.append(strip_ansi_escape.sub('',a.value))
 
             if len(names) == 1:
                 return names[0]
@@ -1129,7 +1131,7 @@ class Parser(object):
             if not isinstance(stmt.value, str):
                 raise TypeError('Expecting a string')
 
-            value = str(stmt.value)
+            value = strip_ansi_escape.sub('',stmt.value)
             if not stmt.target:
                 return value
 
@@ -1211,7 +1213,7 @@ class Parser(object):
                 return false
 
             else:
-                return Symbol(str(stmt.value))
+                return Symbol(stmt.value)
 
         elif isinstance(stmt, ImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
@@ -1385,8 +1387,9 @@ class Parser(object):
             return self._fst_to_ast(stmt.value)
 
         elif isinstance(stmt, DefArgumentNode):
-            name = self._fst_to_ast(stmt.target)
-            arg = Argument(str(name))
+            name = str(self._fst_to_ast(stmt.target))
+            name = strip_ansi_escape.sub('',name)
+            arg = Argument(name)
             if stmt.value is None:
                 return arg
 
@@ -1411,6 +1414,7 @@ class Parser(object):
 
             name = self._fst_to_ast(stmt.name)
             name = name.replace("'", '')
+            name = strip_ansi_escape.sub('',name)
             arguments = self._fst_to_ast(stmt.arguments)
             results = []
             local_vars = []
@@ -1494,9 +1498,8 @@ class Parser(object):
                 if isinstance(val, Tuple):
                     args += val
                 else:
-                    args.append(val)
+                    args.insert(0,val)
                 ch = ch.previous
-            args.reverse()
             parent = ch
 
 
@@ -1504,6 +1507,7 @@ class Parser(object):
                 return self._fst_to_ast(parent.previous)
 
             name = str(parent.value)
+            name = strip_ansi_escape.sub('',name)
             stmt.parent.remove(parent)
 
             while isinstance(stmt,GetitemNode):
@@ -1546,7 +1550,7 @@ class Parser(object):
             # TODO we must use self._fst_to_ast(stmt.previous.value)
             #      but it is not working for the moment
             args = self._fst_to_ast(stmt.value)
-            f_name = str(stmt.previous.value)
+            f_name = strip_ansi_escape.sub('',stmt.previous.value)
             if len(args) == 0:
                 #case of functioncall with no arguments
                 args = (Nil(),)
@@ -1572,7 +1576,7 @@ class Parser(object):
             return val
       
         elif isinstance(stmt, DecoratorNode):
-            name = stmt.value.dumps()
+            name = strip_ansi_escape.sub('',stmt.value.dumps())
             args = []
             if stmt.call:
                 args = [self._fst_to_ast(i) for i in stmt.call.value]
@@ -1724,13 +1728,19 @@ class Parser(object):
             return With(domain, body, settings)
      
         elif isinstance(stmt, ListComprehensionNode):
+            import numpy as np
             result = self._fst_to_ast(stmt.result)
             generators = list(self._fst_to_ast(stmt.generators))
             lhs = self._fst_to_ast(stmt.parent.target)
-            args = [i.target for i in generators]
             index = self.create_variable(lhs+result)
-            target = IndexedBase(lhs)[index]
-            target = Assign(lhs, result)
+            if isinstance(result, (Tuple,list,tuple)):
+                rank = len(np.shape(result))
+            else:
+                rank = 0
+            args = [Slice(None,None)]*rank
+            args.append(index)
+            target = IndexedBase(lhs)[args]
+            target = Assign(target, result)
             assign1 = Assign(index,0)
             assign1.set_fst(stmt)
             target.set_fst(stmt)
@@ -2203,7 +2213,10 @@ class Parser(object):
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new)
                 elif isinstance(expr, Pow):
-                    expr_new = Pow(expr_new, a_new)
+                    assumptions ={str_dtype(_dtype(expr_new)):True}
+                    expr_new = Pow(expr_new, a_new)  
+                    expr_new._assumptions = StdFactKB(assumptions)
+                    expr_new._assumptions._generator = assumptions.copy()
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new)
                 elif isinstance(expr, Or):
@@ -2317,6 +2330,7 @@ class Parser(object):
                     func = self.get_function(name)
 
                 if func is None:
+                    print func
                     errors.report(UNDEFINED_FUNCTION, symbol=name,
                           bounding_box=self.bounding_box,
                           severity='error', blocker=self.blocking)
@@ -2325,7 +2339,7 @@ class Parser(object):
                         return func(*args)
                     else:
                         if 'inline' in func.decorators.keys():
-                            return _inline(func, args)
+                             raise NotImplementedError('TODO fix the inline')
 
                         if isinstance(func, FunctionDef):
                             results = func.results
@@ -2581,7 +2595,6 @@ class Parser(object):
 
                 elif name in [
                     'Abs',
-                    'sqrt',
                     'sin',
                     'cos',
                     'exp',
@@ -2601,11 +2614,17 @@ class Parser(object):
                     'floor',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = _dtype(rhs) 
+                    d_var['datatype'] = _dtype(rhs)          
 
+                elif name in ['ZerosLike']:
+                     d_var = self._infere_type(rhs.args[1], **settings)
                 else:
                      raise NotImplementedError('TODO')
 
+            elif isinstance(rhs, Pow): 
+                 d_var = self._infere_type(rhs.args[0], **settings)
+                 d_var['datatype'] = 'double' if rhs.args[0].is_real else 'complex'
+                 
             elif isinstance(rhs , SumFunction):
                 d_var = self._infere_type(rhs.body, **settings)
 
@@ -3295,21 +3314,23 @@ class Parser(object):
             # TODO - must have a dict where to store things that have been
             #        imported
             #      - should not use namespace
-
+   
             if expr.source:
                 if expr.source in pyccel_builtin_import_registery:
-                    (name, atom) = pyccel_builtin_import(expr)
-                    if not name is None:
-                        F = self.get_variable(name)
-                        if F is None:
-                            # TODO remove: not up to date with Said devs on
-                            # scoping
-                            self._imports[name] = atom
-                        elif name in self._imports:
-                            errors.report(FOUND_DUPLICATED_IMPORT,
+                    
+                    imports = pyccel_builtin_import(expr)
+                    for name,atom in imports:
+                        if not name is None:
+                            F = self.get_variable(name)
+                            if F is None:
+                                # TODO remove: not up to date with Said devs on
+                                # scoping
+                                self._imports[name] = atom
+                            elif name in self._imports:
+                                errors.report(FOUND_DUPLICATED_IMPORT,
                                           symbol=name, severity='warning')
-                        else:
-                            raise NotImplementedError('must report error')
+                            else:
+                                raise NotImplementedError('must report error')
                 else:
                     # in some cases (blas, lapack, openmp and openacc level-0)
                     # the import should not appear in the final file

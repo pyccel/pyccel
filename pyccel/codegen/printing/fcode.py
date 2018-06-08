@@ -308,7 +308,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO - improve
         # importing of pyccel extensions is not printed
-        if source in ['numpy', 'scipy', 'itertools']:
+        if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
         if source == 'mpi4py':
             return 'use mpi'
@@ -577,7 +577,7 @@ class FCodePrinter(CodePrinter):
             return 'MPI_INT'
         elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'real(kind=4)':
+        elif dtype == 'real':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
@@ -750,7 +750,7 @@ class FCodePrinter(CodePrinter):
                         rhs = i
                         break
             #TODO improve we only need to allocate the variable without setting it to zero
-            stmt = ZerosLike(lhs, rhs)
+            stmt = ZerosLike(lhs=lhs, rhs=rhs)
             code += self._print(stmt)
             code += '\n'
             op = '='
@@ -775,7 +775,10 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
             return expr.rhs.fprint(self._print, expr.lhs)
-
+        
+        if isinstance(expr.rhs, ZerosLike):
+            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.args[1]))
+        
         elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
@@ -859,7 +862,7 @@ class FCodePrinter(CodePrinter):
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs_code, expr.like)
+            stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
             code += self._print(stmt)
             code += '\n'
         if not is_procedure:
@@ -904,7 +907,7 @@ class FCodePrinter(CodePrinter):
         return 'real'
 
     def _print_NativeDouble(self, expr):
-        return 'real(kind=8)'
+        return 'real'
 
     def _print_NativeComplex(self, expr):
         # TODO add precision
