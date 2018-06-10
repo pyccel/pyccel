@@ -1550,7 +1550,7 @@ class Parser(object):
             # TODO we must use self._fst_to_ast(stmt.previous.value)
             #      but it is not working for the moment
             args = self._fst_to_ast(stmt.value)
-            f_name = strip_ansi_escape.sub('',stmt.previous.value)
+            f_name = str(stmt.previous.value)
             if len(args) == 0:
                 #case of functioncall with no arguments
                 args = (Nil(),)
@@ -2616,7 +2616,7 @@ class Parser(object):
                     d_var['datatype'] = _dtype(rhs)          
 
                 elif name in ['ZerosLike']:
-                     d_var = self._infere_type(rhs.args[1], **settings)
+                     d_var = self._infere_type(rhs.rhs, **settings)
                 else:
                      raise NotImplementedError('TODO')
 
