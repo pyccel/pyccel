@@ -1171,19 +1171,24 @@ class Parser(object):
             return repr(stmt)
 
         elif isinstance(stmt, StringNode):
-            return String(stmt.value)
+            val = strip_ansi_escape.sub('',stmt.value)
+            return String(val)
 
         elif isinstance(stmt, IntNode):
-            return Integer(stmt.value)
+            val = strip_ansi_escape.sub('',stmt.value)
+            return Integer(val)
 
         elif isinstance(stmt, FloatNode):
-            return Float(stmt.value)
+            val = strip_ansi_escape.sub('',stmt.value)
+            return Float(val)
 
         elif isinstance(stmt, FloatExponantNode):
-            return Float(stmt.value)
+            val = strip_ansi_escape.sub('',stmt.value)
+            return Float(val)
 
         elif isinstance(stmt, ComplexNode):
-            return sympify(stmt.value)
+            val = strip_ansi_escape.sub('',stmt.value)
+            return sympify(val)
 
         elif isinstance(stmt, AssignmentNode):
             lhs = self._fst_to_ast(stmt.target)
@@ -1213,7 +1218,8 @@ class Parser(object):
                 return false
 
             else:
-                return Symbol(stmt.value)
+                val = strip_ansi_escape.sub('',stmt.value)
+                return Symbol(val)
 
         elif isinstance(stmt, ImportNode):
             if not(isinstance(stmt.parent, (RedBaron, DefNode))):
@@ -1551,6 +1557,7 @@ class Parser(object):
             #      but it is not working for the moment
             args = self._fst_to_ast(stmt.value)
             f_name = str(stmt.previous.value)
+            f_name = strip_ansi_escape.sub('',f_name)
             if len(args) == 0:
                 #case of functioncall with no arguments
                 args = (Nil(),)
