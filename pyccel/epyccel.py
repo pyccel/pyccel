@@ -235,7 +235,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
         # TODO ??
         #reload(package)
     except:
-        raise ImportError('could not import {0}'.format(name.lower()))
+        raise ImportError('could not import {0}'.format(name))
     # ...
     if name in dir(package):
         module = getattr(package, name)
