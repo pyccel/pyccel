@@ -577,7 +577,7 @@ class FCodePrinter(CodePrinter):
             return 'MPI_INT'
         elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'real':
+        elif dtype == 'real(kind=8)':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
@@ -777,7 +777,7 @@ class FCodePrinter(CodePrinter):
             return expr.rhs.fprint(self._print, expr.lhs)
         
         if isinstance(expr.rhs, ZerosLike):
-            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.args[1]))
+            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.rhs))
         
         elif isinstance(expr.rhs, Shape):
             # expr.rhs = Shape(a) then expr.rhs.rhs is a
@@ -904,10 +904,10 @@ class FCodePrinter(CodePrinter):
         return 'integer'
 
     def _print_NativeFloat(self, expr):
-        return 'real'
+        return 'real(kind=8)'
 
     def _print_NativeDouble(self, expr):
-        return 'real'
+        return 'real(kind=8)'
 
     def _print_NativeComplex(self, expr):
         # TODO add precision

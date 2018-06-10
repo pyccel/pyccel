@@ -48,7 +48,7 @@ def compile_fortran(source, modulename, extra_args=''):
             f.write(line)
         f.close()
 
-        args = ' -c -m {} {} {}'.format(modulename, filename, extra_args)
+        args = ' -c  -m  {} {} {}'.format(modulename, filename, extra_args)
         import sys
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
 
@@ -235,13 +235,16 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
         # TODO ??
         #reload(package)
     except:
-        raise ImportError('could not import {0}'.format(name))
+        raise ImportError('could not import {0}'.format(name.lower()))
     # ...
+    if name in dir(package):
+        module = getattr(package, name)
+    else:
+        module = getattr(package, 'mod_{0}'.format(name.lower()))
+    
+    #f = getattr(module, name.lower())
 
-    module = getattr(package, 'mod_{0}'.format(name))
-    f = getattr(module, name)
-
-    return f
+    return module
 
 
 # TODO check what we are inserting
@@ -362,7 +365,7 @@ class ContextPyccel(object):
         verbose = settings.pop('verbose', False)
 
         if not('fflags' in list(settings.keys())):
-            settings['fflags'] = '-fPIC -O2'
+            settings['fflags'] = '-fPIC -O3'
         # ...
 
         output, cmd = execute_pyccel(filename, verbose=verbose, **settings)
