@@ -500,7 +500,7 @@ class FCodePrinter(CodePrinter):
         return str(expr)
 
     def _print_Len(self, expr):
-        return self._get_statement('size(%s,1)'%(self._print(expr.arg)))
+        return 'size(%s,1)'%(self._print(expr.arg))
 
     def _print_Sum(self, expr):
         return expr.fprint(self._print)
@@ -772,6 +772,9 @@ class FCodePrinter(CodePrinter):
         # TODO treat the case of iterable classes
         if isinstance(expr.rhs, (Range, Product)):
             return ''
+        if isinstance(expr.rhs, Len):
+            rhs_code = self._print(expr.rhs)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
 
         if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
             return expr.rhs.fprint(self._print, expr.lhs)
@@ -780,7 +783,6 @@ class FCodePrinter(CodePrinter):
             return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.rhs))
         
         elif isinstance(expr.rhs, Shape):
-            # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
 
             lhs = self._print(expr.lhs)
@@ -835,6 +837,7 @@ class FCodePrinter(CodePrinter):
 
             code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
+
         elif isinstance(expr.rhs, Function):
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
@@ -857,6 +860,7 @@ class FCodePrinter(CodePrinter):
               expr.lhs.dtype == NativeSymbol()):
             return ''
         else:
+
             rhs_code = self._print(expr.rhs)
 #            print("ASSIGN = ", rhs_code)
 
