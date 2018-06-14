@@ -577,7 +577,7 @@ class FCodePrinter(CodePrinter):
             return 'MPI_INT'
         elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'real(kind=8)':
+        elif dtype == 'real':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
@@ -601,6 +601,8 @@ class FCodePrinter(CodePrinter):
         else:
             raise NotImplementedError('TODO')
         if shape is None or len(shape)==0:
+            if rank>0:
+                raise NotImplementedError('TODO')
             return '1'
         return str(functools.reduce(operator.mul, shape ))
 
