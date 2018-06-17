@@ -20,6 +20,9 @@ from sympy.printing.precedence import precedence
 from sympy import Eq, Ne, true, false
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
+from sympy.core.numbers import NegativeInfinity as NINF
+from sympy.core.numbers import Infinity as INF 
+
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -772,6 +775,14 @@ class FCodePrinter(CodePrinter):
 
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
+        if isinstance(expr.rhs, NINF):
+            rhs_code = '-Huge({0})'.format(lhs_code)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
+     
+        if isinstance(expr.rhs, INF):
+            rhs_code = 'Huge({0})'.format(lhs_code)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
+        
         if isinstance(expr.rhs, (Range, Product)):
             return ''
         if isinstance(expr.rhs, Len):

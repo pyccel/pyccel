@@ -145,7 +145,7 @@ from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions import StdFactKB
 from sympy import Sum as Summation, Heaviside, KroneckerDelta
-
+from sympy import oo as INF
 from collections import OrderedDict
 
 import traceback
@@ -1646,10 +1646,6 @@ class Parser(object):
                 body = generators.pop()
             indexes = indexes[::-1]
             body = [body]
-            #if isinstance(parent, AssignmentNode) or cond:
-            expr = Assign(lhs,0)
-            expr.set_fst(stmt)
-            body.insert(0,expr)	
             if name == 'sum' :
                 expr =  FunctionalSum(body, target, indexes, None)
             elif name == 'min':
@@ -2609,7 +2605,7 @@ class Parser(object):
                 stmt = stmts[-1]
                 if isinstance(expr, Assign):
                     stmt = Assign(expr.lhs,stmt)
-                elif isinstance(expr, AugAssing):
+                elif isinstance(expr, AugAssign):
                     stmt = AugAssign(expr.lhs,expr.op,stmt)
                 stmt.set_fst(expr.fst)
                 stmt = self._annotate(stmt, **settings)
@@ -2953,13 +2949,14 @@ class Parser(object):
         elif isinstance(expr, GC):
             target = expr.target
             lhs_name = _get_name(target.lhs)        
-            stmt = None
-            loops =expr.loops
-            if isinstance(loops[0],Assign):
-                stmt = loops[0]
-                loops=loops[1:]
+            stmt = self.get_variable(lhs_name)
+            if stmt is None:
+                stmt = Assign(target.lhs,0)
+                stmt.set_fst(target.fst)
+            else:
+                stmt = True
             stmt = self._annotate(stmt, **settings)
-            loops = [self._annotate(i, **settings) for i in loops]
+            loops = [self._annotate(i, **settings) for i in expr.loops]
             
             indexes = expr.indexes
             for i in range(len(indexes)):
@@ -2967,36 +2964,36 @@ class Parser(object):
                 if var is None:
                     raise ValueError('variable not found')
                 indexes[i] = var
-            rhs = target.rhs
-            while True:
-                if isinstance(rhs, (Assign, AugAssign)):
-                    rhs = rhs.rhs
-                elif isinstance(rhs, GC):
-                    rhs = rhs.target
-                elif isinstance(rhs,Application):
-                    rhs = rhs.args[1]
-                else:
-                    break
-            rhs = self._annotate(rhs, **settings)
-            if isinstance(rhs, If):
-                rhs = rhs.bodies[0]
-            d_var = self._infere_type(rhs, **settings)
+            target = self._annotate(target, **settings)
+            if isinstance(target, CodeBlock):
+                target = target.body[-1]
+            elif isinstance(target, If):
+                target = target.bodies[0]
+
+            d_var = self._infere_type(target.rhs, **settings)
             dtype = d_var.pop('datatype')
             lhs = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
             if stmt:
-                if str_dtype(dtype) in ['real','complex']:
-                    stmt = Assign(lhs,0.0)
-                else:
-                    stmt = Assign(lhs,0)
+                if isinstance(expr, FunctionalSum):
+                    val = 0
+                    if str_dtype(dtype) in ['real','complex']:
+                        val = 0.0
+                elif isinstance(expr, FunctionalMin):
+                    val = INF
+                elif isinstance(expr, FunctionalMax):
+                    val = -INF
+                
+                stmt = Assign(lhs,val)
                 stmt.set_fst(expr.fst)
                 loops.insert(0,stmt)
             if isinstance(expr, FunctionalSum):
-                return FunctionalSum(loops, lhs, indexes)
+                expr =  FunctionalSum(loops, lhs, indexes)
             elif isinstance(expr, FunctionalMin):
-                return FunctionalMin(loops, lhs, indexes)
+                expr = FunctionalMin(loops, lhs, indexes)
             elif isinstance(expr, FunctionalMax):
-                return FunctionalMax(loops, lhs, indexes)
+                expr = FunctionalMax(loops, lhs, indexes)
+            return expr
         
         elif isinstance(expr, FunctionalFor):
             target = expr.target 
