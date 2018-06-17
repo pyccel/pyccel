@@ -8,7 +8,7 @@ from pyccel.codegen.printing import fcode
 
 from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
 from pyccel.ast import Header, EmptyLine, NewLine, Comment
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign , Assigns
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign , CodeBlock
 from pyccel.ast import Variable, DottedName
 from pyccel.ast import For, If, While, FunctionalFor, ForIterator
 from pyccel.ast import Is
@@ -164,10 +164,8 @@ class Codegen(object):
                     vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
                 elif isinstance(stmt, If):
                     vars_ += collect_vars(stmt.bodies)
-                elif isinstance(stmt, While):
+                elif isinstance(stmt, (While, CodeBlock)):
                     vars_ += collect_vars(stmt.body)
-                elif isinstance(stmt, Assigns):
-                    vars_ += collect_vars(stmt.stmts)
                 elif isinstance(stmt, (Assign, AliasAssign)):
                     if isinstance(stmt.lhs, Variable):
                         if not isinstance(stmt.lhs.name, DottedName):

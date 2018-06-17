@@ -20,6 +20,9 @@ from sympy.printing.precedence import precedence
 from sympy import Eq, Ne, true, false
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
+from sympy.core.numbers import NegativeInfinity as NINF
+from sympy.core.numbers import Infinity as INF 
+
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -44,7 +47,7 @@ from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import Range, Product, Block , Zip, Enumerate
 from pyccel.ast.core import get_assigned_symbols
-from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
+from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Declare, ValuedVariable,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
@@ -577,7 +580,7 @@ class FCodePrinter(CodePrinter):
             return 'MPI_INT'
         elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'real(kind=8)':
+        elif dtype == 'real':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
@@ -586,6 +589,7 @@ class FCodePrinter(CodePrinter):
         var = expr.argument
         if isinstance(var, Variable):
             shape = var.shape
+            rank = var.rank
         elif isinstance(var, IndexedElement):
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
@@ -598,9 +602,12 @@ class FCodePrinter(CodePrinter):
                     elif i.end is None:
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
+            rank = len(shape)
         else:
             raise NotImplementedError('TODO')
         if shape is None or len(shape)==0:
+            if rank>0:
+                raise NotImplementedError('TODO')
             return '1'
         return str(functools.reduce(operator.mul, shape ))
 
@@ -761,8 +768,8 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_Assigns(self, expr):
-        return '\n'.join(self._print(i) for i in expr.stmts)
+    def _print_CodeBlock(self, expr):
+        return '\n'.join(self._print(i) for i in expr.body)
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -770,6 +777,14 @@ class FCodePrinter(CodePrinter):
 
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
+        if isinstance(expr.rhs, NINF):
+            rhs_code = '-Huge({0})'.format(lhs_code)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
+     
+        if isinstance(expr.rhs, INF):
+            rhs_code = 'Huge({0})'.format(lhs_code)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
+        
         if isinstance(expr.rhs, (Range, Product)):
             return ''
         if isinstance(expr.rhs, Len):

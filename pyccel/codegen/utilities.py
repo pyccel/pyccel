@@ -25,7 +25,7 @@ def construct_flags(compiler,
     Constructs compiling flags for a given compiler.
 
     fflags: str
-        Fortran compiler flags. Default is `-O2`
+        Fortran compiler flags. Default is `-O3`
 
     compiler: str
         used compiler for the target language.
@@ -48,7 +48,7 @@ def construct_flags(compiler,
         raise ValueError("Only {0} are available.".format(_avail_compilers))
 
     if not fflags:
-        fflags = '-O2'
+        fflags = '-O3'
 
     # make sure there are spaces
     flags = " {} ".format(fflags)
@@ -92,7 +92,6 @@ def compile_fortran(filename, compiler, flags,
     verbose: bool
         talk more
     """
-
     if binary is None:
         if not is_module:
             binary = os.path.splitext(os.path.basename(filename))[0]

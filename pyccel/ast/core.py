@@ -8,7 +8,7 @@ from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational, Ne, Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
-from sympy.core.function import Function
+from sympy.core.function import Function,Application
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul, Pow
 from sympy import Integer as sp_Integer
@@ -375,30 +375,26 @@ class Assign(Basic):
         return False
 
 
-class Assigns(Basic):
-    """Represents a list of assignments for code generation.
+class CodeBlock(Basic):
+    """Represents a list of stmt for code generation.
+       we use it when a single statement in python 
+       produce multiple statement in the targeted language
     """
 
-    def __new__(cls, assigns):
+    def __new__(cls, body):
              ls = []
-             for i in assigns:
-                 if isinstance(i,Assigns):
-                     ls += i.stmts
-                 elif isinstance(i, Assign):
-                     ls += [i]
+             for i in body:
+                 if isinstance(i,CodeBlock):
+                     ls += i.body
+                 elif isinstance(i, (Assign, AugAssign,FunctionalFor,Application)):
+                     ls.append(i)
                  else:
-                     raise TypeError('assigns object must contain a list of assign stmts')
+                     raise TypeError('statement not supported yet')
              return Basic.__new__(cls, ls)
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        s=''
-        for i in self.stmts:
-            s = s +'\n{0} := {1}'.format(sstr(i.lhs), sstr(i.rhs))
-        return s
 
     @property
-    def stmts(self):
+    def body(self):
         return self._args[0]
 
 
@@ -1344,13 +1340,13 @@ class GeneratorComprehension(Basic):
     pass
 
 class FunctionalSum(FunctionalFor,GeneratorComprehension):
-    pass
+    name = 'sum'
 
 class FunctionalMax(FunctionalFor,GeneratorComprehension):
-    pass
+    name = 'max'
 
 class FunctionalMin(FunctionalFor,GeneratorComprehension):
-    pass
+    name = 'min'
 
 class FunctionalMap(FunctionalFor,GeneratorComprehension):
     pass
