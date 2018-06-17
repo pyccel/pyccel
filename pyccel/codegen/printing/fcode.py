@@ -589,6 +589,7 @@ class FCodePrinter(CodePrinter):
         var = expr.argument
         if isinstance(var, Variable):
             shape = var.shape
+            rank = var.rank
         elif isinstance(var, IndexedElement):
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
@@ -601,6 +602,7 @@ class FCodePrinter(CodePrinter):
                     elif i.end is None:
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
+            rank = len(shape)
         else:
             raise NotImplementedError('TODO')
         if shape is None or len(shape)==0:
