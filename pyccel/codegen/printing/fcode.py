@@ -44,7 +44,7 @@ from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import Range, Product, Block , Zip, Enumerate
 from pyccel.ast.core import get_assigned_symbols
-from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
+from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Declare, ValuedVariable,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
@@ -763,8 +763,8 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_Assigns(self, expr):
-        return '\n'.join(self._print(i) for i in expr.stmts)
+    def _print_CodeBlock(self, expr):
+        return '\n'.join(self._print(i) for i in expr.body)
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)

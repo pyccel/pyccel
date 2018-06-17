@@ -299,7 +299,7 @@ class Compiler(object):
         if not(compiler in _avail_compilers):
             raise ValueError("Only {0} are available.".format(_avail_compilers))
 
-        flags = " -O2 "
+        flags = " -O3 "
         if compiler == "gfortran":
             if debug:
                 flags += " -fbounds-check "

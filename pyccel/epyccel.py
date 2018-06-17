@@ -48,7 +48,7 @@ def compile_fortran(source, modulename, extra_args=''):
             f.write(line)
         f.close()
 
-        args = ' --fcompiler=intel -c -m  {} {} {} '.format(modulename, filename, extra_args)
+        args = '-c -m  {} {} {} '.format(modulename, filename, extra_args)
         import sys
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
  

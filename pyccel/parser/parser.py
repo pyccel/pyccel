@@ -63,14 +63,15 @@ from pyccel.ast import datatype, DataTypeFactory
 from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign ,Assigns
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign ,CodeBlock
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
 from pyccel.ast import FunctionDef, Interface, PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
-from pyccel.ast import For, FunctionalFor, ForIterator, GeneratorComprehension
+from pyccel.ast import For, FunctionalFor, ForIterator
+from pyccel.ast import GeneratorComprehension as GC
 from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast import If, IfTernaryOperator
 from pyccel.ast import While
@@ -129,6 +130,7 @@ from sympy import Add, Mul, Pow, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
 from sympy import ceiling
+from sympy import Atom
 
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
@@ -222,7 +224,7 @@ def _get_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 
 
-def _atomic(e):
+def _atomic(e,cls=None):
     """Return atom-like quantities as far as substitution is
     concerned: Functions and DottedVarviables, Variables. we don't
     return atoms that are inside such quantities too 
@@ -230,18 +232,18 @@ def _atomic(e):
     from sympy import preorder_traversal
     from collections import OrderedDict
     pot = preorder_traversal(e)
-    seen = set()
-    free = e.free_symbols
-    atoms_ = set()
-    
+    seen = []
+    atoms_ = []
+    if cls is None:
+        cls = (Application, DottedVariable ,Variable)
     for p in pot:
         if p in seen:
             pot.skip()
             continue
-        seen.add(p)
-        if isinstance(p, (Application, DottedVariable ,Variable)):
+        seen.append(p)
+        if isinstance(p, cls):
             pot.skip()
-            atoms_.add(p)
+            atoms_.append(p)
     return atoms_
 
 def _dtype(expr):
@@ -274,11 +276,11 @@ def str_dtype(dtype):
         return  'bool'
     else:
         raise TypeError('Unknown datatype {0}'.format(str(dtype)))
-         
+ 
 
 def atom(e):
     """Return atom-like quantities as far as substitution is
-    concerned: Functions and DottedVarviables. contrary to _atom we
+    concerned: Functions , DottedVarviables. contrary to _atom we
     return atoms that are inside such quantities too
     """
     pass
@@ -319,15 +321,21 @@ class Parser(object):
         self._namespace['cls_constructs'] = {}
         self._namespace['symbolic_functions'] = {}
         self._namespace['python_functions'] = {}
-        self._scope = {}  # represent the namespace of a function
+        self._scope = {}  
+        # represent the namespace of a function
         self._current_class = None
-        self._current = None  # we use it to detect the current method or function
-        # we use it to store the imports
+        self._current = None  
+        # we use it to detect the current method or function
+             
         self._imports = {}
-        # a Parser can have parents, who are importing it. imports are then its sons.
+        # we use it to store the imports
+        
         self._parents = []
+        # a Parser can have parents, who are importing it. 
+        #imports are then its sons.
         self._sons = []
         self._d_parsers = OrderedDict()
+
         # the following flags give us a status on the parsing stage
         self._syntax_done = False
         self._semantic_done = False
@@ -849,10 +857,13 @@ class Parser(object):
         else:
             self._namespace['variables'][name] = expr
 
-    def create_variable(self, expr):
+    def create_variable(self, expr, store=False):
         """."""
         import numpy as np
-        name = 'result_'+str(abs(hash(expr) + np.random.randint(500)))[-4:]
+        try:
+            name = 'result_'+str(abs(hash(expr) + np.random.randint(500)))[-4:]
+        except:
+            name = 'result_'+str(abs(np.random.randint(500)))[-4:]
 
         return Symbol(name)
 
@@ -1609,18 +1620,22 @@ class Parser(object):
             result = self._fst_to_ast(stmt.result)
             generators = self._fst_to_ast(stmt.generators)
             parent = stmt.parent.parent.parent
+
             if isinstance(parent, AssignmentNode):
                 lhs = self._fst_to_ast(parent.target)
-                name = parent.value[0].value
+                name = strip_ansi_escape.sub('',parent.value[0].value)
+                cond = False
             else:
-                NotImplementedError('TODO')
-           
-            ass_ = Assign(lhs,0)
-            ass_.set_fst(parent)
+                lhs = self.create_variable(result)
+                name = stmt.parent.parent
+                name = strip_ansi_escape.sub('', name.value[0].value)
+                cond = True
+            body = result
             if name == 'sum':
-                body = AugAssign(lhs,'+',result)
+                body = AugAssign(lhs,'+',body)
             else:
-                body = Assign(lhs,Function(name)(lhs,result))
+                body = Function(name)(lhs,body)
+                body = Assign(lhs,body)
             target = body
             body.set_fst(parent)
             indexes = []
@@ -1630,14 +1645,26 @@ class Parser(object):
                 generators[-1].insert2body(body)
                 body = generators.pop()
             indexes = indexes[::-1]
+            body = [body]
+            #if isinstance(parent, AssignmentNode) or cond:
+            expr = Assign(lhs,0)
+            expr.set_fst(stmt)
+            body.insert(0,expr)	
             if name == 'sum' :
-                return FunctionalSum([ass_,body], target, indexes, None)
+                expr =  FunctionalSum(body, target, indexes, None)
             elif name == 'min':
-                return FunctionalMin([ass_,body], target, indexes, None)
+                expr = FunctionalMin(body, target, indexes, None)
             elif name == 'max':
-                return FunctionalMax([ass_,body], target, indexes, None)
+                expr = FunctionalMax(body, target, indexes, None)
             else:
                 raise NotImplementedError('TODO')
+            expr.set_fst(stmt)
+            
+            if cond:
+               expr = Assign(lhs,expr)
+                
+            expr.set_fst(stmt)        
+            return expr
 
         elif isinstance(stmt, IfelseblockNode):
             args = self._fst_to_ast(stmt.value)
@@ -1874,7 +1901,7 @@ class Parser(object):
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
 
-            d_var['datatype'] = var.dtype
+            d_var['datatype'] = str_dtype(var.dtype)
 
             if sympy_iterable(var.shape):
                 shape = []
@@ -1900,7 +1927,6 @@ class Parser(object):
             var = self.get_variable(name)
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
-
             d_var['datatype'] = var.dtype
             d_var['allocatable'] = var.allocatable
             d_var['shape'] = var.shape
@@ -2033,6 +2059,8 @@ class Parser(object):
             d_var['allocatable'] = False
             d_var['is_pointer'] = True
             return d_var
+        elif isinstance(expr, GC):
+            return self._infere_type(expr.target, **settings)
         
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
@@ -2082,6 +2110,7 @@ class Parser(object):
             var = self.get_variable(name)
             if var is None:
                 # TODO ERROR not tested yet
+                
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2291,11 +2320,26 @@ class Parser(object):
                     expr = IfTernaryOperator(Tuple(arg.args[0][0],[func1]),Tuple(arg.args[1][0],[func2]))
                     expr.set_fst(arg.fst)
                     return self._annotate(expr, **settings)
-            args = [self._annotate(arg, **settings) for arg in expr.args]
+            args = []
+            stmts = []
+
+            for i in expr.args:
+                if isinstance(i,Assign):
+                    args.append(i.lhs)
+                    stmts.append(i)
+                else:
+                    args.append(i)
+            for i in range(len(stmts)):
+                stmts[i] = self._annotate(stmts[i], **settings)
+            args = [self._annotate(arg, **settings) for arg in args]
+
             if name== 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
-            if F: 
+            if F:
+                if len(stmts)>0:
+                    stmts.append(F)
+                    return CodeBlock(stmts)
                 return F
 
             elif name in self._namespace['cls_constructs'].keys():
@@ -2315,13 +2359,11 @@ class Parser(object):
 
                 # TODO check compatibility
                 # TODO treat parametrized arguments.
-                #      this will be done later, once it is validated for FunctionCall
-
-                # the only thing we can do here, is to return a MethodCall,
-                # without the class Variable, then we will treat it during the
-                # Assign annotation
-#                return MethodCall(method, args, cls_variable=None, kind=None)
-                return ConstructorCall(method, args, cls_variable=None)
+                expr = ConstructorCall(method, args, cls_variable=None)
+                if len(stmts)>0:
+                    stmts.append(expr)
+                    return CodeBlock(stmts)
+                return expr
 
             else:
                 # first we check if it is a macro, in this case, we will create
@@ -2342,7 +2384,11 @@ class Parser(object):
                           severity='error', blocker=self.blocking)
                 else:
                     if not isinstance(func, (FunctionDef, Interface)):
-                        return func(*args)
+                        expr = func(*args)
+                        if len(stmts)>0:
+                            stmts.append(expr)
+                            return CodeBlock(stmts)
+                        return expr
                     else:
                         if 'inline' in func.decorators.keys():
                              raise NotImplementedError('TODO fix the inline')
@@ -2397,9 +2443,21 @@ class Parser(object):
                             expr._assumptions = StdFactKB(assumptions)
                             expr._assumptions._generator = assumptions.copy()
                         elif len(results) == 0:
-                            return Subroutine(name)(*args)
+                            expr = Subroutine(name)(*args)
+                            if len(stmts)>0:
+                                stmts.append(expr)
+                                return CodeBlock(stmts)
+                            return expr
                         elif len(results)>1:
-                            return Function(name)(*args)
+                            expr = Function(name)(*args)
+                            if len(stmts)>0:
+                                stmts.append(expr)
+                                return CodeBlock(stmts)
+                            return expr
+                        
+                        if len(stmts)>0:
+                            stmts.append(expr)
+                            return CodeBlock(stmts)
                         return expr
 
         elif isinstance(expr, Expr):
@@ -2485,9 +2543,39 @@ class Parser(object):
                             raise NotImplementedError('TODO')
 
 
-
-               
+            elif isinstance(rhs, (Mul,Add,Pow)):
+                ls = _atomic(rhs, Assign)
+                if len(ls)>0:
+                    stmts = []
+                    for i in ls:
+                        rhs = rhs.subs(i, i.lhs)
+                        stmts.append(i.rhs)
+                    for i in range(len(stmts)):
+                        stmts[i] = self._annotate(stmts[i], **settings)
+                    stmt = Assign(lhs, rhs)
+                    stmt.set_fst(expr.fst)
+                    stmt = self._annotate(stmt, **settings)
+                    stmts.append(stmt)
+                    return CodeBlock(stmts)
+            
+            if isinstance(rhs, (Assign, AugAssign)):
+                rhs_ = self._annotate(rhs, **settings)
+                if isinstance(rhs_, FunctionalSum):
+                    stmt = AugAssign(expr.lhs, '+', rhs.lhs)
+                elif isinstance(rhs_, GC):
+                    stmt = Function(rhs_.name)(expr.lhs,rhs.lhs)
+                    stmt = Assign(expr.lhs,stmt)
+                else:
+                    raise NotImplementedError('TODO')
+ 
+                stmt.set_fst(expr.fst)
+                stmt = self._annotate(stmt, **settings)
+                return CodeBlock([rhs_, stmt])
+#.......
+#.......
+#.......    
             rhs = self._annotate(rhs, **settings)
+            
 
             if isinstance(rhs, If):
                 args = rhs.args
@@ -2512,8 +2600,21 @@ class Parser(object):
                     i.set_fst(expr.fst)
                 rhs = self._annotate(rhs, **settings)
                 return rhs
-            if isinstance(rhs, FunctionalFor):
+            
+                
+            if isinstance(rhs, (FunctionalFor)):
                 return rhs
+            elif isinstance(rhs, CodeBlock):
+                stmts = rhs.body
+                stmt = stmts[-1]
+                if isinstance(expr, Assign):
+                    stmt = Assign(expr.lhs,stmt)
+                elif isinstance(expr, AugAssing):
+                    stmt = AugAssign(expr.lhs,expr.op,stmt)
+                stmt.set_fst(expr.fst)
+                stmt = self._annotate(stmt, **settings)
+                stmts[-1] = stmt
+                return CodeBlock(stmts)
      
 
             # d_var can be a list of dictionaries
@@ -2667,13 +2768,13 @@ class Parser(object):
                 var = self.get_variable(name)
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
+            
                 else:
                     # TODO improve check type compatibility
                     if (str(lhs.dtype) != str(var.dtype)):
                         txt = '|{name}| {old} <-> {new}'.format(name=name,
                                                                 old=var.dtype,
-                                                                new=lhs.dtype)
-
+                                                               new=lhs.dtype)
                         # case where the rhs is of native type
                         # TODO add other native types
                         if isinstance(rhs, (Integer, Float)):
@@ -2849,23 +2950,47 @@ class Parser(object):
                 return ForIterator(target, iterable, body)
             return For(target, iterable, body)
 
-        elif isinstance(expr, GeneratorComprehension):
-            loops = [self._annotate(i, **settings) for i in expr.loops]
-            target = expr.target 
+        elif isinstance(expr, GC):
+            target = expr.target
+            lhs_name = _get_name(target.lhs)        
+            stmt = None
+            loops =expr.loops
+            if isinstance(loops[0],Assign):
+                stmt = loops[0]
+                loops=loops[1:]
+            stmt = self._annotate(stmt, **settings)
+            loops = [self._annotate(i, **settings) for i in loops]
+            
             indexes = expr.indexes
             for i in range(len(indexes)):
                 var = self.get_variable(indexes[i].name)
                 if var is None:
                     raise ValueError('variable not found')
                 indexes[i] = var
-            rhs = self._annotate(target.rhs, **settings)
-            lhs_name = _get_name(target.lhs)
+            rhs = target.rhs
+            while True:
+                if isinstance(rhs, (Assign, AugAssign)):
+                    rhs = rhs.rhs
+                elif isinstance(rhs, GC):
+                    rhs = rhs.target
+                elif isinstance(rhs,Application):
+                    rhs = rhs.args[1]
+                else:
+                    break
+            rhs = self._annotate(rhs, **settings)
             if isinstance(rhs, If):
                 rhs = rhs.bodies[0]
             d_var = self._infere_type(rhs, **settings)
             dtype = d_var.pop('datatype')
             lhs = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
+            if stmt:
+                if str_dtype(dtype) in ['real','complex']:
+                    stmt = Assign(lhs,0.0)
+                else:
+                    stmt = Assign(lhs,0)
+                stmt.set_fst(expr.fst)
+                loops.insert(0,stmt)
             if isinstance(expr, FunctionalSum):
                 return FunctionalSum(loops, lhs, indexes)
             elif isinstance(expr, FunctionalMin):
@@ -3022,7 +3147,7 @@ class Parser(object):
             else:
                 assigns = [self._annotate(assign, **settings) for assign in assigns]
                 new_vars = [self._annotate(i, **settings) for i in new_vars]
-                assigns = Assigns(assigns)
+                assigns = CodeBlock(assigns)
                 return Return(new_vars,assigns)
 
         elif isinstance(expr, FunctionDef):
@@ -3309,6 +3434,7 @@ class Parser(object):
             name = expr.lhs
             var = self.get_variable(str(name))
             if var is None:
+                
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
