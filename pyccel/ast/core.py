@@ -396,6 +396,9 @@ class CodeBlock(Basic):
     @property
     def body(self):
         return self._args[0]
+    @property
+    def lhs(self):
+        return self.body[-1].lhs
 
 
 class AliasAssign(Basic):
@@ -2109,7 +2112,7 @@ class Return(Basic):
 
     def __new__(cls, expr, stmt = None):
    
-        if stmt and not isinstance(stmt, (Assign, Assigns)):
+        if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
 
         return Basic.__new__(cls, expr, stmt)
