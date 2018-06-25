@@ -382,15 +382,18 @@ class CodeBlock(Basic):
     """
 
     def __new__(cls, body):
-             ls = []
-             for i in body:
-                 if isinstance(i,CodeBlock):
-                     ls += i.body
-                 elif isinstance(i, (Assign, AugAssign,FunctionalFor,Application)):
-                     ls.append(i)
-                 else:
-                     raise TypeError('statement not supported yet')
-             return Basic.__new__(cls, ls)
+        ls = []
+        for i in body:
+            if isinstance(i,CodeBlock):
+                ls += i.body
+            elif isinstance(i, (Assign, AugAssign,FunctionalFor,Application)):
+                ls.append(i)
+            else:
+                raise TypeError('statement not supported yet')
+        obj = Basic.__new__(cls, ls) 
+        if isinstance(ls[-1],(Assign, AugAssign)):
+            obj.set_fst(ls[-1].fst)
+        return  obj
 
 
     @property

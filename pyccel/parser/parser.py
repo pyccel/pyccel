@@ -2450,11 +2450,11 @@ class Parser(object):
 
         elif isinstance(expr, (Assign, AugAssign)):
             # TODO unset position at the end of this part
-           # if expr.fst:
-           # #    self._bounding_box = expr.fst.absolute_bounding_box
-           # else:
-           #     msg = 'Found a node without fst member ({})'.format(type(expr))
-                #raise PyccelSemanticError(msg)
+            if expr.fst:
+                self._bounding_box = expr.fst.absolute_bounding_box
+            else:
+                msg = 'Found a node without fst member ({})'.format(type(expr))
+                raise PyccelSemanticError(msg)
 
             rhs = expr.rhs
             lhs = expr.lhs
@@ -2910,6 +2910,9 @@ class Parser(object):
             if isinstance(expr, AugAssign):
                 expr_new = AugAssign(expr_new.lhs, expr.op,
                         expr_new.rhs)
+            #we need to set the fst again in case 
+            #we annotate it again
+            expr_new.set_fst(expr.fst)
             return expr_new
 
         elif isinstance(expr, For):
