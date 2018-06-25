@@ -144,7 +144,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions import StdFactKB
-from sympy import Sum as Summation, Heaviside, KroneckerDelta
+from sympy import Sum as Summation, Heaviside, KroneckerDelta,Min,Max
 from sympy import oo as INF
 from collections import OrderedDict
 
@@ -2289,18 +2289,7 @@ class Parser(object):
                     expr_new = expr.expr.subs(func, f)
                     expr = Lambda(expr.variables, expr_new)
             return expr
-        elif isinstance(expr, Summation):
-            # treatment of the index/indices
-            if isinstance(expr.args[1][0], Symbol):
-                name = str(expr.args[1][0].name)
-                var = self.get_variable(name)
-                target = var
-                if var is None:
-                    target = Variable('int', name, rank=0)
-                    self.insert_variable(target)
-            itr = self._annotate(expr.args[1], **settings)
-            body = self._annotate(expr.args[0], **settings)
-            return SumFunction(body,itr)
+        
 
         elif isinstance(expr, Application):
             # ... DEBUG
@@ -2461,11 +2450,11 @@ class Parser(object):
 
         elif isinstance(expr, (Assign, AugAssign)):
             # TODO unset position at the end of this part
-            if expr.fst:
-                self._bounding_box = expr.fst.absolute_bounding_box
-            else:
-                msg = 'Found a node without fst member ({})'.format(type(expr))
-                raise PyccelSemanticError(msg)
+           # if expr.fst:
+           # #    self._bounding_box = expr.fst.absolute_bounding_box
+           # else:
+           #     msg = 'Found a node without fst member ({})'.format(type(expr))
+                #raise PyccelSemanticError(msg)
 
             rhs = expr.rhs
             lhs = expr.lhs
@@ -2501,7 +2490,7 @@ class Parser(object):
                     else:
                         raise NotImplementedError('TODO treate interface case')
 
-            elif isinstance(rhs, DottedVariable):
+            if isinstance(rhs, DottedVariable):
                 var = rhs.rhs
                 name = _get_name(var)
                 macro = self.get_macro(name)
@@ -2539,7 +2528,7 @@ class Parser(object):
                             raise NotImplementedError('TODO')
 
 
-            elif isinstance(rhs, (Mul,Add,Pow)):
+            if isinstance(rhs, (Mul,Add,Pow)):
                 ls = _atomic(rhs, Assign)
                 if len(ls)>0:
                     stmts = []
@@ -2553,6 +2542,45 @@ class Parser(object):
                     stmt = self._annotate(stmt, **settings)
                     stmts.append(stmt)
                     return CodeBlock(stmts)
+
+            if isinstance(rhs, (Min, Max, Mul,Add,Pow)):
+                
+                if len(rhs.atoms(Summation))>0:
+                    stmts = []
+                    args = list(rhs.args)
+                    for i in range(len(args)):
+                        if len(args[i].atoms(Summation))>0:
+                            lhs = self.create_variable(args[i])
+                            body = Assign(lhs,args[i])
+                            body.set_fst(expr.fst)
+                            stmts.append(body)
+                            rhs = rhs.subs(args[i],lhs)
+                    if isinstance(expr, Assign):
+                        stmt = Assign(expr.lhs,rhs)
+                    else:
+                        stmt = AugAssign(expr.lhs,'+',rhs)
+
+                    stmt.set_fst(expr.fst)
+                    stmts.append(stmt)
+                     
+                    for i in range(len(stmts)):
+                        stmts[i] = self._annotate(stmts[i], **settings)
+                    return CodeBlock(stmts)
+                            
+            if isinstance(rhs, Summation):
+                index = rhs.args[1]
+                target = Function('range')(index[1],index[2])
+                lhs = expr.lhs
+                body = AugAssign(lhs,'+',rhs.args[0])
+                body.set_fst(expr.fst)
+                body = self._annotate(body, **settings)
+                stmt = For(index[0], target, [body], strict=False)
+                stmt.set_fst(expr.fst)
+                stmt = FunctionalSum([stmt], body, [], None)
+                stmt.set_fst(expr.fst)
+                rhs = self._annotate(stmt, **settings)
+                return rhs
+            
             
             if isinstance(rhs, (Assign, AugAssign)):
                 rhs_ = self._annotate(rhs, **settings)
@@ -2957,13 +2985,6 @@ class Parser(object):
                 stmt = True
             stmt = self._annotate(stmt, **settings)
             loops = [self._annotate(i, **settings) for i in expr.loops]
-            
-            indexes = expr.indexes
-            for i in range(len(indexes)):
-                var = self.get_variable(indexes[i].name)
-                if var is None:
-                    raise ValueError('variable not found')
-                indexes[i] = var
             target = self._annotate(target, **settings)
             if isinstance(target, CodeBlock):
                 target = target.body[-1]
@@ -2988,11 +3009,11 @@ class Parser(object):
                 stmt.set_fst(expr.fst)
                 loops.insert(0,stmt)
             if isinstance(expr, FunctionalSum):
-                expr =  FunctionalSum(loops, lhs, indexes)
+                expr =  FunctionalSum(loops, lhs, [])
             elif isinstance(expr, FunctionalMin):
-                expr = FunctionalMin(loops, lhs, indexes)
+                expr = FunctionalMin(loops, lhs, [])
             elif isinstance(expr, FunctionalMax):
-                expr = FunctionalMax(loops, lhs, indexes)
+                expr = FunctionalMax(loops, lhs, [])
             return expr
         
         elif isinstance(expr, FunctionalFor):
@@ -3575,6 +3596,8 @@ class Parser(object):
             return Dlist(val, shape)
 
         elif isinstance(expr, Nil):
+            return expr
+        elif isinstance(expr, CodeBlock):
             return expr
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))

@@ -920,7 +920,7 @@ class FCodePrinter(CodePrinter):
         return 'logical'
 
     def _print_NativeInteger(self, expr):
-        return 'integer'
+        return 'integer(kind=8)'
 
     def _print_NativeFloat(self, expr):
         return 'real(kind=8)'
