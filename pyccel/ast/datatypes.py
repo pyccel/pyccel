@@ -173,6 +173,8 @@ Generic    = NativeGeneric()
 
 dtype_registry = {'bool': Bool,
                   'int': Int,
+                  'integer': Int,
+                  'real'   : Double,
                   'float': Float,
                   'double': Double,
                   'complex': Complex,

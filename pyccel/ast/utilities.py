@@ -6,34 +6,35 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
-from .core import Constant
+from .core import Constant,ZerosLike
 from .numpyext import Zeros, Ones
 from .numpyext import Array, Shape, Int, Rand, Sum
+from .numpyext import Sqrt,Asin,Acsc,Acos,Asec,Atan,Acot,Log
 from sympy import Symbol, Lambda, floor
 from sympy import I
-from sympy import (Abs, sqrt, sin, cos, exp, log, csc, cos, sec, tan, cot, asin,
-                   acsc, acos, asec, atan, acot, atan2, Mod, Max, Min)
+from sympy import Not
+from sympy import (Abs, sin, cos, exp, csc, cos, sec, tan, cot, Mod, Max, Min)
 
 import scipy.constants as sc_constants
 
 math_functions = {
-    'Abs': Abs,
-    'sqrt': sqrt,
+    'abs': Abs,
+    'sqrt': Sqrt,
     'sin': sin,
     'cos': cos,
     'exp': exp,
-    'log': log,
+    'log': Log,
     'csc': csc,
     'sec': sec,
     'tan': tan,
     'cot': cot,
-    'asin': asin,
-    'acsc': acsc,
-    'acos': acos,
-    'asec': asec,
-    'atan': atan,
-    'acot': acot,
-    'atan2': atan2,
+    'asin': Asin,
+    'acsc': Acsc,
+    'arccos': Acos,
+    'acos':Acos,
+    'asec': Asec,
+    'atan': Atan,
+    'acot': Acot
     }
 
 scipy_constants = {
@@ -67,12 +68,18 @@ def builtin_function(expr, args=None):
         return Sum(*args)
     if name == 'Mod':
         return Mod(*args)
-    if name == 'Max':
+    if name == 'abs':
+        return Abs(*args)
+    if name in ['max', 'Max']:
         return Max(*args)
+    if name in ['min', 'Min']:
+        return Min(*args)
     if name == 'floor':
         return floor(*args)
     elif name == 'complex':
         return args[0]+I*args[1]
+    elif name == 'Not':
+        return Not(*args)
     
 
     if name == 'lambdify':
@@ -101,7 +108,7 @@ def builtin_function(expr, args=None):
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'scipy', 'itertools')
+builtin_import_registery = ('numpy', 'scipy', 'itertools', 'math')
 
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
@@ -110,68 +117,72 @@ def builtin_import(expr):
         raise TypeError('Expecting an Import expression')
 
     if expr.source is None:
-        return (None, None)
+        return []
 
     source = expr.source
     if isinstance(source, DottedName):
         source = source.name[0]
 
         # TODO imrove
-
-    if source == 'numpy':
+    imports = []
+    for i in range(len(expr.target)):
+        if source == 'numpy':
 
         # TODO improve
 
-        target = str(expr.target[0])
-        if target == 'zeros':
+            target = str(expr.target[i])
+            if target == 'zeros':
 
             # TODO return as_name and not name
 
-            return (target, Zeros)
+                imports.append((target, Zeros))
 
-        if target == 'ones':
+            elif target == 'ones':
 
             # TODO return as_name and not name
 
-            return (target, Ones)
+                imports.append((target, Ones))
+   
+            elif target == 'zeros_like':
+                imports.append((target,ZerosLike))
 
-        if target == 'array':
-            return (target, Array)
+            elif target == 'array':
+                imports.append((target, Array))
 
-        if target == 'shape':
-            return (target, Shape)
+            elif target == 'shape':
+                imports.append((target, Shape))
 
-        if target == 'int':
-            return (target, Int)
+            elif target == 'int':
+                imports.append((target,Int))
 
-        if target == 'sum':
-            return (target, Sum)
+            elif target == 'sum':
+                imports.append((target,Sum))
 
-        if target in ['rand', 'random']:
-            return (target, Rand)
+            elif target in ['rand', 'random']:
+                imports.append((target, Rand))
 
-        if target in math_functions.keys():
-            return (target, math_functions[target])
+            elif target in math_functions.keys():
+                imports.append((target, math_functions[target]))
 
-    elif source == 'math':
+        elif source == 'math':
 
-        target = str(expr.target[0])
+            target = str(expr.target[i])
 
-        if target in math_functions.keys():
-            return (target, math_functions[target])
+            if target in math_functions.keys():
+                imports.append((target, math_functions[target]))
 
-    elif source == 'scipy':
-        # TODO improve: source must be scipy.constants
-        #      - use dynamic import?
-        target = str(expr.target[0])
-        if target in scipy_constants.keys():
-            return (target, scipy_constants[target])
-    elif source == 'itertools':
-        target = str(expr.target[0])
+        elif source == 'scipy':
+            # TODO improve: source must be scipy.constants
+            #      - use dynamic import?
+            target = str(expr.target[i])
+            if target in scipy_constants.keys():
+                imports.append((target, scipy_constants[target]))
+        elif source == 'itertools':
+            target = str(expr.target[i])
         
-        if target == 'product':
-            return (target, Product)
+            if target == 'product':
+                imports.append((target, Product))
         
     
 
-    return (None, None)
+    return imports

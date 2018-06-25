@@ -20,6 +20,9 @@ from sympy.printing.precedence import precedence
 from sympy import Eq, Ne, true, false
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
+from sympy.core.numbers import NegativeInfinity as NINF
+from sympy.core.numbers import Infinity as INF 
+
 
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -44,7 +47,7 @@ from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import Range, Product, Block , Zip, Enumerate
 from pyccel.ast.core import get_assigned_symbols
-from pyccel.ast.core import (Assign, AugAssign, Variable, Assigns,
+from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Declare, ValuedVariable,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
@@ -308,7 +311,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO - improve
         # importing of pyccel extensions is not printed
-        if source in ['numpy', 'scipy', 'itertools']:
+        if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
         if source == 'mpi4py':
             return 'use mpi'
@@ -500,7 +503,7 @@ class FCodePrinter(CodePrinter):
         return str(expr)
 
     def _print_Len(self, expr):
-        return self._get_statement('size(%s,1)'%(self._print(expr.arg)))
+        return 'size(%s,1)'%(self._print(expr.arg))
 
     def _print_Sum(self, expr):
         return expr.fprint(self._print)
@@ -526,7 +529,8 @@ class FCodePrinter(CodePrinter):
             arg = args[0]
             code = 'minval({0})'.format(self._print(arg))
         else:
-            raise ValueError("Expecting one argument for the moment.")
+            code = ','.join(self._print(arg) for arg in args)
+            code = 'min('+code+')'
         return self._get_statement(code)
 
     def _print_Max(self, expr):
@@ -576,7 +580,7 @@ class FCodePrinter(CodePrinter):
             return 'MPI_INT'
         elif dtype == 'real(kind=8)':
             return 'MPI_DOUBLE'
-        elif dtype == 'real(kind=4)':
+        elif dtype == 'real':
             return 'MPI_FLOAT'
         else:
             raise NotImplementedError('TODO')
@@ -585,6 +589,7 @@ class FCodePrinter(CodePrinter):
         var = expr.argument
         if isinstance(var, Variable):
             shape = var.shape
+            rank = var.rank
         elif isinstance(var, IndexedElement):
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
@@ -597,9 +602,12 @@ class FCodePrinter(CodePrinter):
                     elif i.end is None:
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
+            rank = len(shape)
         else:
             raise NotImplementedError('TODO')
         if shape is None or len(shape)==0:
+            if rank>0:
+                raise NotImplementedError('TODO')
             return '1'
         return str(functools.reduce(operator.mul, shape ))
 
@@ -749,7 +757,7 @@ class FCodePrinter(CodePrinter):
                         rhs = i
                         break
             #TODO improve we only need to allocate the variable without setting it to zero
-            stmt = ZerosLike(lhs, rhs)
+            stmt = ZerosLike(lhs=lhs, rhs=rhs)
             code += self._print(stmt)
             code += '\n'
             op = '='
@@ -760,8 +768,8 @@ class FCodePrinter(CodePrinter):
 
         return self._get_statement(code)
 
-    def _print_Assigns(self, expr):
-        return '\n'.join(self._print(i) for i in expr.stmts)
+    def _print_CodeBlock(self, expr):
+        return '\n'.join(self._print(i) for i in expr.body)
 
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -769,14 +777,27 @@ class FCodePrinter(CodePrinter):
 
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
+        if isinstance(expr.rhs, NINF):
+            rhs_code = '-Huge({0})'.format(lhs_code)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
+     
+        if isinstance(expr.rhs, INF):
+            rhs_code = 'Huge({0})'.format(lhs_code)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
+        
         if isinstance(expr.rhs, (Range, Product)):
             return ''
+        if isinstance(expr.rhs, Len):
+            rhs_code = self._print(expr.rhs)
+            return '{0} = {1}'.format(lhs_code, rhs_code)
 
         if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
             return expr.rhs.fprint(self._print, expr.lhs)
-
+        
+        if isinstance(expr.rhs, ZerosLike):
+            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.rhs))
+        
         elif isinstance(expr.rhs, Shape):
-            # expr.rhs = Shape(a) then expr.rhs.rhs is a
             a = expr.rhs.rhs
 
             lhs = self._print(expr.lhs)
@@ -831,6 +852,7 @@ class FCodePrinter(CodePrinter):
 
             code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
+
         elif isinstance(expr.rhs, Function):
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
@@ -853,12 +875,13 @@ class FCodePrinter(CodePrinter):
               expr.lhs.dtype == NativeSymbol()):
             return ''
         else:
+
             rhs_code = self._print(expr.rhs)
 #            print("ASSIGN = ", rhs_code)
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs_code, expr.like)
+            stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
             code += self._print(stmt)
             code += '\n'
         if not is_procedure:
@@ -900,7 +923,7 @@ class FCodePrinter(CodePrinter):
         return 'integer'
 
     def _print_NativeFloat(self, expr):
-        return 'real'
+        return 'real(kind=8)'
 
     def _print_NativeDouble(self, expr):
         return 'real(kind=8)'
@@ -1256,10 +1279,12 @@ class FCodePrinter(CodePrinter):
         return '{0}, {1}'.format(start, stop)
 
     def _print_FunctionalFor(self, expr):
-        allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
-        allocate ='allocate({0}({1}))'.format(expr.target.name, allocate)
+        allocate = ''
+        if len(expr.target.shape)>0:
+            allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
+            allocate ='allocate({0}({1}))\n'.format(expr.target.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
-        return allocate + '\n' + loops
+        return allocate + loops
 
     def _print_For(self, expr):
         prolog = ''

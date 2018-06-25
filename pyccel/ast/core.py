@@ -8,7 +8,7 @@ from sympy.core import Symbol, Tuple
 from sympy.core.relational import Equality, Relational, Ne, Eq
 from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
-from sympy.core.function import Function
+from sympy.core.function import Function,Application
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul, Pow
 from sympy import Integer as sp_Integer
@@ -371,35 +371,37 @@ class Assign(Basic):
                 return isinstance(rhs.dtype, NativeSymbol)
             elif isinstance(rhs, Symbol):
                 return True
-
+        
         return False
 
 
-class Assigns(Basic):
-    """Represents a list of assignments for code generation.
+class CodeBlock(Basic):
+    """Represents a list of stmt for code generation.
+       we use it when a single statement in python 
+       produce multiple statement in the targeted language
     """
 
-    def __new__(cls, assigns):
-             ls = []
-             for i in assigns:
-                 if isinstance(i,Assigns):
-                     ls += i.stmts
-                 elif isinstance(i, Assign):
-                     ls += [i]
-                 else:
-                     raise TypeError('assigns object must contain a list of assign stmts')
-             return Basic.__new__(cls, ls)
+    def __new__(cls, body):
+        ls = []
+        for i in body:
+            if isinstance(i,CodeBlock):
+                ls += i.body
+            elif isinstance(i, (Assign, AugAssign,FunctionalFor,Application)):
+                ls.append(i)
+            else:
+                raise TypeError('statement not supported yet')
+        obj = Basic.__new__(cls, ls) 
+        if isinstance(ls[-1],(Assign, AugAssign)):
+            obj.set_fst(ls[-1].fst)
+        return  obj
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        s=''
-        for i in self.stmts:
-            s = s +'\n{0} := {1}'.format(sstr(i.lhs), sstr(i.rhs))
-        return s
 
     @property
-    def stmts(self):
+    def body(self):
         return self._args[0]
+    @property
+    def lhs(self):
+        return self.body[-1].lhs
 
 
 class AliasAssign(Basic):
@@ -1339,7 +1341,22 @@ class FunctionalFor(Basic):
     @property
     def index(self):
         return self._args[3]
-    
+
+class GeneratorComprehension(Basic):
+    pass
+
+class FunctionalSum(FunctionalFor,GeneratorComprehension):
+    name = 'sum'
+
+class FunctionalMax(FunctionalFor,GeneratorComprehension):
+    name = 'max'
+
+class FunctionalMin(FunctionalFor,GeneratorComprehension):
+    name = 'min'
+
+class FunctionalMap(FunctionalFor,GeneratorComprehension):
+    pass
+
 
 class ForIterator(For):
     """Class that describes iterable classes defined by the user."""
@@ -2098,7 +2115,7 @@ class Return(Basic):
 
     def __new__(cls, expr, stmt = None):
    
-        if stmt and not isinstance(stmt, (Assign, Assigns)):
+        if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
 
         return Basic.__new__(cls, expr, stmt)
@@ -2240,7 +2257,7 @@ class FunctionDef(Basic):
                 cls_name=None, hide=False,
                 kind='function',
                 is_static=False,
-                imports=[], decorators=[],is_recursive = False):
+                imports=[], decorators={}, header=None, is_recursive=False):
         # name
         if isinstance(name, str):
             name = Symbol(name)
@@ -2293,16 +2310,15 @@ class FunctionDef(Basic):
         if not iterable(imports):
             raise TypeError("imports must be an iterable")
 
-        if not iterable(decorators):
-            raise TypeError("imports must be an iterable")
-
+        if not isinstance(decorators, dict):
+            raise TypeError("decorators must be a dict")
         return Basic.__new__(cls, name,
                              arguments, results,
                              body,
                              local_vars, global_vars,
                              cls_name, hide,
                              kind, is_static,
-                             imports, decorators, is_recursive)
+                             imports, decorators,header ,is_recursive)
 
     @property
     def name(self):
@@ -2353,8 +2369,11 @@ class FunctionDef(Basic):
         return self._args[11]
 
     @property
-    def is_recursive(self):
+    def header(self):
         return self._args[12]
+    @property
+    def is_recursive(self):
+        return self._args[13]
 
     def print_body(self):
         for s in self.body:
@@ -2369,6 +2388,7 @@ class FunctionDef(Basic):
                            hide=self.hide,
                            kind=self.kind,
                            is_static=self.is_static,
+                           header = self.header,
                            is_recursive = True)
 
 
@@ -2388,6 +2408,7 @@ class FunctionDef(Basic):
                            hide=self.hide,
                            kind=self.kind,
                            is_static=self.is_static,
+                           header = self.header,
                            is_recursive = self.is_recursive)
 
 
@@ -2441,6 +2462,7 @@ class FunctionDef(Basic):
                 self.is_static,
                 self.imports,
                 self.decorators,
+                self.header,
                 self.is_recursive)
         return args
 
@@ -3126,13 +3148,14 @@ class ZerosLike(Function):
     >>> z = ZerosLike(y)
     """
     # TODO improve in the spirit of assign
-    def __new__(cls, lhs, rhs):
+    def __new__(cls, rhs=None,lhs=None):
         if isinstance(lhs, str):
             lhs = Symbol(lhs)
         # Tuple of things that can be on the lhs of an assignment
         assignable = (Symbol, MatrixSymbol, MatrixElement, \
                       Indexed, Idx, Variable)
-        if not isinstance(lhs, assignable):
+     
+        if lhs and not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
 
         return Basic.__new__(cls, lhs, rhs)
@@ -3642,6 +3665,19 @@ class Slice(Basic):
             end = sstr(self.end)
         return '{0} : {1}'.format(start, end)
 
+    def __str__(self):
+        if self.start is None:
+            start = ''
+        else:
+            start = str(self.start)
+        if self.end is None:
+            end = ''
+        else:
+            end = str(self.end)
+        return '{0} : {1}'.format(start, end)
+
+
+
 class Assert(Basic):
     """Represents a assert statement in the code.
 
@@ -3705,6 +3741,8 @@ class If(Basic):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a Relational,"
                     " Boolean, Is, or a built-in bool." % (cond, type(cond)))
+            if not isinstance(ce[1], (list,Tuple,tuple)):
+                raise TypeError('body is not iterable')
             newargs.append(ce)
 
         return Basic.__new__(cls, *newargs)
@@ -3715,6 +3753,10 @@ class If(Basic):
         for i in self._args:
             b += i[1]
         return b
+
+class IfTernaryOperator(If):
+    """class for the Ternery operator"""
+    pass
 
 
 def is_simple_assign(expr):
