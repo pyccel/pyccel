@@ -1280,7 +1280,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionalFor(self, expr):
         allocate = ''
-        if len(expr.target.shape)>0:
+        if expr.target and len(expr.target.shape)>0:
             allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
             allocate ='allocate({0}({1}))\n'.format(expr.target.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
@@ -1967,8 +1967,10 @@ class FCodePrinter(CodePrinter):
                         result.append("%s%s" % ("! ", hunk))
                 else:
                     result.append(line)
-            elif not ("'" in line or '"' in line):
+                     
+            elif not ("'" in line or '"' in line or '(' in line):
                 # code line
+                
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
                 line = line[pos:].lstrip()
@@ -1983,8 +1985,7 @@ class FCodePrinter(CodePrinter):
                         hunk += trailing
                     result.append("%s%s"%("      " , hunk))
             else:
-                #Case of a line with a sting in it we dont want to split
-                #TODO improve
+                # we don't seperate lines in those cases mentioned above
                 result.append(line)
         return result
 

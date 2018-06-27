@@ -386,7 +386,7 @@ class CodeBlock(Basic):
         for i in body:
             if isinstance(i,CodeBlock):
                 ls += i.body
-            elif isinstance(i, (Assign, AugAssign,FunctionalFor,Application)):
+            elif isinstance(i, (Assign, For,AugAssign,FunctionalFor,Application)):
                 ls.append(i)
             else:
                 raise TypeError('statement not supported yet')

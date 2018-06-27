@@ -103,6 +103,7 @@ from pyccel.ast import Macro
 from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
+from pyccel.ast import Zeros
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -131,6 +132,7 @@ from sympy import FunctionClass
 from sympy import Lambda
 from sympy import ceiling
 from sympy import Atom
+from sympy import cse
 
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
@@ -2543,29 +2545,65 @@ class Parser(object):
                     stmts.append(stmt)
                     return CodeBlock(stmts)
 
-            if isinstance(rhs, (Min, Max, Mul,Add,Pow)):
+            if isinstance(rhs, (Min, Max, Mul, Add, Pow)) and\
+                          len(rhs.atoms(Summation))>0:
                 
-                if len(rhs.atoms(Summation))>0:
-                    stmts = []
-                    args = list(rhs.args)
-                    for i in range(len(args)):
-                        if len(args[i].atoms(Summation))>0:
-                            lhs = self.create_variable(args[i])
-                            body = Assign(lhs,args[i])
-                            body.set_fst(expr.fst)
-                            stmts.append(body)
-                            rhs = rhs.subs(args[i],lhs)
-                    if isinstance(expr, Assign):
-                        stmt = Assign(expr.lhs,rhs)
-                    else:
-                        stmt = AugAssign(expr.lhs,'+',rhs)
-
-                    stmt.set_fst(expr.fst)
-                    stmts.append(stmt)
-                     
-                    for i in range(len(stmts)):
-                        stmts[i] = self._annotate(stmts[i], **settings)
-                    return CodeBlock(stmts)
+                ls = list(rhs.atoms(Summation))
+                ls += [rhs]
+                ls,m=cse(ls)
+                
+                
+                vars_old, stmts = map(list,zip(*ls))
+                vars_new = []
+                free_gl  = rhs.free_symbols
+                free_gl.update(rhs.atoms(IndexedBase))
+                free_gl.update(vars_old)
+                stmts.append(rhs)
+                
+                for i in range(len(stmts)-1):
+                    free = stmts[i].free_symbols
+                    free = free.difference(free_gl)
+                    free = list(free)          
+                    var = self.create_variable(stmts[i])
+                    if len(free)>0:
+                        var = IndexedBase(var)[free]
+                    vars_new.append(var)
+                for i in range(len(stmts)-1):
+                    stmts[i+1] = stmts[i+1].replace(vars_old[i],vars_new[i])
+                    stmts[-1] = stmts[-1].replace(stmts[i],vars_new[i])
+                
+                allocate = []
+                for i in range(len(stmts)-1):
+                    stmts[i] = Assign(vars_new[i],stmts[i])
+                    stmts[i].set_fst(expr.fst)
+                    if isinstance(vars_new[i], Indexed):
+                        ind = vars_new[i].indices
+                        tp = list(stmts[i+1].atoms(Tuple))
+                        size = None
+                        size = [None]*len(ind)
+                        for j,k in enumerate(ind):
+                            for t in tp:
+                                if k == t[0]:
+                                    size[j]= t[2]-t[1]
+                                    break
+                        if not all(size):
+                            raise ValueError('Unable to find range of index')
+                        name = _get_name(vars_new[i].base)
+                        var = Symbol(name)
+                        stmt = Assign(var,Function('zeros')(size[0]))
+                        stmt.set_fst(expr.fst)
+                        allocate.append(stmt)
+                        stmts[i] = For(ind[0],Function('range')(size[0]),[stmts[i]],strict = False)
+                            
+                        
+                    
+       
+                stmts[-1] = Assign(expr.lhs,stmts[-1])
+                stmts[-1].set_fst(expr.fst)
+                self._imports['zeros'] = Zeros
+                allocate = [self._annotate(i, **settings) for i in allocate]
+                stmts    = [self._annotate(i, **settings) for i in stmts   ]
+                return CodeBlock(allocate+stmts)
                             
             if isinstance(rhs, Summation):
                 index = rhs.args[1]
@@ -2582,7 +2620,7 @@ class Parser(object):
                 return rhs
             
             
-            if isinstance(rhs, (Assign, AugAssign)):
+            elif isinstance(rhs, (Assign, AugAssign)):
                 rhs_ = self._annotate(rhs, **settings)
                 if isinstance(rhs_, FunctionalSum):
                     stmt = AugAssign(expr.lhs, '+', rhs.lhs)
@@ -2996,8 +3034,11 @@ class Parser(object):
 
             d_var = self._infere_type(target.rhs, **settings)
             dtype = d_var.pop('datatype')
-            lhs = Variable(dtype, lhs_name, **d_var)
-            self.insert_variable(lhs)
+            lhs = None
+            if isinstance(target.lhs, Symbol):
+                lhs = Variable(dtype, lhs_name, **d_var)
+                self.insert_variable(lhs)
+            
             if stmt:
                 if isinstance(expr, FunctionalSum):
                     val = 0
@@ -3008,7 +3049,7 @@ class Parser(object):
                 elif isinstance(expr, FunctionalMax):
                     val = -INF
                 
-                stmt = Assign(lhs,val)
+                stmt = Assign(target.lhs,val)
                 stmt.set_fst(expr.fst)
                 loops.insert(0,stmt)
             if isinstance(expr, FunctionalSum):
