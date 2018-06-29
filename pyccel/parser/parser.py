@@ -1527,12 +1527,7 @@ class Parser(object):
 
             name = str(parent.value)
             name = strip_ansi_escape.sub('',name)
-            stmt.parent.remove(parent)
-
-            while isinstance(stmt,GetitemNode):
-                tmp= stmt.previous
-                stmt.parent.remove(stmt)
-                stmt = tmp
+      
             if not hasattr(args, '__iter__'):
                 args = [args]
             args = tuple(args)
