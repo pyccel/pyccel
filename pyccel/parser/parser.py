@@ -2584,7 +2584,7 @@ class Parser(object):
                         for j,k in enumerate(ind):
                             for t in tp:
                                 if k == t[0]:
-                                    size[j]= t[2]-t[1]
+                                    size[j]= t[2]-t[1]+1
                                     break
                         if not all(size):
                             raise ValueError('Unable to find range of index')
