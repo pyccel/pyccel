@@ -17,7 +17,7 @@ from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast import ValuedArgument
-from pyccel.ast import DottedName
+from pyccel.ast import DottedName, String
 
 DEBUG = False
 
@@ -88,6 +88,12 @@ class Type(BasicStmt):
 class TypeHeader(BasicStmt):
     pass
 
+class StringStmt(BasicStmt):
+    def __init__(self, **kwargs):
+       self.arg = kwargs.pop('arg')
+    @property
+    def expr(self):
+        return String(repr(str(self.arg)))
 
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):
@@ -292,9 +298,10 @@ class MacroArg(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
+       
         self.arg = kwargs.pop('arg')
         self.value = kwargs.pop('value',None)
-
+        
         super(MacroArg, self).__init__(**kwargs)
 
     @property
@@ -305,10 +312,10 @@ class MacroArg(BasicStmt):
         arg = Symbol(str(arg_))
         value = self.value
         if not(value is None): 
-            if isinstance(value, MacroStmt):
+            if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
             else:
-                value = sympify(str(value))
+                value = sympify(str(value),locals={'N':Symbol('N'),'S':Symbol('S')})
             return ValuedArgument(arg, value)
         return arg
 
@@ -434,7 +441,7 @@ hdr_classes = [Header, TypeHeader,
                MacroStmt,
                MacroArg,
                MacroList,
-               FunctionMacroStmt]
+               FunctionMacroStmt,StringStmt]
 
 def parse(filename=None, stmts=None, debug=False):
     this_folder = dirname(__file__)
@@ -482,5 +489,5 @@ if __name__ == '__main__':
 #    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
 #    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
 #    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
-    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape) := dswap(y.shape, y, incx)"))
+    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
 

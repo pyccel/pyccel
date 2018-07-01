@@ -1549,11 +1549,12 @@ class Parser(object):
             return self._fst_to_ast(stmt[-1])
 
         elif isinstance(stmt, DotNode):
-
+            
             suf = stmt.next
             pre = self._fst_to_ast(stmt.previous)
             if stmt.previous:
                 stmt.parent.value.remove(stmt.previous)
+            
             suf = self._fst_to_ast(suf)
             return DottedVariable(pre, suf)
 

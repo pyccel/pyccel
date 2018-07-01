@@ -552,9 +552,12 @@ class FCodePrinter(CodePrinter):
     # ... MACROS
     def _print_MacroShape(self, expr):
         var = expr.argument
-        if not isinstance(var, Variable):
+        if not isinstance(var, (Variable, IndexedElement)):
             raise TypeError('Expecting a variable, given {}'.format(type(var)))
-        shape = var.shape
+        shape = None
+        if isinstance(var, Variable):
+            shape = var.shape
+        
         if shape is None:
             rank = var.rank
             shape = []
@@ -565,13 +568,16 @@ class FCodePrinter(CodePrinter):
                                                i=self._print(i+1))
                 s = '{u}-{l}+1'.format(u=u, l=l)
                 shape.append(s)
+            
         if len(shape) == 1:
             shape = shape[0]
+            
 
-        if not(expr.index is None):
+        elif not(expr.index is None):
             shape = shape[expr.index]
 
         code = '{}'.format(self._print(shape))
+        
         return self._get_statement(code)
     # ...
     def _print_MacroType(self, expr):
@@ -1968,7 +1974,7 @@ class FCodePrinter(CodePrinter):
                 else:
                     result.append(line)
                      
-            elif not ("'" in line or '"' in line or '(' in line):
+            elif (line[72:].count("'" )+line[72:].count('"'))%2-1:
                 # code line
                 
                 pos = split_pos_code(line, 72)
@@ -1986,6 +1992,7 @@ class FCodePrinter(CodePrinter):
                     result.append("%s%s"%("      " , hunk))
             else:
                 # we don't seperate lines in those cases mentioned above
+                #TODO improve find the postion of the caractere and split there
                 result.append(line)
         return result
 
