@@ -592,6 +592,8 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError('TODO')
 
     def _print_MacroCount(self, expr):
+        #TODO should we use the size function of Fortran
+        # or keep it as it is and calculate it
         var = expr.argument
         if isinstance(var, Variable):
             shape = var.shape
@@ -613,7 +615,7 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError('TODO')
         if shape is None or len(shape)==0:
             if rank>0:
-                raise NotImplementedError('TODO')
+                return 'size({var})'.format(self._print(var))
             return '1'
         return str(functools.reduce(operator.mul, shape ))
 

@@ -1717,7 +1717,7 @@ class Variable(Symbol):
                 is_target=False,
                 is_polymorphic=None,
                 is_optional=None,
-                shape=None, cls_base=None, cls_parameters=None):
+                shape=None, cls_base=None, cls_parameters=None,order = 'C'):
 
         # use str to make '*' work using py2
         if isinstance(dtype, str) or (str(dtype) == '*'):
@@ -1773,7 +1773,7 @@ class Variable(Symbol):
         # TODO improve order of arguments
         obj = Basic.__new__(cls, dtype, name, rank, allocatable, shape,
                              cls_base, cls_parameters,
-                             is_pointer, is_target, is_polymorphic, is_optional)
+                             is_pointer, is_target, is_polymorphic, is_optional, order)
 
         assumptions ={}
         class_type = cls_base or dtype.__class__.__name__.startswith('Pyccel')
@@ -1838,6 +1838,10 @@ class Variable(Symbol):
     @property
     def is_optional(self):
         return self._args[10]
+
+    @property
+    def order(self):
+        return self._args[11]
 
     @property
     def is_ndarray(self):

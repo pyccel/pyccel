@@ -262,10 +262,11 @@ class Zeros(Function):
 
     # TODO improve
 
-    def __new__(cls, shape, dtype=None):
+    def __new__(cls, shape, dtype=None,order = 'C'):
         
         if isinstance(shape, list):
-
+            if order == 'C':
+                shape.reverse()
             # this is a correction. otherwise it is not working on LRZ
 
             if isinstance(shape[0], list):
@@ -273,7 +274,7 @@ class Zeros(Function):
             else:
                 shape = Tuple(*(sympify(i) for i in shape))
         elif isinstance(shape, (int, Integer, Symbol)):
-            shape = Tuple(sympify(shape))
+            shape = Tuple(sympify(shape,ls = {'N':Symbol('N'),'S':Symbol('S')}))
         else:
             shape = shape
 
@@ -284,6 +285,7 @@ class Zeros(Function):
             dtype = datatype('ndarray' + dtype.arg.replace('\'', ''))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
+ 
         return Basic.__new__(cls, shape, dtype)
 
     @property

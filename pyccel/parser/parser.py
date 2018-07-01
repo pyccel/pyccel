@@ -2137,7 +2137,11 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
 
             # TODO check consistency of indices with shape/rank
-            args = tuple(expr.indices)
+            args = list(expr.indices)
+            
+            if var.order == 'C':
+                args.reverse()
+            args = tuple(args)
             # case of Pyccel ast Variable, IndexedVariable
             # if not possible we use symbolic objects
             if hasattr(var, 'dtype'):
