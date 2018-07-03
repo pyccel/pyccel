@@ -825,9 +825,9 @@ class Parser(object):
             if isinstance(self._current, DottedName):
                 if name in self._scope[self._current.name[0]]['variables']:
                     var = self._scope[self._current.name[0]]['variables'][name]
-        elif name in self._namespace['variables']:
+        if var is None and name in self._namespace['variables']:
             var = self._namespace['variables'][name]
-        elif name in self._imports:
+        if var is None and name in self._imports:
             var = self._imports[name]
         
         
@@ -1217,12 +1217,6 @@ class Parser(object):
             return expr
 
         elif isinstance(stmt, NameNode):
-            if isinstance(stmt.previous, DotNode):
-                return self._fst_to_ast(stmt.previous)
-
-            if isinstance(stmt.next, GetitemNode):
-                return self._fst_to_ast(stmt.next)
-
             if stmt.value == 'None':
                 return Nil()
 
@@ -1521,19 +1515,8 @@ class Parser(object):
                 else:
                     args.insert(0,val)
                 ch = ch.previous
-            parent = ch
-
-
-            if isinstance(parent.previous, DotNode):
-                return self._fst_to_ast(parent.previous)
-
-            name = str(parent.value)
-            name = strip_ansi_escape.sub('',name)
-      
-            if not hasattr(args, '__iter__'):
-                args = [args]
             args = tuple(args)
-            return IndexedBase(name)[args]
+            return args
 
         elif isinstance(stmt, SliceNode):
             upper = self._fst_to_ast(stmt.upper)
@@ -1548,41 +1531,47 @@ class Parser(object):
                 return Slice(None, upper)
 
         elif isinstance(stmt, DotProxyList):
-            return self._fst_to_ast(stmt[-1])
-
-        elif isinstance(stmt, DotNode):
-            
-            suf = stmt.next
-            pre = self._fst_to_ast(stmt.previous)
-            if stmt.previous:
-                stmt.parent.value.remove(stmt.previous)
-            
-            suf = self._fst_to_ast(suf)
-            return DottedVariable(pre, suf)
+            n = 0
+            ls = []
+            while n<len(stmt):
+                var = self._fst_to_ast(stmt[n])
+                while n<len(stmt) and not(isinstance(stmt[n].next, DotNode)):
+                    n = n + 1
+                if n == len(stmt):
+                    n = n - 1
+                if isinstance(stmt[n], GetitemNode):
+                    args = self._fst_to_ast(stmt[n])
+                    var = IndexedBase(var)[args]
+                elif isinstance(stmt[n], CallNode):
+                    var = self._fst_to_ast(stmt[n])
+                ls.append(var)
+                n = n+1
+                   
+            if len(ls) == 1:
+                expr = ls[0]
+            else:
+               n = 0
+               var = DottedVariable(ls[0],ls[1])
+               n = 2
+               while n<len(ls):
+                   var = DottedVariable(var ,ls[n])
+                   n = n + 1
+               
+               expr =  var
+            return expr  
 
         elif isinstance(stmt, CallNode):
             if len(stmt.value)>0 and isinstance(stmt.value[0], 
                 ArgumentGeneratorComprehensionNode):
                 return self._fst_to_ast(stmt.value[0]) 
-            # TODO we must use self._fst_to_ast(stmt.previous.value)
-            #      but it is not working for the moment
+           
             args = self._fst_to_ast(stmt.value)
             f_name = str(stmt.previous.value)
             f_name = strip_ansi_escape.sub('',f_name)
             if len(args) == 0:
-                #case of functioncall with no arguments
                 args = (Nil(),)
             func = Function(f_name)(*args)
-            parent = stmt.parent
-            if stmt.previous.previous \
-                and isinstance(stmt.previous.previous, DotNode):
-                parent.value.remove(stmt.previous)
-                parent.value.remove(stmt)
-                pre = self._fst_to_ast(stmt.parent)
-                return DottedVariable(pre, func)
-
-            else:
-                return func
+            return func
 
         elif isinstance(stmt, CallArgumentNode):
             target = stmt.target
@@ -2717,18 +2706,24 @@ class Parser(object):
                      # TODO imporve this will not work for the case of different completly different
                      # and not only the datatype
                      d_var[0]['datatype'] = _dtype(rhs)
-                elif name in ['Zeros', 'Ones', 'Shape']:
+                elif name in ['Zeros', 'Ones']:
 
                     # TODO improve
 
                     d_var = {}
                     d_var['datatype'] = rhs.dtype
-                    d_var['allocatable'] = not (name == 'Shape' or name
-                            == 'Int')
+                    d_var['allocatable'] = True
                     d_var['shape'] = rhs.shape
                     d_var['rank'] = rhs.rank
                     d_var['is_pointer'] = False
                     d_var['order'] = rhs.order
+                elif name in ['Shape']:
+                    d_var = {}
+                    d_var['datatype'] = rhs.dtype
+                    d_var['shape'] = rhs.shape
+                    d_var['rank'] = rhs.rank
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
 
                 elif name in ['Array']:
 

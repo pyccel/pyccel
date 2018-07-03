@@ -162,6 +162,7 @@ class FunctionHeader(Header):
         imports   = []
         funcs = []
         dtypes = []
+       
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -180,7 +181,7 @@ class FunctionHeader(Header):
                     if dtype in ['int', 'double', 'float', 'complex']:
                         allocatable = True
                         dtype = 'ndarray'+dtype
-
+                order = None
                 if rank >1:
                     order = d['order']
 
