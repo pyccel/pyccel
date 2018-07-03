@@ -55,7 +55,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeComplex,
                         NativeRange, NativeTensor, NativeString, NativeGeneric)
 
-
+local_sympify = {'N':Symbol('N'),'S':Symbol('S')}
 
 def subs(expr, new_elements):
     """
@@ -293,8 +293,8 @@ class Assign(Basic):
     def __new__(cls, lhs, rhs, strict=False, status=None, like=None):
         cls._strict = strict
         if strict:
-            lhs = sympify(lhs)
-            rhs = sympify(rhs)
+            lhs = sympify(lhs, locals = local_sympify)
+            rhs = sympify(rhs, locals = local_sympify)
             # Tuple of things that can be on the lhs of an assignment
             assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Idx)
             #if not isinstance(lhs, assignable):
@@ -566,8 +566,8 @@ class AugAssign(Basic):
     def __new__(cls, lhs, op, rhs, strict=False, status=None, like=None):
         cls._strict = strict
         if strict:
-            lhs = sympify(lhs)
-            rhs = sympify(rhs)
+            lhs = sympify(lhs, locals = local_sympify)
+            rhs = sympify(rhs, locals = local_sympify)
             # Tuple of things that can be on the lhs of an assignment
             assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
             if not isinstance(lhs, assignable):
@@ -642,11 +642,11 @@ class While(Basic):
     While(n > 1, (n := n - 1,))
     """
     def __new__(cls, test, body):
-        test = sympify(test)
+        test = sympify(test, locals = local_sympify)
 
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        body = Tuple(*(sympify(i) for i in body))
+        body = Tuple(*(sympify(i, locals = local_sympify) for i in body))
         return Basic.__new__(cls, test, body)
 
     @property
@@ -675,11 +675,11 @@ class With(Basic):
     """
     # TODO check prelude and epilog
     def __new__(cls, test, body, settings):
-        test = sympify(test)
+        test = sympify(test, locals = local_sympify)
 
         if not iterable(body):
             raise TypeError("body must be an iterable")
-        body = Tuple(*(sympify(i) for i in body))
+        body = Tuple(*(sympify(i, locals = local_sympify) for i in body))
         return Basic.__new__(cls, test, body, settings)
 
     @property
@@ -1288,7 +1288,7 @@ class For(Basic):
 
     def __new__(cls, target, iter, body, strict=True):
         if strict:
-            target = sympify(target)
+            target = sympify(target, locals = local_sympify)
 
             cond_iter = iterable(iter)
             cond_iter = cond_iter or (isinstance(iter, (Range, Product , Enumerate, Zip)))
@@ -1302,7 +1302,7 @@ class For(Basic):
             if not iterable(body):
                 raise TypeError("body must be an iterable")
 
-            body = Tuple(*(sympify(i) for i in body))
+            body = Tuple(*(sympify(i, locals = local_sympify) for i in body))
         return Basic.__new__(cls, target, iter, body)
 
     @property
@@ -3223,7 +3223,7 @@ class Print(Basic):
 
     def __new__(cls, expr):
         if not isinstance(expr, list):
-            expr = sympify(expr)
+            expr = sympify(expr, locals = local_sympify)
         return Basic.__new__(cls, expr)
 
     @property
@@ -3506,7 +3506,13 @@ class IndexedElement(Indexed):
         elif not hasattr(base, '__getitem__') and not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
-        args = list(map(sympify, args))
+
+        args_ = []
+
+        for arg in args:
+            args_.append(sympify(arg, locals = local_sympify))
+        args = args_
+
         if isinstance(base, (NDimArray, collections.Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
                 return base[args[0]]

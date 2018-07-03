@@ -104,6 +104,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
+from pyccel.ast import local_sympify
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -821,14 +822,15 @@ class Parser(object):
         if self._current:
             if name in self._scope[self._current]['variables']:
                 var = self._scope[self._current]['variables'][name]
-        if isinstance(self._current, DottedName):
-            if name in self._scope[self._current.name[0]]['variables']:
-                var = self._scope[self._current.name[0]]['variables'][name]
-        if name in self._namespace['variables']:
+            if isinstance(self._current, DottedName):
+                if name in self._scope[self._current.name[0]]['variables']:
+                    var = self._scope[self._current.name[0]]['variables'][name]
+        elif name in self._namespace['variables']:
             var = self._namespace['variables'][name]
         elif name in self._imports:
             var = self._imports[name]
-
+        
+        
         return var
 
     def get_variables(self, source=None):
@@ -1201,7 +1203,7 @@ class Parser(object):
 
         elif isinstance(stmt, ComplexNode):
             val = strip_ansi_escape.sub('',stmt.value)
-            return sympify(val)
+            return sympify(val, locals = local_sympify)
 
         elif isinstance(stmt, AssignmentNode):
             lhs = self._fst_to_ast(stmt.target)
@@ -1879,6 +1881,7 @@ class Parser(object):
             d_var['is_polymorphic'] = var.is_polymorphic
             d_var['is_optional'] = var.is_optional
             d_var['is_target'] = var.is_target
+            d_var['order'] = var.order
             return d_var
 
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
@@ -2091,7 +2094,7 @@ class Parser(object):
             return Float(expr)
 
         elif isinstance(expr, complex):
-            return sympify(expr)
+            return sympify(expr, locals = local_sympify)
 
         elif isinstance(expr,NumberSymbol) or isinstance(expr,Number):
             return Float(float(expr))
@@ -2633,9 +2636,9 @@ class Parser(object):
                 stmt.set_fst(expr.fst)
                 stmt = self._annotate(stmt, **settings)
                 return CodeBlock([rhs_, stmt])
-#.......
-#.......
-#.......    
+ # .......
+ # .......
+ # .......    
             rhs = self._annotate(rhs, **settings)
             
 
@@ -2725,6 +2728,7 @@ class Parser(object):
                     d_var['shape'] = rhs.shape
                     d_var['rank'] = rhs.rank
                     d_var['is_pointer'] = False
+                    d_var['order'] = rhs.order
 
                 elif name in ['Array']:
 
@@ -2873,7 +2877,11 @@ class Parser(object):
                                   bounding_box=self.bounding_box,
                                   severity='error', blocker=self.blocking)
 
-                args = tuple(lhs.indices)
+
+                args = list(lhs.indices)
+                if var.order == 'C':
+                    args.reverse()
+                args = tuple(args)
                 dtype = var.dtype
                 lhs = IndexedVariable(name, dtype=dtype).__getitem__(*args)
 
@@ -3275,6 +3283,7 @@ class Parser(object):
                                 d_var['is_optional'] = True
                             a_new = ValuedVariable(dtype, str(a.name),
                                     value=a.value, **d_var)
+                            
                         else:
                             # add shape as arguments if is_static and arg is array
                             rank = d_var['rank']
@@ -3304,6 +3313,7 @@ class Parser(object):
                         args.append(a_new)
                         self.insert_variable(a_new,
                                 name=str(a_new.name))
+
                
                 if len(interfaces)==1 and len(interfaces[0].results)==1:
                     #case of recursive function

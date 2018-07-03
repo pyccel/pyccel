@@ -181,6 +181,9 @@ class FunctionHeader(Header):
                         allocatable = True
                         dtype = 'ndarray'+dtype
 
+                if rank >1:
+                    order = d['order']
+
                 shape  = None
                 if isinstance(dtype, str):
                     try:
@@ -193,7 +196,7 @@ class FunctionHeader(Header):
                 arg_name = 'arg_{0}'.format(str(i))
                 arg = Variable(dtype, arg_name,
                                allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape)
+                               rank=rank, shape=shape ,order = order)
                 args.append(arg)
 
             # ... factorize the following 2 blocks

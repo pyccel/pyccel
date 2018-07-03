@@ -47,8 +47,8 @@ def compile_fortran(source, modulename, extra_args=''):
         for line in source:
             f.write(line)
         f.close()
-
-        args = '-c -m  {} {} {} '.format(modulename, filename, extra_args)
+        lib = '-llapack -lblas'
+        args = '-c {} -m  {} {} {}  '.format(lib, modulename, filename, extra_args)
         import sys
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
  

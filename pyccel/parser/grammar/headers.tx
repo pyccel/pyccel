@@ -13,7 +13,7 @@ Statement:
   | InterfaceStmt
 ;
 
-TrailerSubscriptList: '[' args*=':' [','] ']';
+TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
 
 DataType: ID|STAR;
 

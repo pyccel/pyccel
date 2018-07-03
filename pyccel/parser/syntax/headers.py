@@ -74,7 +74,11 @@ class Type(BasicStmt):
     def expr(self):
         dtype = self.dtype
         trailer = self.trailer
+        order = 'C'
+    
         if trailer:
+            if trailer.order:
+                order = str(trailer.order)
             trailer = [str(i) for i in trailer.args]
         else:
             trailer = []
@@ -83,6 +87,8 @@ class Type(BasicStmt):
         d_var['rank'] = len(trailer)
         d_var['allocatable'] = len(trailer)>0
         d_var['is_pointer'] = False
+        if d_var['rank']>1:
+            d_var['order'] = order
         return d_var
 
 class TypeHeader(BasicStmt):
@@ -489,5 +495,7 @@ if __name__ == '__main__':
 #    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
 #    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
 #    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
-    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
+#    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
+#    print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
+    print(parse(stmts='#$ header function _f(int, int [:,:])'))
 

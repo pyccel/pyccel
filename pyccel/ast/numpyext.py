@@ -15,11 +15,12 @@ from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
 
 
-from .core import (Variable, IndexedElement, IndexedVariable, List, String)
+from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
                         NativeBool)
 
+from .core import local_sympify
 
 class Array(Function):
 
@@ -263,30 +264,37 @@ class Zeros(Function):
     # TODO improve
 
     def __new__(cls, shape, dtype=None,order = 'C'):
-        
+
+        if isinstance(order, String):
+            order = order.arg
+
+        if isinstance(shape,Tuple):
+            shape = list(shape)
+
         if isinstance(shape, list):
             if order == 'C':
                 shape.reverse()
             # this is a correction. otherwise it is not working on LRZ
 
             if isinstance(shape[0], list):
-                shape = Tuple(*(sympify(i) for i in shape[0]))
+                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape[0]))
             else:
-                shape = Tuple(*(sympify(i) for i in shape))
+                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape))
         elif isinstance(shape, (int, Integer, Symbol)):
-            shape = Tuple(sympify(shape,ls = {'N':Symbol('N'),'S':Symbol('S')}))
+            shape = Tuple(sympify(shape, locals = local_sympify))
         else:
             shape = shape
 
         if dtype is None:
             dtype = String('double')
-
+        if isinstance(dtype, ValuedArgument):
+            dtype = dtype.value
         if isinstance(dtype, String):
             dtype = datatype('ndarray' + dtype.arg.replace('\'', ''))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
  
-        return Basic.__new__(cls, shape, dtype)
+        return Basic.__new__(cls, shape, dtype, order)
 
     @property
     def shape(self):
@@ -302,6 +310,10 @@ class Zeros(Function):
     @property
     def dtype(self):
         return self._args[1]
+
+    @property
+    def order(self):
+        return self._args[2]
 
     @property
     def init_value(self):
