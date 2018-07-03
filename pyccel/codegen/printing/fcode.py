@@ -592,12 +592,15 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError('TODO')
 
     def _print_MacroCount(self, expr):
-        #TODO should we use the size function of Fortran
-        # or keep it as it is and calculate it
+
         var = expr.argument
+        return 'size({})'.format(self._print(var))
+#this part is disabled for the moment
+#..........
         if isinstance(var, Variable):
             shape = var.shape
             rank = var.rank
+            
         elif isinstance(var, IndexedElement):
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
@@ -617,6 +620,7 @@ class FCodePrinter(CodePrinter):
             if rank>0:
                 return 'size({var})'.format(self._print(var))
             return '1'
+#............        
         return str(functools.reduce(operator.mul, shape ))
 
     def _print_Declare(self, expr):
