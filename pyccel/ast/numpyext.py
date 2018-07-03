@@ -263,11 +263,14 @@ class Zeros(Function):
 
     # TODO improve
 
-    def __new__(cls, shape, dtype=None,order = 'C'):
+    def __new__(cls, shape, dtype=None, order = 'C'):
+        
 
+        if isinstance(order, ValuedArgument):
+            order = order.value
         if isinstance(order, String):
-            order = order.arg
-
+            order = order.arg.replace('\'', '')
+       
         if isinstance(shape,Tuple):
             shape = list(shape)
 
