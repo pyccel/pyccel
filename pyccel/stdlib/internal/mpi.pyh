@@ -81,6 +81,7 @@
 #$ header function mpi_scatter (*, int, int, *, int, int, int, int, int)
 #$ header function mpi_gather (*, int, int, *, int, int, int, int, int)
 #$ header function mpi_allgather (*, int, int, *, int, int, int, int)
+#$ header function mpi_allgatherv (*, int, int, *, int[:], int[:], int, int)
 #$ header function mpi_gatherv(*, int, int, *, int [:], int [:], int, int, int, int)
 #$ header function mpi_alltoall (*, int, int, *, int, int, int, int)
 
