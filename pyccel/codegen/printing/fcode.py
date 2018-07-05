@@ -276,10 +276,15 @@ class FCodePrinter(CodePrinter):
             # ...
         decs = '\n'.join(self._print(i) for i in decs)
         if mpi:
-            #TODO shuold we add them in this place or do a search to put them in the right place
-            body = 'call mpi_init(ierr)\n'+'\nallocate(status(0:-1 + mpi_status_size)) \n status = 0\n'+body+'\ncall mpi_finalize(ierr)'
+            #TODO shuold we add them like this ?
+            body = 'call mpi_init(ierr)\n'+\
+                   '\nallocate(status(0:-1 + mpi_status_size)) '+\
+                   '\n status = 0\n'+\
+                   body +\
+                   '\ncall mpi_finalize(ierr)'
             
-            decs = decs +'\ninteger :: ierr = -1' + '\n integer, allocatable :: status (:)'
+            decs += '\ninteger :: ierr = -1' +\
+                    '\n integer, allocatable :: status (:)'
 
         return ('{modules}\n'
                 'program {name}\n'

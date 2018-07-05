@@ -273,7 +273,8 @@ class Zeros(Function):
         dtype = 'double'
         order = 'C'
         args_ = list(args)
-        if isinstance(args[0],ValuedArgument):
+        
+        if len(args)>0 and isinstance(args[0],ValuedArgument):
             if str(args[0].argument.name) == 'order':
                 args_.reverse()
     
