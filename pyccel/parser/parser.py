@@ -330,7 +330,7 @@ class Parser(object):
         self._current = None  
         # we use it to detect the current method or function
              
-        self._imports = {}
+        self._imports = self._namespace['imports']
         # we use it to store the imports
         
         self._parents = []
@@ -791,24 +791,27 @@ class Parser(object):
     def insert_import(self, expr):
         """."""
         # TODO improve
+        
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
-
+        container  = self._namespace['imports']
+        if self._current:
+            container = self._scope[self._current]['imports']
         # if source is not specified, imported things are treated as sources
         # TODO test if builtin import
         source = expr.source
         if source is None:
             for t in expr.target:
                 name = str(t)
-                self._namespace['imports'][name] = None
+                container[name] = None
         else:
             source = str(source)
             if not(source in pyccel_builtin_import_registery):
                 for t in expr.target:
                     name = [str(t)]
-                    if not source in self._namespace['imports'].keys():
-                        self._namespace['imports'][source] = []
-                    self._namespace['imports'][source] += name
+                    if not source in container.keys():
+                        container[source] = []
+                    container[source] += name
 
     def get_variable(self, name):
         """."""
@@ -991,7 +994,7 @@ class Parser(object):
         else:
             raise TypeError('Expected a macro')
 
-    def remove(self, name):
+    def remove_variable(self, name):
         """."""
         #TODO improve to checkt each level of scoping
         if self._current:
@@ -1055,13 +1058,20 @@ class Parser(object):
             self._scope[name]['symbolic_functions'] = {}
             self._scope[name]['python_functions'] = {}
             self._scope[name]['macros'] = {}
+            self._scope[name]['imports'] = OrderedDict()
+            self._imports = self._scope[name]['imports']
+            
+            
         else:
             self._scope.pop(self._current)
             if isinstance(self._current, DottedName):
 
-                # case of a functiondef in a another function
-
+                # case of a function inside a function
+                
                 name = self._current.name[0]
+                self._imports = self._scope[name]['imports']
+            else:
+                self._imports = self._namespace['imports']
         self._current = name
 
     def insert_header(self, expr):
@@ -3345,13 +3355,17 @@ class Parser(object):
                 for var in self.get_variables('parent'):
                     if not(var in args + results + local_vars):
                         global_vars += [var]
-
+                
+                
                 is_recursive = False
-                self.set_current_fun(None)
+                
+                #get the imports
+                imports = list(self._scope[name]['imports'])
+                self.set_current_fun(None) 
                 func_ = self.get_function(name)
                 if not(func_ is None) and func_.is_recursive:
                     is_recursive = True
-  
+               
                 func = FunctionDef(name, args, results, body,
                                    local_vars=local_vars,
                                    global_vars=global_vars,
@@ -3522,8 +3536,6 @@ class Parser(object):
                         if not name is None:
                             F = self.get_variable(name)
                             if F is None:
-                                # TODO remove: not up to date with Said devs on
-                                # scoping
                                 self._imports[name] = atom
                             elif name in self._imports:
                                 errors.report(FOUND_DUPLICATED_IMPORT,
@@ -3570,7 +3582,11 @@ class Parser(object):
                         return expr
                     else:
                         if __import_all__:
-                            return Import(__module_name__)
+                            expr = Import(__module_name__)
+                            if self._current:
+                                self.insert_import(expr)
+                                return EmptyLine()
+                            return expr
                         else:
                             return EmptyLine()
             return expr

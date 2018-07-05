@@ -214,7 +214,7 @@ class Codegen(object):
                 else:
                     body += [stmt]
 
-        variables += collect_vars(self.ast)
+        variables = collect_vars(self.ast)
         self._stmts['imports'] = imports
         self._stmts['variables'] = list(set(variables))
         self._stmts['body'] = body
@@ -255,7 +255,7 @@ class Codegen(object):
                 self.routines,
                 self.interfaces,
                 self.classes,
-                imports=self.imports,
+                imports=[],
                 )
         elif self.is_program:
             expr = Program(
@@ -270,7 +270,8 @@ class Codegen(object):
                 )
         else:
             raise NotImplementedError('TODO')
-
+        
+        
         self._expr = expr
 
         #  ...

@@ -158,8 +158,8 @@ class FCodePrinter(CodePrinter):
         if not name.startswith('mod_'):
             name = 'mod_{0}'.format(name)
 
-
-        imports = ''.join(self._print(i) for i in expr.imports)
+        
+        #imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -198,13 +198,11 @@ class FCodePrinter(CodePrinter):
             body = '\n contains\n{0}'.format(body)
 
         return ('module {name}\n'
-                '{imports}\n'
                 'implicit none\n'
                 '{decs}\n'
                 '{interfaces}\n'
                 '{body}\n'
                 'end module\n').format(name=name,
-                                       imports=imports,
                                        decs=decs,
                                        interfaces=interfaces,
                                        body=body)
