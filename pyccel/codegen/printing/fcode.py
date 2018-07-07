@@ -599,9 +599,7 @@ class FCodePrinter(CodePrinter):
     def _print_MacroCount(self, expr):
 
         var = expr.argument
-        return 'size({})'.format(self._print(var))
-#this part is disabled for the moment
-#..........
+        
         if isinstance(var, Variable):
             shape = var.shape
             rank = var.rank
@@ -619,14 +617,14 @@ class FCodePrinter(CodePrinter):
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
             rank = len(shape)
+            
         else:
             raise NotImplementedError('TODO')
-        if shape is None or len(shape)==0:
-            if rank>0:
-                return 'size({var})'.format(self._print(var))
-            return '1'
-#............        
-        return str(functools.reduce(operator.mul, shape ))
+        if rank == 0:
+                return '1'
+        return 'size({})'.format(self._print(var))
+        #TODO should we calculate it or use size   
+        #return str(functools.reduce(operator.mul, shape ))
 
     def _print_Declare(self, expr):
         # ... ignored declarations

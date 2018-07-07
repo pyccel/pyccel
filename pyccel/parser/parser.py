@@ -3607,7 +3607,9 @@ class Parser(object):
                         if __import_all__:
                             expr = Import(__module_name__)
                             self.insert_import(expr)
-                            if not self._current:
+                            #we return the expr when we are in 
+                            # program 
+                            if self._current is None:
                                 return expr
                         return EmptyLine()
             return expr
