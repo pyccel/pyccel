@@ -3600,13 +3600,15 @@ class Parser(object):
                         __module_name__ = p.metavars['module_name']
                         expr = Import(expr.target, __module_name__)
                     # ...
-
+                    
                     if not __ignore_at_import__:
                         return expr
                     else:
                         if __import_all__:
                             expr = Import(__module_name__)
-                        self.insert_import(expr)
+                            self.insert_import(expr)
+                            if not self._current:
+                                return expr
                         return EmptyLine()
             return expr
 
