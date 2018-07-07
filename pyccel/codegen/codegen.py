@@ -255,7 +255,7 @@ class Codegen(object):
                 self.routines,
                 self.interfaces,
                 self.classes,
-                imports=[],
+                imports=self.imports,
                 )
         elif self.is_program:
             expr = Program(

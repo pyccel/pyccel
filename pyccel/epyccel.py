@@ -36,10 +36,15 @@ def get_source_function(func):
     return code
 
 
-def compile_fortran(source, modulename, extra_args=''):
+def compile_fortran(source, modulename, extra_args='',libs = [], compiler = None):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
+    
+    if compiler:
+        compiler = '--f90exec={}'.format(compiler)
+    else:
+        compiler  = ''
 
     try:
         filename = '{}.f90'.format(modulename)
@@ -47,8 +52,8 @@ def compile_fortran(source, modulename, extra_args=''):
         for line in source:
             f.write(line)
         f.close()
-        lib = '-llapack -lblas'
-        args = '-c {} -m  {} {} {}  '.format(lib, modulename, filename, extra_args)
+        libs = ' '.join('-l'+i.lower() for i in libs)
+        args = '-c {}  {} -m  {} {} {}  '.format(libs, compiler, modulename, filename, extra_args)
         import sys
         cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
  
@@ -60,7 +65,7 @@ def compile_fortran(source, modulename, extra_args=''):
 
 
 def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
-            context=None):
+            context=None, compiler = None):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -220,7 +225,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
-    output, cmd = compile_fortran(code, name, extra_args=extra_args)
+    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler)
 
     if verbose:
         print(cmd)

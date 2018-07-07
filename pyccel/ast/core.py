@@ -3880,7 +3880,12 @@ def get_assigned_symbols(expr):
             raise TypeError('Found None lhs')
 
         try:
-            free_symbols = expr.lhs.free_symbols
+            var = expr.lhs
+            if isinstance(var, DottedVariable):
+                var = expr.lhs.lhs
+                while isinstance(var, DottedVariable):
+                    var = var.lhs
+            free_symbols = var.free_symbols
             symbols = list(free_symbols)
         except:
             # TODO must raise an Exception here

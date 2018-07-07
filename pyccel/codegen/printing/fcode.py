@@ -159,7 +159,7 @@ class FCodePrinter(CodePrinter):
             name = 'mod_{0}'.format(name)
 
         
-        #imports = '\n'.join(self._print(i) for i in expr.imports)
+        imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -198,11 +198,13 @@ class FCodePrinter(CodePrinter):
             body = '\n contains\n{0}'.format(body)
 
         return ('module {name}\n'
+                '{imports}\n'
                 'implicit none\n'
                 '{decs}\n'
                 '{interfaces}\n'
                 '{body}\n'
                 'end module\n').format(name=name,
+                                       imports=imports,
                                        decs=decs,
                                        interfaces=interfaces,
                                        body=body)
@@ -1128,6 +1130,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         results_names = [str(i) for i in expr.results]
+
         for arg in expr.arguments:
             if str(arg) in results_names + assigned_names:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
@@ -1157,12 +1160,13 @@ class FCodePrinter(CodePrinter):
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains \n' +functions_code
         body_code = prelude + '\n\n' + body_code
-
+        imports = '\n'.join(self._print(i) for i in expr.imports)
         return ('{0}({1}) {2}\n'
+                '{3}\n'
                 'implicit none\n'
 #                'integer, parameter:: dp=kind(0.d0)\n'
-                '{3}\n'
-                'end {4}').format(sig, arg_code, func_end, body_code, func_type)
+                '{4}\n'
+                'end {5}').format(sig, arg_code, func_end, imports, body_code, func_type)
 
     def _print_Pass(self, expr):
         return ''

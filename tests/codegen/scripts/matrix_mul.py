@@ -14,7 +14,6 @@ def matmat(a,b,c):
         for j in range(0, p):
             for k in range(0, m):
                 c[i,j] = c[i,j] + a[i,k]*b[k,j]
-    return c
 
 n = 3
 m = 4

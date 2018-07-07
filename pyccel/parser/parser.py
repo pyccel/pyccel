@@ -330,7 +330,7 @@ class Parser(object):
         self._current = None  
         # we use it to detect the current method or function
              
-        self._imports = self._namespace['imports']
+        self._imports = {}
         # we use it to store the imports
         
         self._parents = []
@@ -796,7 +796,7 @@ class Parser(object):
             raise TypeError('Expecting Import expression')
         container  = self._namespace['imports']
         if self._current:
-            container = self._scope[self._current]['imports']
+            self._scope[self._current]['imports'].append(expr)
         # if source is not specified, imported things are treated as sources
         # TODO test if builtin import
         source = expr.source
@@ -816,7 +816,7 @@ class Parser(object):
     def get_variable(self, name):
         """."""
 
-        var = None
+   
         if self.current_class:
             for i in self._current_class.attributes:
                 if str(i.name) == name:
@@ -824,17 +824,22 @@ class Parser(object):
                     return var
         if self._current:
             if name in self._scope[self._current]['variables']:
-                var = self._scope[self._current]['variables'][name]
+                return self._scope[self._current]['variables'][name]
+            if name in self._imports[self._current]:
+                return self._imports[self._current][name]
             if isinstance(self._current, DottedName):
-                if name in self._scope[self._current.name[0]]['variables']:
-                    var = self._scope[self._current.name[0]]['variables'][name]
-        if var is None and name in self._namespace['variables']:
-            var = self._namespace['variables'][name]
-        if var is None and name in self._imports:
-            var = self._imports[name]
+                scp = self._current.name[0]
+                if name in self._scope[scp]['variables']:
+                    return self._scope[scp]['variables'][name]
+                if name in self._imports[scp]:
+                    return self._imports[scp][name]            
+        if name in self._namespace['variables']:
+            return self._namespace['variables'][name]
+        if name in self._imports:
+            return self._imports[name]
         
         
-        return var
+        return None
 
     def get_variables(self, source=None):
         if source == 'parent':
@@ -895,15 +900,28 @@ class Parser(object):
         """."""
         # TODO shall we keep the elif in _imports?
         func = None
+        if self._current:
+            container = self._scope[self._current]['functions']
+            if name in container :
+                return container[name]
+            container = self._imports[self._current]
+            if name in container :
+                return container[name]
+             
         if name in self._namespace['functions']:
             func = self._namespace['functions'][name]
             if self._current == name and not func.is_recursive:
                 func = func.set_recursive()
                 self._namespace['functions'][name] = func
+            return func
+    
+                        
+        if name in self._imports :
+            if not isinstance(self._imports[name], dict):
+                return self._imports[name]
         
-        elif name in self._imports:
-            func = self._imports[name]        
-        return func
+            
+        return None
 
     def insert_function(self, func):
         """."""
@@ -1058,20 +1076,15 @@ class Parser(object):
             self._scope[name]['symbolic_functions'] = {}
             self._scope[name]['python_functions'] = {}
             self._scope[name]['macros'] = {}
-            self._scope[name]['imports'] = OrderedDict()
-            self._imports = self._scope[name]['imports']
+            self._scope[name]['imports'] = []
+            self._imports[name] = {}
+
             
             
         else:
-            self._scope.pop(self._current)
             if isinstance(self._current, DottedName):
-
                 # case of a function inside a function
-                
                 name = self._current.name[0]
-                self._imports = self._scope[name]['imports']
-            else:
-                self._imports = self._namespace['imports']
         self._current = name
 
     def insert_header(self, expr):
@@ -1254,8 +1267,8 @@ class Parser(object):
             # in an import statement, we can have seperate target by commas
             ls = self._fst_to_ast(stmt.value)
             expr = Import(ls)
-            self.insert_import(expr)
             expr.set_fst(stmt)
+            self.insert_import(expr)
             return expr
 
         elif isinstance(stmt, FromImportNode):
@@ -1279,8 +1292,8 @@ class Parser(object):
                 targets.append(s)
 
             expr = Import(targets, source=source)
-            self.insert_import(expr)
             expr.set_fst(stmt)
+            self.insert_import(expr)
             return expr
 
         elif isinstance(stmt, DelNode):
@@ -1315,7 +1328,7 @@ class Parser(object):
                 return Add(first, second, evaluate=False)
 
             elif stmt.value == '*':
-                if isinstance(first, List):
+                if isinstance(first, (Tuple, List)):
                     return Dlist(first[0], second)
                 return Mul(first, second, evaluate=False)
 
@@ -2363,6 +2376,7 @@ class Parser(object):
                     args = [self._annotate(i, **settings) 
                                        for i in args]
                     func = macro.master
+                    name = _get_name(func.name)
                     args = macro.apply(args)
                 else:
                     func = self.get_function(name)
@@ -2423,7 +2437,7 @@ class Parser(object):
                                 if not isinstance(i.value, Nil):
                                     args.append(ValuedArgument(i.name, i.value))
 
-                        
+                  
                         if len(results)==1:
                             expr = Function(name)(*args)
                             d_var = self._infere_type(results[0], *settings)
@@ -2470,6 +2484,7 @@ class Parser(object):
                 if not(macro is None):
                     # TODO check types from FunctionDef
                     master = macro.master
+                    name = _get_name(master.name)
                     # all terms in lhs must be already declared and available
                     # the namespace
                     #TODO improve
@@ -2490,7 +2505,7 @@ class Parser(object):
                     args = [self._annotate(i, **settings) for i in rhs.args]
                     args = macro.apply(args, results=results)
                     if isinstance(master, FunctionDef):
-                        return Subroutine(str(master.name))(*args)
+                        return Subroutine(name)(*args)
                     else:
                         raise NotImplementedError('TODO treate interface case')
 
@@ -2602,7 +2617,10 @@ class Parser(object):
        
                 stmts[-1] = Assign(expr.lhs,stmts[-1])
                 stmts[-1].set_fst(expr.fst)
-                self._imports['zeros'] = Zeros
+                container = self._imports
+                if self._current:
+                    conainter = container[self._current]
+                container['zeros'] = Zeros
                 allocate = [self._annotate(i, **settings) for i in allocate]
                 stmts    = [self._annotate(i, **settings) for i in stmts   ]
                 return CodeBlock(allocate+stmts)
@@ -2946,6 +2964,7 @@ class Parser(object):
                             is_pointer=is_pointer)
                 if len(lhs) == 1:
                     lhs = lhs[0]
+                is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
                 if is_pointer:
                     expr_new = AliasAssign(lhs, rhs)
                 elif expr_new.is_symbolic_alias:
@@ -3360,7 +3379,7 @@ class Parser(object):
                 is_recursive = False
                 
                 #get the imports
-                imports = list(self._scope[name]['imports'])
+                imports = list(set(self._scope[self._current]['imports']))
                 self.set_current_fun(None) 
                 func_ = self.get_function(name)
                 if not(func_ is None) and func_.is_recursive:
@@ -3529,15 +3548,19 @@ class Parser(object):
             #      - should not use namespace
    
             if expr.source:
+                container = self._imports
+                if self._current:
+                    container = container[self._current]
                 if expr.source in pyccel_builtin_import_registery:
                     
                     imports = pyccel_builtin_import(expr)
                     for name,atom in imports:
                         if not name is None:
                             F = self.get_variable(name)
+                            
                             if F is None:
-                                self._imports[name] = atom
-                            elif name in self._imports:
+                                container[name] = atom
+                            elif name in container:
                                 errors.report(FOUND_DUPLICATED_IMPORT,
                                           symbol=name, severity='warning')
                             else:
@@ -3554,7 +3577,7 @@ class Parser(object):
                     # using repr.
                     # TODO shall we improve it?
                     p = self.d_parsers[str(expr.source)]
-
+                   
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -3583,12 +3606,8 @@ class Parser(object):
                     else:
                         if __import_all__:
                             expr = Import(__module_name__)
-                            if self._current:
-                                self.insert_import(expr)
-                                return EmptyLine()
-                            return expr
-                        else:
-                            return EmptyLine()
+                        self.insert_import(expr)
+                        return EmptyLine()
             return expr
 
         elif isinstance(expr, Concatinate):
