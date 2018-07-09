@@ -419,7 +419,7 @@ class Parser(object):
 
         try:
             red = RedBaron(code)
-        except Exception, e:
+        except Exception as e:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
@@ -626,7 +626,7 @@ class Parser(object):
         """converts redbaron fst to sympy ast."""
 
         if self.syntax_done:
-            print '> syntax analysis already done'
+            print ('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -641,7 +641,7 @@ class Parser(object):
 
         try:
             ast = self._fst_to_ast(self.fst)
-        except Exception, e:
+        except Exception as e:
             errors.check()
             if self.show_traceback:
                 traceback.print_exc()
@@ -662,7 +662,7 @@ class Parser(object):
         """."""
 
         if self.semantic_done:
-            print '> semantic analysis already done'
+            print ('> semantic analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -686,7 +686,7 @@ class Parser(object):
 
         try:
             ast = self._annotate(ast, **settings)
-        except Exception, e:
+        except Exception as e:
             errors.check()
             if self.show_traceback:
                 traceback.print_exc()
@@ -740,7 +740,7 @@ class Parser(object):
 
         for source in imports:
             if verbose:
-                print '>>> treating :: {}'.format(source)
+                print ('>>> treating :: {}'.format(source))
 
             # get the absolute path corresponding to source
 
@@ -784,7 +784,7 @@ class Parser(object):
         for p in self.sons:
             if not p.sons:
                 if verbose:
-                    print '>>> treating :: {}'.format(p.filename)
+                    print ('>>> treating :: {}'.format(p.filename))
                 p.annotate(**settings)
 
         # finally we treat the remaining sons recursively
@@ -792,17 +792,17 @@ class Parser(object):
         for p in self.sons:
             if p.sons:
                 if verbose:
-                    print '>>> treating :: {}'.format(p.filename)
+                    print ('>>> treating :: {}'.format(p.filename))
                 p.annotate(**settings)
 
     def print_namespace(self):
 
         # TODO improve spacing
 
-        print '------- namespace -------'
+        print ('------- namespace -------')
         for (k, v) in self.namespace.items():
-            print '{var} \t :: \t {dtype}'.format(var=k, dtype=type(v))
-        print '-------------------------'
+            print ('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
+        print ('-------------------------')
 
     def view_namespace(self, entry):
 
@@ -831,13 +831,13 @@ class Parser(object):
 #            txt = tabulate(table, headers, tablefmt="rst")
 
             txt = tabulate(table, tablefmt='rst')
-            print txt
+            print (txt)
         except:
 
-            print '------- namespace.{} -------'.format(entry)
+            print ('------- namespace.{} -------'.format(entry))
             for (k, v) in self.namespace[entry].items():
-                print '{var} \t :: \t {value}'.format(var=k, value=v)
-            print '-------------------------'
+                print ('{var} \t :: \t {value}'.format(var=k, value=v))
+            print ('-------------------------')
 
     def dot(self, filename):
         """Exports sympy AST using graphviz then convert it to an image."""
