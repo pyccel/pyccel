@@ -15,11 +15,12 @@ from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
 
 
-from .core import (Variable, IndexedElement, IndexedVariable, List, String)
+from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
                         NativeBool)
 
+from .core import local_sympify
 
 class Array(Function):
 
@@ -170,6 +171,7 @@ class Shape(Array):
             List,
             Array,
             Variable,
+            IndexedElement,
             )):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
@@ -190,7 +192,7 @@ class Shape(Array):
     def rank(self):
         return 1
 
-    def fprint(self, printer, lhs):
+    def fprint(self, printer, lhs = None):
         """Fortran print."""
 
         lhs_code = printer(lhs)
@@ -198,7 +200,10 @@ class Shape(Array):
             init_value = printer(self.arg.arg)
         else:
             init_value = printer(self.arg)
-        code_init = '{0} = shape({1})'.format(lhs_code, init_value)
+        if lhs:
+            code_init = '{0} = shape({1})'.format(lhs_code, init_value)
+        else:
+            code_init = 'shape({0})'.format(init_value)
 
         return code_init
 
@@ -262,29 +267,54 @@ class Zeros(Function):
 
     # TODO improve
 
-    def __new__(cls, shape, dtype=None):
+    def __new__(cls, shape,*args):
         
+        args = list(args)
+        dtype = 'double'
+        order = 'C'
+        args_ = list(args)
+        
+        if len(args)>0 and isinstance(args[0],ValuedArgument):
+            if str(args[0].argument.name) == 'order':
+                args_.reverse()
+    
+
+        for i in range(len(args_)):
+            if isinstance(args_[i] , ValuedArgument):
+                args_[i] = args_[i].value
+            if isinstance(args_[i], String):
+                args_[i] = args_[i].arg.replace('\'', '')
+            
+        if len(args_) == 1:
+            dtype = args_[0]
+        elif len(args_) == 2:
+            dtype = args_[0]
+            order = args_[1]
+    
+        if isinstance(shape,Tuple):
+            shape = list(shape)
+
         if isinstance(shape, list):
+            if order == 'C':
+                shape.reverse()
 
             # this is a correction. otherwise it is not working on LRZ
-
             if isinstance(shape[0], list):
-                shape = Tuple(*(sympify(i) for i in shape[0]))
+                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape[0]))
             else:
-                shape = Tuple(*(sympify(i) for i in shape))
+                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape))
+
         elif isinstance(shape, (int, Integer, Symbol)):
-            shape = Tuple(sympify(shape))
+            shape = Tuple(sympify(shape, locals = local_sympify))
         else:
             shape = shape
 
-        if dtype is None:
-            dtype = String('double')
-
-        if isinstance(dtype, String):
-            dtype = datatype('ndarray' + dtype.arg.replace('\'', ''))
+        if isinstance(dtype, str):
+            dtype = datatype('ndarray' + dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
-        return Basic.__new__(cls, shape, dtype)
+ 
+        return Basic.__new__(cls, shape, dtype, order)
 
     @property
     def shape(self):
@@ -300,6 +330,10 @@ class Zeros(Function):
     @property
     def dtype(self):
         return self._args[1]
+
+    @property
+    def order(self):
+        return self._args[2]
 
     @property
     def init_value(self):

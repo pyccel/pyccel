@@ -162,6 +162,7 @@ class FunctionHeader(Header):
         imports   = []
         funcs = []
         dtypes = []
+       
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -180,6 +181,9 @@ class FunctionHeader(Header):
                     if dtype in ['int', 'double', 'float', 'complex']:
                         allocatable = True
                         dtype = 'ndarray'+dtype
+                order = None
+                if rank >1:
+                    order = d['order']
 
                 shape  = None
                 if isinstance(dtype, str):
@@ -193,7 +197,7 @@ class FunctionHeader(Header):
                 arg_name = 'arg_{0}'.format(str(i))
                 arg = Variable(dtype, arg_name,
                                allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape)
+                               rank=rank, shape=shape ,order = order)
                 args.append(arg)
 
             # ... factorize the following 2 blocks

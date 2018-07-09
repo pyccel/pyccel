@@ -5,7 +5,8 @@ ci = 2 * ai[0]
 di = 2 * ai[0] + 3 * ai[1]
 ei = 2 * ai[0] + bi * ai[1]
 fi = ai
-gi = ai[1:]
+gi = (0,)*2
+gi[:] = ai[1:]
 
 ad = (1.,4.,5.)
 ad[0] = 2.
@@ -14,4 +15,5 @@ cd = 2. * ad[0]
 dd = 2. * ad[0] + 3. * ad[1]
 ed = 2. * ad[0] + bd * ad[1]
 fd = ad
-gd = ad[1:]
+gd = (0.,)*2
+gd[:] = ad[1:]

@@ -163,6 +163,7 @@ MPI = MPI_()
 
 #$ header macro y.Reduce(data, recvbuf, op=MPI_SUM, root=0) := mpi_reduce(data, recvbuf, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro y.Allreduce(data, recvbuf, op=MPI_SUM) := mpi_allreduce(data, recvbuf, data.count, data.dtype, op , y, ierr)
+#$ header macro  x.Allgather(A,B) := mpi_allgather(A, A.count, A.dtype, B, B.count, B.dtype, x)
 
 
 #$ header macro  y.Gather(data, recvbuf, root=0) := mpi_gather(data, data.count, data.dtype, recvbuf, recvbuf.count, recvbuf.dtype, root, y, ierr)

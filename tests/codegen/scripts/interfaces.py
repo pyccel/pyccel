@@ -5,7 +5,7 @@ def helloworld():
 def incr(x):
     x = x + 1
 
-#$ header function decr(int|double|float) 
+#$ header function decr(int|double) 
 def decr(x):
     y = x - 1
     return y

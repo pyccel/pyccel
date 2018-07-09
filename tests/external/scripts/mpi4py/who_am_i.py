@@ -3,11 +3,11 @@ from mpi4py import MPI
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
-size = -1
+size_ = -1
 rank = -1
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
-size = comm.Get_size()
+size_ = comm.Get_size()
 
-print('I process ', rank, ', among ', size, ' processes')
+print('I process ', rank, ', among ', size_, ' processes')
 
