@@ -608,6 +608,10 @@ class FCodePrinter(CodePrinter):
             rank = var.rank
             
         elif isinstance(var, IndexedElement):
+
+            if var.base.shape is None:
+                return 'size({})'.format(self._print(var))
+
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
                 if isinstance(i, Slice):
@@ -619,6 +623,9 @@ class FCodePrinter(CodePrinter):
                     elif i.end is None:
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
+                    else:
+                        shape.append(i.end-i.start+1)
+            
             rank = len(shape)
             
         else:
