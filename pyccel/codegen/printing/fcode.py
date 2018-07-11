@@ -579,7 +579,10 @@ class FCodePrinter(CodePrinter):
             
 
         elif not(expr.index is None):
-            shape = shape[expr.index]
+            if expr.index < len(shape):
+                shape = shape[expr.index]
+            else:
+                shape = '1'
 
         code = '{}'.format(self._print(shape))
         

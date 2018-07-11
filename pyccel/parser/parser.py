@@ -1656,14 +1656,19 @@ class Parser(object):
 
             upper = self._fst_to_ast(stmt.upper)
             lower = self._fst_to_ast(stmt.lower)
-            if upper and lower:
+            if not isinstance(upper, Nil) and not isinstance(lower, Nil):
+
                 return Slice(lower, upper)
-            elif lower:
+            elif not isinstance(lower, Nil):
 
                 return Slice(lower, None)
-            elif upper:
+            elif not isinstance(upper, Nil):
 
                 return Slice(None, upper)
+            else:
+               
+                return Slice(None, None)
+
         elif isinstance(stmt, DotProxyList):
 
             n = 0
