@@ -305,7 +305,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         prefix_as = ''
-        source = None
+        source = ''
         if expr.source is None:
             prefix = 'use'
         else:
