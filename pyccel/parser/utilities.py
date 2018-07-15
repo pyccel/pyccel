@@ -6,7 +6,9 @@ from redbaron import (CommentNode, ForNode, DefNode, WithNode,
                       IfNode, ElseNode, ElifNode, IfelseblockNode,
                       EndlNode)
 
-from sympy import srepr, sympify
+from sympy import srepr
+from pyccel.ast import DottedName
+from sympy import Symbol
 from sympy.printing.dot import dotprint
 import os
 
@@ -221,10 +223,11 @@ def get_default_path(name):
    """this function takes a an import name
       and returns the path full bash of the library
       if the library is in stdlib"""
-   
-   if name in pyccel_external_lib.keys():
-        return pyccel_external_lib[name]
-   else:
-        return name
+   name_ = name
+   if isinstance(name, (DottedName, Symbol)):
+       name_ = str(name)
+   if name_ in pyccel_external_lib.keys():
+        return pyccel_external_lib[name_]
+   return name
 
 

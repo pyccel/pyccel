@@ -59,7 +59,8 @@ from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
     NativeGeneric
 
 local_sympify = {'N': Symbol('N'), 'S': Symbol('S'), 
-                'zeros':Symbol('zeros'),'ones':Symbol('ones')}
+                'zeros':Symbol('zeros'),'ones':Symbol('ones')
+                ,'Point':Symbol('Point')}
 
 
 def subs(expr, new_elements):
@@ -2228,7 +2229,6 @@ class DottedVariable(AtomicExpr, Boolean):
                 assumptions['complex'] = True
             elif not isinstance(dtype, alloweddtypes) \
                 and not class_type:
-                print(dtype)
                 raise TypeError('Undefined datatype')
 
         ass_copy = assumptions.copy()
@@ -3223,11 +3223,14 @@ class Import(Basic):
 
         def _format(i):
             if isinstance(i, str):
-                return i
+                if '.' in i:
+                    return DottedName(*i.split('.'))
+                else:
+                    return Symbol(i)
             if isinstance(i, (DottedName, AsName)):
                 return i
             elif isinstance(i, Symbol):
-                return str(i.name)
+                return i
             else:
                 raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
 

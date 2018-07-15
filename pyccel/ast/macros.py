@@ -5,6 +5,7 @@ from sympy.core import Symbol
 from sympy import sympify
 
 from .core import Basic
+from .core import local_sympify
 
 class Macro(AtomicExpr):
     """."""
@@ -13,7 +14,7 @@ class Macro(AtomicExpr):
     def __new__(cls, argument):
         # TODO add verification
 
-        argument = sympify(argument)
+        argument = sympify(argument, locals=local_sympify)
         return Basic.__new__(cls, argument)
 
     @property
@@ -83,7 +84,7 @@ def construct_macro(name, argument, parameter=None):
     if not isinstance(name, str):
         raise TypeError('name must be of type str')
 
-    argument = sympify(argument)
+    argument = sympify(argument, locals=local_sympify)
     if name == 'shape':
         return MacroShape(argument, index=parameter)
     elif name == 'dtype':

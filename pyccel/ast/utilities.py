@@ -49,9 +49,11 @@ def builtin_function(expr, args=None):
 
     if isinstance(expr, Application):
         name = str(type(expr).__name__)
-
-    if isinstance(expr, str):
+    elif isinstance(expr, str):
         name = expr
+    else:
+        raise TypeError('expr must be of type str or Function')
+
     if name == 'range':
         return Range(*args)
     elif name == 'zip':
@@ -122,6 +124,8 @@ def builtin_import(expr):
     source = expr.source
     if isinstance(source, DottedName):
         source = source.name[0]
+    else:
+        source = str(source)
 
         # TODO imrove
     imports = []

@@ -109,7 +109,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
-from pyccel.ast import local_sympify
+from pyccel.ast.core import local_sympify
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -237,8 +237,6 @@ def _get_name(var):
         return str(var.base)
     if isinstance(var, Application):
         return str(type(var).__name__)
-    if isinstance(var, DottedName):
-        return str(var)
 
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 
@@ -1368,7 +1366,7 @@ class Parser(object):
             # in an import statement, we can have seperate target by commas
 
             ls = self._fst_to_ast(stmt.value)
-            ls = get_default_path(_get_name(ls))
+            ls = get_default_path(ls)
             expr = Import(ls)
             expr.set_fst(stmt)
             self.insert_import(expr)
@@ -1383,7 +1381,7 @@ class Parser(object):
             source = self._fst_to_ast(stmt.value)
             if isinstance(source, DottedVariable):
                 source = DottedName(*source.names)
-            source = get_default_path(_get_name(source))
+            source = get_default_path(source)
             targets = []
             for i in stmt.targets:
                 s = self._fst_to_ast(i)
@@ -1393,7 +1391,6 @@ class Parser(object):
                                   severity='error')
 
                 targets.append(s)
-
             expr = Import(targets, source=source)
             expr.set_fst(stmt)
             self.insert_import(expr)
@@ -3837,7 +3834,8 @@ class Parser(object):
                 container = self._imports
                 if self._current:
                     container = container[self._current]
-                if expr.source in pyccel_builtin_import_registery:
+                
+                if str(expr.source) in pyccel_builtin_import_registery:
 
                     imports = pyccel_builtin_import(expr)
                     for (name, atom) in imports:

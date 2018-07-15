@@ -217,12 +217,14 @@ class FCodePrinter(CodePrinter):
         mpi = False
         #we use this to detect of we are using so that we can add
         # mpi_init and mpi_finalize in the code instruction
-        # TODO should we find a better way to do this? 
+        # TODO should we find a better way to do this?
+        imports = list(expr.imports)
         for i in expr.imports:
-            if i.source=='mpi4py':
-                mpi = True
+            if isinstance(i.source, DottedName):
+                if 'mpi4py' in i.source.name:
+                    mpi = True
             
-        imports = '\n'.join(self._print(i) for i in expr.imports)
+        imports = '\n'.join(self._print(i) for i in imports)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
         
@@ -318,7 +320,7 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
-        if source == 'mpi4py':
+        if 'mpi4py' in source:
             return 'use mpi'
 
         code = ''
