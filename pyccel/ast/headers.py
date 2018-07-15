@@ -14,6 +14,7 @@ from .core import ClassDef
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
+from .core import local_sympify
 
 class Header(Basic):
     pass
@@ -387,13 +388,13 @@ class MacroFunction(Header):
 
         # we sympify everything since a macro is operating on symbols
         if not(args is None):
-            args = [sympify(a) for a in args]
+            args = [sympify(a, locals=local_sympify) for a in args]
 
         if not(master_args is None):
-            master_args = [sympify(a) for a in master_args]
+            master_args = [sympify(a, locals=local_sympify) for a in master_args]
 
         if not(results is None):
-            results = [sympify(a) for a in results]
+            results = [sympify(a, locals=local_sympify) for a in results]
 
         return Basic.__new__(cls, name, args, master, master_args, results)
 

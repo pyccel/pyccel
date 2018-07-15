@@ -1,8 +1,3 @@
-#$ header class MPI_(public)
-#$ header method __init__(MPI_)
-
-
-
 from pyccel.stdlib.internal.mpi import mpi_comm_world
 from pyccel.stdlib.internal.mpi import mpi_comm_rank
 from pyccel.stdlib.internal.mpi import mpi_comm_size
@@ -70,7 +65,11 @@ from pyccel.stdlib.internal.mpi import MPI_LAND
 from pyccel.stdlib.internal.mpi import MPI_LOR          
 from pyccel.stdlib.internal.mpi import MPI_LXOR  
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
-from pyccel.stdlib.internal.mpi import MPI_DOUBLE       
+from pyccel.stdlib.internal.mpi import MPI_DOUBLE
+
+#.............................
+#$ header class MPI_(public)
+#$ header method __init__(MPI_)   
 
 
 class MPI_:
@@ -88,9 +87,10 @@ class MPI_:
         self.LOR        = MPI_LOR
         self.LXOR       = MPI_LXOR
 
-
-
 MPI = MPI_()
+
+#..................................
+
 
 #$ header macro x.COMM_WORLD := mpi_comm_world
 #$ header macro x.SUM        := MPI_SUM

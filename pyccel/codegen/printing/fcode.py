@@ -217,12 +217,14 @@ class FCodePrinter(CodePrinter):
         mpi = False
         #we use this to detect of we are using so that we can add
         # mpi_init and mpi_finalize in the code instruction
-        # TODO should we find a better way to do this? 
+        # TODO should we find a better way to do this?
+        imports = list(expr.imports)
         for i in expr.imports:
-            if i.source=='mpi4py':
-                mpi = True
+            if isinstance(i.source, DottedName):
+                if 'mpi4py' in i.source.name:
+                    mpi = True
             
-        imports = '\n'.join(self._print(i) for i in expr.imports)
+        imports = '\n'.join(self._print(i) for i in imports)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
         
@@ -303,7 +305,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         prefix_as = ''
-        source = None
+        source = ''
         if expr.source is None:
             prefix = 'use'
         else:
@@ -318,7 +320,7 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
-        if source == 'mpi4py':
+        if 'mpi4py' in source:
             return 'use mpi'
 
         code = ''
@@ -608,6 +610,10 @@ class FCodePrinter(CodePrinter):
             rank = var.rank
             
         elif isinstance(var, IndexedElement):
+
+            if var.base.shape is None:
+                return 'size({})'.format(self._print(var))
+
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
                 if isinstance(i, Slice):
@@ -619,6 +625,9 @@ class FCodePrinter(CodePrinter):
                     elif i.end is None:
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
+                    else:
+                        shape.append(i.end-i.start+1)
+            
             rank = len(shape)
             
         else:

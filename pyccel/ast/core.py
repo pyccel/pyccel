@@ -58,7 +58,9 @@ from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
     NativeComplex, NativeRange, NativeTensor, NativeString, \
     NativeGeneric
 
-local_sympify = {'N': Symbol('N'), 'S': Symbol('S')}
+local_sympify = {'N': Symbol('N'), 'S': Symbol('S'), 
+                'zeros':Symbol('zeros'),'ones':Symbol('ones')
+                ,'Point':Symbol('Point')}
 
 
 def subs(expr, new_elements):
@@ -2216,6 +2218,7 @@ class DottedVariable(AtomicExpr, Boolean):
             class_type = isinstance(args[1], Variable) \
                 and args[1].cls_base \
                 or dtype.__class__.__name__.startswith('Pyccel')
+
             alloweddtypes = (NativeBool, NativeRange, NativeString)
             if isinstance(dtype, NativeInteger) or args[1].is_integer:
                 assumptions['integer'] = True
@@ -3220,14 +3223,14 @@ class Import(Basic):
 
         def _format(i):
             if isinstance(i, str):
-
-                # otherwise, sympy will treat `zeros` as function
-
-                return repr(i)
+                if '.' in i:
+                    return DottedName(*i.split('.'))
+                else:
+                    return Symbol(i)
             if isinstance(i, (DottedName, AsName)):
                 return i
             elif isinstance(i, Symbol):
-                return str(i.name)
+                return i
             else:
                 raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
 
