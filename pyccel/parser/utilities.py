@@ -10,6 +10,10 @@ from sympy import srepr, sympify
 from sympy.printing.dot import dotprint
 import os
 
+pyccel_external_lib = {"mpi4py"             :"pyccel.stdlib.external.mpi4py",
+                       "scipy.linalg.lapack":"pyccel.stdlib.external.lapack",
+                        "scipy.linalg.blas" :"pyccel.stdlib.external.blas"}
+
 
 def read_file(filename):
     """Returns the source code from a filename."""
@@ -212,4 +216,15 @@ def view_tree(expr):
     """Views a sympy expression tree."""
     print (srepr(expr))
 #  ...
+
+def get_default_path(name):
+   """this function takes a an import name
+      and returns the path full bash of the library
+      if the library is in stdlib"""
+   
+   if name in pyccel_external_lib.keys():
+        return pyccel_external_lib[name]
+   else:
+        return name
+
 

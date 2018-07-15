@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from redbaron import RedBaron
-from redbaron import StringNode, IntNode, FloatNode, ComplexNode, \
-    FloatExponantNode, StarNode
+from redbaron import StringNode, IntNode, FloatNode, ComplexNode
+from redbaron import FloatExponantNode, StarNode
 from redbaron import NameNode
 from redbaron import AssignmentNode
 from redbaron import CommentNode, EndlNode
@@ -18,8 +18,8 @@ from redbaron import TupleNode, ListNode
 from redbaron import CommaProxyList
 from redbaron import LineProxyList
 from redbaron import ListComprehensionNode
-from redbaron import ComprehensionLoopNode, \
-    ArgumentGeneratorComprehensionNode
+from redbaron import ComprehensionLoopNode
+from redbaron import ArgumentGeneratorComprehensionNode
 from redbaron import NodeList
 from redbaron import DotProxyList
 from redbaron import ReturnNode
@@ -51,8 +51,8 @@ from redbaron import LambdaNode
 from redbaron import WithNode
 from redbaron import AtomtrailersNode
 
-from pyccel.ast import NativeInteger, NativeFloat, NativeDouble, \
-    NativeComplex
+from pyccel.ast import NativeInteger, NativeFloat
+from pyccel.ast import NativeDouble,NativeComplex
 from pyccel.ast import NativeBool
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeIntegerList
@@ -66,13 +66,13 @@ from pyccel.ast import datatype, DataTypeFactory
 from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign, AugAssign, \
-    CodeBlock
+from pyccel.ast import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast import AugAssign,CodeBlock
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
-from pyccel.ast import FunctionDef, Interface, PythonFunction, \
-    SympyFunction
+from pyccel.ast import FunctionDef, Interface
+from pyccel.ast import PythonFunction,SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For, FunctionalFor, ForIterator
@@ -114,16 +114,16 @@ from pyccel.ast import local_sympify
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
 from pyccel.parser.utilities import reconstruct_pragma_multilines
-from pyccel.parser.utilities import is_valid_filename_pyh, \
-    is_valid_filename_py
+from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
+from pyccel.parser.utilities import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
-from pyccel.parser.errors import Errors, PyccelSyntaxError, \
-    PyccelSemanticError
+from pyccel.parser.errors import Errors, PyccelSyntaxError
+from pyccel.parser.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
@@ -233,10 +233,13 @@ def _get_name(var):
 
     if isinstance(var, (Symbol, IndexedVariable, IndexedBase)):
         return str(var)
-    elif isinstance(var, (IndexedElement, Indexed)):
+    if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
     if isinstance(var, Application):
         return str(type(var).__name__)
+    if isinstance(var, DottedName):
+        return str(var)
+
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 
 
@@ -699,14 +702,17 @@ class Parser(object):
 
         if self.is_header_file:
             target = []
+            
             for parent in self.parents:
                 for (key, item) in parent.imports.items():
                     if get_filename_from_import(key) == self.filename:
                         target += item
+         
             target = set(target)
-            target = target.intersection(self.headers.keys())
-
-            for name in list(target):
+            target_headers = target.intersection(self.headers.keys())
+            
+            
+            for name in list(target_headers):
                 v = self.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
                         MethodHeader):
@@ -719,7 +725,7 @@ class Parser(object):
 
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                 symbol=name, blocker=True,
-                                severity='fatal')
+                                severity='fatal')           
         errors.check()
         self._semantic_done = True
 
@@ -910,7 +916,7 @@ class Parser(object):
             return self._namespace['variables'][name]
         if name in self._imports:
             return self._imports[name]
-
+        
         return None
 
     def get_variables(self, source=None):
@@ -940,7 +946,8 @@ class Parser(object):
             self._scope[self._current]['variables'][name] = expr
         else:
             self._namespace['variables'][name] = expr
-
+        
+        
     def create_variable(self, expr, store=False):
         """."""
 
@@ -1361,6 +1368,7 @@ class Parser(object):
             # in an import statement, we can have seperate target by commas
 
             ls = self._fst_to_ast(stmt.value)
+            ls = get_default_path(_get_name(ls))
             expr = Import(ls)
             expr.set_fst(stmt)
             self.insert_import(expr)
@@ -1375,7 +1383,7 @@ class Parser(object):
             source = self._fst_to_ast(stmt.value)
             if isinstance(source, DottedVariable):
                 source = DottedName(*source.names)
-
+            source = get_default_path(_get_name(source))
             targets = []
             for i in stmt.targets:
                 s = self._fst_to_ast(i)
@@ -3856,9 +3864,8 @@ class Parser(object):
                     # we need to use str here since source has been defined
                     # using repr.
                     # TODO shall we improve it?
-
+                    targets = [_get_name(i) for i in expr.target]
                     p = self.d_parsers[str(expr.source)]
-
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -3867,7 +3874,7 @@ class Parser(object):
 
                             # TODO test if it is not already in the namespace
 
-                            if k in expr.target:
+                            if k in targets:
                                 d_self[k] = v
 
                     # we add all the macros from the son
@@ -4005,7 +4012,7 @@ if __name__ == '__main__':
         filename = sys.argv[1]
     except:
         raise ValueError('Expecting an argument for filename')
-
+    
     pyccel = Parser(filename)
     pyccel.parse(verbose=True)
 
