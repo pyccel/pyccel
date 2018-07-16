@@ -227,7 +227,11 @@ def get_default_path(name):
    if isinstance(name, (DottedName, Symbol)):
        name_ = str(name)
    if name_ in pyccel_external_lib.keys():
-        return pyccel_external_lib[name_]
+        name = pyccel_external_lib[name_].split('.')
+        if len(name)>1:
+            return DottedName(*name)
+        else:
+            return name[0]
    return name
 
 
