@@ -220,8 +220,7 @@ class FCodePrinter(CodePrinter):
         # TODO should we find a better way to do this?
         imports = list(expr.imports)
         for i in expr.imports:
-            if isinstance(i.source, DottedName):
-                if 'mpi4py' in i.source.name:
+                if 'mpi4py' == str(i.target[0]):
                     mpi = True
             
         imports = '\n'.join(self._print(i) for i in imports)
@@ -320,7 +319,7 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
-        if 'mpi4py' in source:
+        if 'mpi4py' == str(expr.target[0]):
             return 'use mpi'
 
         code = ''

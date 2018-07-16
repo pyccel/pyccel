@@ -184,7 +184,7 @@ def get_filename_from_import(module):
         - header files (extension == pyh)
         - python files (extension == py)
     """
-
+    
     filename_pyh = '{}.pyh'.format(module)
     filename_py = '{}.py'.format(module)
 
@@ -213,7 +213,6 @@ def get_filename_from_import(module):
 
     filename_pyh = os.path.join(package_dir, filename_pyh)
     filename_py = os.path.join(package_dir, filename_py)
-
     if os.path.isfile(filename_pyh):
         return filename_pyh
     elif os.path.isfile(filename_py):
@@ -332,7 +331,6 @@ class Parser(object):
             prints Tracebacke exception if True
 
         """
-
         self._fst = None
         self._ast = None
         self._filename = None
