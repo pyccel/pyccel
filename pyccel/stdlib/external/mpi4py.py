@@ -1,4 +1,4 @@
-#$ header metavar module_name='mpi'
+#$ header metavar module_name='mpi4py'
 #$ header metavar module_version='3.1'
 #$ header metavar ignore_at_import=True
 #$ header metavar import_all=True
@@ -97,7 +97,7 @@ MPI = MPI_()
 
 #..................................
 
-
+ierr = -1
 #$ header macro x.COMM_WORLD := mpi_comm_world
 #$ header macro x.SUM        := MPI_SUM
 #$ header macro x.PROD       := MPI_PROD
