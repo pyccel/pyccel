@@ -189,7 +189,7 @@ latex_elements = {
 #####################################################
 # add LaTeX macros
 
-f = file('latex_macros.sty')
+f = open('latex_macros.sty')
 
 try:
     imgmath_latex_preamble  # check whether this is already defined
