@@ -36,6 +36,11 @@ def fft_complex(x,n):
     zffti(n,w)
     zfftf(n,x,w)
 
+@types(double[:],int)
+def fft_real2complex(x,n):
+    from numpy import zeros_like
+    x = zeros_like(x, dtype = 'complex')
+    fft_complex(x,n)
 
 @types(double[:],int)
 def ifft_real(x,n):
@@ -50,4 +55,14 @@ def ifft_complex(x,n):
     w = empty(4*n+15)
     zffti(n,w)
     zfftb(n,x,w)
+
+
+#header interface fft = fft_real2complex|fft_complex
+#$ header macro (x), fft(x,n=x.count) := fft(x,n)
+
+#$ header macro (x), rfft(x,n=x.count) := fft_real(x,n)
+
+#header interface ifft=ifft_real|ifft_complex
+#$ header macro (x), ifft(x,n=x.count) := ifft(x,n)
+
 

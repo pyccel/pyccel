@@ -1,7 +1,7 @@
 # pyccel header for DFTTPACK.
 
 #$ header metavar ignore_at_import=True
-#$ header metavar module_version='4'
+#$ header metavar module_version='1.0'
 
 
 
