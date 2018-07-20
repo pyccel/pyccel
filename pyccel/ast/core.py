@@ -4418,11 +4418,12 @@ def get_assigned_symbols(expr):
 
         try:
             var = expr.lhs
+            
             if isinstance(var, DottedVariable):
                 var = expr.lhs.lhs
                 while isinstance(var, DottedVariable):
                     var = var.lhs
-            free_symbols = var.free_symbols
+            free_symbols = var.atoms(Symbol)
             symbols = list(free_symbols)
         except:
 
