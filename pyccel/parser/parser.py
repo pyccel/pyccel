@@ -2942,7 +2942,7 @@ class Parser(object):
                      # and not only the datatype
 
                     d_var[0]['datatype'] = _dtype(rhs)
-                elif name in ['Zeros', 'Ones']:
+                elif name in ['Zeros', 'Ones', 'Empty']:
 
                     # TODO improve
 

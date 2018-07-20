@@ -22,47 +22,46 @@ from pyccel.stdlib.internal.dfftpack import zffti
 from pyccel.stdlib.internal.dfftpack import zfftf
 from pyccel.stdlib.internal.dfftpack import zfftb	
 
-@types(double[:],int)
-def fft_real(x,n):
-    from numpy import empty
-    w = empty(2*n+15)
-    dffti(n,w)
-    dfftf(n,x,w)
 
-@types(complex[:],int)
-def fft_complex(x,n):
+
+#$ header function fft(double[:]|complex[:], complex[:], int)
+def fft(x, y, n):
     from numpy import empty
     w = empty(4*n+15)
+    y[:] = x[:]
     zffti(n,w)
-    zfftf(n,x,w)
+    zfftf(n,y,w)
 
-@types(double[:],int)
-def fft_real2complex(x,n):
-    from numpy import zeros_like
-    x = zeros_like(x, dtype = 'complex')
-    fft_complex(x,n)
-
-@types(double[:],int)
-def ifft_real(x,n):
-    from numpy import empty
-    w = empty(2*n+15)
-    dffti(n,w)
-    dfftb(n,x,w)
-
-@types(complex[:],int)
-def ifft_complex(x,n):
+#$ header function ifft(double[:]|complex[:], complex[:], int)
+def ifft(x, y, n):
     from numpy import empty
     w = empty(4*n+15)
-    zffti(n,w)
-    zfftb(n,x,w)
+    y[:] = x[:]
+    zffti(n, w)
+    zfftb(n, x, w)
+
+#$ header function rfft(double[:], double[:], int)
+def rfft(x, y, n):
+    from numpy import empty
+    w = empty(2*n+15)
+    y[:] = x[:]
+    dffti(n,w)
+    dfftf(n,y,w)
+
+#$ header function irfft(double[:], double[:], int)
+def irfft(x, y, n):
+    from numpy import empty
+    w = empty(2*n+15)
+    y[:] = x[:]
+    dffti(n,w)
+    dfftb(n,y,w)
 
 
-#header interface fft = fft_real2complex|fft_complex
-#$ header macro (x), fft(x,n=x.count) := fft(x,n)
 
-#$ header macro (x), rfft(x,n=x.count) := fft_real(x,n)
+#$ header macro (y), fft (x, n=x.count) := fft (x, y, n)
+#$ header macro (y), ifft(x, n=x.count) := ifft(x, y, n)
 
-#header interface ifft=ifft_real|ifft_complex
-#$ header macro (x), ifft(x,n=x.count) := ifft(x,n)
+#$ header macro (y), rfft (x,n=x.count) := rfft (x, y, n)
+#$ header macro (y), irfft(x,n=x.count) := irfft(x, y, n)
 
 

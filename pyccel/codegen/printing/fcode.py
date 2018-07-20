@@ -516,7 +516,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Shape(self, expr):
         return expr.fprint(self._print)
-
+    
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
 
