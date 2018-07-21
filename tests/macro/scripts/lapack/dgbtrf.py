@@ -6,7 +6,7 @@ ml  = 1
 mu  = 1
 lda = 2 * ml + mu + 1
 
-a = zeros((lda,n))
+a = zeros((lda,n), dtype = 'double',order = 'F')
 
 # Superdiagonal, Diagonal, Subdiagonal
 m = ml + mu

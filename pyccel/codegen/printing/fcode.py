@@ -158,8 +158,8 @@ class FCodePrinter(CodePrinter):
         if not name.startswith('mod_'):
             name = 'mod_{0}'.format(name)
 
-
-        imports = ''.join(self._print(i) for i in expr.imports)
+        
+        imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -217,12 +217,13 @@ class FCodePrinter(CodePrinter):
         mpi = False
         #we use this to detect of we are using so that we can add
         # mpi_init and mpi_finalize in the code instruction
-        # TODO should we find a better way to do this? 
+        # TODO should we find a better way to do this?
+        imports = list(expr.imports)
         for i in expr.imports:
-            if i.source=='mpi4py':
-                mpi = True
+                if 'mpi4py' == str(i.target[0]):
+                    mpi = True
             
-        imports = '\n'.join(self._print(i) for i in expr.imports)
+        imports = '\n'.join(self._print(i) for i in imports)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
         
@@ -276,10 +277,15 @@ class FCodePrinter(CodePrinter):
             # ...
         decs = '\n'.join(self._print(i) for i in decs)
         if mpi:
-            #TODO shuold we add them in this place or do a search to put them in the right place
-            body = 'call mpi_init(ierr)\n'+'\nallocate(status(0:-1 + mpi_status_size)) \n status = 0\n'+body+'\ncall mpi_finalize(ierr)'
+            #TODO shuold we add them like this ?
+            body = 'call mpi_init(ierr)\n'+\
+                   '\nallocate(status(0:-1 + mpi_status_size)) '+\
+                   '\n status = 0\n'+\
+                   body +\
+                   '\ncall mpi_finalize(ierr)'
             
-            decs = decs +'\ninteger :: ierr = -1' + '\n integer, allocatable :: status (:)'
+            decs += '\ninteger :: ierr = -1' +\
+                    '\n integer, allocatable :: status (:)'
 
         return ('{modules}\n'
                 'program {name}\n'
@@ -298,7 +304,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         prefix_as = ''
-        source = None
+        source = ''
         if expr.source is None:
             prefix = 'use'
         else:
@@ -313,7 +319,7 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source in ['numpy', 'scipy', 'itertools','math']:
             return ''
-        if source == 'mpi4py':
+        if 'mpi4py' == str(expr.target[0]):
             return 'use mpi'
 
         code = ''
@@ -510,7 +516,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Shape(self, expr):
         return expr.fprint(self._print)
-
+    
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
 
@@ -552,9 +558,12 @@ class FCodePrinter(CodePrinter):
     # ... MACROS
     def _print_MacroShape(self, expr):
         var = expr.argument
-        if not isinstance(var, Variable):
+        if not isinstance(var, (Variable, IndexedElement)):
             raise TypeError('Expecting a variable, given {}'.format(type(var)))
-        shape = var.shape
+        shape = None
+        if isinstance(var, Variable):
+            shape = var.shape
+        
         if shape is None:
             rank = var.rank
             shape = []
@@ -565,13 +574,19 @@ class FCodePrinter(CodePrinter):
                                                i=self._print(i+1))
                 s = '{u}-{l}+1'.format(u=u, l=l)
                 shape.append(s)
+            
         if len(shape) == 1:
             shape = shape[0]
+            
 
-        if not(expr.index is None):
-            shape = shape[expr.index]
+        elif not(expr.index is None):
+            if expr.index < len(shape):
+                shape = shape[expr.index]
+            else:
+                shape = '1'
 
         code = '{}'.format(self._print(shape))
+        
         return self._get_statement(code)
     # ...
     def _print_MacroType(self, expr):
@@ -586,11 +601,18 @@ class FCodePrinter(CodePrinter):
             raise NotImplementedError('TODO')
 
     def _print_MacroCount(self, expr):
+
         var = expr.argument
+        
         if isinstance(var, Variable):
             shape = var.shape
             rank = var.rank
+            
         elif isinstance(var, IndexedElement):
+
+            if var.base.shape is None:
+                return 'size({})'.format(self._print(var))
+
             shape = []
             for (s, i) in zip(var.base.shape, var.indices):
                 if isinstance(i, Slice):
@@ -602,14 +624,18 @@ class FCodePrinter(CodePrinter):
                     elif i.end is None:
                         if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
+                    else:
+                        shape.append(i.end-i.start+1)
+            
             rank = len(shape)
+            
         else:
             raise NotImplementedError('TODO')
-        if shape is None or len(shape)==0:
-            if rank>0:
-                raise NotImplementedError('TODO')
-            return '1'
-        return str(functools.reduce(operator.mul, shape ))
+        if rank == 0:
+                return '1'
+        return 'size({})'.format(self._print(var))
+        #TODO should we calculate it or use size   
+        #return str(functools.reduce(operator.mul, shape ))
 
     def _print_Declare(self, expr):
         # ... ignored declarations
@@ -1108,11 +1134,12 @@ class FCodePrinter(CodePrinter):
                     body += [stmt]
 
         # ... TODO improve to treat variables that are assigned within blocks: if, etc
-        symbols = get_assigned_symbols(expr)
+        symbols = get_assigned_symbols(expr.body)
         assigned_names = [str(i) for i in symbols]
         # ...
 
         results_names = [str(i) for i in expr.results]
+
         for arg in expr.arguments:
             if str(arg) in results_names + assigned_names:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
@@ -1142,12 +1169,13 @@ class FCodePrinter(CodePrinter):
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains \n' +functions_code
         body_code = prelude + '\n\n' + body_code
-
+        imports = '\n'.join(self._print(i) for i in expr.imports)
         return ('{0}({1}) {2}\n'
+                '{3}\n'
                 'implicit none\n'
 #                'integer, parameter:: dp=kind(0.d0)\n'
-                '{3}\n'
-                'end {4}').format(sig, arg_code, func_end, body_code, func_type)
+                '{4}\n'
+                'end {5}').format(sig, arg_code, func_end, imports, body_code, func_type)
 
     def _print_Pass(self, expr):
         return ''
@@ -1280,7 +1308,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionalFor(self, expr):
         allocate = ''
-        if len(expr.target.shape)>0:
+        if expr.target and len(expr.target.shape)>0:
             allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
             allocate ='allocate({0}({1}))\n'.format(expr.target.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
@@ -1967,8 +1995,10 @@ class FCodePrinter(CodePrinter):
                         result.append("%s%s" % ("! ", hunk))
                 else:
                     result.append(line)
-            elif not ("'" in line or '"' in line):
+                     
+            elif (line[72:].count("'" )+line[72:].count('"'))%2-1:
                 # code line
+                
                 pos = split_pos_code(line, 72)
                 hunk = line[:pos].rstrip()
                 line = line[pos:].lstrip()
@@ -1983,8 +2013,8 @@ class FCodePrinter(CodePrinter):
                         hunk += trailing
                     result.append("%s%s"%("      " , hunk))
             else:
-                #Case of a line with a sting in it we dont want to split
-                #TODO improve
+                # we don't seperate lines in those cases mentioned above
+                #TODO improve find the postion of the caractere and split there
                 result.append(line)
         return result
 

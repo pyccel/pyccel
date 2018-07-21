@@ -7,9 +7,9 @@ from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
-from .numpyext import Zeros, Ones
+from .numpyext import Zeros, Ones, Empty
 from .numpyext import Array, Shape, Int, Rand, Sum
-from .numpyext import Sqrt,Asin,Acsc,Acos,Asec,Atan,Acot,Log
+from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
 from sympy import I
 from sympy import Not
@@ -49,9 +49,11 @@ def builtin_function(expr, args=None):
 
     if isinstance(expr, Application):
         name = str(type(expr).__name__)
-
-    if isinstance(expr, str):
+    elif isinstance(expr, str):
         name = expr
+    else:
+        raise TypeError('expr must be of type str or Function')
+
     if name == 'range':
         return Range(*args)
     elif name == 'zip':
@@ -122,6 +124,8 @@ def builtin_import(expr):
     source = expr.source
     if isinstance(source, DottedName):
         source = source.name[0]
+    else:
+        source = str(source)
 
         # TODO imrove
     imports = []
@@ -132,16 +136,13 @@ def builtin_import(expr):
 
             target = str(expr.target[i])
             if target == 'zeros':
-
-            # TODO return as_name and not name
-
                 imports.append((target, Zeros))
 
             elif target == 'ones':
-
-            # TODO return as_name and not name
-
                 imports.append((target, Ones))
+
+            elif target == 'empty':
+                imports.append((target, Empty))
    
             elif target == 'zeros_like':
                 imports.append((target,ZerosLike))

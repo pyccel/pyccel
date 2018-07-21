@@ -1,7 +1,7 @@
-#$ header class MPI_(public)
-#$ header method __init__(MPI_)
-
-
+#$ header metavar module_name='mpi4py'
+#$ header metavar module_version='3.1'
+#$ header metavar ignore_at_import=True
+#$ header metavar import_all=True
 
 from pyccel.stdlib.internal.mpi import mpi_comm_world
 from pyccel.stdlib.internal.mpi import mpi_comm_rank
@@ -27,6 +27,7 @@ from pyccel.stdlib.internal.mpi import mpi_scatter
 from pyccel.stdlib.internal.mpi import mpi_barrier
 from pyccel.stdlib.internal.mpi import mpi_gather
 from pyccel.stdlib.internal.mpi import mpi_allgather
+from pyccel.stdlib.internal.mpi import mpi_allgatherv
 from pyccel.stdlib.internal.mpi import mpi_gatherv
 from pyccel.stdlib.internal.mpi import mpi_alltoall
 
@@ -70,7 +71,11 @@ from pyccel.stdlib.internal.mpi import MPI_LAND
 from pyccel.stdlib.internal.mpi import MPI_LOR          
 from pyccel.stdlib.internal.mpi import MPI_LXOR  
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
-from pyccel.stdlib.internal.mpi import MPI_DOUBLE       
+from pyccel.stdlib.internal.mpi import MPI_DOUBLE
+
+#.............................
+#$ header class MPI_(public)
+#$ header method __init__(MPI_)   
 
 
 class MPI_:
@@ -88,10 +93,11 @@ class MPI_:
         self.LOR        = MPI_LOR
         self.LXOR       = MPI_LXOR
 
-
-
 MPI = MPI_()
 
+#..................................
+
+ierr = -1
 #$ header macro x.COMM_WORLD := mpi_comm_world
 #$ header macro x.SUM        := MPI_SUM
 #$ header macro x.PROD       := MPI_PROD
@@ -163,7 +169,7 @@ MPI = MPI_()
 
 #$ header macro y.Reduce(data, recvbuf, op=MPI_SUM, root=0) := mpi_reduce(data, recvbuf, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro y.Allreduce(data, recvbuf, op=MPI_SUM) := mpi_allreduce(data, recvbuf, data.count, data.dtype, op , y, ierr)
-
+#$ header macro x.Allgatherv(A,[B,Bcounts,Bdisps,Bdtype = B.dtype]) := mpi_allgatherv(A, A.count, A.dtype, B, Bcounts, Bdisps, Bdtype, x, ierr)
 
 #$ header macro  y.Gather(data, recvbuf, root=0) := mpi_gather(data, data.count, data.dtype, recvbuf, recvbuf.count, recvbuf.dtype, root, y, ierr)
 
