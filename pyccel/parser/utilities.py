@@ -14,7 +14,8 @@ import os
 
 pyccel_external_lib = {"mpi4py"             :"pyccel.stdlib.external.mpi4py",
                        "scipy.linalg.lapack":"pyccel.stdlib.external.lapack",
-                        "scipy.linalg.blas" :"pyccel.stdlib.external.blas"}
+                       "scipy.linalg.blas"  :"pyccel.stdlib.external.blas",
+                       "scipy.fftpack"      :"pyccel.stdlib.external.dfftpack"}
 
 
 def read_file(filename):

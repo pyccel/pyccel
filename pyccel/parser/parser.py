@@ -2942,7 +2942,7 @@ class Parser(object):
                      # and not only the datatype
 
                     d_var[0]['datatype'] = _dtype(rhs)
-                elif name in ['Zeros', 'Ones']:
+                elif name in ['Zeros', 'Ones', 'Empty']:
 
                     # TODO improve
 
@@ -3892,6 +3892,11 @@ class Parser(object):
                         expr = Import(expr.target, __module_name__)
 
                     # ...
+                    if 'print' in p.metavars.keys():
+                        source = str(expr.source).split('.')[-1]
+                        source = 'mod_' + source
+                        expr = Import(expr.target,source=source)
+                        
 
                     if not __ignore_at_import__:
                         return expr

@@ -7,9 +7,9 @@ from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
-from .numpyext import Zeros, Ones
+from .numpyext import Zeros, Ones, Empty
 from .numpyext import Array, Shape, Int, Rand, Sum
-from .numpyext import Sqrt,Asin,Acsc,Acos,Asec,Atan,Acot,Log
+from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
 from sympy import I
 from sympy import Not
@@ -136,16 +136,13 @@ def builtin_import(expr):
 
             target = str(expr.target[i])
             if target == 'zeros':
-
-            # TODO return as_name and not name
-
                 imports.append((target, Zeros))
 
             elif target == 'ones':
-
-            # TODO return as_name and not name
-
                 imports.append((target, Ones))
+
+            elif target == 'empty':
+                imports.append((target, Empty))
    
             elif target == 'zeros_like':
                 imports.append((target,ZerosLike))

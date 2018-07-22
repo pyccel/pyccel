@@ -1,0 +1,50 @@
+#$ header variable int  FFTW_FORWARD
+#$ header variable int  FFTW_BACKWARD
+#$ header variable int  FFTW_REAL_TO_COMPLEX
+#$ header variable int  FFTW_COMPLEX_TO_REAL
+#$ header variable int  FFTW_ESTIMATE
+#$ header variable int  FFTW_MEASURE
+#$ header variable int  FFTW_OUT_OF_PLACE
+#$ header variable int  FFTW_IN_PLACE
+#$ header variable int  FFTW_USE_WISDOM
+#$ header variable int  FFTW_THREADSAFE
+
+fftw_plan_dft_1d(int, complex *in, complex *out, int sign, unsigned flags);
+fftw_plan_dft_2d(int n0, int n1, fftw_complex *in, fftw_complex *out, int sign, unsigned flags);
+fftw_plan_dft_3d(int n0, int n1, int n2, fftw_complex *in, fftw_complex *out, int sign, unsigned flags);
+fftw_plan_dft(int rank, const int *n,fftw_complex *in, fftw_complex *out, int sign, unsigned flags);
+
+fftw_plan_dft_r2c_1d(int n, double *in, fftw_complex *out, unsigned flags);
+fftw_plan_dft_r2c_2d(int n0, int n1, double *in, fftw_complex *out, unsigned flags);
+fftw_plan_dft_r2c_3d(int n0, int n1, int n2, double *in, fftw_complex *out, unsigned flags);
+fftw_plan_dft_r2c(int rank, const int *n, double *in, fftw_complex *out, unsigned flags);
+
+fftw_plan_dft_c2r_1d(int n0,fftw_complex *in, double *out,unsigned flags);
+fftw_plan_dft_c2r_2d(int n0, int n1,fftw_complex *in, double *out,unsigned flags);
+fftw_plan_dft_c2r_3d(int n0, int n1, int n2,fftw_complex *in, double *out,unsigned flags);
+fftw_plan_dft_c2r(int rank, const int *n,fftw_complex *in, double *out,unsigned flags);
+
+fftw_plan_r2r_1d(int n, double *in, double *out, fftw_r2r_kind kind, unsigned flags);
+fftw_plan_r2r_2d(int n0, int n1, double *in, double *out, fftw_r2r_kind kind0, fftw_r2r_kind kind1, unsigned flags);
+fftw_plan_r2r_3d(int n0, int n1, int n2, double *in, double *out, fftw_r2r_kind kind0, fftw_r2r_kind kind1, fftw_r2r_kind kind2, unsigned flags);
+fftw_plan_r2r(int rank, const int *n, double *in, double *out, const fftw_r2r_kind *kind, unsigned flags);
+
+
+fftw_plan_many_dft(int rank, const int *n, int howmany, fftw_complex *in, const int *inembed, int istride, int idist, fftw_complex *out, const int *onembed, int ostride, int odist,int sign, unsigned flags);
+
+fftw_plan_many_dft_r2c(int rank, const int *n, int howmany,double *in, const int *inembed, int istride, int idist, fftw_complex *out, const int *onembed, int ostride, int odist,
+unsigned flags);
+
+fftw_plan_many_dft_c2r(int rank, const int *n, int howmany,fftw_complex *in, const int *inembed,int istride, int idist,double *out, const int *onembed, int ostride, int odist,
+unsigned flags);
+
+fftw_plan_many_r2r(int rank, const int *n, int howmany,double *in, const int *inembed, int istride, int idist,double *out, const int *onembed,int ostride, int odist,
+const fftw_r2r_kind *kind, unsigned flags);
+
+
+
+
+fftw_execute(p)
+fftw_destroy_plan(p)
+fftw_free(in); fftw_free(out)
+      

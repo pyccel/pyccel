@@ -4418,10 +4418,13 @@ def get_assigned_symbols(expr):
 
         try:
             var = expr.lhs
+            
             if isinstance(var, DottedVariable):
                 var = expr.lhs.lhs
                 while isinstance(var, DottedVariable):
                     var = var.lhs
+            elif isinstance(var, IndexedElement):
+                var = var.base
             free_symbols = var.free_symbols
             symbols = list(free_symbols)
         except:

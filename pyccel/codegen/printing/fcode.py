@@ -516,7 +516,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Shape(self, expr):
         return expr.fprint(self._print)
-
+    
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
 
@@ -1134,7 +1134,7 @@ class FCodePrinter(CodePrinter):
                     body += [stmt]
 
         # ... TODO improve to treat variables that are assigned within blocks: if, etc
-        symbols = get_assigned_symbols(expr)
+        symbols = get_assigned_symbols(expr.body)
         assigned_names = [str(i) for i in symbols]
         # ...
 

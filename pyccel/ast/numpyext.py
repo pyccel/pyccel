@@ -378,9 +378,7 @@ class Ones(Zeros):
 
     """Represents a call to numpy.ones for code generation.
 
-    shape : int or list of integers
-
-    Examples
+    shape : int or list of integers  
 
     """
 
@@ -400,6 +398,32 @@ class Ones(Zeros):
         else:
             raise TypeError('Unknown type')
         return value
+
+class Empty(Zeros):
+
+    """Represents a call to numpy.empty for code generation.
+
+    shape : int or list of integers
+
+    """
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        if isinstance(self.shape, Tuple):
+
+            # this is a correction. problem on LRZ
+
+            shape_code = ', '.join('0:' + printer(i - 1) for i in
+                                   self.shape)
+        else:
+            shape_code = '0:' + printer(self.shape - 1)
+
+
+        lhs_code = printer(lhs)
+
+        code = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+        return code
+
  
 
 class Sqrt(Function):
