@@ -146,11 +146,15 @@ class CodePrinter(StrPrinter):
             args = Mul.make_args(expr)
 
         # Gather args for numerator/denominator
+        flag = True
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 base = item.base
-                if base.is_integer:
+                if base.is_integer and flag:
+                    flag = False
                     base = Real(item.base)
+                    #we only need to do it once
+                    #to one of the denominator args
                 if item.exp != -1:
                     b.append(Pow(base, -item.exp, evaluate=False))
                 else:
