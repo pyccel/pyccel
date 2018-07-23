@@ -8,7 +8,7 @@ from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
 from .numpyext import Zeros, Ones, Empty
-from .numpyext import Array, Shape, Int, Rand, Sum
+from .numpyext import Array, Shape, Int, Rand, Sum, Real
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
 from sympy import I
@@ -64,6 +64,8 @@ def builtin_function(expr, args=None):
         return Array(*args)
     if name == 'int':
         return Int(*args)
+    if name == 'float':
+        return Real(*args)
     if name == 'len':
         return Len(*args)
     if name == 'sum':

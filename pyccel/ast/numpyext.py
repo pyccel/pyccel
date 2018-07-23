@@ -117,43 +117,6 @@ class Sum(Function):
         return 'sum({0})'.format(rhs_code)
 
 
-class Rand(Function):
-
-    """Represents a call to  numpy.random.random or numpy.random.rand for code generation.
-
-    arg : list ,tuple ,Tuple,List
-    """
-
-    def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, Tuple)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'double'
-
-    @property
-    def rank(self):
-
-        # TODO improve
-
-        return 0
-
-    def fprint(self, printer, lhs=None):
-        """Fortran print."""
-
-        rhs_code = printer(self.arg)
-        if len(self.arg) == 0:
-            rhs_code = ''
-        if lhs:
-            lhs_code = printer(lhs)
-            return '{0} = rand({1})'.format(lhs_code, rhs_code)
-        return 'rand({0})'.format(rhs_code)
 
 
 class Shape(Array):
@@ -242,13 +205,87 @@ class Int(Function):
     def rank(self):
         return 0
 
-    def fprint(self, printer, lhs):
+    def fprint(self, printer):
         """Fortran print."""
 
-        lhs_code = printer(lhs)
-        init_value = printer(self.arg)
-        code = '{0} = Int({1})'.format(lhs_code, init_value)
+        value = printer(self.arg)
+        code = 'Int({1})'.format(value)
         return code
+
+class Real(Function):
+
+    """Represents a call to  numpy.int for code generation.
+
+    arg : Variable,Float,Integer
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
+                          NativeDouble, NativeComplex,Mul,Add,Pow)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'real':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return 'int'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    def fprint(self, printer):
+        """Fortran print."""
+
+        value = printer(self.arg)
+        code = 'Real({0})'.format(value)
+        return code
+
+
+    def __str__(self):
+        return 'Float({0})'.format(str(self.arg))
+    
+
+    def _sympystr(self, printer):
+        
+        return self.__str__()
+
+
+class Rand(Real):
+
+    """Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+
+    arg : list ,tuple ,Tuple,List
+    """
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def rank(self):
+        return 0
+
+    def fprint(self, printer):
+        """Fortran print."""
+
+        rhs_code = printer(self.arg)
+        if len(self.arg) == 0:
+            rhs_code = ''
+        return 'rand({0})'.format(rhs_code)
+
 
 
 class Zeros(Function):

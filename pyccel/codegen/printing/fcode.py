@@ -525,6 +525,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Int(self, expr):
         return expr.fprint(self._print)
+ 
+    def _print_Real(self, expr):
+        return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
         return expr.fprint(self._print)
@@ -817,7 +820,7 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
-        if isinstance(expr.rhs, (Zeros, Array, Int, Shape, Sum, Rand)):
+        if isinstance(expr.rhs, (Zeros, Array, Shape)):
             return expr.rhs.fprint(self._print, expr.lhs)
         
         if isinstance(expr.rhs, ZerosLike):
