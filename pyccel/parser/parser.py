@@ -2429,11 +2429,13 @@ class Parser(object):
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new)
                 elif isinstance(expr, Pow):
-                    assumptions = {str_dtype(_dtype(expr_new)): True}
+                    dtype = str_dtype(_dtype(expr_new))
+                    assumptions = {dtype: True}
                     expr_new = Pow(expr_new, a_new)
                     expr_new._assumptions = StdFactKB(assumptions)
                     expr_new._assumptions._generator = \
                         assumptions.copy()
+
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new)
                 elif isinstance(expr, Or):
@@ -2990,10 +2992,14 @@ class Parser(object):
                     d_var['is_pointer'] = False
                 elif name in ['Mod', 'Int']:
 
-                                            # functions that return an int
-
                     d_var = {}
                     d_var['datatype'] = 'int'
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                elif name in ['Real']:
+                    d_var = {}
+                    d_var['datatype'] = 'double'
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
