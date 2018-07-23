@@ -1440,8 +1440,17 @@ class Parser(object):
                     second = Mul(-1, second)
                 return Add(first, second, evaluate=False)
             elif stmt.value == '/':
-
-                second = Pow(second, -1)
+                if isinstance(second, Mul):
+                    args = list(second.args)
+                    if args[0].is_integer:
+                        args[0] = Float(args[0])
+                    second = Pow(args[0], -1, evaluate=False)
+                    second = Mul(second, args[1], evaluate=False)
+                else:
+                    if second.is_integer:
+                        second = Float(second)
+                    second = Pow(second, -1, evaluate=False)
+   
                 return Mul(first, second, evaluate=False)
             elif stmt.value == 'and':
 

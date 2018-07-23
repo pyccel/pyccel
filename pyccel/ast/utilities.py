@@ -156,7 +156,10 @@ def builtin_import(expr):
                 imports.append((target, Shape))
 
             elif target == 'int':
-                imports.append((target,Int))
+                imports.append((target, Int))
+  
+            elif target == 'real':
+                imports.append((target, Real))
 
             elif target == 'sum':
                 imports.append((target,Sum))
