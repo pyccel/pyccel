@@ -1462,10 +1462,17 @@ class Parser(object):
 
                 return Pow(first, second, evaluate=False)
             elif stmt.value == '//':
-
-                second = Pow(second, -1, evaluate=False)
-                return Function('int')(Mul(first, second,
-                        evaluate=False))
+                if isinstance(second, Mul):
+                    args = second.args
+                    second = Pow(args[0], -1, evaluate=False)
+                    first =  Function('int')(Mul(first, second,
+                             evaluate=False))
+                    return Mul(first, args[1], evaluate=False)
+                else:
+                    second = Pow(second, -1, evaluate=False)
+                
+                    return Function('int')(Mul(first, second,
+                            evaluate=False))
             elif stmt.value == '%':
 
                 return Mod(first, second)

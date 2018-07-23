@@ -13,6 +13,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
+from sympy import Rational
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
@@ -180,7 +181,8 @@ class Int(Function):
 
     def __new__(cls, arg):
         if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex,Mul,Add,Pow)):
+                          NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+            
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'integer':True}
@@ -209,7 +211,7 @@ class Int(Function):
         """Fortran print."""
 
         value = printer(self.arg)
-        code = 'Int({1})'.format(value)
+        code = 'Int({0})'.format(value)
         return code
 
 class Real(Function):
@@ -221,7 +223,7 @@ class Real(Function):
 
     def __new__(cls, arg):
         if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex,Mul,Add,Pow)):
+                          NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'real':True}
