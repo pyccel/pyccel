@@ -62,14 +62,14 @@ def test_array_4():
     f = epyccel(f1_py, header)
 
     m1 = 3
-    x = np.zeros(m1,np.float32)
+    x = np.zeros(m1)
     f(m1, x)
 
     x_expected = np.array([0., 1., 2.])
     assert(np.allclose(x, x_expected))
 
 def test_array_5():
-    header = '#$ header procedure f2_py(int, int, float [:,:])'
+    header = '#$ header procedure f2_py(int, int, float [:,:](order = F))'
     def f2_py(m1, m2, x):
         x[:,:] = 0.
         for i in range(0, m1):
@@ -80,11 +80,11 @@ def test_array_5():
 
     m1 = 2
     m2 = 3
-    x = np.zeros((m1,m2), dtype=np.float32, order='F')
+    x = np.zeros((m1,m2), order='F')
     f(m1, m2, x)
 
     # ... expected
-    x_expected = np.zeros((m1,m2), dtype=np.float32, order='F')
+    x_expected = np.zeros((m1,m2), order='F')
     for i in range(0, m1):
         for j in range(0, m2):
             x_expected[i,j] = (i+j) * 1.

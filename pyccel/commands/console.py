@@ -206,15 +206,26 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     elif args.convert_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
-
+        
         settings = {}
         ast = pyccel.annotate(**settings)
-
         name = os.path.basename(filename)
         name = os.path.splitext(name)[0]
         codegen = Codegen(ast, name)
         code = codegen.doprint()
         codegen.export()
+ 
+        for son in pyccel.sons:
+            if 'print' in son.metavars.keys():
+                name = son.filename.split('/')[-1].strip('.py')
+                name = 'mod_'+name
+                codegen = Codegen(son.ast, name)
+                code = codegen.doprint()
+                codegen.export() 
+                
+                
+        
+        
 
     else:
         # TODO shall we add them in the cmd line?

@@ -1,12 +1,12 @@
 from mpi4py import MPI
 
-size = -1
+size_ = -1
 rank_in_world = -1
 
 comm = MPI.COMM_WORLD
 rank_in_world = comm.Get_rank()
 
-size = comm.Get_size()
+size_ = comm.Get_size()
 master = 0
 m      = 8
 

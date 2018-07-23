@@ -6,9 +6,16 @@ from redbaron import (CommentNode, ForNode, DefNode, WithNode,
                       IfNode, ElseNode, ElifNode, IfelseblockNode,
                       EndlNode)
 
-from sympy import srepr, sympify
+from sympy import srepr
+from pyccel.ast import DottedName
+from sympy import Symbol
 from sympy.printing.dot import dotprint
 import os
+
+pyccel_external_lib = {"mpi4py"             :"pyccel.stdlib.external.mpi4py",
+                       "scipy.linalg.lapack":"pyccel.stdlib.external.lapack",
+                       "scipy.linalg.blas"  :"pyccel.stdlib.external.blas",
+                       "scipy.fftpack"      :"pyccel.stdlib.external.dfftpack"}
 
 
 def read_file(filename):
@@ -212,4 +219,20 @@ def view_tree(expr):
     """Views a sympy expression tree."""
     print (srepr(expr))
 #  ...
+
+def get_default_path(name):
+   """this function takes a an import name
+      and returns the path full bash of the library
+      if the library is in stdlib"""
+   name_ = name
+   if isinstance(name, (DottedName, Symbol)):
+       name_ = str(name)
+   if name_ in pyccel_external_lib.keys():
+        name = pyccel_external_lib[name_].split('.')
+        if len(name)>1:
+            return DottedName(*name)
+        else:
+            return name[0]
+   return name
+
 

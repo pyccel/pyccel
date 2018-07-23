@@ -14,6 +14,7 @@ from .core import ClassDef
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
+from .core import local_sympify
 
 class Header(Basic):
     pass
@@ -162,6 +163,7 @@ class FunctionHeader(Header):
         imports   = []
         funcs = []
         dtypes = []
+       
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -180,6 +182,9 @@ class FunctionHeader(Header):
                     if dtype in ['int', 'double', 'float', 'complex']:
                         allocatable = True
                         dtype = 'ndarray'+dtype
+                order = None
+                if rank >1:
+                    order = d['order']
 
                 shape  = None
                 if isinstance(dtype, str):
@@ -193,7 +198,7 @@ class FunctionHeader(Header):
                 arg_name = 'arg_{0}'.format(str(i))
                 arg = Variable(dtype, arg_name,
                                allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape)
+                               rank=rank, shape=shape ,order = order)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
@@ -383,13 +388,13 @@ class MacroFunction(Header):
 
         # we sympify everything since a macro is operating on symbols
         if not(args is None):
-            args = [sympify(a) for a in args]
+            args = [sympify(a, locals=local_sympify) for a in args]
 
         if not(master_args is None):
-            master_args = [sympify(a) for a in master_args]
+            master_args = [sympify(a, locals=local_sympify) for a in master_args]
 
         if not(results is None):
-            results = [sympify(a) for a in results]
+            results = [sympify(a, locals=local_sympify) for a in results]
 
         return Basic.__new__(cls, name, args, master, master_args, results)
 

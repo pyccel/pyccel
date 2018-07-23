@@ -3,16 +3,16 @@ from numpy import zeros
 
 # we need to declare these variables somehow,
 # since we are calling mpi subroutines
-size = -1
+size_ = -1
 rank = -1
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
-size = comm.Get_size()
+size_ = comm.Get_size()
 
 master    = 1
 nb_values = 8
 
-block_length = nb_values // size
+block_length = nb_values // size_
 
 # ...
 values = zeros(block_length, 'int')

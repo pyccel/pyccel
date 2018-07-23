@@ -16,6 +16,7 @@ from pyccel.ast.core import Assign,DottedVariable
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ZerosLike
+from pyccel.ast import Real 
 
 
 # TODO: add examples
@@ -85,59 +86,9 @@ class CodePrinter(StrPrinter):
         This may include indenting, wrapping long lines, etc..."""
         raise NotImplementedError("This function must be implemented by "
                                   "subclass of CodePrinter.")
-    def _print_DottedVariable(self,expr):
-        return expr.name
 
-    def _print_Assign(self, expr):
-        lhs_code = self._print(expr.lhs)
-        is_procedure = False
-        if isinstance(expr.rhs, FunctionDef):
-            rhs_code = self._print(expr.rhs.name)
-            is_procedure = (expr.rhs.kind == 'procedure')
-        elif isinstance(expr.rhs, FunctionCall):
-            func = expr.rhs.func
-            rhs_code = self._print(func.name)
-            is_procedure = (func.kind == 'procedure')
-        else:
-            rhs_code = self._print(expr.rhs)
 
-        code = ''
-        if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs_code, expr.like)
-            code += self._print(stmt)
-            code += '\n'
-        if not is_procedure:
-            code += '{0} = {1}'.format(lhs_code, rhs_code)
-        else:
-            code_args = ''
-            if (not func.arguments is None) and (len(func.arguments) > 0):
-                code_args = ', '.join(self._print(i) for i in func.arguments)
-                code_args = '{0},{1}'.format(code_args, lhs_code)
-            else:
-                code_args = lhs_code
-            code = 'call {0}({1})'.format(rhs_code, code_args)
-        return self._get_statement(code)
-
-    def _print_Function(self, expr):
-        if expr.func.__name__ in self.known_functions:
-            cond_func = self.known_functions[expr.func.__name__]
-            func = None
-            if isinstance(cond_func, str):
-                func = cond_func
-            else:
-                for cond, func in cond_func:
-                    if cond(*expr.args):
-                        break
-            if func is not None:
-                return "%s(%s)" % (func, self.stringify(expr.args, ", "))
-        elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
-            # inlined function
-            return self._print(expr._imp_(*expr.args))
-        else:
-            name      = expr.func.__name__
-            code_args = self.stringify(expr.args, ", ")
-            code = '{0}({1})'.format(name, code_args)
-            return code
+  
 
     def _print_NumberSymbol(self, expr):
         return str(expr)
@@ -146,8 +97,6 @@ class CodePrinter(StrPrinter):
         # dummies must be printed as unique symbols
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
-    def _print_DottedVariable(self,expr):
-        return expr.name
 
     def _print_And(self, expr):
         PREC = precedence(expr)
@@ -178,7 +127,6 @@ class CodePrinter(StrPrinter):
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
 
     def _print_Mul(self, expr):
-
         prec = precedence(expr)
 
         c, e = expr.as_coeff_Mul()
@@ -198,12 +146,19 @@ class CodePrinter(StrPrinter):
             args = Mul.make_args(expr)
 
         # Gather args for numerator/denominator
+        flag = True
         for item in args:
             if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+                base = item.base
+                if base.is_integer and flag:
+                    flag = False
+                    base = Real(item.base)
+                    #we only need to do it once
+                    #to one of the denominator args
                 if item.exp != -1:
-                    b.append(Pow(item.base, -item.exp, evaluate=False))
+                    b.append(Pow(base, -item.exp, evaluate=False))
                 else:
-                    b.append(Pow(item.base, -item.exp))
+                    b.append(Pow(base, -item.exp))
             else:
                 a.append(item)
 

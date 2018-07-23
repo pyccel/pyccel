@@ -1,9 +1,9 @@
 # coding: utf-8
 
 #$ header class Point(public)
-#$ header method __init__(Point, double [:])
+#$ header method __init__(Point, [double])
 #$ header method __del__(Point)
-#$ header method translate(Point, double [:])
+#$ header method translate(Point, [double])
 
 class Point(object):
     def __init__(self, x):

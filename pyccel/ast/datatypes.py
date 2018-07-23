@@ -9,6 +9,7 @@ from sympy import sympify
 from sympy import ImmutableDenseMatrix
 
 
+
 class DataType(with_metaclass(Singleton, Basic)):
     """Base class representing native datatypes"""
     _name = '__UNDEFINED__'
@@ -316,7 +317,7 @@ def datatype(arg):
         else:
             raise TypeError('Expecting a DataType')
     else:
-        arg = sympify(arg)
+        arg = sympify(arg, locals=local_sympify)
         if isinstance(arg, ImmutableDenseMatrix):
             dts = [infer_dtype(i) for i in arg]
             if all([i is Bool for i in dts]):
@@ -329,3 +330,4 @@ def datatype(arg):
             return infer_dtype(arg)
 
 from .core import Variable, IndexedVariable, IndexedElement
+from .core import local_sympify
