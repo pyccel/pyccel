@@ -1957,6 +1957,7 @@ class Variable(Symbol):
         cls_base=None,
         cls_parameters=None,
         order='C',
+        precision=0
         ):
 
         # use str to make '*' work using py2
@@ -1994,6 +1995,9 @@ class Variable(Symbol):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
 
+        if not isinstance(precision,int):
+            raise TypeError('precision must be an integer.')
+
         # if class attribut
 
         if isinstance(name, str):
@@ -2012,6 +2016,12 @@ class Variable(Symbol):
         if rank == 0:
             shape = ()
 
+        if not precision:
+            if isinstance(dtype, NativeInteger):
+                precision = 4
+            elif isinstance(dtype, (NativeFloat, NativeDouble, NativeComplex)):
+                precision = 8
+       
         # TODO improve order of arguments
 
         obj = Basic.__new__(
@@ -2028,6 +2038,7 @@ class Variable(Symbol):
             is_polymorphic,
             is_optional,
             order,
+            precision,
             )
 
         assumptions = {}
@@ -2039,6 +2050,7 @@ class Variable(Symbol):
             assumptions['integer'] = True
         elif isinstance(dtype, (NativeFloat, NativeDouble)):
             assumptions['real'] = True
+            
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
@@ -2095,6 +2107,10 @@ class Variable(Symbol):
     @property
     def order(self):
         return self._args[11]
+  
+    @property
+    def precision(self):
+        return self._args[12]
 
     @property
     def is_ndarray(self):

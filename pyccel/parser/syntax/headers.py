@@ -45,14 +45,22 @@ class ListType(BasicStmt):
 
     @property
     def expr(self):
-        dtypes = [str(i) for i in self.dtype]
+        dtypes = [str(i.expr['datatype']) for i in self.dtype]
+        precisions = [i.expr['precision'] for i in self.dtype]
         if not (all(dtypes[0]==i for i in dtypes)):
             raise TypeError('all element of the TypeList must have the same type')
+        
         d_var = {}
         d_var['datatype'] = str(dtypes[0])
         d_var['rank'] = len(dtypes)
         d_var['is_pointer'] = len(dtypes)>0
         d_var['allocatable'] = False
+        d_var['precision'] = max(precisions)
+        if not(d_var['precision']):
+            if d_var['datatype'] in ['double','float','complex']:
+                d_var['precision'] = 8
+            elif d_var['datatype'] in ['int']:
+                d_var['precision'] = 4
         return d_var
 
 class Type(BasicStmt):
@@ -67,6 +75,7 @@ class Type(BasicStmt):
         """
         self.dtype = kwargs.pop('dtype')
         self.trailer = kwargs.pop('trailer', [])
+        self.precision = kwargs.pop('prec')
 
         super(Type, self).__init__(**kwargs)
 
@@ -87,6 +96,13 @@ class Type(BasicStmt):
         d_var['rank'] = len(trailer)
         d_var['allocatable'] = len(trailer)>0
         d_var['is_pointer'] = False
+        d_var['precision']  = self.precision
+        if not(self.precision):
+            if dtype in ['double' ,'float','complex']:
+                d_var['precision'] = 8
+            elif dtype=='int':
+                d_var['precision'] = 4
+        
         if d_var['rank']>1:
             d_var['order'] = order
         return d_var
@@ -478,24 +494,24 @@ def parse(filename=None, stmts=None, debug=False):
 
 ######################
 if __name__ == '__main__':
-#    print(parse(stmts='#$ header variable x :: int'))
-#    print(parse(stmts='#$ header variable x float [:, :]'))
-#    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
-#    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-#    print(parse(stmts='#$ header class Square(public)'))
-#    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
-#    print(parse(stmts="#$ header metavar module_name='mpi'"))
-#    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
-#    print(parse(stmts='#$ header function _f(int, int [:])'))
-#    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
-#    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
-#    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
-#    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
-#    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
-#    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
-#    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
-#    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
-#    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
-#    print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
+    print(parse(stmts='#$ header variable x :: int'))
+    print(parse(stmts='#$ header variable x float [:, :]'))
+    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
+    print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
+    print(parse(stmts='#$ header class Square(public)'))
+    print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
+    print(parse(stmts="#$ header metavar module_name='mpi'"))
+    print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
+    print(parse(stmts='#$ header function _f(int, int [:])'))
+    print(parse(stmts='#$ header macro _f(x) := f(x, x.shape)'))
+    print(parse(stmts='#$ header macro _g(x) := g(x, x.shape[0], x.shape[1])'))
+    print(parse(stmts='#$ header macro (a, b), _f(x) := f(x.shape, x, a, b)'))
+    print(parse(stmts='#$ header macro _dswap(x, incx) := dswap(x.shape, x, incx)'))
+    print(parse(stmts="#$ header macro _dswap(x, incx=1) := dswap(x.shape, x, incx)"))
+    print(parse(stmts='#$ header macro _dswap(x, y, incx=1, incy=1) := dswap(x.shape, x, incx, y, incy)'))
+    print(parse(stmts="#$ header macro _dswap(x, incx=x.shape) := dswap(x.shape, x, incx)"))
+    print(parse(stmts='#$ header macro Point.translate(alpha, x, y) := translate(alpha, x, y)'))
+    print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
+    print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
     print(parse(stmts='#$ header function _f(int, int [:,:])'))
 

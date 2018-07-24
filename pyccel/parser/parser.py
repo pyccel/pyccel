@@ -1994,6 +1994,7 @@ class Parser(object):
         d_var['is_optional'] = None
         d_var['cls_base'] = None
         d_var['cls_parameters'] = None
+        d_var['precision'] = 0
 
         # TODO improve => put settings as attribut of Parser
 
@@ -2041,6 +2042,7 @@ class Parser(object):
             d_var['is_optional'] = var.is_optional
             d_var['is_target'] = var.is_target
             d_var['order'] = var.order
+            d_var['precision'] = var.precision
             return d_var
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
 
@@ -2074,6 +2076,7 @@ class Parser(object):
 
             d_var['shape'] = shape
             d_var['rank'] = rank
+            d_var['precision'] = var.precision
 
             return d_var
         elif isinstance(expr, IndexedVariable):
@@ -2086,6 +2089,7 @@ class Parser(object):
             d_var['allocatable'] = var.allocatable
             d_var['shape'] = var.shape
             d_var['rank'] = var.rank
+            d_var['precision'] = var.precision
             return d_var
         elif isinstance(expr, Range):
 
@@ -2136,11 +2140,12 @@ class Parser(object):
             # we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
             # so we assume all functions
-
+            
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
+            precisions = [d['precision'] for d in ds]
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
@@ -2172,6 +2177,13 @@ class Parser(object):
             d_var['is_pointer'] = any(pointers)
             d_var['shape'] = shape
             d_var['rank'] = rank
+            if len(precisions)>0:
+                d_var['precision'] = max(precisions)
+            else:
+                if d_var['datatype']=='int':
+                    d_var['precision'] = 4
+                else:
+                    d_var['precision'] = 8
             return d_var
         elif isinstance(expr, (tuple, list, List, Tuple)):
 

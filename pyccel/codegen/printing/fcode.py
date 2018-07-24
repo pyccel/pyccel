@@ -700,6 +700,7 @@ class FCodePrinter(CodePrinter):
             dtype = '{0}({1})'.format(sig, name)
         else:
             dtype = self._print(expr.dtype)
+            dtype += '(kind={0})'.format(str(expr.variable.precision))
         # ...
         if isinstance(expr.dtype, NativeString):
             if expr.intent:
@@ -952,14 +953,14 @@ class FCodePrinter(CodePrinter):
         return 'integer'
 
     def _print_NativeFloat(self, expr):
-        return 'real(kind=8)'
+        return 'real'
 
     def _print_NativeDouble(self, expr):
-        return 'real(kind=8)'
+        return 'real'
 
     def _print_NativeComplex(self, expr):
         # TODO add precision
-        return 'complex(kind=8)'
+        return 'complex'
 
     def _print_BooleanTrue(self, expr):
         return '.true.'
