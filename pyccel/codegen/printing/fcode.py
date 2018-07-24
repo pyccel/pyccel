@@ -28,7 +28,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand
+from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand,Real,Complex
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -820,6 +820,11 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Len):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
+
+        if isinstance(expr.rhs, (Int, Real, Complex)):
+           lhs = '{0}'.format(self._print(expr.lhs))
+           rhs = expr.rhs.fprint(self._print)
+           return '{0} = {1}'.format(lhs,rhs)
 
         if isinstance(expr.rhs, (Zeros, Array, Shape)):
             return expr.rhs.fprint(self._print, expr.lhs)

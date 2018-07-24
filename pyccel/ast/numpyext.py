@@ -321,7 +321,7 @@ class Complex(Function):
         """Fortran print."""
 
         value0 = printer(self.real_part)
-        value0 = printer(self.imag_part)
+        value1 = printer(self.imag_part)
         code = 'complex({0},{1})'.format(value0,value1)
         return code
    
