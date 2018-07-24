@@ -76,7 +76,7 @@ class Type(BasicStmt):
         self.dtype = kwargs.pop('dtype')
         self.trailer = kwargs.pop('trailer', [])
         self.precision = kwargs.pop('prec')
-
+       
         super(Type, self).__init__(**kwargs)
 
     @property

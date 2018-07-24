@@ -2007,12 +2007,14 @@ class Parser(object):
             d_var['datatype'] = 'int'
             d_var['allocatable'] = False
             d_var['rank'] = 0
+            d_var['precision'] = 4
             return d_var
         elif isinstance(expr, (Float, float)):
 
             d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
+            d_var['precision'] = 8
             return d_var
         elif isinstance(expr, String):
 
@@ -2024,6 +2026,7 @@ class Parser(object):
             d_var['datatype'] = 'complex'
             d_var['allocatable'] = False
             d_var['rank'] = 0
+            d_var['precision'] = 8
             return d_var
         elif isinstance(expr, Variable):
 
@@ -2136,7 +2139,9 @@ class Parser(object):
             ds = [self._infere_type(i, **settings) for i in
                   _atomic(expr) if isinstance(i, (Variable,
                   DottedVariable))]
-
+            #TODO we should also look for functions call
+            #to collect info about precision and shapes later when we allow 
+            # vectorised operations
             # we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
             # so we assume all functions
@@ -3018,19 +3023,36 @@ class Parser(object):
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
-                elif name in ['Mod', 'Int']:
+                elif name in ['Int','Int32','Int64']:
 
                     d_var = {}
                     d_var['datatype'] = 'int'
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
-                elif name in ['Real']:
+                    d_var['precision'] = rhs.precision
+                elif name in ['Real','Float32','Float64']:
                     d_var = {}
                     d_var['datatype'] = 'double'
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
+                    d_var['precision'] = rhs.precision
+                elif name in ['Complex','Complex128','Complex64']:
+                    d_var = {}
+                    d_var['datatype'] = 'complex'
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                    d_var['precision'] = rhs.precision
+                elif name in ['Mod']:
+                    d_var = {}
+                    d_var['datatype'] = 'int'
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                    d = self._infere_type(rhs.args[0],**settings)
+                    d_var['precision'] = d.pop('precision',4)
                 elif name in [
                     'Abs',
                     'sin',
@@ -3057,6 +3079,7 @@ class Parser(object):
 
                     d_var = self._infere_type(rhs.rhs, **settings)
                 else:
+                    print name
                     raise NotImplementedError('TODO')
             elif isinstance(rhs, Pow):
 

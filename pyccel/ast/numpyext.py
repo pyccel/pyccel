@@ -176,7 +176,7 @@ class Int(Function):
 
     """Represents a call to  numpy.int for code generation.
 
-    arg : Variable,Float,Integer
+    arg : Variable, Float, Integer, Complex
     """
 
     def __new__(cls, arg):
@@ -207,6 +207,11 @@ class Int(Function):
     def rank(self):
         return 0
 
+    @property
+    def precision(self):
+        return 4
+
+
     def fprint(self, printer):
         """Fortran print."""
 
@@ -216,9 +221,9 @@ class Int(Function):
 
 class Real(Function):
 
-    """Represents a call to  numpy.int for code generation.
+    """Represents a call to  numpy.Real for code generation.
 
-    arg : Variable,Float,Integer
+    arg : Variable, Float, Integer, Complex
     """
 
     def __new__(cls, arg):
@@ -248,13 +253,17 @@ class Real(Function):
     def rank(self):
         return 0
 
+    @property
+    def precision(self):
+        return 8
+
     def fprint(self, printer):
         """Fortran print."""
 
         value = printer(self.arg)
         code = 'Real({0})'.format(value)
         return code
-
+   
 
     def __str__(self):
         return 'Float({0})'.format(str(self.arg))
@@ -263,6 +272,67 @@ class Real(Function):
     def _sympystr(self, printer):
         
         return self.__str__()
+
+class Complex(Function):
+
+    """Represents a call to  numpy.complex for code generation.
+
+    arg : Variable, Float, Integer
+    """
+
+    def __new__(cls, arg0, arg1=0):
+        
+        for arg in [arg0, arg1]:
+            if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
+                    NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+                raise TypeError('Uknown type of  %s.' % type(arg))
+        obj = Basic.__new__(cls, arg0, arg1)
+        assumptions = {'complex':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+
+    @property
+    def real_part(self):
+        return self._args[0]
+
+    @property
+    def imag_part(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return 'complex'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def precision(self):
+        return 8
+
+    def fprint(self, printer):
+        """Fortran print."""
+
+        value0 = printer(self.real_part)
+        value0 = printer(self.imag_part)
+        code = 'complex({0},{1})'.format(value0,value1)
+        return code
+   
+
+    def __str__(self):
+        return self.fprint(str)
+    
+
+    def _sympystr(self, printer):
+        
+        return self.fprint(str)
 
 
 class Rand(Real):
@@ -547,4 +617,28 @@ class Log(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+
+class Complex64(Complex):
+    @property
+    def precision(self):
+        return 4
+
+class Complex128(Complex):
+    pass
+
+class Float32(Real):
+    @property
+    def precision(self):
+        return 4
+
+class Float64(Real):
+    pass
+
+class Int32(Int):
+    pass
+
+class Int64(Int):
+    @property
+    def precision(self):
+        return 8
 

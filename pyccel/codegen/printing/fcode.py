@@ -1091,6 +1091,7 @@ class FCodePrinter(CodePrinter):
                     body.append(stmt)
 
             ret_type = self._print(result.dtype)
+            ret_type += '(kind={0})'.format(str(result.precision)) 
 
             func_type = 'function'
             rec = ''
