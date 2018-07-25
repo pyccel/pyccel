@@ -17,6 +17,8 @@ from sympy import Rational as sp_Rational
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
+from .datatypes import dtype_and_precsision_registry as dtype_registry
+from .datatypes import default_precision 
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
@@ -33,10 +35,18 @@ class Array(Function):
     def __new__(cls, arg, dtype=None):
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        if isinstance(dtype, str):
-            dtype = datatype('ndarray' + dtype)
 
-        return Basic.__new__(cls, arg, dtype)
+        prec = 0 
+        if isinstance(dtype, str):
+            dtype,prec = dtype_registry[dtype]
+            dtype = datatype('ndarray' + dtype)
+        else:
+            dtype = 'real'
+
+        if not prec:
+            prec = default_precision[dtype]
+
+        return Basic.__new__(cls, arg, dtype, prec)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -49,6 +59,10 @@ class Array(Function):
     @property
     def dtype(self):
         return self._args[1]
+  
+    @property
+    def precision(self):
+        return self._args[2]
 
     @property
     def shape(self):
@@ -379,7 +393,7 @@ class Zeros(Function):
         dtype = 'real'
         order = 'C'
         args_ = list(args)
-        
+        prec = 0
         if len(args)>0 and isinstance(args[0],ValuedArgument):
             if str(args[0].argument.name) == 'order':
                 args_.reverse()
@@ -416,13 +430,15 @@ class Zeros(Function):
             shape = shape
 
         if isinstance(dtype, str):
-            if dtype == 'double':
-                dtype = 'real'
+            dtype, prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
- 
-        return Basic.__new__(cls, shape, dtype, order)
+  
+        if not prec:
+            prec = default_precision[str(dtype)]
+
+        return Basic.__new__(cls, shape, dtype, order, prec)
 
     @property
     def shape(self):
@@ -442,6 +458,10 @@ class Zeros(Function):
     @property
     def order(self):
         return self._args[2]
+ 
+    @property
+    def precision(self):
+        return self._args[3]
 
     @property
     def init_value(self):

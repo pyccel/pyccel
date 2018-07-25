@@ -8,14 +8,19 @@ from sympy.core.compatibility import with_metaclass
 from sympy import sympify
 from sympy import ImmutableDenseMatrix
 
-dtype_and_precsision_registry = {'double':('real',8),
-                                  'float':('real',4),
-                                  'float32':('real',4),
-                                  'float64':('real',8),
-                                  'complex64':('complex',4),
-                                  'complex128':('complex',8),
-                                  'int32':('int',4),
-                                  'int64':('int',8)}
+
+default_precision = {'real': 8, 'int': 4, 'complex': 8}
+dtype_and_precsision_registry = {'real':('real',8),
+                                 'double':('real',8),
+                                 'float':('real',4),
+                                 'float32':('real',4),
+                                 'float64':('real',8),
+                                 'complex':('complex',8),
+                                 'complex64':('complex',4),
+                                 'complex128':('complex',8),
+                                 'int':('int',4),
+                                 'int32':('int',4),
+                                 'int64':('int',8)}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -67,8 +72,6 @@ class NativeIntegerList(NativeInteger, NativeList):
 class NativeRealList(NativeReal, NativeList):
     _name = 'RealList'
     pass
-
-
 
 class NativeComplexList(NativeComplex, NativeList):
     _name = 'ComplexList'
