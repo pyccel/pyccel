@@ -38,7 +38,7 @@ math_functions = {
     }
 
 scipy_constants = {
-    'pi': Constant('double', 'pi', value=sc_constants.pi),
+    'pi': Constant('real', 'pi', value=sc_constants.pi),
                   }
 
 

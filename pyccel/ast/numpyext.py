@@ -8,17 +8,17 @@ from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
-from sympy import Integer, Add, Mul, Pow, Float
+from sympy import Integer as sp_Integer, Add, Mul, Pow, Float as sp_Float
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
-from sympy import Rational
+from sympy import Rational as sp_Rational
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
 from .datatypes import DataType, datatype
-from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
+from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
 
 from .core import local_sympify
@@ -176,11 +176,11 @@ class Int(Function):
 
     """Represents a call to  numpy.int for code generation.
 
-    arg : Variable, Float, Integer, Complex
+    arg : Variable, Real, Integer, Complex
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, Float, Integer, Mul, Add, Pow, Rational)):
+        if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, Pow, sp_Rational)):
             
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
@@ -226,7 +226,7 @@ class Real(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, Integer, Float, Mul, Add, Pow, Rational)):
+        if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'real':True}
@@ -278,10 +278,10 @@ class Complex(Function):
     arg : Variable, Float, Integer
     """
 
-    def __new__(cls, arg0, arg1=Float(0)):
+    def __new__(cls, arg0, arg1=sp_Float(0)):
         
         for arg in [arg0, arg1]:
-            if not isinstance(arg, (Variable, Integer, Float, Mul, Add, Pow, Rational)):
+            if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
                 raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg0, arg1)
         assumptions = {'complex':True}
@@ -376,7 +376,7 @@ class Zeros(Function):
     def __new__(cls, shape,*args):
         
         args = list(args)
-        dtype = 'double'
+        dtype = 'real'
         order = 'C'
         args_ = list(args)
         
@@ -410,12 +410,14 @@ class Zeros(Function):
             else:
                 shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape))
 
-        elif isinstance(shape, (int, Integer, Symbol)):
+        elif isinstance(shape, (int, sp_Integer, Symbol)):
             shape = Tuple(sympify(shape, locals = local_sympify))
         else:
             shape = shape
 
         if isinstance(dtype, str):
+            if dtype == 'double':
+                dtype = 'real'
             dtype = datatype('ndarray' + dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
@@ -446,9 +448,7 @@ class Zeros(Function):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 0
-        elif isinstance(dtype, NativeFloat):
-            value = 0.0
-        elif isinstance(dtype, NativeDouble):
+        elif isinstance(dtype, NativeReal):
             value = 0.0
         elif isinstance(dtype, NativeComplex):
             value = 0.0
@@ -493,9 +493,7 @@ class Ones(Zeros):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 1
-        elif isinstance(dtype, NativeFloat):
-            value = 1.0
-        elif isinstance(dtype, NativeDouble):
+        elif isinstance(dtype, NativeReal):
             value = 1.0
         elif isinstance(dtype, NativeComplex):
             value = 1.0

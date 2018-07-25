@@ -51,13 +51,11 @@ from redbaron import LambdaNode
 from redbaron import WithNode
 from redbaron import AtomtrailersNode
 
-from pyccel.ast import NativeInteger, NativeFloat
-from pyccel.ast import NativeDouble,NativeComplex
-from pyccel.ast import NativeBool
+from pyccel.ast import NativeInteger, NativeReal
+from pyccel.ast import NativeBool, NativeComplex
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeIntegerList
-from pyccel.ast import NativeFloatList
-from pyccel.ast import NativeDoubleList
+from pyccel.ast import NativeRealList
 from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
@@ -268,7 +266,7 @@ def _dtype(expr):
     if expr.is_integer:
         return 'int'
     elif expr.is_real:
-        return 'double'
+        return 'real'
     elif expr.is_complex:
         return 'complex'
     elif expr.is_Boolean:
@@ -281,13 +279,13 @@ def str_dtype(dtype):
     if isinstance(dtype, str):
         if dtype == 'int':
             return 'integer'
-        elif dtype in ['double', 'float']:
+        elif dtype== 'real':
             return 'real'
         else:
             return dtype
     if isinstance(dtype, NativeInteger):
         return 'integer'
-    elif isinstance(dtype, (NativeFloat, NativeDouble)):
+    elif isinstance(dtype, NativeReal):
         return 'real'
     elif isinstance(dtype, NativeComplex):
         return 'complex'
@@ -1998,7 +1996,7 @@ class Parser(object):
 
         # TODO improve => put settings as attribut of Parser
 
-        DEFAULT_FLOAT = settings.pop('default_float', 'double')
+        DEFAULT_FLOAT = settings.pop('default_float', 'real')
 
         if isinstance(expr, type(None)):
             return d_var
@@ -2206,10 +2204,8 @@ class Parser(object):
                 dtype = datatype(d['datatype'])
                 if isinstance(dtype, NativeInteger):
                     d_var['datatype'] = NativeIntegerList()
-                elif isinstance(dtype, NativeFloat):
-                    d_var['datatype'] = NativeFloatList()
-                elif isinstance(dtype, NativeDouble):
-                    d_var['datatype'] = NativeDoubleList()
+                elif isinstance(dtype, NativeReal):
+                    d_var['datatype'] = NativeRealList()
                 elif isinstance(dtype, NativeComplex):
                     d_var['datatype'] = NativeComplexList()
                 else:
@@ -2359,7 +2355,7 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
             return var
         elif isinstance(expr, DottedVariable):
-
+            
             first = self._annotate(expr.lhs)
             rhs_name = _get_name(expr.rhs)
             attr_name = []
@@ -2895,6 +2891,10 @@ class Parser(object):
 
             rhs = self._annotate(rhs, **settings)
 
+ # .......
+ # .......
+ # .......
+
             if isinstance(rhs, If):
                 args = rhs.args
                 new_args = []
@@ -3006,10 +3006,8 @@ class Parser(object):
                     d_var['is_pointer'] = False
                     if isinstance(dtype, NativeInteger):
                         d_var['datatype'] = 'ndarrayint'
-                    elif isinstance(dtype, NativeFloat):
-                        d_var['datatype'] = 'ndarrayfloat'
-                    elif isinstance(dtype, NativeDouble):
-                        d_var['datatype'] = 'ndarraydouble'
+                    elif isinstance(dtype, NativeReal):
+                        d_var['datatype'] = 'ndarrayreal'
                     elif isinstance(dtype, NativeComplex):
                         d_var['datatype'] = 'ndarraycomplex'
                     elif isinstance(dtype, str):
@@ -3070,7 +3068,7 @@ class Parser(object):
             elif isinstance(rhs, Pow):
 
                 d_var = self._infere_type(rhs.args[0], **settings)
-                d_var['datatype'] = ('double'
+                d_var['datatype'] = ('real'
                          if rhs.args[0].is_real else 'complex')
             elif isinstance(rhs, SumFunction):
 

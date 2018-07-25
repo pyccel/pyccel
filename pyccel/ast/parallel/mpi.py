@@ -4,7 +4,6 @@ from itertools import groupby
 import numpy as np
 
 from sympy.core.symbol  import Symbol
-from sympy.core.numbers import Integer
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton import Singleton
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
@@ -27,10 +26,6 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import MethodCall, FunctionCall
-from pyccel.ast.datatypes import NativeBool, NativeFloat
-from pyccel.ast.datatypes import NativeComplex, NativeDouble, NativeInteger
-from pyccel.ast.datatypes import DataType
-from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.numpyext import Zeros, Ones
 
 from pyccel.ast.parallel.basic        import Basic

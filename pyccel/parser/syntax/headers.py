@@ -20,6 +20,14 @@ from pyccel.ast import ValuedArgument
 from pyccel.ast import DottedName, String
 
 DEBUG = False
+dtype_registery = {'double':('real',8),
+                   'float':('real',4),
+                   'float32':('real',4),
+                   'float64':('real',8),
+                   'complex64':('complex',4),
+                   'complex128':('complex',8),
+                   'int32':('int',4),
+                   'int64':('int',8)}
 
 class Header(object):
     """Class for Header syntax."""
@@ -82,6 +90,9 @@ class Type(BasicStmt):
     @property
     def expr(self):
         dtype = self.dtype
+        precision = self.precision
+        if dtype in dtype_registery.keys():
+            dtype,precision = dtype_registery[dtype]
         trailer = self.trailer
         order = 'C'
     
@@ -96,8 +107,8 @@ class Type(BasicStmt):
         d_var['rank'] = len(trailer)
         d_var['allocatable'] = len(trailer)>0
         d_var['is_pointer'] = False
-        d_var['precision']  = self.precision
-        if not(self.precision):
+        d_var['precision']  = precision
+        if not(precision):
             if dtype in ['double' ,'float','complex']:
                 d_var['precision'] = 8
             elif dtype=='int':

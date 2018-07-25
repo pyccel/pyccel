@@ -11,7 +11,7 @@ import numpy as np
 
 from sympy import Lambda
 from sympy.core import Symbol
-from sympy.core import Float, Integer
+from sympy.core import Float as sp_Float, Integer as sp_Integer
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
@@ -55,8 +55,8 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Print, If, Nil)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.datatypes import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
+from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
+from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
 
@@ -622,10 +622,10 @@ class FCodePrinter(CodePrinter):
                     if i.start is None and i.end is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
+                        if (isinstance(i.end, (int, sp_Integer)) and i.end>0) or not(isinstance(i.end, (int, sp_Integer))):
                             shape.append(i.end)
                     elif i.end is None:
-                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
+                        if (isinstance(i.start, (int, sp_Integer)) and i.start<s-1) or not(isinstance(i.start, (int, sp_Integer))):
                             shape.append(s-i.start)
                     else:
                         shape.append(i.end-i.start+1)
@@ -724,7 +724,7 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable))) and
+        if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable))) and
             (not(allocatable or is_pointer) or is_static)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
@@ -957,14 +957,10 @@ class FCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'integer'
 
-    def _print_NativeFloat(self, expr):
-        return 'real'
-
-    def _print_NativeDouble(self, expr):
+    def _print_NativeReal(self, expr):
         return 'real'
 
     def _print_NativeComplex(self, expr):
-        # TODO add precision
         return 'complex'
 
     def _print_BooleanTrue(self, expr):
@@ -1895,7 +1891,7 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            one = Float(1.0)
+            one = sp_Float(1.0)
             code = '{0}/{1}'.format(self._print(one), \
                                     self.parenthesize(expr.base, PREC))
             return code
