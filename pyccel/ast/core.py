@@ -3889,6 +3889,23 @@ class AnnotatedComment(Basic):
         args = (self.accel, self.txt)
         return args
 
+class CommentBlock(Basic):
+
+    """ Represents a Block of Comments
+        txt : str
+    """
+    def __new__(cls, txt):
+        if not isinstance(txt, str):
+            raise TypeError('txt must be of type str')
+        txt = txt.replace('"','')
+        txts = txt.split('\n')
+        for i in range(len(txts)):
+            txts[i] = '!'+txts[i]
+        return Basic.__new__(cls, txts)
+
+    @property
+    def comments(self):
+        return self._args[0]
 
 class IndexedVariable(IndexedBase):
 

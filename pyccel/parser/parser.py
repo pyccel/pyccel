@@ -95,7 +95,7 @@ from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
-from pyccel.ast import AnnotatedComment
+from pyccel.ast import AnnotatedComment, CommentBlock
 from pyccel.ast import With
 from pyccel.ast import Range, Zip, Enumerate, Product
 from pyccel.ast import List, Dlist, Len
@@ -1301,8 +1301,9 @@ class Parser(object):
 
             return repr(stmt)
         elif isinstance(stmt, StringNode):
-
-            val = strip_ansi_escape.sub('', stmt.value)
+            val =  stmt.value
+            if isinstance(stmt.parent,(RedBaron, DefNode)):
+                return CommentBlock(val)
             return String(val)
         elif isinstance(stmt, IntNode):
 
@@ -3791,7 +3792,7 @@ class Parser(object):
                 return SymbolicPrint(_args)
             else:
                 return Print(args)
-        elif isinstance(expr, Comment):
+        elif isinstance(expr, (Comment, CommentBlock)):
 
             return expr
         elif isinstance(expr, ClassDef):

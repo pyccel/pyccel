@@ -37,7 +37,7 @@ from pyccel.ast.core import String
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
-from pyccel.ast.core import SeparatorComment
+from pyccel.ast.core import SeparatorComment, CommentBlock
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import FunctionCall, MethodCall , Subroutine
@@ -412,6 +412,26 @@ class FCodePrinter(CodePrinter):
         txt = self._print(expr.text)
         return '! {0} '.format(txt)
 
+
+    def _print_CommentBlock(self, expr):
+        txts = expr.comments 
+        ln = max(len(i) for i in txts) + 1
+        if ln<20:
+            ln = 20
+        top  = '!' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '!'
+        ln = len(top)
+        bottom = '!' + '_'*(ln-2) + '!'
+        
+        for i in range(len(txts)):
+            txts[i] = txts[i] + ' '*(ln -1 - len(txts[i])) + '!'
+
+        
+        body = '\n'.join(i for i in txts)
+        
+        return ('{0}\n'
+                '{1}\n'
+                '{2}').format(top, body, bottom) 
+        
     def _print_EmptyLine(self, expr):
         return ''
 
