@@ -8,17 +8,17 @@ from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
-from sympy import Integer, Add, Mul, Pow
+from sympy import Integer as sp_Integer, Add, Mul, Pow, Float as sp_Float
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
-from sympy import Rational
+from sympy import Rational as sp_Rational
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
 from .datatypes import DataType, datatype
-from .datatypes import (NativeInteger, NativeFloat, NativeDouble, NativeComplex,
+from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
 
 from .core import local_sympify
@@ -176,12 +176,11 @@ class Int(Function):
 
     """Represents a call to  numpy.int for code generation.
 
-    arg : Variable,Float,Integer
+    arg : Variable, Real, Integer, Complex
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+        if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, Pow, sp_Rational)):
             
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
@@ -207,6 +206,11 @@ class Int(Function):
     def rank(self):
         return 0
 
+    @property
+    def precision(self):
+        return 4
+
+
     def fprint(self, printer):
         """Fortran print."""
 
@@ -216,14 +220,13 @@ class Int(Function):
 
 class Real(Function):
 
-    """Represents a call to  numpy.int for code generation.
+    """Represents a call to  numpy.Real for code generation.
 
-    arg : Variable,Float,Integer
+    arg : Variable, Float, Integer, Complex
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+        if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'real':True}
@@ -248,13 +251,17 @@ class Real(Function):
     def rank(self):
         return 0
 
+    @property
+    def precision(self):
+        return 8
+
     def fprint(self, printer):
         """Fortran print."""
 
         value = printer(self.arg)
         code = 'Real({0})'.format(value)
         return code
-
+   
 
     def __str__(self):
         return 'Float({0})'.format(str(self.arg))
@@ -263,6 +270,66 @@ class Real(Function):
     def _sympystr(self, printer):
         
         return self.__str__()
+
+class Complex(Function):
+
+    """Represents a call to  numpy.complex for code generation.
+
+    arg : Variable, Float, Integer
+    """
+
+    def __new__(cls, arg0, arg1=sp_Float(0)):
+        
+        for arg in [arg0, arg1]:
+            if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
+                raise TypeError('Uknown type of  %s.' % type(arg))
+        obj = Basic.__new__(cls, arg0, arg1)
+        assumptions = {'complex':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+
+    @property
+    def real_part(self):
+        return self._args[0]
+
+    @property
+    def imag_part(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return 'complex'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def precision(self):
+        return 8
+
+    def fprint(self, printer):
+        """Fortran print."""
+
+        value0 = printer(self.real_part)
+        value1 = printer(self.imag_part)
+        code = 'complex({0},{1})'.format(value0,value1)
+        return code
+   
+
+    def __str__(self):
+        return self.fprint(str)
+    
+
+    def _sympystr(self, printer):
+        
+        return self.fprint(str)
 
 
 class Rand(Real):
@@ -309,7 +376,7 @@ class Zeros(Function):
     def __new__(cls, shape,*args):
         
         args = list(args)
-        dtype = 'double'
+        dtype = 'real'
         order = 'C'
         args_ = list(args)
         
@@ -343,12 +410,14 @@ class Zeros(Function):
             else:
                 shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape))
 
-        elif isinstance(shape, (int, Integer, Symbol)):
+        elif isinstance(shape, (int, sp_Integer, Symbol)):
             shape = Tuple(sympify(shape, locals = local_sympify))
         else:
             shape = shape
 
         if isinstance(dtype, str):
+            if dtype == 'double':
+                dtype = 'real'
             dtype = datatype('ndarray' + dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
@@ -379,9 +448,7 @@ class Zeros(Function):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 0
-        elif isinstance(dtype, NativeFloat):
-            value = 0.0
-        elif isinstance(dtype, NativeDouble):
+        elif isinstance(dtype, NativeReal):
             value = 0.0
         elif isinstance(dtype, NativeComplex):
             value = 0.0
@@ -426,9 +493,7 @@ class Ones(Zeros):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 1
-        elif isinstance(dtype, NativeFloat):
-            value = 1.0
-        elif isinstance(dtype, NativeDouble):
+        elif isinstance(dtype, NativeReal):
             value = 1.0
         elif isinstance(dtype, NativeComplex):
             value = 1.0
@@ -547,4 +612,28 @@ class Log(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+
+class Complex64(Complex):
+    @property
+    def precision(self):
+        return 4
+
+class Complex128(Complex):
+    pass
+
+class Float32(Real):
+    @property
+    def precision(self):
+        return 4
+
+class Float64(Real):
+    pass
+
+class Int32(Int):
+    pass
+
+class Int64(Int):
+    @property
+    def precision(self):
+        return 8
 

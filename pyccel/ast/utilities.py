@@ -8,11 +8,11 @@ from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
 from .numpyext import Zeros, Ones, Empty
-from .numpyext import Array, Shape, Int, Rand, Sum, Real
+from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
+from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
-from sympy import I
-from sympy import Not
+from sympy import Not,Float
 from sympy import (Abs, sin, cos, exp, csc, cos, sec, tan, cot, Mod, Max, Min)
 
 import scipy.constants as sc_constants
@@ -38,7 +38,7 @@ math_functions = {
     }
 
 scipy_constants = {
-    'pi': Constant('double', 'pi', value=sc_constants.pi),
+    'pi': Constant('real', 'pi', value=sc_constants.pi),
                   }
 
 
@@ -62,9 +62,9 @@ def builtin_function(expr, args=None):
         return Enumerate(*args)
     if name == 'array':
         return Array(*args)
-    if name == 'int':
+    if name in ['int']:
         return Int(*args)
-    if name == 'float':
+    if name in ['float']:
         return Real(*args)
     if name == 'len':
         return Len(*args)
@@ -80,8 +80,10 @@ def builtin_function(expr, args=None):
         return Min(*args)
     if name == 'floor':
         return floor(*args)
-    elif name == 'complex':
-        return args[0]+I*args[1]
+    elif name in ['complex']:
+        if len(args)==1:
+            args = [args[0],Float(0)]
+        return Complex(args[0],args[1])
     elif name == 'Not':
         return Not(*args)
     
@@ -160,6 +162,24 @@ def builtin_import(expr):
   
             elif target == 'real':
                 imports.append((target, Real))
+
+            elif target == 'float32':
+                imports.append((target, Float32))
+
+            elif target == 'float64':
+                imports.append((target, Float64))
+
+            elif target == 'int64':
+                imports.append((target, Int64))
+
+            elif target == 'int32':
+                imports.append((target, Int32))
+
+            elif target == 'complex128':
+                imports.append((target, Complex128))
+
+            elif target == 'complex64':
+                imports.append((target, Complex64))
 
             elif target == 'sum':
                 imports.append((target,Sum))

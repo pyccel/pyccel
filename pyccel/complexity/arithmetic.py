@@ -14,7 +14,7 @@ from sympy.core.singleton import S
 from sympy.utilities.iterables import iterable
 
 from pyccel.ast import (For, Assign, Declare, Variable,
-                        datatype, While, NativeFloat,
+                        datatype, While, NativeReal,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
                         IndexedVariable, Slice, If,

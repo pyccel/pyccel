@@ -11,7 +11,7 @@ import numpy as np
 
 from sympy import Lambda
 from sympy.core import Symbol
-from sympy.core import Float, Integer
+from sympy.core import Float as sp_Float, Integer as sp_Integer
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
@@ -28,7 +28,7 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand
+from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand,Real,Complex
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -55,8 +55,8 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Print, If, Nil)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeSymbol
-from pyccel.ast.datatypes import NativeComplex, NativeDouble, NativeInteger, NativeString, NativeList
+from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
+from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
 
@@ -622,10 +622,10 @@ class FCodePrinter(CodePrinter):
                     if i.start is None and i.end is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
+                        if (isinstance(i.end, (int, sp_Integer)) and i.end>0) or not(isinstance(i.end, (int, sp_Integer))):
                             shape.append(i.end)
                     elif i.end is None:
-                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
+                        if (isinstance(i.start, (int, sp_Integer)) and i.start<s-1) or not(isinstance(i.start, (int, sp_Integer))):
                             shape.append(s-i.start)
                     else:
                         shape.append(i.end-i.start+1)
@@ -700,6 +700,7 @@ class FCodePrinter(CodePrinter):
             dtype = '{0}({1})'.format(sig, name)
         else:
             dtype = self._print(expr.dtype)
+            dtype += '(kind={0})'.format(str(expr.variable.precision))
         # ...
         if isinstance(expr.dtype, NativeString):
             if expr.intent:
@@ -723,7 +724,7 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         # TODO improve
-        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable))) and
+        if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable))) and
             (not(allocatable or is_pointer) or is_static)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
@@ -819,6 +820,11 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Len):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
+
+        if isinstance(expr.rhs, (Int, Real, Complex)):
+           lhs = '{0}'.format(self._print(expr.lhs))
+           rhs = expr.rhs.fprint(self._print)
+           return '{0} = {1}'.format(lhs,rhs)
 
         if isinstance(expr.rhs, (Zeros, Array, Shape)):
             return expr.rhs.fprint(self._print, expr.lhs)
@@ -951,15 +957,11 @@ class FCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'integer'
 
-    def _print_NativeFloat(self, expr):
-        return 'real(kind=8)'
-
-    def _print_NativeDouble(self, expr):
-        return 'real(kind=8)'
+    def _print_NativeReal(self, expr):
+        return 'real'
 
     def _print_NativeComplex(self, expr):
-        # TODO add precision
-        return 'complex(kind=8)'
+        return 'complex'
 
     def _print_BooleanTrue(self, expr):
         return '.true.'
@@ -1090,6 +1092,7 @@ class FCodePrinter(CodePrinter):
                     body.append(stmt)
 
             ret_type = self._print(result.dtype)
+            ret_type += '(kind={0})'.format(str(result.precision)) 
 
             func_type = 'function'
             rec = ''
@@ -1888,7 +1891,7 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            one = Float(1.0)
+            one = sp_Float(1.0)
             code = '{0}/{1}'.format(self._print(one), \
                                     self.parenthesize(expr.base, PREC))
             return code

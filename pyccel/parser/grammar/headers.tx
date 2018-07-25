@@ -17,8 +17,8 @@ TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' 
 
 DataType: ID|STAR;
 
-Type: dtype=DataType (trailer=TrailerSubscriptList)?;
-ListType : '[' dtype+=DataType[','] ']';
+Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
+ListType : '[' dtype+=Type[','] ']';
 TypeHeader: Type|ListType ;
 UnionTypeStmt:  dtype+=TypeHeader['|'] ;
 

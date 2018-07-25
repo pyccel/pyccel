@@ -28,12 +28,8 @@ class NativeBool(DataType):
 class NativeInteger(DataType):
     _name = 'Int'
 
-class NativeFloat(DataType):
-    _name = 'Float'
-    pass
-
-class NativeDouble(DataType):
-    _name = 'Double'
+class NativeReal(DataType):
+    _name = 'Real'
     pass
 
 class NativeComplex(DataType):
@@ -60,13 +56,11 @@ class NativeIntegerList(NativeInteger, NativeList):
     _name = 'IntegerList'
     pass
 
-class NativeFloatList(NativeFloat, NativeList):
-    _name = 'FloatList'
+class NativeRealList(NativeReal, NativeList):
+    _name = 'RealList'
     pass
 
-class NativeDoubleList(NativeDouble, NativeList):
-    _name = 'DoubleList'
-    pass
+
 
 class NativeComplexList(NativeComplex, NativeList):
     _name = 'ComplexList'
@@ -96,13 +90,10 @@ class NdArrayInt(NdArray, NativeInteger):
     _name = 'NdArrayInt'
     pass
 
-class NdArrayFloat(NdArray, NativeFloat):
-    _name = 'NdArrayFloat'
+class NdArrayReal(NdArray, NativeReal):
+    _name = 'NdArrayReal'
     pass
 
-class NdArrayDouble(NdArray, NativeDouble):
-    _name = 'NdArrayDouble'
-    pass
 
 class NdArrayComplex(NdArray, NativeComplex):
     _name = 'NdArrayComplex'
@@ -153,21 +144,18 @@ class FunctionType(DataType):
 
 Bool    = NativeBool()
 Int     = NativeInteger()
-Float   = NativeFloat()
-Double  = NativeDouble()
+Real    = NativeReal()
 Complex = NativeComplex()
 Void    = NativeVoid()
 Nil     = NativeNil()
 String  = NativeString()
 _Symbol = NativeSymbol()
 IntegerList = NativeIntegerList()
-FloatList = NativeFloatList()
-DoubleList = NativeDoubleList()
+RealList = NativeRealList()
 ComplexList = NativeComplexList()
 NdArray = NdArray()
 NdArrayInt = NdArrayInt()
-NdArrayDouble = NdArrayDouble()
-NdArrayFloat = NdArrayFloat()
+NdArrayReal = NdArrayReal()
 NdArrayComplex = NdArrayComplex()
 Generic    = NativeGeneric()
 
@@ -175,20 +163,16 @@ Generic    = NativeGeneric()
 dtype_registry = {'bool': Bool,
                   'int': Int,
                   'integer': Int,
-                  'real'   : Double,
-                  'float': Float,
-                  'double': Double,
+                  'real'   : Real,
                   'complex': Complex,
                   'void': Void,
                   'nil': Nil,
                   'symbol': _Symbol,
                   '*int': IntegerList,
-                  '*float': FloatList,
-                  '*double': DoubleList,
+                  '*real': RealList,
                   '*complex': ComplexList,
                   'ndarrayint': NdArrayInt,
-                  'ndarrayfloat': NdArrayFloat,
-                  'ndarraydouble': NdArrayDouble,
+                  'ndarrayreal': NdArrayReal,
                   'ndarraycomplex': NdArrayComplex,
                   '*': Generic,
                   'str': String}
@@ -261,9 +245,7 @@ def get_default_value(dtype):
     """Returns the default value of a native datatype."""
     if isinstance(dtype, NativeInteger):
         value = 0
-    elif isinstance(dtype, NativeFloat):
-        value = 0.0
-    elif isinstance(dtype, NativeDouble):
+    elif isinstance(dtype, NativeReal):
         value = 0.0
     elif isinstance(dtype, NativeComplex):
         value = 0.0
@@ -285,12 +267,12 @@ def is_with_construct_datatype(dtype):
     except:
         return False
 
-# TODO check the use of floats
+# TODO check the use of Reals
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 
     arg : str or sympy expression
-        If a str ('bool', 'int', 'float', 'double', or 'void'), return the
+        If a str ('bool', 'int', 'real','complex', or 'void'), return the
         singleton for the corresponding dtype. If a sympy expression, return
         the datatype that best fits the expression. This is determined from the
         assumption system. For more control, use the `DataType` class directly.
@@ -304,8 +286,10 @@ def datatype(arg):
             return Int
         elif arg.is_Boolean:
             return Bool
-        else:
-            return Double
+        elif arg.is_real:
+            return Real
+        elif arg.is_complex:
+            return Complex
 
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
@@ -317,6 +301,7 @@ def datatype(arg):
         else:
             raise TypeError('Expecting a DataType')
     else:
+        
         arg = sympify(arg, locals=local_sympify)
         if isinstance(arg, ImmutableDenseMatrix):
             dts = [infer_dtype(i) for i in arg]
@@ -325,7 +310,7 @@ def datatype(arg):
             elif all([i is Int for i in dts]):
                 return Int
             else:
-                return Double
+                return Real
         else:
             return infer_dtype(arg)
 

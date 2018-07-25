@@ -54,7 +54,7 @@ from sympy.core.compatibility import is_sequence
 
 from .basic import Basic
 from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
-    NativeInteger, NativeBool, NativeFloat, NativeDouble, \
+    NativeInteger, NativeBool, NativeReal, \
     NativeComplex, NativeRange, NativeTensor, NativeString, \
     NativeGeneric
 
@@ -1164,12 +1164,12 @@ class Module(Basic):
 
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('double', 'x')
-    >>> y = Variable('double', 'y')
-    >>> z = Variable('double', 'z')
-    >>> t = Variable('double', 't')
-    >>> a = Variable('double', 'a')
-    >>> b = Variable('double', 'b')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributs   = [x,y]
@@ -1298,12 +1298,12 @@ class Program(Basic):
 
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('double', 'x')
-    >>> y = Variable('double', 'y')
-    >>> z = Variable('double', 'z')
-    >>> t = Variable('double', 't')
-    >>> a = Variable('double', 'a')
-    >>> b = Variable('double', 'b')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributs   = [x,y]
@@ -1913,7 +1913,7 @@ class Variable(Symbol):
 
     dtype : str, DataType
         The type of the variable. Can be either a DataType,
-        or a str (bool, int, float, double).
+        or a str (bool, int, real).
 
     name : str, list, DottedName
         The sympy object the variable represents. This can be either a string
@@ -1937,7 +1937,7 @@ class Variable(Symbol):
     >>> from pyccel.ast.core import Variable
     >>> Variable('int', 'n')
     n
-    >>> Variable('float', x, rank=2, shape=(n,2), allocatable=True)
+    >>> Variable('real', x, rank=2, shape=(n,2), allocatable=True)
     x
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
@@ -1957,11 +1957,13 @@ class Variable(Symbol):
         cls_base=None,
         cls_parameters=None,
         order='C',
+        precision=0
         ):
 
         # use str to make '*' work using py2
-
+        
         if isinstance(dtype, str) or str(dtype) == '*':
+            
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
@@ -1994,6 +1996,9 @@ class Variable(Symbol):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
 
+        if not isinstance(precision,int):
+            raise TypeError('precision must be an integer.')
+
         # if class attribut
 
         if isinstance(name, str):
@@ -2012,6 +2017,12 @@ class Variable(Symbol):
         if rank == 0:
             shape = ()
 
+        if not precision:
+            if isinstance(dtype, NativeInteger):
+                precision = 4
+            elif isinstance(dtype, (NativeReal, NativeComplex)):
+                precision = 8
+       
         # TODO improve order of arguments
 
         obj = Basic.__new__(
@@ -2028,6 +2039,7 @@ class Variable(Symbol):
             is_polymorphic,
             is_optional,
             order,
+            precision,
             )
 
         assumptions = {}
@@ -2037,8 +2049,9 @@ class Variable(Symbol):
                          NativeSymbol, NativeGeneric)
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
-        elif isinstance(dtype, (NativeFloat, NativeDouble)):
+        elif isinstance(dtype, NativeReal):
             assumptions['real'] = True
+            
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
@@ -2095,18 +2108,22 @@ class Variable(Symbol):
     @property
     def order(self):
         return self._args[11]
+  
+    @property
+    def precision(self):
+        return self._args[12]
 
     @property
     def is_ndarray(self):
         """user friendly method to check if the variable is an ndarray:
             1. have a rank > 0
-            2. dtype is one among {int, bool, float, double, complex}
+            2. dtype is one among {int, bool, real, complex}
         """
 
         if self.rank == 0:
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
-                          NativeFloat, NativeDouble, NativeComplex))
+                          NativeReal, NativeComplex))
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
@@ -2222,7 +2239,7 @@ class DottedVariable(AtomicExpr, Boolean):
             alloweddtypes = (NativeBool, NativeRange, NativeString)
             if isinstance(dtype, NativeInteger) or args[1].is_integer:
                 assumptions['integer'] = True
-            elif isinstance(dtype, (NativeFloat, NativeDouble)) \
+            elif isinstance(dtype, NativeReal) \
                 or args[1].is_real:
                 assumptions['real'] = True
             elif isinstance(dtype, NativeComplex) or args[1].is_complex:
@@ -2532,8 +2549,8 @@ class FunctionDef(Basic):
     Examples
 
     >>> from pyccel.ast.core import Assign, Variable, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
     >>> args        = [x]
     >>> results     = [y]
     >>> body        = [Assign(y,x+1)]
@@ -2548,8 +2565,8 @@ class FunctionDef(Basic):
     >>> from pyccel.ast.core import ValuedArgument
     >>> from pyccel.ast.core import GetDefaultFunctionArg
     >>> n = ValuedArgument('n', 4)
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2880,8 +2897,8 @@ class GetDefaultFunctionArg(Basic):
     >>> from pyccel.ast.core import ValuedArgument
     >>> from pyccel.ast.core import GetDefaultFunctionArg
     >>> n = ValuedArgument('n', 4)
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2896,8 +2913,8 @@ class GetDefaultFunctionArg(Basic):
 
     >>> from pyccel.ast.core import ValuedVariable
     >>> n = ValuedVariable('int', 'n', value=4)
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -2967,12 +2984,12 @@ class ClassDef(Basic):
 
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('double', 'x')
-    >>> y = Variable('double', 'y')
-    >>> z = Variable('double', 'z')
-    >>> t = Variable('double', 't')
-    >>> a = Variable('double', 'a')
-    >>> b = Variable('double', 'b')
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributs   = [x,y]
@@ -3410,8 +3427,8 @@ class Declare(Basic):
     >>> from pyccel.ast.core import Declare, Variable
     >>> Declare('int', Variable('int', 'n'))
     Declare(NativeInteger(), (n,), None)
-    >>> Declare('double', Variable('double', 'x'), intent='out')
-    Declare(NativeDouble(), (x,), out)
+    >>> Declare('real', Variable('real', 'x'), intent='out')
+    Declare(NativeReal(), (x,), out)
     """
 
     def __new__(
@@ -3642,9 +3659,7 @@ class ZerosLike(Function):
         def _native_init_value(dtype):
             if isinstance(dtype, NativeInteger):
                 return 0
-            elif isinstance(dtype, NativeFloat):
-                return 0.0
-            elif isinstance(dtype, NativeDouble):
+            elif isinstance(dtype, NativeReal):
                 return 0.0
             elif isinstance(dtype, NativeComplex):
                 return 0.0
@@ -3652,7 +3667,7 @@ class ZerosLike(Function):
                 return BooleanFalse()
             raise TypeError('Expecting a Native type, given {}'.format(dtype))
 
-        _native_types = (NativeInteger, NativeFloat, NativeDouble,
+        _native_types = (NativeInteger, NativeReal,
                          NativeComplex, NativeBool)
 
         rhs = self.rhs
@@ -3735,7 +3750,7 @@ class Del(Basic):
     Examples
 
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), allocatable=True)
+    >>> x = Variable('real', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Del([x])
     Del([x])
     """
@@ -4016,7 +4031,7 @@ class IndexedElement(Indexed):
         assumptions = {}
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
-        elif isinstance(dtype, (NativeFloat, NativeDouble)):
+        elif isinstance(dtype, NativeReal):
             assumptions['real'] = True
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True

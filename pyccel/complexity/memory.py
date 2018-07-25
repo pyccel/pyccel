@@ -9,7 +9,7 @@ from sympy.tensor.indexed import Idx
 from pyccel.parser.parser  import PyccelParser
 
 from pyccel.ast import (For, Assign, Declare, Variable,
-                        datatype, While, NativeFloat,
+                        datatype, While, NativeReal,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
                         IndexedVariable, Slice, If,

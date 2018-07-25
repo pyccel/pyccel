@@ -51,13 +51,11 @@ from redbaron import LambdaNode
 from redbaron import WithNode
 from redbaron import AtomtrailersNode
 
-from pyccel.ast import NativeInteger, NativeFloat
-from pyccel.ast import NativeDouble,NativeComplex
-from pyccel.ast import NativeBool
+from pyccel.ast import NativeInteger, NativeReal
+from pyccel.ast import NativeBool, NativeComplex
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeIntegerList
-from pyccel.ast import NativeFloatList
-from pyccel.ast import NativeDoubleList
+from pyccel.ast import NativeRealList
 from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
@@ -268,7 +266,7 @@ def _dtype(expr):
     if expr.is_integer:
         return 'int'
     elif expr.is_real:
-        return 'double'
+        return 'real'
     elif expr.is_complex:
         return 'complex'
     elif expr.is_Boolean:
@@ -281,13 +279,13 @@ def str_dtype(dtype):
     if isinstance(dtype, str):
         if dtype == 'int':
             return 'integer'
-        elif dtype in ['double', 'float']:
+        elif dtype== 'real':
             return 'real'
         else:
             return dtype
     if isinstance(dtype, NativeInteger):
         return 'integer'
-    elif isinstance(dtype, (NativeFloat, NativeDouble)):
+    elif isinstance(dtype, NativeReal):
         return 'real'
     elif isinstance(dtype, NativeComplex):
         return 'complex'
@@ -1994,10 +1992,11 @@ class Parser(object):
         d_var['is_optional'] = None
         d_var['cls_base'] = None
         d_var['cls_parameters'] = None
+        d_var['precision'] = 0
 
         # TODO improve => put settings as attribut of Parser
 
-        DEFAULT_FLOAT = settings.pop('default_float', 'double')
+        DEFAULT_FLOAT = settings.pop('default_float', 'real')
 
         if isinstance(expr, type(None)):
             return d_var
@@ -2006,12 +2005,14 @@ class Parser(object):
             d_var['datatype'] = 'int'
             d_var['allocatable'] = False
             d_var['rank'] = 0
+            d_var['precision'] = 4
             return d_var
         elif isinstance(expr, (Float, float)):
 
             d_var['datatype'] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'] = 0
+            d_var['precision'] = 8
             return d_var
         elif isinstance(expr, String):
 
@@ -2023,6 +2024,7 @@ class Parser(object):
             d_var['datatype'] = 'complex'
             d_var['allocatable'] = False
             d_var['rank'] = 0
+            d_var['precision'] = 8
             return d_var
         elif isinstance(expr, Variable):
 
@@ -2041,6 +2043,7 @@ class Parser(object):
             d_var['is_optional'] = var.is_optional
             d_var['is_target'] = var.is_target
             d_var['order'] = var.order
+            d_var['precision'] = var.precision
             return d_var
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
 
@@ -2074,6 +2077,7 @@ class Parser(object):
 
             d_var['shape'] = shape
             d_var['rank'] = rank
+            d_var['precision'] = var.precision
 
             return d_var
         elif isinstance(expr, IndexedVariable):
@@ -2086,6 +2090,7 @@ class Parser(object):
             d_var['allocatable'] = var.allocatable
             d_var['shape'] = var.shape
             d_var['rank'] = var.rank
+            d_var['precision'] = var.precision
             return d_var
         elif isinstance(expr, Range):
 
@@ -2132,15 +2137,18 @@ class Parser(object):
             ds = [self._infere_type(i, **settings) for i in
                   _atomic(expr) if isinstance(i, (Variable,
                   DottedVariable))]
-
+            #TODO we should also look for functions call
+            #to collect info about precision and shapes later when we allow 
+            # vectorised operations
             # we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
             # so we assume all functions
-
+            
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
+            precisions = [d['precision'] for d in ds]
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
@@ -2172,6 +2180,13 @@ class Parser(object):
             d_var['is_pointer'] = any(pointers)
             d_var['shape'] = shape
             d_var['rank'] = rank
+            if len(precisions)>0:
+                d_var['precision'] = max(precisions)
+            else:
+                if d_var['datatype']=='int':
+                    d_var['precision'] = 4
+                else:
+                    d_var['precision'] = 8
             return d_var
         elif isinstance(expr, (tuple, list, List, Tuple)):
 
@@ -2189,10 +2204,8 @@ class Parser(object):
                 dtype = datatype(d['datatype'])
                 if isinstance(dtype, NativeInteger):
                     d_var['datatype'] = NativeIntegerList()
-                elif isinstance(dtype, NativeFloat):
-                    d_var['datatype'] = NativeFloatList()
-                elif isinstance(dtype, NativeDouble):
-                    d_var['datatype'] = NativeDoubleList()
+                elif isinstance(dtype, NativeReal):
+                    d_var['datatype'] = NativeRealList()
                 elif isinstance(dtype, NativeComplex):
                     d_var['datatype'] = NativeComplexList()
                 else:
@@ -2342,7 +2355,7 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
             return var
         elif isinstance(expr, DottedVariable):
-
+            
             first = self._annotate(expr.lhs)
             rhs_name = _get_name(expr.rhs)
             attr_name = []
@@ -2878,6 +2891,10 @@ class Parser(object):
 
             rhs = self._annotate(rhs, **settings)
 
+ # .......
+ # .......
+ # .......
+
             if isinstance(rhs, If):
                 args = rhs.args
                 new_args = []
@@ -2989,10 +3006,8 @@ class Parser(object):
                     d_var['is_pointer'] = False
                     if isinstance(dtype, NativeInteger):
                         d_var['datatype'] = 'ndarrayint'
-                    elif isinstance(dtype, NativeFloat):
-                        d_var['datatype'] = 'ndarrayfloat'
-                    elif isinstance(dtype, NativeDouble):
-                        d_var['datatype'] = 'ndarraydouble'
+                    elif isinstance(dtype, NativeReal):
+                        d_var['datatype'] = 'ndarrayreal'
                     elif isinstance(dtype, NativeComplex):
                         d_var['datatype'] = 'ndarraycomplex'
                     elif isinstance(dtype, str):
@@ -3006,19 +3021,23 @@ class Parser(object):
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
-                elif name in ['Mod', 'Int']:
-
+                elif name in ['Int','Int32','Int64','Real',
+                             'Float32','Float64','Complex',
+                              'Complex128','Complex64']:
+                    d_var = {}
+                    d_var['datatype'] = _dtype(rhs)
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                    d_var['precision'] = rhs.precision
+                elif name in ['Mod']:
                     d_var = {}
                     d_var['datatype'] = 'int'
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
-                elif name in ['Real']:
-                    d_var = {}
-                    d_var['datatype'] = 'double'
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
+                    d = self._infere_type(rhs.args[0],**settings)
+                    d_var['precision'] = d.pop('precision',4)
                 elif name in [
                     'Abs',
                     'sin',
@@ -3049,7 +3068,7 @@ class Parser(object):
             elif isinstance(rhs, Pow):
 
                 d_var = self._infere_type(rhs.args[0], **settings)
-                d_var['datatype'] = ('double'
+                d_var['datatype'] = ('real'
                          if rhs.args[0].is_real else 'complex')
             elif isinstance(rhs, SumFunction):
 
