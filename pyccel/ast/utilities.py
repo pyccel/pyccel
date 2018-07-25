@@ -12,7 +12,7 @@ from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
-from sympy import Not
+from sympy import Not,Float
 from sympy import (Abs, sin, cos, exp, csc, cos, sec, tan, cot, Mod, Max, Min)
 
 import scipy.constants as sc_constants
@@ -82,7 +82,7 @@ def builtin_function(expr, args=None):
         return floor(*args)
     elif name in ['complex']:
         if len(args)==1:
-            args = [args[0],0]
+            args = [args[0],Float(0)]
         return Complex(args[0],args[1])
     elif name == 'Not':
         return Not(*args)

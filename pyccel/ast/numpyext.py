@@ -8,7 +8,7 @@ from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
-from sympy import Integer, Add, Mul, Pow
+from sympy import Integer, Add, Mul, Pow, Float
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
@@ -180,8 +180,7 @@ class Int(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+        if not isinstance(arg, (Variable, Float, Integer, Mul, Add, Pow, Rational)):
             
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
@@ -227,8 +226,7 @@ class Real(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                          NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+        if not isinstance(arg, (Variable, Integer, Float, Mul, Add, Pow, Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'real':True}
@@ -280,11 +278,10 @@ class Complex(Function):
     arg : Variable, Float, Integer
     """
 
-    def __new__(cls, arg0, arg1=0):
+    def __new__(cls, arg0, arg1=Float(0)):
         
         for arg in [arg0, arg1]:
-            if not isinstance(arg, (Variable, NativeInteger, NativeFloat,
-                    NativeDouble, NativeComplex, Mul, Add, Pow, Rational)):
+            if not isinstance(arg, (Variable, Integer, Float, Mul, Add, Pow, Rational)):
                 raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg0, arg1)
         assumptions = {'complex':True}

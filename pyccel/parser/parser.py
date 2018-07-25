@@ -3023,24 +3023,11 @@ class Parser(object):
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
-                elif name in ['Int','Int32','Int64']:
-
+                elif name in ['Int','Int32','Int64','Real',
+                             'Float32','Float64','Complex',
+                              'Complex128','Complex64']:
                     d_var = {}
-                    d_var['datatype'] = 'int'
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                    d_var['precision'] = rhs.precision
-                elif name in ['Real','Float32','Float64']:
-                    d_var = {}
-                    d_var['datatype'] = 'double'
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                    d_var['precision'] = rhs.precision
-                elif name in ['Complex','Complex128','Complex64']:
-                    d_var = {}
-                    d_var['datatype'] = 'complex'
+                    d_var['datatype'] = _dtype(rhs)
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
@@ -3079,7 +3066,6 @@ class Parser(object):
 
                     d_var = self._infere_type(rhs.rhs, **settings)
                 else:
-                    print name
                     raise NotImplementedError('TODO')
             elif isinstance(rhs, Pow):
 
