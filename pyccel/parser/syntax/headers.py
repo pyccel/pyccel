@@ -18,16 +18,9 @@ from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast import ValuedArgument
 from pyccel.ast import DottedName, String
+from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
 
 DEBUG = False
-dtype_registery = {'double':('real',8),
-                   'float':('real',4),
-                   'float32':('real',4),
-                   'float64':('real',8),
-                   'complex64':('complex',4),
-                   'complex128':('complex',8),
-                   'int32':('int',4),
-                   'int64':('int',8)}
 
 class Header(object):
     """Class for Header syntax."""
@@ -91,8 +84,8 @@ class Type(BasicStmt):
     def expr(self):
         dtype = self.dtype
         precision = self.precision
-        if dtype in dtype_registery.keys():
-            dtype,precision = dtype_registery[dtype]
+        if dtype in dtype_registry.keys():
+            dtype,precision = dtype_registry[dtype]
         trailer = self.trailer
         order = 'C'
     
