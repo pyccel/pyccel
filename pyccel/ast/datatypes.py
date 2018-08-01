@@ -36,18 +36,26 @@ class DataType(with_metaclass(Singleton, Basic)):
 
 class NativeBool(DataType):
     _name = 'Bool'
+    def is_Boolean(self): return True
+    def is_integer(self): return True
+    def is_real(self): return True
+    def is_complex(self): return True
     pass
 
 class NativeInteger(DataType):
     _name = 'Int'
+    def is_integer(self): return True
+    def is_real(self): return True
+    def is_complex(self): return True
 
 class NativeReal(DataType):
     _name = 'Real'
-    pass
+    def is_real(self): return True
+    def is_complex(self): return True
 
 class NativeComplex(DataType):
     _name = 'Complex'
-    pass
+    def is_complex(self): return True
 
 class NativeString(DataType):
     _name = 'String'
@@ -293,15 +301,14 @@ def datatype(arg):
 
     """
     def infer_dtype(arg):
-        if arg.is_integer:
-            return Int
-        elif arg.is_Boolean:
+        if arg.is_Boolean:
             return Bool
+        elif arg.is_integer:
+            return Int
+        elif arg.is_real:
+            return Real
         elif arg.is_complex:
             return Complex
-        else:
-            return Real
-
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)

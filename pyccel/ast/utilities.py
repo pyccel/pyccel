@@ -8,7 +8,7 @@ from .core import Range, Len , Enumerate, Zip, Product
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
 from .numpyext import Zeros, Ones, Empty
-from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
+from .numpyext import Array, Shape, Int, Rand, Sum, Matmul, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
@@ -183,6 +183,9 @@ def builtin_import(expr):
 
             elif target == 'sum':
                 imports.append((target,Sum))
+                
+            elif target == 'matmul':
+                imports.append((target,Matmul))
 
             elif target in ['rand', 'random']:
                 imports.append((target, Rand))

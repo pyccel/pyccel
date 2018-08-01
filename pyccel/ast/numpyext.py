@@ -137,10 +137,12 @@ class Matmul(Function):
     arg : list , tuple , Tuple, List, Variable
     """
 
-    def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+    def __new__(cls, a, b):
+        if not isinstance(a, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(a))
+        if not isinstance(b, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(a))
+        return Basic.__new__(cls, a, b)
 
     @property
     def a(self):
@@ -156,16 +158,20 @@ class Matmul(Function):
 
     @property
     def rank(self):
-        return 0
+        return 1
+    
+    @property
+    def shape(self):
+        return 3
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
-
-        rhs_code = printer(self.arg)
+        a_code = printer(self.a)
+        b_code = printer(self.b)
         if lhs:
             lhs_code = printer(lhs)
-            return '{0} = matmul({1},{2})'.format(lhs_code, rhs_code)
-        return 'matmul({0},{1})'.format(rhs_code)
+            return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
+        return 'matmul({0},{1})'.format(a_code, b_code)
 
 
 class Shape(Array):

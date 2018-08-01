@@ -3057,13 +3057,20 @@ class Parser(object):
                     'atan',
                     'acot',
                     'atan2',
-                    'floor',
+                    'floor'
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = _dtype(rhs)
                 elif name in ['ZerosLike']:
 
                     d_var = self._infere_type(rhs.rhs, **settings)
+                elif name in ['Matmul']:
+                    d_var = {}
+                    d_var['datatype'] = rhs.dtype
+                    d_var['allocatable'] = True
+                    d_var['shape'] = rhs.shape
+                    d_var['rank'] = rhs.rank
+                    d_var['is_pointer'] = False
                 else:
                     raise NotImplementedError('TODO')
             elif isinstance(rhs, Pow):
