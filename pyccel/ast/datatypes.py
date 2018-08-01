@@ -297,10 +297,10 @@ def datatype(arg):
             return Int
         elif arg.is_Boolean:
             return Bool
-        elif arg.is_real:
-            return Real
         elif arg.is_complex:
             return Complex
+        else:
+            return Real
 
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
