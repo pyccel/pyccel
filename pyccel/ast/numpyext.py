@@ -131,6 +131,7 @@ class Sum(Function):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
+# TODO: order is wrong with Fortran indexing
 class Matmul(Function):
     """Represents a call to numpy.matmul for code generation.
 
