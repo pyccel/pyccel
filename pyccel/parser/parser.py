@@ -3068,7 +3068,6 @@ class Parser(object):
                     d_var = {}
                     d_var['datatype'] = rhs.dtype
                     d_var['allocatable'] = True
-                    d_var['shape'] = rhs.shape
                     d_var['rank'] = rhs.rank
                     d_var['is_pointer'] = False
                 else:

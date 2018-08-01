@@ -158,11 +158,7 @@ class Matmul(Function):
 
     @property
     def rank(self):
-        return 1
-    
-    @property
-    def shape(self):
-        return 3
+        return 1 # TODO: make this general
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
