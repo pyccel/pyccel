@@ -2210,7 +2210,7 @@ class Parser(object):
                 elif isinstance(dtype, NativeComplex):
                     d_var['datatype'] = NativeComplexList()
                 else:
-                    raise NotImplementedError('TODO')
+                    raise NotImplementedError('Datatype {}'.format(dtype))
             return d_var
         elif isinstance(expr, Concatinate):
             d_var_left = self._infere_type(expr.left, **settings)

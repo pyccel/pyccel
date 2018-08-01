@@ -106,7 +106,7 @@ class Sum(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, Tuple, List, Variable)):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
@@ -131,7 +131,41 @@ class Sum(Function):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
+class Matmul(Function):
+    """Represents a call to numpy.matmul for code generation.
 
+    arg : list , tuple , Tuple, List, Variable
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+        return Basic.__new__(cls, arg)
+
+    @property
+    def a(self):
+        return self._args[0]
+    
+    @property
+    def b(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return self._args[0].dtype
+
+    @property
+    def rank(self):
+        return 0
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+
+        rhs_code = printer(self.arg)
+        if lhs:
+            lhs_code = printer(lhs)
+            return '{0} = matmul({1},{2})'.format(lhs_code, rhs_code)
+        return 'matmul({0},{1})'.format(rhs_code)
 
 
 class Shape(Array):
