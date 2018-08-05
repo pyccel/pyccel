@@ -69,7 +69,7 @@ def test_array_4():
     assert(np.allclose(x, x_expected))
 
 def test_array_5():
-    header = '#$ header procedure f2_py(int, int, float [:,:](order = F))'
+    header = '#$ header procedure f2_py(int, int, double [:,:](order = F))'
     def f2_py(m1, m2, x):
         x[:,:] = 0.
         for i in range(0, m1):

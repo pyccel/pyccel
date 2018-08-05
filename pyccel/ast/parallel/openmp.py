@@ -21,7 +21,7 @@ from pyccel.ast.core import Len
 from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, With, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
-from pyccel.ast.core import MethodCall, FunctionCall, ConstructorCall
+from pyccel.ast.core import ConstructorCall
 
 from pyccel.ast.parallel.basic import Basic
 

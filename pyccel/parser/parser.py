@@ -60,7 +60,7 @@ from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
 from pyccel.ast import String
-from pyccel.ast import datatype, DataTypeFactory
+from pyccel.ast import DataTypeFactory
 from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
@@ -68,7 +68,7 @@ from pyccel.ast import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast import AugAssign,CodeBlock
 from pyccel.ast import Return
 from pyccel.ast import Pass
-from pyccel.ast import FunctionCall, MethodCall, ConstructorCall
+from pyccel.ast import ConstructorCall
 from pyccel.ast import FunctionDef, Interface
 from pyccel.ast import PythonFunction,SympyFunction
 from pyccel.ast import ClassDef
@@ -96,7 +96,7 @@ from pyccel.ast import Is
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
-from pyccel.ast import With
+from pyccel.ast import With, Block
 from pyccel.ast import Range, Zip, Enumerate, Product
 from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
@@ -107,6 +107,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
+from pyccel.ast import inline, subs
 from pyccel.ast.core import local_sympify
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -1451,7 +1452,6 @@ class Parser(object):
                     if second.is_integer:
                         second = Float(second)
                     second = Pow(second, -1, evaluate=False)
-   
                 return Mul(first, second, evaluate=False)
             elif stmt.value == 'and':
 
@@ -2204,12 +2204,12 @@ class Parser(object):
             d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
                 d_var['is_target'] = True
-                dtype = datatype(d['datatype'])
-                if isinstance(dtype, NativeInteger):
+                dtype = str_dtype(d['datatype'])
+                if dtype == 'integer':
                     d_var['datatype'] = NativeIntegerList()
-                elif isinstance(dtype, NativeReal):
+                elif dtype == 'real':
                     d_var['datatype'] = NativeRealList()
-                elif isinstance(dtype, NativeComplex):
+                elif dtype == 'complex':
                     d_var['datatype'] = NativeComplexList()
                 else:
                     raise NotImplementedError('TODO')
@@ -2241,7 +2241,6 @@ class Parser(object):
         elif isinstance(expr, GC):
             return self._infere_type(expr.target, **settings)
         else:
-
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
     def _annotate(self, expr, **settings):
@@ -2457,9 +2456,10 @@ class Parser(object):
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, Add):
-                    expr_new = Add(expr_new, a_new)
+      
+                    expr_new = Add(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Mul):
-                    expr_new = Mul(expr_new, a_new)
+                    expr_new = Mul(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Pow):
                     dtype = str_dtype(_dtype(expr_new))
                     assumptions = {dtype: True}
@@ -2469,26 +2469,26 @@ class Parser(object):
                         assumptions.copy()
 
                 elif isinstance(expr, And):
-                    expr_new = And(expr_new, a_new)
+                    expr_new = And(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Or):
                     expr_new = Or(expr_new, a_new)
                 elif isinstance(expr, Eq):
-                    expr_new = Eq(expr_new, a_new)
+                    expr_new = Eq(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Ne):
-                    expr_new = Ne(expr_new, a_new)
+                    expr_new = Ne(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Lt):
-                    expr_new = Lt(expr_new, a_new)
+                    expr_new = Lt(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Le):
-                    expr_new = Le(expr_new, a_new)
+                    expr_new = Le(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Gt):
-                    expr_new = Gt(expr_new, a_new)
+                    expr_new = Gt(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Ge):
-                    expr_new = Ge(expr_new, a_new)
+                    expr_new = Ge(expr_new, a_new, evaluate=False)
 
             # TODO fix bug when we put expr_new.doit() for the indexedvariable
             # somehow sympy creats new object and we loose the info
             # for the types
-
+            
             return expr_new
         elif isinstance(expr, Lambda):
 
@@ -2505,10 +2505,8 @@ class Parser(object):
                     raise ValueError('Unknown function in lambda definition'
                             )
                 else:
-                    if isinstance(f, SympyFunction):
-                        f = FunctionCall(f, func.args)
-                    else:
-                        f = f(*func.args)
+                    
+                    f = f(*func.args)
                     expr_new = expr.expr.subs(func, f)
                     expr = Lambda(expr.variables, expr_new)
             return expr
@@ -2607,8 +2605,7 @@ class Parser(object):
                         return expr
                     else:
                         if 'inline' in func.decorators.keys():
-                            raise NotImplementedError('TODO fix the inline'
-                                    )
+                            return inline(func,args)
 
                         if isinstance(func, FunctionDef):
                             results = func.results
@@ -2782,6 +2779,7 @@ class Parser(object):
                         else:
                             raise NotImplementedError('TODO')
 
+
             if isinstance(rhs, (Mul, Add, Pow)):
                 ls = _atomic(rhs, Assign)
                 if len(ls) > 0:
@@ -2873,6 +2871,7 @@ class Parser(object):
                 stmt.set_fst(expr.fst)
                 rhs = self._annotate(stmt, **settings)
                 return rhs
+
             elif isinstance(rhs, (Assign, AugAssign)):
 
                 rhs_ = self._annotate(rhs, **settings)
@@ -2924,6 +2923,22 @@ class Parser(object):
                     i.set_fst(expr.fst)
                 rhs = self._annotate(rhs, **settings)
                 return rhs
+
+            if isinstance(rhs, Block):
+                results = _atomic(rhs.body,Return)
+                
+                sub = list(zip(results,[EmptyLine()]*len(results)))
+                body = rhs.body
+                body = subs(body,sub)
+                results = [i.expr for i in results]
+                lhs = expr.lhs
+                if isinstance(lhs ,(list,tuple,Tuple)):
+                    sub = [list(zip(i,lhs)) for i in results]
+                else:
+                    sub = [(i[0],lhs) for i in results]
+                body = subs(body,sub)
+                expr = Block(rhs.name, rhs.variables, body)
+                return expr
 
             if isinstance(rhs, FunctionalFor):
                 return rhs
