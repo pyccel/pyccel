@@ -164,6 +164,8 @@ import sys
 import re
 strip_ansi_escape = \
     re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
+import redbaron
+redbaron.ipython_behavior = False
 
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
