@@ -108,7 +108,7 @@ from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
-from pyccel.ast.datatypes import _dtype, str_dtype
+from pyccel.ast.datatypes import sp_dtype, str_dtype
 from pyccel.ast.core import local_sympify
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -2103,7 +2103,7 @@ class Parser(object):
                 d_var = self._infere_type(func.results[0], **settings)
             else:
                 d_var = self._infere_type(expr.args[0], **settings)
-                d_var['datatype'] = _dtype(expr)
+                d_var['datatype'] = sp_dtype(expr)
             return d_var
         elif isinstance(expr, Expr):
 
@@ -2148,7 +2148,7 @@ class Parser(object):
 
             # ...
 
-            d_var['datatype'] = _dtype(expr)
+            d_var['datatype'] = sp_dtype(expr)
             d_var['allocatable'] = any(allocatables)
             d_var['is_pointer'] = any(pointers)
             d_var['shape'] = shape
@@ -2431,7 +2431,7 @@ class Parser(object):
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Pow):
-                    dtype = str_dtype(_dtype(expr_new))
+                    dtype = str_dtype(sp_dtype(expr_new))
                     assumptions = {dtype: True}
                     expr_new = Pow(expr_new, a_new)
                     expr_new._assumptions = StdFactKB(assumptions)
@@ -2964,7 +2964,7 @@ class Parser(object):
                      # TODO imporve this will not work for the case of different completly different
                      # and not only the datatype
 
-                    d_var[0]['datatype'] = _dtype(rhs)
+                    d_var[0]['datatype'] = sp_dtype(rhs)
                 elif name in ['Zeros', 'Ones', 'Empty']:
 
                     # TODO improve
@@ -3005,7 +3005,7 @@ class Parser(object):
                 elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
 
                     d_var = {}
-                    d_var['datatype'] = _dtype(rhs)
+                    d_var['datatype'] = sp_dtype(rhs)
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
@@ -3013,7 +3013,7 @@ class Parser(object):
                              'Float32','Float64','Complex',
                               'Complex128','Complex64']:
                     d_var = {}
-                    d_var['datatype'] = _dtype(rhs)
+                    d_var['datatype'] = sp_dtype(rhs)
                     d_var['rank'] = 0
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
@@ -3047,7 +3047,7 @@ class Parser(object):
                     'floor',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = _dtype(rhs)
+                    d_var['datatype'] = sp_dtype(rhs)
                 elif name in ['ZerosLike']:
 
                     d_var = self._infere_type(rhs.rhs, **settings)
