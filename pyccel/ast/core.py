@@ -73,32 +73,39 @@ def subs(expr, new_elements):
     if len(list(new_elements)) == 0:
         return expr
     if isinstance(expr, (list, tuple, Tuple)):
-        return [subs(expr, new_elements) for i in expr]
-    elif isinstance(expr, (Expr, Assign)):
-        return expr.subs(new_elements)
+        return [subs(i, new_elements) for i in expr]
+
     elif isinstance(expr, While):
-        test = subs(expr.test, a_old, a_new)
-        body = subs(expr.body, a_old, a_new)
+        test = subs(expr.test, new_elements)
+        body = subs(expr.body, new_elements)
         return While(test, body)
+
     elif isinstance(expr, For):
-
-        # TODO treat iter correctly
-
-        target = subs(expr.target, a_old, a_new)
-        it = subs(expr.iterable, a_old, a_new)
+        target = subs(expr.target, new_elements)
+        it = subs(expr.iterable, new_elements)
         target = expr.target
         it = expr.iterable
-        body = subs(expr.body, a_old, a_new)
+        body = subs(expr.body, new_elements)
         return For(target, it, body)
+
     elif isinstance(expr, If):
         args = []
         for block in expr.args:
             test = block[0]
             stmts = block[1]
-            t = subs(test, a_old, a_new)
-            s = subs(stmts, a_old, a_new)
+            t = subs(test, new_elements)
+            s = subs(stmts, new_elements)
             args.append((t, s))
         return If(*args)
+
+    elif isinstance(expr, Return):
+        for i in new_elements:
+            expr = expr.subs(i[0],i[1])
+        return expr
+
+    elif isinstance(expr, (Expr, Assign)):
+        return expr.subs(new_elements)
+
     else:
         return expr
 
@@ -173,6 +180,13 @@ def allocatable_like(expr, verbose=False):
                 raise TypeError('Found an unknown symbol {0}'.format(str(a)))
     else:
         raise TypeError('Unexpected type {0}'.format(type(expr)))
+
+
+def inline(func, args):
+        local_vars = func.local_vars
+        body = func.body
+        body = subs(body, zip(func.arguments, args))
+        return Block(str(func.name), local_vars, body)
 
 
 class DottedName(Basic):
@@ -794,8 +808,8 @@ class With(Basic):
                 enter = i
             elif str(i.name) == '__exit__':
                 exit = i
-        enter = FunctionCall(enter, []).inline
-        exit = FunctionCall(exit, []).inline
+        enter = inline(enter,[])
+        exit =  inline(exit, [])
 
         # TODO check if enter is empty or not first
 
@@ -1053,8 +1067,7 @@ class Block(Basic):
         cls,
         name,
         variables,
-        body,
-        ):
+        body):
         if not isinstance(name, str):
             raise TypeError('name must be of type str')
         if not iterable(variables):
@@ -1064,6 +1077,7 @@ class Block(Basic):
                 raise TypeError('Only a Variable instance is allowed.')
         if not iterable(body):
             raise TypeError('body must be an iterable')
+        body = Tuple(*body)
         return Basic.__new__(cls, name, variables, body)
 
     @property
@@ -1466,8 +1480,8 @@ class For(Basic):
                     Enumerate, Zip))
             cond_iter = cond_iter or isinstance(iter, Variable) \
                 and is_iterable_datatype(iter.dtype)
-            cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
-                and is_iterable_datatype(iter.this.dtype)
+          #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
+          #      and is_iterable_datatype(iter.arguments[0].dtype)
             if not cond_iter:
                 raise TypeError('iter must be an iterable')
 
@@ -1604,8 +1618,6 @@ class ForIterator(For):
             return n
         else:
 
-              # isinstance(it, ConstructorCall)
-
             return 1
 
     @property
@@ -1642,14 +1654,12 @@ class Is(Basic):
         return self._args[1]
 
 
-# TODO remove kind from here and put it in FunctionDef
 
-class FunctionCall(AtomicExpr):
+
+class ConstructorCall(AtomicExpr):
 
     """
-    Base class for applied mathematical functions.
-
-    It also serves as a constructor for undefined function classes.
+    It  serves as a constructor for undefined function classes.
 
     func: FunctionDef, str
         an instance of FunctionDef or function name
@@ -1659,30 +1669,6 @@ class FunctionCall(AtomicExpr):
 
     kind: str
         'function' or 'procedure'. default value: 'function'
-
-    Examples
-
-    Examples
-
-    >>> from pyccel.ast.core import Assign, Variable
-    >>> from pyccel.ast.core import FunctionDef
-    >>> x = Variable('int', 'x')
-    >>> y = Variable('int', 'y')
-    >>> args        = [x]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+1)]
-    >>> incr = FunctionDef('incr', args, results, body)
-    >>> n = Variable('int', 'n')
-    >>> incr(n)
-    incr(n)
-    >>> type(incr(n))
-    pyccel.ast.core.FunctionCall
-    >>> incr(n)*2+1
-    1 + 2*incr(n)
-    >>> incr(n)+1
-    incr(n) + 1
-    >>> incr(n)*2
-    2*incr(n)
     """
 
     is_commutative = True
@@ -1701,131 +1687,6 @@ class FunctionCall(AtomicExpr):
 
         if isinstance(func, FunctionDef):
             kind = func.kind
-            f_name = func.name
-        elif isinstance(func, Interface):
-            kind = func.functions[0].kind
-            f_name = func.name
-        else:
-            f_name = func
-
-#        if not isinstance(kind, str):
-#            raise TypeError("Expecting a string for kind.")
-#
-#        if not (kind in ['function', 'procedure']):
-#            raise ValueError("kind must be one among {'function', 'procedure'}")
-#        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
-#            raise TypeError("Expecting a cls_variable.")
-
-        obj = Basic.__new__(cls, f_name)
-
-        obj._kind = kind
-        obj._func = func
-        obj._arguments = arguments
-
-        return obj
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        name = sstr(self.name)
-        args = ''
-        if not self.arguments is None:
-            args = ', '.join(sstr(i) for i in self.arguments)
-        return '{0}({1})'.format(name, args)
-
-    @property
-    def func(self):
-        return self._func
-
-    @property
-    def kind(self):
-        return self._kind
-
-    @property
-    def arguments(self):
-        return self._arguments
-
-    @property
-    def name(self):
-        if isinstance(self.func, FunctionDef):
-            return self.func.name
-        else:
-            return self.func
-
-    @property
-    def inline(self):
-        func = self.func
-        local_vars = func.local_vars
-        body = func.body
-        body = subs(body, zip(func.arguments, self.arguments))
-        return Block(str(func.name), local_vars, body)
-
-
-class MethodCall(AtomicExpr):
-
-    """
-    Base class for applied mathematical functions.
-
-    It also serves as a constructor for undefined function classes.
-
-    func: FunctionDef, str
-        an instance of FunctionDef or function name
-
-    arguments: list, tuple, None
-        a list of arguments.
-
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
-    Examples
-
-    Examples
-
-    >>> from pyccel.ast.core import Assign, Variable
-    >>> from pyccel.ast.core import FunctionDef
-    >>> x = Variable('int', 'x')
-    >>> y = Variable('int', 'y')
-    >>> args        = [x]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+1)]
-    >>> incr = FunctionDef('incr', args, results, body)
-    >>> n = Variable('int', 'n')
-    >>> incr(n)
-    incr(n)
-    >>> type(incr(n))
-    pyccel.ast.core.FunctionCall
-    >>> incr(n)*2+1
-    1 + 2*incr(n)
-    >>> incr(n)+1
-    incr(n) + 1
-    >>> incr(n)*2
-    2*incr(n)
-    """
-
-    is_commutative = True
-
-    # TODO improve
-
-    def __new__(
-        cls,
-        func,
-        arguments,
-        cls_variable=None,
-        kind='function',
-        ):
-        if not isinstance(func, (FunctionDef, Interface, str)):
-            raise TypeError('Expecting func to be a FunctionDef or str')
-
-        if isinstance(func, FunctionDef):
-            kind = func.kind
-
-#        if not isinstance(kind, str):
-#            raise TypeError("Expecting a string for kind.")
-#
-#        if not (kind in ['function', 'procedure']):
-#            raise ValueError("kind must be one among {'function', 'procedure'}")
-#
-#        if isinstance(func,FunctionDef) and func.cls_name and not cls_variable:
-#            raise TypeError("Expecting a cls_variable.")
 
         f_name = func.name
 
@@ -1869,26 +1730,6 @@ class MethodCall(AtomicExpr):
         else:
             return self.func
 
-
-class ConstructorCall(MethodCall):
-
-    """
-    class for a call to class constructor in the code.
-    """
-
-    @property
-    def this(self):
-        return self.arguments[0]
-
-    @property
-    def attributs(self):
-        """Returns all attributs of the __init__ function."""
-
-        attr = []
-        for i in self.func.body:
-            if isinstance(i, Assign) and str(i.lhs).startswith('self.'):
-                attr += [i.lhs]
-        return attr
 
 
 class Nil(Basic):
@@ -2222,7 +2063,6 @@ class DottedVariable(AtomicExpr, Boolean):
             IndexedBase,
             Indexed,
             Function,
-            FunctionCall,
             )):
             raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(args[1]),
                             type(args[1])))
@@ -4398,9 +4238,7 @@ def get_initial_value(expr, var):
             if not r is None:
                 return r
         return value
-    elif isinstance(expr, FunctionCall):
-
-        return get_initial_value(expr.func, var)
+    
     elif isinstance(expr, ConstructorCall):
 
         return get_initial_value(expr.func, var)
@@ -4598,7 +4436,7 @@ def get_iterable_ranges(it, var_name=None):
             if str(stmt.lhs) in names:
                 expr = stmt.rhs
                 for (a_old, a_new) in zip(args, params):
-                    dtype = datatype(stmt.rhs)
+                    dtype = datatype(stmt.rhs.dtype)
                     v_old = Variable(dtype, a_old)
                     if isinstance(a_new, (IndexedVariable,
                                   IndexedElement, str, Variable)):
@@ -4691,7 +4529,7 @@ def get_iterable_ranges(it, var_name=None):
             if str(stmt.lhs) in names:
                 expr = stmt.rhs
                 for (a_old, a_new) in zip(args, params):
-                    dtype = datatype(stmt.rhs)
+                    dtype = datatype(stmt.rhs.dtype)
                     v_old = Variable(dtype, a_old)
                     if isinstance(a_new, (IndexedVariable,
                                   IndexedElement, str, Variable)):

@@ -14,7 +14,6 @@ from sympy.printing.precedence import precedence
 
 from pyccel.ast.core import Assign,DottedVariable
 from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ZerosLike
 from pyccel.ast import Real 
 

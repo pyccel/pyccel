@@ -39,15 +39,11 @@ rectangle = Shape(100., 45.)
 #finding the area of your rectangle:
 print(rectangle.area)
 
-#finding the perimeter of your rectangle:
-print(rectangle.perimeter)
+#$ header function f(int)
+@inline
+def f(t):
+    x = 5*t
+    return x
 
-#describing the rectangle
-rectangle.describe("A wide rectangle, more than twice as wide as it is tall")
-
-#making the rectangle 50% smaller
-rectangle.scaleSize(0.5)
-
-#re-printing the new area of the rectangle
-print(rectangle.area)
+y = f(6)
 

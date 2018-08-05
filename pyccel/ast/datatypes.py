@@ -5,8 +5,6 @@ from .basic import Basic
 
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
-from sympy import sympify
-from sympy import ImmutableDenseMatrix
 
 
 default_precision = {'real': 8, 'int': 4, 'complex': 8}
@@ -292,38 +290,14 @@ def datatype(arg):
         DataType
 
     """
-    def infer_dtype(arg):
-        if arg.is_integer:
-            return Int
-        elif arg.is_Boolean:
-            return Bool
-        elif arg.is_real:
-            return Real
-        elif arg.is_complex:
-            return Complex
+    
 
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
-    elif isinstance(arg, (Variable, IndexedVariable, IndexedElement)):
-        if isinstance(arg.dtype, DataType):
-            return dtype_registry[arg.dtype.name.lower()]
-        else:
-            raise TypeError('Expecting a DataType')
+    if isinstance(arg, DataType):
+        return dtype_registry[arg.dtype.name.lower()]
     else:
-        
-        arg = sympify(arg, locals=local_sympify)
-        if isinstance(arg, ImmutableDenseMatrix):
-            dts = [infer_dtype(i) for i in arg]
-            if all([i is Bool for i in dts]):
-                return Bool
-            elif all([i is Int for i in dts]):
-                return Int
-            else:
-                return Real
-        else:
-            return infer_dtype(arg)
+        raise TypeError('Expecting a DataType')
 
-from .core import Variable, IndexedVariable, IndexedElement
-from .core import local_sympify

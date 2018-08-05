@@ -40,7 +40,7 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import SeparatorComment, CommentBlock
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
-from pyccel.ast.core import FunctionCall, MethodCall , Subroutine
+from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
@@ -626,18 +626,22 @@ class FCodePrinter(CodePrinter):
     def _print_MacroCount(self, expr):
 
         var = expr.argument
-        
+        #TODO calculate size when type is pointer
+        # ans shape is None
         if isinstance(var, Variable):
             shape = var.shape
             rank = var.rank
+            if shape is None:
+                return 'size({})'.format(self._print(var))
+            
             
         elif isinstance(var, IndexedElement):
-
-            if var.base.shape is None:
+            _shape = var.base.shape
+            if _shape is None:
                 return 'size({})'.format(self._print(var))
 
             shape = []
-            for (s, i) in zip(var.base.shape, var.indices):
+            for (s, i) in zip(_shape, var.indices):
                 if isinstance(i, Slice):
                     if i.start is None and i.end is None:
                         shape.append(s)
@@ -654,11 +658,11 @@ class FCodePrinter(CodePrinter):
             
         else:
             raise NotImplementedError('TODO')
+
         if rank == 0:
                 return '1'
-        return 'size({})'.format(self._print(var))
-        #TODO should we calculate it or use size   
-        #return str(functools.reduce(operator.mul, shape ))
+
+        return str(functools.reduce(operator.mul, shape ))
 
     def _print_Declare(self, expr):
         # ... ignored declarations
@@ -941,34 +945,34 @@ class FCodePrinter(CodePrinter):
             code += '\n'
         if not is_procedure:
             code += '{0} = {1}'.format(lhs_code, rhs_code)
-        else:
-            code_args = ''
-            func = expr.rhs
-            # func here is of instance FunctionCall
-            cls_name = func.func.cls_name
-            keys = func.func.arguments
+#        else:
+#            code_args = ''
+#            func = expr.rhs
+#            # func here is of instance FunctionCall
+#            cls_name = func.func.cls_name
+#            keys = func.func.arguments
 
-            # for MPI statements, we need to add the lhs as the last argument
-            # TODO improve
-            if isinstance(func.func, MPI):
-                if not func.arguments:
-                    code_args = lhs_code
-                else:
-                    code_args = ', '.join(self._print(i) for i in func.arguments)
-                    code_args = '{0}, {1}'.format(code_args, lhs_code)
-            else:
-                _ij_print = lambda i, j: '{0}={1}'.format(self._print(i), \
-                                                         self._print(j))
-
-                code_args = ', '.join(_ij_print(i, j) \
-                                      for i, j in zip(keys, func.arguments))
+#            # for MPI statements, we need to add the lhs as the last argument
+#            # TODO improve
+#            if isinstance(func.func, MPI):
+#                if not func.arguments:
+#                    code_args = lhs_code
+#                else:
+#                    code_args = ', '.join(self._print(i) for i in func.arguments)
+#                    code_args = '{0}, {1}'.format(code_args, lhs_code)
+#            else:
+#                _ij_print = lambda i, j: '{0}={1}'.format(self._print(i), \
+#                                                         self._print(j))
+#
+#                code_args = ', '.join(_ij_print(i, j) \
+#                                      for i, j in zip(keys, func.arguments))
 #            if (not func.arguments is None) and (len(func.arguments) > 0):
 #                if (not cls_name):
 #                    code_args = ', '.join(self._print(i) for i in func.arguments)
 #                    code_args = '{0}, {1}'.format(code_args, lhs_code)
 #                else:
-            print('code_args > {0}'.format(code_args))
-            code = 'call {0}({1})'.format(rhs_code, code_args)
+#            print('code_args > {0}'.format(code_args))
+#            code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
     def _print_NativeBool(self, expr):
@@ -1056,6 +1060,11 @@ class FCodePrinter(CodePrinter):
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
 
+
+        #case of no local variables
+        if len(decs) == 0:
+            return body_code
+                       
         return ('{name} : Block\n'
                 '{prelude}\n'
                  '{body}\n'
@@ -1874,22 +1883,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.func, Subroutine):
             code = 'call ' + code
        
-        return self._get_statement(code)
-
-
-    def _print_MethodCall(self, expr):
-        func = expr.func
-        name = func.name
-        name = self._print(name)
-
-        code_args = ''
-        if not(expr.arguments) is None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
-
-        this = self._print(expr.cls_variable)
-        code = '{0} % {1}({2})'.format(this, name, code_args)
-        if func.is_procedure:
-            code = 'call {0}'.format(code)
         return self._get_statement(code)
 
     def _print_ImaginaryUnit(self, expr):
