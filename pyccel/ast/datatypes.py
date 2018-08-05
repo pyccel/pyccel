@@ -301,3 +301,47 @@ def datatype(arg):
     else:
         raise TypeError('Expecting a DataType')
 
+
+def sp_dtype(expr):
+    """ 
+    return the datatype of a sympy types expression 
+
+    """
+    if expr.is_integer:
+        return 'int'
+    elif expr.is_real:
+        return 'real'
+    elif expr.is_complex:
+        return 'complex'
+    elif expr.is_Boolean:
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(expr)))
+
+
+def str_dtype(dtype):
+
+    """
+    return a sympy datatype as string
+    dtype: str, Native Type
+
+    """
+    if isinstance(dtype, str):
+        if dtype == 'int':
+            return 'integer'
+        elif dtype== 'real':
+            return 'real'
+        else:
+            return dtype
+    if isinstance(dtype, NativeInteger):
+        return 'integer'
+    elif isinstance(dtype, NativeReal):
+        return 'real'
+    elif isinstance(dtype, NativeComplex):
+        return 'complex'
+    elif isinstance(dtype, NativeBool):
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
+
+

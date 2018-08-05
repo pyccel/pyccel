@@ -108,6 +108,7 @@ from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
+from pyccel.ast.datatypes import _dtype, str_dtype
 from pyccel.ast.core import local_sympify
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -265,37 +266,6 @@ def _atomic(e, cls=None):
     return atoms_
 
 
-def _dtype(expr):
-    if expr.is_integer:
-        return 'int'
-    elif expr.is_real:
-        return 'real'
-    elif expr.is_complex:
-        return 'complex'
-    elif expr.is_Boolean:
-        return 'bool'
-    else:
-        raise TypeError('Unknown datatype {0}'.format(str(expr)))
-
-
-def str_dtype(dtype):
-    if isinstance(dtype, str):
-        if dtype == 'int':
-            return 'integer'
-        elif dtype== 'real':
-            return 'real'
-        else:
-            return dtype
-    if isinstance(dtype, NativeInteger):
-        return 'integer'
-    elif isinstance(dtype, NativeReal):
-        return 'real'
-    elif isinstance(dtype, NativeComplex):
-        return 'complex'
-    elif isinstance(dtype, NativeBool):
-        return 'bool'
-    else:
-        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
 
 
 def atom(e):
