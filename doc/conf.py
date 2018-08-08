@@ -37,7 +37,6 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.inheritance_diagram',
-    'sphinxcontrib.tikz',
     'sphinx.ext.viewcode',
     'sphinxcontrib.bibtex']
 
@@ -113,14 +112,6 @@ html_static_path = ['_static']
 # specify the side bar
 #html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html'], }
 html_sidebars = { '**': ['localtoc.html', 'relations.html', 'searchbox.html'], }
-
-
-# -- Options for Tikz -----------------------------------------------------
-tikz_proc_suite     = 'GhostScript'
-tikz_transparent    = True
-#tikz_latex_preamble = ‹string›
-#tikz_tikzlibraries  = 'positioning,shapes,shadows,arrows'
-
 
 # -- Options for HTMLHelp output ------------------------------------------
 
