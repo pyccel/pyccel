@@ -4274,15 +4274,25 @@ def get_assigned_symbols(expr):
         any AST valid expression
     """
 
-    if iterable(expr):
+    if isinstance(expr, (FunctionDef, For, While)):
+        return get_assigned_symbols(expr.body)
+    elif isinstance(expr, FunctionalFor):
+        return get_assigned_symbols(expr.loops)
+    elif isinstance(expr, If):
+
+        return get_assigned_symbols(expr.bodies)
+
+    elif iterable(expr):
         symbols = []
+        
         for a in expr:
             symbols += get_assigned_symbols(a)
         symbols = set(symbols)
         symbols = list(symbols)
         return symbols
     elif isinstance(expr, (Assign, AugAssign)):
-
+        
+        
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
@@ -4309,12 +4319,7 @@ def get_assigned_symbols(expr):
 #            raise SystemExit('ERROR')
 
         return symbols
-    elif isinstance(expr, (FunctionDef, For, While)):
-
-        return get_assigned_symbols(expr.body)
-    elif isinstance(expr, If):
-
-        return get_assigned_symbols(expr.bodies)
+    
 
     return []
 

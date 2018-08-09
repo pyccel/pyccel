@@ -627,10 +627,15 @@ class FCodePrinter(CodePrinter):
 
         var = expr.argument
         #TODO calculate size when type is pointer
-        # ans shape is None
+        # it must work according to fortran documentation
+        # but it raises somehow an error when it's a pointer
+        # and shape is None
+
         if isinstance(var, Variable):
             shape = var.shape
-            rank = var.rank
+            if not isinstance(shape,(tuple,list,Tuple)):
+                shape = [shape]
+            rank = len(shape)
             if shape is None:
                 return 'size({})'.format(self._print(var))
             
@@ -661,7 +666,7 @@ class FCodePrinter(CodePrinter):
 
         if rank == 0:
                 return '1'
-
+        
         return str(functools.reduce(operator.mul, shape ))
 
     def _print_Declare(self, expr):
