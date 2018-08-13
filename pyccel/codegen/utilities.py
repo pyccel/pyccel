@@ -12,7 +12,7 @@ from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 
 # TODO use constructor and a dict to map flags w.r.t the compiler
-_avail_compilers = ['gfortran', 'mpif90', 'pgfortran']
+_avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort']
 
 # TODO add opt flags, etc... look at f2py interface in numpy
 def construct_flags(compiler,
@@ -149,7 +149,7 @@ def compile_fortran(filename, compiler, flags,
 # ...
 
 def execute_pyccel(filename,
-                   compiler='gfortran',
+                   compiler=None,
                    fflags=None,
                    debug=False,
                    verbose=False,
@@ -184,6 +184,9 @@ def execute_pyccel(filename,
     errors.reset()
 
     # ... constructs the compiler flags
+    if compiler is None:
+        compiler='gfortran'
+
     flags = construct_flags(compiler,
                             fflags=fflags,
                             debug=debug,

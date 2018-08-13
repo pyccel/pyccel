@@ -42,7 +42,7 @@ def compile_fortran(source, modulename, extra_args='',libs = [], compiler = None
     case if we run directly the command line f2py ..."""
     
     if compiler:
-        compiler = '--f90exec={}'.format(compiler)
+        compiler = '--fcompiler={}'.format(compiler)
     else:
         compiler  = ''
 
@@ -53,10 +53,9 @@ def compile_fortran(source, modulename, extra_args='',libs = [], compiler = None
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = '-c {}  {} -m  {} {} {}  '.format(libs, compiler, modulename, filename, extra_args)
+        args = """ {} -c {}  --opt='-O3' -m  {} {} {}  """.format(compiler, libs, modulename, filename, extra_args)
         import sys
-        cmd = '{} -c "import numpy.f2py as f2py2e;f2py2e.main()" {}'.format(sys.executable, args)
- 
+        cmd = 'f2py {}'.format(args)
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
 
@@ -230,8 +229,8 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
     if verbose:
         print(cmd)
 
-    if verbose:
-        print(output)
+  #  if verbose:
+  #      print(output)
     # ...
 
     # ...

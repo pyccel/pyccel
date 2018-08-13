@@ -5,9 +5,10 @@ from .basic import Basic
 
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
+from sympy import Eq, Ne, Lt, Gt, Le, Ge
 
 
-default_precision = {'real': 8, 'int': 4, 'complex': 8}
+default_precision = {'real': 8, 'int': 4, 'complex': 8, 'bool':2}
 dtype_and_precsision_registry = {'real':('real',8),
                                  'double':('real',8),
                                  'float':('real',4),
@@ -18,7 +19,8 @@ dtype_and_precsision_registry = {'real':('real',8),
                                  'complex128':('complex',8),
                                  'int':('int',4),
                                  'int32':('int',4),
-                                 'int64':('int',8)}
+                                 'int64':('int',8),
+                                 'bool' :('bool',2)}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -314,6 +316,8 @@ def sp_dtype(expr):
     elif expr.is_complex:
         return 'complex'
     elif expr.is_Boolean:
+        return 'bool'
+    elif isinstance(expr,(Eq, Ne, Lt, Gt, Le, Ge)):
         return 'bool'
     else:
         raise TypeError('Unknown datatype {0}'.format(str(expr)))
