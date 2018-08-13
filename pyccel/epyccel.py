@@ -36,15 +36,20 @@ def get_source_function(func):
     return code
 
 
-def compile_fortran(source, modulename, extra_args='',libs = [], compiler = None):
+def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
+
+    compilers  = ''
     
+    if mpi:
+        compilers = '--f90exec=mpif90 '
+
     if compiler:
-        compiler = '--fcompiler={}'.format(compiler)
-    else:
-        compiler  = ''
+        compilers = compilers +'--fcompiler={}'.format(compiler)
+    
+        
 
     try:
         filename = '{}.f90'.format(modulename)
@@ -53,7 +58,7 @@ def compile_fortran(source, modulename, extra_args='',libs = [], compiler = None
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """ {} -c {}  --opt='-O3' -m  {} {} {}  """.format(compiler, libs, modulename, filename, extra_args)
+        args = """  {} -c --opt='-O3' {} -m  {} {} {}  """.format(compilers, libs, modulename, filename, extra_args)
         import sys
         cmd = 'f2py {}'.format(args)
         output = subprocess.check_output(cmd, shell=True)
@@ -64,7 +69,7 @@ def compile_fortran(source, modulename, extra_args='',libs = [], compiler = None
 
 
 def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
-            context=None, compiler = None):
+            context=None, compiler = None , mpi=False):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -224,7 +229,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
-    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler)
+    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi)
 
     if verbose:
         print(cmd)
