@@ -614,12 +614,22 @@ class FCodePrinter(CodePrinter):
     # ...
     def _print_MacroType(self, expr):
         dtype = self._print(expr.argument.dtype)
+        prec  = expr.argument.precision
+         
         if dtype == 'integer':
-            return 'MPI_INT'
-        elif dtype == 'real(kind=8)':
-            return 'MPI_DOUBLE'
+            if prec==4:
+                return 'MPI_INT'
+            else:
+                raise NotImplementedError('TODO')
+
         elif dtype == 'real':
-            return 'MPI_FLOAT'
+            if prec==8:
+                return 'MPI_DOUBLE'
+            if prec==4:
+                return 'MPI_FLOAT'
+            else:
+                raise NotImplementedError('TODO')
+
         else:
             raise NotImplementedError('TODO')
 
