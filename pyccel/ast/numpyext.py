@@ -390,26 +390,36 @@ class Zeros(Function):
     def __new__(cls, shape,*args):
         
         args = list(args)
-        dtype = 'real'
-        order = 'C'
-        args_ = list(args)
+        args_= {'dtype':'real','order':'C'}
         prec = 0
-        if len(args)>0 and isinstance(args[0],ValuedArgument):
-            if str(args[0].argument.name) == 'order':
-                args_.reverse()
-    
-
-        for i in range(len(args_)):
-            if isinstance(args_[i] , ValuedArgument):
-                args_[i] = args_[i].value
-            if isinstance(args_[i], String):
-                args_[i] = args_[i].arg.replace('\'', '')
+        val_args = []
+        
+        for i in range(len(args)):
+            if isinstance(args[i], ValuedArgument):
+                val_args = args[i:]
+                args[i:] = []
+                break
             
-        if len(args_) == 1:
-            dtype = args_[0]
-        elif len(args_) == 2:
-            dtype = args_[0]
-            order = args_[1]
+                
+        if len(args)==1:
+            args_['dtype'] = str(args[0])
+        elif len(args)==2:
+            args_['dtype'] = str(args[0])
+            args_['order'] = str(args[1])
+            
+        for i in val_args:
+            val = str(i.value)
+            args_[str(i.argument.name)] = val
+
+        for key in args_.keys():
+            args_[key] = args_[key].replace('\'', '')
+         
+        
+            
+            
+  
+        dtype = args_['dtype']
+        order = args_['order']
     
         if isinstance(shape,Tuple):
             shape = list(shape)

@@ -3941,6 +3941,9 @@ class String(Basic):
     @property
     def arg(self):
         return self._args[0]
+   
+    def __str__(self):
+        return self.arg
 
 
 class Concatinate(Basic):
