@@ -3791,6 +3791,7 @@ class IndexedVariable(IndexedBase):
         label,
         shape=None,
         dtype=None,
+        prec=0,
         **kw_args
         ):
         if dtype is None:
@@ -3802,6 +3803,7 @@ class IndexedVariable(IndexedBase):
 
         obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
         obj._dtype = dtype
+        obj._precision = prec
         return obj
 
     def __getitem__(self, *args):
@@ -3815,6 +3817,10 @@ class IndexedVariable(IndexedBase):
     @property
     def dtype(self):
         return self._dtype
+
+    @property
+    def precision(self):
+        return self._precision
 
     @property
     def name(self):
@@ -3927,6 +3933,10 @@ class IndexedElement(Indexed):
     @property
     def dtype(self):
         return self.base.dtype
+
+    @property
+    def precision(self):
+        return self.base.precision
 
 
 class String(Basic):

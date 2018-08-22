@@ -15,6 +15,8 @@ import inspect
 import subprocess
 import importlib
 import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 def get_source_function(func):
     if not callable(func):
@@ -58,9 +60,14 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  {} -c --opt='-O3' {} -m  {} {} {}  """.format(compilers, libs, modulename, filename, extra_args)
-        import sys
-        cmd = 'f2py {}'.format(args)
+        args = """  -c {} --opt='-O3' {} -m  {} {} {}  """.format(compilers, libs, modulename, filename, extra_args)
+
+        if PY2:
+            cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
+        else:
+            cmd = """python3 -c 'import numpy.f2py as f ;f.main()' {}"""
+
+        cmd = cmd.format(args)
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
 

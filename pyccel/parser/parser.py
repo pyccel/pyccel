@@ -2284,7 +2284,8 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
             dtype = var.dtype
             shape = var.shape
-            return IndexedVariable(name, dtype=dtype, shape=shape)
+            prec  = var.precision
+            return IndexedVariable(name, dtype=dtype, shape=shape,prec=prec)
         elif isinstance(expr, (IndexedElement, Indexed)):
 
             name = _get_name(expr)
@@ -2308,8 +2309,9 @@ class Parser(object):
             if hasattr(var, 'dtype'):
                 dtype = var.dtype
                 shape = var.shape
+                prec  = var.precision
                 return IndexedVariable(name, dtype=dtype,
-                        shape=shape).__getitem__(*args)
+                        shape=shape,prec=prec).__getitem__(*args)
             else:
                 return IndexedBase(name).__getitem__(args)
         elif isinstance(expr, Symbol):
@@ -3136,7 +3138,8 @@ class Parser(object):
                                   blocker=self.blocking)
 
                 dtype = var.dtype
-                lhs = IndexedVariable(name, dtype=dtype)
+                prec  = var.precision
+                lhs = IndexedVariable(name, dtype=dtype,prec=prec)
             elif isinstance(lhs, (IndexedElement, Indexed)):
 
                 # TODO check consistency of indices with shape/rank
@@ -3155,8 +3158,9 @@ class Parser(object):
                     args.reverse()
                 args = tuple(args)
                 dtype = var.dtype
+                prec  = var.precision
                 lhs = IndexedVariable(name,
-                        dtype=dtype).__getitem__(*args)
+                        dtype=dtype,prec=prec).__getitem__(*args)
             elif isinstance(lhs, DottedVariable):
 
                 dtype = d_var.pop('datatype')
