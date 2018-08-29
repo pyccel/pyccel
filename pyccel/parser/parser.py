@@ -2329,7 +2329,7 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
             return var
         elif isinstance(expr, DottedVariable):
-            
+         
             first = self._annotate(expr.lhs)
             rhs_name = _get_name(expr.rhs)
             attr_name = []
@@ -2362,6 +2362,7 @@ class Parser(object):
                 second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
             else:
+             
                 macro = self.get_macro(rhs_name)
                 if not macro is None:
                     master = macro.master
@@ -2398,6 +2399,7 @@ class Parser(object):
                         expr = DottedVariable(first, second)
                         return expr
             return DottedVariable(first, second)
+
         elif isinstance(expr, (
             Add,
             Mul,
@@ -2741,7 +2743,7 @@ class Parser(object):
                         args = [rhs.lhs] + list(args)
                         args = [self._annotate(i, **settings) for i in
                                 args]
-
+                      
                         args = macro.apply(args, results=results)
 
                         # TODO treate interface case
