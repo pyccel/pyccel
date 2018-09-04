@@ -31,7 +31,7 @@ packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # ...
 
 # ...
-install_requires = ['numpy', 'sympy', 'pylint', 'parse', 'redbaron',
+install_requires = ['numpy', 'scipy', 'sympy', 'pylint', 'parse', 'redbaron',
                     'termcolor', 'textx']
 
 try:
