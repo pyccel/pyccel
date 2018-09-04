@@ -20,5 +20,8 @@ def lambdify(f):
     return f
 
 
+def types(f):
+    return f
+
 
 
