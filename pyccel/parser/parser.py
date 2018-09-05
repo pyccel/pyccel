@@ -179,6 +179,13 @@ PY3 = sys.version_info[0] == 3
 # TODO installed modules. must ask python (working version) where the module is
 #      installed
 
+def is_ignored_module(name):
+    if isinstance(name, DottedName):
+        if str(name) in ['pyccel.decorators']:
+            return True
+
+    return False
+
 def get_filename_from_import(module):
     """Returns a valid filename with absolute path, that corresponds to the
     definition of module.
@@ -622,6 +629,7 @@ class Parser(object):
 
         try:
             ast = self._fst_to_ast(self.fst)
+
         except Exception as e:
             errors.check()
             if self.show_traceback:
@@ -1319,21 +1327,20 @@ class Parser(object):
             expr.set_fst(stmt)
             return expr
         elif isinstance(stmt, NameNode):
-
             if stmt.value == 'None':
                 return Nil()
+
             elif stmt.value == 'True':
-
                 return true
+
             elif stmt.value == 'False':
-
                 return false
-            else:
 
+            else:
                 val = strip_ansi_escape.sub('', stmt.value)
                 return Symbol(val)
-        elif isinstance(stmt, ImportNode):
 
+        elif isinstance(stmt, ImportNode):
             if not isinstance(stmt.parent, (RedBaron, DefNode)):
                 errors.report(PYCCEL_RESTRICTION_IMPORT,
                               bounding_box=stmt.absolute_bounding_box,
@@ -1345,13 +1352,13 @@ class Parser(object):
                               severity='error')
 
             # in an import statement, we can have seperate target by commas
-
             ls = self._fst_to_ast(stmt.value)
             ls = get_default_path(ls)
             expr = Import(ls)
             expr.set_fst(stmt)
             self.insert_import(expr)
             return expr
+
         elif isinstance(stmt, FromImportNode):
 
             if not isinstance(stmt.parent, (RedBaron, DefNode)):
@@ -1372,14 +1379,19 @@ class Parser(object):
                                   severity='error')
 
                 targets.append(s)
+
+            if is_ignored_module(source):
+                return EmptyLine()
+
             expr = Import(targets, source=source)
             expr.set_fst(stmt)
             self.insert_import(expr)
             return expr
-        elif isinstance(stmt, DelNode):
 
+        elif isinstance(stmt, DelNode):
             arg = self._fst_to_ast(stmt.value)
             return Del(arg)
+
         elif isinstance(stmt, UnitaryOperatorNode):
 
             target = self._fst_to_ast(stmt.target)
@@ -1943,25 +1955,24 @@ class Parser(object):
             indexes = indexes[::-1]
             return FunctionalFor([assign1, generators[-1]], target,
                                  indexes, index)
+
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
-
             # this is a blocking error, since we don't want to convert the try body
-
             errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
-        elif isinstance(stmt, RaiseNode):
 
+        elif isinstance(stmt, RaiseNode):
             errors.report(PYCCEL_RESTRICTION_RAISE,
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
-        elif isinstance(stmt, (YieldNode, YieldAtomNode)):
 
+        elif isinstance(stmt, (YieldNode, YieldAtomNode)):
             errors.report(PYCCEL_RESTRICTION_YIELD,
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
-        else:
 
+        else:
             raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
 
     def _infere_type(self, expr, **settings):
@@ -3885,6 +3896,7 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
 
             return Is(var, expr.rhs)
+
         elif isinstance(expr, Import):
 
             # TODO - must have a dict where to store things that have been

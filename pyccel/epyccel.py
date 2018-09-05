@@ -15,6 +15,10 @@ import inspect
 import subprocess
 import importlib
 import sys
+import os
+from types import ModuleType, FunctionType
+from importlib.machinery import ExtensionFileLoader
+
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
@@ -132,10 +136,19 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     >>> f([3, 4, 5])
     2
     """
-    assert(callable(func) or isinstance(func, str))
+    is_module = False
+    is_function = False
+
+    if isinstance(func, ModuleType):
+        is_module = True
+
+    if callable(func):
+        is_function = True
+
+    assert(callable(func) or isinstance(func, str) or isinstance(func, ModuleType))
 
     # ...
-    if callable(func):
+    if callable(func) or isinstance(func, ModuleType):
         name = func.__name__
 
     elif name is None:
@@ -144,8 +157,37 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
 
     # ...
+    if is_module:
+        mod = func
+        is_sharedlib = isinstance(getattr(mod, '__loader__', None), ExtensionFileLoader)
+
+        if is_sharedlib:
+            module_filename = inspect.getfile(mod)
+
+            # clean
+            cmd = 'rm -f {}'.format(module_filename)
+            os.system(cmd)
+
+            # then re-run again
+            mod = importlib.import_module(name)
+            epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
+                    libs=libs, name=name, context=context, compiler=compiler,
+                    mpi=mpi, static=static)
+    # ...
+
+    # ...
+    ignored_funcs = None
     if not static:
-        static = [name]
+        if isinstance(func, ModuleType):
+            mod = func
+            funcs = [i for i in dir(mod) if isinstance(getattr(mod, i), FunctionType)]
+
+            # remove pyccel.decorators
+            ignored_funcs = [i for i in funcs if getattr(mod, i).__module__ == 'pyccel.decorators']
+            static = [i for i in funcs if not(i in ignored_funcs)]
+
+        else:
+            static = [name]
     # ...
 
     # ...
@@ -202,6 +244,10 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ... get the function source code
     if callable(func):
         code = get_source_function(func)
+
+    elif isinstance(func, ModuleType):
+        lines = inspect.getsourcelines(func)[0]
+        code = ''.join(lines)
 
     else:
         code = func
@@ -277,6 +323,10 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     except:
         raise ImportError('could not import {0}'.format(name))
     # ...
+
+    if is_module:
+        return package
+
     if name in dir(package):
         module = getattr(package, name)
     else:

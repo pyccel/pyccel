@@ -182,6 +182,25 @@ def test_decorators():
 
     clean_test()
 
+def test_module1():
+    import mod_test1 as mod
+
+    # ...
+    m = epyccel(mod)
+    assert(m.g1(3) == mod.g1(3))
+    # ...
+
+    # ...
+    x = np.array([2, 3, 4], dtype=int)
+    x_expected = x.copy()
+
+    m.g2(x)
+    mod.g2(x_expected)
+
+    assert(np.allclose(x, x_expected))
+    # ...
+
+
 if __name__ == '__main__':
     # ... using headers
     test_f1()
@@ -195,3 +214,7 @@ if __name__ == '__main__':
     # ... using decorators
     test_decorators()
     # ...
+
+#    # ... using modules
+#    test_module1()
+#    # ...
