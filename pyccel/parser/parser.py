@@ -1572,11 +1572,25 @@ class Parser(object):
                 for i in decorators['types']:
                     if isinstance(i, Symbol):
                         arg = i.name
+
                     elif isinstance(i, Indexed):
                         arg = str(i.base) + '[' + ':' * i.rank + ']'
                         types.append(arg)
+
                     elif isinstance(i, Tuple):
                         arg = '[' + ','.join(el.name for el in i) + ']'
+
+                    elif isinstance(i, str):
+                        arg = i
+
+                    elif isinstance(i, String):
+                        arg = str(i)
+                        arg = arg.replace("'", '')  # remove quotes for str representation
+
+                    else:
+                        msg = '> Wrong type, given {}'.format(type(i))
+                        raise NotImplementedError(msg)
+
                     types.append(arg)
 
                 txt = '#$ header ' + name + '(' \

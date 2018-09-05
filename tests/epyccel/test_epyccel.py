@@ -11,6 +11,8 @@ def clean_test():
     os.system(cmd)
 
 # ..............................................
+#  functions for which we will provide headers
+# ..............................................
 def f1(x):
     y = x - 1
     return y
@@ -37,10 +39,32 @@ def f6(m1, m2, x):
     for i in range(0, m1):
         for j in range(0, m2):
             x[i,j] = (i+j) * 1.
+# ..............................................
 
+# ..............................................
+#        functions with types decorator
+# ..............................................
 @types(int)
 def g1(x):
     y = x+1
+    return y
+
+@types('int [:]')
+def g2(x):
+    y = x + 1
+    return y
+
+@types(int,int,int)
+def g3(x, n=2, m=3):
+    y = x - n*m
+    return y
+
+@types(int,int)
+def g4(x, m=None):
+    if m is None:
+        y = x + 1
+    else:
+        y = x - 1
     return y
 # ..............................................
 
@@ -123,12 +147,38 @@ def test_f6():
 
     clean_test()
 
-def test_g1():
+def test_decorators():
 
     # ...
     f = epyccel(g1)
     assert(f(3) == g1(3))
     # ...
+
+    # ...
+    f = epyccel(g2)
+
+    x = np.array([2, 3, 4], dtype=int)
+    x_expected = x.copy()
+
+    f(x)
+    g2(x_expected)
+
+    assert(np.allclose(x, x_expected))
+    # ...
+
+    # ...
+    f = epyccel(g3)
+    assert(f(3,2,4) == g3(3,2,4))
+    # ...
+
+#    # ... TODO: not working yet. optional arg is placed before out!
+#    f = epyccel(g4)
+#    assert(f(3) == g4(3))
+#
+#    print(f(3,2))
+#    print(g4(3,2))
+#    assert(f(3, 2) == g4(3, 2))
+#    # ...
 
     clean_test()
 
@@ -143,5 +193,5 @@ if __name__ == '__main__':
     # ...
 
     # ... using decorators
-    test_g1()
+    test_decorators()
     # ...
