@@ -44,14 +44,14 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
     case if we run directly the command line f2py ..."""
 
     compilers  = ''
-    
+
     if mpi:
         compilers = '--f90exec=mpif90 '
 
     if compiler:
         compilers = compilers +'--fcompiler={}'.format(compiler)
-    
-        
+
+
 
     try:
         filename = '{}.f90'.format(modulename)
@@ -75,7 +75,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
         f.close()
 
 
-def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
+def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
             context=None, compiler = None , mpi=False):
     """Pyccelize a python function and wrap it using f2py.
 
@@ -141,44 +141,56 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
     # ...
 
     # ...
-    if isinstance(inputs, str):
-        headers = inputs
-    elif isinstance(inputs, (tuple, list)):
-        # find all possible headers
-        lines = [str(i) for i in inputs if (isinstance(i, str) and
-                                            i.lstrip().startswith('#$ header'))]
-        # TODO take the last occurence for f => use zip
-        headers = "\n".join([str(i) for i in lines])
-    elif isinstance(inputs, dict):
-        # case of globals() history from ipython
-        if not 'In' in inputs.keys():
-            raise ValueError('Expecting `In` key in the inputs dictionary')
+    headers = None
+    if inputs:
+        if isinstance(inputs, str):
+            headers = inputs
 
-        inputs = inputs['In']
+        elif isinstance(inputs, (tuple, list)):
+            # find all possible headers
+            lines = [str(i) for i in inputs if (isinstance(i, str) and
+                                                i.lstrip().startswith('#$ header'))]
+            # TODO take the last occurence for f => use zip
+            headers = "\n".join([str(i) for i in lines])
 
-        # TODO shall we reverse the list
+        elif isinstance(inputs, dict):
+            # case of globals() history from ipython
+            if not 'In' in inputs.keys():
+                raise ValueError('Expecting `In` key in the inputs dictionary')
 
-        # find all possible headers
-        lines = [str(i) for i in inputs if i.lstrip().startswith('#$ header')]
-        # TODO take the last occurence for f => use zip
-        headers = "\n".join([str(i) for i in lines])
+            inputs = inputs['In']
+
+            # TODO shall we reverse the list
+
+            # find all possible headers
+            lines = [str(i) for i in inputs if i.lstrip().startswith('#$ header')]
+            # TODO take the last occurence for f => use zip
+            headers = "\n".join([str(i) for i in lines])
 
     # we parse all headers then convert them to static function
-    hdr = parse(stmts=headers)
-    if isinstance(hdr, FunctionHeader):
-        header = hdr.to_static()
-    elif isinstance(hdr, (tuple, list)):
-        hs = [h.to_static() for h in hdr]
-        hs = [h for h in hs if hs.func == name]
-        # TODO improve
-        header = hs[0]
+    if headers:
+        hdr = parse(stmts=headers)
+        if isinstance(hdr, FunctionHeader):
+            header = hdr.to_static()
+
+        elif isinstance(hdr, (tuple, list)):
+            hs = [h.to_static() for h in hdr]
+            hs = [h for h in hs if hs.func == name]
+            # TODO improve
+            header = hs[0]
+
+        else:
+            raise NotImplementedError('TODO')
+
     else:
+        # add static options, since we will be using f2py
         raise NotImplementedError('TODO')
     # ...
 
     # ... get the function source code
     if callable(func):
         code = get_source_function(func)
+
     else:
         code = func
     # ...
@@ -257,7 +269,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
         module = getattr(package, name)
     else:
         module = getattr(package, 'mod_{0}'.format(name.lower()))
-    
+
     #f = getattr(module, name.lower())
 
     return module
