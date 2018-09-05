@@ -186,7 +186,7 @@ def get_filename_from_import(module):
         - header files (extension == pyh)
         - python files (extension == py)
     """
-    
+
     filename_pyh = '{}.pyh'.format(module)
     filename_py = '{}.py'.format(module)
 
@@ -245,7 +245,7 @@ def _get_name(var):
 def _atomic(e, cls=None):
     """Return atom-like quantities as far as substitution is
     concerned: Functions and DottedVarviables, Variables. we don't
-    return atoms that are inside such quantities too 
+    return atoms that are inside such quantities too
     """
 
     from sympy import preorder_traversal
@@ -280,13 +280,7 @@ class Parser(object):
 
     """ Class for a Parser."""
 
-    def __init__(
-        self,
-        inputs,
-        debug=False,
-        headers=None,
-        show_traceback=True,
-        ):
+    def __init__(self, inputs, debug=False, headers=None, static=None, show_traceback=True):
         """Parser constructor.
 
         inputs: str
@@ -297,6 +291,9 @@ class Parser(object):
 
         headers: list, tuple
             list of headers to append to the namespace
+
+        static: list/tuple
+            a list of 'static' functions as strings
 
         show_traceback: bool
             prints Tracebacke exception if True
@@ -366,8 +363,18 @@ class Parser(object):
             for (key, value) in list(headers.items()):
                 self._namespace['headers'][key] = value
 
-        # check if inputs is a file
+        self._namespace['static'] = []
+        if static:
+            if not isinstance(static, (list, tuple)):
+                raise TypeError('Expecting a list/tuple of static')
 
+            for i in static:
+                if not isinstance(i, str):
+                    raise TypeError('Expecting str. given {}'.format(type(i)))
+
+            self._namespace['static'] = static
+
+        # check if inputs is a file
         code = inputs
         if os.path.isfile(inputs):
 
@@ -430,6 +437,10 @@ class Parser(object):
     @property
     def symbolic_functions(self):
         return self.namespace['symbolic_functions']
+
+    @property
+    def static_functions(self):
+        return self.namespace['static']
 
     @property
     def macros(self):
@@ -669,16 +680,16 @@ class Parser(object):
 
         if self.is_header_file:
             target = []
-            
+
             for parent in self.parents:
                 for (key, item) in parent.imports.items():
                     if get_filename_from_import(key) == self.filename:
                         target += item
-         
+
             target = set(target)
             target_headers = target.intersection(self.headers.keys())
-            
-            
+
+
             for name in list(target_headers):
                 v = self.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
@@ -692,7 +703,7 @@ class Parser(object):
 
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                 symbol=name, blocker=True,
-                                severity='fatal')           
+                                severity='fatal')
         errors.check()
         self._semantic_done = True
 
@@ -883,7 +894,7 @@ class Parser(object):
             return self._namespace['variables'][name]
         if name in self._imports:
             return self._imports[name]
-        
+
         return None
 
     def get_variables(self, source=None):
@@ -913,8 +924,8 @@ class Parser(object):
             self._scope[self._current]['variables'][name] = expr
         else:
             self._namespace['variables'][name] = expr
-        
-        
+
+
     def create_variable(self, expr, store=False):
         """."""
 
@@ -1441,7 +1452,7 @@ class Parser(object):
                     return Mul(first, args[1], evaluate=False)
                 else:
                     second = Pow(second, -1, evaluate=False)
-                
+
                     return Function('int')(Mul(first, second,
                             evaluate=False))
             elif stmt.value == '%':
@@ -1551,14 +1562,12 @@ class Parser(object):
             imports = []
 
             # TODO improve later
-
             decorators = {}
             for i in stmt.decorators:
                 decorators.update(self._fst_to_ast(i))
+
+            # extract the types to construct a header
             if 'types' in decorators.keys():
-
-                # extract the types to construct a header
-
                 types = []
                 for i in decorators['types']:
                     if isinstance(i, Symbol):
@@ -1569,23 +1578,28 @@ class Parser(object):
                     elif isinstance(i, Tuple):
                         arg = '[' + ','.join(el.name for el in i) + ']'
                     types.append(arg)
+
                 txt = '#$ header ' + name + '(' \
                     + ','.join(types[:len(arguments)]) + ')'
+
                 if len(types[len(arguments):]) > 0:
                     txt += ' results(' \
                         + ','.join(types[len(arguments):]) + ')'
+
                 header = hdr_parse(stmts=txt)
+                if name in self.static_functions:
+                    header = header.to_static()
+
             body = stmt.value
 
             if 'sympy' in decorators.keys():
-
                 # TODO maybe we should run pylint here
-
                 stmt.decorators.pop()
                 func = SympyFunction(name, arguments, [],
                         [stmt.__str__()])
                 self.insert_function(func)
                 return EmptyLine()
+
             elif 'python' in decorators.keys():
 
                 # TODO maybe we should run pylint here
@@ -1656,7 +1670,7 @@ class Parser(object):
 
                 return Slice(None, upper)
             else:
-               
+
                 return Slice(None, None)
 
         elif isinstance(stmt, DotProxyList):
@@ -2111,12 +2125,12 @@ class Parser(object):
                   _atomic(expr) if isinstance(i, (Variable,
                   DottedVariable))]
             #TODO we should also look for functions call
-            #to collect info about precision and shapes later when we allow 
+            #to collect info about precision and shapes later when we allow
             # vectorised operations
             # we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
             # so we assume all functions
-            
+
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
@@ -2329,7 +2343,7 @@ class Parser(object):
                               severity='error', blocker=self.blocking)
             return var
         elif isinstance(expr, DottedVariable):
-         
+
             first = self._annotate(expr.lhs)
             rhs_name = _get_name(expr.rhs)
             attr_name = []
@@ -2362,7 +2376,7 @@ class Parser(object):
                 second = self._annotate(expr.rhs, **settings)
                 self._current_class = None
             else:
-             
+
                 macro = self.get_macro(rhs_name)
                 if not macro is None:
                     master = macro.master
@@ -2430,7 +2444,7 @@ class Parser(object):
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, Add):
-      
+
                     expr_new = Add(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new, evaluate=False)
@@ -2462,7 +2476,7 @@ class Parser(object):
             # TODO fix bug when we put expr_new.doit() for the indexedvariable
             # somehow sympy creats new object and we loose the info
             # for the types
-            
+
             return expr_new
         elif isinstance(expr, Lambda):
 
@@ -2479,7 +2493,7 @@ class Parser(object):
                     raise ValueError('Unknown function in lambda definition'
                             )
                 else:
-                    
+
                     f = f(*func.args)
                     expr_new = expr.expr.subs(func, f)
                     expr = Lambda(expr.variables, expr_new)
@@ -2743,7 +2757,7 @@ class Parser(object):
                         args = [rhs.lhs] + list(args)
                         args = [self._annotate(i, **settings) for i in
                                 args]
-                      
+
                         args = macro.apply(args, results=results)
 
                         # TODO treate interface case
@@ -2900,7 +2914,7 @@ class Parser(object):
 
             if isinstance(rhs, Block):
                 results = _atomic(rhs.body,Return)
-                
+
                 sub = list(zip(results,[EmptyLine()]*len(results)))
                 body = rhs.body
                 body = subs(body,sub)
@@ -3618,8 +3632,8 @@ class Parser(object):
                                         # TODO ERROR not tested yet
 
                                         errors.report(REDEFINING_VARIABLE,
-                                                      symbol=n_name, 
-                                                      severity='error', 
+                                                      symbol=n_name,
+                                                      severity='error',
                                                       blocker=self.blocking)
 
                                     self.insert_variable(n_arg)
@@ -3867,7 +3881,7 @@ class Parser(object):
                 container = self._imports
                 if self._current:
                     container = container[self._current]
-                
+
                 if str(expr.source) in pyccel_builtin_import_registery:
 
                     imports = pyccel_builtin_import(expr)
@@ -3931,7 +3945,7 @@ class Parser(object):
                         source = str(expr.source).split('.')[-1]
                         source = 'mod_' + source
                         expr = Import(expr.target,source=source)
-                        
+
 
                     if not __ignore_at_import__:
                         return expr
@@ -4048,7 +4062,7 @@ if __name__ == '__main__':
         filename = sys.argv[1]
     except:
         raise ValueError('Expecting an argument for filename')
-    
+
     pyccel = Parser(filename)
     pyccel.parse(verbose=True)
 
@@ -4072,4 +4086,4 @@ if __name__ == '__main__':
 #    pyccel.dot('ast.gv')
 
 
-			
+

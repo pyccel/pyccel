@@ -76,7 +76,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
 
 
 def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
-            context=None, compiler = None , mpi=False):
+            context=None, compiler = None , mpi=False, static=None):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -102,6 +102,8 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         a Pyccel context for user defined functions and other dependencies
         needed to compile func. it also be a list/tuple of ContextPyccel
 
+    static: list/tuple
+        a list of 'static' functions as strings
 
     Examples
 
@@ -135,9 +137,15 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
     if callable(func):
         name = func.__name__
+
     elif name is None:
         # case of func as a string
         raise ValueError('function name must be provided, in the case of func string')
+    # ...
+
+    # ...
+    if not static:
+        static = [name]
     # ...
 
     # ...
@@ -168,22 +176,26 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
             headers = "\n".join([str(i) for i in lines])
 
     # we parse all headers then convert them to static function
+    d_headers = {}
     if headers:
         hdr = parse(stmts=headers)
         if isinstance(hdr, FunctionHeader):
             header = hdr.to_static()
+            d_headers = {str(name): header}
 
         elif isinstance(hdr, (tuple, list)):
             hs = [h.to_static() for h in hdr]
             hs = [h for h in hs if hs.func == name]
             # TODO improve
             header = hs[0]
+            raise NotImplementedError('TODO')
 
         else:
             raise NotImplementedError('TODO')
+    # ...
 
-    else:
-        # add static options, since we will be using f2py
+    # ...
+    if not static:
         raise NotImplementedError('TODO')
     # ...
 
@@ -227,7 +239,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     try:
         # ...
-        pyccel = Parser(code, headers={str(name): header})
+        pyccel = Parser(code, headers=d_headers, static=static)
         ast = pyccel.parse()
 
         settings = {}
