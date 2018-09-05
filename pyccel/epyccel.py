@@ -170,6 +170,8 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
             # then re-run again
             mod = importlib.import_module(name)
+            # we must reload the module, otherwise it is still the .so one
+            importlib.reload(mod)
             epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
                     libs=libs, name=name, context=context, compiler=compiler,
                     mpi=mpi, static=static)

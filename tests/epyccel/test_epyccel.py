@@ -215,6 +215,6 @@ if __name__ == '__main__':
     test_decorators()
     # ...
 
-#    # ... using modules
-#    test_module1()
-#    # ...
+    # ... using modules
+    test_module1()
+    # ...
