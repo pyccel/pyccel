@@ -3,7 +3,7 @@ Welcome to Pyccel
 
 |build-status| |docs|
 
->>>>> **Note: We are refactoring Pyccel for the moment** <<<<<<
+>>>>> **Note: refactoring Pyccel in progress** <<<<<<
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -36,9 +36,13 @@ all Python dependencies can be installed using (here given for *python3*, use **
 
   sudo -H pip3 install -r requirements.txt
 
-then install **pyccel** using::
+* **Standard mode**::
 
-  sudo pip3 install .
+    python3 -m pip install .
+
+* **Development mode**::
+
+    python3 -m pip install --user -e .
 
 this will install a *python* library **pyccel** and a *binary* called **pyccel**.
 
