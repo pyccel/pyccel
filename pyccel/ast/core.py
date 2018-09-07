@@ -99,11 +99,16 @@ def subs(expr, new_elements):
         return If(*args)
 
     elif isinstance(expr, Return):
+        
         for i in new_elements:
             expr = expr.subs(i[0],i[1])
         return expr
 
-    elif isinstance(expr, (Expr, Assign)):
+    elif isinstance(expr, Assign):
+        new_expr = expr.subs(new_elements)
+        new_expr.set_fst(expr.fst)
+        return new_expr
+    elif isinstance(expr, Expr):
         return expr.subs(new_elements)
 
     else:
@@ -2638,6 +2643,8 @@ class FunctionDef(Basic):
             kind=self.kind,
             is_static=self.is_static,
             header=self.header,
+            imports = self.imports,
+            decorators = self.decorators,
             is_recursive=True,
             )
 
@@ -2662,8 +2669,30 @@ class FunctionDef(Basic):
             kind=self.kind,
             is_static=self.is_static,
             header=self.header,
+            imports = self.imports,
+            decorators = self.decorators,
             is_recursive=self.is_recursive,
             )
+      
+    def vectorize(self, body , header):
+        """ return vectorized FunctionDef """
+        decorators = self.decorators
+        decorators.pop('vectorize')
+        return FunctionDef(
+            'vec_'+str(self.name),
+            self.arguments,
+            [],
+            body,
+            local_vars=self.local_vars,
+            global_vars=self.global_vars,
+            cls_name=self.cls_name,
+            hide=self.hide,
+            kind='procedure',
+            is_static=self.is_static,
+            header=header,
+            imports = self.imports,
+            decorators = decorators,
+            is_recursive=self.is_recursive) 
 
     @property
     def is_procedure(self):

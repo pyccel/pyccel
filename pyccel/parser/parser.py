@@ -130,7 +130,7 @@ from pyccel.parser.errors import PyccelSemanticError
 
 from pyccel.parser.messages import *
 
-from sympy import Symbol, sympify
+from sympy import Symbol, sympify,symbols
 from sympy import Tuple
 from sympy import NumberSymbol, Number
 from sympy import Integer, Float
@@ -1638,20 +1638,22 @@ class Parser(object):
             else:
                 body = self._fst_to_ast(body)
 
-            return FunctionDef(
-                name,
-                arguments,
-                results,
-                body,
-                local_vars=local_vars,
-                global_vars=global_vars,
-                cls_name=cls_name,
-                hide=hide,
-                kind=kind,
-                imports=imports,
-                decorators=decorators,
-                header=header,
-                )
+            func = FunctionDef(
+                   name,
+                   arguments,
+                   results,
+                   body,
+                   local_vars=local_vars,
+                   global_vars=global_vars,
+                   cls_name=cls_name,
+                   hide=hide,
+                   kind=kind,
+                   imports=imports,
+                   decorators=decorators,
+                   header=header)
+
+            func.set_fst(stmt)
+            return func
         elif isinstance(stmt, ClassNode):
 
             name = self._fst_to_ast(stmt.name)
@@ -3667,6 +3669,28 @@ class Parser(object):
                 # this for the case of a function without arguments => no header
 
                 interfaces = [FunctionDef(name, [], [], [])]
+
+            vec_func = None
+            if 'vectorize' in decorators:
+                vec_name = 'vec_' + name
+                arg = decorators['vectorize'][0]
+                arg = str(arg.name)
+                args = [str(i.name) for i in expr.arguments]
+                index_arg = args.index(arg)
+                arg = Symbol(arg)
+                vec_arg = IndexedBase(arg)
+                index = self.create_variable(expr.body)
+                range_ = Function('range')(Function('len')(arg))
+                args   = symbols(args)
+                args[index_arg] = vec_arg[index] 
+                body_vec = Assign(args[index_arg],Function(name)(*args))
+                body_vec.set_fst(expr.fst)
+                body_vec   = [For(index,range_,[body_vec],strict=False)]
+                header_vec = header.vectorize(index_arg)
+                vec_func = expr.vectorize(body_vec, header_vec)
+                
+                
+                
             for m in interfaces:
                 args = []
                 results = []
@@ -3818,44 +3842,31 @@ class Parser(object):
                             cls.attributes, methods, parent=cls.parent))
 
                 funcs += [func]
+            
+            if len(funcs) == 1: 
+                funcs = funcs[0]
+                self.insert_function(funcs)
 
-            if len(funcs) == 1:  # insert function def into namespace
-
-                # TODO checking
-
-                self.insert_function(funcs[0])
-
-#                    # TODO uncomment and improve this part later.
-#                    #      it will allow for handling parameters of different dtypes
-#                    # for every parameterized argument, we need to create the
-#                    # get_default associated function
-#                    kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
-#                    for a in kw_args:
-#                        get_func = GetDefaultFunctionArg(a, func)
-#                        # TODO shall we check first that it is not in the namespace?
-#                        self.insert_variable(get_func, name=get_func.namer
-
-                return funcs[0]
             else:
-                funcs = [f.rename(str(f.name) + '_' + str(i)) for (i,
+                funcs = [f.rename(name + '_' + str(i)) for (i,
                          f) in enumerate(funcs)]
-
-                # TODO checking
 
                 funcs = Interface(name, funcs)
                 self.insert_function(funcs)
 
-#                    # TODO uncomment and improve this part later.
-#                    #      it will allow for handling parameters of different dtypes
-#                    # for every parameterized argument, we need to create the
-#                    # get_default associated function
-#                    kw_args = [a for a in func.arguments if isinstance(a, ValuedVariable)]
-#                    for a in kw_args:
-#                        get_func = GetDefaultFunctionArg(a, func)
-#                        # TODO shall we check first that it is not in the namespace?
-#                        self.insert_variable(get_func, name=get_func.namer
+            if vec_func:
+               vec_func = self._annotate(vec_func, **settings)
+               if isinstance(funcs, Interface):
+                   funcs = list(funcs.funcs)+[vec_func]
+               else:
+                   funcs = funcs.rename('sc_'+ name)
+                   funcs = [funcs,vec_func]
 
-                return funcs
+               funcs = Interface(name, funcs)
+               self.insert_function(funcs)
+            return funcs
+            
+
         elif isinstance(expr, (EmptyLine, NewLine)):
             return expr
         elif isinstance(expr, Print):
