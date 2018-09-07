@@ -15,6 +15,10 @@ import inspect
 import subprocess
 import importlib
 import sys
+import os
+from types import ModuleType, FunctionType
+from importlib.machinery import ExtensionFileLoader
+
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
@@ -44,14 +48,14 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
     case if we run directly the command line f2py ..."""
 
     compilers  = ''
-    
+
     if mpi:
         compilers = '--f90exec=mpif90 '
 
     if compiler:
         compilers = compilers +'--fcompiler={}'.format(compiler)
-    
-        
+
+
 
     try:
         filename = '{}.f90'.format(modulename)
@@ -75,8 +79,8 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
         f.close()
 
 
-def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
-            context=None, compiler = None , mpi=False):
+def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
+            context=None, compiler = None , mpi=False, static=None):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -102,6 +106,8 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
         a Pyccel context for user defined functions and other dependencies
         needed to compile func. it also be a list/tuple of ContextPyccel
 
+    static: list/tuple
+        a list of 'static' functions as strings
 
     Examples
 
@@ -130,55 +136,121 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
     >>> f([3, 4, 5])
     2
     """
-    assert(callable(func) or isinstance(func, str))
+    is_module = False
+    is_function = False
+
+    if isinstance(func, ModuleType):
+        is_module = True
+
+    if callable(func):
+        is_function = True
+
+    assert(callable(func) or isinstance(func, str) or isinstance(func, ModuleType))
 
     # ...
-    if callable(func):
+    if callable(func) or isinstance(func, ModuleType):
         name = func.__name__
+
     elif name is None:
         # case of func as a string
         raise ValueError('function name must be provided, in the case of func string')
     # ...
 
     # ...
-    if isinstance(inputs, str):
-        headers = inputs
-    elif isinstance(inputs, (tuple, list)):
-        # find all possible headers
-        lines = [str(i) for i in inputs if (isinstance(i, str) and
-                                            i.lstrip().startswith('#$ header'))]
-        # TODO take the last occurence for f => use zip
-        headers = "\n".join([str(i) for i in lines])
-    elif isinstance(inputs, dict):
-        # case of globals() history from ipython
-        if not 'In' in inputs.keys():
-            raise ValueError('Expecting `In` key in the inputs dictionary')
+    if is_module:
+        mod = func
+        is_sharedlib = isinstance(getattr(mod, '__loader__', None), ExtensionFileLoader)
 
-        inputs = inputs['In']
+        if is_sharedlib:
+            module_filename = inspect.getfile(mod)
 
-        # TODO shall we reverse the list
+            # clean
+            cmd = 'rm -f {}'.format(module_filename)
+            os.system(cmd)
 
-        # find all possible headers
-        lines = [str(i) for i in inputs if i.lstrip().startswith('#$ header')]
-        # TODO take the last occurence for f => use zip
-        headers = "\n".join([str(i) for i in lines])
+            # then re-run again
+            mod = importlib.import_module(name)
+            # we must reload the module, otherwise it is still the .so one
+            importlib.reload(mod)
+            epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
+                    libs=libs, name=name, context=context, compiler=compiler,
+                    mpi=mpi, static=static)
+    # ...
+
+    # ...
+    ignored_funcs = None
+    if not static:
+        if isinstance(func, ModuleType):
+            mod = func
+            funcs = [i for i in dir(mod) if isinstance(getattr(mod, i), FunctionType)]
+
+            # remove pyccel.decorators
+            ignored_funcs = [i for i in funcs if getattr(mod, i).__module__ == 'pyccel.decorators']
+            static = [i for i in funcs if not(i in ignored_funcs)]
+
+        else:
+            static = [name]
+    # ...
+
+    # ...
+    headers = None
+    if inputs:
+        if isinstance(inputs, str):
+            headers = inputs
+
+        elif isinstance(inputs, (tuple, list)):
+            # find all possible headers
+            lines = [str(i) for i in inputs if (isinstance(i, str) and
+                                                i.lstrip().startswith('#$ header'))]
+            # TODO take the last occurence for f => use zip
+            headers = "\n".join([str(i) for i in lines])
+
+        elif isinstance(inputs, dict):
+            # case of globals() history from ipython
+            if not 'In' in inputs.keys():
+                raise ValueError('Expecting `In` key in the inputs dictionary')
+
+            inputs = inputs['In']
+
+            # TODO shall we reverse the list
+
+            # find all possible headers
+            lines = [str(i) for i in inputs if i.lstrip().startswith('#$ header')]
+            # TODO take the last occurence for f => use zip
+            headers = "\n".join([str(i) for i in lines])
 
     # we parse all headers then convert them to static function
-    hdr = parse(stmts=headers)
-    if isinstance(hdr, FunctionHeader):
-        header = hdr.to_static()
-    elif isinstance(hdr, (tuple, list)):
-        hs = [h.to_static() for h in hdr]
-        hs = [h for h in hs if hs.func == name]
-        # TODO improve
-        header = hs[0]
-    else:
+    d_headers = {}
+    if headers:
+        hdr = parse(stmts=headers)
+        if isinstance(hdr, FunctionHeader):
+            header = hdr.to_static()
+            d_headers = {str(name): header}
+
+        elif isinstance(hdr, (tuple, list)):
+            hs = [h.to_static() for h in hdr]
+            hs = [h for h in hs if hs.func == name]
+            # TODO improve
+            header = hs[0]
+            raise NotImplementedError('TODO')
+
+        else:
+            raise NotImplementedError('TODO')
+    # ...
+
+    # ...
+    if not static:
         raise NotImplementedError('TODO')
     # ...
 
     # ... get the function source code
     if callable(func):
         code = get_source_function(func)
+
+    elif isinstance(func, ModuleType):
+        lines = inspect.getsourcelines(func)[0]
+        code = ''.join(lines)
+
     else:
         code = func
     # ...
@@ -215,7 +287,7 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
 
     try:
         # ...
-        pyccel = Parser(code, headers={str(name): header})
+        pyccel = Parser(code, headers=d_headers, static=static)
         ast = pyccel.parse()
 
         settings = {}
@@ -253,11 +325,15 @@ def epyccel(func, inputs, verbose=False, modules=[], libs=[], name=None,
     except:
         raise ImportError('could not import {0}'.format(name))
     # ...
+
+    if is_module:
+        return package
+
     if name in dir(package):
         module = getattr(package, name)
     else:
         module = getattr(package, 'mod_{0}'.format(name.lower()))
-    
+
     #f = getattr(module, name.lower())
 
     return module

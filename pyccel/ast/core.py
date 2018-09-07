@@ -58,7 +58,7 @@ from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
     NativeComplex, NativeRange, NativeTensor, NativeString, \
     NativeGeneric
 
-local_sympify = {'N': Symbol('N'), 'S': Symbol('S'), 
+local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
                 'zeros':Symbol('zeros'),'ones':Symbol('ones')
                 ,'Point':Symbol('Point')}
 
@@ -259,10 +259,10 @@ class List(Tuple):
 class Dlist(Basic):
 
     """ this is equivalent to the zeros function of numpy arrays for the python list.
-        
-    value : Expr 
+
+    value : Expr
            a sympy expression which represents the initilized value of the list
-  
+
     shape : the shape of the array
     """
 
@@ -432,7 +432,7 @@ class Assign(Basic):
 class CodeBlock(Basic):
 
     """Represents a list of stmt for code generation.
-       we use it when a single statement in python 
+       we use it when a single statement in python
        produce multiple statement in the targeted language
     """
 
@@ -861,7 +861,7 @@ class Enumerate(Basic):
 
     """
     Reresents the enumerate stmt
-  
+
     """
 
     def __new__(cls, arg):
@@ -1816,9 +1816,9 @@ class Variable(Symbol):
         ):
 
         # use str to make '*' work using py2
-        
+
         if isinstance(dtype, str) or str(dtype) == '*':
-            
+
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
@@ -1877,7 +1877,7 @@ class Variable(Symbol):
                 precision = 4
             elif isinstance(dtype, (NativeReal, NativeComplex)):
                 precision = 8
-       
+
         # TODO improve order of arguments
 
         obj = Basic.__new__(
@@ -1906,7 +1906,7 @@ class Variable(Symbol):
             assumptions['integer'] = True
         elif isinstance(dtype, NativeReal):
             assumptions['real'] = True
-            
+
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
@@ -1963,7 +1963,7 @@ class Variable(Symbol):
     @property
     def order(self):
         return self._args[11]
-  
+
     @property
     def precision(self):
         return self._args[12]
@@ -2271,6 +2271,38 @@ class ValuedArgument(Basic):
         value = sstr(self.value)
         return '{0}={1}'.format(argument, value)
 
+
+class FunctionCall(Basic):
+
+    """Represents a function call in the code.
+    """
+
+    def __new__(cls, func, args):
+
+        # ...
+        if not isinstance(func, (str, FunctionDef, Function)):
+            raise TypeError('> expecting a str, FunctionDef, Function')
+
+        if isinstance(func, FunctionDef):
+            func = func.name
+        # ...
+
+        # ...
+        if not isinstance(args, (tuple, list, Tuple)):
+            raise TypeError('> expecting an iterable')
+
+        args = Tuple(*args)
+        # ...
+
+        return Basic.__new__(cls, func, args)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def arguments(self):
+        return self._args[1]
 
 class Return(Basic):
 
@@ -3965,7 +3997,7 @@ class String(Basic):
     @property
     def arg(self):
         return self._args[0]
-   
+
     def __str__(self):
         return self.arg
 
@@ -4265,7 +4297,7 @@ def get_initial_value(expr, var):
             if not r is None:
                 return r
         return value
-    
+
     elif isinstance(expr, ConstructorCall):
 
         return get_initial_value(expr.func, var)
@@ -4311,21 +4343,21 @@ def get_assigned_symbols(expr):
 
     elif iterable(expr):
         symbols = []
-        
+
         for a in expr:
             symbols += get_assigned_symbols(a)
         symbols = set(symbols)
         symbols = list(symbols)
         return symbols
     elif isinstance(expr, (Assign, AugAssign)):
-        
-        
+
+
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
         try:
             var = expr.lhs
-            
+
             if isinstance(var, DottedVariable):
                 var = expr.lhs.lhs
                 while isinstance(var, DottedVariable):
@@ -4346,7 +4378,7 @@ def get_assigned_symbols(expr):
 #            raise SystemExit('ERROR')
 
         return symbols
-    
+
 
     return []
 

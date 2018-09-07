@@ -1,101 +1,220 @@
 # coding: utf-8
 
-from pyccel.epyccel import epyccel
 import numpy as np
+import os
 
-def test_simple():
-    header = '#$ header procedure decr(int) results(int)'
-    def decr(x):
+from pyccel.epyccel import epyccel
+from pyccel.decorators import types
+
+def clean_test():
+    cmd = 'rm -f *.f90 *.so'
+    os.system(cmd)
+
+# ..............................................
+#  functions for which we will provide headers
+# ..............................................
+def f1(x):
+    y = x - 1
+    return y
+
+def f2(x):
+    y = x[0] - 1
+    return y
+
+def f3(x):
+    y = x - 1
+    return y
+
+def f4(x):
+    y = x - 1.0
+    return y
+
+def f5(m1, x):
+    x[:] = 0.
+    for i in range(0, m1):
+        x[i] = i * 1.
+
+def f6(m1, m2, x):
+    x[:,:] = 0.
+    for i in range(0, m1):
+        for j in range(0, m2):
+            x[i,j] = (i+j) * 1.
+# ..............................................
+
+# ..............................................
+#        functions with types decorator
+# ..............................................
+@types(int)
+def g1(x):
+    y = x+1
+    return y
+
+@types('int [:]')
+def g2(x):
+    y = x + 1
+    return y
+
+@types(int,int,int)
+def g3(x, n=2, m=3):
+    y = x - n*m
+    return y
+
+@types(int,int)
+def g4(x, m=None):
+    if m is None:
+        y = x + 1
+    else:
         y = x - 1
-        return y
+    return y
+# ..............................................
 
-    f = epyccel(decr, header)
 
-    y = f(3)
-    assert(y == 2)
+def test_f1():
+    f = epyccel(f1, '#$ header procedure f1(int)')
 
-def test_array_1():
-    header = '#$ header procedure f1(int [:]) results(int)'
-    def f1(x):
-        y = x[0] - 1
-        return y
+    # ...
+    assert(f(3) == f1(3))
+    # ...
 
-    f = epyccel(f1, header)
+    clean_test()
 
+def test_f2():
+    f = epyccel(f2, '#$ header procedure f2(int [:])')
+
+    # ...
     x = np.array([3, 4, 5, 6], dtype=int)
-    y = f(x)
-    assert(y == 2)
+    assert(f(x) == f2(x))
+    # ...
 
-    y = f([3, 4, 5, 6])
-    assert(y == 2)
+    # ...
+    x = [3, 4, 5, 6]
+    assert(f(x) == f2(x))
+    # ...
 
-def test_array_2():
-    header = '#$ header procedure f2(int [:]) results(int [:])'
-    def f2(x):
-        y = x - 1
-        return y
+    clean_test()
 
-    f = epyccel(f2, header)
+def test_f3():
+    f = epyccel(f3, '#$ header procedure f3(int [:])')
 
+    # ...
     x = np.array([3, 4, 5, 6], dtype=int)
-    y = f(x)
-    assert(np.allclose(y, np.array([2, 3, 4, 5])))
+    assert(np.allclose(f(x), f3(x)))
+    # ...
 
-def test_array_3():
-    header = '#$ header procedure g(double [:,:]) results(double [:,:])'
-    def g(x):
-        y = x - 1.0
-        return y
+    clean_test()
 
-    f = epyccel(g, header)
+def test_f4():
+    f = epyccel(f4, '#$ header procedure f4(double [:,:])')
 
+    # ...
     x = np.random.random((2, 3))
-    y = f(x)
+    assert(np.allclose(f(x), f4(x)))
+    # ...
 
-def test_array_4():
-    header = '#$ header procedure f1_py(int, double [:])'
-    def f1_py(m1, x):
-        x[:] = 0.
-        for i in range(0, m1):
-            x[i] = i * 1.
+    clean_test()
 
-    f = epyccel(f1_py, header)
+def test_f5():
+    f = epyccel(f5, '#$ header procedure f5(int, double [:])')
 
+    # ...
     m1 = 3
+
     x = np.zeros(m1)
     f(m1, x)
 
-    x_expected = np.array([0., 1., 2.])
+    x_expected = np.zeros(m1)
+    f5(m1, x_expected)
+
     assert(np.allclose(x, x_expected))
+    # ...
 
-def test_array_5():
-    header = '#$ header procedure f2_py(int, int, double [:,:](order = F))'
-    def f2_py(m1, m2, x):
-        x[:,:] = 0.
-        for i in range(0, m1):
-            for j in range(0, m2):
-                x[i,j] = (i+j) * 1.
+    clean_test()
 
-    f = epyccel(f2_py, header)
+def test_f6():
+    f = epyccel(f6, '#$ header procedure f6(int, int, double [:,:](order = F))')
 
-    m1 = 2
-    m2 = 3
+    # ...
+    m1 = 2 ; m2 = 3
+
     x = np.zeros((m1,m2), order='F')
     f(m1, m2, x)
 
-    # ... expected
     x_expected = np.zeros((m1,m2), order='F')
-    for i in range(0, m1):
-        for j in range(0, m2):
-            x_expected[i,j] = (i+j) * 1.
-    # ...
+    f6(m1, m2, x_expected)
+
     assert(np.allclose(x, x_expected))
+    # ...
+
+    clean_test()
+
+def test_decorators():
+
+    # ...
+    f = epyccel(g1)
+    assert(f(3) == g1(3))
+    # ...
+
+    # ...
+    f = epyccel(g2)
+
+    x = np.array([2, 3, 4], dtype=int)
+    x_expected = x.copy()
+
+    f(x)
+    g2(x_expected)
+
+    assert(np.allclose(x, x_expected))
+    # ...
+
+    # ...
+    f = epyccel(g3)
+    assert(f(3,2,4) == g3(3,2,4))
+    # ...
+
+#    # ... TODO: not working yet. optional arg is placed before out!
+#    f = epyccel(g4)
+#    assert(f(3) == g4(3))
+#
+#    print(f(3,2))
+#    print(g4(3,2))
+#    assert(f(3, 2) == g4(3, 2))
+#    # ...
+
+    clean_test()
+
+def test_module1():
+    import mod_test1 as mod
+
+    # ...
+    m = epyccel(mod)
+    assert(m.g1(3) == mod.g1(3))
+    # ...
+
+    # ...
+    x = np.array([2, 3, 4], dtype=int)
+    x_expected = x.copy()
+
+    m.g2(x)
+    mod.g2(x_expected)
+
+    assert(np.allclose(x, x_expected))
+    # ...
 
 
 if __name__ == '__main__':
-    test_simple()
-    test_array_1()
-    test_array_2()
-    test_array_3()
-    test_array_4()
-    test_array_5()
+    # ... using headers
+    test_f1()
+    test_f2()
+    test_f3()
+    test_f4()
+    test_f5()
+    test_f6()
+    # ...
+
+    # ... using decorators
+    test_decorators()
+    # ...
+
+    # ... using modules
+    test_module1()
+    # ...
