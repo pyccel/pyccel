@@ -97,7 +97,7 @@ from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
 from pyccel.ast import With, Block
-from pyccel.ast import Range, Zip, Enumerate, Product
+from pyccel.ast import Range, Zip, Enumerate, Product, Map
 from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
@@ -2089,6 +2089,8 @@ class Parser(object):
             d_var = self._infere_type(expr.rhs)
             self._current_class = None
             return d_var
+
+        
         elif isinstance(expr, Lambda):
 
             d_var['datatype'] = NativeSymbol()
@@ -2096,6 +2098,7 @@ class Parser(object):
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
+
         elif isinstance(expr, Application):
             name = _get_name(expr)
             func = self.get_function(name)
@@ -2147,7 +2150,6 @@ class Parser(object):
                     shape = s
 
             # ...
-
             d_var['datatype'] = sp_dtype(expr)
             d_var['allocatable'] = any(allocatables)
             d_var['is_pointer'] = any(pointers)
@@ -2484,6 +2486,7 @@ class Parser(object):
                     expr_new = expr.expr.subs(func, f)
                     expr = Lambda(expr.variables, expr_new)
             return expr
+       
         elif isinstance(expr, Application):
 
             # ... DEBUG
@@ -2519,6 +2522,7 @@ class Parser(object):
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
+            
             if F:
                 if len(stmts) > 0:
                     stmts.append(F)
@@ -2866,6 +2870,7 @@ class Parser(object):
  # .......
 
             rhs = self._annotate(rhs, **settings)
+            
 
  # .......
  # .......
@@ -2914,8 +2919,13 @@ class Parser(object):
                 expr = Block(rhs.name, rhs.variables, body)
                 return expr
 
+
             if isinstance(rhs, FunctionalFor):
                 return rhs
+
+      
+            
+                
             elif isinstance(rhs, CodeBlock):
                 stmts = rhs.body
                 stmt = stmts[-1]
@@ -2929,6 +2939,8 @@ class Parser(object):
                 return CodeBlock(stmts)
 
             # d_var can be a list of dictionaries
+
+           
 
             if isinstance(rhs, ConstructorCall):
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
@@ -2953,7 +2965,7 @@ class Parser(object):
             elif isinstance(rhs, Application):
 
                 # ARA: needed for functions defined only with a header
-
+                
                 name = _get_name(rhs)
                 func = self.get_function(name)
                 if isinstance(func, FunctionDef):
@@ -3065,6 +3077,24 @@ class Parser(object):
             elif isinstance(rhs, SumFunction):
 
                 d_var = self._infere_type(rhs.body, **settings)
+
+            elif isinstance(rhs, Map):
+
+                name = str(rhs.args[0])
+                func = self.get_function(name)
+            
+                if func is None:
+                   errors.report(UNDEFINED_FUNCTION, symbol=name,
+                             bounding_box=self.bounding_box,
+                             severity='error',
+                             blocker=self.blocking)
+                dvar  = self._infere_type(rhs.args[1], **settings)
+                d_var = [self._infere_type(result, **settings) for result in func.results]
+                for i in range(len(d_var)):
+                    d_var[i]['shape'] = dvar['shape']
+                    d_var[i]['rank']  = dvar['rank']
+                
+
             else:
 
                 d_var = self._infere_type(rhs, **settings)
@@ -3084,8 +3114,10 @@ class Parser(object):
                         d_var['is_target'] = False
                         d_var['is_pointer'] = True
 
-                    # case of rhs is a target variable the lhs must be a pointer
-
+                    # case of rhs is a target variable the lhs must be a pointe
+            
+            
+            
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 if isinstance(d_var, list):
@@ -3193,12 +3225,34 @@ class Parser(object):
                 else:
                     lhs = self._annotate(lhs, **settings)
 
-            # TODO ERROR must pass fst
-
+            if isinstance(rhs, (Map, Zip)):
+                func  = _get_name(rhs.args[0])
+                func  = Function(func)
+                alloc = Assign(lhs,Zeros(lhs.shape,lhs.dtype))
+                alloc.set_fst(expr.fst)
+                index = self.create_variable(expr)
+                index = Variable('int',index.name)
+                range_ = Function('range')(Function('len')(lhs))
+                name  = _get_name(lhs)
+                var   = IndexedBase(name)[index]
+                args  = rhs.args[1:]
+                args  = [_get_name(arg) for arg in args]
+                args  = [IndexedBase(arg)[index] for arg in args]
+                body  = [Assign(var,func(*args))]
+                body[0].set_fst(expr.fst)
+                body  = For(index, range_, body, strict=False)
+                body  = self._annotate(body, **settings)
+                body  = [alloc , body]
+                return CodeBlock(body)
+                
+                
+            
             expr_new = Assign(lhs, rhs, strict=False)
+            
             if not isinstance(lhs, (list, Tuple, tuple)):
-                d_var = [d_var]
-
+                if isinstance(d_var,dict):
+                    d_var = [d_var]
+            
             for (i, dic) in enumerate(d_var):
                 if not isinstance(lhs, (list, Tuple, tuple)):
                     lhs = [lhs]
@@ -3260,6 +3314,14 @@ class Parser(object):
             if isinstance(iterable, Variable):
                 indx = self.create_variable(iterable)
                 assign = Assign(iterator, IndexedBase(iterable)[indx])
+                assign.set_fst(expr.fst)
+                iterator = indx
+                body = [assign] + body
+            elif isinstance(iterable, Map):
+                indx = self.create_variable(iterable)
+                func = iterable.args[0]
+                args = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
+                assing = assign = Assign(iterator, func(*args))
                 assign.set_fst(expr.fst)
                 iterator = indx
                 body = [assign] + body

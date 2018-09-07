@@ -491,13 +491,14 @@ class Zeros(Function):
     def fprint(self, printer, lhs):
         """Fortran print."""
 
-        if isinstance(self.shape, Tuple):
+        if isinstance(self.shape, (Tuple,tuple)):
 
             # this is a correction. problem on LRZ
-
+            
             shape_code = ', '.join('0:' + printer(i - 1) for i in
                                    self.shape)
         else:
+            
             shape_code = '0:' + printer(self.shape - 1)
 
         init_value = printer(self.init_value)

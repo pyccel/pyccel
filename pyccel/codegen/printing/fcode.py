@@ -45,7 +45,7 @@ from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Range, Product, Block , Zip, Enumerate
+from pyccel.ast.core import Range, Product, Block , Zip, Enumerate, Map
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Declare, ValuedVariable,
@@ -1392,7 +1392,7 @@ class FCodePrinter(CodePrinter):
                 return '{0}'.format(self._print(i))
         # ...
 
-        if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate)):
+        if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
             msg  = "Only iterable currently supported are Range, "
             msg += "Product"
             raise NotImplementedError(msg)
@@ -1402,11 +1402,15 @@ class FCodePrinter(CodePrinter):
                                        prolog, epilog)
         elif isinstance(expr.iterable, Product):
             for i, a in zip(expr.target, expr.iterable.args):
-                itr_=Range(a.shape[0])
+                itr_ = Range(a.shape[0])
                 prolog, epilog = _do_range(i, itr_, \
                                            prolog, epilog)
         elif isinstance(expr.iterable, (Zip, Enumerate)):
-            itr_=Range(expr.iterable.element.shape[0])
+            itr_ = Range(expr.iterable.element.shape[0])
+            prolog, epilog = _do_range(expr.target, itr_, \
+                                       prolog, epilog)
+        elif isinstance(expr.iterable, Map):
+            itr_ = Range(Len(expr.iterable.args[1]))
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 

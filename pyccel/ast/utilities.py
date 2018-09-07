@@ -4,7 +4,7 @@
 from sympy.core.function import Application
 from .core import DottedName
 from .core import Import
-from .core import Range, Len , Enumerate, Zip, Product
+from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
 from .numpyext import Zeros, Ones, Empty
@@ -13,6 +13,7 @@ from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
 from sympy import Symbol, Lambda, floor
 from sympy import Not,Float
+from sympy import Function
 from sympy import (Abs, sin, cos, exp, csc, cos, sec, tan, cot, Mod, Max, Min)
 
 import scipy.constants as sc_constants
@@ -86,6 +87,11 @@ def builtin_function(expr, args=None):
         return Complex(args[0],args[1])
     elif name == 'Not':
         return Not(*args)
+
+    elif name == 'map':
+        func = Function(str(expr.args[0].name))
+        args = [func]+list(args[1:])
+        return Map(*args)
     
 
     if name == 'lambdify':

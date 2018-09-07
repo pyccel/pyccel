@@ -874,6 +874,20 @@ class Enumerate(Basic):
         return self._args[0]
 
 
+class Map(Basic):
+    """
+    Reresents the map stmt
+  
+    """
+    
+    def __new__(cls, *args):
+        if len(args)<2:
+            raise TypeError('wrong number of arguments')
+        return Basic.__new__(cls, *args)
+
+
+
+
 class Range(Basic):
 
     """
@@ -1477,7 +1491,7 @@ class For(Basic):
 
             cond_iter = iterable(iter)
             cond_iter = cond_iter or isinstance(iter, (Range, Product,
-                    Enumerate, Zip))
+                    Enumerate, Zip, Map))
             cond_iter = cond_iter or isinstance(iter, Variable) \
                 and is_iterable_datatype(iter.dtype)
           #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
