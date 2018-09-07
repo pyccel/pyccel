@@ -14,11 +14,12 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
 from sympy import Rational as sp_Rational
+from sympy import IndexedBase
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
-from .datatypes import default_precision 
+from .datatypes import default_precision
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
@@ -36,7 +37,7 @@ class Array(Function):
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        prec = 0 
+        prec = 0
         if isinstance(dtype, str):
             dtype,prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
@@ -59,7 +60,7 @@ class Array(Function):
     @property
     def dtype(self):
         return self._args[1]
-  
+
     @property
     def precision(self):
         return self._args[2]
@@ -150,6 +151,7 @@ class Shape(Array):
             Array,
             Variable,
             IndexedElement,
+            IndexedBase,
             )):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
@@ -195,7 +197,7 @@ class Int(Function):
 
     def __new__(cls, arg):
         if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, Pow, sp_Rational)):
-            
+
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'integer':True}
@@ -275,14 +277,14 @@ class Real(Function):
         value = printer(self.arg)
         code = 'Real({0})'.format(value)
         return code
-   
+
 
     def __str__(self):
         return 'Float({0})'.format(str(self.arg))
-    
+
 
     def _sympystr(self, printer):
-        
+
         return self.__str__()
 
 class Complex(Function):
@@ -293,7 +295,7 @@ class Complex(Function):
     """
 
     def __new__(cls, arg0, arg1=sp_Float(0)):
-        
+
         for arg in [arg0, arg1]:
             if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
                 raise TypeError('Uknown type of  %s.' % type(arg))
@@ -335,14 +337,14 @@ class Complex(Function):
         value1 = printer(self.imag_part)
         code = 'complex({0},{1})'.format(value0,value1)
         return code
-   
+
 
     def __str__(self):
         return self.fprint(str)
-    
+
 
     def _sympystr(self, printer):
-        
+
         return self.fprint(str)
 
 
@@ -388,39 +390,39 @@ class Zeros(Function):
     # TODO improve
 
     def __new__(cls, shape,*args):
-        
+
         args = list(args)
         args_= {'dtype':'real','order':'C'}
         prec = 0
         val_args = []
-        
+
         for i in range(len(args)):
             if isinstance(args[i], ValuedArgument):
                 val_args = args[i:]
                 args[i:] = []
                 break
-            
-                
+
+
         if len(args)==1:
             args_['dtype'] = str(args[0])
         elif len(args)==2:
             args_['dtype'] = str(args[0])
             args_['order'] = str(args[1])
-            
+
         for i in val_args:
             val = str(i.value)
             args_[str(i.argument.name)] = val
 
         for key in args_.keys():
             args_[key] = args_[key].replace('\'', '')
-         
-        
-            
-            
-  
+
+
+
+
+
         dtype = args_['dtype']
         order = args_['order']
-    
+
         if isinstance(shape,Tuple):
             shape = list(shape)
 
@@ -444,7 +446,7 @@ class Zeros(Function):
             dtype = datatype('ndarray' + dtype)
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
-  
+
         if not prec:
             prec = default_precision[str(dtype)]
 
@@ -468,7 +470,7 @@ class Zeros(Function):
     @property
     def order(self):
         return self._args[2]
- 
+
     @property
     def precision(self):
         return self._args[3]
@@ -494,11 +496,11 @@ class Zeros(Function):
         if isinstance(self.shape, (Tuple,tuple)):
 
             # this is a correction. problem on LRZ
-            
+
             shape_code = ', '.join('0:' + printer(i - 1) for i in
                                    self.shape)
         else:
-            
+
             shape_code = '0:' + printer(self.shape - 1)
 
         init_value = printer(self.init_value)
@@ -515,7 +517,7 @@ class Ones(Zeros):
 
     """Represents a call to numpy.ones for code generation.
 
-    shape : int or list of integers  
+    shape : int or list of integers
 
     """
 
@@ -559,7 +561,7 @@ class Empty(Zeros):
         code = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         return code
 
- 
+
 
 class Sqrt(Function):
     def __new__(cls,arg):
