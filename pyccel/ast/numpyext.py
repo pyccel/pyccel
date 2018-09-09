@@ -142,23 +142,28 @@ class Shape(Array):
     arg : list ,tuple ,Tuple,List, Variable
     """
 
-    def __new__(cls, arg):
-        if not isinstance(arg, (
-            list,
-            tuple,
-            Tuple,
-            List,
-            Array,
-            Variable,
-            IndexedElement,
-            IndexedBase,
-            )):
+    def __new__(cls, arg, index=None):
+        if not isinstance(arg, (list,
+                                tuple,
+                                Tuple,
+                                List,
+                                Array,
+                                Variable,
+                                IndexedElement,
+                                IndexedBase)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+
+        # TODO add check on index: must be Integer or Variable with dtype=int
+
+        return Basic.__new__(cls, arg, index)
 
     @property
     def arg(self):
         return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
 
     @property
     def dtype(self):
@@ -180,10 +185,21 @@ class Shape(Array):
             init_value = printer(self.arg.arg)
         else:
             init_value = printer(self.arg)
+
         if lhs:
-            code_init = '{0} = shape({1})'.format(lhs_code, init_value)
+            if self.index is None:
+                code_init = '{0} = shape({1})'.format(lhs_code, init_value)
+
+            else:
+                code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value,
+                                                          printer(self.index))
+
         else:
-            code_init = 'shape({0})'.format(init_value)
+            if self.index is None:
+                code_init = 'shape({0})'.format(init_value)
+
+            else:
+                code_init = 'size({0}, {1})'.format(init_value, printer(self.index))
 
         return code_init
 
