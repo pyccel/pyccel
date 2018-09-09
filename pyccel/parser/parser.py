@@ -1932,7 +1932,7 @@ class Parser(object):
             result = self._fst_to_ast(stmt.result)
             generators = list(self._fst_to_ast(stmt.generators))
             lhs = self._fst_to_ast(stmt.parent.target)
-            index = self.create_variable(lhs + result)
+            index = self.create_variable(lhs)
             if isinstance(result, (Tuple, list, tuple)):
                 rank = len(np.shape(result))
             else:
@@ -2909,14 +2909,14 @@ class Parser(object):
  # .......
  # .......
  # .......
-
+             
             rhs = self._annotate(rhs, **settings)
             
 
  # .......
  # .......
  # .......
-
+            
             if isinstance(rhs, If):
                 args = rhs.args
                 new_args = []
@@ -3537,8 +3537,16 @@ class Parser(object):
             # maybe use the c++ library of sympy
 
             # we annotate the target.rhs to infere the type of the list created
+            rhs_args = []
+            rhs = target.rhs
+            while isinstance(rhs, IfTernaryOperator):
+                rhs_args.append(rhs.args[0][1][0])
+                rhs = rhs.args[1][1][0]
+            rhs_args.append(rhs)
+            rhs = Add(*rhs_args)
+            # we do this to infere types correctly
 
-            rhs = self._annotate(target.rhs, **settings)
+            rhs = self._annotate(rhs, **settings)
             lhs_name = _get_name(target.lhs)
             d_var = self._infere_type(rhs, **settings)
             dtype = d_var.pop('datatype')
