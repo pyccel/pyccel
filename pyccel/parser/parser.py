@@ -261,7 +261,8 @@ def _atomic(e, cls=None):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable)
+        cls = (Application, DottedVariable, Variable, 
+               IndexedVariable,IndexedElement)
     for p in pot:
         if p in seen:
             pot.skip()
@@ -2150,10 +2151,10 @@ class Parser(object):
                 d_var['datatype'] = sp_dtype(expr)
             return d_var
         elif isinstance(expr, Expr):
-
+            cls = (Application, DottedVariable, Variable, 
+                   IndexedVariable,IndexedElement)
             ds = [self._infere_type(i, **settings) for i in
-                  _atomic(expr) if isinstance(i, (Variable,
-                  DottedVariable))]
+                  _atomic(expr) if isinstance(i, cls)]
             #TODO we should also look for functions call
             #to collect info about precision and shapes later when we allow
             # vectorised operations
@@ -2166,6 +2167,7 @@ class Parser(object):
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
             precisions = [d['precision'] for d in ds]
+           
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
