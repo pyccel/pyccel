@@ -17,10 +17,13 @@ import importlib
 import sys
 import os
 from types import ModuleType, FunctionType
-from importlib.machinery import ExtensionFileLoader
+
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
+
+if PY3:
+    from importlib.machinery import ExtensionFileLoader
 
 def get_source_function(func):
     if not callable(func):
