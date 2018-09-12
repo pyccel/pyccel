@@ -1434,38 +1434,40 @@ class Parser(object):
                     second = second._new_rawargs(-args[0], args[1])
                 else:
                     second = Mul(-1, second)
-                return Add(first, second)
+                return Add(first, second, evaluate=False)
             elif stmt.value == '/':
                 if isinstance(second, Mul):
                     args = list(second.args)
                     if args[0].is_integer:
                         args[0] = Float(args[0])
-                    second = Pow(args[0], -1)
-                    second = Mul(second, args[1])
+                    second = Pow(args[0], -1, evaluate=False)
+                    second = Mul(second, args[1], evaluate=False)
                 else:
                     if second.is_integer:
                         second = Float(second)
-                    second = Pow(second, -1)
-                return Mul(first, second)
+                    second = Pow(second, -1, evaluate=False)
+                return Mul(first, second, evaluate=False)
             elif stmt.value == 'and':
 
-                return And(first, second)
+                return And(first, second, evaluate=False)
             elif stmt.value == 'or':
 
-                return Or(first, second)
+                return Or(first, second, evaluate=False)
             elif stmt.value == '**':
 
-                return Pow(first, second)
+                return Pow(first, second, evaluate=False)
             elif stmt.value == '//':
                 if isinstance(second, Mul):
                     args = second.args
-                    second = Pow(args[0], -1)
-                    first =  Function('int')(Mul(first, second))
-                    return Mul(first, args[1])
+                    second = Pow(args[0], -1, evaluate=False)
+                    first =  Function('int')(Mul(first, second,
+                             evaluate=False))
+                    return Mul(first, args[1], evaluate=False)
                 else:
-                    second = Pow(second, -1)
+                    second = Pow(second, -1, evaluate=False)
 
-                    return Function('int')(Mul(first, second))
+                    return Function('int')(Mul(first, second,
+                            evaluate=False))
             elif stmt.value == '%':
 
                 return Mod(first, second)
