@@ -712,6 +712,7 @@ class FCodePrinter(CodePrinter):
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
         is_static = expr.static
+        intent = expr.intent
 
         if isinstance(shape, tuple) and len(shape) ==1:
             shape = shape[0]
@@ -751,7 +752,7 @@ class FCodePrinter(CodePrinter):
             code_value = ' = {0}'.format(expr.value)
 
         decs = []
-        intent = expr.intent
+        
         vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
@@ -762,6 +763,7 @@ class FCodePrinter(CodePrinter):
             s = ''
 
         rankstr =  ''
+        allocatablestr = ''
         # TODO improve
         if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable))) and
             (not(allocatable or is_pointer) or is_static)):
@@ -775,20 +777,25 @@ class FCodePrinter(CodePrinter):
                                                  self._print(i-1)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
             enable_alloc = False
-
+            
         elif (rank > 0) and (allocatable or is_pointer or is_target):
-            rankstr = ','.join(':' for f in range(0, rank))
+            #TODO check this works in all cases
+            if intent:
+                rankstr = ','.join('0:' for f in range(0, rank))
+            else:
+                rankstr = ','.join(':' for f in range(0, rank))
+
             rankstr = '(' + rankstr + ')'
 #        else:
 #            raise NotImplementedError('Not treated yet')
 
-        allocatablestr = ''
+
         if not is_static:
             if is_pointer:
                 allocatablestr = ', pointer'
             elif is_target:
                 allocatablestr = ', target'
-            elif allocatable:
+            elif allocatable and not intent:
                 allocatablestr = ', allocatable'
 
         optionalstr = ''
