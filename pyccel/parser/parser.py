@@ -1305,10 +1305,13 @@ class Parser(object):
         elif isinstance(stmt, FloatNode):
 
             val = strip_ansi_escape.sub('', stmt.value)
+            
+            val = val[:20] if len(val)>20 else val
             return Float(val)
         elif isinstance(stmt, FloatExponantNode):
 
             val = strip_ansi_escape.sub('', stmt.value)
+            val = val[:20] if len(val)>20 else val
             return Float(val)
         elif isinstance(stmt, ComplexNode):
 
