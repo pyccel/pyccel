@@ -3047,22 +3047,19 @@ class Parser(object):
                 elif name in ['Array']:
 
                     dvar = self._infere_type(rhs.arg, **settings)
-                    dtype = dvar['datatype']
+                    
+                    if rhs.dtype:
+                        dvar['datatype'] = rhs.dtype
+                        dvar['precision'] = rhs.precision
+                    dvar['datatype'] = str_dtype(dvar['datatype'])
                     d_var = {}
                     d_var['allocatable'] = True
                     d_var['shape'] = dvar['shape']
                     d_var['rank'] = dvar['rank']
                     d_var['is_pointer'] = False
-                    if isinstance(dtype, NativeInteger):
-                        d_var['datatype'] = 'ndarrayint'
-                    elif isinstance(dtype, NativeReal):
-                        d_var['datatype'] = 'ndarrayreal'
-                    elif isinstance(dtype, NativeComplex):
-                        d_var['datatype'] = 'ndarraycomplex'
-                    elif isinstance(dtype, str):
-                        d_var['datatype'] = 'ndarray' + dtype
-                    else:
-                        raise TypeError('list of type {0} not supported'.format(str(dtype)))
+                    d_var['datatype'] = 'ndarray' + dvar['datatype']
+                    d_var['precision'] = dvar['precision']
+                 
                 elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
 
                     d_var = {}

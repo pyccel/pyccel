@@ -33,20 +33,24 @@ class Array(Function):
     arg : list ,tuple ,Tuple,List
     """
 
-    def __new__(cls, arg, dtype=None):
+    def __new__(cls, arg, dtype):
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         prec = 0
-        if isinstance(dtype, str):
+        if isinstance(dtype, ValuedArgument):
+            dtype = dtype.value
+        
+        if isinstance(dtype, (str, String)):
+            dtype = str(dtype).replace('\'', '')
             dtype,prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
         else:
-            dtype = 'real'
+            dtype = None
 
-        if not prec:
+        if not prec and dtype:
             prec = default_precision[dtype]
-
+      
         return Basic.__new__(cls, arg, dtype, prec)
 
     def _sympystr(self, printer):
@@ -426,14 +430,8 @@ class Zeros(Function):
             args_['order'] = str(args[1])
 
         for i in val_args:
-            val = str(i.value)
+            val = str(i.value).replace('\'', '')
             args_[str(i.argument.name)] = val
-
-        for key in args_.keys():
-            args_[key] = args_[key].replace('\'', '')
-
-
-
 
 
         dtype = args_['dtype']

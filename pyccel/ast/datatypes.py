@@ -22,6 +22,7 @@ dtype_and_precsision_registry = {'real':('real',8),
                                  'int32':('int',4),
                                  'int64':('int',8),
                                  'int'  :('int',4),
+                                 'integer':('int',4),
                                  'bool' :('bool',1)}
 
 
@@ -185,6 +186,7 @@ dtype_registry = {'bool': Bool,
                   '*real': RealList,
                   '*complex': ComplexList,
                   'ndarrayint': NdArrayInt,
+                  'ndarrayinteger':NdArrayInt,
                   'ndarrayreal': NdArrayReal,
                   'ndarraycomplex': NdArrayComplex,
                   '*': Generic,
