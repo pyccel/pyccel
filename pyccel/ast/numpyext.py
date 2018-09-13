@@ -47,11 +47,6 @@ class Array(Function):
                 
             dtype,prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
-            
-
-           
-                
-        
 
         if not prec and dtype:
             prec = default_precision[dtype]

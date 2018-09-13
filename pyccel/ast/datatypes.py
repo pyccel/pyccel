@@ -11,7 +11,7 @@ from sympy import Eq, Ne, Lt, Gt, Le, Ge
 default_precision = {'real': 8, 'int': 4, 'complex': 8, 'bool':1}
 dtype_and_precsision_registry = {'real':('real',8),
                                  'double':('real',8),
-                                 'float':('real',4),
+                                 'float':('real',8),
                                  'float32':('real',4),
                                  'float64':('real',8),
                                  'complex':('complex',8),
