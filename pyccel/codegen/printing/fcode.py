@@ -440,8 +440,8 @@ class FCodePrinter(CodePrinter):
             else:
                 comments.append(txt)
         txts = comments
-        txts = ['!'+txt for txt in txts]
-        ln = max(len(i) for i in txts) + 1
+        
+        ln = max(len(i) for i in txts)
         if ln<20:
             ln = 20
         top  = '!' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '!'
@@ -449,7 +449,7 @@ class FCodePrinter(CodePrinter):
         bottom = '!' + '_'*(ln-2) + '!'
         
         for i in range(len(txts)):
-            txts[i] = txts[i] + ' '*(ln -1 - len(txts[i])) + '!'
+            txts[i] = '!' + txts[i] + ' '*(ln -2 - len(txts[i])) + '!'
 
         
         body = '\n'.join(i for i in txts)
@@ -766,12 +766,15 @@ class FCodePrinter(CodePrinter):
             dtype = '{0}({1})'.format(sig, name)
         else:
             dtype = self._print(expr.dtype)
-            dtype += '(kind={0})'.format(str(expr.variable.precision))
+            
         # ...
-        if isinstance(expr.dtype, NativeString):
-            if expr.intent:
-                dtype = dtype[:9] +'(len =*)'
-                #TODO improve ,this is the case of character as argument
+            if isinstance(expr.dtype, NativeString):
+            
+                if expr.intent:
+                    dtype = dtype[:9] +'(len =*)'
+                    #TODO improve ,this is the case of character as argument
+            else:
+                dtype += '(kind={0})'.format(str(expr.variable.precision))
 
         code_value = ''
         if expr.value:
@@ -803,13 +806,14 @@ class FCodePrinter(CodePrinter):
                                                  self._print(i-1)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
             enable_alloc = False
-            
+        
+        elif (rank > 0) and allocatable and intent:
+            rankstr = ','.join('0:' for f in range(0, rank))
+            rankstr = '(' + rankstr + ')' 
+ 
         elif (rank > 0) and (allocatable or is_pointer or is_target):
-            #TODO check this works in all cases
-            if intent:
-                rankstr = ','.join('0:' for f in range(0, rank))
-            else:
-                rankstr = ','.join(':' for f in range(0, rank))
+      
+            rankstr = ','.join(':' for f in range(0, rank))
 
             rankstr = '(' + rankstr + ')'
 #        else:

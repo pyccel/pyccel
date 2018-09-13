@@ -2049,22 +2049,17 @@ class Parser(object):
             return d_var
         elif isinstance(expr, Variable):
 
-            name = expr.name
-            var = self.get_variable(name)
-            if var is None:
-                var = expr
-
-            d_var['datatype'] = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape'] = var.shape
-            d_var['rank'] = var.rank
-            d_var['cls_base'] = var.cls_base
-            d_var['is_pointer'] = var.is_pointer
-            d_var['is_polymorphic'] = var.is_polymorphic
-            d_var['is_optional'] = var.is_optional
-            d_var['is_target'] = var.is_target
-            d_var['order'] = var.order
-            d_var['precision'] = var.precision
+            d_var['datatype'] = expr.dtype
+            d_var['allocatable'] = expr.allocatable
+            d_var['shape'] = expr.shape
+            d_var['rank'] = expr.rank
+            d_var['cls_base'] = expr.cls_base
+            d_var['is_pointer'] = expr.is_pointer
+            d_var['is_polymorphic'] = expr.is_polymorphic
+            d_var['is_optional'] = expr.is_optional
+            d_var['is_target'] = expr.is_target
+            d_var['order'] = expr.order
+            d_var['precision'] = expr.precision
             return d_var
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
 
@@ -3022,6 +3017,7 @@ class Parser(object):
                     if results:
                         d_var = [self._infere_type(i, **settings)
                                  for i in results]
+                    
                 elif isinstance(func, Interface):
                     d_var = [self._infere_type(i, **settings) for i in
                              func.functions[0].results]
@@ -3328,7 +3324,7 @@ class Parser(object):
                 if len(lhs) == 1:
                     lhs = lhs[0]
                 is_pointer = is_pointer and isinstance(rhs, (Variable,
-                        Dlist))
+                        Dlist,DottedVariable)) 
                 if is_pointer:
                     expr_new = AliasAssign(lhs, rhs)
                 elif expr_new.is_symbolic_alias:

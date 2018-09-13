@@ -40,10 +40,11 @@ rectangle = Shape(100., 45.)
 print(rectangle.area)
 
 #$ header function f(int)
-@inline
-def f(t):
-    x = 5*t
-    return x
+#@inline
+#def f(t):
+#    x = 5*t
+#    return x
+# y = f(6)
 
 #$ header function g(int)
 @vectorize(z)
@@ -51,5 +52,5 @@ def g(z):
     x= 5+z
     return x
 
-y = f(6)
+
 

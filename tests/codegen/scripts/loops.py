@@ -53,7 +53,7 @@ def f(z):
 
 
 mm = [1,2,3]
-for ii in map(f,m):
+for ii in map(f,mm):
     print(ii)
 
 
