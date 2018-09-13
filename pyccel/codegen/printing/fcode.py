@@ -410,11 +410,37 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
-        return '! {0} '.format(txt)
+        comments = []
+        while len(txt)>60:
+            try:
+                index = txt[60:].index(' ')+60
+            except:
+                index = 60
+            comments.append(txt[:index])
+            txt = txt[index:]
+        else:
+            comments.append(txt)
+        comments = ['! '+ comment for comment in comments]
+        comments = '\n'.join(comment for comment in comments)
+        
+        return comments
 
 
     def _print_CommentBlock(self, expr):
-        txts = expr.comments 
+        txts = expr.comments
+        comments = []
+        for txt in txts:
+            while len(txt)>60:
+                try:
+                    index = txt[60:].index(' ')+60
+                except:
+                    index = 60
+                comments.append(txt[:index])
+                txt = txt[index:]
+            else:
+                comments.append(txt)
+        txts = comments
+        txts = ['!'+txt for txt in txts]
         ln = max(len(i) for i in txts) + 1
         if ln<20:
             ln = 20

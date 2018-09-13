@@ -3814,8 +3814,7 @@ class CommentBlock(Basic):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
-        for i in range(len(txts)):
-            txts[i] = '!'+txts[i]
+        
         return Basic.__new__(cls, txts)
 
     @property
