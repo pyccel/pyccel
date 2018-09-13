@@ -193,6 +193,10 @@ def inline(func, args):
         body = subs(body, zip(func.arguments, args))
         return Block(str(func.name), local_vars, body)
 
+def float2int(expr):
+    atoms = expr.atoms(sp_Float)
+    m     = map(sp_Integer,atoms)
+    return expr.subs(zip(atoms,m))
 
 class DottedName(Basic):
 

@@ -24,7 +24,7 @@ from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
 
-from .core import local_sympify
+from .core import local_sympify ,float2int
 
 class Array(Function):
 
@@ -33,20 +33,25 @@ class Array(Function):
     arg : list ,tuple ,Tuple,List
     """
 
-    def __new__(cls, arg, dtype):
+    def __new__(cls, arg, dtype=None):
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         prec = 0
-        if isinstance(dtype, ValuedArgument):
-            dtype = dtype.value
         
-        if isinstance(dtype, (str, String)):
+        if not dtype is None:
+            if isinstance(dtype, ValuedArgument):
+                dtype = dtype.value
             dtype = str(dtype).replace('\'', '')
+            arg = float2int(arg) if 'int' in dtype else arg
+                
             dtype,prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
-        else:
-            dtype = None
+            
+
+           
+                
+        
 
         if not prec and dtype:
             prec = default_precision[dtype]
