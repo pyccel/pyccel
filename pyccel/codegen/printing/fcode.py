@@ -66,6 +66,7 @@ from pyccel.ast.parallel.mpi     import MPI
 from pyccel.ast.parallel.openmp  import OMP_For
 from pyccel.ast.parallel.openacc import ACC_For
 
+from collections import OrderedDict
 import functools
 import operator
 
@@ -512,14 +513,13 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatinate(self, expr):
-         is_list = isinstance(expr.right, Variable) and isinstance(expr.right.dtype, NativeList)
-         is_list = is_list or isinstance(expr.left, Variable) and isinstance(expr.left.dtype, NativeList)
-         is_list = is_list or isinstance(expr.right, List) or isinstance(expr.left, List)
-         if is_list:
-             return '[' + self._print(expr.left) + ', ' + self._print(expr.right) + ']'
+         args = expr.args
+         if expr.is_list:
+             code = ','.join(self._print(a) for a in expr.args)
+             return '[' + code + ']'
          else:
-             #TODO imporve add more checks
-             return 'trim('+ self._print(expr.left) +') // trim(' + self._print(expr.right) + ')'
+             code = '//'.join('trim('+self._print(a)+')' for a in expr.args)
+             return code
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -794,13 +794,13 @@ class FCodePrinter(CodePrinter):
         rankstr =  ''
         allocatablestr = ''
         # TODO improve
-        if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable))) and
+        if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
             (not(allocatable or is_pointer) or is_static)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
 
         elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
-            (not(allocatable or is_pointer) or is_static)):
+            (is_target or not(allocatable or is_pointer) or is_static)):
             #TODO fix bug when we inclue shape of type list
             rankstr =  ','.join('{0}:{1}'.format(self._print(s),
                                                  self._print(i-1)) for i in shape)
@@ -811,8 +811,8 @@ class FCodePrinter(CodePrinter):
             rankstr = ','.join('0:' for f in range(0, rank))
             rankstr = '(' + rankstr + ')' 
  
-        elif (rank > 0) and (allocatable or is_pointer or is_target):
-      
+        elif (rank > 0) and (allocatable or is_pointer):
+
             rankstr = ','.join(':' for f in range(0, rank))
 
             rankstr = '(' + rankstr + ')'
@@ -1146,7 +1146,7 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
         out_args = []
-        decs = {}
+        decs = OrderedDict()
 
         # ... local variables declarations
         for i in expr.local_vars:
@@ -1226,7 +1226,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         results_names = [str(i) for i in expr.results]
-
+        args_decs = OrderedDict()
         for arg in expr.arguments:
             if str(arg) in results_names + assigned_names:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
@@ -1234,9 +1234,9 @@ class FCodePrinter(CodePrinter):
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
             else:
                 dec = Declare(arg.dtype, arg, intent='in', static=is_static)
-            decs[str(arg)] = dec
-
-        decs = [v for k,v in decs.items()]
+            args_decs[str(arg)] = dec
+       
+        decs = [v for k,v in args_decs.items()]+[v for k,v in decs.items()]
 
 
         #remove parametres intent(inout) from out_args to prevent repetition

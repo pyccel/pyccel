@@ -2092,6 +2092,7 @@ class DottedVariable(AtomicExpr, Boolean):
 
         obj = Basic.__new__(cls, args[0], args[1])
         assumptions = {}
+
         if isinstance(args[1], (Variable, IndexedVariable,
                       IndexedElement)):
             dtype = args[1].dtype
@@ -4038,9 +4039,9 @@ class Concatinate(Basic):
 
     """Represents the String concatination operation.
 
-    left : Symbol or string
+    left : Symbol or string or List
 
-    right : Symbol or string
+    right : Symbol or string or List
 
 
     Examples
@@ -4050,45 +4051,36 @@ class Concatinate(Basic):
     >>> x = symbols('x')
     >>> Concatinate('some_string',x)
     some_string+x
-    >>> Concatinate(None,x)
-    x
-    >>> Concatinate(x,None)
-    x
     >>> Concatinate('some_string','another_string')
     'some_string' + 'another_string'
     """
 
     # TODO add step
 
-    def __new__(cls, left, right):
-        if isinstance(left, str):
-            left = repr(left)
-        if isinstance(right, str):
-            right = repr(right)
-        return Basic.__new__(cls, left, right)
+    def __new__(cls, args, is_list):
+        args = list(args)
+
+        args = [ repr(arg) if isinstance(arg, str) else arg for arg in args]
+        
+        return Basic.__new__(cls, args, is_list)
 
     @property
-    def left(self):
+    def args(self):
         return self._args[0]
 
     @property
-    def right(self):
+    def is_list(self):
         return self._args[1]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        left = self.left
-        right = self.right
-        if left is None:
-            return right
+        
+        args = '+'.join(sstr(arg) for arg in self.args)
 
-        if right is None:
-            return left
-
-        return '{0}+{1}'.format(left, right)
+        return args
 
 
-# TODO check that args are integers
+
 
 class Slice(Basic):
 
@@ -4114,7 +4106,8 @@ class Slice(Basic):
     """
 
     # TODO add step
-
+    # TODO check that args are integers
+    # TODO add negative indices
     def __new__(cls, start, end):
         return Basic.__new__(cls, start, end)
 

@@ -1420,9 +1420,6 @@ class Parser(object):
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
             if stmt.value == '+':
-                if isinstance(first, (String, List)) \
-                    or isinstance(second, (String, List)):
-                    return Concatinate(first, second)
                 return Add(first, second, evaluate=False)
             elif stmt.value == '*':
 
@@ -2231,9 +2228,27 @@ class Parser(object):
                     raise NotImplementedError('TODO')
             return d_var
         elif isinstance(expr, Concatinate):
-            d_var_left = self._infere_type(expr.left, **settings)
-            d_var_right = self._infere_type(expr.right, **settings)
             import operator
+            d_vars = [self._infere_type(a, **settings) for a in expr.args]
+            ls = any(d['is_pointer'] or d['is_target'] for d in d_vars)
+
+            if ls:
+                shapes = [d['shape'] for d in d_vars if d['shape']]
+                shapes = zip(*shapes)
+                shape = tuple(sum(s) for s in shapes)
+                if not shape:
+                    shape = (sum(map(Len,expr.args)),)
+                d_vars[0]['shape'] = shape
+                d_vars[0]['rank']   = 1
+                d_vars[0]['is_target'] = True
+                d_vars[0]['is_pointer'] = False
+                
+                
+            else:
+                d_vars[0]['datatype'] = 'str'
+            return d_vars[0]
+
+            
             if not (d_var_left['datatype'] == 'str'
                     or d_var_right['datatype'] == 'str'):
                 d_var_left['shape'] = tuple(map(operator.add,
@@ -2462,6 +2477,24 @@ class Parser(object):
 
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
+            if isinstance(expr, Add):
+                
+                atoms_str = _atomic(expr,String)
+                atoms_ls  = _atomic(expr,List)
+                cls     =(Symbol, DottedVariable)
+                atoms = _atomic(expr, cls)
+                atoms = [self._annotate(a, **settings) for a in atoms]
+                atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
+                atoms = [self._infere_type(a , **settings) for a in atoms]
+                atoms = [a['is_pointer'] for a in atoms]
+                args  = [self._annotate(a, **settings) for a in expr.args]
+                temp  = self.create_variable(expr)
+                
+                if any(atoms) or atoms_ls:
+                    return Concatinate(args, True)
+                elif atoms_str:
+                    return Concatinate(args, False)
+            
 
             args = expr.args
 
@@ -2472,7 +2505,7 @@ class Parser(object):
             expr_new = a_new
 
             # then we treat the rest
-
+            
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, Add):
@@ -4069,11 +4102,6 @@ class Parser(object):
                                 return expr
                         return EmptyLine()
             return expr
-        elif isinstance(expr, Concatinate):
-
-            left = self._annotate(expr.left)
-            right = self._annotate(expr.right)
-            return Concatinate(left, right)
         elif isinstance(expr, AnnotatedComment):
 
             return expr

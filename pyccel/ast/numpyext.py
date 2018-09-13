@@ -456,6 +456,7 @@ class Zeros(Function):
             shape = shape
 
         if isinstance(dtype, str):
+            dtype = dtype.replace('\'', '')
             dtype, prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
         elif not isinstance(dtype, DataType):
