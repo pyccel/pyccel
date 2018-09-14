@@ -1147,7 +1147,7 @@ class FCodePrinter(CodePrinter):
                     name = name.replace(i, _default_methods[i])
         out_args = []
         decs = OrderedDict()
-
+        args_decs = OrderedDict()
         # ... local variables declarations
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
@@ -1187,7 +1187,7 @@ class FCodePrinter(CodePrinter):
                              shape=result.shape)
 
                 dec = Declare(result.dtype, var)
-                decs[str(var)] = dec
+                args_decs[str(var)] = dec
             else:
                 sig = '{0} {1}function {2}'.format(ret_type, rec, name)
                 func_end  = ' result({0})'.format(result.name)
@@ -1202,7 +1202,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='inout', static=is_static)
                 else:
                     dec = Declare(result.dtype, result, intent='out', static=is_static)
-                decs[str(result)] = dec
+                args_decs[str(result)] = dec
 
             sig = 'subroutine ' + name
             func_type = 'subroutine'
@@ -1226,7 +1226,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         results_names = [str(i) for i in expr.results]
-        args_decs = OrderedDict()
+
         for arg in expr.arguments:
             if str(arg) in results_names + assigned_names:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
@@ -1235,9 +1235,9 @@ class FCodePrinter(CodePrinter):
             else:
                 dec = Declare(arg.dtype, arg, intent='in', static=is_static)
             args_decs[str(arg)] = dec
-       
-        decs = [v for k,v in args_decs.items()]+[v for k,v in decs.items()]
-
+        
+        args_decs.update(decs)
+        decs = [v for k,v in args_decs.items()]
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
