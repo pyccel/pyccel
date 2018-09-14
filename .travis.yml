@@ -58,13 +58,13 @@ script:
   - python -m pytest ../tests/preprocess/test_preprocess.py
   - python -m pytest ../tests/epyccel -v
 # this test must be executed with python, since we are calling mpif90 inside it
-  - python tests/internal/test_internal.py
-  - python tests/external/test_external.py
-  - python tests/macro/test_macro.py
-#  - python tests/test_pyccel.py --execute
-#  - python tests/test_pyccel_openmp.py --openmp --execute
-#  - python tests/test_pyccel_lapack.py --libs='blas lapack' --execute
-#  - python tests/test_pyccel_mpi.py --compiler=mpif90
+  - python ../tests/internal/test_internal.py
+  - python ../tests/external/test_external.py
+  - python ../tests/macro/test_macro.py
+#  - python ../tests/test_pyccel.py --execute
+#  - python ../tests/test_pyccel_openmp.py --openmp --execute
+#  - python ../tests/test_pyccel_lapack.py --libs='blas lapack' --execute
+#  - python ../tests/test_pyccel_mpi.py --compiler=mpif90
   - cd -
 
 after_script:
