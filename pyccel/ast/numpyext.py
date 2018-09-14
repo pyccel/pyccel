@@ -12,7 +12,7 @@ from sympy import Integer as sp_Integer, Add, Mul, Pow, Float as sp_Float
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
-from sympy import sqrt, asin, acsc, acos, asec, atan, acot, log
+from sympy import sqrt, asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
 
@@ -649,6 +649,35 @@ class Acsc(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+class Sinh(Function):
+    def __new__(cls,arg):
+        obj = sinh(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Cosh(Function):
+    def __new__(cls,arg):
+        obj = cosh(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
+
+class Tanh(Function):
+    def __new__(cls,arg):
+        obj = tanh(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
 
 class Log(Function):
     def __new__(cls,arg):
@@ -684,4 +713,3 @@ class Int64(Int):
     @property
     def precision(self):
         return 8
-
