@@ -11,6 +11,7 @@ from .numpyext import Zeros, Ones, Empty
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
+from .numpyext import numpy_constants
 from sympy import Symbol, Lambda, floor
 from sympy import Not,Float
 from sympy import Function
@@ -198,6 +199,9 @@ def builtin_import(expr):
 
             elif target in math_functions.keys():
                 imports.append((target, math_functions[target]))
+            
+            elif target in numpy_constants.keys():
+                imports.append((target, numpy_constants[target]))
 
         elif source == 'math':
 

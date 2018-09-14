@@ -17,7 +17,7 @@ from sympy import Rational as sp_Rational
 from sympy import IndexedBase
 
 
-from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument)
+from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument,Constant)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
@@ -25,6 +25,10 @@ from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
 
 from .core import local_sympify ,float2int
+
+numpy_constants = {
+    'pi': Constant('real', 'pi', value=numpy.pi),
+                  }
 
 class Array(Function):
 
