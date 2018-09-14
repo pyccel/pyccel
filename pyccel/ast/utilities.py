@@ -10,7 +10,7 @@ from .core import Constant,ZerosLike
 from .numpyext import Zeros, Ones, Empty
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
+from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from sympy import Symbol, Lambda, floor
 from sympy import Not,Float
 from sympy import Function
@@ -35,7 +35,10 @@ math_functions = {
     'acos':Acos,
     'asec': Asec,
     'atan': Atan,
-    'acot': Acot
+    'acot': Acot,
+    'sinh': Sinh,
+    'cosh': Cosh,
+    'tanh': Tanh
     }
 
 scipy_constants = {
