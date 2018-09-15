@@ -99,7 +99,7 @@ def test_header_f2():
 
 #------------------------------------------------------------------------------
 # TODO: functions returning arrays are not supported yet
-@pytest.mark.xfail
+
 def test_header_f3():
 
     f = epyccel(f3, '#$ header procedure f3(int [:])')
@@ -171,7 +171,7 @@ def test_decorators_g1():
 
 #------------------------------------------------------------------------------
 # TODO: functions returning arrays are not supported yet
-@pytest.mark.xfail
+
 def test_decorators_g2():
 
     f = epyccel(g2)
@@ -196,7 +196,7 @@ def test_decorators_g3():
 
 #------------------------------------------------------------------------------
 # TODO: not working yet. optional arg is placed before out!
-@pytest.mark.xfail
+
 def test_decorators_g4():
 
     f = epyccel(g4)
@@ -214,7 +214,7 @@ def test_decorators_g4():
 #==============================================================================
 
 # TODO: functions returning arrays are not supported yet
-@pytest.mark.xfail
+
 def test_module1():
 
     import mod_test1 as mod
@@ -242,3 +242,4 @@ def test_module1():
 
 def teardown_module():
     clean_test()
+

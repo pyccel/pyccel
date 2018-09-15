@@ -18,6 +18,7 @@ from sympy import Float as sp_Float
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.core.assumptions import StdFactKB
+from sympy.core.cache import cacheit
 
 # from sympy.sets.fancysets import Range as sm_Range
 
@@ -1825,7 +1826,6 @@ class Variable(Symbol):
         ):
 
         # use str to make '*' work using py2
-
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(str(dtype))

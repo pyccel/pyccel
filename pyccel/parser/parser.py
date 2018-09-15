@@ -155,6 +155,7 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions import StdFactKB
 from sympy import Sum as Summation, Heaviside, KroneckerDelta, Min, Max
 from sympy import oo as INF
+from sympy import cache
 from collections import OrderedDict
 
 import traceback
@@ -2017,6 +2018,7 @@ class Parser(object):
         DEFAULT_FLOAT = settings.pop('default_float', 'real')
 
         if isinstance(expr, type(None)):
+
             return d_var
         elif isinstance(expr, (Integer, int)):
 
@@ -2039,13 +2041,14 @@ class Parser(object):
             d_var['rank'] = 0
             return d_var
         elif isinstance(expr, ImaginaryUnit):
+
             d_var['datatype'] = 'complex'
             d_var['allocatable'] = False
             d_var['rank'] = 0
             d_var['precision'] = 8
             return d_var
         elif isinstance(expr, Variable):
-
+            
             d_var['datatype'] = expr.dtype
             d_var['allocatable'] = expr.allocatable
             d_var['shape'] = expr.shape
@@ -2149,23 +2152,22 @@ class Parser(object):
                 d_var['datatype'] = sp_dtype(expr)
             return d_var
         elif isinstance(expr, Expr):
+            
             cls = (Application, DottedVariable, Variable, 
                    IndexedVariable,IndexedElement)
             ds = [self._infere_type(i, **settings) for i in
-                  _atomic(expr) if isinstance(i, cls)]
+                  _atomic(expr,cls)]
             #TODO we should also look for functions call
             #to collect info about precision and shapes later when we allow
             # vectorised operations
             # we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
-            # so we assume all functions
-
+            
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
             precisions = [d['precision'] for d in ds]
-           
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
@@ -2242,7 +2244,6 @@ class Parser(object):
                 d_vars[0]['rank']   = 1
                 d_vars[0]['is_target'] = True
                 d_vars[0]['is_pointer'] = False
-                
                 
             else:
                 d_vars[0]['datatype'] = 'str'
@@ -2378,7 +2379,9 @@ class Parser(object):
         elif isinstance(expr, Symbol):
 
             name = _get_name(expr)
+            
             var = self.get_variable(name)
+            
             if var is None:
                 var = self.get_function(name)
             if var is None:
@@ -2502,6 +2505,7 @@ class Parser(object):
 
             a = args[0]
             a_new = self._annotate(a, **settings)
+            
             expr_new = a_new
 
             # then we treat the rest
@@ -2509,8 +2513,8 @@ class Parser(object):
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, Add):
+                    expr_new = Add(a_new , expr_new , evaluate=False)
 
-                    expr_new = Add(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Pow):
@@ -2541,7 +2545,6 @@ class Parser(object):
             # TODO fix bug when we put expr_new.doit() for the indexedvariable
             # somehow sympy creats new object and we loose the info
             # for the types
-
             return expr_new
         elif isinstance(expr, Lambda):
 
@@ -2943,16 +2946,11 @@ class Parser(object):
                 return CodeBlock([rhs_, stmt])
 
  # .......
- # .......
- # .......
-             
+            
             rhs = self._annotate(rhs, **settings)
             
+ # .......
 
- # .......
- # .......
- # .......
-            
             if isinstance(rhs, If):
                 args = rhs.args
                 new_args = []
@@ -3000,9 +2998,7 @@ class Parser(object):
             if isinstance(rhs, FunctionalFor):
                 return rhs
 
-      
-            
-                
+    
             elif isinstance(rhs, CodeBlock):
                 stmts = rhs.body
                 stmt = stmts[-1]
@@ -3189,8 +3185,7 @@ class Parser(object):
                         d_var['is_target'] = False
                         d_var['is_pointer'] = True
 
-                    # case of rhs is a target variable the lhs must be a pointe
-            
+                    # case of rhs is a target variable the lhs must be a pointer
             
             
             lhs = expr.lhs
@@ -3730,8 +3725,7 @@ class Parser(object):
                 body_vec   = [For(index,range_,[body_vec],strict=False)]
                 header_vec = header.vectorize(index_arg)
                 vec_func = expr.vectorize(body_vec, header_vec)
-                
-                
+                      
                 
             for m in interfaces:
                 args = []
@@ -3884,6 +3878,10 @@ class Parser(object):
                             cls.attributes, methods, parent=cls.parent))
 
                 funcs += [func]
+                #clear the sympy cache
+                #TODO move that inside FunctionDef
+                #and clear all variable except the global one
+                cache.clear_cache()
             
             if len(funcs) == 1: 
                 funcs = funcs[0]
@@ -3906,6 +3904,8 @@ class Parser(object):
 
                funcs = Interface(name, funcs)
                self.insert_function(funcs)
+
+            
             return funcs
             
 
