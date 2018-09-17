@@ -61,10 +61,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
 
 
     try:
-        if (modulename.find('.')==-1):
-            filename = '{}.f90'.format(modulename)
-        else:
-            filename = '{}.f90'.format(modulename.replace('.','/'))
+        filename = '{}.f90'.format(modulename.replace('.','/'))
         f = open(filename, "w")
         for line in source:
             f.write(line)
