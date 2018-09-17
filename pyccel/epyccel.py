@@ -163,7 +163,6 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
 
     output_folder = name.rsplit('.',1)[0] if '.' in name else ''
-    print("output_folder:",output_folder)
 
     # ...
     if is_module:
