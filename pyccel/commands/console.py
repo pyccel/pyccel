@@ -242,6 +242,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        compiler=compiler,
                        fflags=fflags,
                        debug=False,
+                       verbose=verbose,
                        accelerator=accelerator,
                        include=include,
                        libdir=libdir,
