@@ -205,8 +205,9 @@ def get_filename_from_import(module,output_folder=''):
 
     folders = output_folder.split(""".""")
     for i in range(len(folders)):
-        poss_filename_pyh = '/'.join([*folders[:i+1],filename_pyh])
-        poss_filename_py = '/'.join([*folders[:i+1],filename_py])
+        poss_dirname      = os.path.join( *folders[:i+1] )
+        poss_filename_pyh = os.path.join( poss_dirname, filename_pyh )
+        poss_filename_py  = os.path.join( poss_dirname, filename_py  )
         if is_valid_filename_pyh(poss_filename_pyh):
             return os.path.abspath(poss_filename_pyh)
         if is_valid_filename_py(poss_filename_py):
