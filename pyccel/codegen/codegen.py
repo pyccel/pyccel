@@ -310,7 +310,6 @@ class Codegen(object):
             filename = '{name}.{ext}'.format(name=self.name, ext=ext)
         else:
             filename = '{name}.{ext}'.format(name=filename, ext=ext)
-        print(filename)
 
         code = self.code
         f = open(filename, 'w')
