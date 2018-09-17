@@ -79,6 +79,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='path to lib directory.')
     group.add_argument('--libs', type=str, \
                        help='list of libraries to link with.')
+    group.add_argument('--output', type=str, default = '',\
+                       help='folder in which the output is stored.')
     # ...
 
     # ... Accelerators
@@ -171,6 +173,10 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     fflags  = args.fflags
     libdir  = args.libdir
     libs    = args.libs
+    output_folder = args.output
+    
+    if (len(output_folder)>0 and output_folder[-1]!='/'):
+        output_folder+='/'
 
     if not include:
         include = []
@@ -213,7 +219,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         name = os.path.splitext(name)[0]
         codegen = Codegen(ast, name)
         code = codegen.doprint()
-        codegen.export()
+        codegen.export(output_folder+name)
  
         for son in pyccel.sons:
             if 'print' in son.metavars.keys():
@@ -241,7 +247,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        libdir=libdir,
                        modules=modules,
                        libs=libs,
-                       binary=binary)
+                       binary=binary,
+                       output=output_folder)
 
 #    elif analysis:
 #        # TODO move to another cmd line

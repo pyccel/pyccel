@@ -85,7 +85,8 @@ def compile_fortran(filename, compiler, flags,
                     verbose=False,
                     modules=[],
                     is_module=False,
-                    libs=[]):
+                    libs=[],
+                    output=''):
     """
     Compiles the generated file.
 
@@ -95,14 +96,18 @@ def compile_fortran(filename, compiler, flags,
     if binary is None:
         if not is_module:
             binary = os.path.splitext(os.path.basename(filename))[0]
+            mod_file = ''
         else:
-            binary = ''
+            binary = "{folder}{binary}.o".format(folder=output,
+                                binary=os.path.splitext(os.path.basename(filename))[0])
+            mod_file = "{folder}".format(folder=output)
 
-    o_code = ''
-    if not is_module:
-        o_code = "-o"
-    else:
+    o_code = '-o'
+    j_code = ''
+    if is_module:
         flags += ' -c '
+        if (len(output)>0):
+            j_code = '-J'
 
     m_code = ' '.join('{}.o '.format(m) for m in modules)
 
@@ -115,8 +120,8 @@ def compile_fortran(filename, compiler, flags,
     else:
         libs = ''
 
-    cmd = '{0} {1} {2} {3} {4} {5} {6}'.format( \
-        compiler, flags, m_code, filename, o_code, binary, libs)
+    cmd = '{0} {1} {2} {3} {4} {5} {6} {7} {8}'.format( \
+        compiler, flags, m_code, filename, o_code, binary, libs, j_code, mod_file)
 
     if verbose:
         print(cmd)
@@ -158,7 +163,8 @@ def execute_pyccel(filename,
                    libdir=[],
                    modules=[],
                    libs=[],
-                   binary=None):
+                   binary=None,
+                   output=''):
     """Executes the full process:
         - parsing the python code
         - annotating the python code
@@ -177,7 +183,7 @@ def execute_pyccel(filename,
 
     codegen = Codegen(ast, name)
     code = codegen.doprint()
-    fname = codegen.export()
+    fname = codegen.export(output+name)
 
     # reset Errors singleton
     errors = Errors()
@@ -201,6 +207,7 @@ def execute_pyccel(filename,
                                   verbose=verbose,
                                   modules=modules,
                                   is_module=codegen.is_module,
+                                  output=output,
                                   libs=libs)
     # ...
 
