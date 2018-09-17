@@ -9,7 +9,6 @@ language: python
 
 # which python versions to test
 python:
-  - "2.7"
   - "3.4"
 #  - "3.5"
 #  - "3.5-dev" # 3.5 development branch
@@ -17,13 +16,6 @@ python:
 #  - "3.6-dev" # 3.6 development branch
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
-
-#matrix:
-#  allow_failures:
-#    - python: "2.7"
-#    - python: "3.4"
-#    - python: "3.5"
-#    - python: "3.6"
 
 virtualenv:
     system_site_packages: true
