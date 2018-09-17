@@ -98,15 +98,13 @@ def test_header_f2():
     clean_test()
 
 #------------------------------------------------------------------------------
-# TODO: functions returning arrays are not supported yet
-
 def test_header_f3():
 
     f = epyccel(f3, '#$ header procedure f3(int [:])')
 
     # ...
     x = np.array([3, 4, 5, 6], dtype=int)
-    assert np.allclose(f(x), f3(x))
+    assert np.array_equal( f(x), f3(x) )
     # ...
 
     clean_test()
@@ -117,7 +115,7 @@ def test_header_f4():
 
     # ...
     x = np.random.random((2, 3))
-    assert np.allclose(f(x), f4(x))
+    assert np.allclose( f(x), f4(x), rtol=1e-15, atol=1e-15 )
     # ...
 
     clean_test()
@@ -135,7 +133,7 @@ def test_header_f5():
     x_expected = np.zeros(m1)
     f5(m1, x_expected)
 
-    assert np.allclose(x, x_expected)
+    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
     clean_test()
@@ -153,7 +151,7 @@ def test_header_f6():
     x_expected = np.zeros((m1,m2), order='F')
     f6(m1, m2, x_expected)
 
-    assert np.allclose(x, x_expected)
+    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
     clean_test()
@@ -170,8 +168,6 @@ def test_decorators_g1():
     clean_test()
 
 #------------------------------------------------------------------------------
-# TODO: functions returning arrays are not supported yet
-
 def test_decorators_g2():
 
     f = epyccel(g2)
@@ -182,7 +178,7 @@ def test_decorators_g2():
     f(x)
     g2(x_expected)
 
-    assert np.allclose(x, x_expected)
+    assert np.array_equal( x, x_expected )
 
     clean_test()
 
@@ -213,8 +209,6 @@ def test_decorators_g4():
 # TEST MODULE
 #==============================================================================
 
-# TODO: functions returning arrays are not supported yet
-
 def test_module1():
 
     import mod_test1 as mod
@@ -231,7 +225,7 @@ def test_module1():
     m.g2(x)
     mod.g2(x_expected)
 
-    assert np.allclose(x, x_expected)
+    assert np.array_equal( x, x_expected )
     # ...
 
     clean_test()
