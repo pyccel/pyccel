@@ -22,6 +22,7 @@ from sympy import Atom, Indexed
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF 
+from sympy import Mod
 
 
 from sympy.utilities.iterables import iterable
@@ -600,6 +601,10 @@ class FCodePrinter(CodePrinter):
     def _print_Ceil(self, expr):
         return self._get_statement('ceiling(%s)'%(self._print(expr.rhs)))
 
+    def _print_Mod(self, expr):
+        args = ','.join(self._print(i) for i in expr.args)
+        return 'modulo({})'.format(args)
+
     def _print_Sign(self, expr):
         # TODO use the appropriate precision from rhs
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
@@ -898,7 +903,7 @@ class FCodePrinter(CodePrinter):
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
         if isinstance(expr.rhs, (Int, Real, Complex)):
-           lhs = '{0}'.format(self._print(expr.lhs))
+           lhs = self._print(expr.lhs)
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
@@ -907,6 +912,12 @@ class FCodePrinter(CodePrinter):
         
         if isinstance(expr.rhs, ZerosLike):
             return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.rhs))
+   
+        if isinstance(expr.rhs, Mod):
+            lhs = self._print(expr.lhs)
+            args = ','.join(self._print(i) for i in expr.rhs.args)
+            rhs  = 'modulo({})'.format(args)
+            return '{0} = {1}'.format(lhs,rhs)
         
         elif isinstance(expr.rhs, Shape):
             a = expr.rhs.rhs
@@ -1437,22 +1448,30 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
                                        prolog, epilog)
+
         elif isinstance(expr.iterable, Product):
             for i, a in zip(expr.target, expr.iterable.args):
                 itr_ = Range(a.shape[0])
                 prolog, epilog = _do_range(i, itr_, \
                                            prolog, epilog)
-        elif isinstance(expr.iterable, (Zip, Enumerate)):
+
+        elif isinstance(expr.iterable, Zip):
             itr_ = Range(expr.iterable.element.shape[0])
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
+
+        elif isinstance(expr.iterable, Enumerate):
+            itr_ = Range(Len(expr.iterable.element))
+            prolog, epilog = _do_range(expr.target, itr_, \
+                                       prolog, epilog)
+
         elif isinstance(expr.iterable, Map):
             itr_ = Range(Len(expr.iterable.args[1]))
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
         body = '\n'.join(_iprint(i) for i in expr.body)
-
+        
         return ('{prolog}'
                 '{body}\n'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
@@ -1926,10 +1945,8 @@ class FCodePrinter(CodePrinter):
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
 
-
-
     def _print_Function(self, expr):
-        # for the moment, this is only used if the function has not arguments
+        
         args = expr.args
         name = type(expr).__name__
 
@@ -1983,10 +2000,10 @@ class FCodePrinter(CodePrinter):
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
-    def _print_IndexedVariable(self, expr):
+    def _print_IndexedBase(self, expr):
         return self._print(expr.name)
 
-    def _print_IndexedElement(self, expr):
+    def _print_Indexed(self, expr):
         inds = [i for i in expr.indices]
         #indices of indexedElement of len==1 shouldn't be a Tuple
         for i, ind in enumerate(inds):
@@ -1994,8 +2011,9 @@ class FCodePrinter(CodePrinter):
                 inds[i] = ind[0]
 
         inds = [self._print(i) for i in inds]
-
+        
         return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
+
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
