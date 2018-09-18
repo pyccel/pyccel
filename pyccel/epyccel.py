@@ -45,7 +45,7 @@ def get_source_function(func):
     return code
 
 
-def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False):
+def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False, includes = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
@@ -67,7 +67,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  -c {} --opt='-O3' {} -m  {} {} {}  """.format(compilers, libs, modulename, filename, extra_args)
+        args = """  -c {} --opt='-O3' {} -m  {} {} {} {} """.format(compilers,
+                                                libs, modulename, filename,
+                                                extra_args, includes)
 
         if PY2:
             cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
@@ -267,6 +269,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         print ('------')
 
     extra_args = ''
+    include_args = ''
 
     if context:
         if isinstance(context, ContextPyccel):
@@ -279,14 +282,17 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         imports = []
         names_o = []
+        include_folders = []
         context_import_path = []
         for i in context:
             names_o.append('{fol}{name}.o'.format(fol=i.os_folder,name=i.name))
+            include_folders.append('-I{}'.format(i.os_folder))
             imports.append(i.imports)
             context_import_path.append((i.name,i.os_folder))
         context_import_path = dict(context_import_path)
 
         extra_args = ' '.join(i for i in names_o)
+        include_args = ' '.join(i for i in include_folders)
         imports = '\n'.join(i for i in imports)
         # ...
 
@@ -320,7 +326,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
-    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi)
+    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi, includes = include_args)
 
     if verbose:
         print(cmd)
