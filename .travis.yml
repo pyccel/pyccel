@@ -7,14 +7,20 @@
 sudo: required
 language: python
 
-# which python versions to test
+# Existing Python versions
 python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7"
+#  - "3.7"
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
+
+# Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
 
 # command before installation
 before_install:
