@@ -232,6 +232,17 @@ class FunctionHeader(Header):
                               self.kind,
                               True)
 
+    def vectorize(self,index):
+        """ add a dimension to one of the arguments specified by it's position"""
+        types = self.dtypes
+        types[index]['rank'] += 1
+        types[index]['allocatable'] = True
+        return FunctionHeader(self.func,
+                              types,
+                              self.results,
+                              self.kind,
+                              self.is_static)
+
     def __getnewargs__(self):
         """used for Pickling self."""
         args = (self.func,

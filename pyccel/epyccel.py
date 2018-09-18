@@ -17,10 +17,13 @@ import importlib
 import sys
 import os
 from types import ModuleType, FunctionType
-from importlib.machinery import ExtensionFileLoader
+
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
+
+if PY3:
+    from importlib.machinery import ExtensionFileLoader
 
 def get_source_function(func):
     if not callable(func):
@@ -42,7 +45,7 @@ def get_source_function(func):
     return code
 
 
-def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False):
+def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False, includes = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
@@ -58,13 +61,15 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
 
 
     try:
-        filename = '{}.f90'.format(modulename)
+        filename = '{}.f90'.format(modulename.replace('.','/'))
         f = open(filename, "w")
         for line in source:
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  -c {} --opt='-O3' {} -m  {} {} {}  """.format(compilers, libs, modulename, filename, extra_args)
+        args = """  -c {} --opt='-O3' {} -m  {} {} {} {} """.format(compilers,
+                                                libs, modulename, filename,
+                                                extra_args, includes)
 
         if PY2:
             cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
@@ -156,6 +161,8 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         raise ValueError('function name must be provided, in the case of func string')
     # ...
 
+    output_folder = name.rsplit('.',1)[0] if '.' in name else ''
+
     # ...
     if is_module:
         mod = func
@@ -246,6 +253,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ... get the function source code
     if callable(func):
         code = get_source_function(func)
+        print(code)
 
     elif isinstance(func, ModuleType):
         lines = inspect.getsourcelines(func)[0]
@@ -261,6 +269,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         print ('------')
 
     extra_args = ''
+    include_args = ''
 
     if context:
         if isinstance(context, ContextPyccel):
@@ -273,21 +282,30 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         imports = []
         names_o = []
+        include_folders = []
+        context_import_path = []
         for i in context:
-            names_o.append('{name}.o'.format(name=i.name))
+            names_o.append('{fol}{name}.o'.format(fol=i.os_folder,name=i.name))
+            include_folders.append('-I{}'.format(i.os_folder))
             imports.append(i.imports)
+            context_import_path.append((i.name,i.os_folder))
+        context_import_path = dict(context_import_path)
 
         extra_args = ' '.join(i for i in names_o)
+        include_args = ' '.join(i for i in include_folders)
         imports = '\n'.join(i for i in imports)
         # ...
 
         # ... add import to initial code
         code = '{imports}\n{code}'.format(imports=imports, code=code)
         # ...
+    else:
+        context_import_path = {}
 
     try:
         # ...
-        pyccel = Parser(code, headers=d_headers, static=static)
+        pyccel = Parser(code, headers=d_headers, static=static, output_folder = output_folder,
+                            context_import_path=context_import_path)
         ast = pyccel.parse()
 
         settings = {}
@@ -308,7 +326,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
-    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi)
+    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi, includes = include_args)
 
     if verbose:
         print(cmd)
@@ -343,10 +361,39 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 class ContextPyccel(object):
     """Class for interactive use of Pyccel. It can be used within an IPython
     session, Jupyter Notebook or ipyccel command line."""
-    def __init__(self, name):
+    def __init__(self, name,context_folder='',output_folder=''):
         self._name = 'mod_{}'.format(name)
         self._constants = OrderedDict()
         self._functions = OrderedDict()
+        
+        self._folder = context_folder
+        if (len(self._folder)>0):
+            self._folder+='.'
+        self._os_folder = self._folder.replace('.','/')
+        
+        contexts = context_folder.split('.')
+        outputs  =  output_folder.split('.')
+        n = min(len(contexts),len(outputs))
+        i=0
+        while(i<n and contexts[i]==outputs[i]):
+            i+=1
+        contexts = contexts[i:]
+        outputs  =  outputs[i:]
+        
+        if (len(contexts)==0 and len(outputs)==0):
+            self._rel_folder = ''
+        else:
+            self._rel_folder = '.'*(len(outputs)+1)+'.'.join(contexts)
+            if (self._rel_folder[-1]!='.'):
+                self._rel_folder+='.'
+
+    @property
+    def folder(self):
+        return self._folder
+
+    @property
+    def os_folder(self):
+        return self._os_folder
 
     @property
     def name(self):

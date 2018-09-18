@@ -11,7 +11,7 @@ from sympy import Eq, Ne, Lt, Gt, Le, Ge
 default_precision = {'real': 8, 'int': 4, 'complex': 8, 'bool':1}
 dtype_and_precsision_registry = {'real':('real',8),
                                  'double':('real',8),
-                                 'float':('real',4),
+                                 'float':('real',8),
                                  'float32':('real',4),
                                  'float64':('real',8),
                                  'complex':('complex',8),
@@ -22,6 +22,7 @@ dtype_and_precsision_registry = {'real':('real',8),
                                  'int32':('int',4),
                                  'int64':('int',8),
                                  'int'  :('int',4),
+                                 'integer':('int',4),
                                  'bool' :('bool',1)}
 
 
@@ -185,6 +186,7 @@ dtype_registry = {'bool': Bool,
                   '*real': RealList,
                   '*complex': ComplexList,
                   'ndarrayint': NdArrayInt,
+                  'ndarrayinteger':NdArrayInt,
                   'ndarrayreal': NdArrayReal,
                   'ndarraycomplex': NdArrayComplex,
                   '*': Generic,
