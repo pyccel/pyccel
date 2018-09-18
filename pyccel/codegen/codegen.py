@@ -309,7 +309,7 @@ class Codegen(object):
         if filename is None:
             filename = '{name}.{ext}'.format(name=self.name, ext=ext)
         else:
-            raise NotImplementedError('TODO')
+            filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         code = self.code
         f = open(filename, 'w')

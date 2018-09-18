@@ -7,26 +7,20 @@
 sudo: required
 language: python
 
-# which python versions to test
+# Existing Python versions
 python:
-  - "2.7"
   - "3.4"
-#  - "3.5"
-#  - "3.5-dev" # 3.5 development branch
-#  - "3.6"
-#  - "3.6-dev" # 3.6 development branch
+  - "3.5"
+  - "3.6"
+#  - "3.7"
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
 
+# Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
 matrix:
-  allow_failures:
-    - python: "2.7"
-    - python: "3.4"
-#    - python: "3.5"
-#    - python: "3.6"
-
-virtualenv:
-    system_site_packages: true
+  include:
+    - python: 3.7
+      dist: xenial
 
 # command before installation
 before_install:
