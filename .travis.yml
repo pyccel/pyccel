@@ -16,9 +16,6 @@ python:
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
 
-virtualenv:
-    system_site_packages: true
-
 # command before installation
 before_install:
   - sudo apt-get install gfortran
