@@ -187,7 +187,7 @@ def is_ignored_module(name):
 
     return False
 
-def get_filename_from_import(module,output_folder=''):
+def get_filename_from_import(module,output_folder='',context_import_path = {}):
     """Returns a valid filename with absolute path, that corresponds to the
     definition of module.
     The priority order is:
@@ -202,6 +202,14 @@ def get_filename_from_import(module,output_folder=''):
         return os.path.abspath(filename_pyh)
     if is_valid_filename_py(filename_py):
         return os.path.abspath(filename_py)
+
+    if (module in context_import_path):
+        poss_filename_pyh = '{0}{1}.pyh'.format(context_import_path[module],module)
+        poss_filename_py = '{0}{1}.py'.format(context_import_path[module],module)
+        if is_valid_filename_pyh(poss_filename_pyh):
+            return os.path.abspath(poss_filename_pyh)
+        if is_valid_filename_py(poss_filename_py):
+            return os.path.abspath(poss_filename_py)
 
     folders = output_folder.split(""".""")
     for i in range(len(folders)):
@@ -299,7 +307,8 @@ class Parser(object):
 
     """ Class for a Parser."""
 
-    def __init__(self, inputs, debug=False, headers=None, static=None, show_traceback=True, output_folder=''):
+    def __init__(self, inputs, debug=False, headers=None, static=None, show_traceback=True,
+                    output_folder='', context_import_path = {}):
         """Parser constructor.
 
         inputs: str
@@ -333,6 +342,7 @@ class Parser(object):
         self._namespace['python_functions'] = {}
         self._scope = {}
         self._output_folder = output_folder
+        self._context_import_path = context_import_path
 
         # represent the namespace of a function
 
@@ -749,7 +759,7 @@ class Parser(object):
 
             # get the absolute path corresponding to source
 
-            filename = get_filename_from_import(source,self._output_folder)
+            filename = get_filename_from_import(source,self._output_folder,self._context_import_path)
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)

@@ -279,9 +279,12 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         imports = []
         names_o = []
+        context_import_path = []
         for i in context:
             names_o.append('{fol}{name}.o'.format(fol=i.os_folder,name=i.name))
             imports.append(i.imports)
+            context_import_path.append((i.name,i.os_folder))
+        context_import_path = dict(context_import_path)
 
         extra_args = ' '.join(i for i in names_o)
         imports = '\n'.join(i for i in imports)
@@ -290,10 +293,13 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         # ... add import to initial code
         code = '{imports}\n{code}'.format(imports=imports, code=code)
         # ...
+    else:
+        context_import_path = {}
 
     try:
         # ...
-        pyccel = Parser(code, headers=d_headers, static=static, output_folder = output_folder)
+        pyccel = Parser(code, headers=d_headers, static=static, output_folder = output_folder,
+                            context_import_path=context_import_path)
         ast = pyccel.parse()
 
         settings = {}

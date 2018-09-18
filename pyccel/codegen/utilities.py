@@ -172,7 +172,7 @@ def execute_pyccel(filename,
         - compiling the fortran code.
 
     """
-    pyccel = Parser(filename)
+    pyccel = Parser(filename,output_folder=output.replace('/','.'))
     ast = pyccel.parse()
 
     settings = {}
