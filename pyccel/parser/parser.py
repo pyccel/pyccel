@@ -3333,7 +3333,7 @@ class Parser(object):
                 return CodeBlock(body)
                 
                 
-            if isinstance(rhs, Expr):
+            if isinstance(rhs, (Add, Mul, Pow)):
                 if not rhs.is_integer and rhs.is_real:
                     rhs = int2float(rhs)
 
