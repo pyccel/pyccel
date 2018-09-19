@@ -2064,7 +2064,7 @@ class Variable(Symbol):
         return args
 
     def _eval_subs(self, old, new):
-        return old
+        return self
 
 
 class DottedVariable(AtomicExpr, Boolean):
@@ -2180,7 +2180,7 @@ class DottedVariable(AtomicExpr, Boolean):
         return ls
 
     def _eval_subs(self, old, new):
-        return old
+        return self
 
 
 
@@ -3142,7 +3142,7 @@ class ClassDef(Basic):
             return self.is_iterable or self.is_with_construct
 
     def _eval_subs(self, old , new):
-        return old
+        return self
 
 
 class Import(Basic):
@@ -3924,7 +3924,7 @@ class IndexedVariable(IndexedBase):
         return cls(name, shape=self.shape, dtype=self.dtype)
 
     def _eval_subs(self, old, new):
-        return old
+        return self
 
 
 
@@ -4033,7 +4033,7 @@ class IndexedElement(Indexed):
         return self.base.precision
 
     def _eval_subs(self, old, new):
-        return old
+        return self
 
 
 
