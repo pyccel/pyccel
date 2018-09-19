@@ -3334,9 +3334,9 @@ class Parser(object):
                 
                 
             if isinstance(rhs, (Add, Mul, Pow)):
+                
                 if not rhs.is_integer and rhs.is_real:
                     rhs = int2float(rhs)
-
 
             expr_new = Assign(lhs, rhs, strict=False)
             

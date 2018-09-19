@@ -14,7 +14,7 @@ from sympy.core.function import Function, Application
 from sympy import sympify
 from sympy import Symbol, Integer, Add, Mul, Pow
 from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float
+from sympy import Float as sp_Float ,Rational as sp_Rational
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.core.assumptions import StdFactKB
@@ -200,9 +200,11 @@ def float2int(expr):
     return expr.subs(zip(atoms,m))
 
 def int2float(expr):
-    atoms = expr.atoms(sp_Integer)
+    atoms = expr.atoms(sp_Rational)
     m     = map(sp_Float,atoms)
-    return expr.subs(zip(atoms,m))
+    expr = expr.subs(zip(atoms,m))
+  
+    return expr
 
 class DottedName(Basic):
 
@@ -2061,6 +2063,9 @@ class Variable(Symbol):
             )
         return args
 
+    def _eval_subs(self, old, new):
+        return old
+
 
 class DottedVariable(AtomicExpr, Boolean):
 
@@ -2173,6 +2178,10 @@ class DottedVariable(AtomicExpr, Boolean):
             else:
                 ls += i.names
         return ls
+
+    def _eval_subs(self, old, new):
+        return old
+
 
 
 class ValuedVariable(Variable):
@@ -2968,8 +2977,10 @@ class ClassDef(Basic):
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
 
+        imports = list(imports)
         for i in methods:
-            imports += i.imports
+            imports += list(i.imports)
+     
         imports = set(imports)  # for unicity
         imports = Tuple(*imports)
 
@@ -3064,14 +3075,6 @@ class ClassDef(Basic):
 
     # TODO add other attributes?
 
-    @property
-    def this(self):
-        alias = None
-        name = str(self.name)
-        dtype = DataTypeFactory(name, '_name', prefix='Custom',
-                                alias=alias)
-
-        return Variable(dtype(), 'self')
 
     def get_attribute(self, O, attr):
         """Returns the attribute attr of the class O of instance self."""
@@ -3137,6 +3140,9 @@ class ClassDef(Basic):
             return True
         else:
             return self.is_iterable or self.is_with_construct
+
+    def _eval_subs(self, old , new):
+        return old
 
 
 class Import(Basic):
@@ -3917,6 +3923,10 @@ class IndexedVariable(IndexedBase):
 
         return cls(name, shape=self.shape, dtype=self.dtype)
 
+    def _eval_subs(self, old, new):
+        return old
+
+
 
 class IndexedElement(Indexed):
 
@@ -4021,6 +4031,10 @@ class IndexedElement(Indexed):
     @property
     def precision(self):
         return self.base.precision
+
+    def _eval_subs(self, old, new):
+        return old
+
 
 
 class String(Basic):

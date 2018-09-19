@@ -17,7 +17,8 @@ from sympy import Rational as sp_Rational
 from sympy import IndexedBase
 
 
-from .core import (Variable, IndexedElement, IndexedVariable, List, String, ValuedArgument,Constant)
+from .core import (Variable, IndexedElement, IndexedVariable, 
+                   List, String, ValuedArgument, Constant, int2float)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
@@ -223,6 +224,9 @@ class Int(Function):
         if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, Pow, sp_Rational)):
 
             raise TypeError('Uknown type of  %s.' % type(arg))
+        if isinstance(arg,(Mul, Add, Pow)):
+            arg = int2float(arg)
+
         obj = Basic.__new__(cls, arg)
         assumptions = {'integer':True}
         ass_copy = assumptions.copy()
