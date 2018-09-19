@@ -109,7 +109,7 @@ from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
 from pyccel.ast.datatypes import sp_dtype, str_dtype
-from pyccel.ast.core import local_sympify
+from pyccel.ast.core import local_sympify, int2float
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -3337,7 +3337,11 @@ class Parser(object):
                 return CodeBlock(body)
                 
                 
-            
+            if isinstance(rhs, Expr):
+                if not rhs.is_integer and rhs.is_real:
+                    rhs = int2float(rhs)
+
+
             expr_new = Assign(lhs, rhs, strict=False)
             
             if not isinstance(lhs, (list, Tuple, tuple)):
