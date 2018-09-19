@@ -1482,15 +1482,11 @@ class Parser(object):
                 if isinstance(second, Mul):
                     args = second.args
                     second = Pow(args[0], -1, evaluate=False)
-                    if second.is_rational:
-                        second=second.n()
                     first =  Function('int')(Mul(first, second,
                              evaluate=False))
                     return Mul(first, args[1], evaluate=False)
                 else:
                     second = Pow(second, -1, evaluate=False)
-                    if second.is_rational:
-                        second=second.n()
                     return Function('int')(Mul(first, second,
                             evaluate=False))
             elif stmt.value == '%':

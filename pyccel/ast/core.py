@@ -199,6 +199,11 @@ def float2int(expr):
     m     = map(sp_Integer,atoms)
     return expr.subs(zip(atoms,m))
 
+def int2float(expr):
+    atoms = expr.atoms(sp_Integer)
+    m     = map(sp_Float,atoms)
+    return expr.subs(zip(atoms,m))
+
 class DottedName(Basic):
 
     """
