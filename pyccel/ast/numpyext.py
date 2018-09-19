@@ -224,8 +224,6 @@ class Int(Function):
         if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, Pow, sp_Rational)):
 
             raise TypeError('Uknown type of  %s.' % type(arg))
-        if isinstance(arg,(Mul, Add, Pow)):
-            arg = int2float(arg)
 
         obj = Basic.__new__(cls, arg)
         assumptions = {'integer':True}
@@ -261,6 +259,8 @@ class Int(Function):
         value = printer(self.arg)
         code = 'Int({0})'.format(value)
         return code
+
+
 
 class Real(Function):
 

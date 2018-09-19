@@ -80,7 +80,7 @@ from pyccel.stdlib.internal.mpi import MPI_DOUBLE
 
 class MPI_:
     def __init__(self):
-        self.COMM_WORLD = 0
+        self.COMM_WORLD = -1
         self.INT        = MPI_INTEGER
         self.DOUBLE     = MPI_DOUBLE
         self.SUM        = MPI_SUM
@@ -92,7 +92,7 @@ class MPI_:
         self.LAND       = MPI_LAND
         self.LOR        = MPI_LOR
         self.LXOR       = MPI_LXOR
-        self.Request    = 0
+        self.Request    = -1
 
 MPI = MPI_()
 

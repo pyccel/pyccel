@@ -2561,7 +2561,9 @@ class Parser(object):
 
             # TODO fix bug when we put expr_new.doit() for the indexedvariable
             # somehow sympy creats new object and we loose the info
-            # for the types
+            # for the types 
+            if not expr_new.is_integer and expr_new.is_real :
+                expr_new = int2float(expr_new)
             return expr_new
         elif isinstance(expr, Lambda):
 
@@ -3332,11 +3334,6 @@ class Parser(object):
                 body  = [alloc , body]
                 return CodeBlock(body)
                 
-                
-            if isinstance(rhs, (Add, Mul, Pow)):
-                
-                if not rhs.is_integer and rhs.is_real:
-                    rhs = int2float(rhs)
 
             expr_new = Assign(lhs, rhs, strict=False)
             
