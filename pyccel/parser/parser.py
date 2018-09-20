@@ -110,6 +110,7 @@ from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
 from pyccel.ast.datatypes import sp_dtype, str_dtype
 from pyccel.ast.core import local_sympify, int2float, Pow
+from sympy import Pow as sp_Pow
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -2488,7 +2489,7 @@ class Parser(object):
         elif isinstance(expr, (
             Add,
             Mul,
-            Pow,
+            Pow,sp_Pow,
             And,
             Or,
             Eq,
@@ -2538,7 +2539,7 @@ class Parser(object):
 
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Pow):
+                elif isinstance(expr, (Pow, sp_Pow)):
                     expr_new = Pow(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new, evaluate=False)
@@ -2757,7 +2758,6 @@ class Parser(object):
                             return CodeBlock(stmts)
                         return expr
         elif isinstance(expr, Expr):
-
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
         elif isinstance(expr, (Assign, AugAssign)):
 

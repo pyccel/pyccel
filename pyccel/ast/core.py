@@ -224,6 +224,8 @@ class Pow(sp_Pow):
         return self.base.is_real
 
     def _eval_is_complex(self):
+        if self.exp == -1:
+            return True
         return self.base.is_complex
 
     def _eval_subs(self, old, new):
@@ -231,7 +233,6 @@ class Pow(sp_Pow):
         args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
         args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
         expr = Pow(args[0], args[1], evaluate=False)
-        
         return expr
 
 
