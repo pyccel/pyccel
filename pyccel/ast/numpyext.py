@@ -8,7 +8,7 @@ from sympy.core.function import Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
-from sympy import Integer as sp_Integer, Add, Mul, Pow, Float as sp_Float
+from sympy import Integer as sp_Integer, Add, Mul, Pow as sp_Pow, Float as sp_Float
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
@@ -18,7 +18,7 @@ from sympy import IndexedBase
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, 
-                   List, String, ValuedArgument, Constant, int2float)
+                   List, String, ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
@@ -221,7 +221,7 @@ class Int(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, sp_Pow, sp_Rational)):
 
             raise TypeError('Uknown type of  %s.' % type(arg))
 
@@ -270,7 +270,7 @@ class Real(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, sp_Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'real':True}
@@ -325,7 +325,7 @@ class Complex(Function):
     def __new__(cls, arg0, arg1=sp_Float(0)):
 
         for arg in [arg0, arg1]:
-            if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, Pow, sp_Rational)):
+            if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, sp_Pow, sp_Rational)):
                 raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg0, arg1)
         assumptions = {'complex':True}
@@ -586,15 +586,10 @@ class Empty(Zeros):
 
 
 
-class Sqrt(Function):
-    def __new__(cls,arg):
-        obj = sqrt(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+class Sqrt(Pow):
+
+    def __new__(cls, base):
+        return Pow(base, 0.5, evaluate=False)
 
 class Asin(Function):
     def __new__(cls,arg):

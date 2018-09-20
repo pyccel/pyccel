@@ -109,7 +109,7 @@ from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
 from pyccel.ast.datatypes import sp_dtype, str_dtype
-from pyccel.ast.core import local_sympify, int2float
+from pyccel.ast.core import local_sympify, int2float, Pow
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -134,7 +134,7 @@ from sympy import Symbol, sympify,symbols
 from sympy import Tuple
 from sympy import NumberSymbol, Number
 from sympy import Integer, Float
-from sympy import Add, Mul, Pow, floor, Mod
+from sympy import Add, Mul, floor, Mod
 from sympy import FunctionClass
 from sympy import Lambda
 from sympy import ceiling
@@ -2172,8 +2172,9 @@ class Parser(object):
             
             cls = (Application, DottedVariable, Variable, 
                    IndexedVariable,IndexedElement)
+            atoms = _atomic(expr,cls)
             ds = [self._infere_type(i, **settings) for i in
-                  _atomic(expr,cls)]
+                  atoms]
             #TODO we should also look for functions call
             #to collect info about precision and shapes later when we allow
             # vectorised operations
@@ -2185,7 +2186,10 @@ class Parser(object):
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
             precisions = [d['precision'] for d in ds]
-
+            
+            if all(i.is_integer for i in atoms):
+                if expr.is_complex:
+                    precisions.append(8)  
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
 
@@ -2535,13 +2539,7 @@ class Parser(object):
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Pow):
-                    dtype = str_dtype(sp_dtype(expr_new))
-                    assumptions = {dtype: True}
-                    expr_new = Pow(expr_new, a_new)
-                    expr_new._assumptions = StdFactKB(assumptions)
-                    expr_new._assumptions._generator = \
-                        assumptions.copy()
-
+                    expr_new = Pow(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Or):
@@ -2562,8 +2560,10 @@ class Parser(object):
             # TODO fix bug when we put expr_new.doit() for the indexedvariable
             # somehow sympy creats new object and we loose the info
             # for the types 
-            if not expr_new.is_integer and expr_new.is_real :
+            if not expr_new.is_integer and expr_new.is_real:
                 expr_new = int2float(expr_new)
+      
+
             return expr_new
         elif isinstance(expr, Lambda):
 
@@ -2967,7 +2967,6 @@ class Parser(object):
  # .......
             
             rhs = self._annotate(rhs, **settings)
-            
  # .......
 
             if isinstance(rhs, If):
@@ -3159,13 +3158,8 @@ class Parser(object):
                     d_var = self._infere_type(rhs.rhs, **settings)
                 else:
                     raise NotImplementedError('TODO')
-            elif isinstance(rhs, Pow):
 
-                d_var = self._infere_type(rhs.args[0], **settings)
-                d_var['datatype'] = ('real'
-                         if rhs.args[0].is_real else 'complex')
             elif isinstance(rhs, SumFunction):
-
                 d_var = self._infere_type(rhs.body, **settings)
 
             elif isinstance(rhs, Map):

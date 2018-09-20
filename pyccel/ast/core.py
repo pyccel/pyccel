@@ -12,13 +12,13 @@ from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.function import Function, Application
 from sympy import sympify
-from sympy import Symbol, Integer, Add, Mul, Pow
+from sympy import Symbol, Integer, Add, Mul, Pow as sp_Pow
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float ,Rational as sp_Rational
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.core.assumptions import StdFactKB
-from sympy.core.cache import cacheit
+from sympy import cache
 
 # from sympy.sets.fancysets import Range as sm_Range
 
@@ -202,9 +202,38 @@ def float2int(expr):
 def int2float(expr):
     atoms = expr.atoms(sp_Rational)
     m     = map(sp_Float,atoms)
-    expr = expr.subs(zip(atoms,m))
-  
+    expr  = expr.subs(zip(atoms,m))
     return expr
+
+class Pow(sp_Pow):
+
+    def __new__(cls, b, e, evaluate=None):
+        
+        obj = sp_Pow.__new__(cls, b, e, evaluate)
+        return obj
+
+
+    def _eval_is_integer(self):
+        if self.exp == -1:
+            return False
+        return self.base.is_integer
+
+    def _eval_is_real(self):
+        if self.exp == -1:
+            return True
+        return self.base.is_real
+
+    def _eval_is_complex(self):
+        return self.base.is_complex
+
+    def _eval_subs(self, old, new):
+        args = self.args
+        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
+        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
+        expr = Pow(args[0], args[1], evaluate=False)
+        
+        return expr
+
 
 class DottedName(Basic):
 
