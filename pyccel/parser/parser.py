@@ -2205,10 +2205,6 @@ class Parser(object):
             else:
                 rank = 0
 
-            # ...
-
-            # ...
-
             shape = ()
             for s in shapes:
                 if s:

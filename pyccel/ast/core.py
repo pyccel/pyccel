@@ -200,15 +200,18 @@ def float2int(expr):
     return expr.subs(zip(atoms,m))
 
 def int2float(expr):
+    if expr.is_number:
+        return expr.n()
     atoms = expr.atoms(sp_Rational)
-    m     = map(sp_Float,atoms)
-    expr  = expr.subs(zip(atoms,m))
+    if atoms:
+        m     = map(sp_Float,atoms)
+        expr  = expr.subs(zip(atoms,m))
+    
     return expr
 
 class Pow(sp_Pow):
 
     def __new__(cls, b, e, evaluate=None):
-        
         obj = sp_Pow.__new__(cls, b, e, evaluate)
         return obj
 
