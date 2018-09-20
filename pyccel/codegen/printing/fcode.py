@@ -485,7 +485,8 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_Constant(self, expr):
-        return self._print(expr.value)
+        val = sp_Float(expr.value)
+        return self._print(val)
 
     def _print_ValuedArgument(self, expr):
         name = self._print(expr.name)
