@@ -109,7 +109,7 @@ from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
 from pyccel.ast.datatypes import sp_dtype, str_dtype
-from pyccel.ast.core import local_sympify, int2float, Pow
+from pyccel.ast.core import local_sympify, int2float, Pow, _atomic
 from sympy import Pow as sp_Pow
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -269,39 +269,6 @@ def _get_name(var):
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 
 
-def _atomic(e, cls=None):
-    """Return atom-like quantities as far as substitution is
-    concerned: Functions and DottedVarviables, Variables. we don't
-    return atoms that are inside such quantities too
-    """
-
-    from sympy import preorder_traversal
-    from collections import OrderedDict
-    pot = preorder_traversal(e)
-    seen = []
-    atoms_ = []
-    if cls is None:
-        cls = (Application, DottedVariable, Variable, 
-               IndexedVariable,IndexedElement)
-    for p in pot:
-        if p in seen:
-            pot.skip()
-            continue
-        seen.append(p)
-        if isinstance(p, cls):
-            pot.skip()
-            atoms_.append(p)
-    return atoms_
-
-
-
-
-def atom(e):
-    """Return atom-like quantities as far as substitution is
-    concerned: Functions , DottedVarviables. contrary to _atom we
-    return atoms that are inside such quantities too
-    """
-    pass
 
 
 class Parser(object):

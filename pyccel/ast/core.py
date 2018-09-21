@@ -187,6 +187,42 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError('Unexpected type {0}'.format(type(expr)))
 
+def _atomic(e, cls=None,ignore=()):
+    """Return atom-like quantities as far as substitution is
+    concerned: Functions and DottedVarviables, Variables. we don't
+    return atoms that are inside such quantities too
+    """
+
+    from sympy import preorder_traversal
+    from collections import OrderedDict
+    pot = preorder_traversal(e)
+    seen = []
+    atoms_ = []
+    if cls is None:
+        cls = (Application, DottedVariable, Variable, 
+               IndexedVariable,IndexedElement)
+    
+    for p in pot:
+        if p in seen or isinstance(p,ignore):
+            pot.skip()
+            continue
+        seen.append(p)
+        if isinstance(p, cls):
+            pot.skip()
+            atoms_.append(p)
+        
+    return atoms_
+
+
+
+
+def atom(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Functions , DottedVarviables. contrary to _atom we
+    return atoms that are inside such quantities too
+    """
+    pass
+
 
 def inline(func, args):
         local_vars = func.local_vars
@@ -202,9 +238,9 @@ def float2int(expr):
 def int2float(expr):
     if expr.is_number:
         return expr.n()
-    atoms = expr.replace(Function,VoidFunction)
-    
-    atoms = atoms.atoms(sp_Rational)
+
+    atoms = _atomic(expr, cls=sp_Rational, ignore=Function)
+
     if atoms:
         m     = map(sp_Float,atoms)
         expr  = expr.subs(zip(atoms,m))
