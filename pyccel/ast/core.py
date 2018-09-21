@@ -202,7 +202,9 @@ def float2int(expr):
 def int2float(expr):
     if expr.is_number:
         return expr.n()
-    atoms = expr.atoms(sp_Rational)
+    atoms = expr.replace(Function,VoidFunction)
+    
+    atoms = atoms.atoms(sp_Rational)
     if atoms:
         m     = map(sp_Float,atoms)
         expr  = expr.subs(zip(atoms,m))
@@ -1811,6 +1813,13 @@ class Void(Basic):
 
     pass
 
+class VoidFunction(Basic):
+    #this class is used in order to eliminate certain atoms 
+    # in an arithmitic expression so that we dont take them into 
+    # consideration 
+    def __new__(*args):
+        return Symbol("""x9846548484665
+                      494794564465165161561""")
 
 class Variable(Symbol):
 
