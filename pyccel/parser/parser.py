@@ -2153,7 +2153,7 @@ class Parser(object):
             precisions = [d['precision'] for d in ds]
             
             if all(i.is_integer for i in atoms):
-                if expr.is_real or expr.is_complex and not expr.is_integer:
+                if expr.is_complex and not expr.is_integer:
                     precisions.append(8)  
 
             # TODO improve

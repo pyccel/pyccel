@@ -692,6 +692,30 @@ class Log(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+class Abs(Function):
+
+    def _eval_is_integer(self):
+        return all(i.is_integer for i in self.args)
+
+    def _eval_is_real(self):
+        return True
+
+class Min(Function):
+     def _eval_is_integer(self):
+        return all(i.is_integer for i in self.args)
+          
+     def _eval_is_real(self):
+        return True
+
+
+class Max(Function):
+     def _eval_is_integer(self):
+        return all(i.is_integer for i in self.args)
+          
+     def _eval_is_real(self):
+        return True
+
+
 
 class Complex64(Complex):
     @property
