@@ -240,7 +240,6 @@ def int2float(expr):
         return expr.n()
 
     atoms = _atomic(expr, cls=sp_Rational, ignore=Function)
-
     if atoms:
         m     = map(sp_Float,atoms)
         expr  = expr.subs(zip(atoms,m))
@@ -249,32 +248,16 @@ def int2float(expr):
 
 class Pow(sp_Pow):
 
-    def __new__(cls, b, e, evaluate=None):
-        obj = sp_Pow.__new__(cls, b, e, evaluate)
-        return obj
-
-
-    def _eval_is_integer(self):
-        if self.exp == -1:
-            return False
-        return self.base.is_integer
-
-    def _eval_is_real(self):
-        if self.exp == -1:
-            return True
-        return self.base.is_real
-
-    def _eval_is_complex(self):
-        if self.exp == -1:
-            return True
-        return self.base.is_complex
-
     def _eval_subs(self, old, new):
         args = self.args
         args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
         args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
         expr = Pow(args[0], args[1], evaluate=False)
         return expr
+
+    def _eval_evalf(self,prec):
+        return sp_Pow(self.base,self.exp).evalf(prec)
+
 
 
 class DottedName(Basic):
@@ -1892,7 +1875,7 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
-
+   
     def __new__(
         cls,
         dtype,
@@ -1910,7 +1893,6 @@ class Variable(Symbol):
         precision=0
         ):
 
-        # use str to make '*' work using py2
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(str(dtype))
@@ -1998,6 +1980,7 @@ class Variable(Symbol):
                          NativeSymbol, NativeGeneric)
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
+
         elif isinstance(dtype, NativeReal):
             assumptions['real'] = True
 
@@ -2143,6 +2126,10 @@ class Variable(Symbol):
 
     def _eval_subs(self, old, new):
         return self
+
+    def _eval_is_positive(self):
+        #we do this inorder to infere the type of Pow expression correctly
+        return self.is_real   
 
 
 class DottedVariable(AtomicExpr, Boolean):
