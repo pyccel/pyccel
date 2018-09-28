@@ -34,7 +34,7 @@ def double_loop( n ):
     x = 0
     for i in range( 3, 10 ):
         x += 1
-        y  = 2*x
+        y  = n*x
         for j in range( 4, 15 ):
             z = x-y
     return z
@@ -53,8 +53,6 @@ def double_loop_on_2d_array_C( z ):
         for j in range( n ):
             z[i,j] = i-j
 
-    return z
-
 # ...
 @types( 'int[:,:](order=F)' )
 def double_loop_on_2d_array_F( z ):
@@ -68,8 +66,6 @@ def double_loop_on_2d_array_F( z ):
     for i in range( m ):
         for j in range( n ):
             z[i,j] = i-j
-
-    return z
 
 # ...
 @types( 'int[:,:](order=C)' )
@@ -88,8 +84,6 @@ def product_loop_on_2d_array_C( z ):
     for i,j in product( x, y ):
         z[i,j] = i-j
 
-    return z
-
 # ...
 @types( 'int[:,:](order=F)' )
 def product_loop_on_2d_array_F( z ):
@@ -107,25 +101,9 @@ def product_loop_on_2d_array_F( z ):
     for i,j in product( x, y ):
         z[i,j] = i-j
 
-    return z
-
 # ...
-@types( 'int[:](order=C)' )
-def map_on_1d_array_C( z ):
-
-    @types( int )
-    def f( x ):
-        return x+5
-
-    res = 0
-    for v in map( f, z ):
-        res *= v
-
-    return res
-
-# ...
-@types( 'int[:](order=F)' )
-def map_on_1d_array_F( z ):
+@types( 'int[:]' )
+def map_on_1d_array( z ):
 
     @types( int )
     def f( x ):
@@ -156,6 +134,6 @@ def zip_prod( m ):
 
     res = 0
     for i1,i2 in zip( x, y ):
-        res += i*j
+        res += i1*i2
 
     return res
