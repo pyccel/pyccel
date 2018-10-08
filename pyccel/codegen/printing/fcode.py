@@ -5,7 +5,7 @@ www.fortran90.org as much as possible."""
 
 
 import string
-from itertools import groupby
+from itertools import groupby, chain
 
 import numpy as np
 
@@ -1256,12 +1256,7 @@ class FCodePrinter(CodePrinter):
             if i in out_args:
                 out_args.remove(i)
 
-        out_code  = ', '.join(self._print(i) for i in out_args)
-
-        arg_code  = ', '.join(self._print(i) for i in expr.arguments)
-        if len(out_code) > 0:
-            arg_code  = ', '.join(i for i in [arg_code, out_code])
-
+        arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
         body_code = '\n'.join(self._print(i) for i in body)
         prelude   = '\n'.join(self._print(i) for i in decs)
         if len(functions)>0:
