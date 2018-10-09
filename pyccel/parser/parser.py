@@ -2330,7 +2330,9 @@ class Parser(object):
             dtype = var.dtype
             shape = var.shape
             prec  = var.precision
-            return IndexedVariable(name, dtype=dtype, shape=shape,prec=prec)
+            order = var.order
+            rank  = var.rank
+            return IndexedVariable(name, dtype=dtype, shape=shape,prec=prec,order=order,rank=rank)
         elif isinstance(expr, (IndexedElement, Indexed)):
 
             name = _get_name(expr)
@@ -2355,8 +2357,10 @@ class Parser(object):
                 dtype = var.dtype
                 shape = var.shape
                 prec  = var.precision
+                order = var.order
+                rank  = var.rank
                 return IndexedVariable(name, dtype=dtype,
-                        shape=shape,prec=prec).__getitem__(*args)
+                        shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
             else:
                 return IndexedBase(name).__getitem__(args)
         elif isinstance(expr, Symbol):
@@ -3217,7 +3221,10 @@ class Parser(object):
 
                 dtype = var.dtype
                 prec  = var.precision
-                lhs = IndexedVariable(name, dtype=dtype,prec=prec)
+                shape = var.shape
+                order = var.order
+                rank  = var.rank
+                lhs = IndexedVariable(name, dtype=dtype,shape=shape,prec=prec,order=order, rank=rank)
             elif isinstance(lhs, (IndexedElement, Indexed)):
 
                 # TODO check consistency of indices with shape/rank
@@ -3237,8 +3244,11 @@ class Parser(object):
                 args = tuple(args)
                 dtype = var.dtype
                 prec  = var.precision
+                order = var.order
+                rank  = var.rank
+                shape = var.shape
                 lhs = IndexedVariable(name,
-                        dtype=dtype,prec=prec).__getitem__(*args)
+                        dtype=dtype, shape=shape,prec=prec,order=order, rank=rank).__getitem__(*args)
             elif isinstance(lhs, DottedVariable):
 
                 dtype = d_var.pop('datatype')

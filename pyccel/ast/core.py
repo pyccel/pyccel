@@ -3947,6 +3947,8 @@ class IndexedVariable(IndexedBase):
         shape=None,
         dtype=None,
         prec=0,
+        order=None,
+        rank = 0,
         **kw_args
         ):
         if dtype is None:
@@ -3956,9 +3958,11 @@ class IndexedVariable(IndexedBase):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
+        obj = IndexedBase.__new__(cls, label, shape=shape,**kw_args)
         obj._dtype = dtype
         obj._precision = prec
+        obj._order     = order
+
         return obj
 
     def __getitem__(self, *args):
@@ -3976,6 +3980,10 @@ class IndexedVariable(IndexedBase):
     @property
     def precision(self):
         return self._precision
+ 
+    @property
+    def order(self):
+        return self._order
 
     @property
     def name(self):
@@ -4062,6 +4070,7 @@ class IndexedElement(Indexed):
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
+        
         return obj
 
     @property
@@ -4096,6 +4105,10 @@ class IndexedElement(Indexed):
     @property
     def precision(self):
         return self.base.precision
+
+    @property
+    def order(self):
+        return self.base.order
 
     def _eval_subs(self, old, new):
         return self
