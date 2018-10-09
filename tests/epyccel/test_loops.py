@@ -30,8 +30,6 @@ def test_double_loop():
     assert f1( 2 ) == f2( 2 )
 
 # ...
-# TODO: if (order=='C'), shape() should return dimensions in opposite order
-@pytest.mark.xfail
 def test_double_loop_on_2d_array_C():
 
     f1 = loops.double_loop_on_2d_array_C
@@ -58,8 +56,6 @@ def test_double_loop_on_2d_array_F():
     assert np.array_equal( x, y )
 
 # ...
-# TODO: if (order=='C'), shape() should return dimensions in opposite order
-@pytest.mark.xfail
 def test_product_loop_on_2d_array_C():
 
     f1 = loops.product_loop_on_2d_array_C

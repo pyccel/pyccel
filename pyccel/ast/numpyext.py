@@ -38,7 +38,7 @@ class Array(Function):
     arg : list ,tuple ,Tuple,List
     """
 
-    def __new__(cls, arg, dtype=None):
+    def __new__(cls, arg, dtype=None, order='C'):
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
@@ -56,7 +56,7 @@ class Array(Function):
         if not prec and dtype:
             prec = default_precision[dtype]
       
-        return Basic.__new__(cls, arg, dtype, prec)
+        return Basic.__new__(cls, arg, dtype, order, prec)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -71,8 +71,12 @@ class Array(Function):
         return self._args[1]
 
     @property
-    def precision(self):
+    def order(self):
         return self._args[2]
+
+    @property
+    def precision(self):
+        return self._args[3]
 
     @property
     def shape(self):
@@ -163,6 +167,7 @@ class Shape(Array):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         # TODO add check on index: must be Integer or Variable with dtype=int
+        # TODO [YG, 09.10.2018]: Verify why index should be passed at all (not in Numpy!)
 
         return Basic.__new__(cls, arg, index)
 
@@ -199,12 +204,23 @@ class Shape(Array):
             if self.index is None:
                 code_init = '{0} = shape({1})'.format(lhs_code, init_value)
 
+                # NOTE [YG, 09.10.2018]:
+                # If Python array uses C ordering, we must reverse the shape
+                # in order to correctly use its components as cycle bounds!
+                if self.arg.order == 'C':
+                    code_init += '\n{0} = {0}(ubound({0},1):lbound({0},1):-1)'.format( lhs_code )
+
             else:
                 code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value,
                                                           printer(self.index))
 
         else:
             if self.index is None:
+
+                # TODO [YG, 09.10.2018]:
+                # Find a way to reverse shape components for C ordering!
+                # Probably we should make available a Fortran function
+                # 'reverse' and use it here: reverse(shape({0}))
                 code_init = 'shape({0})'.format(init_value)
 
             else:
