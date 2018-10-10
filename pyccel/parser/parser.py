@@ -3086,14 +3086,21 @@ class Parser(object):
                     d_var['allocatable'] = False
                     d_var['is_pointer'] = False
                     d_var['precision'] = rhs.precision
+
                 elif name in ['Mod']:
+
+                    # Determine output type/rank/shape
+                    # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
+                    i = 0 if (rhs.args[0].rank >= rhs.args[1].rank) else 1
                     d_var = {}
-                    d_var['datatype'] = 'int'
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                    d = self._infere_type(rhs.args[0],**settings)
+                    d_var['datatype'   ] = rhs.args[i].dtype
+                    d_var['rank'       ] = rhs.args[i].rank
+                    d_var['shape'      ] = rhs.args[i].shape
+                    d_var['allocatable'] = rhs.args[i].allocatable
+                    d_var['is_pointer' ] = False
+                    d = self._infere_type(rhs.args[i],**settings)
                     d_var['precision'] = d.pop('precision',4)
+
                 elif name in [
                     'Abs',
                     'sin',

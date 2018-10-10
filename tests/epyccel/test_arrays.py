@@ -65,8 +65,6 @@ def test_array_int_1d_scalar_idiv():
     assert np.array_equal( f1(x,a), f2(x,a) )
  
 # ...
-# TODO: modulo operation '%' between array and scalar
-@pytest.mark.xfail
 def test_array_int_1d_scalar_mod():
 
     f1 = arrays.array_int_1d_scalar_mod
@@ -135,8 +133,6 @@ def test_array_int_1d_idiv():
     assert np.array_equal( f1(x,y), f2(x,y) )
 
 # ...
-# TODO: modulo operation '%' between arrays
-@pytest.mark.xfail
 def test_array_int_1d_mod():
 
     f1 = arrays.array_int_1d_mod
@@ -208,8 +204,6 @@ def test_array_int_2d_C_scalar_idiv():
     assert np.array_equal( f1(x,a), f2(x,a) )
 
 # ...
-# TODO: modulo operation '%' between array and scalar
-@pytest.mark.xfail
 def test_array_int_2d_C_scalar_mod():
 
     f1 = arrays.array_int_2d_C_scalar_mod
@@ -278,8 +272,6 @@ def test_array_int_2d_C_idiv():
     assert np.array_equal( f1(x,y), f2(x,y) )
 
 # ...
-# TODO: modulo operation '%' between arrays
-@pytest.mark.xfail
 def test_array_int_2d_C_mod():
 
     f1 = arrays.array_int_2d_C_mod
@@ -351,8 +343,6 @@ def test_array_int_2d_F_scalar_idiv():
     assert np.array_equal( f1(x,a), f2(x,a) )
 
 # ...
-# TODO: modulo operation '%' between array and scalar
-@pytest.mark.xfail
 def test_array_int_2d_F_scalar_mod():
 
     f1 = arrays.array_int_2d_F_scalar_mod
@@ -421,8 +411,6 @@ def test_array_int_2d_F_idiv():
     assert np.array_equal( f1(x,y), f2(x,y) )
 
 # ...
-# TODO: modulo operation '%' between arrays
-@pytest.mark.xfail
 def test_array_int_2d_F_mod():
 
     f1 = arrays.array_int_2d_F_mod
