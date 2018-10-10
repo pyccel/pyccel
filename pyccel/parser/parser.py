@@ -2523,14 +2523,12 @@ class Parser(object):
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new, evaluate=False)
 
-            # TODO fix bug when we put expr_new.doit() for the indexedvariable
-            # somehow sympy creats new object and we loose the info
-            # for the types 
+            
             if not expr_new.is_integer and expr_new.is_real:
                 expr_new = int2float(expr_new)
       
 
-            return expr_new
+            return expr_new.doit(deep=False)
         elif isinstance(expr, Lambda):
 
             expr_names = set(map(str, expr.expr.atoms(Symbol)))
