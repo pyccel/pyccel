@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from redbaron import RedBaron
@@ -1447,13 +1446,14 @@ class Parser(object):
                 if isinstance(second, Mul):
                     args = second.args
                     second = Pow(args[0], -1, evaluate=False)
-                    first =  Function('int')(Mul(first, second,
+                    first =  Function('floor')(Mul(first, second,
                              evaluate=False))
                     return Mul(first, args[1], evaluate=False)
                 else:
                     second = Pow(second, -1, evaluate=False)
-                    return Function('int')(Mul(first, second,
+                    return Function('floor')(Mul(first, second,
                             evaluate=False))
+
             elif stmt.value == '%':
 
                 return Mod(first, second)

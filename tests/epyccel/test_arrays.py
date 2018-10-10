@@ -52,8 +52,6 @@ def test_array_int_1d_scalar_div():
     assert np.allclose( f1(x,a), f2(x,a), rtol=1e-15, atol=1e-15 )
  
 # ...
-# TODO: integer division '//' between array and scalar
-@pytest.mark.xfail
 def test_array_int_1d_scalar_idiv():
 
     f1 = arrays.array_int_1d_scalar_idiv
@@ -120,8 +118,6 @@ def test_array_int_1d_div():
     assert np.array_equal( f1(x,y), f2(x,y) )
 
 # ...
-# TODO: integer division '//' between arrays
-@pytest.mark.xfail
 def test_array_int_1d_idiv():
 
     f1 = arrays.array_int_1d_idiv
@@ -191,8 +187,6 @@ def test_array_int_2d_C_scalar_div():
     assert np.allclose( f1(x,a), f2(x,a), rtol=1e-15, atol=1e-15 )
 
 # ...
-# TODO: integer division '//' between array and scalar
-@pytest.mark.xfail
 def test_array_int_2d_C_scalar_idiv():
 
     f1 = arrays.array_int_2d_C_scalar_idiv
@@ -259,8 +253,6 @@ def test_array_int_2d_C_div():
     assert np.allclose( f1(x,y), f2(x,y), rtol=1e-15, atol=1e-15 )
 
 # ...
-# TODO: integer division '//' between arrays
-@pytest.mark.xfail
 def test_array_int_2d_C_idiv():
 
     f1 = arrays.array_int_2d_C_idiv
@@ -330,8 +322,6 @@ def test_array_int_2d_F_scalar_div():
     assert np.allclose( f1(x,a), f2(x,a), rtol=1e-15, atol=1e-15 )
 
 # ...
-# TODO: integer division '//' between array and scalar
-@pytest.mark.xfail
 def test_array_int_2d_F_scalar_idiv():
 
     f1 = arrays.array_int_2d_F_scalar_idiv
@@ -398,8 +388,6 @@ def test_array_int_2d_F_div():
     assert np.allclose( f1(x,y), f2(x,y), rtol=1e-15, atol=1e-15 )
 
 # ...
-# TODO: integer division '//' between arrays
-@pytest.mark.xfail
 def test_array_int_2d_F_idiv():
 
     f1 = arrays.array_int_2d_F_idiv
