@@ -1446,13 +1446,11 @@ class Parser(object):
                 if isinstance(second, Mul):
                     args = second.args
                     second = Pow(args[0], -1, evaluate=False)
-                    first =  Function('floor')(Mul(first, second,
-                             evaluate=False))
+                    first =  floor(Mul(first, second, evaluate=False))
                     return Mul(first, args[1], evaluate=False)
                 else:
                     second = Pow(second, -1, evaluate=False)
-                    return Function('floor')(Mul(first, second,
-                            evaluate=False))
+                    return floor(Mul(first, second, evaluate=False))
 
             elif stmt.value == '%':
 
