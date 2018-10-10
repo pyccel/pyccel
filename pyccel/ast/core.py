@@ -3958,10 +3958,12 @@ class IndexedVariable(IndexedBase):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        obj = IndexedBase.__new__(cls, label, shape=shape,**kw_args)
-        obj._dtype = dtype
-        obj._precision = prec
-        obj._order     = order
+        obj = IndexedBase.__new__(cls, label, shape=shape)
+        kw_args['dtype']     = dtype
+        kw_args['precision'] = prec
+        kw_args['order']     = order
+        kw_args['rank']      = rank
+        obj._kw_args         = kw_args
 
         return obj
 
@@ -3975,26 +3977,35 @@ class IndexedVariable(IndexedBase):
 
     @property
     def dtype(self):
-        return self._dtype
+        return self.kw_args['dtype']
 
     @property
     def precision(self):
-        return self._precision
+        return self.kw_args['precision']
  
     @property
     def order(self):
-        return self._order
+        return self.kw_args['order']
+
+    @property
+    def rank(self):
+        return self.kw_args['rank']
+
+    @property
+    def kw_args(self):
+        return self._kw_args
 
     @property
     def name(self):
         return self._args[0]
 
-    # TODO what about kw_args in __new__?
+
 
     def clone(self, name):
         cls = eval(self.__class__.__name__)
-
-        return cls(name, shape=self.shape, dtype=self.dtype)
+        # TODO what about kw_args in __new__?
+        return cls(name, shape=self.shape, dtype=self.dtype,
+                   prec=self.precision, order=self.order, rank=self.rank)
 
     def _eval_subs(self, old, new):
         return self
@@ -4109,6 +4120,10 @@ class IndexedElement(Indexed):
     @property
     def order(self):
         return self.base.order
+
+    @property
+    def rank(self):
+        return self.base.rank
 
     def _eval_subs(self, old, new):
         return self
