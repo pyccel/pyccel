@@ -205,10 +205,10 @@ def test_array_int_2d_C_scalar_idiv():
     x = np.array( [[1,2,3],[4,5,6]] )
     a = 3
 
-    assert np.array_equal( f1(x,y), f2(x,y) )
+    assert np.array_equal( f1(x,a), f2(x,a) )
 
 # ...
-# TODO: modulo operation '//' between array and scalar
+# TODO: modulo operation '%' between array and scalar
 @pytest.mark.xfail
 def test_array_int_2d_C_scalar_mod():
 
@@ -218,7 +218,7 @@ def test_array_int_2d_C_scalar_mod():
     x = np.array( [[1,2,3],[4,5,6]] )
     a = 3
 
-    assert np.array_equal( f1(x,y), f2(x,y) )
+    assert np.array_equal( f1(x,a), f2(x,a) )
 
 # ...
 def test_array_int_2d_C_add():
@@ -348,7 +348,7 @@ def test_array_int_2d_F_scalar_idiv():
     x = np.array( [[1,2,3],[4,5,6]], order='F' )
     a = 3
 
-    assert np.array_equal( f1(x,y), f2(x,y) )
+    assert np.array_equal( f1(x,a), f2(x,a) )
 
 # ...
 # TODO: modulo operation '%' between array and scalar
@@ -361,7 +361,7 @@ def test_array_int_2d_F_scalar_mod():
     x = np.array( [[1,2,3],[4,5,6]], order='F' )
     a = 3
 
-    assert np.array_equal( f1(x,y), f2(x,y) )
+    assert np.array_equal( f1(x,a), f2(x,a) )
 
 # ...
 def test_array_int_2d_F_add():
