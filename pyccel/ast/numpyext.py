@@ -200,15 +200,18 @@ class Shape(Array):
         else:
             init_value = printer(self.arg)
 
+   
+        init_value = ['size({0},{1})'.format(init_value, ind) 
+                      for ind in range(1, self.arg.rank+1, 1)]
+        if self.arg.order == 'C':
+            init_value.reverse()
+
+        init_value = ','.join(i for i in init_value)
+ 
         if lhs:
             if self.index is None:
-                code_init = '{0} = shape({1})'.format(lhs_code, init_value)
-
-                # NOTE [YG, 09.10.2018]:
-                # If Python array uses C ordering, we must reverse the shape
-                # in order to correctly use its components as cycle bounds!
-                if self.arg.order == 'C':
-                    code_init += '\n{0} = {0}(ubound({0},1):lbound({0},1):-1)'.format( lhs_code )
+                
+                code_init = '{0} = (/ {1} /)'.format(lhs_code, init_value)
 
             else:
                 code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value,
@@ -221,7 +224,7 @@ class Shape(Array):
                 # Find a way to reverse shape components for C ordering!
                 # Probably we should make available a Fortran function
                 # 'reverse' and use it here: reverse(shape({0}))
-                code_init = 'shape({0})'.format(init_value)
+                code_init = '(/ {0} /)'.format(init_value)
 
             else:
                 code_init = 'size({0}, {1})'.format(init_value, printer(self.index))

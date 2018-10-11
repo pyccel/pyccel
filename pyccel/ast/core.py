@@ -4121,10 +4121,6 @@ class IndexedElement(Indexed):
     def order(self):
         return self.base.order
 
-    @property
-    def rank(self):
-        return self.base.rank
-
     def _eval_subs(self, old, new):
         return self
 
