@@ -219,11 +219,6 @@ class Shape(Array):
 
         else:
             if self.index is None:
-
-                # TODO [YG, 09.10.2018]:
-                # Find a way to reverse shape components for C ordering!
-                # Probably we should make available a Fortran function
-                # 'reverse' and use it here: reverse(shape({0}))
                 code_init = '(/ {0} /)'.format(init_value)
 
             else:
