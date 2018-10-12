@@ -206,7 +206,7 @@ class Shape(Array):
         if self.arg.order == 'C':
             init_value.reverse()
 
-        init_value = ','.join(i for i in init_value)
+        init_value = ', '.join(i for i in init_value)
  
         if lhs:
             if self.index is None:
@@ -214,15 +214,16 @@ class Shape(Array):
                 code_init = '{0} = (/ {1} /)'.format(lhs_code, init_value)
 
             else:
-                code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value,
-                                                          printer(self.index))
+                index = printer(self.index)
+                code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
 
         else:
             if self.index is None:
                 code_init = '(/ {0} /)'.format(init_value)
 
             else:
-                code_init = 'size({0}, {1})'.format(init_value, printer(self.index))
+                index = printer(self.index)
+                code_init = 'size({0}, {1})'.format(init_value, index)
 
         return code_init
 

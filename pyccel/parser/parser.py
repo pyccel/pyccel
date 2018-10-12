@@ -2150,10 +2150,11 @@ class Parser(object):
             shapes = [d['shape'] for d in ds]
             precisions = [d['precision'] for d in ds]
             
+            
             if all(i.is_integer for i in atoms):
                 if expr.is_complex and not expr.is_integer:
                     precisions.append(8)  
-
+            print(expr,precisions)
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
 
@@ -3117,13 +3118,22 @@ class Parser(object):
                     'atan',
                     'acot',
                     'atan2',
-                    'floor',
                     ]:
                     d_var = self._infere_type(rhs.args[0], **settings)
                     d_var['datatype'] = sp_dtype(rhs)
+                    
                 elif name in ['ZerosLike']:
 
                     d_var = self._infere_type(rhs.rhs, **settings)
+                elif name in ['floor']:
+                    d_var = self._infere_type(rhs.args[0], **settings)
+                    d_var['datatype'] = 'int'
+                    
+                    if rhs.args[0].is_complex and not rhs.args[0].is_integer:
+                        d_var['precision'] = d_var['precision']//2
+                    else:
+                        d_var['precision'] = 4
+                  
                 else:
                     raise NotImplementedError('TODO')
 
