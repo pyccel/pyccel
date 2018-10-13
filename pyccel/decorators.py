@@ -19,7 +19,7 @@ def sympy(f):
     return f
 
 
-def types(*args):
+def types(*args,**kw):
     def id(f):
         return f
     return id

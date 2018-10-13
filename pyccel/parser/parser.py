@@ -1566,36 +1566,41 @@ class Parser(object):
             # extract the types to construct a header
             if 'types' in decorators.keys():
                 types = []
-                for i in decorators['types']:
-                    if isinstance(i, Symbol):
-                        arg = i.name
-
-                    elif isinstance(i, Indexed):
-                        arg = str(i.base) + '[' + ':' * i.rank + ']'
-                        types.append(arg)
-
-                    elif isinstance(i, Tuple):
-                        arg = '[' + ','.join(el.name for el in i) + ']'
-
-                    elif isinstance(i, str):
-                        arg = i
-
-                    elif isinstance(i, String):
-                        arg = str(i)
-                        arg = arg.replace("'", '')  # remove quotes for str representation
-
+                results = []
+                container = types
+                i = 0
+                n = len(decorators['types'])
+                ls = decorators['types']
+                while i<len(ls) :
+                    arg = ls[i]
+                    
+                    if isinstance(arg, Symbol):
+                        arg = arg.name
+                        container.append(arg)
+                    elif isinstance(arg, String):
+                        arg = str(arg)
+                        arg = arg.replace("'", '')
+                        container.append(arg)
+                    elif isinstance(arg, ValuedArgument):
+                        arg_name = arg.name
+                        arg  = arg.value
+                        container = results
+                        if not arg_name == 'results':
+                            msg = '> Wrong argument, given {}'.format(arg_name)
+                            raise NotImplementedError(msg)
+                        ls = arg if isinstance(arg, Tuple) else [arg]
+                        i = -1
+                    
                     else:
-                        msg = '> Wrong type, given {}'.format(type(i))
+                        msg = '> Wrong type, given {}'.format(type(arg))
                         raise NotImplementedError(msg)
-
-                    types.append(arg)
-
-                txt = '#$ header ' + name + '(' \
-                    + ','.join(types[:len(arguments)]) + ')'
-
-                if len(types[len(arguments):]) > 0:
-                    txt += ' results(' \
-                        + ','.join(types[len(arguments):]) + ')'
+                    
+                    i = i+1
+                	
+                txt  = '#$ header ' + name 
+                txt += '(' + ','.join(types) + ')'
+                if results:
+                    txt += ' results(' + ','.join(results) + ')'
 
                 header = hdr_parse(stmts=txt)
                 if name in self.static_functions:
@@ -2154,7 +2159,7 @@ class Parser(object):
             if all(i.is_integer for i in atoms):
                 if expr.is_complex and not expr.is_integer:
                     precisions.append(8)  
-            print(expr,precisions)
+
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
 

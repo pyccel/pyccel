@@ -17,13 +17,13 @@ def decr(x):
     y = x - 1
     return y
 
-@types(int[:])
+@types('int[:]')
 def incr_array(x):
     x = x + 1
 
 y_=[1,2,3]
 
-@types([int])
+@types('[int]')
 def decr_array(x):
     y_[1] = 6
     z = y_
