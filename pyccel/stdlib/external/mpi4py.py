@@ -80,7 +80,7 @@ from pyccel.stdlib.internal.mpi import MPI_DOUBLE
 
 class MPI_:
     def __init__(self):
-        self.COMM_WORLD = 0
+        self.COMM_WORLD = -1
         self.INT        = MPI_INTEGER
         self.DOUBLE     = MPI_DOUBLE
         self.SUM        = MPI_SUM
@@ -92,7 +92,7 @@ class MPI_:
         self.LAND       = MPI_LAND
         self.LOR        = MPI_LOR
         self.LXOR       = MPI_LXOR
-        self.Request    = 0
+        self.Request    = -1
 
 MPI = MPI_()
 
@@ -129,9 +129,9 @@ ierr = -1
 #$ header macro  (req),y.issend(data, dest, tag=0) := mpi_issend(data, data.count, data.dtype, dest ,tag, y, req, ierr)
 #$ header macro  (req),y.ibsend(data, dest, tag=0) := mpi_ibsend(data, data.count, data.dtype, dest ,tag, y, req, ierr)
 
-#$ header macro (x), y.recv(source=0, tag=0) := mpi_recv(x, x.count, x.dtype, source ,tag, y, MPI_STATUSES_IGNORE, ierr)
+#$ header macro (x), y.recv(source=0, tag=0) := mpi_recv(x, x.count, x.dtype, source ,tag, y, MPI_STATUS_IGNORE, ierr)
 
-#$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, MPI_STATUSES_IGNORE, ierr) 
+#$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, MPI_STATUS_IGNORE, ierr) 
 
 #$ header macro (x),y.reduce(data, op=MPI_SUM, root=0) := mpi_reduce(data, x, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro (x),y.allreduce(data, op=MPI_SUM) := mpi_allreduce(data, x, data.count, data.dtype, op , y, ierr)
@@ -158,7 +158,7 @@ ierr = -1
 
 
 #$ header macro  y.Send([data, dtype=data.dtype], dest=0, tag=0)  := mpi_send(data, data.count, dtype, dest ,tag, y, ierr)
-#$ header macro  y.Recv([data, dtype=data.dtype], source=ANY_SOURCE, tag=ANY_TAG) := mpi_recv(data, data.count, data.dtype, source ,tag, y, MPI_STATUSES_IGNORE, ierr)
+#$ header macro  y.Recv([data, dtype=data.dtype], source=ANY_SOURCE, tag=ANY_TAG) := mpi_recv(data, data.count, data.dtype, source ,tag, y, MPI_STATUS_IGNORE, ierr)
 
 #$ header macro  (req),y.Isend([data, count=data.count,dtype=data.dtype], dest=0, tag=0)  := mpi_isend(data, count, dtype, dest ,tag, y, req, ierr)
 #$ header macro  (req),y.Issend([data, count=data.count,dtype=data.dtype], dest=0, tag=0)  := mpi_issend(data, count, dtype, dest ,tag, y, ierr)
@@ -166,7 +166,7 @@ ierr = -1
 #$ header macro  (req),y.Irecv( [data, count=data.count,dtype=data.dtype], source=ANY_SOURCE, tag=ANY_TAG) := mpi_irecv(data, count, dtype, source ,tag, y, req, ierr)
 
 
-#$ header macro (x), y.Sendrecv(sendobj, dest, sendtag=0, recvbuf=x, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, recvbuf, recvbuf.count, recvbuf.dtype, source , recvtag, y, MPI_STATUSES_IGNORE, ierr) 
+#$ header macro (x), y.Sendrecv(sendobj, dest, sendtag=0, recvbuf=x, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, recvbuf, recvbuf.count, recvbuf.dtype, source , recvtag, y, MPI_STATUS_IGNORE, ierr) 
 
 #$ header macro y.Reduce(data, recvbuf, op=MPI_SUM, root=0) := mpi_reduce(data, recvbuf, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro y.Allreduce(data, recvbuf, op=MPI_SUM) := mpi_allreduce(data, recvbuf, data.count, data.dtype, op , y, ierr)

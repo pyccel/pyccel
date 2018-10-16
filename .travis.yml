@@ -7,26 +7,20 @@
 sudo: required
 language: python
 
-# which python versions to test
+# Existing Python versions
 python:
-  - "2.7"
   - "3.4"
-#  - "3.5"
-#  - "3.5-dev" # 3.5 development branch
-#  - "3.6"
-#  - "3.6-dev" # 3.6 development branch
+  - "3.5"
+  - "3.6"
+#  - "3.7"
 #  - "3.7-dev" # 3.7 development branch
 #  - "nightly"
 
+# Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
 matrix:
-  allow_failures:
-    - python: "2.7"
-    - python: "3.4"
-#    - python: "3.5"
-#    - python: "3.6"
-
-virtualenv:
-    system_site_packages: true
+  include:
+    - python: 3.7
+      dist: xenial
 
 # command before installation
 before_install:
@@ -41,25 +35,32 @@ install:
   - pip install -r requirements.txt
   - pip install .
 
+before_script:
+  - mkdir __pytest__
+
 # command to run tests
 script:
-#  - pytest # or py.test for Python versions 3.5 and below
-  - if [[ $TRAVIS_PYTHON_VERSION == 3.4 || $TRAVIS_PYTHON_VERSION == 3.5 ]]; then export PYTEST=py.test ;else export PYTEST=pytest ; fi
-  - $PYTEST tests/parser/test_headers.py
-  - $PYTEST tests/parser/test_openmp.py
-  - $PYTEST tests/parser/test_openacc.py
-  - $PYTEST tests/syntax/test_syntax.py
-  - $PYTEST tests/semantic/test_semantic.py
-  - $PYTEST tests/codegen/test_codegen.py
-  - $PYTEST tests/errors/test_errors.py
-  - $PYTEST tests/warnings/test_warnings.py
-  - $PYTEST tests/preprocess/test_preprocess.py
+  - cd __pytest__
+  - python -m pytest ../tests/parser/test_headers.py
+  - python -m pytest ../tests/parser/test_openmp.py
+  - python -m pytest ../tests/parser/test_openacc.py
+  - python -m pytest ../tests/syntax/test_syntax.py
+  - python -m pytest ../tests/semantic/test_semantic.py
+  - python -m pytest ../tests/codegen/test_codegen.py
+  - python -m pytest ../tests/complexity/test_complexity.py
+  - python -m pytest ../tests/errors/test_errors.py
+  - python -m pytest ../tests/warnings/test_warnings.py
+  - python -m pytest ../tests/preprocess/test_preprocess.py
+  - python -m pytest ../tests/epyccel -v
 # this test must be executed with python, since we are calling mpif90 inside it
-  - python tests/internal/test_internal.py
-  - python tests/external/test_external.py
-  - python tests/macro/test_macro.py
-  - cd tests/epyccel/ ; python test_epyccel.py ; cd ../.. 
-#  - python tests/test_pyccel.py --execute
-#  - python tests/test_pyccel_openmp.py --openmp --execute
-#  - python tests/test_pyccel_lapack.py --libs='blas lapack' --execute
-#  - python tests/test_pyccel_mpi.py --compiler=mpif90
+  - python ../tests/internal/test_internal.py
+  - python ../tests/external/test_external.py
+  - python ../tests/macro/test_macro.py
+#  - python ../tests/test_pyccel.py --execute
+#  - python ../tests/test_pyccel_openmp.py --openmp --execute
+#  - python ../tests/test_pyccel_lapack.py --libs='blas lapack' --execute
+#  - python ../tests/test_pyccel_mpi.py --compiler=mpif90
+  - cd -
+
+after_script:
+  - rm -rf __pytest__

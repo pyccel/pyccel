@@ -4,7 +4,8 @@ textx==1.6.1
 sympy==1.2
 pylint==1.8.2
 parse==1.8.2
-redbaron==0.6.3
+redbaron>=0.7
 pytest==3.4.2
 tabulate==0.8.2
 termcolor
+fastcache

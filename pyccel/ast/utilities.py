@@ -4,16 +4,18 @@
 from sympy.core.function import Application
 from .core import DottedName
 from .core import Import
-from .core import Range, Len , Enumerate, Zip, Product
+from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
 from .core import Constant,ZerosLike
-from .numpyext import Zeros, Ones, Empty
+from .numpyext import Zeros, Ones, Empty, Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
+from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
+from .numpyext import numpy_constants
 from sympy import Symbol, Lambda, floor
 from sympy import Not,Float
-from sympy import (Abs, sin, cos, exp, csc, cos, sec, tan, cot, Mod, Max, Min)
+from sympy import Function
+from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, Mod)
 
 import scipy.constants as sc_constants
 
@@ -34,7 +36,10 @@ math_functions = {
     'acos':Acos,
     'asec': Asec,
     'atan': Atan,
-    'acot': Acot
+    'acot': Acot,
+    'sinh': Sinh,
+    'cosh': Cosh,
+    'tanh': Tanh
     }
 
 scipy_constants = {
@@ -86,6 +91,11 @@ def builtin_function(expr, args=None):
         return Complex(args[0],args[1])
     elif name == 'Not':
         return Not(*args)
+
+    elif name == 'map':
+        func = Function(str(expr.args[0].name))
+        args = [func]+list(args[1:])
+        return Map(*args)
     
 
     if name == 'lambdify':
@@ -189,6 +199,9 @@ def builtin_import(expr):
 
             elif target in math_functions.keys():
                 imports.append((target, math_functions[target]))
+            
+            elif target in numpy_constants.keys():
+                imports.append((target, numpy_constants[target]))
 
         elif source == 'math':
 

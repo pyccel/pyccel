@@ -13,23 +13,14 @@ class Point(object):
         pass
 
     def translate(self, a):
-        self.x = self.x + a
+        b      =  self.x + a 
+        self.x = b
 
-x = [1.,1.,1.]
-p = Point (x)
+x = [0.,0.,0.]
+p = Point(x)
 
-a = [0.,0.,0.]
-a[0] = 3
+a = [1.,1.,1.]
+
 p.translate(a)
 print(p.x)
-
-b = p.x[0]
-b = p.x[0] + 1
-b = 2 * p.x[0] + 1
-b = 2 * ( p.x[0] + 1 )
-print(b)
-c= p.x
-
-p.x[1] = 2.0
-
-del p
+	

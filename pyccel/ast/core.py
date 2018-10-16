@@ -12,12 +12,13 @@ from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
 from sympy.core.singleton import Singleton
 from sympy.core.function import Function, Application
 from sympy import sympify
-from sympy import Symbol, Integer, Add, Mul, Pow
+from sympy import Symbol, Integer, Add, Mul, Pow as sp_Pow
 from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float
+from sympy import Float as sp_Float ,Rational as sp_Rational
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
 from sympy.core.assumptions import StdFactKB
+from sympy import cache
 
 # from sympy.sets.fancysets import Range as sm_Range
 
@@ -58,7 +59,7 @@ from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
     NativeComplex, NativeRange, NativeTensor, NativeString, \
     NativeGeneric
 
-local_sympify = {'N': Symbol('N'), 'S': Symbol('S'), 
+local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
                 'zeros':Symbol('zeros'),'ones':Symbol('ones')
                 ,'Point':Symbol('Point')}
 
@@ -99,11 +100,16 @@ def subs(expr, new_elements):
         return If(*args)
 
     elif isinstance(expr, Return):
+        
         for i in new_elements:
             expr = expr.subs(i[0],i[1])
         return expr
 
-    elif isinstance(expr, (Expr, Assign)):
+    elif isinstance(expr, Assign):
+        new_expr = expr.subs(new_elements)
+        new_expr.set_fst(expr.fst)
+        return new_expr
+    elif isinstance(expr, Expr):
         return expr.subs(new_elements)
 
     else:
@@ -181,12 +187,77 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError('Unexpected type {0}'.format(type(expr)))
 
+def _atomic(e, cls=None,ignore=()):
+    """Return atom-like quantities as far as substitution is
+    concerned: Functions and DottedVarviables, Variables. we don't
+    return atoms that are inside such quantities too
+    """
+
+    from sympy import preorder_traversal
+    from collections import OrderedDict
+    pot = preorder_traversal(e)
+    seen = []
+    atoms_ = []
+    if cls is None:
+        cls = (Application, DottedVariable, Variable, 
+               IndexedVariable,IndexedElement)
+    
+    for p in pot:
+        if p in seen or isinstance(p,ignore):
+            pot.skip()
+            continue
+        seen.append(p)
+        if isinstance(p, cls):
+            pot.skip()
+            atoms_.append(p)
+        
+    return atoms_
+
+
+
+
+def atom(e):
+    """Return atom-like quantities as far as substitution is
+    concerned: Functions , DottedVarviables. contrary to _atom we
+    return atoms that are inside such quantities too
+    """
+    pass
+
 
 def inline(func, args):
         local_vars = func.local_vars
         body = func.body
         body = subs(body, zip(func.arguments, args))
         return Block(str(func.name), local_vars, body)
+
+def float2int(expr):
+    atoms = expr.atoms(sp_Float)
+    m     = map(sp_Integer,atoms)
+    return expr.subs(zip(atoms,m))
+
+def int2float(expr):
+    if expr.is_number:
+        return expr.n()
+
+    atoms = _atomic(expr, cls=sp_Rational, ignore=Function)
+    if atoms:
+        m     = map(sp_Float,atoms)
+        expr  = expr.subs(zip(atoms,m))
+    
+    return expr
+
+class Pow(sp_Pow):
+
+    def _eval_subs(self, old, new):
+        args = self.args
+        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
+        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
+        expr = Pow(args[0], args[1], evaluate=False)
+        return expr
+
+    def _eval_evalf(self,prec):
+        return sp_Pow(self.base,self.exp).evalf(prec)
+
 
 
 class DottedName(Basic):
@@ -259,10 +330,10 @@ class List(Tuple):
 class Dlist(Basic):
 
     """ this is equivalent to the zeros function of numpy arrays for the python list.
-        
-    value : Expr 
+
+    value : Expr
            a sympy expression which represents the initilized value of the list
-  
+
     shape : the shape of the array
     """
 
@@ -432,7 +503,7 @@ class Assign(Basic):
 class CodeBlock(Basic):
 
     """Represents a list of stmt for code generation.
-       we use it when a single statement in python 
+       we use it when a single statement in python
        produce multiple statement in the targeted language
     """
 
@@ -861,7 +932,7 @@ class Enumerate(Basic):
 
     """
     Reresents the enumerate stmt
-  
+
     """
 
     def __new__(cls, arg):
@@ -872,6 +943,20 @@ class Enumerate(Basic):
     @property
     def element(self):
         return self._args[0]
+
+
+class Map(Basic):
+    """
+    Reresents the map stmt
+  
+    """
+    
+    def __new__(cls, *args):
+        if len(args)<2:
+            raise TypeError('wrong number of arguments')
+        return Basic.__new__(cls, *args)
+
+
 
 
 class Range(Basic):
@@ -1477,7 +1562,7 @@ class For(Basic):
 
             cond_iter = iterable(iter)
             cond_iter = cond_iter or isinstance(iter, (Range, Product,
-                    Enumerate, Zip))
+                    Enumerate, Zip, Map))
             cond_iter = cond_iter or isinstance(iter, Variable) \
                 and is_iterable_datatype(iter.dtype)
           #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
@@ -1747,6 +1832,13 @@ class Void(Basic):
 
     pass
 
+class VoidFunction(Basic):
+    #this class is used in order to eliminate certain atoms 
+    # in an arithmitic expression so that we dont take them into 
+    # consideration 
+    def __new__(*args):
+        return Symbol("""x9846548484665
+                      494794564465165161561""")
 
 class Variable(Symbol):
 
@@ -1783,7 +1875,7 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
-
+   
     def __new__(
         cls,
         dtype,
@@ -1801,10 +1893,8 @@ class Variable(Symbol):
         precision=0
         ):
 
-        # use str to make '*' work using py2
-        
         if isinstance(dtype, str) or str(dtype) == '*':
-            
+
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
@@ -1863,7 +1953,7 @@ class Variable(Symbol):
                 precision = 4
             elif isinstance(dtype, (NativeReal, NativeComplex)):
                 precision = 8
-       
+
         # TODO improve order of arguments
 
         obj = Basic.__new__(
@@ -1890,9 +1980,10 @@ class Variable(Symbol):
                          NativeSymbol, NativeGeneric)
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
+
         elif isinstance(dtype, NativeReal):
             assumptions['real'] = True
-            
+
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
@@ -1949,7 +2040,7 @@ class Variable(Symbol):
     @property
     def order(self):
         return self._args[11]
-  
+
     @property
     def precision(self):
         return self._args[12]
@@ -2033,6 +2124,13 @@ class Variable(Symbol):
             )
         return args
 
+    def _eval_subs(self, old, new):
+        return self
+
+    def _eval_is_positive(self):
+        #we do this inorder to infere the type of Pow expression correctly
+        return self.is_real   
+
 
 class DottedVariable(AtomicExpr, Boolean):
 
@@ -2069,6 +2167,7 @@ class DottedVariable(AtomicExpr, Boolean):
 
         obj = Basic.__new__(cls, args[0], args[1])
         assumptions = {}
+
         if isinstance(args[1], (Variable, IndexedVariable,
                       IndexedElement)):
             dtype = args[1].dtype
@@ -2144,6 +2243,10 @@ class DottedVariable(AtomicExpr, Boolean):
             else:
                 ls += i.names
         return ls
+
+    def _eval_subs(self, old, new):
+        return self
+
 
 
 class ValuedVariable(Variable):
@@ -2257,6 +2360,38 @@ class ValuedArgument(Basic):
         value = sstr(self.value)
         return '{0}={1}'.format(argument, value)
 
+
+class FunctionCall(Basic):
+
+    """Represents a function call in the code.
+    """
+
+    def __new__(cls, func, args):
+
+        # ...
+        if not isinstance(func, (str, FunctionDef, Function)):
+            raise TypeError('> expecting a str, FunctionDef, Function')
+
+        if isinstance(func, FunctionDef):
+            func = func.name
+        # ...
+
+        # ...
+        if not isinstance(args, (tuple, list, Tuple)):
+            raise TypeError('> expecting an iterable')
+
+        args = Tuple(*args)
+        # ...
+
+        return Basic.__new__(cls, func, args)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def arguments(self):
+        return self._args[1]
 
 class Return(Basic):
 
@@ -2592,6 +2727,8 @@ class FunctionDef(Basic):
             kind=self.kind,
             is_static=self.is_static,
             header=self.header,
+            imports = self.imports,
+            decorators = self.decorators,
             is_recursive=True,
             )
 
@@ -2616,8 +2753,30 @@ class FunctionDef(Basic):
             kind=self.kind,
             is_static=self.is_static,
             header=self.header,
+            imports = self.imports,
+            decorators = self.decorators,
             is_recursive=self.is_recursive,
             )
+      
+    def vectorize(self, body , header):
+        """ return vectorized FunctionDef """
+        decorators = self.decorators
+        decorators.pop('vectorize')
+        return FunctionDef(
+            'vec_'+str(self.name),
+            self.arguments,
+            [],
+            body,
+            local_vars=self.local_vars,
+            global_vars=self.global_vars,
+            cls_name=self.cls_name,
+            hide=self.hide,
+            kind='procedure',
+            is_static=self.is_static,
+            header=header,
+            imports = self.imports,
+            decorators = decorators,
+            is_recursive=self.is_recursive) 
 
     @property
     def is_procedure(self):
@@ -2883,8 +3042,10 @@ class ClassDef(Basic):
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
 
+        imports = list(imports)
         for i in methods:
-            imports += i.imports
+            imports += list(i.imports)
+     
         imports = set(imports)  # for unicity
         imports = Tuple(*imports)
 
@@ -2979,14 +3140,6 @@ class ClassDef(Basic):
 
     # TODO add other attributes?
 
-    @property
-    def this(self):
-        alias = None
-        name = str(self.name)
-        dtype = DataTypeFactory(name, '_name', prefix='Custom',
-                                alias=alias)
-
-        return Variable(dtype(), 'self')
 
     def get_attribute(self, O, attr):
         """Returns the attribute attr of the class O of instance self."""
@@ -3052,6 +3205,9 @@ class ClassDef(Basic):
             return True
         else:
             return self.is_iterable or self.is_with_construct
+
+    def _eval_subs(self, old , new):
+        return self
 
 
 class Import(Basic):
@@ -3739,8 +3895,7 @@ class CommentBlock(Basic):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
-        for i in range(len(txts)):
-            txts[i] = '!'+txts[i]
+        
         return Basic.__new__(cls, txts)
 
     @property
@@ -3792,6 +3947,8 @@ class IndexedVariable(IndexedBase):
         shape=None,
         dtype=None,
         prec=0,
+        order=None,
+        rank = 0,
         **kw_args
         ):
         if dtype is None:
@@ -3801,9 +3958,13 @@ class IndexedVariable(IndexedBase):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        obj = IndexedBase.__new__(cls, label, shape=shape, **kw_args)
-        obj._dtype = dtype
-        obj._precision = prec
+        obj = IndexedBase.__new__(cls, label, shape=shape)
+        kw_args['dtype']     = dtype
+        kw_args['precision'] = prec
+        kw_args['order']     = order
+        kw_args['rank']      = rank
+        obj._kw_args         = kw_args
+
         return obj
 
     def __getitem__(self, *args):
@@ -3816,22 +3977,39 @@ class IndexedVariable(IndexedBase):
 
     @property
     def dtype(self):
-        return self._dtype
+        return self.kw_args['dtype']
 
     @property
     def precision(self):
-        return self._precision
+        return self.kw_args['precision']
+ 
+    @property
+    def order(self):
+        return self.kw_args['order']
+
+    @property
+    def rank(self):
+        return self.kw_args['rank']
+
+    @property
+    def kw_args(self):
+        return self._kw_args
 
     @property
     def name(self):
         return self._args[0]
 
-    # TODO what about kw_args in __new__?
+
 
     def clone(self, name):
         cls = eval(self.__class__.__name__)
+        # TODO what about kw_args in __new__?
+        return cls(name, shape=self.shape, dtype=self.dtype,
+                   prec=self.precision, order=self.order, rank=self.rank)
 
-        return cls(name, shape=self.shape, dtype=self.dtype)
+    def _eval_subs(self, old, new):
+        return self
+
 
 
 class IndexedElement(Indexed):
@@ -3903,6 +4081,7 @@ class IndexedElement(Indexed):
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
+        
         return obj
 
     @property
@@ -3938,6 +4117,14 @@ class IndexedElement(Indexed):
     def precision(self):
         return self.base.precision
 
+    @property
+    def order(self):
+        return self.base.order
+
+    def _eval_subs(self, old, new):
+        return self
+
+
 
 class String(Basic):
 
@@ -3951,7 +4138,7 @@ class String(Basic):
     @property
     def arg(self):
         return self._args[0]
-   
+
     def __str__(self):
         return self.arg
 
@@ -3960,9 +4147,9 @@ class Concatinate(Basic):
 
     """Represents the String concatination operation.
 
-    left : Symbol or string
+    left : Symbol or string or List
 
-    right : Symbol or string
+    right : Symbol or string or List
 
 
     Examples
@@ -3972,45 +4159,36 @@ class Concatinate(Basic):
     >>> x = symbols('x')
     >>> Concatinate('some_string',x)
     some_string+x
-    >>> Concatinate(None,x)
-    x
-    >>> Concatinate(x,None)
-    x
     >>> Concatinate('some_string','another_string')
     'some_string' + 'another_string'
     """
 
     # TODO add step
 
-    def __new__(cls, left, right):
-        if isinstance(left, str):
-            left = repr(left)
-        if isinstance(right, str):
-            right = repr(right)
-        return Basic.__new__(cls, left, right)
+    def __new__(cls, args, is_list):
+        args = list(args)
+
+        args = [ repr(arg) if isinstance(arg, str) else arg for arg in args]
+        
+        return Basic.__new__(cls, args, is_list)
 
     @property
-    def left(self):
+    def args(self):
         return self._args[0]
 
     @property
-    def right(self):
+    def is_list(self):
         return self._args[1]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        left = self.left
-        right = self.right
-        if left is None:
-            return right
+        
+        args = '+'.join(sstr(arg) for arg in self.args)
 
-        if right is None:
-            return left
-
-        return '{0}+{1}'.format(left, right)
+        return args
 
 
-# TODO check that args are integers
+
 
 class Slice(Basic):
 
@@ -4036,7 +4214,8 @@ class Slice(Basic):
     """
 
     # TODO add step
-
+    # TODO check that args are integers
+    # TODO add negative indices
     def __new__(cls, start, end):
         return Basic.__new__(cls, start, end)
 
@@ -4251,7 +4430,7 @@ def get_initial_value(expr, var):
             if not r is None:
                 return r
         return value
-    
+
     elif isinstance(expr, ConstructorCall):
 
         return get_initial_value(expr.func, var)
@@ -4297,21 +4476,21 @@ def get_assigned_symbols(expr):
 
     elif iterable(expr):
         symbols = []
-        
+
         for a in expr:
             symbols += get_assigned_symbols(a)
         symbols = set(symbols)
         symbols = list(symbols)
         return symbols
     elif isinstance(expr, (Assign, AugAssign)):
-        
-        
+
+
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
         try:
             var = expr.lhs
-            
+
             if isinstance(var, DottedVariable):
                 var = expr.lhs.lhs
                 while isinstance(var, DottedVariable):
@@ -4332,7 +4511,7 @@ def get_assigned_symbols(expr):
 #            raise SystemExit('ERROR')
 
         return symbols
-    
+
 
     return []
 
