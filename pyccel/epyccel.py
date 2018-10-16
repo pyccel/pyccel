@@ -364,6 +364,61 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
 #==============================================================================
 
+# TODO: write similar version for single functions
+def epyccel_mpi( mod, comm, root=0 ):
+    """
+    Collective version of epyccel for modules: root process generates Fortran
+    code, compiles it and creates a shared library (extension module), which
+    is then loaded by all processes in the communicator.
+
+    Parameters
+    ----------
+    mod : types.ModuleType
+        Python module to be pyccelized.
+
+    comm: mpi4py.MPI.Comm
+        MPI communicator where extension module will be made available.
+
+    root: int
+        Rank of process responsible for code generation.
+
+    Results
+    -------
+    fmod : types.ModuleType
+        Python extension module.
+
+    """
+    from mpi4py import MPI
+
+    assert isinstance(  mod, ModuleType )
+    assert isinstance( comm, MPI.Comm   )
+    assert isinstance( root, int        )
+
+    # Master process calls epyccel
+    if comm.rank == root:
+        fmod      = epyccel( mod, mpi=True )
+        fmod_path = fmod.__file__
+        fmod_name = fmod.__name__
+    else:
+        fmod_path = None
+        fmod_name = None
+
+    # Broadcast Fortran module path/name to all processes
+    fmod_path = comm.bcast( fmod_path, root=root )
+    fmod_name = comm.bcast( fmod_name, root=root )
+
+    # Non-master processes import Fortran module directly from its path
+    if comm.rank != root:
+        spec = importlib.util.spec_from_file_location( fmod_name, fmod_path )
+        fmod = importlib.util.module_from_spec( spec )
+        spec.loader.exec_module( fmod )
+        clean_extension_module( fmod, mod.__name__ )
+
+    # Return Fortran module
+    return fmod
+
+#==============================================================================
+
 def clean_extension_module( ext_mod, py_mod_name ):
     """
     Clean Python extension module by moving functions contained in f2py's
