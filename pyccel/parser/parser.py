@@ -3095,15 +3095,15 @@ class Parser(object):
 
                     # Determine output type/rank/shape
                     # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
-                    i = 0 if (rhs.args[0].rank >= rhs.args[1].rank) else 1
+                    d_vars = [self._infere_type(arg,**settings) for arg in rhs.args]
+                    i = 0 if (d_vars[0]['rank'] >= d_vars[1]['rank']) else 1
                     d_var = {}
-                    d_var['datatype'   ] = rhs.args[i].dtype
-                    d_var['rank'       ] = rhs.args[i].rank
-                    d_var['shape'      ] = rhs.args[i].shape
-                    d_var['allocatable'] = rhs.args[i].allocatable
+                    d_var['datatype'   ] = d_vars[i]['datatype']
+                    d_var['rank'       ] = d_vars[i]['rank']
+                    d_var['shape'      ] = d_vars[i]['shape']
+                    d_var['allocatable'] = d_vars[i]['allocatable']
                     d_var['is_pointer' ] = False
-                    d = self._infere_type(rhs.args[i],**settings)
-                    d_var['precision'] = d.pop('precision',4)
+                    d_var['precision']   = d_vars[i].pop('precision',4)
 
                 elif name in [
                     'Abs',
