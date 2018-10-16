@@ -100,8 +100,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ...
 
     # TODO move to another cmd line
-#    parser.add_argument('--analysis', action='store_true', \
-#                        help='enables code analysis mode.')
+    parser.add_argument('--analysis', action='store_true', \
+                        help='enables code analysis mode.')
     # ...
 
     # ...
@@ -228,10 +228,16 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                 codegen = Codegen(son.ast, name)
                 code = codegen.doprint()
                 codegen.export() 
+
+
                 
                 
         
-        
+    elif args.analysis:
+        # TODO move to another cmd line
+        from pyccel.complexity.arithmetic import OpComplexity
+        complexity = OpComplexity(filename)
+        print(" arithmetic cost         ~ " + str(complexity.cost()))        
 
     else:
         # TODO shall we add them in the cmd line?
@@ -251,14 +257,5 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        binary=binary,
                        output=output_folder)
 
-#    elif analysis:
-#        # TODO move to another cmd line
-#
-#        from pyccel.complexity.memory import MemComplexity
-#
-#        local_vars = []
-#        if args.local_vars:
-#            local_vars = args.local_vars.split(',')
-#        complexity = MemComplexity(filename)
-#        complexity.intensity(verbose=True, local_vars=local_vars)
-    # ...
+
+
