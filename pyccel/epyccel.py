@@ -330,7 +330,8 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # Change module name to avoid name clashes: Python cannot import two modules with the same name
     if is_module:
         modname = name
-        name = '__epyccel__' + modname
+        head, sep, tail = modname.rpartition('.')
+        name = sep.join( [head, '__epyccel__'+ tail] )
 
     output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi, includes = include_args)
 
@@ -379,7 +380,7 @@ def clean_extension_module( ext_mod, py_mod_name ):
 
     """
     # Get name of f2py automatic attribute
-    n = py_mod_name.lower()
+    n = py_mod_name.lower().replace('.','_')
     if not n.startswith('mod_'):
         n = 'mod_'+ n
 
