@@ -1,29 +1,30 @@
 # coding: utf-8
 
-from pyccel.parser.syntax.headers import parse
-from pyccel.parser.errors import Errors
-from pyccel.parser.errors import PyccelError
-
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
-from pyccel.codegen.utilities import execute_pyccel
-from pyccel.ast import FunctionHeader
-
 from collections import OrderedDict
+from types       import ModuleType, FunctionType
 
 import inspect
 import subprocess
 import importlib
 import sys
 import os
-from types import ModuleType, FunctionType
 
+from pyccel.parser                import Parser
+from pyccel.parser.errors         import Errors, PyccelError
+from pyccel.parser.syntax.headers import parse
+from pyccel.codegen               import Codegen
+from pyccel.codegen.utilities     import execute_pyccel
+from pyccel.ast                   import FunctionHeader
+
+#==============================================================================
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 if PY3:
     from importlib.machinery import ExtensionFileLoader
+
+#==============================================================================
 
 def get_source_function(func):
     if not callable(func):
@@ -44,6 +45,7 @@ def get_source_function(func):
 
     return code
 
+#==============================================================================
 
 def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False, includes = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
@@ -57,8 +59,6 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
 
     if compiler:
         compilers = compilers +'--fcompiler={}'.format(compiler)
-
-
 
     try:
         filename = '{}.f90'.format(modulename.replace('.','/'))
@@ -83,6 +83,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
     finally:
         f.close()
 
+#==============================================================================
 
 def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
             context=None, compiler = None , mpi=False, static=None):
@@ -326,6 +327,11 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
+    # Change module name to avoid name clashes: Python cannot import two modules with the same name
+    if is_module:
+        modname = name
+        name = '__epyccel__' + modname
+
     output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi, includes = include_args)
 
     if verbose:
@@ -345,17 +351,50 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
 
     if is_module:
+        clean_extension_module( package, modname )
         return package
 
-    if name in dir(package):
-        module = getattr(package, name)
-    else:
-        module = getattr(package, 'mod_{0}'.format(name.lower()))
+    if is_function:
+        if name in dir( package ):
+            function = getattr( package, name )
+        else:
+            function = getattr( package, 'mod_'+ name.lower() )
+        return function
 
-    #f = getattr(module, name.lower())
+#==============================================================================
 
-    return module
+def clean_extension_module( ext_mod, py_mod_name ):
+    """
+    Clean Python extension module by moving functions contained in f2py's
+    "mod_[py_mod_name]" automatic attribute to one level up (module level).
+    "mod_[py_mod_name]" attribute is then completely removed from the module.
 
+    Parameters
+    ----------
+    ext_mod : types.ModuleType
+        Python extension module created by f2py from pyccel-generated Fortran.
+
+    py_mod_name : str
+        Name of the original (pure Python) module.
+
+    """
+    # Get name of f2py automatic attribute
+    n = py_mod_name.lower()
+    if not n.startswith('mod_'):
+        n = 'mod_'+ n
+
+    # Move all functions to module level
+    m = getattr( ext_mod, n )
+    for a in type( m ).__dir__( m ):
+        if a.startswith( '__' ) and a.endswith( '__' ):
+            pass
+        else:
+            setattr( ext_mod, a, getattr( m, a ) )
+
+    # Remove f2py automatic attribute
+    delattr( ext_mod, n )
+
+#==============================================================================
 
 # TODO check what we are inserting
 class ContextPyccel(object):
