@@ -19,7 +19,7 @@ __all__ = ["count_ops", "OpComplexity"]
 class OpComplexity(Complexity):
     """class for Operation complexity computation."""
 
-    def cost(self, verbose=False):
+    def cost(self):
         """
         Computes the complexity of the given code.
 
