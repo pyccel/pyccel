@@ -47,6 +47,7 @@ script:
   - python -m pytest ../tests/syntax/test_syntax.py
   - python -m pytest ../tests/semantic/test_semantic.py
   - python -m pytest ../tests/codegen/test_codegen.py
+  - python -m pytest ../tests/complexity/test_complexity.py
   - python -m pytest ../tests/errors/test_errors.py
   - python -m pytest ../tests/warnings/test_warnings.py
   - python -m pytest ../tests/preprocess/test_preprocess.py
