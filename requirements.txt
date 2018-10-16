@@ -7,5 +7,6 @@ parse==1.8.2
 redbaron>=0.7
 pytest==3.4.2
 tabulate==0.8.2
+mpi4py
 termcolor
 fastcache
