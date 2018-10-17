@@ -42,7 +42,16 @@ def test_2():
     context.insert_function(decr, ['double'], kind='function', results=['double'])
     # ...
 
+    # Change directory: context must be compiled in same location as function
+    import os
+    origin = os.path.abspath( os.curdir )
+    os.chdir( os.path.dirname( __file__ ) )
+
+    # Print context to Python module, translate to Fortran and compile
     context.compile()
+
+    # Move back to starting directory
+    os.chdir( origin )
 
     header = '#$ header procedure f2_py(int, double [:])'
     def f2_py(m1, x):
