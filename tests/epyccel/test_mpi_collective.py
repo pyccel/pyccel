@@ -63,8 +63,18 @@ def test_np_allreduce( ne=15 ):
 #==============================================================================
 
 def teardown_module():
-    import os
-    os.system( 'rm -f modules/__epyccel__*' )
+
+    comm = MPI.COMM_WORLD
+
+    if comm.rank == 0:
+        import os, glob
+        dirname  = os.path.dirname( pmod.__file__ )
+        pattern  = os.path.join( dirname, '__epyccel__*' )
+        filelist = glob.glob( pattern )
+        for f in filelist:
+            os.remove( f )
+
+    comm.Barrier()
 
 #==============================================================================
 # INTERACTIVE USAGE
