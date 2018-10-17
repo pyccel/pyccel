@@ -61,14 +61,15 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
         compilers = compilers +'--fcompiler={}'.format(compiler)
 
     try:
-        filename = '{}.f90'.format(modulename.replace('.','/'))
+        filename = '{}.f90'.format( modulename.replace('.','/') )
+        filename = os.path.basename( filename )
         f = open(filename, "w")
         for line in source:
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
         args = """  -c {} --opt='-O3' {} -m  {} {} {} {} """.format(compilers,
-                                                libs, modulename, filename,
+                                                libs, modulename.rpartition('.')[2], filename,
                                                 extra_args, includes)
 
         if PY2:
@@ -332,8 +333,27 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         modname = name
         head, sep, tail = modname.rpartition('.')
         name = sep.join( [head, '__epyccel__'+ tail] )
+    else:
+        modname = name
+        name = '__epyccel__'+ name
 
-    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi, includes = include_args)
+    # Find directory where Fortran extension module should be created
+    if is_module:
+        dirname = os.path.dirname( mod.__file__ )
+    else:
+        dirname = os.path.dirname( sys.modules[func.__module__].__file__ )
+
+    # Move into working directory, create extension module, then move back to original directory
+    origin = os.path.abspath( os.curdir )
+    os.chdir( dirname )
+    output, cmd = compile_fortran( code, name,
+        extra_args= extra_args,
+        libs      = libs,
+        compiler  = compiler,
+        mpi       = mpi,
+        includes  = include_args
+    )
+    os.chdir( origin )
 
     if verbose:
         print(cmd)
@@ -344,23 +364,21 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     # ...
     try:
-        package = importlib.import_module(name)
+        os.chdir( dirname )
+        package = importlib.import_module( name )
+        clean_extension_module( package, modname )
+        os.chdir( origin )
         # TODO ??
         #reload(package)
     except:
-        raise ImportError('could not import {0}'.format(name))
+        print( os.path.abspath( os.curdir ) )
+        raise ImportError('could not import {0}'.format( name ))
     # ...
 
     if is_module:
-        clean_extension_module( package, modname )
         return package
-
-    if is_function:
-        if name in dir( package ):
-            function = getattr( package, name )
-        else:
-            function = getattr( package, 'mod_'+ name.lower() )
-        return function
+    else:
+        return getattr( package, func.__name__.lower() )
 
 #==============================================================================
 
