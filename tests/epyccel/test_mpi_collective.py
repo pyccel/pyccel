@@ -1,7 +1,9 @@
 from mpi4py import MPI
 import numpy as np
+import pytest
 
 from pyccel.epyccel import epyccel_mpi
+from modules        import mpi_collective as pmod
 
 #==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS
@@ -9,14 +11,11 @@ from pyccel.epyccel import epyccel_mpi
 
 def setup_module( module=None ):
 
-    from modules import mpi_collective as pmod
-
     comm = MPI.COMM_WORLD
     fmod = epyccel_mpi( pmod, comm )
 
     if module:
         module.comm = comm
-        module.pmod = pmod
         module.fmod = fmod
     else:
         globals().update( locals() )
@@ -25,6 +24,7 @@ def setup_module( module=None ):
 # UNIT TESTS
 #==============================================================================
 
+@pytest.mark.parallel
 def test_np_allreduce( ne=15 ):
     """
     Initialize a 1D integer array with the process rank, and sum across
@@ -58,13 +58,46 @@ def test_np_allreduce( ne=15 ):
     fmod.np_allreduce( sendbuf, recvbuf_f90 )
     assert np.array_equal( recvbuf_py, recvbuf_f90 )
 
+# ...
+@pytest.mark.parallel
+def test_np_bcast( ne=15 ):
+
+    root  = 0
+    exact = np.arange( ne, dtype='i' )
+
+    # Send/receive buffer
+    if comm.rank == root:
+        buf_py  = exact.copy()
+        buf_f90 = exact.copy()
+    else:
+        buf_py  = np.zeros_like( exact )
+        buf_f90 = np.zeros_like( exact )
+
+    # Python
+    pmod.np_bcast( buf_py, root )
+    assert np.array_equal( buf_py, exact )
+
+    # Fortran
+    fmod.np_bcast( buf_f90, root )
+    assert np.array_equal( buf_f90, exact )
+
 #==============================================================================
 # CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 #==============================================================================
 
 def teardown_module():
-    import os
-    os.system( 'rm -f modules/__epyccel__*' )
+
+    comm = MPI.COMM_WORLD
+
+    if comm.rank == 0:
+        import os, glob
+        dirname  = os.path.dirname( pmod.__file__ )
+        pattern  = os.path.join( dirname, '__epyccel__*' )
+        filelist = glob.glob( pattern )
+        for f in filelist:
+            os.remove( f )
+
+    comm.Barrier()
 
 #==============================================================================
 # INTERACTIVE USAGE
@@ -75,5 +108,6 @@ if __name__ == '__main__':
     setup_module()
 
     test_np_allreduce()
+    test_np_bcast()
 
     teardown_module()

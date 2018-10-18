@@ -414,5 +414,9 @@ def test_array_int_2d_F_mod():
 #==============================================================================
 
 def teardown_module():
-    import os
-    os.system( 'rm -f *.so *.f90' )
+    import os, glob
+    dirname  = os.path.dirname( arrays.__file__ )
+    pattern  = os.path.join( dirname, '__epyccel__*' )
+    filelist = glob.glob( pattern )
+    for f in filelist:
+        os.remove( f )
