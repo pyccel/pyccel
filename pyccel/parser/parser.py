@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
+import redbaron
+import traceback
+import importlib
+import pickle
+import os
+import sys
+import re
+
+#==============================================================================
+
 from redbaron import RedBaron
 from redbaron import StringNode, IntNode, FloatNode, ComplexNode
 from redbaron import FloatExponantNode, StarNode
@@ -49,6 +60,8 @@ from redbaron import NameAsNameNode
 from redbaron import LambdaNode
 from redbaron import WithNode
 from redbaron import AtomtrailersNode
+
+#==============================================================================
 
 from pyccel.ast import NativeInteger, NativeReal
 from pyccel.ast import NativeBool, NativeComplex
@@ -109,7 +122,6 @@ from pyccel.ast import Zeros
 from pyccel.ast import inline, subs
 from pyccel.ast.datatypes import sp_dtype, str_dtype
 from pyccel.ast.core import local_sympify, int2float, Pow, _atomic
-from sympy import Pow as sp_Pow
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -130,43 +142,44 @@ from pyccel.parser.errors import PyccelSemanticError
 
 from pyccel.parser.messages import *
 
-from sympy import Symbol, sympify,symbols
-from sympy import Tuple
+#==============================================================================
+
+from sympy.core.function       import Function, FunctionClass, Application
+from sympy.core.numbers        import ImaginaryUnit
+from sympy.logic.boolalg       import Boolean, BooleanTrue, BooleanFalse
+from sympy.utilities.iterables import iterable as sympy_iterable
+from sympy.core.assumptions    import StdFactKB
+
+from sympy import KroneckerDelta, Heaviside
+from sympy import Symbol, sympify, symbols
+from sympy import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import NumberSymbol, Number
-from sympy import Integer, Float
-from sympy import Add, Mul, floor, Mod
+from sympy import Indexed, IndexedBase
+from sympy import Add, Mul, And, Or
 from sympy import FunctionClass
+from sympy import ceiling, floor, Mod
+from sympy import Min, Max
+
+
+from sympy import oo  as INF
+from sympy import Pow as sp_Pow
+from sympy import Sum as Summation
+from sympy import Integer, Float
+from sympy import true, false
+from sympy import Tuple
 from sympy import Lambda
-from sympy import ceiling
 from sympy import Atom
 from sympy import cse
-
-from sympy.core.expr import Expr
-from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy.core.containers import Dict
-from sympy.core.function import Function, FunctionClass, Application
-from sympy.core.numbers import ImaginaryUnit
-from sympy.logic.boolalg import And, Or
-from sympy.logic.boolalg import true, false
-from sympy.logic.boolalg import Not
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-from sympy.tensor import Indexed, IndexedBase
-from sympy.utilities.iterables import iterable as sympy_iterable
-from sympy.core.assumptions import StdFactKB
-from sympy import Sum as Summation, Heaviside, KroneckerDelta, Min, Max
-from sympy import oo as INF
+from sympy import Expr
+from sympy import Dict
+from sympy import Not
 from sympy import cache
-from collections import OrderedDict
 
-import traceback
-import importlib
-import pickle
-import os
-import sys
-import re
+#==============================================================================
+
 strip_ansi_escape = \
     re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
-import redbaron
+
 redbaron.ipython_behavior = False
 
 # use this to delete ansi_escape characters from a string
@@ -180,12 +193,15 @@ PY3 = sys.version_info[0] == 3
 # TODO installed modules. must ask python (working version) where the module is
 #      installed
 
+#==============================================================================
+
 def is_ignored_module(name):
     if isinstance(name, DottedName):
         if str(name) in ['pyccel.decorators']:
             return True
 
     return False
+
 
 def get_filename_from_import(module,output_folder='',context_import_path = {}):
     """Returns a valid filename with absolute path, that corresponds to the
@@ -251,9 +267,7 @@ def get_filename_from_import(module,output_folder='',context_import_path = {}):
                   severity='fatal')
 
 
-#  ...
-
-#  ...
+#==============================================================================
 
 def _get_name(var):
     """."""
@@ -267,8 +281,7 @@ def _get_name(var):
 
     raise NotImplementedError('Uncovered type {dtype}'.format(dtype=type(var)))
 
-
-
+#==============================================================================
 
 class Parser(object):
 
@@ -637,6 +650,8 @@ class Parser(object):
 
         return ast
 
+#==============================================================================
+
     def annotate(self, **settings):
         """."""
 
@@ -840,6 +855,8 @@ class Parser(object):
         name = os.path.splitext(name)[0]
         cmd = 'dot -Tps {name}.gv -o {name}.ps'.format(name=name)
         os.system(cmd)
+
+#==============================================================================
 
     def insert_import(self, expr):
         """."""
@@ -1188,6 +1205,10 @@ class Parser(object):
                 vars_ += [stmt]
 
         return vars_
+
+#==============================================================================
+#==============================================================================
+#==============================================================================
 
     def _fst_to_ast(self, stmt):
         """Creates AST from FST."""
@@ -1970,6 +1991,11 @@ class Parser(object):
         else:
             raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
 
+
+#==============================================================================
+#==============================================================================
+#==============================================================================
+
     def _infere_type(self, expr, **settings):
         """
         type inference for expressions
@@ -2363,6 +2389,13 @@ class Parser(object):
             return self._infere_type(expr.target, **settings)
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
+
+#==============================================================================
+#==============================================================================
+#==============================================================================
+
+
 
     def _annotate(self, expr, **settings):
         """Annotates the AST.
@@ -3036,10 +3069,11 @@ class Parser(object):
                 stmt = self._annotate(stmt, **settings)
                 return CodeBlock([rhs_, stmt])
 
- # .......
+            # ...
             
             rhs = self._annotate(rhs, **settings)
- # .......
+
+            # ...
 
             if isinstance(rhs, If):
                 args = rhs.args
@@ -4175,12 +4209,14 @@ class Parser(object):
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
 
-class PyccelParser(Parser):
+#==============================================================================
 
+
+class PyccelParser(Parser):
     pass
 
 
-######################################################
+#==============================================================================
 
 if __name__ == '__main__':
     import sys

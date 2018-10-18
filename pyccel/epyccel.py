@@ -1,7 +1,8 @@
 # coding: utf-8
 
-from collections import OrderedDict
-from types       import ModuleType, FunctionType
+from importlib.machinery import ExtensionFileLoader
+from collections         import OrderedDict
+from types               import ModuleType, FunctionType
 
 import inspect
 import subprocess
@@ -16,13 +17,6 @@ from pyccel.codegen               import Codegen
 from pyccel.codegen.utilities     import execute_pyccel
 from pyccel.ast                   import FunctionHeader
 
-#==============================================================================
-
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    from importlib.machinery import ExtensionFileLoader
 
 #==============================================================================
 
@@ -72,10 +66,8 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
                                                 libs, modulename.rpartition('.')[2], filename,
                                                 extra_args, includes)
 
-        if PY2:
-            cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
-        else:
-            cmd = """python3 -c 'import numpy.f2py as f ;f.main()' {}"""
+        cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
+        
 
         cmd = cmd.format(args)
         output = subprocess.check_output(cmd, shell=True)
