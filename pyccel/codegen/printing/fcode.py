@@ -800,6 +800,7 @@ class FCodePrinter(CodePrinter):
 
         rankstr =  ''
         allocatablestr = ''
+
         # TODO improve
         if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
             (not(allocatable or is_pointer) or is_static)):
@@ -829,6 +830,7 @@ class FCodePrinter(CodePrinter):
         if not is_static:
             if is_pointer:
                 allocatablestr = ', pointer'
+
             elif allocatable and not intent:
                 allocatablestr = ', allocatable'
 
@@ -1305,6 +1307,7 @@ class FCodePrinter(CodePrinter):
                 msg += ' Given {0}'.format(type(var))
                 raise NotImplementedError(msg)
         return code
+
     def _print_ClassDef(self, expr):
         # ... we don't print 'hidden' classes
         if expr.hide:

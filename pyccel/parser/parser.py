@@ -1089,10 +1089,15 @@ class Parser(object):
         else:
             self._namespace['variables'].pop(name, None)
 
-    # TODO update_variable is not used
-    #      _get_variable_name is not defined
     def update_variable(self, var, **options):
         """."""
+
+        # TODO improve _get_variable_name
+        def _get_variable_name(var):
+            if not isinstance(var, Variable):
+                raise NotImplementedError('TODO')
+
+            return var.name
 
         name = _get_variable_name(var).split(""".""")
         var = self.get_variable(name[0])
@@ -3283,6 +3288,7 @@ class Parser(object):
                 shape = var.shape
                 lhs = IndexedVariable(name,
                         dtype=dtype, shape=shape,prec=prec,order=order, rank=rank).__getitem__(*args)
+
             elif isinstance(lhs, DottedVariable):
 
                 dtype = d_var.pop('datatype')
@@ -3295,12 +3301,6 @@ class Parser(object):
                     parent = cls.parent
                     attributes = list(attributes)
                     n_name = str(lhs.rhs.name)
-                    attributes += [Variable(dtype, n_name, **d_var)]
-
-                    # update the attributes of the class and push it to the namespace
-
-                    self.insert_class(ClassDef(cls_name, attributes,
-                            [], parent=parent))
 
                     # update the self variable with the new attributes
 
@@ -3308,8 +3308,23 @@ class Parser(object):
                     var = Variable(dt, 'self',
                                    cls_base=self.get_class(cls_name))
                     self.insert_variable(var, 'self')
-                    lhs = DottedVariable(var, Variable(dtype, n_name,
-                            **d_var))
+
+                    d_lhs = d_var.copy()
+                    # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                    if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                        d_lhs['allocatable'] = False
+                        d_lhs['is_pointer'] = True
+
+                        rhs = self.update_variable(rhs, is_target=True)
+
+                    member = Variable(dtype, n_name, **d_lhs)
+                    lhs = DottedVariable(var, member)
+
+                    # update the attributes of the class and push it to the namespace
+                    attributes += [member]
+                    self.insert_class(ClassDef(cls_name, attributes,
+                            [], parent=parent))
+
                 else:
                     lhs = self._annotate(lhs, **settings)
 
@@ -3376,7 +3391,7 @@ class Parser(object):
                     expr_new = AliasAssign(lhs, rhs)
 
                 # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-                elif isinstance(lhs, Variable) and lhs.is_pointer:
+                elif isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer:
                     expr_new = AliasAssign(lhs, rhs)
 
                 elif expr_new.is_symbolic_alias:
@@ -3663,6 +3678,7 @@ class Parser(object):
             expr = Interface(name, funcs, hide=True)
             container[name] = expr
             return expr
+
         elif isinstance(expr, Return):
 
             results = expr.expr
@@ -3692,6 +3708,7 @@ class Parser(object):
                             new_vars]
                 assigns = CodeBlock(assigns)
                 return Return(new_vars, assigns)
+
         elif isinstance(expr, FunctionDef):
 
             name = str(expr.name)
@@ -3836,9 +3853,11 @@ class Parser(object):
                     self.insert_function(interfaces[0])
 
                 # we annotate the body
-
                 body = [self._annotate(i, **settings) for i in
                         expr.body]
+
+                # ISSUE 177: must update arguments to get is_target
+                args = [self.get_variable(a.name) for a in args]
 
                 # find return stmt and results
 
