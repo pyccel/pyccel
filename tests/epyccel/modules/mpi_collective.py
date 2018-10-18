@@ -32,3 +32,17 @@ def np_bcast( buf, root ):
         buf[:] = 0
 
     comm.Bcast( buf, root )
+
+# ...
+@types( 'int[:]', 'int[:]', int )
+def np_gather( sendbuf, recvbuf, root ):
+
+    comm = MPI.COMM_WORLD
+    ierr = -1
+    rank = -1
+    rank = comm.Get_rank()
+
+    if rank == root:
+        recvbuf[:] = 0
+
+    comm.Gather( sendbuf, recvbuf, root )
