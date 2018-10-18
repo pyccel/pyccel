@@ -41,7 +41,7 @@ from redbaron import RaiseNode
 from redbaron import TryNode
 from redbaron import YieldNode
 from redbaron import YieldAtomNode
-from redbaron import BreakNode
+from redbaron import BreakNode, ContinueNode
 from redbaron import GetitemNode, SliceNode
 from redbaron import ImportNode, FromImportNode
 from redbaron import DottedAsNameNode, DecoratorNode
@@ -82,7 +82,7 @@ from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
 from pyccel.ast import Comment, EmptyLine, NewLine
-from pyccel.ast import Break
+from pyccel.ast import Break, Continue
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader, InterfaceHeader
@@ -1898,6 +1898,9 @@ class Parser(object):
         elif isinstance(stmt, BreakNode):
 
             return Break()
+
+        elif isinstance(stmt, ContinueNode):
+            return Continue()
         elif isinstance(stmt, StarNode):
 
             return '*'
@@ -2132,10 +2135,109 @@ class Parser(object):
             func = self.get_function(name)
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
-            else:
+
+            elif name in ['Zeros', 'Ones', 'Empty']:
+
+                d_var = {}
+                d_var['datatype'] = expr.dtype
+                d_var['allocatable'] = True
+                d_var['shape'] = expr.shape
+                d_var['rank'] = expr.rank
+                d_var['is_pointer'] = False
+                d_var['order'] = expr.order
+            elif name in ['Shape']:
+                d_var = {}
+                d_var['datatype'] = expr.dtype
+                d_var['shape'] = expr.shape
+                d_var['rank'] = expr.rank
+                d_var['allocatable'] = False
+                d_var['is_pointer'] = False
+            elif name in ['Array']:
+
+                dvar = self._infere_type(expr.arg, **settings)
+                    
+                if expr.dtype:
+                    dvar['datatype'] = expr.dtype
+                    dvar['precision'] = expr.precision
+                dvar['datatype'] = str_dtype(dvar['datatype'])
+                d_var = {}
+                d_var['allocatable'] = True
+                d_var['shape'] = dvar['shape']
+                d_var['rank'] = dvar['rank']
+                d_var['is_pointer'] = False
+                d_var['datatype'] = 'ndarray' + dvar['datatype']
+                d_var['precision'] = dvar['precision']
+                 
+            elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
+
+                d_var = {}
+                d_var['datatype'] = sp_dtype(expr)
+                d_var['rank'] = 0
+                d_var['allocatable'] = False
+                d_var['is_pointer'] = False
+            elif name in ['Int','Int32','Int64','Real',
+                             'Float32','Float64','Complex',
+                              'Complex128','Complex64']:
+                d_var = {}
+                d_var['datatype'] = sp_dtype(expr)
+                d_var['rank'] = 0
+                d_var['allocatable'] = False
+                d_var['is_pointer'] = False
+                d_var['precision'] = expr.precision
+
+            elif name in ['Mod']:
+
+                # Determine output type/rank/shape
+                # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
+                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
+                i = 0 if (d_vars[0]['rank'] >= d_vars[1]['rank']) else 1
+                d_var = {}
+                d_var['datatype'   ] = d_vars[i]['datatype']
+                d_var['rank'       ] = d_vars[i]['rank']
+                d_var['shape'      ] = d_vars[i]['shape']
+                d_var['allocatable'] = d_vars[i]['allocatable']
+                d_var['is_pointer' ] = False
+                d_var['precision']   = d_vars[i].pop('precision',4)
+
+            elif name in [
+                    'Abs',
+                    'sin',
+                    'cos',
+                    'exp',
+                    'log',
+                    'csc',
+                    'cos',
+                    'sec',
+                    'tan',
+                    'cot',
+                    'asin',
+                    'acsc',
+                    'acos',
+                    'asec',
+                    'atan',
+                    'acot',
+                    'atan2',
+                    ]:
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = sp_dtype(expr)
+                    
+            elif name in ['ZerosLike']:
+
+                d_var = self._infere_type(expr.rhs, **settings)
+            elif name in ['floor']:
+                d_var = self._infere_type(expr.args[0], **settings)
+                d_var['datatype'] = 'int'
+                    
+                if expr.args[0].is_complex and not expr.args[0].is_integer:
+                    d_var['precision'] = d_var['precision']//2
+                else:
+                    d_var['precision'] = 4
+                  
+            else:
+                raise NotImplementedError('TODO')
+
             return d_var
+
         elif isinstance(expr, Expr):
             
             cls = (Application, DottedVariable, Variable, 
@@ -2283,7 +2385,12 @@ class Parser(object):
                 return List(*ls)
             else:
                 return Tuple(*ls)
-        elif isinstance(expr, (Integer, Float, String, ImaginaryUnit)):
+
+        elif isinstance(expr, (CodeBlock, Nil, ValuedArgument,
+                               EmptyLine, NewLine,Break, Continue, Pass,
+                               Comment, CommentBlock,AnnotatedComment,
+                               Integer, Float, String, ImaginaryUnit,
+                               BooleanTrue, BooleanFalse)):
 
             return expr
         elif isinstance(expr, int):
@@ -2298,9 +2405,7 @@ class Parser(object):
         elif isinstance(expr, NumberSymbol) or isinstance(expr, Number):
 
             return Float(float(expr))
-        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
-
-            return expr
+   
         elif isinstance(expr, Variable):
 
             name = expr.name
@@ -3036,112 +3141,11 @@ class Parser(object):
                     d_var = [self._infere_type(i, **settings) for i in
                              func.functions[0].results]
 
-                     # TODO imporve this will not work for the case of different completly different
-                     # and not only the datatype
-
+                     # TODO imporve this will not work for the case of different results type
                     d_var[0]['datatype'] = sp_dtype(rhs)
-                elif name in ['Zeros', 'Ones', 'Empty']:
-
-                    # TODO improve
-
-                    d_var = {}
-                    d_var['datatype'] = rhs.dtype
-                    d_var['allocatable'] = True
-                    d_var['shape'] = rhs.shape
-                    d_var['rank'] = rhs.rank
-                    d_var['is_pointer'] = False
-                    d_var['order'] = rhs.order
-                elif name in ['Shape']:
-                    d_var = {}
-                    d_var['datatype'] = rhs.dtype
-                    d_var['shape'] = rhs.shape
-                    d_var['rank'] = rhs.rank
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                elif name in ['Array']:
-
-                    dvar = self._infere_type(rhs.arg, **settings)
-                    
-                    if rhs.dtype:
-                        dvar['datatype'] = rhs.dtype
-                        dvar['precision'] = rhs.precision
-                    dvar['datatype'] = str_dtype(dvar['datatype'])
-                    d_var = {}
-                    d_var['allocatable'] = True
-                    d_var['shape'] = dvar['shape']
-                    d_var['rank'] = dvar['rank']
-                    d_var['is_pointer'] = False
-                    d_var['datatype'] = 'ndarray' + dvar['datatype']
-                    d_var['precision'] = dvar['precision']
-                 
-                elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
-
-                    d_var = {}
-                    d_var['datatype'] = sp_dtype(rhs)
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                elif name in ['Int','Int32','Int64','Real',
-                             'Float32','Float64','Complex',
-                              'Complex128','Complex64']:
-                    d_var = {}
-                    d_var['datatype'] = sp_dtype(rhs)
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                    d_var['precision'] = rhs.precision
-
-                elif name in ['Mod']:
-
-                    # Determine output type/rank/shape
-                    # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
-                    d_vars = [self._infere_type(arg,**settings) for arg in rhs.args]
-                    i = 0 if (d_vars[0]['rank'] >= d_vars[1]['rank']) else 1
-                    d_var = {}
-                    d_var['datatype'   ] = d_vars[i]['datatype']
-                    d_var['rank'       ] = d_vars[i]['rank']
-                    d_var['shape'      ] = d_vars[i]['shape']
-                    d_var['allocatable'] = d_vars[i]['allocatable']
-                    d_var['is_pointer' ] = False
-                    d_var['precision']   = d_vars[i].pop('precision',4)
-
-                elif name in [
-                    'Abs',
-                    'sin',
-                    'cos',
-                    'exp',
-                    'log',
-                    'csc',
-                    'cos',
-                    'sec',
-                    'tan',
-                    'cot',
-                    'asin',
-                    'acsc',
-                    'acos',
-                    'asec',
-                    'atan',
-                    'acot',
-                    'atan2',
-                    ]:
-                    d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = sp_dtype(rhs)
-                    
-                elif name in ['ZerosLike']:
-
-                    d_var = self._infere_type(rhs.rhs, **settings)
-                elif name in ['floor']:
-                    d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = 'int'
-                    
-                    if rhs.args[0].is_complex and not rhs.args[0].is_integer:
-                        d_var['precision'] = d_var['precision']//2
-                    else:
-                        d_var['precision'] = 4
-                  
                 else:
-                    raise NotImplementedError('TODO')
-
+                    d_var = self._infere_type(rhs, **settings)
+                
             elif isinstance(rhs, SumFunction):
                 d_var = self._infere_type(rhs.body, **settings)
 
@@ -3908,10 +3912,7 @@ class Parser(object):
 
             
             return funcs
-            
 
-        elif isinstance(expr, (EmptyLine, NewLine)):
-            return expr
         elif isinstance(expr, Print):
 
             args = self._annotate(expr.expr, **settings)
@@ -3940,9 +3941,7 @@ class Parser(object):
                 return SymbolicPrint(_args)
             else:
                 return Print(args)
-        elif isinstance(expr, (Comment, CommentBlock)):
 
-            return expr
         elif isinstance(expr, ClassDef):
 
             # TODO - improve the use and def of interfaces
@@ -3987,9 +3986,7 @@ class Parser(object):
                     interfaces += [i]
             return ClassDef(name, attributes, methods,
                             interfaces=interfaces, parent=parent)
-        elif isinstance(expr, Pass):
 
-            return Pass()
         elif isinstance(expr, Del):
 
             ls = self._annotate(expr.variables)
@@ -4103,9 +4100,7 @@ class Parser(object):
                                 return expr
                         return EmptyLine()
             return expr
-        elif isinstance(expr, AnnotatedComment):
 
-            return expr
         elif isinstance(expr, With):
 
             domaine = self._annotate(expr.test)
@@ -4166,8 +4161,7 @@ class Parser(object):
             expr = MacroVariable(expr.name, var)
             self.insert_macro(expr)
             return expr
-        elif isinstance(expr, ValuedArgument):
-            return expr
+
         elif isinstance(expr, Dlist):
 
             val = self._annotate(expr.val, **settings)
@@ -4176,11 +4170,7 @@ class Parser(object):
                         )
             shape = self._annotate(expr.length, **settings)
             return Dlist(val, shape)
-        elif isinstance(expr, Nil):
 
-            return expr
-        elif isinstance(expr, CodeBlock):
-            return expr
         else:
             raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
 
