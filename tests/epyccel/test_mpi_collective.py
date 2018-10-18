@@ -82,8 +82,6 @@ def test_np_bcast( ne=15 ):
     assert np.array_equal( buf_f90, exact )
 
 # ...
-# TODO: Fix translation of 'mpi4py.MPI.Comm.Gather()' into Fortran counterpart
-@pytest.mark.xfail
 @pytest.mark.parallel
 def test_np_gather():
 
