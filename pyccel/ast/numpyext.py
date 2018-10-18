@@ -318,7 +318,8 @@ class Real(Function):
         """Fortran print."""
 
         value = printer(self.arg)
-        code = 'Real({0})'.format(value)
+        prec  = printer(self.precision)
+        code = 'Real({0}, {1})'.format(value, prec)
         return code
 
 
