@@ -20,12 +20,10 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.assumptions import StdFactKB
 from sympy import cache
 
-# from sympy.sets.fancysets import Range as sm_Range
 
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import ImmutableDenseMatrix
-from sympy.matrices.expressions.matexpr import MatrixSymbol, \
-    MatrixElement
+from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 
@@ -43,6 +41,20 @@ from sympy.logic.boolalg import BooleanFunction
 import collections
 from sympy.core.compatibility import is_sequence
 
+
+from .basic import Basic
+from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
+    NativeInteger, NativeBool, NativeReal, \
+    NativeComplex, NativeRange, NativeTensor, NativeString, \
+    NativeGeneric
+
+from .functionalexpr import FunctionalFor
+
+local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
+                'zeros':Symbol('zeros'),'ones':Symbol('ones')
+                ,'Point':Symbol('Point')}
+
+
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
 #      - add examples
@@ -52,16 +64,6 @@ from sympy.core.compatibility import is_sequence
 #      - Slice case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
-
-from .basic import Basic
-from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
-    NativeInteger, NativeBool, NativeReal, \
-    NativeComplex, NativeRange, NativeTensor, NativeString, \
-    NativeGeneric
-
-local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
-                'zeros':Symbol('zeros'),'ones':Symbol('ones')
-                ,'Point':Symbol('Point')}
 
 
 def subs(expr, new_elements):
@@ -1600,59 +1602,6 @@ class For(Basic):
         self.body.append(stmt)
 
 
-class FunctionalFor(Basic):
-
-    """."""
-
-    def __new__(
-        cls,
-        loops,
-        target,
-        indexes,
-        index=None,
-        ):
-        return Basic.__new__(cls, loops, target, indexes, index)
-
-    @property
-    def loops(self):
-        return self._args[0]
-
-    @property
-    def target(self):
-        return self._args[1]
-
-    @property
-    def indexes(self):
-        return self._args[2]
-
-    @property
-    def index(self):
-        return self._args[3]
-
-
-class GeneratorComprehension(Basic):
-
-    pass
-
-
-class FunctionalSum(FunctionalFor, GeneratorComprehension):
-
-    name = 'sum'
-
-
-class FunctionalMax(FunctionalFor, GeneratorComprehension):
-
-    name = 'max'
-
-
-class FunctionalMin(FunctionalFor, GeneratorComprehension):
-
-    name = 'min'
-
-
-class FunctionalMap(FunctionalFor, GeneratorComprehension):
-
-    pass
 
 
 class ForIterator(For):

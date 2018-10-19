@@ -31,6 +31,8 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
                   }
 
+#=======================================================================================
+
 class Array(Function):
 
     """Represents a call to  numpy.array for code generation.
@@ -112,6 +114,7 @@ class Array(Function):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
+#=======================================================================================
 
 class Sum(Function):
     """Represents a call to  numpy.sum for code generation.
@@ -146,7 +149,7 @@ class Sum(Function):
         return 'sum({0})'.format(rhs_code)
 
 
-
+#=======================================================================================
 
 class Shape(Array):
 
@@ -227,6 +230,7 @@ class Shape(Array):
 
         return code_init
 
+#=======================================================================================
 
 class Int(Function):
 
@@ -236,7 +240,11 @@ class Int(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, sp_Float, sp_Integer, Mul, Add, sp_Pow, sp_Rational)):
+        if not isinstance(arg, (Variable, 
+                                IndexedElement, 
+                                sp_Float, sp_Integer, 
+                                Mul, Add, sp_Pow, 
+                                sp_Rational)):
 
             raise TypeError('Uknown type of  %s.' % type(arg))
 
@@ -276,16 +284,21 @@ class Int(Function):
         return code
 
 
+#=======================================================================================
 
 class Real(Function):
 
-    """Represents a call to  numpy.Real for code generation.
+    """Represents a call to  numpy.real for code generation.
 
     arg : Variable, Float, Integer, Complex
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, sp_Pow, sp_Rational)):
+        
+        _valid_args = (Variable, IndexedElement, sp_Integer,
+                       sp_Float, Mul, Add, sp_Pow, sp_Rational)
+
+        if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg)
         assumptions = {'real':True}
@@ -300,7 +313,7 @@ class Real(Function):
 
     @property
     def dtype(self):
-        return 'int'
+        return 'real'
 
     @property
     def shape(self):
@@ -331,6 +344,31 @@ class Real(Function):
 
         return self.__str__()
 
+#=======================================================================================
+
+class Imag(Real):
+
+    """Represents a call to  numpy.imag for code generation.
+
+    arg : Variable, Float, Integer, Complex
+    """
+
+
+
+    def fprint(self, printer):
+        """Fortran print."""
+
+        value = printer(self.arg)
+        code = 'aimag({0})'.format(value)
+        return code
+
+
+    def __str__(self):
+        return 'imag({0})'.format(str(self.arg))
+
+
+#=======================================================================================
+
 class Complex(Function):
 
     """Represents a call to  numpy.complex for code generation.
@@ -340,8 +378,11 @@ class Complex(Function):
 
     def __new__(cls, arg0, arg1=sp_Float(0)):
 
+        _valid_args = (Variable, IndexedElement, sp_Integer, 
+                       sp_Float, Mul, Add, sp_Pow, sp_Rational)
+
         for arg in [arg0, arg1]:
-            if not isinstance(arg, (Variable, sp_Integer, sp_Float, Mul, Add, sp_Pow, sp_Rational)):
+            if not isinstance(arg, _valid_args):
                 raise TypeError('Uknown type of  %s.' % type(arg))
         obj = Basic.__new__(cls, arg0, arg1)
         assumptions = {'complex':True}
@@ -391,6 +432,102 @@ class Complex(Function):
 
         return self.fprint(str)
 
+#=======================================================================================
+
+class Linspace(Function):
+
+    """
+    Represents numpy.linspace.
+
+    """
+
+    def __new__(cls, *args):
+       
+
+        _valid_args = (Variable, IndexedElement, sp_Float, 
+                       sp_Integer, sp_Rational)
+
+        for arg in args:
+            if not isinstance(arg, _valid_args):
+                raise TypeError('Expecting valid args')
+
+        if len(args) == 3:
+            start = args[0]
+            stop = args[1]
+            size = args[2]
+
+        else:
+           raise ValueError('Range has at most 3 arguments')
+
+
+        return Basic.__new__(cls, start, stop, size)
+
+    @property
+    def start(self):
+        return self._args[0]
+
+    @property
+    def stop(self):
+        return self._args[1]
+
+    @property
+    def size(self):
+        return self._args[2]
+
+    @property
+    def step(self):
+        return (self.stop - self.start) / (self.size - 1)
+
+  
+    @property
+    def dtype(self):
+        return 'real'
+
+    @property
+    def order(self):
+        return 'F'
+
+    @property
+    def precision(self):
+        return 8
+
+    @property
+    def shape(self):
+        return (self.size,)
+
+    @property
+    def rank(self):
+        return 1
+
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        code = 'linspace({}, {}, {})',format(sstr(self.start),
+                                             sstr(self.stop),
+                                             sstr(self.size))    
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+
+        init_value = '(/{0} + {1}*{2},{1} = 0,{3}-1 /)'
+
+        start = printer(self.start)
+        step  = printer(self.step)
+        stop  = printer(self.stop)
+        index = printer('ind_1641316')
+
+        init_value.format(start,index,step,stop)
+
+        if lhs:
+            lhs = printer(lhs)
+            code = '{0} = {1}'.format(lhs, init_value)
+        else:
+            code = '{0}'.format(init_value)
+
+        return code
+
+
+#=======================================================================================
 
 class Rand(Real):
 
@@ -551,6 +688,7 @@ class Zeros(Function):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
+#=======================================================================================
 
 class Ones(Zeros):
 
@@ -574,6 +712,8 @@ class Ones(Zeros):
         else:
             raise TypeError('Unknown type')
         return value
+
+#=======================================================================================
 
 class Empty(Zeros):
 
@@ -601,11 +741,14 @@ class Empty(Zeros):
         return code
 
 
+#=======================================================================================
 
 class Sqrt(Pow):
 
     def __new__(cls, base):
         return Pow(base, 0.5, evaluate=False)
+
+#=======================================================================================
 
 class Asin(Function):
     def __new__(cls,arg):
@@ -616,6 +759,7 @@ class Asin(Function):
             obj._assumptions = StdFactKB(assumptions)
             obj._assumptions._generator = ass_copy
         return obj
+
 
 class Acos(Function):
     def __new__(cls,arg):
@@ -637,6 +781,8 @@ class Asec(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+#=======================================================================================
+
 class Atan(Function):
     def __new__(cls,arg):
         obj = atan(arg)
@@ -646,6 +792,7 @@ class Atan(Function):
             obj._assumptions = StdFactKB(assumptions)
             obj._assumptions._generator = ass_copy
         return obj
+
 
 class Acot(Function):
     def __new__(cls,arg):
@@ -668,6 +815,8 @@ class Acsc(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+#=======================================================================================
+
 class Sinh(Function):
     def __new__(cls,arg):
         obj = sinh(arg)
@@ -688,6 +837,7 @@ class Cosh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+
 class Tanh(Function):
     def __new__(cls,arg):
         obj = tanh(arg)
@@ -697,6 +847,8 @@ class Tanh(Function):
             obj._assumptions = StdFactKB(assumptions)
             obj._assumptions._generator = ass_copy
         return obj
+
+#=======================================================================================
 
 class Log(Function):
     def __new__(cls,arg):
@@ -708,6 +860,8 @@ class Log(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+#=======================================================================================
+
 class Abs(Function):
 
     def _eval_is_integer(self):
@@ -716,13 +870,14 @@ class Abs(Function):
     def _eval_is_real(self):
         return True
 
+#=======================================================================================
+
 class Min(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
           
      def _eval_is_real(self):
         return True
-
 
 class Max(Function):
      def _eval_is_integer(self):
@@ -732,6 +887,7 @@ class Max(Function):
         return True
 
 
+#=======================================================================================
 
 class Complex64(Complex):
     @property
@@ -741,6 +897,8 @@ class Complex64(Complex):
 class Complex128(Complex):
     pass
 
+#=======================================================================================
+
 class Float32(Real):
     @property
     def precision(self):
@@ -749,6 +907,9 @@ class Float32(Real):
 class Float64(Real):
     pass
 
+
+#=======================================================================================
+
 class Int32(Int):
     pass
 
@@ -756,3 +917,6 @@ class Int64(Int):
     @property
     def precision(self):
         return 8
+
+
+

@@ -11,9 +11,9 @@ from .numpyext import Zeros, Ones, Empty, Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
-from .numpyext import numpy_constants
+from .numpyext import numpy_constants, Linspace
 from sympy import Symbol, Lambda, floor
-from sympy import Not,Float
+from sympy import Not, Float
 from sympy import Function
 from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, Mod)
 
@@ -65,25 +65,27 @@ def builtin_function(expr, args=None):
         return Zip(*args)
     elif name == 'enumerate':
         return Enumerate(*args)
-    if name == 'array':
+    elif name == 'array':
         return Array(*args)
-    if name in ['int']:
+    elif name == 'linspace':
+        return Linspace(*args)
+    elif name in ['int']:
         return Int(*args)
-    if name in ['float']:
+    elif name in ['float']:
         return Real(*args)
-    if name == 'len':
+    elif name == 'len':
         return Len(*args)
-    if name == 'sum':
+    elif name == 'sum':
         return Sum(*args)
-    if name == 'Mod':
+    elif name == 'Mod':
         return Mod(*args)
-    if name == 'abs':
+    elif name == 'abs':
         return Abs(*args)
-    if name in ['max', 'Max']:
+    elif name in ['max', 'Max']:
         return Max(*args)
-    if name in ['min', 'Min']:
+    elif name in ['min', 'Min']:
         return Min(*args)
-    if name == 'floor':
+    elif name == 'floor':
         return floor(*args)
     elif name in ['complex']:
         if len(args)==1:
@@ -98,7 +100,7 @@ def builtin_function(expr, args=None):
         return Map(*args)
     
 
-    if name == 'lambdify':
+    elif name == 'lambdify':
        if isinstance(args, Lambda):
            expr_ = args.expr
            expr_ = Return(expr_)

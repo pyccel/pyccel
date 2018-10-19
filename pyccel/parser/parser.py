@@ -2171,6 +2171,15 @@ class Parser(object):
                 d_var['is_pointer'] = False
                 d_var['datatype'] = 'ndarray' + dvar['datatype']
                 d_var['precision'] = dvar['precision']
+
+            elif name in ['Linspace']:
+                d_var = {}
+                d_var['allocatable'] = True
+                d_var['shape'] = expr.shape
+                d_var['rank'] = 1
+                d_var['is_pointer'] = False
+                d_var['datatype'] = 'ndarrayreal'
+                d_var['precision'] = expr.precision
                  
             elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
 
