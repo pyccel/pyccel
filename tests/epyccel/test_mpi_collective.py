@@ -81,6 +81,36 @@ def test_np_bcast( ne=15 ):
     fmod.np_bcast( buf_f90, root )
     assert np.array_equal( buf_f90, exact )
 
+# ...
+@pytest.mark.parallel
+def test_np_gather():
+
+    root = 0
+    nval = 10 * comm.size
+
+    # Split array across all processes in communicator
+    s = (nval *  comm.rank   ) // comm.size
+    e = (nval * (comm.rank+1)) // comm.size
+
+    # Send and receive buffers
+    sendbuf = np.arange( s, e, dtype='i' )
+    if comm.rank == root:
+        recvbuf_py  = np.empty ( nval, dtype='i' )
+        recvbuf_f90 = np.empty ( nval, dtype='i' )
+        exact       = np.arange( nval, dtype='i' )
+    else:
+        recvbuf_py  = np.empty ( 0, dtype='i' )
+        recvbuf_f90 = np.empty ( 0, dtype='i' )
+        exact       = np.empty ( 0, dtype='i' )
+
+    # Python
+    pmod.np_gather( sendbuf, recvbuf_py, root )
+    assert np.array_equal( recvbuf_py, exact )
+
+    # Fortran
+    fmod.np_gather( sendbuf, recvbuf_f90, root )
+    assert np.array_equal( recvbuf_f90, exact )
+
 #==============================================================================
 # CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 #==============================================================================
@@ -109,5 +139,6 @@ if __name__ == '__main__':
 
     test_np_allreduce()
     test_np_bcast()
+    test_np_gather()
 
     teardown_module()

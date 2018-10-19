@@ -66,7 +66,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
                                                 libs, modulename.rpartition('.')[2], filename,
                                                 extra_args, includes)
 
-        cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
+        cmd = """python3 -c 'import numpy.f2py as f ;f.main()' {}"""
         
 
         cmd = cmd.format(args)

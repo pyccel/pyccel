@@ -1464,7 +1464,9 @@ class Parser(object):
 
                 return Pow(first, second, evaluate=False)
             elif stmt.value == '//':
-                if isinstance(second, Mul):
+                
+                if isinstance(second, Mul) and isinstance(stmt.second,
+                                               BinaryOperatorNode):
                     args = second.args
                     second = Pow(args[0], -1, evaluate=False)
                     first =  floor(Mul(first, second, evaluate=False))
@@ -1479,36 +1481,12 @@ class Parser(object):
             else:
 
                 raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(stmt.value)))
-        elif isinstance(stmt, ComparisonOperatorNode):
-
-            if stmt.first == '==':
-                return '=='
-            elif stmt.first == '!=':
-
-                return '!='
-            elif stmt.first == '<':
-
-                return '<'
-            elif stmt.first == '>':
-
-                return '>'
-            elif stmt.first == '<=':
-
-                return '<='
-            elif stmt.first == '>=':
-
-                return '>='
-            elif stmt.first == 'is':
-
-                return 'is'
-            else:
-
-                raise PyccelSyntaxError('unknown comparison operator {}'.format(stmt.first))
+     
         elif isinstance(stmt, ComparisonNode):
 
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
-            op = self._fst_to_ast(stmt.value)
+            op = stmt.value.first
             if op == '==':
                 return Eq(first, second, evaluate=False)
             elif op == '!=':
@@ -2666,8 +2644,8 @@ class Parser(object):
                     expr_new = Ge(expr_new, a_new, evaluate=False)
 
             
-            if not expr_new.is_integer and expr_new.is_real:
-                expr_new = int2float(expr_new)
+            #if not expr_new.is_integer and expr_new.is_real:
+            #    expr_new = int2float(expr_new)
       
 
             return expr_new.doit(deep=False)

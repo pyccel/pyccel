@@ -238,11 +238,18 @@ def float2int(expr):
 def int2float(expr):
     if expr.is_number:
         return expr.n()
-
+    print(expr)
+    import time
+    s = time.time()
     atoms = _atomic(expr, cls=sp_Rational, ignore=Function)
+    e = time.time()
+    print(e-s)
     if atoms:
         m     = map(sp_Float,atoms)
+        s = time.time()
         expr  = expr.subs(zip(atoms,m))
+        e = time.time()
+        print(e-s)
     
     return expr
 
