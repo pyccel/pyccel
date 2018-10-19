@@ -270,8 +270,8 @@ class Codegen(object):
                 )
         else:
             raise NotImplementedError('TODO')
-        
-        
+
+
         self._expr = expr
 
         #  ...
@@ -296,7 +296,7 @@ class Codegen(object):
 
         # ...
 
-        code = printer(self.expr)
+        code = printer(self.expr, **settings)
 
         # ...
 
