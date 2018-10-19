@@ -3161,8 +3161,6 @@ class Parser(object):
 
                      # TODO imporve this will not work for the case of different results type
                     d_var[0]['datatype'] = sp_dtype(rhs)
-<<<<<<< HEAD
-=======
 
                 elif name in ['Zeros', 'Ones', 'Empty']:
                     # TODO improve
