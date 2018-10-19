@@ -166,7 +166,6 @@ class FCodePrinter(CodePrinter):
             name = '{prefix}_{name}'.format(prefix=self.prefix_module,
                                             name=name)
 
-
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''

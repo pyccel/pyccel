@@ -100,7 +100,7 @@ def subs(expr, new_elements):
         return If(*args)
 
     elif isinstance(expr, Return):
-        
+
         for i in new_elements:
             expr = expr.subs(i[0],i[1])
         return expr
@@ -199,9 +199,9 @@ def _atomic(e, cls=None,ignore=()):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable, 
+        cls = (Application, DottedVariable, Variable,
                IndexedVariable,IndexedElement)
-    
+
     for p in pot:
         if p in seen or isinstance(p,ignore):
             pot.skip()
@@ -210,7 +210,7 @@ def _atomic(e, cls=None,ignore=()):
         if isinstance(p, cls):
             pot.skip()
             atoms_.append(p)
-        
+
     return atoms_
 
 
@@ -250,7 +250,7 @@ def int2float(expr):
         expr  = expr.subs(zip(atoms,m))
         e = time.time()
         print(e-s)
-    
+
     return expr
 
 class Pow(sp_Pow):
@@ -955,9 +955,9 @@ class Enumerate(Basic):
 class Map(Basic):
     """
     Reresents the map stmt
-  
+
     """
-    
+
     def __new__(cls, *args):
         if len(args)<2:
             raise TypeError('wrong number of arguments')
@@ -1840,9 +1840,9 @@ class Void(Basic):
     pass
 
 class VoidFunction(Basic):
-    #this class is used in order to eliminate certain atoms 
-    # in an arithmitic expression so that we dont take them into 
-    # consideration 
+    #this class is used in order to eliminate certain atoms
+    # in an arithmitic expression so that we dont take them into
+    # consideration
     def __new__(*args):
         return Symbol("""x9846548484665
                       494794564465165161561""")
@@ -1882,7 +1882,7 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
-   
+
     def __new__(
         cls,
         dtype,
@@ -2136,7 +2136,7 @@ class Variable(Symbol):
 
     def _eval_is_positive(self):
         #we do this inorder to infere the type of Pow expression correctly
-        return self.is_real   
+        return self.is_real
 
 
 class DottedVariable(AtomicExpr, Boolean):
@@ -2216,6 +2216,18 @@ class DottedVariable(AtomicExpr, Boolean):
         return self._args[1].dtype
 
     @property
+    def allocatable(self):
+        return self._args[1].allocatable
+
+    @property
+    def is_pointer(self):
+        return self._args[1].is_pointer
+
+    @property
+    def is_target(self):
+        return self._args[1].is_target
+
+    @property
     def name(self):
         if isinstance(self.lhs, DottedVariable):
             name_0 = self.lhs.name
@@ -2253,6 +2265,9 @@ class DottedVariable(AtomicExpr, Boolean):
 
     def _eval_subs(self, old, new):
         return self
+
+    def inspect(self):
+        self._args[1].inspect()
 
 
 
@@ -2764,7 +2779,7 @@ class FunctionDef(Basic):
             decorators = self.decorators,
             is_recursive=self.is_recursive,
             )
-      
+
     def vectorize(self, body , header):
         """ return vectorized FunctionDef """
         decorators = self.decorators
@@ -2783,7 +2798,7 @@ class FunctionDef(Basic):
             header=header,
             imports = self.imports,
             decorators = decorators,
-            is_recursive=self.is_recursive) 
+            is_recursive=self.is_recursive)
 
     @property
     def is_procedure(self):
@@ -3052,7 +3067,7 @@ class ClassDef(Basic):
         imports = list(imports)
         for i in methods:
             imports += list(i.imports)
-     
+
         imports = set(imports)  # for unicity
         imports = Tuple(*imports)
 
@@ -3902,7 +3917,7 @@ class CommentBlock(Basic):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
-        
+
         return Basic.__new__(cls, txts)
 
     @property
@@ -3989,7 +4004,7 @@ class IndexedVariable(IndexedBase):
     @property
     def precision(self):
         return self.kw_args['precision']
- 
+
     @property
     def order(self):
         return self.kw_args['order']
@@ -4088,7 +4103,7 @@ class IndexedElement(Indexed):
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
-        
+
         return obj
 
     @property
@@ -4176,7 +4191,7 @@ class Concatinate(Basic):
         args = list(args)
 
         args = [ repr(arg) if isinstance(arg, str) else arg for arg in args]
-        
+
         return Basic.__new__(cls, args, is_list)
 
     @property
@@ -4189,7 +4204,7 @@ class Concatinate(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        
+
         args = '+'.join(sstr(arg) for arg in self.args)
 
         return args

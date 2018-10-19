@@ -1109,6 +1109,13 @@ class Parser(object):
     def update_variable(self, var, **options):
         """."""
 
+        # TODO improve _get_variable_name
+        def _get_variable_name(var):
+            if not isinstance(var, Variable):
+                raise NotImplementedError('TODO')
+
+            return var.name
+
         name = _get_variable_name(var).split(""".""")
         var = self.get_variable(name[0])
         if len(name) > 1:
@@ -1315,7 +1322,7 @@ class Parser(object):
         elif isinstance(stmt, FloatNode):
 
             val = strip_ansi_escape.sub('', stmt.value)
-            
+
             val = val[:20] if len(val)>20 else val
             return Float(val)
         elif isinstance(stmt, FloatExponantNode):
@@ -1464,7 +1471,7 @@ class Parser(object):
 
                 return Pow(first, second, evaluate=False)
             elif stmt.value == '//':
-                
+
                 if isinstance(second, Mul) and isinstance(stmt.second,
                                                BinaryOperatorNode):
                     args = second.args
@@ -1481,7 +1488,7 @@ class Parser(object):
             else:
 
                 raise PyccelSyntaxError('unknown/unavailable binary operator {node}'.format(node=type(stmt.value)))
-     
+
         elif isinstance(stmt, ComparisonNode):
 
             first = self._fst_to_ast(stmt.first)
@@ -1572,7 +1579,7 @@ class Parser(object):
                 ls = decorators['types']
                 while i<len(ls) :
                     arg = ls[i]
-                    
+
                     if isinstance(arg, Symbol):
                         arg = arg.name
                         container.append(arg)
@@ -1589,14 +1596,14 @@ class Parser(object):
                             raise NotImplementedError(msg)
                         ls = arg if isinstance(arg, Tuple) else [arg]
                         i = -1
-                    
+
                     else:
                         msg = '> Wrong type, given {}'.format(type(arg))
                         raise NotImplementedError(msg)
-                    
+
                     i = i+1
-                	
-                txt  = '#$ header ' + name 
+
+                txt  = '#$ header ' + name
                 txt += '(' + ','.join(types) + ')'
                 if results:
                     txt += ' results(' + ','.join(results) + ')'
@@ -2040,7 +2047,7 @@ class Parser(object):
             d_var['precision'] = 8
             return d_var
         elif isinstance(expr, Variable):
-            
+
             d_var['datatype'] = expr.dtype
             d_var['allocatable'] = expr.allocatable
             d_var['shape'] = expr.shape
@@ -2125,7 +2132,7 @@ class Parser(object):
             self._current_class = None
             return d_var
 
-        
+
         elif isinstance(expr, Lambda):
 
             d_var['datatype'] = NativeSymbol()
@@ -2159,7 +2166,7 @@ class Parser(object):
             elif name in ['Array']:
 
                 dvar = self._infere_type(expr.arg, **settings)
-                    
+
                 if expr.dtype:
                     dvar['datatype'] = expr.dtype
                     dvar['precision'] = expr.precision
@@ -2171,7 +2178,7 @@ class Parser(object):
                 d_var['is_pointer'] = False
                 d_var['datatype'] = 'ndarray' + dvar['datatype']
                 d_var['precision'] = dvar['precision']
-                 
+
             elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
 
                 d_var = {}
@@ -2224,27 +2231,27 @@ class Parser(object):
                     ]:
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = sp_dtype(expr)
-                    
+
             elif name in ['ZerosLike']:
 
                 d_var = self._infere_type(expr.rhs, **settings)
             elif name in ['floor']:
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = 'int'
-                    
+
                 if expr.args[0].is_complex and not expr.args[0].is_integer:
                     d_var['precision'] = d_var['precision']//2
                 else:
                     d_var['precision'] = 4
-                  
+
             else:
                 raise NotImplementedError('TODO')
 
             return d_var
 
         elif isinstance(expr, Expr):
-            
-            cls = (Application, DottedVariable, Variable, 
+
+            cls = (Application, DottedVariable, Variable,
                    IndexedVariable,IndexedElement)
             atoms = _atomic(expr,cls)
             ds = [self._infere_type(i, **settings) for i in
@@ -2254,17 +2261,17 @@ class Parser(object):
             # vectorised operations
             # we only look for atomic expression of type Variable
             # because we don't allow functions that returns an array in an expression
-            
+
             allocatables = [d['allocatable'] for d in ds]
             pointers = [d['is_pointer'] or d['is_target'] for d in ds]
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
             precisions = [d['precision'] for d in ds]
-            
-            
+
+
             if all(i.is_integer for i in atoms):
                 if expr.is_complex and not expr.is_integer:
-                    precisions.append(8)  
+                    precisions.append(8)
 
             # TODO improve
             # ... only scalars and variables of rank 0 can be handled
@@ -2337,12 +2344,12 @@ class Parser(object):
                 d_vars[0]['rank']   = 1
                 d_vars[0]['is_target'] = True
                 d_vars[0]['is_pointer'] = False
-                
+
             else:
                 d_vars[0]['datatype'] = 'str'
             return d_vars[0]
 
-            
+
             if not (d_var_left['datatype'] == 'str'
                     or d_var_right['datatype'] == 'str'):
                 d_var_left['shape'] = tuple(map(operator.add,
@@ -2416,7 +2423,7 @@ class Parser(object):
         elif isinstance(expr, NumberSymbol) or isinstance(expr, Number):
 
             return Float(float(expr))
-   
+
         elif isinstance(expr, Variable):
 
             name = expr.name
@@ -2486,9 +2493,9 @@ class Parser(object):
         elif isinstance(expr, Symbol):
 
             name = _get_name(expr)
-            
+
             var = self.get_variable(name)
-            
+
             if var is None:
                 var = self.get_function(name)
             if var is None:
@@ -2588,7 +2595,7 @@ class Parser(object):
             # we reconstruct the arithmetic expressions using the annotated
             # arguments
             if isinstance(expr, Add):
-                
+
                 atoms_str = _atomic(expr,String)
                 atoms_ls  = _atomic(expr,List)
                 cls     =(Symbol, DottedVariable)
@@ -2599,12 +2606,12 @@ class Parser(object):
                 atoms = [a['is_pointer'] for a in atoms]
                 args  = [self._annotate(a, **settings) for a in expr.args]
                 temp  = self.create_variable(expr)
-                
+
                 if any(atoms) or atoms_ls:
                     return Concatinate(args, True)
                 elif atoms_str:
                     return Concatinate(args, False)
-            
+
 
             args = expr.args
 
@@ -2612,11 +2619,11 @@ class Parser(object):
 
             a = args[0]
             a_new = self._annotate(a, **settings)
-            
+
             expr_new = a_new
 
             # then we treat the rest
-            
+
             for a in args[1:]:
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, Add):
@@ -2643,10 +2650,12 @@ class Parser(object):
                 elif isinstance(expr, Ge):
                     expr_new = Ge(expr_new, a_new, evaluate=False)
 
-            
             #if not expr_new.is_integer and expr_new.is_real:
             #    expr_new = int2float(expr_new)
-      
+
+            if not expr_new.is_integer and expr_new.is_real:
+                expr_new = int2float(expr_new)
+
 
             return expr_new.doit(deep=False)
         elif isinstance(expr, Lambda):
@@ -2669,7 +2678,7 @@ class Parser(object):
                     expr_new = expr.expr.subs(func, f)
                     expr = Lambda(expr.variables, expr_new)
             return expr
-       
+
         elif isinstance(expr, Application):
 
             # ... DEBUG
@@ -2705,7 +2714,7 @@ class Parser(object):
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
-            
+
             if F:
                 if len(stmts) > 0:
                     stmts.append(F)
@@ -2840,8 +2849,10 @@ class Parser(object):
                             stmts.append(expr)
                             return CodeBlock(stmts)
                         return expr
+
         elif isinstance(expr, Expr):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
+
         elif isinstance(expr, (Assign, AugAssign)):
 
             # TODO unset position at the end of this part
@@ -3047,11 +3058,7 @@ class Parser(object):
                 stmt = self._annotate(stmt, **settings)
                 return CodeBlock([rhs_, stmt])
 
-            # ...
-            
             rhs = self._annotate(rhs, **settings)
-
-            # ...
 
             if isinstance(rhs, If):
                 args = rhs.args
@@ -3100,7 +3107,7 @@ class Parser(object):
             if isinstance(rhs, FunctionalFor):
                 return rhs
 
-    
+
             elif isinstance(rhs, CodeBlock):
                 stmts = rhs.body
                 stmt = stmts[-1]
@@ -3114,8 +3121,6 @@ class Parser(object):
                 return CodeBlock(stmts)
 
             # d_var can be a list of dictionaries
-
-           
 
             if isinstance(rhs, ConstructorCall):
                 cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
@@ -3137,10 +3142,11 @@ class Parser(object):
                 d_var['is_polymorphic'] = False
                 d_var['cls_base'] = cls
                 d_var['is_pointer'] = False
+
             elif isinstance(rhs, Application):
 
                 # ARA: needed for functions defined only with a header
-                
+
                 name = _get_name(rhs)
                 func = self.get_function(name)
                 if isinstance(func, FunctionDef):
@@ -3148,16 +3154,119 @@ class Parser(object):
                     if results:
                         d_var = [self._infere_type(i, **settings)
                                  for i in results]
-                    
+
                 elif isinstance(func, Interface):
                     d_var = [self._infere_type(i, **settings) for i in
                              func.functions[0].results]
 
                      # TODO imporve this will not work for the case of different results type
                     d_var[0]['datatype'] = sp_dtype(rhs)
+<<<<<<< HEAD
+=======
+
+                elif name in ['Zeros', 'Ones', 'Empty']:
+                    # TODO improve
+                    d_var = {}
+                    d_var['datatype'] = rhs.dtype
+                    d_var['allocatable'] = True
+                    d_var['shape'] = rhs.shape
+                    d_var['rank'] = rhs.rank
+                    d_var['is_pointer'] = False
+                    d_var['is_target'] = True
+                    d_var['order'] = rhs.order
+
+                elif name in ['Shape']:
+                    d_var = {}
+                    d_var['datatype'] = rhs.dtype
+                    d_var['shape'] = rhs.shape
+                    d_var['rank'] = rhs.rank
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+
+                elif name in ['Array']:
+
+                    dvar = self._infere_type(rhs.arg, **settings)
+
+                    if rhs.dtype:
+                        dvar['datatype'] = rhs.dtype
+                        dvar['precision'] = rhs.precision
+                    dvar['datatype'] = str_dtype(dvar['datatype'])
+                    d_var = {}
+                    d_var['allocatable'] = True
+                    d_var['shape'] = dvar['shape']
+                    d_var['rank'] = dvar['rank']
+                    d_var['is_pointer'] = False
+                    d_var['datatype'] = 'ndarray' + dvar['datatype']
+                    d_var['precision'] = dvar['precision']
+
+                elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
+
+                    d_var = {}
+                    d_var['datatype'] = sp_dtype(rhs)
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                elif name in ['Int','Int32','Int64','Real',
+                             'Float32','Float64','Complex',
+                              'Complex128','Complex64']:
+                    d_var = {}
+                    d_var['datatype'] = sp_dtype(rhs)
+                    d_var['rank'] = 0
+                    d_var['allocatable'] = False
+                    d_var['is_pointer'] = False
+                    d_var['precision'] = rhs.precision
+
+                elif name in ['Mod']:
+
+                    # Determine output type/rank/shape
+                    # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
+                    i = 0 if (rhs.args[0].rank >= rhs.args[1].rank) else 1
+                    d_var = {}
+                    d_var['datatype'   ] = rhs.args[i].dtype
+                    d_var['rank'       ] = rhs.args[i].rank
+                    d_var['shape'      ] = rhs.args[i].shape
+                    d_var['allocatable'] = rhs.args[i].allocatable
+                    d_var['is_pointer' ] = False
+                    d = self._infere_type(rhs.args[i],**settings)
+                    d_var['precision'] = d.pop('precision',4)
+
+                elif name in [
+                    'Abs',
+                    'sin',
+                    'cos',
+                    'exp',
+                    'log',
+                    'csc',
+                    'cos',
+                    'sec',
+                    'tan',
+                    'cot',
+                    'asin',
+                    'acsc',
+                    'acos',
+                    'asec',
+                    'atan',
+                    'acot',
+                    'atan2',
+                    ]:
+                    d_var = self._infere_type(rhs.args[0], **settings)
+                    d_var['datatype'] = sp_dtype(rhs)
+
+                elif name in ['ZerosLike']:
+
+                    d_var = self._infere_type(rhs.rhs, **settings)
+                elif name in ['floor']:
+                    d_var = self._infere_type(rhs.args[0], **settings)
+                    d_var['datatype'] = 'int'
+
+                    if rhs.args[0].is_complex and not rhs.args[0].is_integer:
+                        d_var['precision'] = d_var['precision']//2
+                    else:
+                        d_var['precision'] = 4
+
                 else:
                     d_var = self._infere_type(rhs, **settings)
-                
+
             elif isinstance(rhs, SumFunction):
                 d_var = self._infere_type(rhs.body, **settings)
 
@@ -3165,7 +3274,7 @@ class Parser(object):
 
                 name = str(rhs.args[0])
                 func = self.get_function(name)
-            
+
                 if func is None:
                    errors.report(UNDEFINED_FUNCTION, symbol=name,
                              bounding_box=self.bounding_box,
@@ -3176,7 +3285,7 @@ class Parser(object):
                 for i in range(len(d_var)):
                     d_var[i]['shape'] = dvar['shape']
                     d_var[i]['rank']  = dvar['rank']
-                
+
 
             else:
 
@@ -3192,14 +3301,15 @@ class Parser(object):
                     # in the ConsturcterCall
 
                     d_var['is_polymorphic'] = False
+
                 if d_var['is_target']:
                     if isinstance(rhs, Symbol):
                         d_var['is_target'] = False
                         d_var['is_pointer'] = True
 
                     # case of rhs is a target variable the lhs must be a pointer
-            
-            
+
+
             lhs = expr.lhs
             if isinstance(lhs, Symbol):
                 if isinstance(d_var, list):
@@ -3208,17 +3318,29 @@ class Parser(object):
                                 )
                     elif len(d_var) == 1:
                         d_var = d_var[0]
+
                 name = _get_name(lhs)
                 dtype = d_var.pop('datatype')
 
-                lhs = Variable(dtype, name, **d_var)
+                d_lhs = d_var.copy()
+                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                    d_lhs['allocatable'] = False
+                    d_lhs['is_pointer'] = True
+
+                    # TODO uncomment this line, to make rhs target for
+                    #      lists/tuples.
+                    #rhs = self.update_variable(rhs, is_target=True)
+                    #
+
+                lhs = Variable(dtype, name, **d_lhs)
                 var = self.get_variable(name)
                 if var is None:
                     self.insert_variable(lhs, name=lhs.name)
+
                 else:
 
                     # TODO improve check type compatibility
-
                     if str(lhs.dtype) != str(var.dtype):
                         txt = \
                             '|{name}| {old} <-> {new}'.format(name=name,
@@ -3226,22 +3348,21 @@ class Parser(object):
 
                         # case where the rhs is of native type
                         # TODO add other native types
-
                         if isinstance(rhs, (Integer, Float)):
                             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                                     symbol=txt,
                                     bounding_box=self.bounding_box,
                                     severity='error', blocker=False)
-                        else:
 
+                        else:
                             errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                                     symbol=txt,
                                     bounding_box=self.bounding_box,
                                     severity='internal', blocker=False)
+
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
 
                 # TODO check consistency of indices with shape/rank
-
                 name = _get_name(lhs)
                 var = self.get_variable(name)
                 if var is None:
@@ -3259,6 +3380,7 @@ class Parser(object):
                 order = var.order
                 rank  = var.rank
                 lhs = IndexedVariable(name, dtype=dtype,shape=shape,prec=prec,order=order, rank=rank)
+
             elif isinstance(lhs, (IndexedElement, Indexed)):
 
                 # TODO check consistency of indices with shape/rank
@@ -3283,6 +3405,7 @@ class Parser(object):
                 shape = var.shape
                 lhs = IndexedVariable(name,
                         dtype=dtype, shape=shape,prec=prec,order=order, rank=rank).__getitem__(*args)
+
             elif isinstance(lhs, DottedVariable):
 
                 dtype = d_var.pop('datatype')
@@ -3295,12 +3418,6 @@ class Parser(object):
                     parent = cls.parent
                     attributes = list(attributes)
                     n_name = str(lhs.rhs.name)
-                    attributes += [Variable(dtype, n_name, **d_var)]
-
-                    # update the attributes of the class and push it to the namespace
-
-                    self.insert_class(ClassDef(cls_name, attributes,
-                            [], parent=parent))
 
                     # update the self variable with the new attributes
 
@@ -3308,8 +3425,23 @@ class Parser(object):
                     var = Variable(dt, 'self',
                                    cls_base=self.get_class(cls_name))
                     self.insert_variable(var, 'self')
-                    lhs = DottedVariable(var, Variable(dtype, n_name,
-                            **d_var))
+
+                    d_lhs = d_var.copy()
+                    # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                    if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                        d_lhs['allocatable'] = False
+                        d_lhs['is_pointer'] = True
+
+                        rhs = self.update_variable(rhs, is_target=True)
+
+                    member = Variable(dtype, n_name, **d_lhs)
+                    lhs = DottedVariable(var, member)
+
+                    # update the attributes of the class and push it to the namespace
+                    attributes += [member]
+                    self.insert_class(ClassDef(cls_name, attributes,
+                            [], parent=parent))
+
                 else:
                     lhs = self._annotate(lhs, **settings)
 
@@ -3332,43 +3464,53 @@ class Parser(object):
                 body  = self._annotate(body, **settings)
                 body  = [alloc , body]
                 return CodeBlock(body)
-                
 
             expr_new = Assign(lhs, rhs, strict=False)
-            
+
             if not isinstance(lhs, (list, Tuple, tuple)):
                 if isinstance(d_var,dict):
                     d_var = [d_var]
-            
+
             for (i, dic) in enumerate(d_var):
                 if not isinstance(lhs, (list, Tuple, tuple)):
                     lhs = [lhs]
+
                 allocatable = False
                 is_pointer = False
                 if dic['allocatable']:
                     allocatable = True
+
                 if dic['is_pointer']:
                     is_pointer = True
-                if 'is_target' in dic.keys() and dic['is_target'] \
-                    and isinstance(rhs, Variable):
+
+                if ('is_target' in dic.keys() and dic['is_target']  and
+                    isinstance(rhs, Variable)):
                     is_pointer = True
-                if isinstance(expr_new.rhs, IndexedElement) \
-                    and expr_new.lhs.rank > 0:
+
+                if (isinstance(expr_new.rhs, IndexedElement) and
+                    expr_new.lhs.rank > 0):
                     allocatable = True
-                elif isinstance(expr_new.rhs, Variable) \
-                    and isinstance(expr_new.rhs.dtype, NativeList):
+
+                elif (isinstance(expr_new.rhs, Variable) and
+                      isinstance(expr_new.rhs.dtype, NativeList)):
                     is_pointer = True
-                if isinstance(lhs, Variable) and (allocatable
-                        or is_pointer):
+
+                if (isinstance(lhs, Variable) and (allocatable or is_pointer)):
                     lhs[i] = self.update_variable(expr_new.lhs[i],
-                            allocatable=allocatable,
-                            is_pointer=is_pointer)
+                                                  allocatable=allocatable,
+                                                  is_pointer=is_pointer)
+
                 if len(lhs) == 1:
                     lhs = lhs[0]
-                is_pointer = is_pointer and isinstance(rhs, (Variable,
-                        Dlist,DottedVariable)) 
+
+                is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
                 if is_pointer:
                     expr_new = AliasAssign(lhs, rhs)
+
+                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                elif isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer:
+                    expr_new = AliasAssign(lhs, rhs)
+
                 elif expr_new.is_symbolic_alias:
                     expr_new = SymbolicAssign(lhs, rhs)
 
@@ -3390,6 +3532,7 @@ class Parser(object):
 
             expr_new.set_fst(expr.fst)
             return expr_new
+
         elif isinstance(expr, For):
 
             # treatment of the index/indices
@@ -3652,6 +3795,7 @@ class Parser(object):
             expr = Interface(name, funcs, hide=True)
             container[name] = expr
             return expr
+
         elif isinstance(expr, Return):
 
             results = expr.expr
@@ -3681,6 +3825,7 @@ class Parser(object):
                             new_vars]
                 assigns = CodeBlock(assigns)
                 return Return(new_vars, assigns)
+
         elif isinstance(expr, FunctionDef):
 
             name = str(expr.name)
@@ -3736,14 +3881,14 @@ class Parser(object):
                 index = self.create_variable(expr.body)
                 range_ = Function('range')(Function('len')(arg))
                 args   = symbols(args)
-                args[index_arg] = vec_arg[index] 
+                args[index_arg] = vec_arg[index]
                 body_vec = Assign(args[index_arg],Function(name)(*args))
                 body_vec.set_fst(expr.fst)
                 body_vec   = [For(index,range_,[body_vec],strict=False)]
                 header_vec = header.vectorize(index_arg)
                 vec_func = expr.vectorize(body_vec, header_vec)
-                      
-                
+
+
             for m in interfaces:
                 args = []
                 results = []
@@ -3825,9 +3970,11 @@ class Parser(object):
                     self.insert_function(interfaces[0])
 
                 # we annotate the body
-
                 body = [self._annotate(i, **settings) for i in
                         expr.body]
+
+                # ISSUE 177: must update arguments to get is_target
+                args = [self.get_variable(a.name) for a in args]
 
                 # find return stmt and results
 
@@ -3899,8 +4046,8 @@ class Parser(object):
                 #TODO move that inside FunctionDef
                 #and clear all variable except the global one
                 cache.clear_cache()
-            
-            if len(funcs) == 1: 
+
+            if len(funcs) == 1:
                 funcs = funcs[0]
                 self.insert_function(funcs)
 
@@ -3922,7 +4069,7 @@ class Parser(object):
                funcs = Interface(name, funcs)
                self.insert_function(funcs)
 
-            
+
             return funcs
 
         elif isinstance(expr, Print):
