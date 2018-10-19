@@ -83,6 +83,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='folder in which the output is stored.')
     group.add_argument('--prefix', type=str, default = '',\
                        help='add prefix to the generated file.')
+    group.add_argument('--prefix-module', type=str, default = 'mod',\
+                       help='add prefix module name.')
     # ...
 
     # ... Accelerators
@@ -177,6 +179,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     libs    = args.libs
     output_folder = args.output
     prefix = args.prefix
+    prefix_module = args.prefix_module
 
     if (len(output_folder)>0 and output_folder[-1]!='/'):
         output_folder+='/'
@@ -221,7 +224,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         name = os.path.basename(filename)
         name = os.path.splitext(name)[0]
         codegen = Codegen(ast, name)
-        code = codegen.doprint()
+        settings['prefix_module'] = prefix_module
+        code = codegen.doprint(**settings)
         if prefix:
             name = '{prefix}{name}'.format(prefix=prefix, name=name)
 
