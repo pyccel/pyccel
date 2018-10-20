@@ -941,18 +941,6 @@ class Parser(object):
             self._namespace['variables'][name] = expr
 
 
-    def create_variable(self, expr, store=False):
-        """."""
-
-        import numpy as np
-        try:
-            name = 'result_' + str(abs(hash(expr)
-                                   + np.random.randint(500)))[-4:]
-        except:
-            name = 'result_' + str(abs(np.random.randint(500)))[-4:]
-
-        return Symbol(name)
-
     def get_class(self, name):
         """."""
 
@@ -2591,7 +2579,7 @@ class Parser(object):
         elif isinstance(expr, (
             Add,
             Mul,
-            Pow,sp_Pow,
+            sp_Pow,
             And,
             Or,
             Eq,
@@ -2606,8 +2594,8 @@ class Parser(object):
             # arguments
             if isinstance(expr, Add):
 
-                atoms_str = _atomic(expr,String)
-                atoms_ls  = _atomic(expr,List)
+                atoms_str = _atomic(expr, String)
+                atoms_ls  = _atomic(expr, List)
                 cls     =(Symbol, DottedVariable)
                 atoms = _atomic(expr, cls)
                 atoms = [self._annotate(a, **settings) for a in atoms]
@@ -2638,7 +2626,6 @@ class Parser(object):
                 a_new = self._annotate(a, **settings)
                 if isinstance(expr, Add):
                     expr_new = Add(a_new , expr_new , evaluate=False)
-
                 elif isinstance(expr, Mul):
                     expr_new = Mul(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, (Pow, sp_Pow)):
@@ -2646,7 +2633,7 @@ class Parser(object):
                 elif isinstance(expr, And):
                     expr_new = And(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Or):
-                    expr_new = Or(expr_new, a_new)
+                    expr_new = Or(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Eq):
                     expr_new = Eq(expr_new, a_new, evaluate=False)
                 elif isinstance(expr, Ne):
@@ -2663,11 +2650,9 @@ class Parser(object):
             #if not expr_new.is_integer and expr_new.is_real:
             #    expr_new = int2float(expr_new)
 
-            if not expr_new.is_integer and expr_new.is_real:
-                expr_new = int2float(expr_new)
-
 
             return expr_new.doit(deep=False)
+
         elif isinstance(expr, Lambda):
 
             expr_names = set(map(str, expr.expr.atoms(Symbol)))
@@ -2961,9 +2946,9 @@ class Parser(object):
                             raise NotImplementedError('TODO')
 
 
-            if isinstance(rhs, (Mul, Add, Pow)):
+            if isinstance(rhs, Expr):
                 ls = _atomic(rhs, Assign)
-                if len(ls) > 0:
+                if ls:
                     stmts = []
                     for i in ls:
                         rhs = rhs.subs(i, i.lhs)
@@ -3172,106 +3157,7 @@ class Parser(object):
                      # TODO imporve this will not work for the case of different results type
                     d_var[0]['datatype'] = sp_dtype(rhs)
 
-                elif name in ['Zeros', 'Ones', 'Empty']:
-                    # TODO improve
-                    d_var = {}
-                    d_var['datatype'] = rhs.dtype
-                    d_var['allocatable'] = True
-                    d_var['shape'] = rhs.shape
-                    d_var['rank'] = rhs.rank
-                    d_var['is_pointer'] = False
-                    d_var['is_target'] = True
-                    d_var['order'] = rhs.order
-
-                elif name in ['Shape']:
-                    d_var = {}
-                    d_var['datatype'] = rhs.dtype
-                    d_var['shape'] = rhs.shape
-                    d_var['rank'] = rhs.rank
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-
-                elif name in ['Array']:
-
-                    dvar = self._infere_type(rhs.arg, **settings)
-
-                    if rhs.dtype:
-                        dvar['datatype'] = rhs.dtype
-                        dvar['precision'] = rhs.precision
-                    dvar['datatype'] = str_dtype(dvar['datatype'])
-                    d_var = {}
-                    d_var['allocatable'] = True
-                    d_var['shape'] = dvar['shape']
-                    d_var['rank'] = dvar['rank']
-                    d_var['is_pointer'] = False
-                    d_var['datatype'] = 'ndarray' + dvar['datatype']
-                    d_var['precision'] = dvar['precision']
-
-                elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
-
-                    d_var = {}
-                    d_var['datatype'] = sp_dtype(rhs)
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                elif name in ['Int','Int32','Int64','Real',
-                             'Float32','Float64','Complex',
-                              'Complex128','Complex64']:
-                    d_var = {}
-                    d_var['datatype'] = sp_dtype(rhs)
-                    d_var['rank'] = 0
-                    d_var['allocatable'] = False
-                    d_var['is_pointer'] = False
-                    d_var['precision'] = rhs.precision
-
-                elif name in ['Mod']:
-
-                    # Determine output type/rank/shape
-                    # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
-                    i = 0 if (rhs.args[0].rank >= rhs.args[1].rank) else 1
-                    d_var = {}
-                    d_var['datatype'   ] = rhs.args[i].dtype
-                    d_var['rank'       ] = rhs.args[i].rank
-                    d_var['shape'      ] = rhs.args[i].shape
-                    d_var['allocatable'] = rhs.args[i].allocatable
-                    d_var['is_pointer' ] = False
-                    d = self._infere_type(rhs.args[i],**settings)
-                    d_var['precision'] = d.pop('precision',4)
-
-                elif name in [
-                    'Abs',
-                    'sin',
-                    'cos',
-                    'exp',
-                    'log',
-                    'csc',
-                    'cos',
-                    'sec',
-                    'tan',
-                    'cot',
-                    'asin',
-                    'acsc',
-                    'acos',
-                    'asec',
-                    'atan',
-                    'acot',
-                    'atan2',
-                    ]:
-                    d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = sp_dtype(rhs)
-
-                elif name in ['ZerosLike']:
-
-                    d_var = self._infere_type(rhs.rhs, **settings)
-                elif name in ['floor']:
-                    d_var = self._infere_type(rhs.args[0], **settings)
-                    d_var['datatype'] = 'int'
-
-                    if rhs.args[0].is_complex and not rhs.args[0].is_integer:
-                        d_var['precision'] = d_var['precision']//2
-                    else:
-                        d_var['precision'] = 4
-
+                
                 else:
                     d_var = self._infere_type(rhs, **settings)
 

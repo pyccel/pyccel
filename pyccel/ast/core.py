@@ -190,6 +190,7 @@ def allocatable_like(expr, verbose=False):
         raise TypeError('Unexpected type {0}'.format(type(expr)))
 
 def _atomic(e, cls=None,ignore=()):
+
     """Return atom-like quantities as far as substitution is
     concerned: Functions and DottedVarviables, Variables. we don't
     return atoms that are inside such quantities too
@@ -217,43 +218,81 @@ def _atomic(e, cls=None,ignore=()):
 
 
 
+def extract_subexpressions(expr):
+   """this function takes an expression and returns a list 
+      of statements if this expression contains sub expressions that need
+      to be evaluated outside of the expression
 
-def atom(e):
-    """Return atom-like quantities as far as substitution is
-    concerned: Functions , DottedVarviables. contrary to _atom we
-    return atoms that are inside such quantities too
+
+      expr : Add, Mul, Pow, Application
+
     """
-    pass
+    stmts = []
+    cls   = (Add, Mul, sp_Pow, And,  
+             Or, Eq, Ne, Lt, Gt, 
+             Le, Ge)
 
+    id_cls = (Variable, Indexed, IndexedBase,
+              DottedVariable, sp_Float, sp_Integer, 
+              sp_Rational)
 
+    funcs_names = ('diag', 'zeros', 'ones', 
+                      'empty', 'array', 'cross')
+
+    def change_expr(expr):
+        if isinstance(expr, cls):
+            args = expr.args
+            args = [change_expr(arg) for arg in args]
+            return expr.func(*args, evaluate=False))
+        if isinstance(expr, Application):
+            if str(expr.func) in funcs_names:
+                var = create_variable(expr)
+                stmts.append(expr)
+                return var
+             else:
+                return expr
+        elif isinstance(expr, id_cls):
+            return expr
+        elif isinstance(expr, GC):
+            stmts.append(expr)
+            return expr.lhs
+        
+            
 def inline(func, args):
         local_vars = func.local_vars
         body = func.body
         body = subs(body, zip(func.arguments, args))
         return Block(str(func.name), local_vars, body)
 
-def float2int(expr):
-    atoms = expr.atoms(sp_Float)
-    m     = map(sp_Integer,atoms)
-    return expr.subs(zip(atoms,m))
 
 def int2float(expr):
+
     if expr.is_number:
         return expr.n()
-    print(expr)
-    import time
-    s = time.time()
-    atoms = _atomic(expr, cls=sp_Rational, ignore=Function)
-    e = time.time()
-    print(e-s)
-    if atoms:
-        m     = map(sp_Float,atoms)
-        s = time.time()
-        expr  = expr.subs(zip(atoms,m))
-        e = time.time()
-        print(e-s)
-
+    elif isinstance(expr, (Symbol, Indexed, IndexedBase, DottedVariable)):
+        return expr
+    elif isinstance(expr, (Add, Mul)):
+        args = [int2float(arg) for arg in expr.args]
+        return expr._new_rawargs(*args)
+    elif isinstance(expr, sp_Pow):
+        args = list(expr.args)
+        args[0] = int2float(args[0])
+        return expr.func(*args)
+    else:
+        raise NotImplementedError('TODO')
     return expr
+
+def create_variable(expr, store=False):
+        """."""
+
+        import numpy as np
+        try:
+            name = 'result_' + str(abs(hash(expr)
+                                   + np.random.randint(500)))[-4:]
+        except:
+            name = 'result_' + str(abs(np.random.randint(500)))[-4:]
+
+        return Symbol(name)
 
 class Pow(sp_Pow):
 
