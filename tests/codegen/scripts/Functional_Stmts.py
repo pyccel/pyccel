@@ -19,4 +19,5 @@ a4 = min(k if i>k else 0 if i==k else i for i in range(5) for k in range(10))
 #a7 = min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
 #a8 = sum(sum(a[i,k,4,2] for i in range(5)) for k in range(5))**2
 
-#print a1,a2,a3,a4,a5,a6,a7,a8 
+print(a1,a2,a3,a4)
+#print a5,a6,a7,a8 

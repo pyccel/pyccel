@@ -2596,14 +2596,15 @@ class Parser(object):
 
                 atoms_str = _atomic(expr, String)
                 atoms_ls  = _atomic(expr, List)
-                cls     =(Symbol, DottedVariable)
+
+                cls       = (Symbol, Indexed, DottedVariable)
+                
                 atoms = _atomic(expr, cls)
                 atoms = [self._annotate(a, **settings) for a in atoms]
                 atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
                 atoms = [self._infere_type(a , **settings) for a in atoms]
-                atoms = [a['is_pointer'] for a in atoms]
+                atoms = [a['is_pointer'] for a in atoms if a['rank']>0]
                 args  = [self._annotate(a, **settings) for a in expr.args]
-                temp  = create_variable(expr)
 
                 if any(atoms) or atoms_ls:
                     return Concatinate(args, True)
@@ -3478,10 +3479,10 @@ class Parser(object):
 
             result = expr.expr
             lhs_name = _get_name(expr.lhs)
-            stmt = self.get_variable(lhs_name)
-            if stmt is None:
-                var  = Variable('int', lhs_name)
-                self.insert_variable(var)
+            lhs = self.get_variable(lhs_name)
+            if lhs is None:
+                lhs  = Variable('int', lhs_name)
+                self.insert_variable(lhs)
             
             loops = [self._annotate(i, **settings) for i in expr.loops]
             result = self._annotate(result, **settings)
@@ -3497,19 +3498,19 @@ class Parser(object):
                 lhs = Variable(dtype, lhs_name, **d_var)
                 self.insert_variable(lhs)
 
-            if stmt:
-                if isinstance(expr, FunctionalSum):
-                    val = 0
-                    if str_dtype(dtype) in ['real', 'complex']:
-                        val = 0.0
-                elif isinstance(expr, FunctionalMin):
-                    val = INF
-                elif isinstance(expr, FunctionalMax):
-                    val = -INF
+            
+            if isinstance(expr, FunctionalSum):
+                val = 0
+                if str_dtype(dtype) in ['real', 'complex']:
+                    val = 0.0
+            elif isinstance(expr, FunctionalMin):
+                val = INF
+            elif isinstance(expr, FunctionalMax):
+                val = -INF
 
-                stmt = Assign(target.lhs, val)
-                stmt.set_fst(expr.fst)
-                loops.insert(0, stmt)
+            stmt = Assign(expr.lhs, val)
+            stmt.set_fst(expr.fst)
+            loops.insert(0, stmt)
             if isinstance(expr, FunctionalSum):
                 expr = FunctionalSum(loops, lhs=lhs)
             elif isinstance(expr, FunctionalMin):
@@ -3517,6 +3518,7 @@ class Parser(object):
             elif isinstance(expr, FunctionalMax):
                 expr = FunctionalMax(loops, lhs=lhs)
             return expr
+
         elif isinstance(expr, FunctionalFor):
 
             target = expr.expr

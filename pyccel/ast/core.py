@@ -204,7 +204,7 @@ def _atomic(e, cls=None,ignore=()):
                IndexedVariable,IndexedElement)
 
     for p in pot:
-        if p in seen or isinstance(p,ignore):
+        if p in seen or isinstance(p, ignore):
             pot.skip()
             continue
         seen.append(p)

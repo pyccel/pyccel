@@ -1401,7 +1401,7 @@ class FCodePrinter(CodePrinter):
             raise ValueError('Unrecongnized operation', op)
 
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
-        return self._print(stmt)
+        return self._print_Assign(stmt)
 
     def _print_Range(self, expr):
         start = self._print(expr.start)
