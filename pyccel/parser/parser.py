@@ -2127,7 +2127,25 @@ class Parser(object):
             d_var['is_pointer'] = False
             d_var['rank'] = 0
             return d_var
+        elif isinstance(expr, ConstructorCall):
+            cls_name = expr.func.cls_name 
+            cls = self.get_class(cls_name)
 
+            dtype = self.get_class_construct(cls_name)()
+    
+            
+            d_var['datatype'] = dtype
+            d_var['allocatable'] = False
+            d_var['shape'] = ()
+            d_var['rank'] = 0
+            d_var['is_target'] = True
+
+            # set target  to True if we want the class objects to be pointers
+
+            d_var['is_polymorphic'] = False
+            d_var['cls_base'] = cls
+            d_var['is_pointer'] = False
+            return d_var
         elif isinstance(expr, Application):
             name = _get_name(expr)
             func = self.get_function(name)
@@ -2354,6 +2372,9 @@ class Parser(object):
             return d_var_left
         elif isinstance(expr, ValuedArgument):
             return self._infere_type(expr.value)
+
+        elif isinstance(expr, IfTernaryOperator):
+            return self._infere_type(expr.args[0][1][0])
         elif isinstance(expr, Dlist):
 
             import numpy
@@ -2918,24 +2939,12 @@ class Parser(object):
                             raise NotImplementedError('TODO')
 
 
-            if isinstance(rhs, Expr):
-                ls = _atomic(rhs, Assign)
-                if ls:
-                    stmts = []
-                    for i in ls:
-                        rhs = rhs.subs(i, i.lhs)
-                        stmts.append(i.rhs)
-                    for i in range(len(stmts)):
-                        stmts[i] = self._annotate(stmts[i], **settings)
-                    stmt = Assign(lhs, rhs)
-                    stmt.set_fst(expr.fst)
-                    stmt = self._annotate(stmt, **settings)
-                    stmts.append(stmt)
-                    return CodeBlock(stmts)
+          
 
             if isinstance(rhs, (Min, Max, Mul, Add, Pow)) \
                 and len(rhs.atoms(Summation)) > 0:
-
+                #TODO move this to another file
+                #we have this condition only when lambdify is called
                 ls = list(rhs.atoms(Summation))
                 ls += [rhs]
                 (ls, m) = cse(ls)
@@ -3010,24 +3019,10 @@ class Parser(object):
                 rhs = self._annotate(stmt, **settings)
                 return rhs
 
-            elif isinstance(rhs, (Assign, AugAssign)):
-
-                rhs_ = self._annotate(rhs, **settings)
-                if isinstance(rhs_, FunctionalSum):
-                    stmt = AugAssign(expr.lhs, '+', rhs.lhs)
-                elif isinstance(rhs_, GC):
-                    stmt = Function(rhs_.name)(expr.lhs, rhs.lhs)
-                    stmt = Assign(expr.lhs, stmt)
-                else:
-                    raise NotImplementedError('TODO')
-
-                stmt.set_fst(expr.fst)
-                stmt = self._annotate(stmt, **settings)
-                return CodeBlock([rhs_, stmt])
-
+           
             rhs = self._annotate(rhs, **settings)
 
-            if isinstance(rhs, If):
+            if isinstance(rhs, IfTernaryOperator):
                 args = rhs.args
                 new_args = []
                 for arg in args:
@@ -3041,7 +3036,7 @@ class Parser(object):
                         body = AugAssign(lhs, expr.op, result)
                     body.set_fst(expr.fst)
                     new_args.append([arg[0], [body]])
-                expr = If(*new_args)
+                expr = IfTernaryOperator(*new_args)
                 return self._annotate(expr, **settings)
 
             if isinstance(rhs, FunctionDef):
@@ -3090,25 +3085,7 @@ class Parser(object):
             # d_var can be a list of dictionaries
 
             if isinstance(rhs, ConstructorCall):
-                cls_name = rhs.func.cls_name  #  create a new Datatype for the current class
-                cls = self.get_class(cls_name)
-
-                dtype = self.get_class_construct(cls_name)()
-
-                # to be moved to infere_type?
-
-                d_var = {}
-                d_var['datatype'] = dtype
-                d_var['allocatable'] = False
-                d_var['shape'] = ()
-                d_var['rank'] = 0
-                d_var['is_target'] = True
-
-                # set target  to True if we want the class objects to be pointers
-
-                d_var['is_polymorphic'] = False
-                d_var['cls_base'] = cls
-                d_var['is_pointer'] = False
+                d_var = self._infere_type(rhs, **settings)
 
             elif isinstance(rhs, Application):
 
@@ -3488,8 +3465,7 @@ class Parser(object):
             result = self._annotate(result, **settings)
             if isinstance(result, CodeBlock):
                 result = result.body[-1]
-            elif isinstance(result, If):
-                result = result.bodies[0]
+            
 
             d_var = self._infere_type(result, **settings)
             dtype = d_var.pop('datatype')
@@ -3589,42 +3565,41 @@ class Parser(object):
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
 
-            # TODO find faster way to calculate dim when step>1 and not isinstance(dim, Sum)
+            # TODO find a faster way to calculate dim 
+            # when step>1 and not isinstance(dim, Sum)
             # maybe use the c++ library of sympy
 
-            # we annotate the target.rhs to infere the type of the list created
-            target_args = []
-            
-            while isinstance(target, IfTernaryOperator):
-                target_args.append(target.args[0][1][0])
-                target = target.args[1][1][0]
-            target_args.append(target)
-            target = Add(*target_args)
-            # we do this to infere types correctly
+            # we annotate the target to infere the type of the list created
 
             target = self._annotate(target, **settings)
-            lhs_name = _get_name(expr.lhs)
             d_var = self._infere_type(target, **settings)
+
             dtype = d_var.pop('datatype')
             d_var['rank'] += 1
             shape = list(d_var['shape'])
             d_var['is_pointer'] = True
             shape.append(dim)
             d_var['shape'] = Tuple(*shape)
+            
+            lhs_name = _get_name(expr.lhs)
             lhs = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
+
             loops = [self._annotate(i, **settings) for i in expr.loops]
             index = self._annotate(index, **settings)
+
             return FunctionalFor(loops, lhs=lhs, indexes=indexes, index=index)
+
         elif isinstance(expr, While):
 
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
             return While(test, body)
+        
         elif isinstance(expr, If):
 
             args = self._annotate(expr.args, **settings)
-            return If(*args)
+            return expr.func(*args)
         elif isinstance(expr, VariableHeader):
 
             # TODO improve
