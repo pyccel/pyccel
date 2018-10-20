@@ -1,53 +1,53 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import importlib
-from numpy import ndarray
-
-from sympy import Lambda, preorder_traversal
-from sympy.core.expr import Expr, AtomicExpr
-from sympy.core import Symbol, Tuple
-from sympy.core.relational import Equality, Relational, Ne, Eq
-from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
-from sympy.core.singleton import Singleton
-from sympy.core.function import Function, Application
-from sympy import sympify
-from sympy import Symbol, Integer, Add, Mul, Pow as sp_Pow
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float ,Rational as sp_Rational
-from sympy.core.compatibility import with_metaclass
-from sympy.core.compatibility import is_sequence
-from sympy.core.assumptions import StdFactKB
-from sympy import cache
-
-
-from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.matrices import ImmutableDenseMatrix
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-from sympy.utilities.iterables import iterable
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-
-from sympy.core.basic import Atom
-from sympy.core.expr import Expr, AtomicExpr
-from sympy.core.compatibility import string_types
-from sympy.core.operations import LatticeOp
-from sympy.core.function import Derivative, UndefinedFunction
-from sympy.core.function import _coeff_isneg
-from sympy.core.singleton import S
-from sympy import Integral, Symbol
-from sympy.simplify.radsimp import fraction
-from sympy.logic.boolalg import BooleanFunction
 
 import collections
+import importlib
+
+from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import string_types
+from sympy.simplify.radsimp   import fraction
+from sympy.core.assumptions   import StdFactKB
+from sympy.core.operations    import LatticeOp
+from sympy.core.relational    import Equality, Relational
+from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge 
+from sympy.core.singleton     import Singleton, S
+from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
+from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
+from sympy.logic.boolalg      import BooleanFunction
+from sympy.core.function      import Function, Application
+from sympy.core.function      import Derivative, UndefinedFunction
+from sympy.core.function      import _coeff_isneg
+from sympy.core.numbers       import ImaginaryUnit
+from sympy.core.basic         import Atom
+from sympy.core.expr          import Expr, AtomicExpr
+from sympy.tensor             import Idx, Indexed, IndexedBase
+
+
+
+from sympy import cache
+from sympy import sympify
+from sympy import Add, Mul, Pow as sp_Pow
+from sympy import Integral, Symbol, Tuple
+from sympy import Lambda, preorder_traversal
+from sympy import Integer as sp_Integer
+from sympy import Float as sp_Float ,Rational as sp_Rational
+
+
+from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+from sympy.utilities.iterables import iterable
+
 
 
 from .basic import Basic
-from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
-    NativeInteger, NativeBool, NativeReal, \
-    NativeComplex, NativeRange, NativeTensor, NativeString, \
-    NativeGeneric
+from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                        NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeRange, NativeTensor, NativeString,
+                        NativeGeneric)
 
+from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
 local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
@@ -59,9 +59,7 @@ local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
 #      - update code examples
 #      - add examples
 #      - Function case
-#      - Zeros, Ones, Array cases
 #      - AnnotatedComment case
-#      - Slice case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
@@ -232,23 +230,24 @@ def extract_subexpressions(expr):
              Or, Eq, Ne, Lt, Gt, 
              Le, Ge)
 
-    id_cls = (Variable, Indexed, IndexedBase,
+    id_cls = (Symbol, Indexed, IndexedBase,
               DottedVariable, sp_Float, sp_Integer, 
-              sp_Rational)
+              sp_Rational, ImaginaryUnit,Boolean, 
+              BooleanTrue, BooleanFalse)
 
     funcs_names = ('diag', 'zeros', 'ones', 
                    'empty', 'array', 'cross',
                    'map','zip','enumerate')
 
-    def change_expr(expr):
+    def substitute(expr):
         if isinstance(expr, cls):
             args = expr.args
-            args = [change_expr(arg) for arg in args]
+            args = [substitute(arg) for arg in args]
             return expr.func(*args, evaluate=False)
         if isinstance(expr, Application):
             if str(expr.func) in funcs_names:
                 var = create_variable(expr)
-                stmts.append(expr)
+                stmts.append(Assign(var, expr))
                 return var
             else:
                 return expr
@@ -257,7 +256,14 @@ def extract_subexpressions(expr):
         elif isinstance(expr, GC):
             stmts.append(expr)
             return expr.lhs
-        
+        elif isinstance(expr,IfTernaryOperator):
+            var = create_variable(expr)
+            stmts.append(Assign(var,expr))
+            return var
+            
+    
+    expr  = substitute(expr)
+    return stmts, expr    
             
 def inline(func, args):
         local_vars = func.local_vars
@@ -1031,7 +1037,7 @@ class Range(Basic):
         stop = None
         step = 1
 
-        _valid_args = (Integer, Symbol, Indexed, Variable,
+        _valid_args = (sp_Integer, Symbol, Indexed, Variable,
                        IndexedElement)
 
         if isinstance(args, (tuple, list, Tuple)):

@@ -10,27 +10,32 @@ class FunctionalFor(Basic):
     def __new__(
         cls,
         loops,
-        target,
-        indexes,
+        expr=None,
+        lhs=None,
+        indexes=None,
         index=None,
         ):
-        return Basic.__new__(cls, loops, target, indexes, index)
+        return Basic.__new__(cls, loops, expr, lhs, indexes, index)
 
     @property
     def loops(self):
         return self._args[0]
 
     @property
-    def target(self):
+    def expr(self):
         return self._args[1]
 
     @property
-    def indexes(self):
+    def lhs(self):
         return self._args[2]
 
     @property
-    def index(self):
+    def indexes(self):
         return self._args[3]
+
+    @property
+    def index(self):
+        return self._args[4]
 
 
 class GeneratorComprehension(Basic):

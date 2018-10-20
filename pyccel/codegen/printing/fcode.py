@@ -1416,9 +1416,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionalFor(self, expr):
         allocate = ''
-        if expr.target and len(expr.target.shape)>0:
-            allocate = ','.join('0:{0}'.format(str(i)) for i in expr.target.shape)
-            allocate ='allocate({0}({1}))\n'.format(expr.target.name, allocate)
+        if expr.lhs and len(expr.lhs.shape)>0:
+            allocate = ','.join('0:{0}'.format(str(i)) for i in expr.lhs.shape)
+            allocate ='allocate({0}({1}))\n'.format(expr.lhs.name, allocate)
         loops = '\n'.join(self._print(i) for i in expr.loops)
         return allocate + loops
 

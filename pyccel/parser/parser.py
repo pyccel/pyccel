@@ -119,7 +119,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
-from pyccel.ast import inline, subs, create_variable
+from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.datatypes import sp_dtype, str_dtype
 from pyccel.ast.core import local_sympify, int2float, Pow, _atomic
 
@@ -1782,7 +1782,7 @@ class Parser(object):
             else:
                 body = Function(name)(lhs, body)
                 body = Assign(lhs, body)
-            target = body
+
             body.set_fst(parent)
             indexes = []
             generators = list(generators)
@@ -1793,17 +1793,13 @@ class Parser(object):
             indexes = indexes[::-1]
             body = [body]
             if name == 'sum':
-                expr = FunctionalSum(body, target, indexes, None)
+                expr = FunctionalSum(body, result, lhs, indexes,None)
             elif name == 'min':
-                expr = FunctionalMin(body, target, indexes, None)
+                expr = FunctionalMin(body, result, lhs, indexes, None)
             elif name == 'max':
-                expr = FunctionalMax(body, target, indexes, None)
+                expr = FunctionalMax(body, result, lhs, indexes, None)
             else:
                 raise NotImplementedError('TODO')
-            expr.set_fst(stmt)
-
-            if cond:
-                expr = Assign(lhs, expr)
 
             expr.set_fst(stmt)
             return expr
@@ -1889,15 +1885,16 @@ class Parser(object):
 
                 txt = stmt.value[1:].lstrip()
                 return Comment(txt)
-        elif isinstance(stmt, BreakNode):
 
+        elif isinstance(stmt, BreakNode):
             return Break()
 
         elif isinstance(stmt, ContinueNode):
             return Continue()
-        elif isinstance(stmt, StarNode):
 
+        elif isinstance(stmt, StarNode):
             return '*'
+
         elif isinstance(stmt, LambdaNode):
 
             expr = self._fst_to_ast(stmt.value)
@@ -1908,11 +1905,13 @@ class Parser(object):
                 args += [var]
 
             return Lambda(args, expr)
+
         elif isinstance(stmt, WithNode):
             domain = self._fst_to_ast(stmt.contexts[0].value)
             body = self._fst_to_ast(stmt.value)
             settings = None
             return With(domain, body, settings)
+
         elif isinstance(stmt, ListComprehensionNode):
 
             import numpy as np
@@ -1942,7 +1941,7 @@ class Parser(object):
                 generators[-1].insert2body(F)
                 indexes.append(generators[-1].target)
             indexes = indexes[::-1]
-            return FunctionalFor([assign1, generators[-1]], target,
+            return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
                                  indexes, index)
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
@@ -2590,8 +2589,9 @@ class Parser(object):
             Ge,
             )):
 
-            # we reconstruct the arithmetic expressions using the annotated
-            # arguments
+            # we reconstruct the arithmetic expressions 
+            # using the annotated arguments
+
             if isinstance(expr, Add):
 
                 atoms_str = _atomic(expr, String)
@@ -2610,46 +2610,17 @@ class Parser(object):
                 elif atoms_str:
                     return Concatinate(args, False)
 
+            stmts, expr = extract_subexpressions(expr)
+            if stmts:
+                stmts = [self._annotate(stmt, **settings) 
+                         for stmt in stmts]
+            
+            args = [self._annotate(a, **settings) for a in expr.args]
 
-            args = expr.args
-
-            # we treat the first element
-
-            a = args[0]
-            a_new = self._annotate(a, **settings)
-
-            expr_new = a_new
-
-            # then we treat the rest
-
-            for a in args[1:]:
-                a_new = self._annotate(a, **settings)
-                if isinstance(expr, Add):
-                    expr_new = Add(a_new , expr_new , evaluate=False)
-                elif isinstance(expr, Mul):
-                    expr_new = Mul(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, (Pow, sp_Pow)):
-                    expr_new = Pow(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, And):
-                    expr_new = And(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Or):
-                    expr_new = Or(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Eq):
-                    expr_new = Eq(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Ne):
-                    expr_new = Ne(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Lt):
-                    expr_new = Lt(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Le):
-                    expr_new = Le(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Gt):
-                    expr_new = Gt(expr_new, a_new, evaluate=False)
-                elif isinstance(expr, Ge):
-                    expr_new = Ge(expr_new, a_new, evaluate=False)
+            expr_new = expr.func(*args, evaluate=False)
 
             #if not expr_new.is_integer and expr_new.is_real:
             #    expr_new = int2float(expr_new)
-
 
             return expr_new.doit(deep=False)
 
@@ -3505,26 +3476,24 @@ class Parser(object):
             return For(target, iterable, body)
         elif isinstance(expr, GC):
 
-            target = expr.target
-            lhs_name = _get_name(target.lhs)
+            result = expr.expr
+            lhs_name = _get_name(expr.lhs)
             stmt = self.get_variable(lhs_name)
             if stmt is None:
-                stmt = Assign(target.lhs, 0)
-                stmt.set_fst(target.fst)
-            else:
-                stmt = True
-            stmt = self._annotate(stmt, **settings)
+                var  = Variable('int', lhs_name)
+                self.insert_variable(var)
+            
             loops = [self._annotate(i, **settings) for i in expr.loops]
-            target = self._annotate(target, **settings)
-            if isinstance(target, CodeBlock):
-                target = target.body[-1]
-            elif isinstance(target, If):
-                target = target.bodies[0]
+            result = self._annotate(result, **settings)
+            if isinstance(result, CodeBlock):
+                result = result.body[-1]
+            elif isinstance(result, If):
+                result = result.bodies[0]
 
-            d_var = self._infere_type(target.rhs, **settings)
+            d_var = self._infere_type(result, **settings)
             dtype = d_var.pop('datatype')
             lhs = None
-            if isinstance(target.lhs, Symbol):
+            if isinstance(expr.lhs, Symbol):
                 lhs = Variable(dtype, lhs_name, **d_var)
                 self.insert_variable(lhs)
 
@@ -3542,19 +3511,20 @@ class Parser(object):
                 stmt.set_fst(expr.fst)
                 loops.insert(0, stmt)
             if isinstance(expr, FunctionalSum):
-                expr = FunctionalSum(loops, lhs, [])
+                expr = FunctionalSum(loops, lhs=lhs)
             elif isinstance(expr, FunctionalMin):
-                expr = FunctionalMin(loops, lhs, [])
+                expr = FunctionalMin(loops, lhs=lhs)
             elif isinstance(expr, FunctionalMax):
-                expr = FunctionalMax(loops, lhs, [])
+                expr = FunctionalMax(loops, lhs=lhs)
             return expr
         elif isinstance(expr, FunctionalFor):
 
-            target = expr.target
+            target = expr.expr
             index = expr.index
             indexes = expr.indexes
             dims = []
             body = expr.loops[1]
+            
             while isinstance(body, For):
                 a = self._annotate(body.iterable, **settings)
                 stop = None
@@ -3585,6 +3555,7 @@ class Parser(object):
                     if dvar['rank'] == 0:
                         dvar['allocatable'] = dvar['is_pointer'] = False
                     var = Variable(dtype, var.name, **dvar)
+
                     stop = a.shape[0]
                 else:
                     raise NotImplementedError('TODO')
@@ -3620,18 +3591,18 @@ class Parser(object):
             # maybe use the c++ library of sympy
 
             # we annotate the target.rhs to infere the type of the list created
-            rhs_args = []
-            rhs = target.rhs
-            while isinstance(rhs, IfTernaryOperator):
-                rhs_args.append(rhs.args[0][1][0])
-                rhs = rhs.args[1][1][0]
-            rhs_args.append(rhs)
-            rhs = Add(*rhs_args)
+            target_args = []
+            
+            while isinstance(target, IfTernaryOperator):
+                target_args.append(target.args[0][1][0])
+                target = target.args[1][1][0]
+            target_args.append(target)
+            target = Add(*target_args)
             # we do this to infere types correctly
 
-            rhs = self._annotate(rhs, **settings)
-            lhs_name = _get_name(target.lhs)
-            d_var = self._infere_type(rhs, **settings)
+            target = self._annotate(target, **settings)
+            lhs_name = _get_name(expr.lhs)
+            d_var = self._infere_type(target, **settings)
             dtype = d_var.pop('datatype')
             d_var['rank'] += 1
             shape = list(d_var['shape'])
@@ -3642,7 +3613,7 @@ class Parser(object):
             self.insert_variable(lhs)
             loops = [self._annotate(i, **settings) for i in expr.loops]
             index = self._annotate(index, **settings)
-            return FunctionalFor(loops, lhs, indexes, index)
+            return FunctionalFor(loops, lhs=lhs, indexes=indexes, index=index)
         elif isinstance(expr, While):
 
             test = self._annotate(expr.test, **settings)

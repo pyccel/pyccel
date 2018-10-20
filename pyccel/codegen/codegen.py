@@ -160,8 +160,10 @@ class Codegen(object):
                         vars_ += [stmt.target] + collect_vars(stmt.body)
                     else:
                         vars_ += stmt.target + collect_vars(stmt.body)
+                elif isinstance(stmt, GC):
+                    vars_ += [stmt.lhs] + collect_vars(stmt.loops)
                 elif isinstance(stmt, FunctionalFor):
-                    vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
+                    vars_ += [stmt.lhs] + stmt.indexes + collect_vars(stmt.loops)
                 elif isinstance(stmt, If):
                     vars_ += collect_vars(stmt.bodies)
                 elif isinstance(stmt, (While, CodeBlock)):
