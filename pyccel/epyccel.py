@@ -67,7 +67,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
                                                 extra_args, includes)
 
         cmd = """python3 -c 'import numpy.f2py as f ;f.main()' {}"""
-        
+
 
         cmd = cmd.format(args)
         output = subprocess.check_output(cmd, shell=True)
@@ -470,12 +470,12 @@ class ContextPyccel(object):
         self._name = 'mod_{}'.format(name)
         self._constants = OrderedDict()
         self._functions = OrderedDict()
-        
+
         self._folder = context_folder
         if (len(self._folder)>0):
             self._folder+='.'
         self._os_folder = self._folder.replace('.','/')
-        
+
         contexts = context_folder.split('.')
         outputs  =  output_folder.split('.')
         n = min(len(contexts),len(outputs))
@@ -484,7 +484,7 @@ class ContextPyccel(object):
             i+=1
         contexts = contexts[i:]
         outputs  =  outputs[i:]
-        
+
         if (len(contexts)==0 and len(outputs)==0):
             self._rel_folder = ''
         else:

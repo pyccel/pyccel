@@ -83,7 +83,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='folder in which the output is stored.')
     group.add_argument('--prefix', type=str, default = '',\
                        help='add prefix to the generated file.')
-    group.add_argument('--prefix-module', type=str, default = 'mod',\
+    group.add_argument('--prefix-module', type=str, default = '',\
                        help='add prefix module name.')
     # ...
 
