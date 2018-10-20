@@ -119,7 +119,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
-from pyccel.ast import inline, subs
+from pyccel.ast import inline, subs, create_variable
 from pyccel.ast.datatypes import sp_dtype, str_dtype
 from pyccel.ast.core import local_sympify, int2float, Pow, _atomic
 
@@ -1772,7 +1772,7 @@ class Parser(object):
                 name = strip_ansi_escape.sub('', parent.value[0].value)
                 cond = False
             else:
-                lhs = self.create_variable(result)
+                lhs = create_variable(result)
                 name = stmt.parent.parent
                 name = strip_ansi_escape.sub('', name.value[0].value)
                 cond = True
@@ -1919,7 +1919,7 @@ class Parser(object):
             result = self._fst_to_ast(stmt.result)
             generators = list(self._fst_to_ast(stmt.generators))
             lhs = self._fst_to_ast(stmt.parent.target)
-            index = self.create_variable(lhs)
+            index = create_variable(lhs)
             if isinstance(result, (Tuple, list, tuple)):
                 rank = len(np.shape(result))
             else:
@@ -2603,7 +2603,7 @@ class Parser(object):
                 atoms = [self._infere_type(a , **settings) for a in atoms]
                 atoms = [a['is_pointer'] for a in atoms]
                 args  = [self._annotate(a, **settings) for a in expr.args]
-                temp  = self.create_variable(expr)
+                temp  = create_variable(expr)
 
                 if any(atoms) or atoms_ls:
                     return Concatinate(args, True)
@@ -2979,7 +2979,7 @@ class Parser(object):
                     free = stmts[i].free_symbols
                     free = free.difference(free_gl)
                     free = list(free)
-                    var = self.create_variable(stmts[i])
+                    var = create_variable(stmts[i])
                     if len(free) > 0:
                         var = IndexedBase(var)[free]
                     vars_new.append(var)
@@ -3344,7 +3344,7 @@ class Parser(object):
                 func  = Function(func)
                 alloc = Assign(lhs,Zeros(lhs.shape,lhs.dtype))
                 alloc.set_fst(expr.fst)
-                index = self.create_variable(expr)
+                index = create_variable(expr)
                 index = Variable('int',index.name)
                 range_ = Function('range')(Function('len')(lhs))
                 name  = _get_name(lhs)
@@ -3436,13 +3436,13 @@ class Parser(object):
             iterator = expr.target
 
             if isinstance(iterable, Variable):
-                indx = self.create_variable(iterable)
+                indx = create_variable(iterable)
                 assign = Assign(iterator, IndexedBase(iterable)[indx])
                 assign.set_fst(expr.fst)
                 iterator = indx
                 body = [assign] + body
             elif isinstance(iterable, Map):
-                indx = self.create_variable(iterable)
+                indx = create_variable(iterable)
                 func = iterable.args[0]
                 args = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
                 assing = assign = Assign(iterator, func(*args))
@@ -3451,7 +3451,7 @@ class Parser(object):
                 body = [assign] + body
             elif isinstance(iterable, Zip):
                 args = iterable.args
-                indx = self.create_variable(args)
+                indx = create_variable(args)
                 for i in range(len(args)):
                     assign = Assign(iterator[i],
                                     IndexedBase(args[i])[indx])
@@ -3470,7 +3470,7 @@ class Parser(object):
                 args = iterable.args
                 iterator = list(iterator)
                 for i in range(len(args)):
-                    indx = self.create_variable(i)
+                    indx = create_variable(i)
                     assign = Assign(iterator[i],
                                     IndexedBase(args[i])[indx])
                     assign.set_fst(expr.fst)
@@ -3702,7 +3702,7 @@ class Parser(object):
             for result in results:
                 if isinstance(result, Expr) and not isinstance(result,
                         Symbol):
-                    new_vars += [self.create_variable(result)]
+                    new_vars += [create_variable(result)]
                     stmt = Assign(new_vars[-1], result)
                     stmt.set_fst(expr.fst)
                     assigns += [stmt]
@@ -3772,7 +3772,7 @@ class Parser(object):
                 index_arg = args.index(arg)
                 arg = Symbol(arg)
                 vec_arg = IndexedBase(arg)
-                index = self.create_variable(expr.body)
+                index = create_variable(expr.body)
                 range_ = Function('range')(Function('len')(arg))
                 args   = symbols(args)
                 args[index_arg] = vec_arg[index]

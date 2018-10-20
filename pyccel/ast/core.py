@@ -219,7 +219,7 @@ def _atomic(e, cls=None,ignore=()):
 
 
 def extract_subexpressions(expr):
-   """this function takes an expression and returns a list 
+    """this function takes an expression and returns a list 
       of statements if this expression contains sub expressions that need
       to be evaluated outside of the expression
 
@@ -237,19 +237,20 @@ def extract_subexpressions(expr):
               sp_Rational)
 
     funcs_names = ('diag', 'zeros', 'ones', 
-                      'empty', 'array', 'cross')
+                   'empty', 'array', 'cross',
+                   'map','zip','enumerate')
 
     def change_expr(expr):
         if isinstance(expr, cls):
             args = expr.args
             args = [change_expr(arg) for arg in args]
-            return expr.func(*args, evaluate=False))
+            return expr.func(*args, evaluate=False)
         if isinstance(expr, Application):
             if str(expr.func) in funcs_names:
                 var = create_variable(expr)
                 stmts.append(expr)
                 return var
-             else:
+            else:
                 return expr
         elif isinstance(expr, id_cls):
             return expr
@@ -280,19 +281,21 @@ def int2float(expr):
         return expr.func(*args)
     else:
         raise NotImplementedError('TODO')
-    return expr
+
+def float2int(expr):
+    pass
 
 def create_variable(expr, store=False):
-        """."""
+    """."""
 
-        import numpy as np
-        try:
-            name = 'result_' + str(abs(hash(expr)
-                                   + np.random.randint(500)))[-4:]
-        except:
-            name = 'result_' + str(abs(np.random.randint(500)))[-4:]
+    import numpy as np
+    try:
+        name = 'result_' + str(abs(hash(expr)
+                                  + np.random.randint(500)))[-4:]
+    except:
+        name = 'result_' + str(abs(np.random.randint(500)))[-4:]
 
-        return Symbol(name)
+    return Symbol(name)
 
 class Pow(sp_Pow):
 
