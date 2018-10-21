@@ -233,23 +233,30 @@ def extract_subexpressions(expr):
     id_cls = (Symbol, Indexed, IndexedBase,
               DottedVariable, sp_Float, sp_Integer, 
               sp_Rational, ImaginaryUnit,Boolean, 
-              BooleanTrue, BooleanFalse)
+              BooleanTrue, BooleanFalse, String,
+              ValuedArgument, Nil, List)
 
     funcs_names = ('diag', 'zeros', 'ones', 
-                   'empty', 'array', 'cross',
-                   'map','zip','enumerate')
+                   'empty', 'cross','map',
+                   'zip','enumerate')
 
     def substitute(expr):
         if isinstance(expr, cls):
             args = expr.args
             args = [substitute(arg) for arg in args]
             return expr.func(*args, evaluate=False)
-        if isinstance(expr, Application):
+        elif isinstance(expr, Application):
+            args = substitute(expr.args)
+            
             if str(expr.func) in funcs_names:
                 var = create_variable(expr)
-                stmts.append(Assign(var, expr))
+                expr = expr.func(*args, evaluate=False)
+                expr = Assign(var, expr)
+                stmts.append(expr)
+
                 return var
             else:
+                expr = expr.func(*args, evaluate=False)
                 return expr
         elif isinstance(expr, id_cls):
             return expr
@@ -258,12 +265,30 @@ def extract_subexpressions(expr):
             return expr.lhs
         elif isinstance(expr,IfTernaryOperator):
             var = create_variable(expr)
-            stmts.append(Assign(var,expr))
+            new = Assign(var,expr)
+            new.set_fst(expr.fst)
+            stmts.append(new)
             return var
+        elif isinstance(expr, List):
+            args = []
+            for i in expr:
+                args.append(substitute(i))
             
-    
-    expr  = substitute(expr)
-    return stmts, expr    
+            return List(*args, sympify=False)
+
+        elif isinstance(expr, (Tuple, tuple, list)):
+            args = []
+            for i in expr:
+                args.append(substitute(i))
+            
+            return args
+                
+        else:
+            raise TypeError('statment {} not supported yet'.format(type(expr)))
+            
+
+    new_expr  = substitute(expr)
+    return stmts, new_expr    
             
 def inline(func, args):
         local_vars = func.local_vars
@@ -460,6 +485,7 @@ class Assign(Basic):
         like=None,
         ):
         cls._strict = strict
+
         if strict:
             lhs = sympify(lhs, locals=local_sympify)
             rhs = sympify(rhs, locals=local_sympify)
@@ -570,10 +596,11 @@ class CodeBlock(Basic):
             if isinstance(i, CodeBlock):
                 ls += i.body
             elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application)):
+                            Application, Expr, IfTernaryOperator)):
                 ls.append(i)
             else:
-                raise TypeError('statement not supported yet')
+                
+                raise TypeError('statement of type {} not supported yet'.format(type(i)))
         obj = Basic.__new__(cls, ls)
         if isinstance(ls[-1], (Assign, AugAssign)):
             obj.set_fst(ls[-1].fst)

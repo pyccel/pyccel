@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from .basic import Basic
+from sympy.core.expr  import Expr, AtomicExpr
 
 class FunctionalFor(Basic):
 
@@ -38,27 +39,22 @@ class FunctionalFor(Basic):
         return self._args[4]
 
 
-class GeneratorComprehension(Basic):
-
+class GeneratorComprehension(AtomicExpr, Basic):
     pass
 
 
 class FunctionalSum(FunctionalFor, GeneratorComprehension):
-
     name = 'sum'
 
 
 class FunctionalMax(FunctionalFor, GeneratorComprehension):
-
     name = 'max'
 
 
 class FunctionalMin(FunctionalFor, GeneratorComprehension):
-
     name = 'min'
 
 
 class FunctionalMap(FunctionalFor, GeneratorComprehension):
-
     pass
 

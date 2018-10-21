@@ -1226,9 +1226,9 @@ class Parser(object):
             ls = [self._fst_to_ast(i) for i in stmt]
 
             if isinstance(stmt, (list, ListNode)):
+                
                 return List(*ls)
             else:
-
                 return Tuple(*ls)
 
         # ...
@@ -2389,7 +2389,7 @@ class Parser(object):
             d_var['is_pointer'] = True
             return d_var
         elif isinstance(expr, GC):
-            return self._infere_type(expr.target, **settings)
+            return self._infere_type(expr.expr, **settings)
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -2520,6 +2520,7 @@ class Parser(object):
                 var = self.get_symbolic_function(name)
 
             if var is None:
+              
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2613,6 +2614,12 @@ class Parser(object):
             # we reconstruct the arithmetic expressions 
             # using the annotated arguments
 
+            stmts, expr = extract_subexpressions(expr)
+            
+            if stmts:
+                stmts = [self._annotate(stmt, **settings) 
+                         for stmt in stmts]
+            
             if isinstance(expr, Add):
 
                 atoms_str = _atomic(expr, String)
@@ -2632,19 +2639,16 @@ class Parser(object):
                 elif atoms_str:
                     return Concatinate(args, False)
 
-            stmts, expr = extract_subexpressions(expr)
-            if stmts:
-                stmts = [self._annotate(stmt, **settings) 
-                         for stmt in stmts]
+            
             
             args = [self._annotate(a, **settings) for a in expr.args]
-
             expr_new = expr.func(*args, evaluate=False)
-
+            expr_new = expr_new.doit(deep=False)
             #if not expr_new.is_integer and expr_new.is_real:
             #    expr_new = int2float(expr_new)
-
-            return expr_new.doit(deep=False)
+            if stmts:
+                expr_new = CodeBlock(stmts + [expr_new])
+            return expr_new
 
         elif isinstance(expr, Lambda):
 
@@ -2669,45 +2673,25 @@ class Parser(object):
 
         elif isinstance(expr, Application):
 
-            # ... DEBUG
+            name     = _get_name(expr)
+            func     = self.get_function(name)
 
-            name = _get_name(expr)
-            func = self.get_function(name)
-            args = list(expr.args)
-            for (i, arg) in enumerate(expr.args):
-                if isinstance(arg, IfTernaryOperator):
-                    new_args1 = args[:i] + list(arg.args[0][1]) \
-                        + args[i + 1:]
-                    func1 = Function(name)(*new_args1)
-                    new_args2 = args[:i] + list(arg.args[1][1]) \
-                        + args[i + 1:]
-                    func2 = Function(name)(*new_args2)
-                    expr = IfTernaryOperator(Tuple(arg.args[0][0],
-                            [func1]), Tuple(arg.args[1][0], [func2]))
-                    expr.set_fst(arg.fst)
-                    return self._annotate(expr, **settings)
-            args = []
-            stmts = []
-
-            for i in expr.args:
-                if isinstance(i, Assign):
-                    args.append(i.lhs)
-                    stmts.append(i)
-                else:
-                    args.append(i)
-            for i in range(len(stmts)):
-                stmts[i] = self._annotate(stmts[i], **settings)
-            args = [self._annotate(arg, **settings) for arg in args]
-
+           
+            stmts, new_args = extract_subexpressions(expr.args)
+            
+            stmts = [self._annotate(stmt, **settings) for stmt in stmts]   
+            args  = [self._annotate(arg, **settings) for arg in new_args]
+            
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
-
-            if F:
+           
+            if F is not None:
                 if len(stmts) > 0:
                     stmts.append(F)
                     return CodeBlock(stmts)
                 return F
+
             elif name in self._namespace['cls_constructs'].keys():
 
                 # TODO improve the test
@@ -2756,12 +2740,14 @@ class Parser(object):
                                   blocker=self.blocking)
                 else:
                     if not isinstance(func, (FunctionDef, Interface)):
+                       
                         expr = func(*args)
                         if len(stmts) > 0:
                             stmts.append(expr)
                             return CodeBlock(stmts)
                         return expr
                     else:
+                        
                         if 'inline' in func.decorators.keys():
                             return inline(func,args)
 
@@ -2838,7 +2824,7 @@ class Parser(object):
                             return CodeBlock(stmts)
                         return expr
 
-        elif isinstance(expr, Expr):
+        elif isinstance(expr, Expr) and not isinstance(expr, GC):
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
         elif isinstance(expr, (Assign, AugAssign)):
@@ -3019,8 +3005,9 @@ class Parser(object):
                 rhs = self._annotate(stmt, **settings)
                 return rhs
 
-           
+
             rhs = self._annotate(rhs, **settings)
+            
 
             if isinstance(rhs, IfTernaryOperator):
                 args = rhs.args
@@ -3071,6 +3058,7 @@ class Parser(object):
 
 
             elif isinstance(rhs, CodeBlock):
+                
                 stmts = rhs.body
                 stmt = stmts[-1]
                 if isinstance(expr, Assign):
@@ -3083,9 +3071,6 @@ class Parser(object):
                 return CodeBlock(stmts)
 
             # d_var can be a list of dictionaries
-
-            if isinstance(rhs, ConstructorCall):
-                d_var = self._infere_type(rhs, **settings)
 
             elif isinstance(rhs, Application):
 
@@ -3291,7 +3276,7 @@ class Parser(object):
             if isinstance(rhs, (Map, Zip)):
                 func  = _get_name(rhs.args[0])
                 func  = Function(func)
-                alloc = Assign(lhs,Zeros(lhs.shape,lhs.dtype))
+                alloc = Assign(lhs, Zeros(lhs.shape,lhs.dtype))
                 alloc.set_fst(expr.fst)
                 index = create_variable(expr)
                 index = Variable('int',index.name)
@@ -3301,7 +3286,7 @@ class Parser(object):
                 args  = rhs.args[1:]
                 args  = [_get_name(arg) for arg in args]
                 args  = [IndexedBase(arg)[index] for arg in args]
-                body  = [Assign(var,func(*args))]
+                body  = [Assign(var, func(*args))]
                 body[0].set_fst(expr.fst)
                 body  = For(index, range_, body, strict=False)
                 body  = self._annotate(body, **settings)
@@ -3493,6 +3478,7 @@ class Parser(object):
                 expr = FunctionalMin(loops, lhs=lhs)
             elif isinstance(expr, FunctionalMax):
                 expr = FunctionalMax(loops, lhs=lhs)
+            
             return expr
 
         elif isinstance(expr, FunctionalFor):
