@@ -1227,9 +1227,9 @@ class Parser(object):
 
             if isinstance(stmt, (list, ListNode)):
                 
-                return List(*ls)
+                return List(*ls, sympify=False)
             else:
-                return Tuple(*ls)
+                return Tuple(*ls, sympify=False)
 
         # ...
 
@@ -1811,18 +1811,19 @@ class Parser(object):
 
             test = self._fst_to_ast(stmt.test)
             body = self._fst_to_ast(stmt.value)
-            return Tuple(test, body)
+            return Tuple(test, body, sympify=False)
         elif isinstance(stmt, ElseNode):
 
-            test = True
+            test = true
             body = self._fst_to_ast(stmt.value)
-            return Tuple(test, body)
+            return Tuple(test, body, sympify=False)
         elif isinstance(stmt, TernaryOperatorNode):
 
             test1 = self._fst_to_ast(stmt.value)
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
-            args = [Tuple(test1, [first]), Tuple(True, [second])]
+            args = [Tuple(test1, [first], sympify=False), 
+                    Tuple(true, [second], sympify=False)]
             expr = IfTernaryOperator(*args)
             expr.set_fst(stmt)
             return expr
@@ -2415,12 +2416,13 @@ class Parser(object):
         if isinstance(expr, (list, tuple, Tuple)):
             ls = []
             for i in expr:
+                
                 a = self._annotate(i, **settings)
                 ls.append(a)
             if isinstance(expr, List):
-                return List(*ls)
+                return List(*ls, sympify=False)
             else:
-                return Tuple(*ls)
+                return Tuple(*ls, sympify=False)
 
         elif isinstance(expr, (CodeBlock, Nil, ValuedArgument,
                                EmptyLine, NewLine,Break, Continue, Pass,
@@ -3044,7 +3046,7 @@ class Parser(object):
                 body = subs(body,sub)
                 results = [i.expr for i in results]
                 lhs = expr.lhs
-                if isinstance(lhs ,(list,tuple,Tuple)):
+                if isinstance(lhs ,(list, tuple, Tuple)):
                     sub = [list(zip(i,lhs)) for i in results]
                 else:
                     sub = [(i[0],lhs) for i in results]
@@ -3565,7 +3567,7 @@ class Parser(object):
             shape = list(d_var['shape'])
             d_var['is_pointer'] = True
             shape.append(dim)
-            d_var['shape'] = Tuple(*shape)
+            d_var['shape'] = Tuple(*shape, sympify=False)
             
             lhs_name = _get_name(expr.lhs)
             lhs = Variable(dtype, lhs_name, **d_var)
@@ -3583,7 +3585,6 @@ class Parser(object):
             return While(test, body)
         
         elif isinstance(expr, If):
-
             args = self._annotate(expr.args, **settings)
             return expr.func(*args)
         elif isinstance(expr, VariableHeader):
@@ -3779,7 +3780,7 @@ class Parser(object):
                                 # update shape
                                 # TODO can this be improved? add some check
 
-                                d_var['shape'] = Tuple(*additional_args)
+                                d_var['shape'] = Tuple(*additional_args, sympify=False)
                             a_new = Variable(dtype, str(a.name),
                                     **d_var)
 

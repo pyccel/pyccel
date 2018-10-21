@@ -225,6 +225,7 @@ def extract_subexpressions(expr):
       expr : Add, Mul, Pow, Application
 
     """
+    
     stmts = []
     cls   = (Add, Mul, sp_Pow, And,  
              Or, Eq, Ne, Lt, Gt, 
@@ -239,7 +240,7 @@ def extract_subexpressions(expr):
     funcs_names = ('diag', 'zeros', 'ones', 
                    'empty', 'cross','map',
                    'zip','enumerate')
-
+    #TODO put only imported functions
     def substitute(expr):
         if isinstance(expr, cls):
             args = expr.args
@@ -259,13 +260,14 @@ def extract_subexpressions(expr):
                 expr = expr.func(*args, evaluate=False)
                 return expr
         elif isinstance(expr, id_cls):
+            
             return expr
         elif isinstance(expr, GC):
             stmts.append(expr)
             return expr.lhs
         elif isinstance(expr,IfTernaryOperator):
             var = create_variable(expr)
-            new = Assign(var,expr)
+            new = Assign(var, expr)
             new.set_fst(expr.fst)
             stmts.append(new)
             return var
@@ -278,9 +280,9 @@ def extract_subexpressions(expr):
 
         elif isinstance(expr, (Tuple, tuple, list)):
             args = []
+            
             for i in expr:
                 args.append(substitute(i))
-            
             return args
                 
         else:
@@ -899,7 +901,7 @@ class While(Basic):
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body))
+        body = Tuple(*(sympify(i, locals=local_sympify) for i in body),sympify=False)
         return Basic.__new__(cls, test, body)
 
     @property
@@ -940,7 +942,7 @@ class With(Basic):
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body))
+        body = Tuple(*(sympify(i, locals=local_sympify) for i in body), sympify=False)
         return Basic.__new__(cls, test, body, settings)
 
     @property
@@ -1246,7 +1248,7 @@ class Block(Basic):
                 raise TypeError('Only a Variable instance is allowed.')
         if not iterable(body):
             raise TypeError('body must be an iterable')
-        body = Tuple(*body)
+        body = Tuple(*body, sympify=False)
         return Basic.__new__(cls, name, variables, body)
 
     @property
@@ -1407,7 +1409,7 @@ class Module(Basic):
         for i in classes:
             imports += i.imports
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports)
+        imports = Tuple(*imports, sympify=False)
 
         return Basic.__new__(
             cls,
@@ -1550,7 +1552,7 @@ class Program(Basic):
         for i in classes:
             imports += i.imports
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports)
+        imports = Tuple(*imports, sympify=False)
 
         if not iterable(modules):
             raise TypeError('modules must be an iterable')
@@ -1658,7 +1660,7 @@ class For(Basic):
                 raise TypeError('body must be an iterable')
 
             body = Tuple(*(sympify(i, locals=local_sympify) for i in
-                         body))
+                         body), sympify=False)
         return Basic.__new__(cls, target, iter, body)
 
     @property
@@ -2426,7 +2428,7 @@ class FunctionCall(Basic):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
-        args = Tuple(*args)
+        args = Tuple(*args, sympify=False)
         # ...
 
         return Basic.__new__(cls, func, args)
@@ -2639,7 +2641,7 @@ class FunctionDef(Basic):
 #        if not all(isinstance(a, Argument) for a in arguments):
 #            raise TypeError("All arguments must be of type Argument")
 
-        arguments = Tuple(*arguments)
+        arguments = Tuple(*arguments, sympify=False)
 
         # body
 
@@ -2651,7 +2653,7 @@ class FunctionDef(Basic):
 
         if not iterable(results):
             raise TypeError('results must be an iterable')
-        results = Tuple(*results)
+        results = Tuple(*results, sympify=False)
 
         # if method
 
@@ -3065,7 +3067,7 @@ class ClassDef(Basic):
 
         if not iterable(attributes):
             raise TypeError('attributs must be an iterable')
-        attributes = Tuple(*attributes)
+        attributes = Tuple(*attributes, sympify=False)
 
         # methods
 
@@ -3093,7 +3095,7 @@ class ClassDef(Basic):
             imports += list(i.imports)
 
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports)
+        imports = Tuple(*imports, sympify=False)
 
         # ...
         # look if the class has the method __del__
@@ -3121,7 +3123,7 @@ class ClassDef(Basic):
          #  methods = list(methods) + [free]
          # TODO move this somewhere else
 
-        methods = Tuple(*methods)
+        methods = Tuple(*methods, sympify=False)
 
         # ...
 
@@ -3299,7 +3301,7 @@ class Import(Basic):
         elif iterable(target):
             for i in target:
                 _target.append(_format(i))
-        target = Tuple(*_target)
+        target = Tuple(*_target, sympify=False)
 
         if not source is None:
             source = _format(source)
@@ -3802,7 +3804,7 @@ class Del(Basic):
         # TODO: check that the variable is allocatable
 
         if not iterable(expr):
-            expr = Tuple(expr)
+            expr = Tuple(expr, sympify=False)
         return Basic.__new__(cls, expr)
 
     @property
