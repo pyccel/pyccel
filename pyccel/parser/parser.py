@@ -2265,6 +2265,8 @@ class Parser(object):
 
             return d_var
 
+        elif isinstance(expr, GC):
+            return self._infere_type(expr.lhs, **settings)
         elif isinstance(expr, Expr):
 
             cls = (Application, DottedVariable, Variable,
@@ -2388,9 +2390,7 @@ class Parser(object):
             d_var['shape'] = (expr.length, )  # TODO improve
             d_var['allocatable'] = False
             d_var['is_pointer'] = True
-            return d_var
-        elif isinstance(expr, GC):
-            return self._infere_type(expr.expr, **settings)
+            return d_var    
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -3028,7 +3028,7 @@ class Parser(object):
                 expr = IfTernaryOperator(*new_args)
                 return self._annotate(expr, **settings)
 
-            if isinstance(rhs, FunctionDef):
+            elif isinstance(rhs, FunctionDef):
 
                 # case of lambdify
 
@@ -3038,7 +3038,7 @@ class Parser(object):
                 rhs = self._annotate(rhs, **settings)
                 return rhs
 
-            if isinstance(rhs, Block):
+            elif isinstance(rhs, Block):
                 results = _atomic(rhs.body,Return)
 
                 sub = list(zip(results,[EmptyLine()]*len(results)))
@@ -3054,8 +3054,19 @@ class Parser(object):
                 expr = Block(rhs.name, rhs.variables, body)
                 return expr
 
-
-            if isinstance(rhs, FunctionalFor):
+            
+            elif isinstance(rhs, FunctionalFor):
+                if isinstance(rhs, GC):
+                    if _get_name(rhs.lhs) != _get_name(lhs):
+                        if isinstance(rhs, FunctionalSum):
+                            stmt = AugAssign(lhs,'+',rhs.lhs)
+                        elif isinstance(rhs, FunctionalMin):
+                            stmt = Assign(lhs, Min(lhs,rhs.lhs))
+                        elif isinstance(rhs, FunctionalMax):
+                            stmt = Assign(lhs, Max(lhs, rhs.lhs))
+                        stmt.set_fst(rhs.fst)
+                        stmt = self._annotate(stmt, **settings)
+                        return CodeBlock([rhs, stmt])
                 return rhs
 
 
@@ -3096,9 +3107,6 @@ class Parser(object):
                 
                 else:
                     d_var = self._infere_type(rhs, **settings)
-
-            elif isinstance(rhs, SumFunction):
-                d_var = self._infere_type(rhs.body, **settings)
 
             elif isinstance(rhs, Map):
 
@@ -3456,6 +3464,7 @@ class Parser(object):
 
             d_var = self._infere_type(result, **settings)
             dtype = d_var.pop('datatype')
+     
             lhs = None
             if isinstance(expr.lhs, Symbol):
                 lhs = Variable(dtype, lhs_name, **d_var)
@@ -3474,14 +3483,15 @@ class Parser(object):
             stmt = Assign(expr.lhs, val)
             stmt.set_fst(expr.fst)
             loops.insert(0, stmt)
+
             if isinstance(expr, FunctionalSum):
-                expr = FunctionalSum(loops, lhs=lhs)
+                expr_new = FunctionalSum(loops, lhs=lhs)
             elif isinstance(expr, FunctionalMin):
-                expr = FunctionalMin(loops, lhs=lhs)
+                expr_new = FunctionalMin(loops, lhs=lhs)
             elif isinstance(expr, FunctionalMax):
-                expr = FunctionalMax(loops, lhs=lhs)
-            
-            return expr
+                expr_new = FunctionalMax(loops, lhs=lhs)
+            expr_new.set_fst(expr.fst)
+            return expr_new
 
         elif isinstance(expr, FunctionalFor):
 

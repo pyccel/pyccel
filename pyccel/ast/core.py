@@ -292,6 +292,31 @@ def extract_subexpressions(expr):
     new_expr  = substitute(expr)
     return stmts, new_expr    
             
+def collect_vars(ast):
+    """ collect variables in order to be declared"""
+    variables = {}
+    def collect(stmt):
+        if isinstance(stmt, (tuple, Tuple, list)):
+            for i in stmt:
+                collect(i)
+        if isinstance(stmt, For):
+            collect(stmt.target)
+            collect(stmt.body)
+        elif isinstance(stmt, FunctionalFor):
+            collect(stmt.lhs)
+            collect(stmt.loops)
+        elif isinstance(stmt, If):
+            collect(stmt.bodies)
+        elif isinstance(stmt, (While, CodeBlock)):
+            collect(stmt.body)
+        elif isinstance(stmt, (Assign, AliasAssign)):
+            collect(stmt.lhs)
+        elif isinstance(stmt, Variable):
+            if not isinstance(stmt.name, DottedName):
+                variables[stmt.name] = stmt
+    collect(ast)
+    return variables.values()
+
 def inline(func, args):
         local_vars = func.local_vars
         body = func.body

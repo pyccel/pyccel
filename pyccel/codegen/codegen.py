@@ -13,7 +13,7 @@ from pyccel.ast import Variable, DottedName
 from pyccel.ast import For, If, While, FunctionalFor, ForIterator
 from pyccel.ast import Is
 from pyccel.ast import GeneratorComprehension as GC
-
+from pyccel.ast import collect_vars
 from pyccel.parser.errors import Errors, PyccelCodegenError
 
 # TODO improve this import
@@ -151,29 +151,7 @@ class Codegen(object):
 
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
-
-        def collect_vars(ast):
-            vars_ = []
-            for stmt in ast:
-                if isinstance(stmt, For):
-                    if isinstance(stmt.target, Variable):
-                        vars_ += [stmt.target] + collect_vars(stmt.body)
-                    else:
-                        vars_ += stmt.target + collect_vars(stmt.body)
-                elif isinstance(stmt, GC):
-                    vars_ += [stmt.lhs] + collect_vars(stmt.loops)
-                elif isinstance(stmt, FunctionalFor):
-                    vars_ += [stmt.lhs] + stmt.indexes + collect_vars(stmt.loops)
-                elif isinstance(stmt, If):
-                    vars_ += collect_vars(stmt.bodies)
-                elif isinstance(stmt, (While, CodeBlock)):
-                    vars_ += collect_vars(stmt.body)
-                elif isinstance(stmt, (Assign, AliasAssign)):
-                    if isinstance(stmt.lhs, Variable):
-                        if not isinstance(stmt.lhs.name, DottedName):
-                            vars_ += [stmt.lhs]
-            return vars_
-
+         
         errors = Errors()
         errors.set_parser_stage('codegen')
 
@@ -216,13 +194,13 @@ class Codegen(object):
                 else:
                     body += [stmt]
 
-        variables = collect_vars(self.ast)
-        self._stmts['imports'] = imports
-        self._stmts['variables'] = list(set(variables))
-        self._stmts['body'] = body
-        self._stmts['routines'] = routines
-        self._stmts['classes'] = classes
-        self._stmts['modules'] = modules
+
+        self._stmts['imports']    = imports
+        self._stmts['variables']  = collect_vars(self.ast)
+        self._stmts['body']       = body
+        self._stmts['routines']   = routines
+        self._stmts['classes']    = classes
+        self._stmts['modules']    = modules
         self._stmts['interfaces'] = interfaces
 
         errors.check()
@@ -320,7 +298,6 @@ class Codegen(object):
         f.close()
 
         return filename
-
 
 class FCodegen(Codegen):
 

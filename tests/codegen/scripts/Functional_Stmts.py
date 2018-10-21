@@ -14,10 +14,9 @@ a=ones((5,5,5,5),'double')
 b=ones((5),'int')
 
 a5 = (2*sum(b[i] for i in range(5))**5+5)*min(j+1. for j in b)**4+9
-m  = 5+incr(2+incr(6+sum(b[i] for i in range(5))))
-#a6 = sum(sum(sum(a[i,k,o,2] for i in range(5)) for k in range(5)) for o in range(5))
-#a7 = min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
-#a8 = sum(sum(a[i,k,4,2] for i in range(5)) for k in range(5))**2
+a6  = 5+incr(2+incr(6+sum(b[i] for i in range(5))))
+a7 = sum(sum(sum(a[i,k,o,2] for i in range(5)) for k in range(5)) for o in range(5))
+a8 = min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
+a9 = sum(sum(a[i,k,4,2] for i in range(5)) for k in range(5))**2
 
-print a1,a2,a3,a4,a5
-#print a6,a7,a8 
+print(a1,a2,a3,a4,a5,a6,a7,a8,a9)
