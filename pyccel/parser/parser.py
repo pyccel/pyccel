@@ -1226,7 +1226,7 @@ class Parser(object):
             ls = [self._fst_to_ast(i) for i in stmt]
 
             if isinstance(stmt, (list, ListNode)):
-                
+
                 return List(*ls, sympify=False)
             else:
                 return Tuple(*ls, sympify=False)
@@ -1822,7 +1822,7 @@ class Parser(object):
             test1 = self._fst_to_ast(stmt.value)
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
-            args = [Tuple(test1, [first], sympify=False), 
+            args = [Tuple(test1, [first], sympify=False),
                     Tuple(true, [second], sympify=False)]
             expr = IfTernaryOperator(*args)
             expr.set_fst(stmt)
@@ -2129,12 +2129,12 @@ class Parser(object):
             d_var['rank'] = 0
             return d_var
         elif isinstance(expr, ConstructorCall):
-            cls_name = expr.func.cls_name 
+            cls_name = expr.func.cls_name
             cls = self.get_class(cls_name)
 
             dtype = self.get_class_construct(cls_name)()
-    
-            
+
+
             d_var['datatype'] = dtype
             d_var['allocatable'] = False
             d_var['shape'] = ()
@@ -2390,7 +2390,7 @@ class Parser(object):
             d_var['shape'] = (expr.length, )  # TODO improve
             d_var['allocatable'] = False
             d_var['is_pointer'] = True
-            return d_var    
+            return d_var
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -2416,7 +2416,7 @@ class Parser(object):
         if isinstance(expr, (list, tuple, Tuple)):
             ls = []
             for i in expr:
-                
+
                 a = self._annotate(i, **settings)
                 ls.append(a)
             if isinstance(expr, List):
@@ -2522,7 +2522,7 @@ class Parser(object):
                 var = self.get_symbolic_function(name)
 
             if var is None:
-              
+
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2613,22 +2613,22 @@ class Parser(object):
             Ge,
             )):
 
-            # we reconstruct the arithmetic expressions 
+            # we reconstruct the arithmetic expressions
             # using the annotated arguments
 
             stmts, expr = extract_subexpressions(expr)
-            
+
             if stmts:
-                stmts = [self._annotate(stmt, **settings) 
+                stmts = [self._annotate(stmt, **settings)
                          for stmt in stmts]
-            
+
             if isinstance(expr, Add):
 
                 atoms_str = _atomic(expr, String)
                 atoms_ls  = _atomic(expr, List)
 
                 cls       = (Symbol, Indexed, DottedVariable)
-                
+
                 atoms = _atomic(expr, cls)
                 atoms = [self._annotate(a, **settings) for a in atoms]
                 atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
@@ -2641,8 +2641,8 @@ class Parser(object):
                 elif atoms_str:
                     return Concatinate(args, False)
 
-            
-            
+
+
             args = [self._annotate(a, **settings) for a in expr.args]
             expr_new = expr.func(*args, evaluate=False)
             expr_new = expr_new.doit(deep=False)
@@ -2678,16 +2678,16 @@ class Parser(object):
             name     = _get_name(expr)
             func     = self.get_function(name)
 
-           
+
             stmts, new_args = extract_subexpressions(expr.args)
-            
-            stmts = [self._annotate(stmt, **settings) for stmt in stmts]   
+
+            stmts = [self._annotate(stmt, **settings) for stmt in stmts]
             args  = [self._annotate(arg, **settings) for arg in new_args]
-            
+
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
-           
+
             if F is not None:
                 if len(stmts) > 0:
                     stmts.append(F)
@@ -2742,14 +2742,14 @@ class Parser(object):
                                   blocker=self.blocking)
                 else:
                     if not isinstance(func, (FunctionDef, Interface)):
-                       
+
                         expr = func(*args)
                         if len(stmts) > 0:
                             stmts.append(expr)
                             return CodeBlock(stmts)
                         return expr
                     else:
-                        
+
                         if 'inline' in func.decorators.keys():
                             return inline(func,args)
 
@@ -2927,7 +2927,7 @@ class Parser(object):
                             raise NotImplementedError('TODO')
 
 
-          
+
 
             if isinstance(rhs, (Min, Max, Mul, Add, Pow)) \
                 and len(rhs.atoms(Summation)) > 0:
@@ -3009,7 +3009,7 @@ class Parser(object):
 
 
             rhs = self._annotate(rhs, **settings)
-            
+
 
             if isinstance(rhs, IfTernaryOperator):
                 args = rhs.args
@@ -3054,7 +3054,7 @@ class Parser(object):
                 expr = Block(rhs.name, rhs.variables, body)
                 return expr
 
-            
+
             elif isinstance(rhs, FunctionalFor):
                 if isinstance(rhs, GC):
                     if _get_name(rhs.lhs) != _get_name(lhs):
@@ -3071,7 +3071,7 @@ class Parser(object):
 
 
             elif isinstance(rhs, CodeBlock):
-                
+
                 stmts = rhs.body
                 stmt = stmts[-1]
                 if isinstance(expr, Assign):
@@ -3104,7 +3104,7 @@ class Parser(object):
                      # TODO imporve this will not work for the case of different results type
                     d_var[0]['datatype'] = sp_dtype(rhs)
 
-                
+
                 else:
                     d_var = self._infere_type(rhs, **settings)
 
@@ -3455,22 +3455,22 @@ class Parser(object):
             if lhs is None:
                 lhs  = Variable('int', lhs_name)
                 self.insert_variable(lhs)
-            
+
             loops = [self._annotate(i, **settings) for i in expr.loops]
             result = self._annotate(result, **settings)
             if isinstance(result, CodeBlock):
                 result = result.body[-1]
-            
+
 
             d_var = self._infere_type(result, **settings)
             dtype = d_var.pop('datatype')
-     
+
             lhs = None
             if isinstance(expr.lhs, Symbol):
                 lhs = Variable(dtype, lhs_name, **d_var)
                 self.insert_variable(lhs)
 
-            
+
             if isinstance(expr, FunctionalSum):
                 val = 0
                 if str_dtype(dtype) in ['real', 'complex']:
@@ -3500,7 +3500,7 @@ class Parser(object):
             indexes = expr.indexes
             dims = []
             body = expr.loops[1]
-            
+
             while isinstance(body, For):
                 a = self._annotate(body.iterable, **settings)
                 stop = None
@@ -3563,7 +3563,7 @@ class Parser(object):
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
 
-            # TODO find a faster way to calculate dim 
+            # TODO find a faster way to calculate dim
             # when step>1 and not isinstance(dim, Sum)
             # maybe use the c++ library of sympy
 
@@ -3578,7 +3578,7 @@ class Parser(object):
             d_var['is_pointer'] = True
             shape.append(dim)
             d_var['shape'] = Tuple(*shape, sympify=False)
-            
+
             lhs_name = _get_name(expr.lhs)
             lhs = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
@@ -3593,7 +3593,7 @@ class Parser(object):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
             return While(test, body)
-        
+
         elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return expr.func(*args)

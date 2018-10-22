@@ -925,7 +925,7 @@ class FCodePrinter(CodePrinter):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, ZerosLike):
-            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.rhs))
+            return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, Mod):
             lhs = self._print(expr.lhs)

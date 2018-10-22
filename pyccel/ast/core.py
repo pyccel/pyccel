@@ -12,7 +12,7 @@ from sympy.simplify.radsimp   import fraction
 from sympy.core.assumptions   import StdFactKB
 from sympy.core.operations    import LatticeOp
 from sympy.core.relational    import Equality, Relational
-from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge 
+from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge
 from sympy.core.singleton     import Singleton, S
 from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
 from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
@@ -217,7 +217,7 @@ def _atomic(e, cls=None,ignore=()):
 
 
 def extract_subexpressions(expr):
-    """this function takes an expression and returns a list 
+    """this function takes an expression and returns a list
       of statements if this expression contains sub expressions that need
       to be evaluated outside of the expression
 
@@ -225,19 +225,19 @@ def extract_subexpressions(expr):
       expr : Add, Mul, Pow, Application
 
     """
-    
+
     stmts = []
-    cls   = (Add, Mul, sp_Pow, And,  
-             Or, Eq, Ne, Lt, Gt, 
+    cls   = (Add, Mul, sp_Pow, And,
+             Or, Eq, Ne, Lt, Gt,
              Le, Ge)
 
     id_cls = (Symbol, Indexed, IndexedBase,
-              DottedVariable, sp_Float, sp_Integer, 
-              sp_Rational, ImaginaryUnit,Boolean, 
+              DottedVariable, sp_Float, sp_Integer,
+              sp_Rational, ImaginaryUnit,Boolean,
               BooleanTrue, BooleanFalse, String,
               ValuedArgument, Nil, List)
 
-    funcs_names = ('diag', 'zeros', 'ones', 
+    funcs_names = ('diag', 'zeros', 'ones',
                    'empty', 'cross','map',
                    'zip','enumerate')
     #TODO put only imported functions
@@ -248,7 +248,7 @@ def extract_subexpressions(expr):
             return expr.func(*args, evaluate=False)
         elif isinstance(expr, Application):
             args = substitute(expr.args)
-            
+
             if str(expr.func) in funcs_names:
                 var = create_variable(expr)
                 expr = expr.func(*args, evaluate=False)
@@ -260,7 +260,7 @@ def extract_subexpressions(expr):
                 expr = expr.func(*args, evaluate=False)
                 return expr
         elif isinstance(expr, id_cls):
-            
+
             return expr
         elif isinstance(expr, GC):
             stmts.append(expr)
@@ -275,23 +275,23 @@ def extract_subexpressions(expr):
             args = []
             for i in expr:
                 args.append(substitute(i))
-            
+
             return List(*args, sympify=False)
 
         elif isinstance(expr, (Tuple, tuple, list)):
             args = []
-            
+
             for i in expr:
                 args.append(substitute(i))
             return args
-                
+
         else:
             raise TypeError('statment {} not supported yet'.format(type(expr)))
-            
+
 
     new_expr  = substitute(expr)
-    return stmts, new_expr    
-            
+    return stmts, new_expr
+
 def collect_vars(ast):
     """ collect variables in order to be declared"""
     variables = {}
@@ -626,7 +626,7 @@ class CodeBlock(Basic):
                             Application, Expr, IfTernaryOperator)):
                 ls.append(i)
             else:
-                
+
                 raise TypeError('statement of type {} not supported yet'.format(type(i)))
         obj = Basic.__new__(cls, ls)
         if isinstance(ls[-1], (Assign, AugAssign)):
@@ -3664,6 +3664,7 @@ class Len(Function):
 
 
 # TODO - add examples
+#      - move to numpyext.py
 
 class ZerosLike(Function):
 
@@ -3749,6 +3750,18 @@ class ZerosLike(Function):
         else:
             raise TypeError('Unknown type for {name}, given {dtype}'.format(dtype=type(rhs),
                             name=rhs))
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        init_value = printer(self.init_value)
+
+        code_alloc = 'allocate({0}, mold={1})'.format(lhs_code, rhs_code)
+        code_init = '{0} = {1}'.format(lhs_code, init_value)
+        code = '{0}\n{1}'.format(code_alloc, code_init)
+        return code
 
 
 class Print(Basic):

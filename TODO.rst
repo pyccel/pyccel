@@ -11,6 +11,10 @@ TODO
 
 - improve dotprint for our ast objects
 
+- remove fprint from ast classes (see numpyext)
+
+- move all numpy objects to numpyext
+
 Bugs
 ****
 
