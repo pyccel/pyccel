@@ -50,7 +50,6 @@ class Array(Function):
             if isinstance(dtype, ValuedArgument):
                 dtype = dtype.value
             dtype = str(dtype).replace('\'', '')
-            arg = float2int(arg) if 'int' in dtype else arg
                 
             dtype,prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)

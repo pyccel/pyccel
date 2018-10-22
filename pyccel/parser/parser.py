@@ -77,12 +77,12 @@ from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign
-from pyccel.ast import AugAssign,CodeBlock
+from pyccel.ast import AugAssign, CodeBlock
 from pyccel.ast import Return
 from pyccel.ast import Pass
 from pyccel.ast import ConstructorCall
 from pyccel.ast import FunctionDef, Interface
-from pyccel.ast import PythonFunction,SympyFunction
+from pyccel.ast import PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For, FunctionalFor, ForIterator
@@ -120,8 +120,9 @@ from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
-from pyccel.ast.datatypes import sp_dtype, str_dtype
 from pyccel.ast.core import local_sympify, int2float, Pow, _atomic
+from pyccel.ast.datatypes import sp_dtype, str_dtype
+
 
 from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives
@@ -131,7 +132,7 @@ from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
-from pyccel.parser.syntax.openmp import parse as omp_parse
+from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError
@@ -160,16 +161,13 @@ from sympy import FunctionClass
 from sympy import ceiling, floor, Mod
 from sympy import Min, Max
 
-
 from sympy import oo  as INF
 from sympy import Pow as sp_Pow
-from sympy import Sum as Summation
 from sympy import Integer, Float
 from sympy import true, false
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Atom
-from sympy import cse
 from sympy import Expr
 from sympy import Dict
 from sympy import Not
@@ -188,10 +186,6 @@ redbaron.ipython_behavior = False
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
-
-#  ... useful functions for imports
-# TODO installed modules. must ask python (working version) where the module is
-#      installed
 
 #==============================================================================
 
@@ -2925,87 +2919,6 @@ class Parser(object):
                             return Subroutine(str(master.name))(*args)
                         else:
                             raise NotImplementedError('TODO')
-
-
-          
-
-            if isinstance(rhs, (Min, Max, Mul, Add, Pow)) \
-                and len(rhs.atoms(Summation)) > 0:
-                #TODO move this to another file
-                #we have this condition only when lambdify is called
-                ls = list(rhs.atoms(Summation))
-                ls += [rhs]
-                (ls, m) = cse(ls)
-
-                (vars_old, stmts) = map(list, zip(*ls))
-                vars_new = []
-                free_gl = rhs.free_symbols
-                free_gl.update(rhs.atoms(IndexedBase))
-                free_gl.update(vars_old)
-                stmts.append(rhs)
-
-                for i in range(len(stmts) - 1):
-                    free = stmts[i].free_symbols
-                    free = free.difference(free_gl)
-                    free = list(free)
-                    var = create_variable(stmts[i])
-                    if len(free) > 0:
-                        var = IndexedBase(var)[free]
-                    vars_new.append(var)
-                for i in range(len(stmts) - 1):
-                    stmts[i + 1] = stmts[i + 1].replace(vars_old[i],
-                            vars_new[i])
-                    stmts[-1] = stmts[-1].replace(stmts[i], vars_new[i])
-
-                allocate = []
-                for i in range(len(stmts) - 1):
-                    stmts[i] = Assign(vars_new[i], stmts[i])
-                    stmts[i].set_fst(expr.fst)
-                    if isinstance(vars_new[i], Indexed):
-                        ind = vars_new[i].indices
-                        tp = list(stmts[i + 1].atoms(Tuple))
-                        size = None
-                        size = [None] * len(ind)
-                        for (j, k) in enumerate(ind):
-                            for t in tp:
-                                if k == t[0]:
-                                    size[j] = t[2] - t[1] + 1
-                                    break
-                        if not all(size):
-                            raise ValueError('Unable to find range of index'
-                                    )
-                        name = _get_name(vars_new[i].base)
-                        var = Symbol(name)
-                        stmt = Assign(var, Function('zeros')(size[0]))
-                        stmt.set_fst(expr.fst)
-                        allocate.append(stmt)
-                        stmts[i] = For(ind[0], Function('range'
-                                )(size[0]), [stmts[i]], strict=False)
-
-                stmts[-1] = Assign(expr.lhs, stmts[-1])
-                stmts[-1].set_fst(expr.fst)
-                container = self._imports
-                if self._current:
-                    conainter = container[self._current]
-                container['zeros'] = Zeros
-                allocate = [self._annotate(i, **settings) for i in
-                            allocate]
-                stmts = [self._annotate(i, **settings) for i in stmts]
-                return CodeBlock(allocate + stmts)
-
-            if isinstance(rhs, Summation):
-                index = rhs.args[1]
-                target = Function('range')(index[1], index[2])
-                lhs = expr.lhs
-                body = AugAssign(lhs, '+', rhs.args[0])
-                body.set_fst(expr.fst)
-                body = self._annotate(body, **settings)
-                stmt = For(index[0], target, [body], strict=False)
-                stmt.set_fst(expr.fst)
-                stmt = FunctionalSum([stmt], body, [], None)
-                stmt.set_fst(expr.fst)
-                rhs = self._annotate(stmt, **settings)
-                return rhs
 
 
             rhs = self._annotate(rhs, **settings)
