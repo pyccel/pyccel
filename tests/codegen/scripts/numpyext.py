@@ -36,8 +36,7 @@ b1 = ones((4, 3))
 b2 = ones((n, 2*n))
 
 x = array([1.,2.,3.])
-# TODO bug
-#z = x
+z = x
 
 nn = shape(x)
 mm = shape(array([1.,2.,3.]))

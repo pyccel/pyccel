@@ -2162,6 +2162,7 @@ class Parser(object):
                 d_var['rank'] = expr.rank
                 d_var['is_pointer'] = False
                 d_var['order'] = expr.order
+
             elif name in ['Shape']:
                 d_var = {}
                 d_var['datatype'] = expr.dtype
@@ -2169,6 +2170,7 @@ class Parser(object):
                 d_var['rank'] = expr.rank
                 d_var['allocatable'] = False
                 d_var['is_pointer'] = False
+
             elif name in ['Array']:
 
                 dvar = self._infere_type(expr.arg, **settings)
@@ -2176,12 +2178,15 @@ class Parser(object):
                 if expr.dtype:
                     dvar['datatype'] = expr.dtype
                     dvar['precision'] = expr.precision
+
                 dvar['datatype'] = str_dtype(dvar['datatype'])
+
                 d_var = {}
                 d_var['allocatable'] = True
                 d_var['shape'] = dvar['shape']
                 d_var['rank'] = dvar['rank']
                 d_var['is_pointer'] = False
+                d_var['is_target'] = True # ISSUE 177: TODO this should be done using update_variable
                 d_var['datatype'] = 'ndarray' + dvar['datatype']
                 d_var['precision'] = dvar['precision']
 
@@ -2202,6 +2207,7 @@ class Parser(object):
                 d_var['rank'] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer'] = False
+
             elif name in ['Int','Int32','Int64','Real',
                              'Float32','Float64','Complex',
                               'Complex128','Complex64']:
@@ -3168,7 +3174,7 @@ class Parser(object):
 
                     # TODO uncomment this line, to make rhs target for
                     #      lists/tuples.
-                    #rhs = self.update_variable(rhs, is_target=True)
+#                    rhs = self.update_variable(rhs, is_target=True)
                     #
 
                 lhs = Variable(dtype, name, **d_lhs)
