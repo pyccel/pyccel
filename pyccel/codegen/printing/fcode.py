@@ -616,6 +616,21 @@ class FCodePrinter(CodePrinter):
         # TODO use the appropriate precision from rhs
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
 
+    def _print_Bounds(self, expr):
+        var = expr.var
+        rank = var.rank
+        bounds = []
+        for i in range(0, rank):
+            l = 'lbound({var},{i})'.format(var=self._print(var),
+                                           i=self._print(i+1))
+            u = 'ubound({var},{i})'.format(var=self._print(var),
+                                           i=self._print(i+1))
+
+            bounds.append('{lbound}:{ubound}'.format(lbound=l, ubound=u))
+        bounds = ','.join(bounds)
+        return bounds
+
+
     # ... MACROS
     def _print_MacroShape(self, expr):
         var = expr.argument

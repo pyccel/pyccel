@@ -808,12 +808,33 @@ class ZerosLike(Function):
         lhs_code = printer(lhs)
         rhs_code = printer(self.rhs)
         init_value = printer(self.init_value)
+        bounds_code = printer(Bounds(self.rhs))
 
-        code_alloc = 'allocate({0}, mold={1})'.format(lhs_code, rhs_code)
+        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
         code_init = '{0} = {1}'.format(lhs_code, init_value)
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
+
+
+#=======================================================================================
+
+class Bounds(Basic):
+
+    """
+    Represents bounds of NdArray.
+
+    Examples
+
+    """
+
+    def __new__(cls, var):
+        # TODO check type of var
+        return Basic.__new__(cls, var)
+
+    @property
+    def var(self):
+        return self._args[0]
 
 
 #=======================================================================================
