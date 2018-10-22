@@ -151,6 +151,7 @@ from sympy.logic.boolalg       import Boolean, BooleanTrue, BooleanFalse
 from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions    import StdFactKB
 
+from sympy import Sum as Summation
 from sympy import KroneckerDelta, Heaviside
 from sympy import Symbol, sympify, symbols
 from sympy import Eq, Ne, Lt, Le, Gt, Ge
