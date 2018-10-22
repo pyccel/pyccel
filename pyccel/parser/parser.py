@@ -2248,9 +2248,9 @@ class Parser(object):
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = sp_dtype(expr)
 
-            elif name in ['ZerosLike']:
-
+            elif name in ['ZerosLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
+
             elif name in ['floor']:
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = 'int'

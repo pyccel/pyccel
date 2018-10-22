@@ -30,7 +30,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
 from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand,Real,Complex
-from pyccel.ast.numpyext import ZerosLike
+from pyccel.ast.numpyext import ZerosLike, FullLike
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -532,6 +532,8 @@ class FCodePrinter(CodePrinter):
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
+    # TODO this is not used anymore since, we are calling printer inside
+    #      numpyext. must be improved!!
     def _print_ZerosLike(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
@@ -911,6 +913,7 @@ class FCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join(self._print(i) for i in expr.body)
 
+    # TODO the ifs as they are are, is not optimal => use elif
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -927,6 +930,7 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.rhs, (Range, Product)):
             return ''
+
         if isinstance(expr.rhs, Len):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
@@ -940,6 +944,9 @@ class FCodePrinter(CodePrinter):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, ZerosLike):
+            return expr.rhs.fprint(self._print, expr.lhs)
+
+        if isinstance(expr.rhs, FullLike):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, Mod):

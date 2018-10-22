@@ -839,6 +839,78 @@ class Bounds(Basic):
 
 #=======================================================================================
 
+class FullLike(Function):
+
+    """Represents variable assignment using numpy.full_like for code generation.
+
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    rhs : Variable
+        the input variable
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Zeros, FullLike
+    >>> n,m,x = symbols('n,m,x')
+    >>> y = Zeros(x, (n,m))
+    >>> z = FullLike(y)
+    """
+
+    # TODO improve in the spirit of assign
+
+    def __new__(cls, rhs=None, lhs=None):
+        if isinstance(lhs, str):
+            lhs = Symbol(lhs)
+
+        # Tuple of things that can be on the lhs of an assignment
+
+        assignable = (
+            Symbol,
+            MatrixSymbol,
+            MatrixElement,
+            Indexed,
+            Idx,
+            Variable,
+            )
+
+        if lhs and not isinstance(lhs, assignable):
+            raise TypeError('Cannot assign to lhs of type %s.'
+                            % type(lhs))
+
+        return Basic.__new__(cls, lhs, rhs)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := 0'.format(sstr(self.lhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        bounds_code = printer(Bounds(self.rhs))
+
+        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+        code_init = '{0} = {1}'.format(lhs_code, rhs_code)
+        code = '{0}\n{1}'.format(code_alloc, code_init)
+        return code
+
+
+#=======================================================================================
+
 class Empty(Zeros):
 
     """Represents a call to numpy.empty for code generation.
