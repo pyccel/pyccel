@@ -6,8 +6,8 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
-from .core import Constant,ZerosLike
-from .numpyext import Zeros, Ones, Empty, Min, Max, Abs
+from .core import Constant
+from .numpyext import Zeros, Ones, Empty, ZerosLike, Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
@@ -98,7 +98,7 @@ def builtin_function(expr, args=None):
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
         return Map(*args)
-    
+
 
     elif name == 'lambdify':
        if isinstance(args, Lambda):
@@ -108,7 +108,7 @@ def builtin_function(expr, args=None):
            f_arguments = args.variables
            func = FunctionDef('lambda', f_arguments, [], [expr_])
            return func
-           
+
        code = compile(args.body[0],'','single')
        g={}
        eval(code,g)
@@ -159,7 +159,7 @@ def builtin_import(expr):
 
             elif target == 'empty':
                 imports.append((target, Empty))
-   
+
             elif target == 'zeros_like':
                 imports.append((target,ZerosLike))
 
@@ -171,7 +171,7 @@ def builtin_import(expr):
 
             elif target == 'int':
                 imports.append((target, Int))
-  
+
             elif target == 'real':
                 imports.append((target, Real))
 
@@ -201,7 +201,7 @@ def builtin_import(expr):
 
             elif target in math_functions.keys():
                 imports.append((target, math_functions[target]))
-            
+
             elif target in numpy_constants.keys():
                 imports.append((target, numpy_constants[target]))
 
@@ -220,10 +220,10 @@ def builtin_import(expr):
                 imports.append((target, scipy_constants[target]))
         elif source == 'itertools':
             target = str(expr.target[i])
-        
+
             if target == 'product':
                 imports.append((target, Product))
-        
-    
+
+
 
     return imports

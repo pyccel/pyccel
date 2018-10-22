@@ -30,6 +30,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
 from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand,Real,Complex
+from pyccel.ast.numpyext import ZerosLike
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -42,7 +43,6 @@ from pyccel.ast.core import SeparatorComment, CommentBlock
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import Subroutine
-from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
