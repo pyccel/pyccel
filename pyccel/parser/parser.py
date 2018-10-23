@@ -2992,7 +2992,7 @@ class Parser(object):
                 # that needs to be splitted
                 # into a list of stmts
                 stmts = rhs.body
-                stmt = stmts[-1]
+                stmt  = stmts[-1]
                 if isinstance(expr, Assign):
                     stmt = Assign(expr.lhs, stmt)
                 elif isinstance(expr, AugAssign):
@@ -3049,8 +3049,7 @@ class Parser(object):
                 d_var = self._infere_type(rhs, **settings)
                 __name__ = d_var['datatype'].__class__.__name__
                 if __name__.startswith('Pyccel'):
-                    __name__ = d_var['datatype']
-                    __name__ = __name__.__class__.__name__[6:]
+                    __name__ = __name__[6:]
                     d_var['cls_base'] = self.get_class(__name__)
                     d_var['is_pointer'] = d_var['is_target'] or d_var['is_pointer']
 
@@ -3170,9 +3169,9 @@ class Parser(object):
                 dtype = d_var.pop('datatype')
                 name = lhs.lhs.name
                 if self._current == '__init__':
-                    cls = self.get_variable('self')
-                    cls = str(cls.cls_base.name)
-                    cls = self.get_class(cls)
+                    cls      = self.get_variable('self')
+                    cls_name = str(cls.cls_base.name)
+                    cls      = self.get_class(cls_name)
 
                     attributes = cls.attributes
                     parent     = cls.parent
@@ -3181,11 +3180,12 @@ class Parser(object):
 
                     # update the self variable with the new attributes
 
-                    dt = self.get_class_construct(cls_name)()
+                    dt       = self.get_class_construct(cls_name)()
                     cls_base = self.get_class(cls_name)
-                    var = Variable(dt, 'self', cls_base=cls_base)
+                    var      = Variable(dt, 'self', cls_base=cls_base)
+                    d_lhs    = d_var.copy()
                     self.insert_variable(var, 'self')
-                    d_lhs = d_var.copy()
+
 
                     # ISSUES #177: lhs must be a pointer when rhs is allocatable array
                     if d_lhs['allocatable'] and isinstance(rhs, Variable):
@@ -3981,7 +3981,7 @@ class Parser(object):
                     # using repr.
                     # TODO shall we improve it?
                     targets = [_get_name(i) for i in expr.target]
-                    p = self.d_parsers[str(expr.source)]
+                    p       = self.d_parsers[str(expr.source)]
                     for entry in ['variables', 'classes', 'functions',
                                   'cls_constructs']:
                         d_self = self._namespace[entry]
@@ -4038,8 +4038,9 @@ class Parser(object):
             domaine = self._annotate(expr.test)
             parent  = domaine.cls_base
             if not parent.is_with_construct:
-                raise ValueError('with construct can only applied to classes with __enter__ and __exit__ methods'
-                                 )
+                msg = '__enter__ or __exit__ methods not found'
+                raise ValueError(msg)
+
             body = self._annotate(expr.body)
             return With(domaine, body, None).block
         elif isinstance(expr, MacroFunction):
@@ -4075,7 +4076,7 @@ class Parser(object):
         elif isinstance(expr, MacroVariable):
             master = expr.master
             if isinstance(master, DottedName):
-                raise NotImplemented('TODO')
+                raise NotImplementedError('TODO')
             header = self.get_header(master)
             if header is None:
                 var = self.get_variable(master)
@@ -4098,8 +4099,10 @@ class Parser(object):
 
             val = self._annotate(expr.val, **settings)
             if isinstance(val, (Tuple, list, tuple)):
-                raise PyccelSemanticError('list initialisation of dimesion > 1 not yet supported'
-                        )
+                #TODO list of dimesion > 1 '
+                        
+                msg = 'TODO not yet supported'
+                raise PyccelSemanticError(msg)
             shape = self._annotate(expr.length, **settings)
             return Dlist(val, shape)
 
