@@ -6,12 +6,13 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
-from .core import Constant,ZerosLike
+from .core import Constant, ZerosLike
 from .numpyext import Zeros, Ones, Empty, Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
+from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
 from sympy import Function
@@ -98,30 +99,9 @@ def builtin_function(expr, args=None):
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
         return Map(*args)
-    
 
     elif name == 'lambdify':
-       if isinstance(args, Lambda):
-           expr_ = args.expr
-           expr_ = Return(expr_)
-           expr_.set_fst(expr)
-           f_arguments = args.variables
-           func = FunctionDef('lambda', f_arguments, [], [expr_])
-           return func
-           
-       code = compile(args.body[0],'','single')
-       g={}
-       eval(code,g)
-       f_name = str(args.name)
-       code = g[f_name]
-       args_ = args.arguments
-       expr_ = code(*args_)
-       f_arguments = list(expr_.free_symbols)
-       expr_ = Return(expr_)
-       expr_.set_fst(expr)
-       body = [expr_]
-       func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
-       return func
+        return lambdify(expr, args)
 
     return None
 

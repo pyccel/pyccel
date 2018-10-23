@@ -1602,6 +1602,7 @@ class Parser(object):
                 stmt.decorators.pop()
                 func = SympyFunction(name, arguments, [],
                         [stmt.__str__()])
+                func.set_fst(stmt)
                 self.insert_function(func)
                 return EmptyLine()
 
@@ -1612,6 +1613,7 @@ class Parser(object):
                 stmt.decorators.pop()
                 func = PythonFunction(name, arguments, [],
                         [stmt.__str__()])
+                func.set_fst(stmt)
                 self.insert_function(func)
                 return EmptyLine()
             else:
@@ -2150,7 +2152,7 @@ class Parser(object):
 
             elif name in ['Zeros', 'Ones', 'Empty']:
 
-                d_var = {}
+                
                 d_var['datatype'] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'] = expr.shape
@@ -2158,7 +2160,6 @@ class Parser(object):
                 d_var['is_pointer'] = False
                 d_var['order'] = expr.order
             elif name in ['Shape']:
-                d_var = {}
                 d_var['datatype'] = expr.dtype
                 d_var['shape'] = expr.shape
                 d_var['rank'] = expr.rank
@@ -2172,7 +2173,7 @@ class Parser(object):
                     dvar['datatype'] = expr.dtype
                     dvar['precision'] = expr.precision
                 dvar['datatype'] = str_dtype(dvar['datatype'])
-                d_var = {}
+
                 d_var['allocatable'] = True
                 d_var['shape'] = dvar['shape']
                 d_var['rank'] = dvar['rank']
@@ -2182,7 +2183,7 @@ class Parser(object):
 
 
             elif name in ['Linspace']:
-                d_var = {}
+
                 d_var['allocatable'] = True
                 d_var['shape'] = expr.shape
                 d_var['rank'] = 1
@@ -2192,7 +2193,7 @@ class Parser(object):
 
             elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
 
-                d_var = {}
+
                 d_var['datatype'] = sp_dtype(expr)
                 d_var['rank'] = 0
                 d_var['allocatable'] = False
@@ -2200,7 +2201,7 @@ class Parser(object):
             elif name in ['Int','Int32','Int64','Real',
                              'Float32','Float64','Complex',
                               'Complex128','Complex64']:
-                d_var = {}
+
                 d_var['datatype'] = sp_dtype(expr)
                 d_var['rank'] = 0
                 d_var['allocatable'] = False
@@ -2213,7 +2214,7 @@ class Parser(object):
                 # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
                 d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
                 i = 0 if (d_vars[0]['rank'] >= d_vars[1]['rank']) else 1
-                d_var = {}
+
                 d_var['datatype'   ] = d_vars[i]['datatype']
                 d_var['rank'       ] = d_vars[i]['rank']
                 d_var['shape'      ] = d_vars[i]['shape']
@@ -3705,7 +3706,7 @@ class Parser(object):
                                 # TODO can this be improved? add some check
 
                                 d_var['shape'] = Tuple(*additional_args, sympify=False)
-                            a_new = Variable(dtype, str(a.name),
+                            a_new = Variable(dtype, _get_name(a),
                                     **d_var)
 
                         if additional_args:

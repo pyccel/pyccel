@@ -330,7 +330,7 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_variable(expr, store=False):
+def create_variable(expr):
     """."""
 
     import numpy as np
