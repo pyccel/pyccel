@@ -1,6 +1,6 @@
 #$ header function f(double[:],double[:,:,:],int)
 @sympy
-def g():
+def g(v,w,i):
     from sympy import Lambda, Function ,symbols ,IndexedBase,Idx ,Max, Sum
     x = Function('x')
     i, n, j, dim, k =symbols('i, n, j, dim, k')

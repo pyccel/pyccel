@@ -325,25 +325,12 @@ def inline(func, args):
 
 
 def int2float(expr):
-
-    if expr.is_number:
-        return expr.n()
-    elif isinstance(expr, (Symbol, Indexed, IndexedBase, DottedVariable)):
-        return expr
-    elif isinstance(expr, (Add, Mul)):
-        args = [int2float(arg) for arg in expr.args]
-        return expr._new_rawargs(*args)
-    elif isinstance(expr, sp_Pow):
-        args = list(expr.args)
-        args[0] = int2float(args[0])
-        return expr.func(*args)
-    else:
-        raise NotImplementedError('TODO')
+    return expr
 
 def float2int(expr):
-    pass
+    return expr
 
-def create_variable(expr, store=False):
+def create_variable(expr):
     """."""
 
     import numpy as np

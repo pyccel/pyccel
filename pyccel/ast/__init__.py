@@ -7,6 +7,7 @@ from .macros         import *
 from .headers        import *
 from .numpyext       import *
 from .fortran        import *
+from .functionalexpr import *
 from .utilities      import *
 from .parallel       import *
-from .functionalexpr import *
+

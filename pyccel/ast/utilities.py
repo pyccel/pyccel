@@ -6,12 +6,13 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
-from .core import Constant
+from .core import Constant, ZerosLike
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
+from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
 from sympy import Function
@@ -20,27 +21,67 @@ from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, Mod)
 import scipy.constants as sc_constants
 
 math_functions = {
-    'abs': Abs,
-    'sqrt': Sqrt,
-    'sin': sin,
-    'cos': cos,
-    'exp': exp,
-    'log': Log,
-    'csc': csc,
-    'sec': sec,
-    'tan': tan,
-    'cot': cot,
-    'asin': Asin,
-    'acsc': Acsc,
+    'abs'   : Abs,
+    'sqrt'  : Sqrt,
+    'sin'   : sin,
+    'cos'   : cos,
+    'exp'   : exp,
+    'log'   : Log,
+    'csc'   : csc,
+    'sec'   : sec,
+    'tan'   : tan,
+    'cot'   : cot,
+    'asin'  : Asin,
+    'acsc'  : Acsc,
     'arccos': Acos,
-    'acos':Acos,
-    'asec': Asec,
-    'atan': Atan,
-    'acot': Acot,
-    'sinh': Sinh,
-    'cosh': Cosh,
-    'tanh': Tanh
+    'acos'  : Acos,
+    'asec'  : Asec,
+    'atan'  : Atan,
+    'acot'  : Acot,
+    'sinh'  : Sinh,
+    'cosh'  : Cosh,
+    'tanh'  : Tanh
     }
+
+numpy_functions = {
+    'zeros'     : Zeros,
+    'empty'     : Empty,
+    'ones'      : Ones,
+    'zeros_like': ZerosLike,
+    'array'     : Array,
+    'shape'     : Shape,
+    'int'       : Int,
+    'real'      : Real,
+    'float'     : Real,
+    'double'    : Real,
+    'float32'   : Float32,
+    'float64'   : Float64,
+    'int32'     : Int32,
+    'int64'     : Int64,
+    'complex128': Complex128,
+    'complex64' : Complex64,
+    'sum'       : Sum,
+    'rand'      : Rand,
+    'random'    : Rand
+}
+
+builtin_functions_dict = {
+    'range'    : Range,
+    'zip'      : Zip,
+    'enumerate': Enumerate,
+    'int'      : Int,
+    'float'    : Real,
+    'sum'      : Sum,
+    'len'      : Len,
+    'Mod'      : Mod,
+    'abs'      : Abs,
+    'max'      : Max,
+    'Max'      : Max,
+    'min'      : Min,
+    'Min'      : Min,
+    'floor'    : floor,
+    'not'      : Not
+}
 
 scipy_constants = {
     'pi': Constant('real', 'pi', value=sc_constants.pi),
@@ -59,34 +100,14 @@ def builtin_function(expr, args=None):
     else:
         raise TypeError('expr must be of type str or Function')
 
-    if name == 'range':
-        return Range(*args)
-    elif name == 'zip':
-        return Zip(*args)
-    elif name == 'enumerate':
-        return Enumerate(*args)
+    dic = builtin_functions_dict
+
+    if name in dic.keys() :
+        return dic[name](*args)
     elif name == 'array':
         return Array(*args)
     elif name == 'linspace':
         return Linspace(*args)
-    elif name in ['int']:
-        return Int(*args)
-    elif name in ['float']:
-        return Real(*args)
-    elif name == 'len':
-        return Len(*args)
-    elif name == 'sum':
-        return Sum(*args)
-    elif name == 'Mod':
-        return Mod(*args)
-    elif name == 'abs':
-        return Abs(*args)
-    elif name in ['max', 'Max']:
-        return Max(*args)
-    elif name in ['min', 'Min']:
-        return Min(*args)
-    elif name == 'floor':
-        return floor(*args)
     elif name in ['complex']:
         if len(args)==1:
             args = [args[0],Float(0)]
@@ -99,29 +120,8 @@ def builtin_function(expr, args=None):
         args = [func]+list(args[1:])
         return Map(*args)
 
-
     elif name == 'lambdify':
-       if isinstance(args, Lambda):
-           expr_ = args.expr
-           expr_ = Return(expr_)
-           expr_.set_fst(expr)
-           f_arguments = args.variables
-           func = FunctionDef('lambda', f_arguments, [], [expr_])
-           return func
-
-       code = compile(args.body[0],'','single')
-       g={}
-       eval(code,g)
-       f_name = str(args.name)
-       code = g[f_name]
-       args_ = args.arguments
-       expr_ = code(*args_)
-       f_arguments = list(expr_.free_symbols)
-       expr_ = Return(expr_)
-       expr_.set_fst(expr)
-       body = [expr_]
-       func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
-       return func
+        return lambdify(expr, args)
 
     return None
 
@@ -148,59 +148,9 @@ def builtin_import(expr):
     for i in range(len(expr.target)):
         if source == 'numpy':
 
-        # TODO improve
-
             target = str(expr.target[i])
-            if target == 'zeros':
-                imports.append((target, Zeros))
-
-            elif target == 'ones':
-                imports.append((target, Ones))
-
-            elif target == 'empty':
-                imports.append((target, Empty))
-
-            elif target == 'zeros_like':
-                imports.append((target,ZerosLike))
-
-            elif target == 'full_like':
-                imports.append((target,FullLike))
-
-            elif target == 'array':
-                imports.append((target, Array))
-
-            elif target == 'shape':
-                imports.append((target, Shape))
-
-            elif target == 'int':
-                imports.append((target, Int))
-
-            elif target == 'real':
-                imports.append((target, Real))
-
-            elif target == 'float32':
-                imports.append((target, Float32))
-
-            elif target == 'float64':
-                imports.append((target, Float64))
-
-            elif target == 'int64':
-                imports.append((target, Int64))
-
-            elif target == 'int32':
-                imports.append((target, Int32))
-
-            elif target == 'complex128':
-                imports.append((target, Complex128))
-
-            elif target == 'complex64':
-                imports.append((target, Complex64))
-
-            elif target == 'sum':
-                imports.append((target,Sum))
-
-            elif target in ['rand', 'random']:
-                imports.append((target, Rand))
+            if target in numpy_functions.keys():
+                imports.append((target, numpy_functions[target]))
 
             elif target in math_functions.keys():
                 imports.append((target, math_functions[target]))
