@@ -6,7 +6,7 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
-from .core import Constant, ZerosLike
+from .core import Constant
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
