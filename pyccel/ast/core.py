@@ -2572,6 +2572,9 @@ class FunctionDef(Basic):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_pure: bool
+        True for a function without side effect
+
     is_static: bool
         True for static functions. Needed for f2py
 
@@ -2625,6 +2628,7 @@ class FunctionDef(Basic):
         decorators={},
         header=None,
         is_recursive=False,
+        is_pure=False,
         ):
 
         # name
@@ -2696,6 +2700,11 @@ class FunctionDef(Basic):
 
         if not isinstance(decorators, dict):
             raise TypeError('decorators must be a dict')
+
+        if not isinstance(is_pure, bool):
+            raise TypeError('Expecting a boolean for pure')
+
+
         return Basic.__new__(
             cls,
             name,
@@ -2712,6 +2721,7 @@ class FunctionDef(Basic):
             decorators,
             header,
             is_recursive,
+            is_pure
             )
 
     @property
@@ -2769,6 +2779,10 @@ class FunctionDef(Basic):
     @property
     def is_recursive(self):
         return self._args[13]
+
+    @property
+    def is_pure(self):
+        return self._args[14]
 
     def print_body(self):
         for s in self.body:
@@ -2901,6 +2915,10 @@ class FunctionDef(Basic):
             self.is_recursive,
             )
         return args
+
+    # TODO
+    def check_pure(self):
+        raise NotImplementedError('')
 
 
 class SympyFunction(FunctionDef):

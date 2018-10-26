@@ -1545,6 +1545,7 @@ class Parser(object):
             header = None
             hide = False
             kind = 'function'
+            is_pure = False
             imports = []
 
             # TODO improve later
@@ -1616,8 +1617,12 @@ class Parser(object):
                 func.set_fst(stmt)
                 self.insert_function(func)
                 return EmptyLine()
+
             else:
                 body = self._fst_to_ast(body)
+
+            if 'pure' in decorators.keys():
+                is_pure = True
 
             func = FunctionDef(
                    name,
@@ -1629,6 +1634,7 @@ class Parser(object):
                    cls_name=cls_name,
                    hide=hide,
                    kind=kind,
+                   is_pure=is_pure,
                    imports=imports,
                    decorators=decorators,
                    header=header)
@@ -3682,6 +3688,7 @@ class Parser(object):
             decorators = expr.decorators
             funcs      = []
             is_static  = False
+            is_pure    = expr.is_pure
 
             header = expr.header
             if header is None:
@@ -3878,6 +3885,7 @@ class Parser(object):
                     hide=hide,
                     kind=kind,
                     is_static=is_static,
+                    is_pure=is_pure,
                     imports=imports,
                     decorators=decorators,
                     is_recursive=is_recursive)

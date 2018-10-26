@@ -15,6 +15,8 @@ TODO
 
 - move all numpy objects to numpyext
 
+- check the correctness of pure function
+
 Bugs
 ****
 
