@@ -48,6 +48,7 @@ numpy_functions = {
     'empty'     : Empty,
     'ones'      : Ones,
     'zeros_like': ZerosLike,
+    'full_like' : FullLike,
     'array'     : Array,
     'shape'     : Shape,
     'int'       : Int,
