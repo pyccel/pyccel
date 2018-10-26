@@ -43,13 +43,17 @@ math_functions = {
     'tanh'  : Tanh
     }
 
+# TODO split numpy_functions into multiple dictionaries following
+# https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 numpy_functions = {
+    # ... array creation routines
     'zeros'     : Zeros,
     'empty'     : Empty,
     'ones'      : Ones,
     'zeros_like': ZerosLike,
     'full_like' : FullLike,
     'array'     : Array,
+    # ...
     'shape'     : Shape,
     'int'       : Int,
     'real'      : Real,

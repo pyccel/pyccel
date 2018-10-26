@@ -2575,6 +2575,9 @@ class FunctionDef(Basic):
     is_pure: bool
         True for a function without side effect
 
+    is_elemental: bool
+        True for a function is elemental
+
     is_static: bool
         True for static functions. Needed for f2py
 
@@ -2629,6 +2632,7 @@ class FunctionDef(Basic):
         header=None,
         is_recursive=False,
         is_pure=False,
+        is_elemental=False,
         ):
 
         # name
@@ -2704,6 +2708,9 @@ class FunctionDef(Basic):
         if not isinstance(is_pure, bool):
             raise TypeError('Expecting a boolean for pure')
 
+        if not isinstance(is_elemental, bool):
+            raise TypeError('Expecting a boolean for elemental')
+
 
         return Basic.__new__(
             cls,
@@ -2721,7 +2728,8 @@ class FunctionDef(Basic):
             decorators,
             header,
             is_recursive,
-            is_pure
+            is_pure,
+            is_elemental
             )
 
     @property
@@ -2783,6 +2791,10 @@ class FunctionDef(Basic):
     @property
     def is_pure(self):
         return self._args[14]
+
+    @property
+    def is_elemental(self):
+        return self._args[15]
 
     def print_body(self):
         for s in self.body:
@@ -2918,6 +2930,10 @@ class FunctionDef(Basic):
 
     # TODO
     def check_pure(self):
+        raise NotImplementedError('')
+
+    # TODO
+    def check_elemental(self):
         raise NotImplementedError('')
 
 

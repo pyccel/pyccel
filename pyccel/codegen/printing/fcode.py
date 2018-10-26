@@ -1178,8 +1178,10 @@ class FCodePrinter(CodePrinter):
         # ...
 
         name = self._print(expr.name)
-        is_static = expr.is_static
-        is_pure = expr.is_pure
+
+        is_static    = expr.is_static
+        is_pure      = expr.is_pure
+        is_elemental = expr.is_elemental
 
         if expr.cls_name:
             for k, m in list(_default_methods.items()):
@@ -1204,7 +1206,6 @@ class FCodePrinter(CodePrinter):
 
         # ...
         body = expr.body
-        is_pure = expr.is_pure
         func_end  = ''
         if not expr.is_procedure:
             result = expr.results[0]
@@ -1296,6 +1297,10 @@ class FCodePrinter(CodePrinter):
         # treate case of pure function
         if is_pure:
             sig = 'pure {}'.format(sig)
+
+        # treate case of elemental function
+        if is_elemental:
+            sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
         body_code = '\n'.join(self._print(i) for i in body)

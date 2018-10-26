@@ -1538,15 +1538,17 @@ class Parser(object):
             name = self._fst_to_ast(stmt.name)
             name = name.replace("'", '')
             name = strip_ansi_escape.sub('', name)
-            arguments = self._fst_to_ast(stmt.arguments)
-            results = []
-            local_vars = []
-            global_vars = []
-            header = None
-            hide = False
-            kind = 'function'
-            is_pure = False
-            imports = []
+
+            arguments    = self._fst_to_ast(stmt.arguments)
+            results      = []
+            local_vars   = []
+            global_vars  = []
+            header       = None
+            hide         = False
+            kind         = 'function'
+            is_pure      = False
+            is_elemental = False
+            imports      = []
 
             # TODO improve later
             decorators = {}
@@ -1624,6 +1626,9 @@ class Parser(object):
             if 'pure' in decorators.keys():
                 is_pure = True
 
+            if 'elemental' in decorators.keys():
+                is_elemental = True
+
             func = FunctionDef(
                    name,
                    arguments,
@@ -1635,6 +1640,7 @@ class Parser(object):
                    hide=hide,
                    kind=kind,
                    is_pure=is_pure,
+                   is_elemental=is_elemental,
                    imports=imports,
                    decorators=decorators,
                    header=header)
@@ -3680,15 +3686,16 @@ class Parser(object):
 
         elif isinstance(expr, FunctionDef):
 
-            name       = str(expr.name)
-            name       = name.replace("'", '')
-            cls_name   = expr.cls_name
-            hide       = False
-            kind       = 'function'
-            decorators = expr.decorators
-            funcs      = []
-            is_static  = False
-            is_pure    = expr.is_pure
+            name         = str(expr.name)
+            name         = name.replace("'", '')
+            cls_name     = expr.cls_name
+            hide         = False
+            kind         = 'function'
+            decorators   = expr.decorators
+            funcs        = []
+            is_static    = False
+            is_pure      = expr.is_pure
+            is_elemental = expr.is_elemental
 
             header = expr.header
             if header is None:
@@ -3886,6 +3893,7 @@ class Parser(object):
                     kind=kind,
                     is_static=is_static,
                     is_pure=is_pure,
+                    is_elemental=is_elemental,
                     imports=imports,
                     decorators=decorators,
                     is_recursive=is_recursive)
