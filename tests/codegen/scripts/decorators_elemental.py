@@ -1,3 +1,6 @@
+from numpy import array
+from numpy import zeros_like
+
 @elemental
 @types(float)
 def square(x):
@@ -8,5 +11,7 @@ a = 2.0
 b = square(a)
 print(b)
 
-x = [1., 2., 3.]
-print(square(x))
+xs = array([1., 2., 3.])
+ys = zeros_like(xs)
+ys = square(xs)
+print(ys)

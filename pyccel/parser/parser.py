@@ -3104,6 +3104,29 @@ class Parser(object):
                         d_var = [self._infere_type(i, **settings)
                                  for i in results]
 
+                    # case of elemental function
+                    # if the input and args of func do not have the same shape,
+                    # then the lhs must be already declared
+                    if func.is_elemental:
+                        # we first compare the funcdef args with the func call
+                        # args
+#                        d_var = None
+                        func_args = func.arguments
+                        call_args = rhs.args
+                        f_ranks = [x.rank for x in func_args]
+                        c_ranks = [x.rank for x in call_args]
+                        same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
+                        if not all(same_ranks):
+                            _name = _get_name(lhs)
+                            var = self.get_variable(_name)
+                            if var is None:
+                                # TODO have a specific error message
+                                errors.report(UNDEFINED_VARIABLE,
+                                        symbol=_name,
+                                        bounding_box=self.bounding_box,
+                                        severity='error',
+                                        blocker=self.blocking)
+
                 elif isinstance(func, Interface):
                     d_var = [self._infere_type(i, **settings) for i in
                              func.functions[0].results]
@@ -3204,6 +3227,13 @@ class Parser(object):
                                     symbol=txt,
                                     bounding_box=self.bounding_box,
                                     severity='internal', blocker=False)
+
+                    # in the case of elemental, lhs is not of the same dtype as
+                    # var.
+                    # TODO d_lhs must be consistent with var!
+                    # the following is a small fix, since lhs must be already
+                    # declared
+                    lhs = var
 
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
 
