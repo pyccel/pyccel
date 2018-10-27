@@ -4,6 +4,9 @@ from numpy import sum
 from numpy import array
 from numpy import shape
 from numpy import diag, cross
+from numpy import zeros_like
+from numpy import full_like
+from numpy import int
 
 x1 = array((1,2,3,5,8,5), 'float')
 x2 = array((5,8,6,9,8,2), 'int')
@@ -16,6 +19,8 @@ x3 = array(((5,8,6,9,8,2),
           'double')
 
 x4 = zeros((len(x1),len(x1)), 'int')
+
+x1[:] = 2.
 
 n = 5
 x5 = zeros(4)
@@ -39,14 +44,6 @@ x16 = x15
 nn = shape(x14)
 mm = shape(array([1.,2.,3.]))
 
-x1[:] = 2.
-
-# TODO must give an error. Incompatible type
-#b = int(a)
-
-# TODO not working yet
-#tt = zeros_like(x)
-
 x17 = ones((n,m,2), 'double')
 print(sum(x17)==n*m*2)
 
@@ -64,3 +61,13 @@ x21 = cross(x19, x20)
 #from numpy.random import rand
 #yr = rand()
 #print(yr)
+
+xa1 = zeros_like(x1)
+xa2 = zeros_like(x2)
+xa3 = zeros_like(x3)
+
+xb1 = full_like(x1)
+xb2 = full_like(x2)
+xb3 = full_like(x3)
+
+

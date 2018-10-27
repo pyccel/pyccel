@@ -14,11 +14,15 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
-from sympy import IndexedBase, Matrix
+from sympy import IndexedBase, Indexed, Idx, Matrix
 
 
-from .core import (Variable, IndexedElement, IndexedVariable, Len, For, ForAll, Range, Assign, 
-                   List, String, ValuedArgument, Constant, Pow, int2float)
+from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+
+
+from .core import (Variable, IndexedElement, IndexedVariable, Len,
+                   For, ForAll, Range, Assign, List, String,
+                   ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
@@ -45,13 +49,13 @@ class Array(Function):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         prec = 0
-        
+
         if not dtype is None:
             if isinstance(dtype, ValuedArgument):
                 dtype = dtype.value
             dtype = str(dtype).replace('\'', '')
-                
             dtype, prec = dtype_registry[dtype]
+
             dtype = datatype('ndarray' + dtype)
 
         if not prec and dtype:
@@ -206,17 +210,17 @@ class Shape(Array):
         else:
             init_value = printer(self.arg)
 
-   
-        init_value = ['size({0},{1})'.format(init_value, ind) 
+
+        init_value = ['size({0},{1})'.format(init_value, ind)
                       for ind in range(1, self.arg.rank+1, 1)]
         if self.arg.order == 'C':
             init_value.reverse()
 
         init_value = ', '.join(i for i in init_value)
- 
+
         if lhs:
             if self.index is None:
-                
+
                 code_init = '{0} = (/ {1} /)'.format(lhs_code, init_value)
 
             else:
@@ -243,10 +247,10 @@ class Int(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Variable, 
-                                IndexedElement, 
-                                sp_Float, sp_Integer, 
-                                Mul, Add, sp_Pow, 
+        if not isinstance(arg, (Variable,
+                                IndexedElement,
+                                sp_Float, sp_Integer,
+                                Mul, Add, sp_Pow,
                                 sp_Rational)):
 
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -297,7 +301,7 @@ class Real(Function):
     """
 
     def __new__(cls, arg):
-        
+
         _valid_args = (Variable, IndexedElement, sp_Integer,
                        sp_Float, Mul, Add, sp_Pow, sp_Rational)
 
@@ -381,7 +385,7 @@ class Complex(Function):
 
     def __new__(cls, arg0, arg1=sp_Float(0)):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer, 
+        _valid_args = (Variable, IndexedElement, sp_Integer,
                        sp_Float, Mul, Add, sp_Pow, sp_Rational)
 
         for arg in [arg0, arg1]:
@@ -445,9 +449,9 @@ class Linspace(Function):
     """
 
     def __new__(cls, *args):
-       
 
-        _valid_args = (Variable, IndexedElement, sp_Float, 
+
+        _valid_args = (Variable, IndexedElement, sp_Float,
                        sp_Integer, sp_Rational)
 
         for arg in args:
@@ -485,7 +489,7 @@ class Linspace(Function):
     def step(self):
         return (self.stop - self.start) / (self.size - 1)
 
-  
+
     @property
     def dtype(self):
         return 'real'
@@ -506,14 +510,15 @@ class Linspace(Function):
     def rank(self):
         return 1
 
+    def _eval_is_real(self):
+        return True 
 
     def _sympystr(self, printer):
         sstr = printer.doprint
         code = 'linspace({}, {}, {})',format(sstr(self.start),
                                              sstr(self.stop),
                                              sstr(self.size))
-    def _eval_is_real(self):
-        return True  
+
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
@@ -889,6 +894,200 @@ class Ones(Zeros):
 
 #=======================================================================================
 
+class ZerosLike(Function):
+
+    """Represents variable assignment using numpy.zeros_like for code generation.
+
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    rhs : Variable
+        the input variable
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Zeros, ZerosLike
+    >>> n,m,x = symbols('n,m,x')
+    >>> y = Zeros(x, (n,m))
+    >>> z = ZerosLike(y)
+    """
+
+    # TODO improve in the spirit of assign
+
+    def __new__(cls, rhs=None, lhs=None):
+        if isinstance(lhs, str):
+            lhs = Symbol(lhs)
+
+        # Tuple of things that can be on the lhs of an assignment
+
+        assignable = (
+            Symbol,
+            MatrixSymbol,
+            MatrixElement,
+            Indexed,
+            Idx,
+            Variable,
+            )
+
+        if lhs and not isinstance(lhs, assignable):
+            raise TypeError('Cannot assign to lhs of type %s.'
+                            % type(lhs))
+
+        return Basic.__new__(cls, lhs, rhs)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := 0'.format(sstr(self.lhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    @property
+    def init_value(self):
+
+        def _native_init_value(dtype):
+            if isinstance(dtype, NativeInteger):
+                return 0
+            elif isinstance(dtype, NativeReal):
+                return 0.0
+            elif isinstance(dtype, NativeComplex):
+                return 0.0
+            elif isinstance(dtype, NativeBool):
+                return BooleanFalse()
+            raise TypeError('Expecting a Native type, given {}'.format(dtype))
+
+        _native_types = (NativeInteger, NativeReal,
+                         NativeComplex, NativeBool)
+
+        rhs = self.rhs
+        if isinstance(rhs.dtype, _native_types):
+            return _native_init_value(rhs.dtype)
+        elif isinstance(rhs, (Variable, IndexedVariable)):
+            return _native_init_value(rhs.dtype)
+        elif isinstance(rhs, IndexedElement):
+            return _native_init_value(rhs.base.dtype)
+        else:
+            raise TypeError('Unknown type for {name}, given {dtype}'.format(dtype=type(rhs),
+                            name=rhs))
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        init_value = printer(self.init_value)
+        bounds_code = printer(Bounds(self.rhs))
+
+        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+        code_init = '{0} = {1}'.format(lhs_code, init_value)
+        code = '{0}\n{1}'.format(code_alloc, code_init)
+        return code
+
+
+
+#=======================================================================================
+
+class Bounds(Basic):
+
+    """
+    Represents bounds of NdArray.
+
+    Examples
+
+    """
+
+    def __new__(cls, var):
+        # TODO check type of var
+        return Basic.__new__(cls, var)
+
+    @property
+    def var(self):
+        return self._args[0]
+
+
+#=======================================================================================
+
+class FullLike(Function):
+
+    """Represents variable assignment using numpy.full_like for code generation.
+
+    lhs : Expr
+        Sympy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code. Notable types
+        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
+        subclass these types are also supported.
+
+    rhs : Variable
+        the input variable
+
+    Examples
+
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Zeros, FullLike
+    >>> n,m,x = symbols('n,m,x')
+    >>> y = Zeros(x, (n,m))
+    >>> z = FullLike(y)
+    """
+
+    # TODO improve in the spirit of assign
+
+    def __new__(cls, rhs=None, lhs=None):
+        if isinstance(lhs, str):
+            lhs = Symbol(lhs)
+
+        # Tuple of things that can be on the lhs of an assignment
+
+        assignable = (
+            Symbol,
+            MatrixSymbol,
+            MatrixElement,
+            Indexed,
+            Idx,
+            Variable,
+            )
+
+        if lhs and not isinstance(lhs, assignable):
+            raise TypeError('Cannot assign to lhs of type %s.'
+                            % type(lhs))
+
+        return Basic.__new__(cls, lhs, rhs)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return '{0} := 0'.format(sstr(self.lhs))
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        bounds_code = printer(Bounds(self.rhs))
+
+        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+        code_init = '{0} = {1}'.format(lhs_code, rhs_code)
+        code = '{0}\n{1}'.format(code_alloc, code_init)
+        return code
+
+
+#=======================================================================================
+
 class Empty(Zeros):
 
     """Represents a call to numpy.empty for code generation.
@@ -1049,14 +1248,14 @@ class Abs(Function):
 class Min(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
-          
+
      def _eval_is_real(self):
         return True
 
 class Max(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
-          
+
      def _eval_is_real(self):
         return True
 

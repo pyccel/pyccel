@@ -6,8 +6,10 @@ from .core import DottedName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
-from .core import Constant, ZerosLike
-from .numpyext import Zeros, Ones, Empty, Min, Max, Abs, Diag, Cross
+
+from .core import Constant
+from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
+from .numpyext import Min, Max, Abs
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
@@ -43,12 +45,17 @@ math_functions = {
     'tanh'  : Tanh
     }
 
+# TODO split numpy_functions into multiple dictionaries following
+# https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 numpy_functions = {
+    # ... array creation routines
     'zeros'     : Zeros,
     'empty'     : Empty,
     'ones'      : Ones,
     'zeros_like': ZerosLike,
+    'full_like' : FullLike,
     'array'     : Array,
+    # ...
     'shape'     : Shape,
     'int'       : Int,
     'real'      : Real,
@@ -104,7 +111,7 @@ def builtin_function(expr, args=None):
         raise TypeError('expr must be of type str or Function')
 
     dic = builtin_functions_dict
-    
+
     if name in dic.keys() :
         return dic[name](*args)
     elif name == 'array':
@@ -155,7 +162,7 @@ def builtin_import(expr):
 
             elif target in math_functions.keys():
                 imports.append((target, math_functions[target]))
-            
+
             elif target in numpy_constants.keys():
                 imports.append((target, numpy_constants[target]))
 
@@ -174,10 +181,10 @@ def builtin_import(expr):
                 imports.append((target, scipy_constants[target]))
         elif source == 'itertools':
             target = str(expr.target[i])
-        
+
             if target == 'product':
                 imports.append((target, Product))
-        
-    
+
+
 
     return imports

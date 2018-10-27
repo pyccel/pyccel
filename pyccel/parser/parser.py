@@ -1221,7 +1221,7 @@ class Parser(object):
             ls = [self._fst_to_ast(i) for i in stmt]
 
             if isinstance(stmt, (list, ListNode)):
-                
+
                 return List(*ls, sympify=False)
             else:
                 return Tuple(*ls, sympify=False)
@@ -1538,14 +1538,17 @@ class Parser(object):
             name = self._fst_to_ast(stmt.name)
             name = name.replace("'", '')
             name = strip_ansi_escape.sub('', name)
-            arguments = self._fst_to_ast(stmt.arguments)
-            results = []
-            local_vars = []
-            global_vars = []
-            header = None
-            hide = False
-            kind = 'function'
-            imports = []
+
+            arguments    = self._fst_to_ast(stmt.arguments)
+            results      = []
+            local_vars   = []
+            global_vars  = []
+            header       = None
+            hide         = False
+            kind         = 'function'
+            is_pure      = False
+            is_elemental = False
+            imports      = []
 
             # TODO improve later
             decorators = {}
@@ -1616,8 +1619,15 @@ class Parser(object):
                 func.set_fst(stmt)
                 self.insert_function(func)
                 return EmptyLine()
+
             else:
                 body = self._fst_to_ast(body)
+
+            if 'pure' in decorators.keys():
+                is_pure = True
+
+            if 'elemental' in decorators.keys():
+                is_elemental = True
 
             func = FunctionDef(
                    name,
@@ -1629,6 +1639,8 @@ class Parser(object):
                    cls_name=cls_name,
                    hide=hide,
                    kind=kind,
+                   is_pure=is_pure,
+                   is_elemental=is_elemental,
                    imports=imports,
                    decorators=decorators,
                    header=header)
@@ -1819,7 +1831,7 @@ class Parser(object):
             test1 = self._fst_to_ast(stmt.value)
             first = self._fst_to_ast(stmt.first)
             second = self._fst_to_ast(stmt.second)
-            args = [Tuple(test1, [first], sympify=False), 
+            args = [Tuple(test1, [first], sympify=False),
                     Tuple(true, [second], sympify=False)]
             expr = IfTernaryOperator(*args)
             expr.set_fst(stmt)
@@ -2126,12 +2138,11 @@ class Parser(object):
             d_var['rank'       ] = 0
             return d_var
         elif isinstance(expr, ConstructorCall):
-            cls_name = expr.func.cls_name 
+            cls_name = expr.func.cls_name
             cls = self.get_class(cls_name)
 
             dtype = self.get_class_construct(cls_name)()
-    
-            
+
             d_var['datatype'   ] = dtype
             d_var['allocatable'] = False
             d_var['shape'      ] = ()
@@ -2152,14 +2163,13 @@ class Parser(object):
 
             elif name in ['Zeros', 'Ones', 'Empty', 'Diag', 
                           'Shape', 'Cross', 'Linspace']:
-
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'      ] = expr.shape
                 d_var['rank'       ] = expr.rank
                 d_var['is_pointer' ] = False
                 d_var['order'      ] = expr.order
-    
+
             elif name in ['Array']:
 
                 dvar = self._infere_type(expr.arg, **settings)
@@ -2168,7 +2178,9 @@ class Parser(object):
                     dvar['datatype' ] = expr.dtype
                     dvar['precision'] = expr.precision
 
-                dvar['datatype'    ] = str_dtype(dvar['datatype'])
+                dvar['datatype'] = str_dtype(dvar['datatype'])
+
+                d_var = {}
                 d_var['allocatable'] = True
                 d_var['shape'      ] = dvar['shape']
                 d_var['rank'       ] = dvar['rank']
@@ -2176,13 +2188,14 @@ class Parser(object):
                 d_var['datatype'   ] = 'ndarray' + dvar['datatype']
                 d_var['precision'  ] = dvar['precision']
 
+                d_var['is_target'] = True # ISSUE 177: TODO this should be done using update_variable
+
             elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
-
-
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
+
             elif name in ['Int','Int32','Int64','Real',
                              'Float32','Float64','Complex',
                               'Complex128','Complex64']:
@@ -2229,9 +2242,9 @@ class Parser(object):
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = sp_dtype(expr)
 
-            elif name in ['ZerosLike']:
-
+            elif name in ['ZerosLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
+
             elif name in ['floor']:
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = 'int'
@@ -2368,10 +2381,11 @@ class Parser(object):
             # TODO improve
             d_var['datatype'   ] = d['datatype']
             d_var['rank'       ] = d['rank'] + 1
-            d_var['shape'      ] = (expr.length, )  
+            d_var['shape'      ] = (expr.length, )
             d_var['allocatable'] = False
             d_var['is_pointer' ] = True
-            return d_var    
+            return d_var
+
         else:
             raise NotImplementedError('{expr} not yet available'.format(expr=type(expr)))
 
@@ -2397,7 +2411,7 @@ class Parser(object):
         if isinstance(expr, (list, tuple, Tuple)):
             ls = []
             for i in expr:
-                
+
                 a = self._annotate(i, **settings)
                 ls.append(a)
             if isinstance(expr, List):
@@ -2503,7 +2517,7 @@ class Parser(object):
                 var = self.get_symbolic_function(name)
 
             if var is None:
-              
+
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2594,22 +2608,22 @@ class Parser(object):
             Ge,
             )):
 
-            # we reconstruct the arithmetic expressions 
+            # we reconstruct the arithmetic expressions
             # using the annotated arguments
 
             stmts, expr = extract_subexpressions(expr)
-            
+
             if stmts:
-                stmts = [self._annotate(stmt, **settings) 
+                stmts = [self._annotate(stmt, **settings)
                          for stmt in stmts]
-            
+
             if isinstance(expr, Add):
 
                 atoms_str = _atomic(expr, String)
                 atoms_ls  = _atomic(expr, List)
 
                 cls       = (Symbol, Indexed, DottedVariable)
-                
+
                 atoms = _atomic(expr, cls)
                 atoms = [self._annotate(a, **settings) for a in atoms]
                 atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
@@ -2622,8 +2636,8 @@ class Parser(object):
                 elif atoms_str:
                     return Concatinate(args, False)
 
-            
-            
+
+
             args = [self._annotate(a, **settings) for a in expr.args]
             expr_new = expr.func(*args, evaluate=False)
             expr_new = expr_new.doit(deep=False)
@@ -2659,16 +2673,16 @@ class Parser(object):
             name     = _get_name(expr)
             func     = self.get_function(name)
 
-           
+
             stmts, new_args = extract_subexpressions(expr.args)
-            
-            stmts = [self._annotate(stmt, **settings) for stmt in stmts]   
+
+            stmts = [self._annotate(stmt, **settings) for stmt in stmts]
             args  = [self._annotate(arg, **settings) for arg in new_args]
-            
+
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
-           
+
             if F is not None:
                 if len(stmts) > 0:
                     stmts.append(F)
@@ -2723,14 +2737,14 @@ class Parser(object):
                                   blocker=self.blocking)
                 else:
                     if not isinstance(func, (FunctionDef, Interface)):
-                       
+
                         expr = func(*args)
                         if len(stmts) > 0:
                             stmts.append(expr)
                             return CodeBlock(stmts)
                         return expr
                     else:
-                        
+
                         if 'inline' in func.decorators.keys():
                             return inline(func,args)
 
@@ -2909,9 +2923,85 @@ class Parser(object):
                         else:
                             raise NotImplementedError('TODO')
 
+            if isinstance(rhs, (Min, Max, Mul, Add, Pow)) \
+                and len(rhs.atoms(Summation)) > 0:
+                #TODO move this to another file
+                #we have this condition only when lambdify is called
+                ls = list(rhs.atoms(Summation))
+                ls += [rhs]
+                (ls, m) = cse(ls)
+
+                (vars_old, stmts) = map(list, zip(*ls))
+                vars_new = []
+                free_gl = rhs.free_symbols
+                free_gl.update(rhs.atoms(IndexedBase))
+                free_gl.update(vars_old)
+                stmts.append(rhs)
+
+                for i in range(len(stmts) - 1):
+                    free = stmts[i].free_symbols
+                    free = free.difference(free_gl)
+                    free = list(free)
+                    var = create_variable(stmts[i])
+                    if len(free) > 0:
+                        var = IndexedBase(var)[free]
+                    vars_new.append(var)
+                for i in range(len(stmts) - 1):
+                    stmts[i + 1] = stmts[i + 1].replace(vars_old[i],
+                            vars_new[i])
+                    stmts[-1] = stmts[-1].replace(stmts[i], vars_new[i])
+
+                allocate = []
+                for i in range(len(stmts) - 1):
+                    stmts[i] = Assign(vars_new[i], stmts[i])
+                    stmts[i].set_fst(expr.fst)
+                    if isinstance(vars_new[i], Indexed):
+                        ind = vars_new[i].indices
+                        tp = list(stmts[i + 1].atoms(Tuple))
+                        size = None
+                        size = [None] * len(ind)
+                        for (j, k) in enumerate(ind):
+                            for t in tp:
+                                if k == t[0]:
+                                    size[j] = t[2] - t[1] + 1
+                                    break
+                        if not all(size):
+                            raise ValueError('Unable to find range of index'
+                                    )
+                        name = _get_name(vars_new[i].base)
+                        var = Symbol(name)
+                        stmt = Assign(var, Function('zeros')(size[0]))
+                        stmt.set_fst(expr.fst)
+                        allocate.append(stmt)
+                        stmts[i] = For(ind[0], Function('range'
+                                )(size[0]), [stmts[i]], strict=False)
+
+                stmts[-1] = Assign(expr.lhs, stmts[-1])
+                stmts[-1].set_fst(expr.fst)
+                container = self._imports
+                if self._current:
+                    conainter = container[self._current]
+                container['zeros'] = Zeros
+                allocate = [self._annotate(i, **settings) for i in
+                            allocate]
+                stmts = [self._annotate(i, **settings) for i in stmts]
+                return CodeBlock(allocate + stmts)
+
+            if isinstance(rhs, Summation):
+                index = rhs.args[1]
+                target = Function('range')(index[1], index[2])
+                lhs = expr.lhs
+                body = AugAssign(lhs, '+', rhs.args[0])
+                body.set_fst(expr.fst)
+                body = self._annotate(body, **settings)
+                stmt = For(index[0], target, [body], strict=False)
+                stmt.set_fst(expr.fst)
+                stmt = FunctionalSum([stmt], body, [], None)
+                stmt.set_fst(expr.fst)
+                rhs = self._annotate(stmt, **settings)
+                return rhs
 
             rhs = self._annotate(rhs, **settings)
-            
 
             if isinstance(rhs, IfTernaryOperator):
                 args = rhs.args
@@ -2956,7 +3046,7 @@ class Parser(object):
                 expr = Block(rhs.name, rhs.variables, body)
                 return expr
 
-            
+
             elif isinstance(rhs, FunctionalFor):
                 if isinstance(rhs, GC):
                     if _get_name(rhs.lhs) != _get_name(lhs):
@@ -3001,6 +3091,29 @@ class Parser(object):
                         d_var = [self._infere_type(i, **settings)
                                  for i in results]
 
+                    # case of elemental function
+                    # if the input and args of func do not have the same shape,
+                    # then the lhs must be already declared
+                    if func.is_elemental:
+                        # we first compare the funcdef args with the func call
+                        # args
+#                        d_var = None
+                        func_args = func.arguments
+                        call_args = rhs.args
+                        f_ranks = [x.rank for x in func_args]
+                        c_ranks = [x.rank for x in call_args]
+                        same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
+                        if not all(same_ranks):
+                            _name = _get_name(lhs)
+                            var = self.get_variable(_name)
+                            if var is None:
+                                # TODO have a specific error message
+                                errors.report(UNDEFINED_VARIABLE,
+                                        symbol=_name,
+                                        bounding_box=self.bounding_box,
+                                        severity='error',
+                                        blocker=self.blocking)
+
                 elif isinstance(func, Interface):
                     d_var = [self._infere_type(i, **settings) for i in
                              func.functions[0].results]
@@ -3008,6 +3121,7 @@ class Parser(object):
                     # TODO imporve this will not work for
                     # the case of different results types
                     d_var[0]['datatype'] = sp_dtype(rhs)
+
                 else:
                     d_var = self._infere_type(rhs, **settings)
 
@@ -3071,7 +3185,7 @@ class Parser(object):
 
                     # TODO uncomment this line, to make rhs target for
                     #      lists/tuples.
-                    #rhs = self.update_variable(rhs, is_target=True)
+#                    rhs = self.update_variable(rhs, is_target=True)
                     #
 
                 lhs = Variable(dtype, name, **d_lhs)
@@ -3100,6 +3214,13 @@ class Parser(object):
                                     symbol=txt,
                                     bounding_box=self.bounding_box,
                                     severity='internal', blocker=False)
+
+                    # in the case of elemental, lhs is not of the same dtype as
+                    # var.
+                    # TODO d_lhs must be consistent with var!
+                    # the following is a small fix, since lhs must be already
+                    # declared
+                    lhs = var
 
             elif isinstance(lhs, (IndexedVariable, IndexedBase)):
 
@@ -3368,22 +3489,22 @@ class Parser(object):
             if lhs is None:
                 lhs  = Variable('int', lhs_name)
                 self.insert_variable(lhs)
-            
+
             loops  = [self._annotate(i, **settings) for i in expr.loops]
             result = self._annotate(result, **settings)
             if isinstance(result, CodeBlock):
                 result = result.body[-1]
-            
+
 
             d_var = self._infere_type(result, **settings)
             dtype = d_var.pop('datatype')
-     
+
             lhs = None
             if isinstance(expr.lhs, Symbol):
                 lhs = Variable(dtype, lhs_name, **d_var)
                 self.insert_variable(lhs)
 
-            
+
             if isinstance(expr, FunctionalSum):
                 val = 0
                 if str_dtype(dtype) in ['real', 'complex']:
@@ -3413,7 +3534,7 @@ class Parser(object):
             indexes = expr.indexes
             dims    = []
             body    = expr.loops[1]
-            
+
             while isinstance(body, For):
 
                 stop  = None
@@ -3477,7 +3598,7 @@ class Parser(object):
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
 
-            # TODO find a faster way to calculate dim 
+            # TODO find a faster way to calculate dim
             # when step>1 and not isinstance(dim, Sum)
             # maybe use the c++ library of sympy
 
@@ -3492,7 +3613,7 @@ class Parser(object):
             d_var['is_pointer'] = True
             shape.append(dim)
             d_var['shape'] = Tuple(*shape, sympify=False)
-            
+
             lhs_name = _get_name(expr.lhs)
             lhs      = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
@@ -3507,7 +3628,7 @@ class Parser(object):
             test = self._annotate(expr.test, **settings)
             body = self._annotate(expr.body, **settings)
             return While(test, body)
-        
+
         elif isinstance(expr, If):
             args = self._annotate(expr.args, **settings)
             return expr.func(*args)
@@ -3582,14 +3703,16 @@ class Parser(object):
 
         elif isinstance(expr, FunctionDef):
 
-            name       = str(expr.name)
-            name       = name.replace("'", '')
-            cls_name   = expr.cls_name
-            hide       = False
-            kind       = 'function'
-            decorators = expr.decorators
-            funcs      = []
-            is_static  = False
+            name         = str(expr.name)
+            name         = name.replace("'", '')
+            cls_name     = expr.cls_name
+            hide         = False
+            kind         = 'function'
+            decorators   = expr.decorators
+            funcs        = []
+            is_static    = False
+            is_pure      = expr.is_pure
+            is_elemental = expr.is_elemental
 
             header = expr.header
             if header is None:
@@ -3786,6 +3909,8 @@ class Parser(object):
                     hide=hide,
                     kind=kind,
                     is_static=is_static,
+                    is_pure=is_pure,
+                    is_elemental=is_elemental,
                     imports=imports,
                     decorators=decorators,
                     is_recursive=is_recursive)
@@ -4085,7 +4210,7 @@ class Parser(object):
             val = self._annotate(expr.val, **settings)
             if isinstance(val, (Tuple, list, tuple)):
                 #TODO list of dimesion > 1 '
-                        
+
                 msg = 'TODO not yet supported'
                 raise PyccelSemanticError(msg)
             shape = self._annotate(expr.length, **settings)

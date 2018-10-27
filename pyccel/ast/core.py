@@ -12,7 +12,7 @@ from sympy.simplify.radsimp   import fraction
 from sympy.core.assumptions   import StdFactKB
 from sympy.core.operations    import LatticeOp
 from sympy.core.relational    import Equality, Relational
-from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge 
+from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge
 from sympy.core.singleton     import Singleton, S
 from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
 from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
@@ -220,7 +220,7 @@ def _atomic(e, cls=None,ignore=()):
 
 
 def extract_subexpressions(expr):
-    """this function takes an expression and returns a list 
+    """this function takes an expression and returns a list
       of statements if this expression contains sub expressions that need
       to be evaluated outside of the expression
 
@@ -228,19 +228,19 @@ def extract_subexpressions(expr):
       expr : Add, Mul, Pow, Application
 
     """
-    
+
     stmts = []
-    cls   = (Add, Mul, sp_Pow, And,  
-             Or, Eq, Ne, Lt, Gt, 
+    cls   = (Add, Mul, sp_Pow, And,
+             Or, Eq, Ne, Lt, Gt,
              Le, Ge)
 
     id_cls = (Symbol, Indexed, IndexedBase,
-              DottedVariable, sp_Float, sp_Integer, 
-              sp_Rational, ImaginaryUnit,Boolean, 
+              DottedVariable, sp_Float, sp_Integer,
+              sp_Rational, ImaginaryUnit,Boolean,
               BooleanTrue, BooleanFalse, String,
               ValuedArgument, Nil, List)
 
-    funcs_names = ('diag', 'zeros', 'ones', 
+    funcs_names = ('diag', 'zeros', 'ones',
                    'empty', 'cross','map',
                    'zip','enumerate')
     #TODO put only imported functions
@@ -251,7 +251,7 @@ def extract_subexpressions(expr):
             return expr.func(*args, evaluate=False)
         elif isinstance(expr, Application):
             args = substitute(expr.args)
-            
+
             if str(expr.func) in funcs_names:
                 var = create_variable(expr)
                 expr = expr.func(*args, evaluate=False)
@@ -263,7 +263,7 @@ def extract_subexpressions(expr):
                 expr = expr.func(*args, evaluate=False)
                 return expr
         elif isinstance(expr, id_cls):
-            
+
             return expr
         elif isinstance(expr, GC):
             stmts.append(expr)
@@ -278,19 +278,19 @@ def extract_subexpressions(expr):
             args = []
             for i in expr:
                 args.append(substitute(i))
-            
+
             return List(*args, sympify=False)
 
         elif isinstance(expr, (Tuple, tuple, list)):
             args = []
-            
+
             for i in expr:
                 args.append(substitute(i))
             return args
-                
+
         else:
             raise TypeError('statment {} not supported yet'.format(type(expr)))
-            
+
 
     new_expr  = substitute(expr)
     return stmts, new_expr    
@@ -625,7 +625,7 @@ class CodeBlock(Basic):
                             Application, Expr, IfTernaryOperator)):
                 ls.append(i)
             else:
-                
+
                 raise TypeError('statement of type {} not supported yet'.format(type(i)))
         obj = Basic.__new__(cls, ls)
         if isinstance(ls[-1], (Assign, AugAssign)):
@@ -2591,6 +2591,12 @@ class FunctionDef(Basic):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_pure: bool
+        True for a function without side effect
+
+    is_elemental: bool
+        True for a function is elemental
+
     is_static: bool
         True for static functions. Needed for f2py
 
@@ -2644,6 +2650,8 @@ class FunctionDef(Basic):
         decorators={},
         header=None,
         is_recursive=False,
+        is_pure=False,
+        is_elemental=False,
         ):
 
         # name
@@ -2715,6 +2723,14 @@ class FunctionDef(Basic):
 
         if not isinstance(decorators, dict):
             raise TypeError('decorators must be a dict')
+
+        if not isinstance(is_pure, bool):
+            raise TypeError('Expecting a boolean for pure')
+
+        if not isinstance(is_elemental, bool):
+            raise TypeError('Expecting a boolean for elemental')
+
+
         return Basic.__new__(
             cls,
             name,
@@ -2731,6 +2747,8 @@ class FunctionDef(Basic):
             decorators,
             header,
             is_recursive,
+            is_pure,
+            is_elemental
             )
 
     @property
@@ -2788,6 +2806,14 @@ class FunctionDef(Basic):
     @property
     def is_recursive(self):
         return self._args[13]
+
+    @property
+    def is_pure(self):
+        return self._args[14]
+
+    @property
+    def is_elemental(self):
+        return self._args[15]
 
     def print_body(self):
         for s in self.body:
@@ -2920,6 +2946,14 @@ class FunctionDef(Basic):
             self.is_recursive,
             )
         return args
+
+    # TODO
+    def check_pure(self):
+        raise NotImplementedError('')
+
+    # TODO
+    def check_elemental(self):
+        raise NotImplementedError('')
 
 
 class SympyFunction(FunctionDef):
@@ -3667,94 +3701,6 @@ class Len(Function):
     @property
     def dtype(self):
         return 'int'
-
-
-# TODO - add examples
-
-class ZerosLike(Function):
-
-    """Represents variable assignment using numpy.zeros_like for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Variable
-        the input variable
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, ZerosLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = ZerosLike(y)
-    """
-
-    # TODO improve in the spirit of assign
-
-    def __new__(cls, rhs=None, lhs=None):
-        if isinstance(lhs, str):
-            lhs = Symbol(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-
-        assignable = (
-            Symbol,
-            MatrixSymbol,
-            MatrixElement,
-            Indexed,
-            Idx,
-            Variable,
-            )
-
-        if lhs and not isinstance(lhs, assignable):
-            raise TypeError('Cannot assign to lhs of type %s.'
-                            % type(lhs))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def init_value(self):
-
-        def _native_init_value(dtype):
-            if isinstance(dtype, NativeInteger):
-                return 0
-            elif isinstance(dtype, NativeReal):
-                return 0.0
-            elif isinstance(dtype, NativeComplex):
-                return 0.0
-            elif isinstance(dtype, NativeBool):
-                return BooleanFalse()
-            raise TypeError('Expecting a Native type, given {}'.format(dtype))
-
-        _native_types = (NativeInteger, NativeReal,
-                         NativeComplex, NativeBool)
-
-        rhs = self.rhs
-        if isinstance(rhs.dtype, _native_types):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, (Variable, IndexedVariable)):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, IndexedElement):
-            return _native_init_value(rhs.base.dtype)
-        else:
-            raise TypeError('Unknown type for {name}, given {dtype}'.format(dtype=type(rhs),
-                            name=rhs))
 
 
 class Print(Basic):

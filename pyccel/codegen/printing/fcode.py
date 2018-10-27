@@ -29,9 +29,12 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
+
 from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Int, Real, Shape
 from pyccel.ast.numpyext import Sum, Rand, Complex
+from pyccel.ast.numpyext import ZerosLike, FullLike
+
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -44,7 +47,6 @@ from pyccel.ast.core import SeparatorComment, CommentBlock
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import Subroutine
-from pyccel.ast.core import ZerosLike
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
@@ -534,6 +536,8 @@ class FCodePrinter(CodePrinter):
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
+    # TODO this is not used anymore since, we are calling printer inside
+    #      numpyext. must be improved!!
     def _print_ZerosLike(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
@@ -620,6 +624,21 @@ class FCodePrinter(CodePrinter):
     def _print_Sign(self, expr):
         # TODO use the appropriate precision from rhs
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
+
+    def _print_Bounds(self, expr):
+        var = expr.var
+        rank = var.rank
+        bounds = []
+        for i in range(0, rank):
+            l = 'lbound({var},{i})'.format(var=self._print(var),
+                                           i=self._print(i+1))
+            u = 'ubound({var},{i})'.format(var=self._print(var),
+                                           i=self._print(i+1))
+
+            bounds.append('{lbound}:{ubound}'.format(lbound=l, ubound=u))
+        bounds = ','.join(bounds)
+        return bounds
+
 
     # ... MACROS
     def _print_MacroShape(self, expr):
@@ -901,6 +920,7 @@ class FCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join(self._print(i) for i in expr.body)
 
+    # TODO the ifs as they are are, is not optimal => use elif
     def _print_Assign(self, expr):
         lhs_code = self._print(expr.lhs)
         is_procedure = False
@@ -917,6 +937,7 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.rhs, (Range, Product)):
             return ''
+
         if isinstance(expr.rhs, Len):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
@@ -930,7 +951,10 @@ class FCodePrinter(CodePrinter):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, ZerosLike):
-            return self._print(ZerosLike(lhs=expr.lhs,rhs=expr.rhs.rhs))
+            return expr.rhs.fprint(self._print, expr.lhs)
+
+        if isinstance(expr.rhs, FullLike):
+            return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, Mod):
             lhs = self._print(expr.lhs)
@@ -1161,7 +1185,10 @@ class FCodePrinter(CodePrinter):
         # ...
 
         name = self._print(expr.name)
-        is_static = expr.is_static
+
+        is_static    = expr.is_static
+        is_pure      = expr.is_pure
+        is_elemental = expr.is_elemental
 
         if expr.cls_name:
             for k, m in list(_default_methods.items()):
@@ -1273,6 +1300,14 @@ class FCodePrinter(CodePrinter):
         for i in expr.arguments:
             if i in out_args:
                 out_args.remove(i)
+
+        # treate case of pure function
+        if is_pure:
+            sig = 'pure {}'.format(sig)
+
+        # treate case of elemental function
+        if is_elemental:
+            sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
         body_code = '\n'.join(self._print(i) for i in body)
