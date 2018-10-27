@@ -47,6 +47,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric)
 
+
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
@@ -187,6 +188,8 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError('Unexpected type {0}'.format(type(expr)))
 
+
+
 def _atomic(e, cls=None,ignore=()):
 
     """Return atom-like quantities as far as substitution is
@@ -292,11 +295,18 @@ def extract_subexpressions(expr):
     new_expr  = substitute(expr)
     return stmts, new_expr    
             
+
+
 def collect_vars(ast):
     """ collect variables in order to be declared"""
+    #TODO use the namespace to get the declared variables
     variables = {}
     def collect(stmt):
-        if isinstance(stmt, (tuple, Tuple, list)):
+
+        if isinstance(stmt, Variable):
+            if not isinstance(stmt.name, DottedName):
+                variables[stmt.name] = stmt
+        elif isinstance(stmt, (tuple, Tuple, list)):
             for i in stmt:
                 collect(i)
         if isinstance(stmt, For):
@@ -311,9 +321,11 @@ def collect_vars(ast):
             collect(stmt.body)
         elif isinstance(stmt, (Assign, AliasAssign)):
             collect(stmt.lhs)
-        elif isinstance(stmt, Variable):
-            if not isinstance(stmt.name, DottedName):
-                variables[stmt.name] = stmt
+            if isinstance(stmt.rhs, (Linspace, Diag)):
+                collect(stmt.rhs.index)
+                    
+        
+
     collect(ast)
     return variables.values()
 
@@ -335,10 +347,10 @@ def create_variable(expr):
 
     import numpy as np
     try:
-        name = 'result_' + str(abs(hash(expr)
+        name = 'Dummy_' + str(abs(hash(expr)
                                   + np.random.randint(500)))[-4:]
     except:
-        name = 'result_' + str(abs(np.random.randint(500)))[-4:]
+        name = 'Dymmy_' + str(abs(np.random.randint(500)))[-4:]
 
     return Symbol(name)
 
@@ -1691,6 +1703,13 @@ class For(Basic):
         self.body.append(stmt)
 
 
+
+class DoConcurrent(For):
+    pass
+
+
+class ForAll(For):
+    pass 
 
 
 class ForIterator(For):
@@ -4817,4 +4836,4 @@ def get_iterable_ranges(it, var_name=None):
 
 
 # ...
-
+from .numpyext import Linspace, Diag

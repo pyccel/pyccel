@@ -29,7 +29,9 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-from pyccel.ast import Zeros, Array, Int, Shape, Sum, Rand,Real,Complex
+from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
+from pyccel.ast.numpyext import Int, Real, Shape
+from pyccel.ast.numpyext import Sum, Rand, Complex
 
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -573,6 +575,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
+  
+    def _print_Linspace(self, expr):
+        return expr.fprint(self._print)
 
     def _print_Array(self, expr):
         return expr.fprint(self._print)
@@ -921,7 +926,7 @@ class FCodePrinter(CodePrinter):
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
-        if isinstance(expr.rhs, (Zeros, Array, Shape)):
+        if isinstance(expr.rhs, (Zeros, Array, Shape, Linspace, Diag, Cross)):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, ZerosLike):

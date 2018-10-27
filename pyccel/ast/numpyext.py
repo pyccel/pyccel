@@ -14,10 +14,10 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core.assumptions import StdFactKB
 from sympy import sqrt, asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
-from sympy import IndexedBase
+from sympy import IndexedBase, Matrix
 
 
-from .core import (Variable, IndexedElement, IndexedVariable, 
+from .core import (Variable, IndexedElement, IndexedVariable, Len, For, ForAll, Range, Assign, 
                    List, String, ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
@@ -37,7 +37,7 @@ class Array(Function):
 
     """Represents a call to  numpy.array for code generation.
 
-    arg : list ,tuple ,Tuple,List
+    arg : list ,tuple ,Tuple, List
     """
 
     def __new__(cls, arg, dtype=None, order='C'):
@@ -51,12 +51,12 @@ class Array(Function):
                 dtype = dtype.value
             dtype = str(dtype).replace('\'', '')
                 
-            dtype,prec = dtype_registry[dtype]
+            dtype, prec = dtype_registry[dtype]
             dtype = datatype('ndarray' + dtype)
 
         if not prec and dtype:
             prec = default_precision[dtype]
-      
+
         return Basic.__new__(cls, arg, dtype, order, prec)
 
     def _sympystr(self, printer):
@@ -192,6 +192,10 @@ class Shape(Array):
     @property
     def rank(self):
         return 1
+
+    @property
+    def order(self):
+        return 'C'
 
     def fprint(self, printer, lhs = None):
         """Fortran print."""
@@ -458,8 +462,8 @@ class Linspace(Function):
         else:
            raise ValueError('Range has at most 3 arguments')
 
-
-        return Basic.__new__(cls, start, stop, size)
+        index = Variable('int', 'linspace_index')
+        return Basic.__new__(cls, start, stop, size, index)
 
     @property
     def start(self):
@@ -472,6 +476,10 @@ class Linspace(Function):
     @property
     def size(self):
         return self._args[2]
+
+    @property
+    def index(self):
+        return self._args[3]
 
     @property
     def step(self):
@@ -503,28 +511,195 @@ class Linspace(Function):
         sstr = printer.doprint
         code = 'linspace({}, {}, {})',format(sstr(self.start),
                                              sstr(self.stop),
-                                             sstr(self.size))    
+                                             sstr(self.size))
+    def _eval_is_real(self):
+        return True  
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        init_value = '(/{0} + {1}*{2},{1} = 0,{3}-1 /)'
+        init_value = '(/ ({0} + {1}*{2},{1} = 0,{3}-1) /)'
 
         start = printer(self.start)
         step  = printer(self.step)
         stop  = printer(self.stop)
-        index = printer('ind_1641316')
+        index = printer(self.index)
 
-        init_value.format(start,index,step,stop)
+        init_value = init_value.format(start, index, step, stop)
+        
+        
 
         if lhs:
-            lhs = printer(lhs)
-            code = '{0} = {1}'.format(lhs, init_value)
+            lhs    = printer(lhs)
+            code   = 'allocate(0:{})'.format(printer(self.size))
+            code  += '\n{0} = {1}'.format(lhs, init_value)
         else:
-            code = '{0}'.format(init_value)
+            code   = '{0}'.format(init_value)
 
         return code
 
+#=======================================================================================
+
+class Diag(Function):
+
+    """
+    Represents numpy.diag.
+
+    """
+    #TODO improve the properties dtype, rank, shape
+    # to be more general
+
+
+    def __new__(cls, array, v=0, k=0):
+       
+
+        _valid_args = (Variable, IndexedElement, Tuple)
+
+        
+        if not isinstance(array, _valid_args):
+           raise TypeError('Expecting valid args')
+
+        if not isinstance(k, (int, sp_Integer)):
+           raise ValueError('k must be an integer')
+
+        index = Variable('int', 'diag_index')
+        return Basic.__new__(cls, array, v, k, index)
+
+    @property
+    def array(self):
+        return self._args[0]
+
+    @property
+    def v(self):
+        return self._args[1]
+
+    @property
+    def k(self):
+        return self._args[2]
+
+    @property
+    def index(self):
+        return self._args[3]
+
+  
+    @property
+    def dtype(self):
+        return 'real'
+
+    @property
+    def order(self):
+        return 'C'
+
+    @property
+    def precision(self):
+        return 8
+
+    @property
+    def shape(self):
+        return Len(self.array)
+
+    @property
+    def rank(self):
+        rank = 1 if self.array.rank == 2 else 2
+        return rank
+
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        array = printer(self.array)
+        rank  = self.array.rank
+        index = printer(self.index)
+           
+        if rank == 2:
+            lhs   = IndexedBase(lhs)[self.index]
+            rhs   = IndexedBase(self.array)[self.index,self.index]
+            body  = [Assign(lhs, rhs)]
+            body  = For(self.index, Range(Len(self.array)), body)
+            code  = printer(body)
+            alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
+        elif rank == 1:
+            
+            lhs   = IndexedBase(lhs)[self.index, self.index]
+            rhs   = IndexedBase(self.array)[self.index]
+            body  = [Assign(lhs, rhs)]
+            body  = For(self.index, Range(Len(self.array)), body)
+            code  = printer(body)
+            alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
+       
+        return alloc + '\n' + code
+
+#=======================================================================================
+
+class Cross(Function):
+
+    """
+    Represents numpy.cross.
+
+    """
+    #TODO improve the properties dtype, rank, shape
+    # to be more general
+
+    def __new__(cls, a, b):
+       
+
+        _valid_args = (Variable, IndexedElement, Tuple)
+
+        
+        if not isinstance(a, _valid_args):
+           raise TypeError('Expecting valid args')
+
+        if not isinstance(b, _valid_args):
+           raise TypeError('Expecting valid args')
+
+        return Basic.__new__(cls, a, b)
+
+    @property
+    def a(self):
+        return self._args[0]
+
+    @property
+    def b(self):
+        return self._args[1]
+
+   
+    @property
+    def dtype(self):
+        return self.a.dtype
+
+    @property
+    def order(self):
+        return 'C'
+
+    @property
+    def precision(self):
+        return 8
+
+
+    @property
+    def rank(self):
+        return 1
+
+    @property
+    def shape(self):
+        return ()
+
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+ 
+        a     = IndexedBase(self.a)
+        b     = IndexedBase(self.b)
+        a     = Matrix([a[0], a[1], a[2]])
+        b     = Matrix([b[0], b[1], b[2]])
+        code  = a.cross(b).T.tolist()
+        code  = Tuple(*code[0])
+        code  = Assign(lhs, code)
+        code  = printer(code)
+        alloc = 'allocate({}(0:size({})-1))'.format(printer(lhs),printer(self.a))
+        
+        
+        return alloc + '\n' + code
 
 #=======================================================================================
 

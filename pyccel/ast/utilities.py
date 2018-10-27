@@ -7,7 +7,7 @@ from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
 from .core import Constant, ZerosLike
-from .numpyext import Zeros, Ones, Empty, Min, Max, Abs
+from .numpyext import Zeros, Ones, Empty, Min, Max, Abs, Diag, Cross
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
@@ -62,7 +62,10 @@ numpy_functions = {
     'complex64' : Complex64,
     'sum'       : Sum,
     'rand'      : Rand,
-    'random'    : Rand
+    'random'    : Rand,
+    'linspace'  : Linspace,
+    'diag'      : Diag,
+    'cross'     : Cross,
 }
 
 builtin_functions_dict = {
@@ -106,8 +109,6 @@ def builtin_function(expr, args=None):
         return dic[name](*args)
     elif name == 'array':
         return Array(*args)
-    elif name == 'linspace':
-        return Linspace(*args)
     elif name in ['complex']:
         if len(args)==1:
             args = [args[0],Float(0)]

@@ -2150,7 +2150,8 @@ class Parser(object):
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
 
-            elif name in ['Zeros', 'Ones', 'Empty']:
+            elif name in ['Zeros', 'Ones', 'Empty', 'Diag', 
+                          'Shape', 'Cross', 'Linspace']:
 
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
@@ -2158,13 +2159,7 @@ class Parser(object):
                 d_var['rank'       ] = expr.rank
                 d_var['is_pointer' ] = False
                 d_var['order'      ] = expr.order
-            elif name in ['Shape']:
-
-                d_var['datatype'   ] = expr.dtype
-                d_var['shape'      ] = expr.shape
-                d_var['rank'       ] = expr.rank
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
+    
             elif name in ['Array']:
 
                 dvar = self._infere_type(expr.arg, **settings)
@@ -2180,16 +2175,6 @@ class Parser(object):
                 d_var['is_pointer' ] = False
                 d_var['datatype'   ] = 'ndarray' + dvar['datatype']
                 d_var['precision'  ] = dvar['precision']
-
-
-            elif name in ['Linspace']:
-
-                d_var['allocatable'] = True
-                d_var['shape'      ] = expr.shape
-                d_var['rank'       ] = 1
-                d_var['is_pointer' ] = False
-                d_var['datatype'   ] = 'ndarrayreal'
-                d_var['precision'  ] = expr.precision
 
             elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
 
