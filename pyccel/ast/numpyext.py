@@ -732,6 +732,7 @@ class Rand(Real):
         return 'rand({0})'.format(rhs_code)
 
 
+#=======================================================================================
 
 class Zeros(Function):
 

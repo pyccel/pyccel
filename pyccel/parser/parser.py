@@ -1793,20 +1793,20 @@ class Parser(object):
                 body = Assign(lhs, body)
 
             body.set_fst(parent)
-            indexes = []
+            indices = []
             generators = list(generators)
             while len(generators) > 0:
-                indexes.append(generators[-1].target)
+                indices.append(generators[-1].target)
                 generators[-1].insert2body(body)
                 body = generators.pop()
-            indexes = indexes[::-1]
+            indices = indices[::-1]
             body = [body]
             if name == 'sum':
-                expr = FunctionalSum(body, result, lhs, indexes,None)
+                expr = FunctionalSum(body, result, lhs, indices,None)
             elif name == 'min':
-                expr = FunctionalMin(body, result, lhs, indexes, None)
+                expr = FunctionalMin(body, result, lhs, indices, None)
             elif name == 'max':
-                expr = FunctionalMax(body, result, lhs, indexes, None)
+                expr = FunctionalMax(body, result, lhs, indices, None)
             else:
                 raise NotImplementedError('TODO')
 
@@ -1945,14 +1945,14 @@ class Parser(object):
             assign2.set_fst(stmt)
             generators[-1].insert2body(assign2)
 
-            indexes = [generators[-1].target]
+            indices = [generators[-1].target]
             while len(generators) > 1:
                 F = generators.pop()
                 generators[-1].insert2body(F)
-                indexes.append(generators[-1].target)
-            indexes = indexes[::-1]
+                indices.append(generators[-1].target)
+            indices = indices[::-1]
             return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                                 indexes, index)
+                                 indices, index)
 
         elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
             # this is a blocking error, since we don't want to convert the try body
@@ -3531,7 +3531,7 @@ class Parser(object):
 
             target  = expr.expr
             index   = expr.index
-            indexes = expr.indexes
+            indices = expr.indices
             dims    = []
             body    = expr.loops[1]
 
@@ -3579,11 +3579,11 @@ class Parser(object):
 
             # we now calculate the size of the array which will be allocated
 
-            for i in range(len(indexes)):
-                var = self.get_variable(indexes[i].name)
+            for i in range(len(indices)):
+                var = self.get_variable(indices[i].name)
                 if var is None:
                     raise ValueError('variable not found')
-                indexes[i] = var
+                indices[i] = var
 
             dim = dims[-1][0]
             for i in range(len(dims) - 1, 0, -1):
@@ -3592,8 +3592,8 @@ class Parser(object):
                 start = dims[i - 1][2]
                 size  = ceiling(size)
                 dim   = ceiling(dim)
-                dim   = dim.subs(indexes[i-1], start+step*indexes[i-1])
-                dim   = Summation(dim, (indexes[i-1], 0, size-1))
+                dim   = dim.subs(indices[i-1], start+step*indices[i-1])
+                dim   = Summation(dim, (indices[i-1], 0, size-1))
                 dim   = dim.doit()
             if isinstance(dim, Summation):
                 raise NotImplementedError('TODO')
@@ -3621,7 +3621,7 @@ class Parser(object):
             loops = [self._annotate(i, **settings) for i in expr.loops]
             index = self._annotate(index, **settings)
 
-            return FunctionalFor(loops, lhs=lhs, indexes=indexes, index=index)
+            return FunctionalFor(loops, lhs=lhs, indices=indices, index=index)
 
         elif isinstance(expr, While):
 

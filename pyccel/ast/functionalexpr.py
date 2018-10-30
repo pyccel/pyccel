@@ -13,10 +13,10 @@ class FunctionalFor(Basic):
         loops,
         expr=None,
         lhs=None,
-        indexes=None,
+        indices=None,
         index=None,
         ):
-        return Basic.__new__(cls, loops, expr, lhs, indexes, index)
+        return Basic.__new__(cls, loops, expr, lhs, indices, index)
 
     @property
     def loops(self):
@@ -31,7 +31,7 @@ class FunctionalFor(Basic):
         return self._args[2]
 
     @property
-    def indexes(self):
+    def indices(self):
         return self._args[3]
 
     @property
