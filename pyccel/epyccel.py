@@ -335,9 +335,9 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     # Find directory where Fortran extension module should be created
     if is_module:
-        dirname = os.path.dirname( mod.__file__ )
+        dirname = os.path.dirname(os.path.abspath( mod.__file__ ))
     else:
-        dirname = os.path.dirname( sys.modules[func.__module__].__file__ )
+        dirname = os.path.dirname(os.path.abspath(sys.modules[func.__module__].__file__ ))
 
     # Move into working directory, create extension module, then move back to original directory
     origin = os.path.abspath( os.curdir )

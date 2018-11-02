@@ -4,6 +4,7 @@ import numpy as np
 
 from pyccel.epyccel import ContextPyccel
 from pyccel.epyccel import epyccel
+from pyccel.decorators import types
 
 def test_1():
     context = ContextPyccel(name='context_1')
@@ -24,9 +25,6 @@ def test_1():
 
     # ... insert constants
     context.insert_constant({'c_float': 1., 'c_int':2})
-    # ...
-
-    print(context)
 
     context.compile()
 
@@ -42,25 +40,15 @@ def test_2():
     context.insert_function(decr, ['double'], kind='function', results=['double'])
     # ...
 
-    # Change directory: context must be compiled in same location as function
-    import os
-    origin = os.path.abspath( os.curdir )
-    os.chdir( os.path.dirname( __file__ ) )
-
-    # Print context to Python module, translate to Fortran and compile
-    context.compile()
-
-    # Move back to starting directory
-    os.chdir( origin )
-
-    header = '#$ header procedure f2_py(int, double [:])'
+    @types('int', 'double[:]')
     def f2_py(m1, x):
         for i in range(0, m1):
             y = x[i]
             z = decr(y)
             x[i] = z
 
-    f = epyccel(f2_py, header, context=context)
+    context.compile()
+    f = epyccel(f2_py, context=context)
 
     m1 = 3
     x = np.asarray(range(0, m1), dtype='float')
@@ -72,5 +60,5 @@ def test_2():
 
 
 if __name__ == '__main__':
-#    test_1()
+    test_1()
     test_2()
