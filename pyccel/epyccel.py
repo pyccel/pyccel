@@ -62,11 +62,11 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  -c {} --opt='-O3' {} -m  {} {} {} {} """.format(compilers,
+        args = """  -c {} --f90flags=-O3 {} -m  {} {} {} {} """.format(compilers,
                                                 libs, modulename.rpartition('.')[2], filename,
                                                 extra_args, includes)
 
-        cmd = """python3 -c 'import numpy.f2py as f ;f.main()' {}"""
+        cmd = """python3 -m numpy.f2py {}"""
 
 
         cmd = cmd.format(args)
@@ -156,6 +156,11 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
 
     output_folder = name.rsplit('.',1)[0] if '.' in name else ''
+
+    # fortran module name
+    modname = 'epyccel__' + name
+
+
 
     # ...
     if is_module:
@@ -305,7 +310,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         settings = {}
         ast = pyccel.annotate(**settings)
 
-        codegen = Codegen(ast, name)
+        codegen = Codegen(ast, modname)
         code = codegen.doprint()
         # ...
 
@@ -320,14 +325,13 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
-    # Change module name to avoid name clashes: Python cannot import two modules with the same name
+       # Change module name to avoid name clashes: Python cannot import two modules with the same name
     if is_module:
-        modname = name
-        head, sep, tail = modname.rpartition('.')
+        head, sep, tail = name.rpartition('.')
         name = sep.join( [head, '__epyccel__'+ tail] )
     else:
-        modname = name
         name = '__epyccel__'+ name
+
 
     # Find directory where Fortran extension module should be created
     if is_module:
@@ -357,6 +361,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
     try:
         os.chdir( dirname )
+        
         package = importlib.import_module( name )
         clean_extension_module( package, modname )
         os.chdir( origin )
@@ -446,8 +451,6 @@ def clean_extension_module( ext_mod, py_mod_name ):
     """
     # Get name of f2py automatic attribute
     n = py_mod_name.lower().replace('.','_')
-    if not n.startswith('mod_'):
-        n = 'mod_'+ n
 
     # Move all functions to module level
     m = getattr( ext_mod, n )

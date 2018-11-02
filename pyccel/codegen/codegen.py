@@ -37,11 +37,14 @@ class Codegen(object):
             name of the generated module or program.
         """
 
-        self._ast = expr
-        self._name = name
-        self._kind = None
-        self._code = None
+        self._ast      = expr
+        self._name     = name
+        self._kind     = None
+        self._code     = None
         self._language = None
+
+        #TODO verify module name != function name
+        #it generates a compilation error
 
         self._stmts = {}
         _structs = [
