@@ -23,7 +23,7 @@ def setup_module( module=None ):
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
-
+@pytest.mark.xfail
 @pytest.mark.parallel
 def test_np_sendrecv():
 

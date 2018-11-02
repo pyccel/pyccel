@@ -23,7 +23,7 @@ def setup_module( module=None ):
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
-
+@pytest.mark.xfail
 @pytest.mark.parallel
 def test_np_allreduce( ne=15 ):
     """
@@ -59,6 +59,7 @@ def test_np_allreduce( ne=15 ):
     assert np.array_equal( recvbuf_py, recvbuf_f90 )
 
 # ...
+@pytest.mark.xfail
 @pytest.mark.parallel
 def test_np_bcast( ne=15 ):
 
@@ -82,6 +83,7 @@ def test_np_bcast( ne=15 ):
     assert np.array_equal( buf_f90, exact )
 
 # ...
+@pytest.mark.xfail
 @pytest.mark.parallel
 def test_np_gather():
 
