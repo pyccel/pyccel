@@ -56,9 +56,3 @@ def test_2():
 
     x_expected = np.array([-1., 0., 1.])
     assert(np.allclose(x, x_expected))
-
-
-
-if __name__ == '__main__':
-    test_1()
-    test_2()

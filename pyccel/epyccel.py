@@ -347,8 +347,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         libs      = libs,
         compiler  = compiler,
         mpi       = mpi,
-        includes  = include_args
-    )
+        includes  = include_args)
     os.chdir( origin )
 
     if verbose:
@@ -469,16 +468,19 @@ def clean_extension_module( ext_mod, py_mod_name ):
 class ContextPyccel(object):
     """Class for interactive use of Pyccel. It can be used within an IPython
     session, Jupyter Notebook or ipyccel command line."""
-    def __init__(self, name,context_folder='',output_folder=''):
-        self._name = 'mod_{}'.format(name)
+    def __init__(self, name, context_folder=None, output_folder=''):
+        self._name = 'epyccel__{}'.format(name)
         self._constants = OrderedDict()
         self._functions = OrderedDict()
+
+        if not context_folder:
+            context_folder = os.path.abspath('.').replace('/', '.')
 
         self._folder = context_folder
         if (len(self._folder)>0):
             self._folder+='.'
         self._os_folder = self._folder.replace('.','/')
-
+        
         contexts = context_folder.split('.')
         outputs  =  output_folder.split('.')
         n = min(len(contexts),len(outputs))
@@ -613,7 +615,6 @@ class ContextPyccel(object):
 
         if not('fflags' in list(settings.keys())):
             settings['fflags'] = '-fPIC -O3'
-        # ...
 
         output, cmd = execute_pyccel(filename, verbose=verbose, **settings)
         return output, cmd
