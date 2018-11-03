@@ -17,6 +17,9 @@ from pyccel.codegen               import Codegen
 from pyccel.codegen.utilities     import execute_pyccel
 from pyccel.ast                   import FunctionHeader
 
+#==============================================================================
+
+PY37 = sys.version_info[0:2] == (3, 7) 
 
 #==============================================================================
 
@@ -359,15 +362,18 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     # ...
     try:
-        os.chdir( dirname )
-        
-        package = importlib.import_module( name )
-        clean_extension_module( package, modname )
-        os.chdir( origin )
-        # TODO ??
-        #reload(package)
+        if PY37:
+            dirname = os.path.relpath(dirname).replace('/','.')
+            package = dirname + '.' + name
+            package = importlib.import_module( '..'+name, package=package )
+            clean_extension_module( package, modname )
+        else:
+            os.chdir( dirname )
+            package = importlib.import_module( name )
+            clean_extension_module( package, modname )
+            os.chdir( origin )
+
     except:
-        print( os.path.abspath( os.curdir ) )
         raise ImportError('could not import {0}'.format( name ))
     # ...
 
