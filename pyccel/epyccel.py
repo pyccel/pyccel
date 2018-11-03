@@ -353,21 +353,14 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     if verbose:
         print(cmd)
 
-  #  if verbose:
-  #      print(output)
-    # ...
 
-    # ...
     try:
-        os.chdir( dirname )
-        
-        package = importlib.import_module( name )
+        # extract relative path from the currect directory
+        dirname = os.path.relpath(dirname).replace('/','.')
+        package = dirname + '.' + name
+        package = importlib.import_module( '..'+name, package=package )
         clean_extension_module( package, modname )
-        os.chdir( origin )
-        # TODO ??
-        #reload(package)
     except:
-        print( os.path.abspath( os.curdir ) )
         raise ImportError('could not import {0}'.format( name ))
     # ...
 
