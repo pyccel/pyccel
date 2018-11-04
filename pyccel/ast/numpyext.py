@@ -4,7 +4,7 @@
 # TODO remove sympify, Symbol
 
 import numpy
-from sympy.core.function import Function
+from sympy.core.function import Function, Application
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
@@ -21,7 +21,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, Len,
-                   For, ForAll, Range, Assign, List, String,
+                   For, ForAll, Range, Assign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
@@ -304,8 +304,8 @@ class Real(Function):
 
     def __new__(cls, arg):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer,
-                       sp_Float, Mul, Add, sp_Pow, sp_Rational)
+        _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
+                       sp_Float, Mul, Add, sp_Pow, sp_Rational, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -728,10 +728,8 @@ class Rand(Real):
     def fprint(self, printer):
         """Fortran print."""
 
-        rhs_code = printer(self.arg)
-        if len(self.arg) == 0:
-            rhs_code = ''
-        return 'rand({0})'.format(rhs_code)
+        return 'rand()'
+
 
 
 #=======================================================================================

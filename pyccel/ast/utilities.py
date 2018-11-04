@@ -10,7 +10,7 @@ from .core import FunctionDef, Return, Assign
 from .core import Constant
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
 from .numpyext import Min, Max, Abs
-from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex
+from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex, Imag
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
@@ -59,6 +59,7 @@ numpy_functions = {
     'shape'     : Shape,
     'int'       : Int,
     'real'      : Real,
+    'imag'      : Imag,
     'float'     : Real,
     'double'    : Real,
     'float32'   : Float32,

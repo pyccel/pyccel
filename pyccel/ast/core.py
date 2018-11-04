@@ -240,9 +240,7 @@ def extract_subexpressions(expr):
               BooleanTrue, BooleanFalse, String,
               ValuedArgument, Nil, List)
 
-    funcs_names = ('diag', 'zeros', 'ones',
-                   'empty', 'cross','map',
-                   'zip','enumerate')
+    func_names = ('diag', 'empty', 'cross', 'zip', 'enumerate')
     #TODO put only imported functions
     def substitute(expr):
         if isinstance(expr, cls):
@@ -252,7 +250,7 @@ def extract_subexpressions(expr):
         elif isinstance(expr, Application):
             args = substitute(expr.args)
 
-            if str(expr.func) in funcs_names:
+            if str(expr.func) in func_names:
                 var = create_variable(expr)
                 expr = expr.func(*args, evaluate=False)
                 expr = Assign(var, expr)

@@ -17,7 +17,8 @@ pyccel_external_lib = {"mpi4py"             :"pyccel.stdlib.external.mpi4py",
                        "scipy.linalg.blas"  :"pyccel.stdlib.external.blas",
                        "scipy.fftpack"      :"pyccel.stdlib.external.dfftpack",
                        "fitpack"            :"pyccel.stdlib.internal.fitpack",
-                       "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
+                       "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack",
+                       "numpy.random"       :"numpy"}
 
 
 def read_file(filename):

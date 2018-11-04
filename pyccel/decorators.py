@@ -18,6 +18,8 @@ def python(f):
 def sympy(f):
     return f
 
+def bypass(f):
+    return f
 
 def types(*args,**kw):
     def id(f):

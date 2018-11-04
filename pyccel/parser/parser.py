@@ -1555,6 +1555,9 @@ class Parser(object):
             for i in stmt.decorators:
                 decorators.update(self._fst_to_ast(i))
 
+            if 'bypass' in decorators.keys():
+                return EmptyLine()
+
             # extract the types to construct a header
             if 'types' in decorators.keys():
                 types = []
@@ -2196,9 +2199,9 @@ class Parser(object):
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
 
-            elif name in ['Int','Int32','Int64','Real',
-                             'Float32','Float64','Complex',
-                              'Complex128','Complex64']:
+            elif name in ['Int','Int32','Int64','Real','Imag',
+                          'Float32','Float64','Complex',
+                          'Complex128','Complex64']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
