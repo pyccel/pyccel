@@ -2979,6 +2979,7 @@ class Parser(object):
                     stmt.set_fst(rhs.fst)
                     stmt = self._annotate(stmt, **settings)
                     return CodeBlock([rhs, stmt])
+                return rhs
        
             elif isinstance(rhs, FunctionalFor):
                 return rhs
