@@ -750,7 +750,7 @@ class Zeros(Function):
 
     # TODO improve
 
-    def __new__(cls, shape,*args):
+    def __new__(cls, shape, *args):
 
         args = list(args)
         args_= {'dtype':'real','order':'C'}
@@ -1114,6 +1114,53 @@ class Empty(Zeros):
         code = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         return code
 
+
+class Norm(Function):
+    """ Represents call to numpy.norm"""
+
+    def __new__(cls, arg, dim=None):
+        return Basic.__new__(arg, dim)
+
+    @property
+    def arg(self):
+        return self._args[0]
+ 
+    @property
+    def dim(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return 'real'
+
+
+    @property
+    def rank(self):
+        if self.dim:
+            return self.arg.rank -1
+        else:
+            return 0
+
+    @property
+    def shape(self):
+        if self.rank:
+            shape = list(self.args.shape)
+            del shape[self.dim]
+            return tuple(shape)
+        else:
+            return 0
+        
+
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+ 
+        if self.dim:
+            rhs = 'Norm2({},{})'.format(printer(self.arg),printer(self.dim))
+        else:
+            rhs = 'Norm2({})'.format(printer(self.arg))
+            
+        return rhs
 
 #=======================================================================================
 

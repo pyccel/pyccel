@@ -120,7 +120,6 @@ def lambdify(expr, args):
         stmts[-1] = Assing(var, stmts[-1])
     stmts += [Return([var])]
     set_fst(stmts, args.fst)
-    print(new_args)
     func = FunctionDef(f_name, new_args, [], stmts ,decorators = args.decorators)
     return func
 

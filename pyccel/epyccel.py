@@ -19,7 +19,7 @@ from pyccel.ast                   import FunctionHeader
 
 #==============================================================================
 
-PY37 = sys.version_info[0:2] == (3, 7) 
+PY_VERSION = sys.version_info[0:2]
 
 #==============================================================================
 
@@ -69,10 +69,10 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
                                                 libs, modulename.rpartition('.')[2], filename,
                                                 extra_args, includes)
 
-        cmd = """python3 -m numpy.f2py {}"""
+        cmd = """python{}.{} -m numpy.f2py {}"""
 
 
-        cmd = cmd.format(args)
+        cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
 
@@ -362,7 +362,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     # ...
     try:
-        if PY37:
+        if PY_VERSION == (3, 7):
             dirname = os.path.relpath(dirname).replace('/','.')
             package = dirname + '.' + name
             package = importlib.import_module( '..'+name, package=package )

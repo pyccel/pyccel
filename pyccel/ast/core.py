@@ -2229,25 +2229,13 @@ class DottedVariable(AtomicExpr, Boolean):
 
         obj = Basic.__new__(cls, args[0], args[1])
         assumptions = {}
-
-        if isinstance(args[1], (Variable, IndexedVariable,
-                      IndexedElement)):
-            dtype = args[1].dtype
-            class_type = isinstance(args[1], Variable) \
-                and args[1].cls_base \
-                or dtype.__class__.__name__.startswith('Pyccel')
-
-            alloweddtypes = (NativeBool, NativeRange, NativeString)
-            if isinstance(dtype, NativeInteger) or args[1].is_integer:
-                assumptions['integer'] = True
-            elif isinstance(dtype, NativeReal) \
-                or args[1].is_real:
-                assumptions['real'] = True
-            elif isinstance(dtype, NativeComplex) or args[1].is_complex:
-                assumptions['complex'] = True
-            elif not isinstance(dtype, alloweddtypes) \
-                and not class_type:
-                raise TypeError('Undefined datatype')
+        
+        if args[1].is_integer:
+            assumptions['integer'] = True
+        elif args[1].is_real:
+            assumptions['real'] = True
+        elif args[1].is_complex:
+            assumptions['complex'] = True
 
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
