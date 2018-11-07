@@ -2177,7 +2177,7 @@ class Parser(object):
                 d_var = self._infere_type(func.results[0], **settings)
 
             elif name in ['Zeros', 'Ones', 'Empty', 'Diag', 
-                          'Shape', 'Cross', 'Linspace']:
+                          'Shape', 'Cross', 'Linspace','Where']:
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'      ] = expr.shape
@@ -2234,6 +2234,13 @@ class Parser(object):
                 d_var['allocatable'] = d_vars[i]['allocatable']
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = d_vars[i].pop('precision',4)
+            elif name in ['Norm']:
+                d_var = self._infere_type(expr.arg,**settings)
+
+                d_var['shape'] = expr.shape(d_var['shape'])
+                d_var['rank' ] = len(d_var['shape'])
+                d_var['allocatable'] = d_var['rank']>0
+                d_var['is_pointer' ] = False
 
             elif name in [
                     'Abs',

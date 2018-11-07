@@ -1706,8 +1706,32 @@ class DoConcurrent(For):
     pass
 
 
-class ForAll(For):
-    pass 
+class ForAll(Basic):
+    """ class that represents the forall statement in fortran"""
+    def __new__(cls, iter, target, mask, body):
+
+        if not isinstance(iter, Range):
+            raise TypeError('iter must be of type Range')
+
+        return Basic.__new__(cls, iter, target, mask, body)
+
+
+    @property
+    def iter(self):
+        return self._args[0]
+
+    @property
+    def target(self):
+        return self._args[1]
+
+    @property
+    def mask(self):
+        return self._args[2]
+
+    @property
+    def body(self):
+        return self._args[3]
+
 
 
 class ForIterator(For):

@@ -21,7 +21,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 
 
 from .core import (Variable, IndexedElement, IndexedVariable, Len,
-                   For, ForAll, Range, Assign, List, String, Nil,
+                   For, ForAll, Range, Assign, AugAssign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precsision_registry as dtype_registry
 from .datatypes import default_precision
@@ -29,7 +29,7 @@ from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
                         NativeBool)
 
-from .core import local_sympify ,float2int
+from .core import local_sympify ,float2int, Slice
 
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
@@ -662,17 +662,17 @@ class Cross(Function):
         return Basic.__new__(cls, a, b)
 
     @property
-    def a(self):
+    def first(self):
         return self._args[0]
 
     @property
-    def b(self):
+    def second(self):
         return self._args[1]
 
    
     @property
     def dtype(self):
-        return self.a.dtype
+        return self.first.dtype
 
     @property
     def order(self):
@@ -685,7 +685,7 @@ class Cross(Function):
 
     @property
     def rank(self):
-        return 1
+        return self.first.rank
 
     @property
     def shape(self):
@@ -694,27 +694,116 @@ class Cross(Function):
 
     def fprint(self, printer, lhs):
         """Fortran print."""
- 
-        a     = IndexedBase(self.a)
-        b     = IndexedBase(self.b)
-        a     = Matrix([a[0], a[1], a[2]])
-        b     = Matrix([b[0], b[1], b[2]])
-        code  = a.cross(b).T.tolist()
-        code  = Tuple(*code[0])
-        code  = Assign(lhs, code)
-        code  = printer(code)
-        alloc = 'allocate({}(0:size({})-1))'.format(printer(lhs),printer(self.a))
+       
+        a     = IndexedBase(self.first)
+        b     = IndexedBase(self.second)
+        slc   = Slice(None,None)
+        rank  = self.rank
         
+        if rank > 2:
+            raise NotImplementedError('TODO')
+
+        if rank == 2:
+            a_inds = [[slc,0], [slc,1], [slc,2]]
+            b_inds = [[slc,0], [slc,1], [slc,2]]
+
+            if self.first.order == 'C':
+                for inds in a_inds:
+                    inds.reverse()
+            if self.second.order == 'C':
+                for inds in b_inds:
+                    inds.reverse()
+
+            a = [a[tuple(inds)] for inds in a_inds]
+            b = [b[tuple(inds)] for inds in b_inds]
+
+    
+        cross_product = [a[1]*b[2]-a[2]*b[1],
+                         a[2]*b[0]-a[0]*b[2],
+                         a[0]*b[1]-a[1]*b[0]]
+            
+        cross_product = Tuple(*cross_product)
+        order = lhs.order
+        lhs  = printer(lhs)
+        first = printer(self.first)
+
+        if rank == 2:
+
+            alloc = 'allocate({0}(0:size({1},1)-1,0:size({1},2)-1))'.format(lhs,first)
+
+            if order == 'C':
+
+                code = 'reshape({}, shape({}), order=[2,1])'.format(printer(cross_product), lhs)
+            else:
+
+                code = 'reshape({}, shape({})'.format(printer(cross_product), lhs)
+
+        elif rank==1:
+
+            alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
+            code  = printer(cross_product)
+            
+        code = '{} = {}'.format(lhs, code)
+
+        #return alloc + '\n' + code
+        return code
+
+#=======================================================================================
+
+class Where(Function):
+    """ Represents a call to  numpy.where """
+   
+    def __new__(cls, mask):
+        return Basic.__new__(cls, mask)
+
+
+    @property
+    def mask(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        ind = Variable('int','ind1')
         
-        return alloc + '\n' + code
+        return ind
+
+    @property
+    def dtype(self):
+        return 'int'
+
+    @property
+    def rank(self):
+        return 1
+
+    @property
+    def shape(self):
+        return ()
+
+    @property
+    def order(self):
+        return 'C'
+     
+
+    def fprint(self, printer, lhs):
+        
+        ind   = printer(self.index)
+        mask  = printer(self.mask)
+        lhs   = printer(lhs)
+
+        stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
+        stmt  = '{lhs} = {stmt}'.format(lhs=lhs, stmt=stmt)
+        alloc = 'allocate({}(0:count({})-1))'.format(lhs, mask)
+
+        return alloc +'\n' + stmt
+        
 
 #=======================================================================================
 
 class Rand(Real):
 
-    """Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+    """
+      Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
-    arg : list ,tuple ,Tuple,List
     """
 
     @property
@@ -994,6 +1083,18 @@ class ZerosLike(Function):
         return code
 
 
+class EmptyLike(ZerosLike):
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        bounds_code = printer(Bounds(self.rhs))
+        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+    
+        return code
+
 
 #=======================================================================================
 
@@ -1119,6 +1220,8 @@ class Norm(Function):
     """ Represents call to numpy.norm"""
 
     def __new__(cls, arg, dim=None):
+        if isinstance(dim, ValuedArgument):
+            dim = dim.value
         return Basic.__new__(arg, dim)
 
     @property
@@ -1133,26 +1236,24 @@ class Norm(Function):
     def dtype(self):
         return 'real'
 
-
     @property
-    def rank(self):
-        if self.dim:
-            return self.arg.rank -1
-        else:
-            return 0
-
-    @property
-    def shape(self):
-        if self.rank:
-            shape = list(self.args.shape)
+    def shape(self, shape):
+        if self.dim is not None:
+            shape = list(shape)
             del shape[self.dim]
             return tuple(shape)
         else:
-            return 0
+            return ()
+
+    @property
+    def rank(self):
+        if self.dim is not None:
+            return self.arg.rank-1
+        return 0
         
 
 
-    def fprint(self, printer, lhs=None):
+    def fprint(self, printer):
         """Fortran print."""
  
         if self.dim:

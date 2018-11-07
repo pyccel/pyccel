@@ -31,7 +31,7 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 
 from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Int, Real, Shape
+from pyccel.ast.numpyext import Int, Real, Shape, Where
 from pyccel.ast.numpyext import Sum, Rand, Complex
 from pyccel.ast.numpyext import ZerosLike, FullLike
 
@@ -947,7 +947,7 @@ class FCodePrinter(CodePrinter):
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
-        if isinstance(expr.rhs, (Zeros, Array, Shape, Linspace, Diag, Cross)):
+        if isinstance(expr.rhs, (Zeros, Array, Shape, Linspace, Diag, Cross, Where)):
             return expr.rhs.fprint(self._print, expr.lhs)
 
         if isinstance(expr.rhs, ZerosLike):
@@ -1454,6 +1454,20 @@ class FCodePrinter(CodePrinter):
         stop  = self._print(expr.stop)
         return '{0}, {1}'.format(start, stop)
 
+
+    def _print_ForAll(self, expr):
+
+        start = self._print(expr.iter.start)
+        end   = self._print(expr.iter.stop)
+        body  = '\n'.join(self._print(i) for i in expr.body)
+        mask  = self._print(expr.mask)
+        ind   = self._print(expr.target)
+
+        code = 'forall({ind} = {start}:{end}, {mask})'
+        code = code.format(ind=ind,start=start,end=end,mask=mask)
+        code = code + '\n' + body + '\n' + 'end forall'
+        return code
+
     def _print_FunctionalFor(self, expr):
         allocate = ''
         if expr.lhs and len(expr.lhs.shape)>0:
@@ -1491,8 +1505,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
-            msg  = "Only iterable currently supported are Range, "
-            msg += "Product"
+            msg  = "Only iterable currently supported are Range or Product "
             raise NotImplementedError(msg)
 
         if isinstance(expr.iterable, Range):
@@ -2051,7 +2064,7 @@ class FCodePrinter(CodePrinter):
         return "%sd0" % printed
 
     def _print_IndexedBase(self, expr):
-        return self._print(expr.name)
+        return self._print(expr.label)
 
     def _print_Indexed(self, expr):
         inds = [i for i in expr.indices]
