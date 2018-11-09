@@ -748,6 +748,8 @@ class Cross(Function):
 
                 code = 'reshape({}, shape({})'.format(cross_product, first)
 
+        elif rank == 1:
+            code = cross_product
     
         if lhs is not None:
             code = '{} = {}'.format(lhs, code)
