@@ -676,6 +676,7 @@ class Cross(Function):
 
     @property
     def order(self):
+        #TODO which order should we give it
         return 'C'
 
     @property
@@ -692,12 +693,12 @@ class Cross(Function):
         return ()
 
 
-    def fprint(self, printer, lhs):
+    def fprint(self, printer, lhs=None):
         """Fortran print."""
        
         a     = IndexedBase(self.first)
         b     = IndexedBase(self.second)
-        slc   = Slice(None,None)
+        slc   = Slice(None, None)
         rank  = self.rank
         
         if rank > 2:
@@ -723,27 +724,33 @@ class Cross(Function):
                          a[0]*b[1]-a[1]*b[0]]
             
         cross_product = Tuple(*cross_product)
-        order = lhs.order
-        lhs  = printer(lhs)
+        cross_product = printer(cross_product)
         first = printer(self.first)
+        order = self.order
+
+        if lhs is not None:
+            lhs  = printer(lhs)
+
+            if rank == 2:
+                alloc = 'allocate({0}(0:size({1},1)-1,0:size({1},2)-1))'.format(lhs, first)
+
+            elif rank == 1:
+                alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
+
+         
 
         if rank == 2:
 
-            alloc = 'allocate({0}(0:size({1},1)-1,0:size({1},2)-1))'.format(lhs,first)
-
             if order == 'C':
 
-                code = 'reshape({}, shape({}), order=[2,1])'.format(printer(cross_product), lhs)
+                code = 'reshape({}, shape({}), order=[2,1])'.format(cross_product, first)
             else:
 
-                code = 'reshape({}, shape({})'.format(printer(cross_product), lhs)
+                code = 'reshape({}, shape({})'.format(cross_product, first)
 
-        elif rank==1:
-
-            alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
-            code  = printer(cross_product)
-            
-        code = '{} = {}'.format(lhs, code)
+    
+        if lhs is not None:
+            code = '{} = {}'.format(lhs, code)
 
         #return alloc + '\n' + code
         return code
@@ -773,7 +780,7 @@ class Where(Function):
 
     @property
     def rank(self):
-        return 1
+        return 2
 
     @property
     def shape(self):
@@ -781,7 +788,7 @@ class Where(Function):
 
     @property
     def order(self):
-        return 'C'
+        return 'F'
      
 
     def fprint(self, printer, lhs):
@@ -791,8 +798,8 @@ class Where(Function):
         lhs   = printer(lhs)
 
         stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
-        stmt  = '{lhs} = {stmt}'.format(lhs=lhs, stmt=stmt)
-        alloc = 'allocate({}(0:count({})-1))'.format(lhs, mask)
+        stmt  = '{lhs}(:,0) = {stmt}'.format(lhs=lhs, stmt=stmt)
+        alloc = 'allocate({}(0:count({})-1,0:0))'.format(lhs, mask)
 
         return alloc +'\n' + stmt
         
@@ -1215,6 +1222,7 @@ class Empty(Zeros):
         code = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         return code
 
+#=======================================================================================
 
 class Norm(Function):
     """ Represents call to numpy.norm"""
@@ -1222,7 +1230,7 @@ class Norm(Function):
     def __new__(cls, arg, dim=None):
         if isinstance(dim, ValuedArgument):
             dim = dim.value
-        return Basic.__new__(arg, dim)
+        return Basic.__new__(cls, arg, dim)
 
     @property
     def arg(self):
@@ -1236,12 +1244,12 @@ class Norm(Function):
     def dtype(self):
         return 'real'
 
-    @property
-    def shape(self, shape):
+
+    def shape(self, sh):
         if self.dim is not None:
-            shape = list(shape)
-            del shape[self.dim]
-            return tuple(shape)
+            sh = list(sh)
+            del sh[self.dim]
+            return tuple(sh)
         else:
             return ()
 
@@ -1271,6 +1279,16 @@ class Sqrt(Pow):
         return Pow(base, 0.5, evaluate=False)
 
 #=======================================================================================
+
+class Mod(Function):
+    def __new__(cls,*args):
+        obj = Basic.__new__(cls, *args)
+        
+        assumptions={'integer':True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
 
 class Asin(Function):
     def __new__(cls,arg):

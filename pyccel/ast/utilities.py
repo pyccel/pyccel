@@ -10,7 +10,7 @@ from .core import FunctionDef, Return, Assign
 from .core import Constant
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
-from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex, Imag
+from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
@@ -18,7 +18,7 @@ from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, Mod)
+from sympy import (sin, cos, exp, csc, cos, sec, tan, cot)
 
 import scipy.constants as sc_constants
 
@@ -64,6 +64,7 @@ numpy_functions = {
     'imag'      : Imag,
     'float'     : Real,
     'double'    : Real,
+    'Mod'       : Mod,
     'float32'   : Float32,
     'float64'   : Float64,
     'int32'     : Int32,

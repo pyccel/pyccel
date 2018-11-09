@@ -22,7 +22,6 @@ from sympy import Atom, Indexed
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
-from sympy import Mod
 
 
 from sympy.utilities.iterables import iterable
@@ -31,7 +30,7 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 
 from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Int, Real, Shape, Where
+from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
 from pyccel.ast.numpyext import Sum, Rand, Complex
 from pyccel.ast.numpyext import ZerosLike, FullLike
 
@@ -421,38 +420,13 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Comment(self, expr):
-        txt = self._print(expr.text)
-        comments = []
-        while len(txt)>60:
-            try:
-                index = txt[60:].index(' ')+60
-            except:
-                index = 60
-            comments.append(txt[:index])
-            txt = txt[index:]
-        else:
-            comments.append(txt)
-        comments = ['! '+ comment for comment in comments]
-        comments = '\n'.join(comment for comment in comments)
-
-        return comments
+        comments = self._print(expr.text)
+        
+        return '!' + comments
 
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
-        comments = []
-        for txt in txts:
-            while len(txt)>60:
-                try:
-                    index = txt[60:].index(' ')+60
-                except:
-                    index = 60
-                comments.append(txt[:index])
-                txt = txt[index:]
-            else:
-                comments.append(txt)
-        txts = comments
-
         ln = max(len(i) for i in txts)
         if ln<20:
             ln = 20
@@ -572,6 +546,12 @@ class FCodePrinter(CodePrinter):
         return 'size(%s,1)'%(self._print(expr.arg))
 
     def _print_Sum(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Cross(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Norm(self, expr):
         return expr.fprint(self._print)
 
     def _print_Shape(self, expr):
@@ -2133,26 +2113,10 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if line.startswith("! "):
-                # comment line
-                if len(line) > 72:
-                    pos = line.rfind(" ", 6, 72)
-                    if pos == -1:
-                        pos = 72
-                    hunk = line[:pos]
-                    line = line[pos:].lstrip()
-                    result.append(hunk)
-                    while len(line) > 0:
-                        pos = line.rfind(" ", 0, 66)
-                        if pos == -1 or len(line) < 66:
-                            pos = 66
-                        hunk = line[:pos]
-                        line = line[pos:].lstrip()
-                        result.append("%s%s" % ("! ", hunk))
-                else:
-                    result.append(line)
+            if len(line)>72 and('"' in line or "'" in line or '!' in line):
+                result.append(line)
 
-            elif (line[72:].count("'" )+line[72:].count('"'))%2-1:
+            elif len(line)>72:
                 # code line
 
                 pos = split_pos_code(line, 72)
@@ -2169,8 +2133,6 @@ class FCodePrinter(CodePrinter):
                         hunk += trailing
                     result.append("%s%s"%("      " , hunk))
             else:
-                # we don't seperate lines in those cases mentioned above
-                #TODO improve find the postion of the caractere and split there
                 result.append(line)
         return result
 

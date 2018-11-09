@@ -12,13 +12,14 @@ from sympy import Symbol
 from sympy.printing.dot import dotprint
 import os
 
-pyccel_external_lib = {"mpi4py"             :"pyccel.stdlib.external.mpi4py",
-                       "scipy.linalg.lapack":"pyccel.stdlib.external.lapack",
-                       "scipy.linalg.blas"  :"pyccel.stdlib.external.blas",
-                       "scipy.fftpack"      :"pyccel.stdlib.external.dfftpack",
-                       "fitpack"            :"pyccel.stdlib.internal.fitpack",
-                       "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack",
-                       "numpy.random"       :"numpy"}
+pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
+                       "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
+                       "scipy.linalg.blas"  : "pyccel.stdlib.external.blas",
+                       "scipy.fftpack"      : "pyccel.stdlib.external.dfftpack",
+                       "fitpack"            : "pyccel.stdlib.internal.fitpack",
+                       "numpy.random"       : "numpy",
+                       "numpy.linalg"       : "numpy",
+                       "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
 
 
 def read_file(filename):

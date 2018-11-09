@@ -118,7 +118,7 @@ from pyccel.ast import Macro
 from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
-from pyccel.ast import Zeros
+from pyccel.ast import Zeros, Where, Linspace, Diag
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
@@ -2469,6 +2469,7 @@ class Parser(object):
             if var is None:
 
                 # TODO ERROR not tested yet
+                
 
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
@@ -2477,6 +2478,15 @@ class Parser(object):
         elif isinstance(expr, str):
 
             return repr(expr)
+        elif isinstance(expr, Slice):
+            args = list(expr.args)
+            if args[0] is not None:
+                args[0] = self._annotate(args[0], **settings)
+
+            if args[1] is not None:
+                args[1] = self._annotate(args[1], **settings)
+            return Slice(*args)
+               
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
 
             # an indexed variable is only defined if the associated variable is in
@@ -2511,6 +2521,13 @@ class Parser(object):
 
             args = list(expr.indices)
 
+            if var.rank>len(args):
+                # add missing dimensions
+                
+                args = args + [Slice(None, None)]*(var.rank-len(args))
+              
+            args = [self._annotate(arg, **settings) for arg in args]
+
             if var.order == 'C':
                 args.reverse()
             args = tuple(args)
@@ -2540,7 +2557,7 @@ class Parser(object):
                 var = self.get_symbolic_function(name)
 
             if var is None:
-
+                
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2619,7 +2636,6 @@ class Parser(object):
             # using the annotated arguments
 
             stmts, expr = extract_subexpressions(expr)
-
             if stmts:
                 stmts = [self._annotate(stmt, **settings)
                          for stmt in stmts]
@@ -2630,8 +2646,8 @@ class Parser(object):
                 atoms_ls  = _atomic(expr, List)
 
                 cls       = (Symbol, Indexed, DottedVariable)
-
-                atoms = _atomic(expr, cls)
+                
+                atoms = _atomic(expr, cls,ignore=(Function))
                 atoms = [self._annotate(a, **settings) for a in atoms]
                 atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
                 atoms = [self._infere_type(a , **settings) for a in atoms]
@@ -2681,10 +2697,10 @@ class Parser(object):
             func     = self.get_function(name)
 
             stmts, new_args = extract_subexpressions(expr.args)
-
+            
             stmts = [self._annotate(stmt, **settings) for stmt in stmts]
             args  = [self._annotate(arg, **settings) for arg in new_args]
-
+            
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
@@ -2745,6 +2761,10 @@ class Parser(object):
                     if not isinstance(func, (FunctionDef, Interface)):
 
                         expr = func(*args)
+
+                        if isinstance(expr, (Where, Diag, Linspace)):
+                            self.insert_variable(expr.index)
+
                         if len(stmts) > 0:
                             stmts.append(expr)
                             return CodeBlock(stmts)
@@ -3151,53 +3171,10 @@ class Parser(object):
                     # declared
                     lhs = var
 
-            elif isinstance(lhs, (IndexedVariable, IndexedBase)):
+            
 
-                # TODO check consistency of indices with shape/rank
-                name = _get_name(lhs)
-                var = self.get_variable(name)
-                if var is None:
-
-                    # TODO ERROR not tested yet
-
-                    errors.report(UNDEFINED_VARIABLE, symbol=name,
-                                  bounding_box=self.bounding_box,
-                                  severity='error',
-                                  blocker=self.blocking)
-
-                dtype = var.dtype
-                prec  = var.precision
-                shape = var.shape
-                order = var.order
-                rank  = var.rank
-                lhs   = IndexedVariable(name, dtype=dtype,shape=shape,
-                                       prec=prec,order=order, rank=rank)
-
-            elif isinstance(lhs, (IndexedElement, Indexed)):
-
-                # TODO check consistency of indices with shape/rank
-
-                name = _get_name(lhs)
-                var = self.get_variable(name)
-                if var is None:
-                    errors.report(UNDEFINED_INDEXED_VARIABLE,
-                                  symbol=name,
-                                  bounding_box=self.bounding_box,
-                                  severity='error',
-                                  blocker=self.blocking)
-
-                args = list(lhs.indices)
-                if var.order == 'C':
-                    args.reverse()
-                args = tuple(args)
-                dtype = var.dtype
-                prec  = var.precision
-                order = var.order
-                rank  = var.rank
-                shape = var.shape
-                lhs   = IndexedVariable(name, dtype=dtype,
-                                       shape=shape, prec=prec,
-                                       order=order, rank=rank).__getitem__(*args)
+            elif isinstance(lhs, (IndexedBase, Indexed)):
+                lhs = self._annotate(lhs, **settings)
 
             elif isinstance(lhs, DottedVariable):
 

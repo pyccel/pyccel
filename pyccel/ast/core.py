@@ -240,7 +240,7 @@ def extract_subexpressions(expr):
               BooleanTrue, BooleanFalse, String,
               ValuedArgument, Nil, List)
 
-    func_names = ('diag', 'empty', 'cross', 'zip', 'enumerate')
+    func_names = ('diag', 'empty', 'zip', 'enumerate')
     #TODO put only imported functions
     def substitute(expr):
         if isinstance(expr, cls):
@@ -317,9 +317,9 @@ def collect_vars(ast):
             collect(stmt.bodies)
         elif isinstance(stmt, (While, CodeBlock)):
             collect(stmt.body)
-        elif isinstance(stmt, (Assign, AliasAssign)):
+        elif isinstance(stmt, (Assign, AliasAssign, AugAssign)):
             collect(stmt.lhs)
-            if isinstance(stmt.rhs, (Linspace, Diag)):
+            if isinstance(stmt.rhs, (Linspace, Diag, Where)):
                 collect(stmt.rhs.index)
                     
         
@@ -4792,4 +4792,4 @@ def get_iterable_ranges(it, var_name=None):
 
 
 # ...
-from .numpyext import Linspace, Diag
+from .numpyext import Linspace, Diag, Where
