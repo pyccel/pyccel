@@ -63,6 +63,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='Using pyccel for Semantic Checking')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
+    
     # ...
 
     # ... backend compiler options
@@ -85,6 +86,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='add prefix to the generated file.')
     group.add_argument('--prefix-module', type=str, default = '',\
                        help='add prefix module name.')
+
+    group.add_argument('--language', type=str, help='target language')
+ 
     # ...
 
     # ... Accelerators
@@ -180,6 +184,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     output_folder = args.output
     prefix = args.prefix
     prefix_module = args.prefix_module
+    language = args.language
 
     if (len(output_folder)>0 and output_folder[-1]!='/'):
         output_folder+='/'
@@ -218,8 +223,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     elif args.convert_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
-
         settings = {}
+        if args.language:
+            settings['language'] = args.language
         ast = pyccel.annotate(**settings)
         name = os.path.basename(filename)
         name = os.path.splitext(name)[0]

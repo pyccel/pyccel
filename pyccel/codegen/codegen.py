@@ -4,7 +4,7 @@
 from pyccel.parser import Parser
 import os
 
-from pyccel.codegen.printing import fcode
+from pyccel.codegen.printing import fcode, ccode
 
 from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
 from pyccel.ast import Header, EmptyLine, NewLine, Comment
@@ -20,7 +20,8 @@ from pyccel.parser.errors import Errors, PyccelCodegenError
 
 from pyccel.parser.messages import *
 
-_extension_registry = {'fortran': 'f90'}
+_extension_registry = {'fortran': 'f90', 'c':'c'}
+printer_registry    = {'fortran':fcode, 'c':ccode}
 
 
 class Codegen(object):
@@ -158,14 +159,14 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        variables = []
-        routines = []
-        classes = []
-        imports = []
-        modules = []
-        body = []
+        modules    = []
+        classes    = []
+        routines   = []
         interfaces = []
-        decs = []
+        imports    = []
+        body       = []
+        variables  = []
+        
 
         for stmt in self.ast:
             if isinstance(stmt, EmptyLine):
@@ -198,12 +199,12 @@ class Codegen(object):
                     body += [stmt]
 
 
-        self._stmts['imports']    = imports
-        self._stmts['variables']  = collect_vars(self.ast)
-        self._stmts['body']       = body
-        self._stmts['routines']   = routines
-        self._stmts['classes']    = classes
-        self._stmts['modules']    = modules
+        self._stmts['imports'   ] = imports
+        self._stmts['variables' ] = collect_vars(self.ast)
+        self._stmts['body'      ] = body
+        self._stmts['routines'  ] = routines
+        self._stmts['classes'   ] = classes
+        self._stmts['modules'   ] = modules
         self._stmts['interfaces'] = interfaces
 
         errors.check()
@@ -220,7 +221,9 @@ class Codegen(object):
         body = self.body
 
         ls = [i for i in body if not isinstance(i, _stmts)]
+
         is_module = len(ls) == 0
+
         if is_module:
             self._kind = 'module'
         else:
@@ -238,8 +241,8 @@ class Codegen(object):
                 self.routines,
                 self.interfaces,
                 self.classes,
-                imports=self.imports,
-                )
+                imports=self.imports)
+
         elif self.is_program:
             expr = Program(
                 self.name,
@@ -249,8 +252,7 @@ class Codegen(object):
                 self.classes,
                 self.body,
                 imports=self.imports,
-                modules=self.modules,
-                )
+                modules=self.modules)
         else:
             raise NotImplementedError('TODO')
 
@@ -265,15 +267,17 @@ class Codegen(object):
         # ... finds the target language
 
         language = settings.pop('language', 'fortran')
-        if not language == 'fortran':
-            raise ValueError('Only fortran is available')
+
+        if not language in ['fortran', 'c']:
+            raise ValueError('the language {} not available'.format(lanugage))
+
         self._language = language
 
         # ...
 
         # ... define the printing function to be used
 
-        printer = settings.pop('printer', fcode)
+        printer = printer_registry[language]
 
         # ...
 
@@ -303,6 +307,6 @@ class Codegen(object):
         return filename
 
 class FCodegen(Codegen):
-
     pass
+
 

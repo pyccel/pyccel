@@ -104,6 +104,7 @@ _default_methods = {
     '__del__' : 'free',
 }
 
+
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode"
