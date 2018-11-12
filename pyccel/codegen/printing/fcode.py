@@ -172,6 +172,13 @@ class FCodePrinter(CodePrinter):
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
+        # ... TODO add other elements
+        private_funcs = [f.name for f in expr.funcs if f.is_private]
+        private = private_funcs
+        if private:
+            private = ','.join(self._print(i) for i in private)
+            private = 'private :: {}'.format(private)
+        # ...
 
         # ...
         sep = self._print(SeparatorComment(40))
@@ -210,12 +217,14 @@ class FCodePrinter(CodePrinter):
         return ('module {name}\n'
                 '{imports}\n'
                 'implicit none\n'
+                '{private}\n'
                 '{decs}\n'
                 '{interfaces}\n'
                 '{body}\n'
                 'end module\n').format(name=name,
                                        imports=imports,
                                        decs=decs,
+                                       private=private,
                                        interfaces=interfaces,
                                        body=body)
 
@@ -421,7 +430,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        
+
         return '!' + comments
 
 
@@ -559,7 +568,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
-  
+
     def _print_Linspace(self, expr):
         return expr.fprint(self._print)
 

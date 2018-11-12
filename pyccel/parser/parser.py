@@ -1560,6 +1560,7 @@ class Parser(object):
             kind         = 'function'
             is_pure      = False
             is_elemental = False
+            is_private   = False
             imports      = []
 
             # TODO improve later
@@ -1644,6 +1645,9 @@ class Parser(object):
             if 'elemental' in decorators.keys():
                 is_elemental = True
 
+            if 'private' in decorators.keys():
+                is_private = True
+
             func = FunctionDef(
                    name,
                    arguments,
@@ -1656,6 +1660,7 @@ class Parser(object):
                    kind=kind,
                    is_pure=is_pure,
                    is_elemental=is_elemental,
+                   is_private=is_private,
                    imports=imports,
                    decorators=decorators,
                    header=header)
@@ -2176,7 +2181,7 @@ class Parser(object):
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
 
-            elif name in ['Zeros', 'Ones', 'Empty', 'Diag', 
+            elif name in ['Zeros', 'Ones', 'Empty', 'Diag',
                           'Shape', 'Cross', 'Linspace','Where']:
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
@@ -2469,7 +2474,7 @@ class Parser(object):
             if var is None:
 
                 # TODO ERROR not tested yet
-                
+
 
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
@@ -2486,7 +2491,7 @@ class Parser(object):
             if args[1] is not None:
                 args[1] = self._annotate(args[1], **settings)
             return Slice(*args)
-               
+
         elif isinstance(expr, (IndexedVariable, IndexedBase)):
 
             # an indexed variable is only defined if the associated variable is in
@@ -2523,9 +2528,9 @@ class Parser(object):
 
             if var.rank>len(args):
                 # add missing dimensions
-                
+
                 args = args + [Slice(None, None)]*(var.rank-len(args))
-              
+
             args = [self._annotate(arg, **settings) for arg in args]
 
             if var.order == 'C':
@@ -2557,7 +2562,7 @@ class Parser(object):
                 var = self.get_symbolic_function(name)
 
             if var is None:
-                
+
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                               bounding_box=self.bounding_box,
                               severity='error', blocker=self.blocking)
@@ -2576,7 +2581,7 @@ class Parser(object):
                 for i in first.cls_base.methods:
                     if str(i.name) == expr.rhs.name and 'property' \
                         in i.decorators.keys():
-                        
+
                         d_var = self._infere_type(i.results[0], **settings)
                         dtype = d_var['datatype']
                         assumptions = {str_dtype(dtype): True}
@@ -2646,7 +2651,7 @@ class Parser(object):
                 atoms_ls  = _atomic(expr, List)
 
                 cls       = (Symbol, Indexed, DottedVariable)
-                
+
                 atoms = _atomic(expr, cls,ignore=(Function))
                 atoms = [self._annotate(a, **settings) for a in atoms]
                 atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
@@ -2697,10 +2702,10 @@ class Parser(object):
             func     = self.get_function(name)
 
             stmts, new_args = extract_subexpressions(expr.args)
-            
+
             stmts = [self._annotate(stmt, **settings) for stmt in stmts]
             args  = [self._annotate(arg, **settings) for arg in new_args]
-            
+
             if name == 'lambdify':
                 args = self.get_symbolic_function(str(expr.args[0]))
             F = pyccel_builtin_function(expr, args)
@@ -2822,13 +2827,13 @@ class Parser(object):
                                     args.append(ValuedArgument(i.name, i.value))
 
                         if len(results) == 1:
-                            
+
                             d_var = self._infere_type(results[0],
                                     *settings)
                             dtype = d_var['datatype']
                             dtype = {str_dtype(dtype): True}
                             expr = Function(name,**dtype)(*args)
-                            
+
                         elif len(results) == 0:
                             expr = Subroutine(name)(*args)
                             if len(stmts) > 0:
@@ -3007,7 +3012,7 @@ class Parser(object):
                     stmt = self._annotate(stmt, **settings)
                     return CodeBlock([rhs, stmt])
                 return rhs
-       
+
             elif isinstance(rhs, FunctionalFor):
                 return rhs
 
@@ -3171,7 +3176,7 @@ class Parser(object):
                     # declared
                     lhs = var
 
-            
+
 
             elif isinstance(lhs, (IndexedBase, Indexed)):
                 lhs = self._annotate(lhs, **settings)
@@ -3619,6 +3624,7 @@ class Parser(object):
             is_static    = False
             is_pure      = expr.is_pure
             is_elemental = expr.is_elemental
+            is_private   = expr.is_private
 
             header = expr.header
             if header is None:
@@ -3817,6 +3823,7 @@ class Parser(object):
                     is_static=is_static,
                     is_pure=is_pure,
                     is_elemental=is_elemental,
+                    is_private=is_private,
                     imports=imports,
                     decorators=decorators,
                     is_recursive=is_recursive)

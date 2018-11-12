@@ -291,8 +291,8 @@ def extract_subexpressions(expr):
 
 
     new_expr  = substitute(expr)
-    return stmts, new_expr    
-            
+    return stmts, new_expr
+
 
 
 def collect_vars(ast):
@@ -321,8 +321,8 @@ def collect_vars(ast):
             collect(stmt.lhs)
             if isinstance(stmt.rhs, (Linspace, Diag, Where)):
                 collect(stmt.rhs.index)
-                    
-        
+
+
 
     collect(ast)
     return variables.values()
@@ -2253,7 +2253,7 @@ class DottedVariable(AtomicExpr, Boolean):
 
         obj = Basic.__new__(cls, args[0], args[1])
         assumptions = {}
-        
+
         if args[1].is_integer:
             assumptions['integer'] = True
         elif args[1].is_real:
@@ -2607,6 +2607,9 @@ class FunctionDef(Basic):
     is_elemental: bool
         True for a function is elemental
 
+    is_private: bool
+        True for a function is private
+
     is_static: bool
         True for static functions. Needed for f2py
 
@@ -2662,6 +2665,7 @@ class FunctionDef(Basic):
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
+        is_private=False,
         ):
 
         # name
@@ -2740,6 +2744,9 @@ class FunctionDef(Basic):
         if not isinstance(is_elemental, bool):
             raise TypeError('Expecting a boolean for elemental')
 
+        if not isinstance(is_private, bool):
+            raise TypeError('Expecting a boolean for private')
+
 
         return Basic.__new__(
             cls,
@@ -2758,8 +2765,8 @@ class FunctionDef(Basic):
             header,
             is_recursive,
             is_pure,
-            is_elemental
-            )
+            is_elemental,
+            is_private)
 
     @property
     def name(self):
@@ -2824,6 +2831,10 @@ class FunctionDef(Basic):
     @property
     def is_elemental(self):
         return self._args[15]
+
+    @property
+    def is_private(self):
+        return self._args[16]
 
     def print_body(self):
         for s in self.body:
