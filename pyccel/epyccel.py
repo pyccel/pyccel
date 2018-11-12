@@ -44,7 +44,8 @@ def get_source_function(func):
 
 #==============================================================================
 
-def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False, includes = []):
+def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
+                    mpi=False, includes = [], only = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
@@ -57,6 +58,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
     if compiler:
         compilers = compilers +'--fcompiler={}'.format(compiler)
 
+    if only:
+        only = 'only: ' + ','.join(str(i) for i in only)
+
     try:
         filename = '{}.f90'.format( modulename.replace('.','/') )
         filename = os.path.basename( filename )
@@ -65,9 +69,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  -c {} --f90flags=-O3 {} -m  {} {} {} {} """.format(compilers,
+        args = """  -c {} --f90flags=-O3 {} -m  {} {} {} {} {}""".format(compilers,
                                                 libs, modulename.rpartition('.')[2], filename,
-                                                extra_args, includes)
+                                                extra_args, includes, only)
 
         cmd = """python{}.{} -m numpy.f2py {}"""
 
@@ -82,7 +86,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
 #==============================================================================
 
 def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
-            context=None, compiler = None , mpi=False, static=None):
+            context=None, compiler = None , mpi=False, static=None, only=None):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -110,6 +114,9 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     static: list/tuple
         a list of 'static' functions as strings
+
+    only: list/tuple
+        a list of what should be exposed by f2py as strings
 
     Examples
 
@@ -183,7 +190,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
             importlib.reload(mod)
             epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
                     libs=libs, name=name, context=context, compiler=compiler,
-                    mpi=mpi, static=static)
+                    mpi=mpi, static=static, only=only)
     # ...
 
     # ...
@@ -350,14 +357,15 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         libs      = libs,
         compiler  = compiler,
         mpi       = mpi,
-        includes  = include_args)
+        includes  = include_args,
+        only      = only)
     os.chdir( origin )
 
     if verbose:
         print(cmd)
 
-  #  if verbose:
-  #      print(output)
+    if verbose:
+        print(code)
     # ...
 
     # ...
@@ -486,7 +494,7 @@ class ContextPyccel(object):
         if (len(self._folder)>0):
             self._folder+='.'
         self._os_folder = self._folder.replace('.','/')
-        
+
         contexts = context_folder.split('.')
         outputs  =  output_folder.split('.')
         n = min(len(contexts),len(outputs))
