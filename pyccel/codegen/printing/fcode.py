@@ -172,12 +172,15 @@ class FCodePrinter(CodePrinter):
         imports = '\n'.join(self._print(i) for i in expr.imports)
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
+
         # ... TODO add other elements
         private_funcs = [f.name for f in expr.funcs if f.is_private]
         private = private_funcs
         if private:
             private = ','.join(self._print(i) for i in private)
             private = 'private :: {}'.format(private)
+        else:
+            private = ''
         # ...
 
         # ...
@@ -246,6 +249,16 @@ class FCodePrinter(CodePrinter):
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
 
+        # ... TODO add other elements
+        private_funcs = [f.name for f in expr.funcs if f.is_private]
+        private = private_funcs
+        if private:
+            private = ','.join(self._print(i) for i in private)
+            private = 'private :: {}'.format(private)
+        else:
+            private = ''
+        # ...
+
         decs    = expr.declarations
         func_in_func = False
         for func in expr.funcs:
@@ -311,11 +324,13 @@ class FCodePrinter(CodePrinter):
                 'program {name}\n'
                 '{imports}\n'
                 'implicit none\n'
+                '{private}\n'
                 '{decs}\n'
                 '{body}\n'
                 '{funcs}\n'
                 'end program {name}\n').format(name=name,
                                                imports=imports,
+                                               private=private,
                                                decs=decs,
                                                body=body,
                                                funcs=funcs,
