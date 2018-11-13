@@ -45,21 +45,30 @@ def get_source_function(func):
 #==============================================================================
 
 def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
-                    mpi=False, includes = [], only = []):
+                    mpi=False, openmp=False, includes = [], only = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
 
+    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {libs} -m {modulename} {filename} {extra_args} {includes} {only}"""
+
     compilers  = ''
+    f90flags   = ''
 
     if mpi:
         compilers = '--f90exec=mpif90 '
 
+    if openmp:
+        extra_args += ' -lgomp '
+        f90flags   += ' -fopenmp '
+
     if compiler:
-        compilers = compilers +'--fcompiler={}'.format(compiler)
+        compilers = compilers + '--fcompiler={}'.format(compiler)
 
     if only:
         only = 'only: ' + ','.join(str(i) for i in only)
+    else:
+        only = ''
 
     try:
         filename = '{}.f90'.format( modulename.replace('.','/') )
@@ -69,12 +78,16 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  -c {} --f90flags=-O3 {} -m  {} {} {} {} {}""".format(compilers,
-                                                libs, modulename.rpartition('.')[2], filename,
-                                                extra_args, includes, only)
+        args = args_pattern.format( compilers  = compilers,
+                                    f90flags   = f90flags,
+                                    libs       = libs,
+                                    modulename = modulename.rpartition('.')[2],
+                                    filename   = filename,
+                                    extra_args = extra_args,
+                                    includes   = includes,
+                                    only       = only )
 
         cmd = """python{}.{} -m numpy.f2py {}"""
-
 
         cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
         output = subprocess.check_output(cmd, shell=True)
@@ -85,8 +98,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
 
 #==============================================================================
 
-def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
-            context=None, compiler = None , mpi=False, static=None, only=None):
+def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], libdirs=[], name=None,
+            context=None, compiler = None , mpi=False, static=None, only=None,
+            openmp=False):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -105,6 +119,9 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     libs: list, tuple
         list of libraries
 
+    libdirs: list, tuple
+        list of paths for libraries
+
     name: str
         name of the function, if it is given as a string
 
@@ -117,6 +134,10 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     only: list/tuple
         a list of what should be exposed by f2py as strings
+
+    openmp: bool
+        True if openmp is used. Note that in this case, one need to use nogil
+        from cython
 
     Examples
 
@@ -190,7 +211,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
             importlib.reload(mod)
             epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
                     libs=libs, name=name, context=context, compiler=compiler,
-                    mpi=mpi, static=static, only=only)
+                    mpi=mpi, static=static, only=only, openmp=openmp)
     # ...
 
     # ...
@@ -262,7 +283,6 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ... get the function source code
     if callable(func):
         code = get_source_function(func)
-        print(code)
 
     elif isinstance(func, ModuleType):
         lines = inspect.getsourcelines(func)[0]
@@ -279,6 +299,10 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     extra_args = ''
     include_args = ''
+
+    if libdirs:
+        libdirs = ['-L{}'.format(i) for i in libdirs]
+        extra_args += ' '.join(i for i in libdirs)
 
     if context:
         if isinstance(context, ContextPyccel):
@@ -357,6 +381,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         libs      = libs,
         compiler  = compiler,
         mpi       = mpi,
+        openmp    = openmp,
         includes  = include_args,
         only      = only)
     os.chdir( origin )
