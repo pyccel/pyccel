@@ -2840,6 +2840,9 @@ class FunctionDef(Basic):
         for s in self.body:
             print(s)
 
+    # TODO is there a better way to do this, avoiding copying args? => bad for
+    # maintenance!
+    #      must be done everywhere
     def set_recursive(self):
         return FunctionDef(
             self.name,

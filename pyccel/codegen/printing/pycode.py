@@ -17,6 +17,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
+    def _print_Variable(self, expr):
+        return self._print(expr.name)
+
     def _print_FunctionDef(self, expr):
         name = self._print(expr.name)
         body = '\n'.join(self._print(i) for i in expr.body)
@@ -24,8 +27,21 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         args = ', '.join(self._print(i) for i in expr.arguments)
 
         #imports = '\n'.join(self._print(i) for i in expr.imports)
-        code = ('def {0}({1}):\n'
-                '{2}\n').format(name, args, body)
+        code = ('def {name}({args}):\n'
+                '{body}\n').format(name=name, args=args, body=body)
+
+        decorators = expr.decorators
+        if decorators:
+            for n,args in decorators.items():
+                if args:
+                    args = ','.join("'{}'".format(i) for i in args)
+                    dec = '@{name}({args})'.format(name=n, args=args)
+
+                else:
+                    dec = '@{name}'.format(name=n)
+
+                code = '{dec}\n{code}'.format(dec=dec, code=code)
+
         return code
 
     def _print_Return(self, expr):
