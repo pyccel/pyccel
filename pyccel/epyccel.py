@@ -116,9 +116,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
 
 #==============================================================================
 
-def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], libdirs=[], name=None,
-            context=None, compiler = None , mpi=False, static=None, only=None,
-            openmp=False):
+def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdirs = [], name = None,
+            context = None, compiler = None , mpi = False, static = None, only = None,
+            openmp = False):
     """Pyccelize a python function and wrap it using f2py.
 
     func: function, str
@@ -184,6 +184,9 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], libdirs=[], n
     >>> f([3, 4, 5])
     2
     """
+    if compiler is None:
+        compiler = 'gfortran'
+
     is_module = False
     is_function = False
 
