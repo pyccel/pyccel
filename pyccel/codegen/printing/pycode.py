@@ -20,6 +20,21 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_IndexedElement(self, expr):
+        indices = expr.indices
+        if isinstance(indices, (tuple, list, Tuple)):
+            # this a fix since when having a[i,j] the generated code is a[(i,j)]
+            if len(indices) == 1 and isinstance(indices[0], (tuple, list, Tuple)):
+                indices = indices[0]
+
+            indices = [self._print(i) for i in indices]
+            indices = ','.join(i for i in indices)
+        else:
+            raise NotImplementedError('TODO')
+
+        base = self._print(expr.base)
+        return '{base}[{indices}]'.format(base=base, indices=indices)
+
     def _print_FunctionDef(self, expr):
         name = self._print(expr.name)
         body = '\n'.join(self._print(i) for i in expr.body)
