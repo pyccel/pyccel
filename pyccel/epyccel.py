@@ -50,20 +50,37 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
     the right one with respect to the python/numpy version, which is not the
     case if we run directly the command line f2py ..."""
 
-    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {libs} -m {modulename} {filename} {extra_args} {includes} {only}"""
+    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {extra_args} {includes} {only}"""
 
     compilers  = ''
     f90flags   = ''
+    opt        = ''
+
+    if compiler == 'gfortran':
+        _compiler = 'gnu95'
+
+    elif compiler == 'ifort':
+        _compiler = 'intelem'
+
+    else:
+        raise NotImplementedError('Only gfortran and ifort are available for the moment')
 
     if mpi:
         compilers = '--f90exec=mpif90 '
 
     if openmp:
-        extra_args += ' -lgomp '
-        f90flags   += ' -fopenmp '
+        if compiler == 'gfortran':
+            extra_args += ' -lgomp '
+            f90flags   += ' -fopenmp '
+
+        elif compiler == 'ifort':
+            extra_args += ' -liomp5 '
+            f90flags   += ' -openmp -nostandard-realloc-lhs '
+            opt         = """ --opt='-xhost -0fast' """
+
 
     if compiler:
-        compilers = compilers + '--fcompiler={}'.format(compiler)
+        compilers = compilers + '--fcompiler={}'.format(_compiler)
 
     if only:
         only = 'only: ' + ','.join(str(i) for i in only)
@@ -80,6 +97,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
         libs = ' '.join('-l'+i.lower() for i in libs)
         args = args_pattern.format( compilers  = compilers,
                                     f90flags   = f90flags,
+                                    opt        = opt,
                                     libs       = libs,
                                     modulename = modulename.rpartition('.')[2],
                                     filename   = filename,
