@@ -4,6 +4,7 @@ import numpy as np
 
 from pyccel.epyccel import ContextPyccel
 from pyccel.epyccel import epyccel
+from pyccel.decorators import types
 
 def test_1():
     context = ContextPyccel(name='context_1')
@@ -24,9 +25,6 @@ def test_1():
 
     # ... insert constants
     context.insert_constant({'c_float': 1., 'c_int':2})
-    # ...
-
-    print(context)
 
     context.compile()
 
@@ -42,16 +40,15 @@ def test_2():
     context.insert_function(decr, ['double'], kind='function', results=['double'])
     # ...
 
-    context.compile()
-
-    header = '#$ header procedure f2_py(int, double [:])'
+    @types('int', 'double[:]')
     def f2_py(m1, x):
         for i in range(0, m1):
             y = x[i]
             z = decr(y)
             x[i] = z
 
-    f = epyccel(f2_py, header, context=context)
+    context.compile()
+    f = epyccel(f2_py, context=context)
 
     m1 = 3
     x = np.asarray(range(0, m1), dtype='float')
@@ -59,9 +56,3 @@ def test_2():
 
     x_expected = np.array([-1., 0., 1.])
     assert(np.allclose(x, x_expected))
-
-
-
-if __name__ == '__main__':
-#    test_1()
-    test_2()

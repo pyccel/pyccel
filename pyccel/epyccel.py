@@ -1,29 +1,27 @@
 # coding: utf-8
 
-from pyccel.parser.syntax.headers import parse
-from pyccel.parser.errors import Errors
-from pyccel.parser.errors import PyccelError
-
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
-from pyccel.codegen.utilities import execute_pyccel
-from pyccel.ast import FunctionHeader
-
-from collections import OrderedDict
+from importlib.machinery import ExtensionFileLoader
+from collections         import OrderedDict
+from types               import ModuleType, FunctionType
 
 import inspect
 import subprocess
 import importlib
 import sys
 import os
-from types import ModuleType, FunctionType
 
+from pyccel.parser                import Parser
+from pyccel.parser.errors         import Errors, PyccelError
+from pyccel.parser.syntax.headers import parse
+from pyccel.codegen               import Codegen
+from pyccel.codegen.utilities     import execute_pyccel
+from pyccel.ast                   import FunctionHeader
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
+#==============================================================================
 
-if PY3:
-    from importlib.machinery import ExtensionFileLoader
+PY_VERSION = sys.version_info[0:2]
+
+#==============================================================================
 
 def get_source_function(func):
     if not callable(func):
@@ -44,6 +42,7 @@ def get_source_function(func):
 
     return code
 
+#==============================================================================
 
 def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , mpi=False, includes = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
@@ -58,31 +57,29 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None , m
     if compiler:
         compilers = compilers +'--fcompiler={}'.format(compiler)
 
-
-
     try:
-        filename = '{}.f90'.format(modulename.replace('.','/'))
+        filename = '{}.f90'.format( modulename.replace('.','/') )
+        filename = os.path.basename( filename )
         f = open(filename, "w")
         for line in source:
             f.write(line)
         f.close()
         libs = ' '.join('-l'+i.lower() for i in libs)
-        args = """  -c {} --opt='-O3' {} -m  {} {} {} {} """.format(compilers,
-                                                libs, modulename, filename,
+        args = """  -c {} --f90flags=-O3 {} -m  {} {} {} {} """.format(compilers,
+                                                libs, modulename.rpartition('.')[2], filename,
                                                 extra_args, includes)
 
-        if PY2:
-            cmd = """python -c 'import numpy.f2py as f ;f.main()' {}"""
-        else:
-            cmd = """python3 -c 'import numpy.f2py as f ;f.main()' {}"""
+        cmd = """python{}.{} -m numpy.f2py {}"""
 
-        cmd = cmd.format(args)
+
+        cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
 
     finally:
         f.close()
 
+#==============================================================================
 
 def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
             context=None, compiler = None , mpi=False, static=None):
@@ -162,6 +159,11 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
     # ...
 
     output_folder = name.rsplit('.',1)[0] if '.' in name else ''
+
+    # fortran module name
+    modname = 'epyccel__' + name
+
+
 
     # ...
     if is_module:
@@ -311,7 +313,7 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
         settings = {}
         ast = pyccel.annotate(**settings)
 
-        codegen = Codegen(ast, name)
+        codegen = Codegen(ast, modname)
         code = codegen.doprint()
         # ...
 
@@ -326,7 +328,30 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
         raise PyccelError('Could not convert to Fortran')
 
-    output, cmd = compile_fortran(code, name, extra_args=extra_args, libs = libs, compiler = compiler, mpi=mpi, includes = include_args)
+       # Change module name to avoid name clashes: Python cannot import two modules with the same name
+    if is_module:
+        head, sep, tail = name.rpartition('.')
+        name = sep.join( [head, '__epyccel__'+ tail] )
+    else:
+        name = '__epyccel__'+ name
+
+
+    # Find directory where Fortran extension module should be created
+    if is_module:
+        dirname = os.path.dirname(os.path.abspath( mod.__file__ ))
+    else:
+        dirname = os.path.dirname(os.path.abspath(sys.modules[func.__module__].__file__ ))
+
+    # Move into working directory, create extension module, then move back to original directory
+    origin = os.path.abspath( os.curdir )
+    os.chdir( dirname )
+    output, cmd = compile_fortran( code, name,
+        extra_args= extra_args,
+        libs      = libs,
+        compiler  = compiler,
+        mpi       = mpi,
+        includes  = include_args)
+    os.chdir( origin )
 
     if verbose:
         print(cmd)
@@ -337,35 +362,126 @@ def epyccel(func, inputs=None, verbose=False, modules=[], libs=[], name=None,
 
     # ...
     try:
-        package = importlib.import_module(name)
-        # TODO ??
-        #reload(package)
+        if PY_VERSION == (3, 7):
+            dirname = os.path.relpath(dirname).replace('/','.')
+            package = dirname + '.' + name
+            package = importlib.import_module( '..'+name, package=package )
+            clean_extension_module( package, modname )
+        else:
+            os.chdir( dirname )
+            package = importlib.import_module( name )
+            clean_extension_module( package, modname )
+            os.chdir( origin )
+
     except:
-        raise ImportError('could not import {0}'.format(name))
+        raise ImportError('could not import {0}'.format( name ))
     # ...
 
     if is_module:
         return package
-
-    if name in dir(package):
-        module = getattr(package, name)
     else:
-        module = getattr(package, 'mod_{0}'.format(name.lower()))
+        return getattr( package, func.__name__.lower() )
 
-    #f = getattr(module, name.lower())
+#==============================================================================
 
-    return module
+# TODO: write similar version for single functions
+def epyccel_mpi( mod, comm, root=0 ):
+    """
+    Collective version of epyccel for modules: root process generates Fortran
+    code, compiles it and creates a shared library (extension module), which
+    is then loaded by all processes in the communicator.
 
+    Parameters
+    ----------
+    mod : types.ModuleType
+        Python module to be pyccelized.
+
+    comm: mpi4py.MPI.Comm
+        MPI communicator where extension module will be made available.
+
+    root: int
+        Rank of process responsible for code generation.
+
+    Results
+    -------
+    fmod : types.ModuleType
+        Python extension module.
+
+    """
+    from mpi4py import MPI
+
+    assert isinstance(  mod, ModuleType )
+    assert isinstance( comm, MPI.Comm   )
+    assert isinstance( root, int        )
+
+    # Master process calls epyccel
+    if comm.rank == root:
+        fmod      = epyccel( mod, mpi=True )
+        fmod_path = fmod.__file__
+        fmod_name = fmod.__name__
+    else:
+        fmod_path = None
+        fmod_name = None
+
+    # Broadcast Fortran module path/name to all processes
+    fmod_path = comm.bcast( fmod_path, root=root )
+    fmod_name = comm.bcast( fmod_name, root=root )
+
+    # Non-master processes import Fortran module directly from its path
+    if comm.rank != root:
+        spec = importlib.util.spec_from_file_location( fmod_name, fmod_path )
+        fmod = importlib.util.module_from_spec( spec )
+        spec.loader.exec_module( fmod )
+        clean_extension_module( fmod, mod.__name__ )
+
+    # Return Fortran module
+    return fmod
+
+#==============================================================================
+
+def clean_extension_module( ext_mod, py_mod_name ):
+    """
+    Clean Python extension module by moving functions contained in f2py's
+    "mod_[py_mod_name]" automatic attribute to one level up (module level).
+    "mod_[py_mod_name]" attribute is then completely removed from the module.
+
+    Parameters
+    ----------
+    ext_mod : types.ModuleType
+        Python extension module created by f2py from pyccel-generated Fortran.
+
+    py_mod_name : str
+        Name of the original (pure Python) module.
+
+    """
+    # Get name of f2py automatic attribute
+    n = py_mod_name.lower().replace('.','_')
+
+    # Move all functions to module level
+    m = getattr( ext_mod, n )
+    for a in type( m ).__dir__( m ):
+        if a.startswith( '__' ) and a.endswith( '__' ):
+            pass
+        else:
+            setattr( ext_mod, a, getattr( m, a ) )
+
+    # Remove f2py automatic attribute
+    delattr( ext_mod, n )
+
+#==============================================================================
 
 # TODO check what we are inserting
 class ContextPyccel(object):
     """Class for interactive use of Pyccel. It can be used within an IPython
     session, Jupyter Notebook or ipyccel command line."""
-    def __init__(self, name,context_folder='',output_folder=''):
-        self._name = 'mod_{}'.format(name)
+    def __init__(self, name, context_folder=None, output_folder=''):
+        self._name = 'epyccel__{}'.format(name)
         self._constants = OrderedDict()
         self._functions = OrderedDict()
-        
+
+        if not context_folder:
+            context_folder = os.path.abspath('.').replace('/', '.')
+
         self._folder = context_folder
         if (len(self._folder)>0):
             self._folder+='.'
@@ -379,7 +495,7 @@ class ContextPyccel(object):
             i+=1
         contexts = contexts[i:]
         outputs  =  outputs[i:]
-        
+
         if (len(contexts)==0 and len(outputs)==0):
             self._rel_folder = ''
         else:
@@ -505,7 +621,6 @@ class ContextPyccel(object):
 
         if not('fflags' in list(settings.keys())):
             settings['fflags'] = '-fPIC -O3'
-        # ...
 
         output, cmd = execute_pyccel(filename, verbose=verbose, **settings)
         return output, cmd

@@ -51,7 +51,8 @@ script:
   - python -m pytest ../tests/errors/test_errors.py
   - python -m pytest ../tests/warnings/test_warnings.py
   - python -m pytest ../tests/preprocess/test_preprocess.py
-  - python -m pytest ../tests/epyccel -v
+  - python -m pytest ../tests/epyccel -v -m "not parallel"
+#  - mpirun -n 4 python -m pytest ../tests/epyccel -v -m parallel
 # this test must be executed with python, since we are calling mpif90 inside it
   - python ../tests/internal/test_internal.py
   - python ../tests/external/test_external.py

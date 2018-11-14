@@ -108,3 +108,15 @@ def test_zip_prod():
     f2 = epyccel( f1 )
 
     assert np.array_equal( f1(10), f2(10) )
+
+#==============================================================================
+# CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+#==============================================================================
+
+def teardown_module():
+    import os, glob
+    dirname  = os.path.dirname( loops.__file__ )
+    pattern  = os.path.join( dirname, '__epyccel__*' )
+    filelist = glob.glob( pattern )
+    for f in filelist:
+        os.remove( f )

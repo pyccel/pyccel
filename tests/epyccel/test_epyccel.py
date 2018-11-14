@@ -211,7 +211,7 @@ def test_decorators_g4():
 
 def test_module1():
 
-    import mod_test1 as mod
+    import test_mod as mod
 
     # ...
     m = epyccel(mod)

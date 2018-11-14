@@ -1,67 +1,68 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import importlib
-from numpy import ndarray
-
-from sympy import Lambda, preorder_traversal
-from sympy.core.expr import Expr, AtomicExpr
-from sympy.core import Symbol, Tuple
-from sympy.core.relational import Equality, Relational, Ne, Eq
-from sympy.logic.boolalg import And, Boolean, Not, Or, true, false
-from sympy.core.singleton import Singleton
-from sympy.core.function import Function, Application
-from sympy import sympify
-from sympy import Symbol, Integer, Add, Mul, Pow as sp_Pow
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float ,Rational as sp_Rational
-from sympy.core.compatibility import with_metaclass
-from sympy.core.compatibility import is_sequence
-from sympy.core.assumptions import StdFactKB
-from sympy import cache
-
-# from sympy.sets.fancysets import Range as sm_Range
-
-from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.matrices import ImmutableDenseMatrix
-from sympy.matrices.expressions.matexpr import MatrixSymbol, \
-    MatrixElement
-from sympy.utilities.iterables import iterable
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-
-from sympy.core.basic import Atom
-from sympy.core.expr import Expr, AtomicExpr
-from sympy.core.compatibility import string_types
-from sympy.core.operations import LatticeOp
-from sympy.core.function import Derivative, UndefinedFunction
-from sympy.core.function import _coeff_isneg
-from sympy.core.singleton import S
-from sympy import Integral, Symbol
-from sympy.simplify.radsimp import fraction
-from sympy.logic.boolalg import BooleanFunction
 
 import collections
+import importlib
+
+from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import string_types
+from sympy.simplify.radsimp   import fraction
+from sympy.core.assumptions   import StdFactKB
+from sympy.core.operations    import LatticeOp
+from sympy.core.relational    import Equality, Relational
+from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge
+from sympy.core.singleton     import Singleton, S
+from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
+from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
+from sympy.logic.boolalg      import BooleanFunction
+from sympy.core.function      import Function, Application
+from sympy.core.function      import Derivative, UndefinedFunction
+from sympy.core.function      import _coeff_isneg
+from sympy.core.numbers       import ImaginaryUnit
+from sympy.core.basic         import Atom
+from sympy.core.expr          import Expr, AtomicExpr
+from sympy.tensor             import Idx, Indexed, IndexedBase
+
+
+
+from sympy import cache
+from sympy import sympify
+from sympy import Add, Mul, Pow as sp_Pow
+from sympy import Integral, Symbol, Tuple
+from sympy import Lambda, preorder_traversal
+from sympy import Integer as sp_Integer
+from sympy import Float as sp_Float ,Rational as sp_Rational
+
+
+from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+from sympy.utilities.iterables import iterable
+
+
+
+from .basic import Basic
+from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                        NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeRange, NativeTensor, NativeString,
+                        NativeGeneric)
+
+
+from .functionalexpr import GeneratorComprehension as GC
+from .functionalexpr import FunctionalFor
+
+local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
+                'zeros':Symbol('zeros'),'ones':Symbol('ones')
+                ,'Point':Symbol('Point')}
+
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
 #      - add examples
 #      - Function case
-#      - Zeros, Ones, Array cases
 #      - AnnotatedComment case
-#      - Slice case
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
-
-from .basic import Basic
-from .datatypes import datatype, DataType, CustomDataType, NativeSymbol, \
-    NativeInteger, NativeBool, NativeReal, \
-    NativeComplex, NativeRange, NativeTensor, NativeString, \
-    NativeGeneric
-
-local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
-                'zeros':Symbol('zeros'),'ones':Symbol('ones')
-                ,'Point':Symbol('Point')}
 
 
 def subs(expr, new_elements):
@@ -100,7 +101,7 @@ def subs(expr, new_elements):
         return If(*args)
 
     elif isinstance(expr, Return):
-        
+
         for i in new_elements:
             expr = expr.subs(i[0],i[1])
         return expr
@@ -187,7 +188,10 @@ def allocatable_like(expr, verbose=False):
     else:
         raise TypeError('Unexpected type {0}'.format(type(expr)))
 
+
+
 def _atomic(e, cls=None,ignore=()):
+
     """Return atom-like quantities as far as substitution is
     concerned: Functions and DottedVarviables, Variables. we don't
     return atoms that are inside such quantities too
@@ -199,30 +203,129 @@ def _atomic(e, cls=None,ignore=()):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable, 
+        cls = (Application, DottedVariable, Variable,
                IndexedVariable,IndexedElement)
-    
+
     for p in pot:
-        if p in seen or isinstance(p,ignore):
+        if p in seen or isinstance(p, ignore):
             pot.skip()
             continue
         seen.append(p)
         if isinstance(p, cls):
             pot.skip()
             atoms_.append(p)
-        
+
     return atoms_
 
 
 
+def extract_subexpressions(expr):
+    """this function takes an expression and returns a list
+      of statements if this expression contains sub expressions that need
+      to be evaluated outside of the expression
 
-def atom(e):
-    """Return atom-like quantities as far as substitution is
-    concerned: Functions , DottedVarviables. contrary to _atom we
-    return atoms that are inside such quantities too
+
+      expr : Add, Mul, Pow, Application
+
     """
-    pass
 
+    stmts = []
+    cls   = (Add, Mul, sp_Pow, And,
+             Or, Eq, Ne, Lt, Gt,
+             Le, Ge)
+
+    id_cls = (Symbol, Indexed, IndexedBase,
+              DottedVariable, sp_Float, sp_Integer,
+              sp_Rational, ImaginaryUnit,Boolean,
+              BooleanTrue, BooleanFalse, String,
+              ValuedArgument, Nil, List)
+
+    func_names = ('diag', 'empty', 'zip', 'enumerate')
+    #TODO put only imported functions
+    def substitute(expr):
+        if isinstance(expr, cls):
+            args = expr.args
+            args = [substitute(arg) for arg in args]
+            return expr.func(*args, evaluate=False)
+        elif isinstance(expr, Application):
+            args = substitute(expr.args)
+
+            if str(expr.func) in func_names:
+                var = create_variable(expr)
+                expr = expr.func(*args, evaluate=False)
+                expr = Assign(var, expr)
+                stmts.append(expr)
+
+                return var
+            else:
+                expr = expr.func(*args, evaluate=False)
+                return expr
+        elif isinstance(expr, id_cls):
+
+            return expr
+        elif isinstance(expr, GC):
+            stmts.append(expr)
+            return expr.lhs
+        elif isinstance(expr,IfTernaryOperator):
+            var = create_variable(expr)
+            new = Assign(var, expr)
+            new.set_fst(expr.fst)
+            stmts.append(new)
+            return var
+        elif isinstance(expr, List):
+            args = []
+            for i in expr:
+                args.append(substitute(i))
+
+            return List(*args, sympify=False)
+
+        elif isinstance(expr, (Tuple, tuple, list)):
+            args = []
+
+            for i in expr:
+                args.append(substitute(i))
+            return args
+
+        else:
+            raise TypeError('statment {} not supported yet'.format(type(expr)))
+
+
+    new_expr  = substitute(expr)
+    return stmts, new_expr    
+            
+
+
+def collect_vars(ast):
+    """ collect variables in order to be declared"""
+    #TODO use the namespace to get the declared variables
+    variables = {}
+    def collect(stmt):
+
+        if isinstance(stmt, Variable):
+            if not isinstance(stmt.name, DottedName):
+                variables[stmt.name] = stmt
+        elif isinstance(stmt, (tuple, Tuple, list)):
+            for i in stmt:
+                collect(i)
+        if isinstance(stmt, For):
+            collect(stmt.target)
+            collect(stmt.body)
+        elif isinstance(stmt, FunctionalFor):
+            collect(stmt.lhs)
+            collect(stmt.loops)
+        elif isinstance(stmt, If):
+            collect(stmt.bodies)
+        elif isinstance(stmt, (While, CodeBlock)):
+            collect(stmt.body)
+        elif isinstance(stmt, (Assign, AliasAssign, AugAssign)):
+            collect(stmt.lhs)
+            if isinstance(stmt.rhs, (Linspace, Diag, Where)):
+                collect(stmt.rhs.index)
+                    
+        
+
+    collect(ast)
+    return variables.values()
 
 def inline(func, args):
         local_vars = func.local_vars
@@ -230,21 +333,24 @@ def inline(func, args):
         body = subs(body, zip(func.arguments, args))
         return Block(str(func.name), local_vars, body)
 
-def float2int(expr):
-    atoms = expr.atoms(sp_Float)
-    m     = map(sp_Integer,atoms)
-    return expr.subs(zip(atoms,m))
 
 def int2float(expr):
-    if expr.is_number:
-        return expr.n()
-
-    atoms = _atomic(expr, cls=sp_Rational, ignore=Function)
-    if atoms:
-        m     = map(sp_Float,atoms)
-        expr  = expr.subs(zip(atoms,m))
-    
     return expr
+
+def float2int(expr):
+    return expr
+
+def create_variable(expr):
+    """."""
+
+    import numpy as np
+    try:
+        name = 'Dummy_' + str(abs(hash(expr)
+                                  + np.random.randint(500)))[-4:]
+    except:
+        name = 'Dymmy_' + str(abs(np.random.randint(500)))[-4:]
+
+    return Symbol(name)
 
 class Pow(sp_Pow):
 
@@ -403,6 +509,7 @@ class Assign(Basic):
         like=None,
         ):
         cls._strict = strict
+
         if strict:
             lhs = sympify(lhs, locals=local_sympify)
             rhs = sympify(rhs, locals=local_sympify)
@@ -513,10 +620,11 @@ class CodeBlock(Basic):
             if isinstance(i, CodeBlock):
                 ls += i.body
             elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application)):
+                            Application, Expr, IfTernaryOperator)):
                 ls.append(i)
             else:
-                raise TypeError('statement not supported yet')
+
+                raise TypeError('statement of type {} not supported yet'.format(type(i)))
         obj = Basic.__new__(cls, ls)
         if isinstance(ls[-1], (Assign, AugAssign)):
             obj.set_fst(ls[-1].fst)
@@ -815,7 +923,7 @@ class While(Basic):
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body))
+        body = Tuple(*(sympify(i, locals=local_sympify) for i in body),sympify=False)
         return Basic.__new__(cls, test, body)
 
     @property
@@ -856,7 +964,7 @@ class With(Basic):
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body))
+        body = Tuple(*(sympify(i, locals=local_sympify) for i in body), sympify=False)
         return Basic.__new__(cls, test, body, settings)
 
     @property
@@ -948,9 +1056,9 @@ class Enumerate(Basic):
 class Map(Basic):
     """
     Reresents the map stmt
-  
+
     """
-    
+
     def __new__(cls, *args):
         if len(args)<2:
             raise TypeError('wrong number of arguments')
@@ -980,7 +1088,7 @@ class Range(Basic):
         stop = None
         step = 1
 
-        _valid_args = (Integer, Symbol, Indexed, Variable,
+        _valid_args = (sp_Integer, Symbol, Indexed, Variable,
                        IndexedElement)
 
         if isinstance(args, (tuple, list, Tuple)):
@@ -1162,7 +1270,7 @@ class Block(Basic):
                 raise TypeError('Only a Variable instance is allowed.')
         if not iterable(body):
             raise TypeError('body must be an iterable')
-        body = Tuple(*body)
+        body = Tuple(*body, sympify=False)
         return Basic.__new__(cls, name, variables, body)
 
     @property
@@ -1323,7 +1431,7 @@ class Module(Basic):
         for i in classes:
             imports += i.imports
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports)
+        imports = Tuple(*imports, sympify=False)
 
         return Basic.__new__(
             cls,
@@ -1466,7 +1574,7 @@ class Program(Basic):
         for i in classes:
             imports += i.imports
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports)
+        imports = Tuple(*imports, sympify=False)
 
         if not iterable(modules):
             raise TypeError('modules must be an iterable')
@@ -1574,7 +1682,7 @@ class For(Basic):
                 raise TypeError('body must be an iterable')
 
             body = Tuple(*(sympify(i, locals=local_sympify) for i in
-                         body))
+                         body), sympify=False)
         return Basic.__new__(cls, target, iter, body)
 
     @property
@@ -1593,21 +1701,23 @@ class For(Basic):
         self.body.append(stmt)
 
 
-class FunctionalFor(Basic):
 
-    """."""
+class DoConcurrent(For):
+    pass
 
-    def __new__(
-        cls,
-        loops,
-        target,
-        indexes,
-        index=None,
-        ):
-        return Basic.__new__(cls, loops, target, indexes, index)
+
+class ForAll(Basic):
+    """ class that represents the forall statement in fortran"""
+    def __new__(cls, iter, target, mask, body):
+
+        if not isinstance(iter, Range):
+            raise TypeError('iter must be of type Range')
+
+        return Basic.__new__(cls, iter, target, mask, body)
+
 
     @property
-    def loops(self):
+    def iter(self):
         return self._args[0]
 
     @property
@@ -1615,37 +1725,13 @@ class FunctionalFor(Basic):
         return self._args[1]
 
     @property
-    def indexes(self):
+    def mask(self):
         return self._args[2]
 
     @property
-    def index(self):
+    def body(self):
         return self._args[3]
 
-
-class GeneratorComprehension(Basic):
-
-    pass
-
-
-class FunctionalSum(FunctionalFor, GeneratorComprehension):
-
-    name = 'sum'
-
-
-class FunctionalMax(FunctionalFor, GeneratorComprehension):
-
-    name = 'max'
-
-
-class FunctionalMin(FunctionalFor, GeneratorComprehension):
-
-    name = 'min'
-
-
-class FunctionalMap(FunctionalFor, GeneratorComprehension):
-
-    pass
 
 
 class ForIterator(For):
@@ -1833,9 +1919,9 @@ class Void(Basic):
     pass
 
 class VoidFunction(Basic):
-    #this class is used in order to eliminate certain atoms 
-    # in an arithmitic expression so that we dont take them into 
-    # consideration 
+    #this class is used in order to eliminate certain atoms
+    # in an arithmitic expression so that we dont take them into
+    # consideration
     def __new__(*args):
         return Symbol("""x9846548484665
                       494794564465165161561""")
@@ -1875,7 +1961,7 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
-   
+
     def __new__(
         cls,
         dtype,
@@ -2129,7 +2215,7 @@ class Variable(Symbol):
 
     def _eval_is_positive(self):
         #we do this inorder to infere the type of Pow expression correctly
-        return self.is_real   
+        return self.is_real
 
 
 class DottedVariable(AtomicExpr, Boolean):
@@ -2167,25 +2253,13 @@ class DottedVariable(AtomicExpr, Boolean):
 
         obj = Basic.__new__(cls, args[0], args[1])
         assumptions = {}
-
-        if isinstance(args[1], (Variable, IndexedVariable,
-                      IndexedElement)):
-            dtype = args[1].dtype
-            class_type = isinstance(args[1], Variable) \
-                and args[1].cls_base \
-                or dtype.__class__.__name__.startswith('Pyccel')
-
-            alloweddtypes = (NativeBool, NativeRange, NativeString)
-            if isinstance(dtype, NativeInteger) or args[1].is_integer:
-                assumptions['integer'] = True
-            elif isinstance(dtype, NativeReal) \
-                or args[1].is_real:
-                assumptions['real'] = True
-            elif isinstance(dtype, NativeComplex) or args[1].is_complex:
-                assumptions['complex'] = True
-            elif not isinstance(dtype, alloweddtypes) \
-                and not class_type:
-                raise TypeError('Undefined datatype')
+        
+        if args[1].is_integer:
+            assumptions['integer'] = True
+        elif args[1].is_real:
+            assumptions['real'] = True
+        elif args[1].is_complex:
+            assumptions['complex'] = True
 
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
@@ -2207,6 +2281,18 @@ class DottedVariable(AtomicExpr, Boolean):
     @property
     def dtype(self):
         return self._args[1].dtype
+
+    @property
+    def allocatable(self):
+        return self._args[1].allocatable
+
+    @property
+    def is_pointer(self):
+        return self._args[1].is_pointer
+
+    @property
+    def is_target(self):
+        return self._args[1].is_target
 
     @property
     def name(self):
@@ -2246,6 +2332,9 @@ class DottedVariable(AtomicExpr, Boolean):
 
     def _eval_subs(self, old, new):
         return self
+
+    def inspect(self):
+        self._args[1].inspect()
 
 
 
@@ -2380,7 +2469,7 @@ class FunctionCall(Basic):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
-        args = Tuple(*args)
+        args = Tuple(*args, sympify=False)
         # ...
 
         return Basic.__new__(cls, func, args)
@@ -2512,6 +2601,12 @@ class FunctionDef(Basic):
     kind: str
         'function' or 'procedure'. default value: 'function'
 
+    is_pure: bool
+        True for a function without side effect
+
+    is_elemental: bool
+        True for a function is elemental
+
     is_static: bool
         True for static functions. Needed for f2py
 
@@ -2565,6 +2660,8 @@ class FunctionDef(Basic):
         decorators={},
         header=None,
         is_recursive=False,
+        is_pure=False,
+        is_elemental=False,
         ):
 
         # name
@@ -2593,7 +2690,7 @@ class FunctionDef(Basic):
 #        if not all(isinstance(a, Argument) for a in arguments):
 #            raise TypeError("All arguments must be of type Argument")
 
-        arguments = Tuple(*arguments)
+        arguments = Tuple(*arguments, sympify=False)
 
         # body
 
@@ -2605,7 +2702,7 @@ class FunctionDef(Basic):
 
         if not iterable(results):
             raise TypeError('results must be an iterable')
-        results = Tuple(*results)
+        results = Tuple(*results, sympify=False)
 
         # if method
 
@@ -2636,6 +2733,14 @@ class FunctionDef(Basic):
 
         if not isinstance(decorators, dict):
             raise TypeError('decorators must be a dict')
+
+        if not isinstance(is_pure, bool):
+            raise TypeError('Expecting a boolean for pure')
+
+        if not isinstance(is_elemental, bool):
+            raise TypeError('Expecting a boolean for elemental')
+
+
         return Basic.__new__(
             cls,
             name,
@@ -2652,6 +2757,8 @@ class FunctionDef(Basic):
             decorators,
             header,
             is_recursive,
+            is_pure,
+            is_elemental
             )
 
     @property
@@ -2710,6 +2817,14 @@ class FunctionDef(Basic):
     def is_recursive(self):
         return self._args[13]
 
+    @property
+    def is_pure(self):
+        return self._args[14]
+
+    @property
+    def is_elemental(self):
+        return self._args[15]
+
     def print_body(self):
         for s in self.body:
             print(s)
@@ -2757,7 +2872,7 @@ class FunctionDef(Basic):
             decorators = self.decorators,
             is_recursive=self.is_recursive,
             )
-      
+
     def vectorize(self, body , header):
         """ return vectorized FunctionDef """
         decorators = self.decorators
@@ -2776,7 +2891,7 @@ class FunctionDef(Basic):
             header=header,
             imports = self.imports,
             decorators = decorators,
-            is_recursive=self.is_recursive) 
+            is_recursive=self.is_recursive)
 
     @property
     def is_procedure(self):
@@ -2841,6 +2956,14 @@ class FunctionDef(Basic):
             self.is_recursive,
             )
         return args
+
+    # TODO
+    def check_pure(self):
+        raise NotImplementedError('')
+
+    # TODO
+    def check_elemental(self):
+        raise NotImplementedError('')
 
 
 class SympyFunction(FunctionDef):
@@ -3019,7 +3142,7 @@ class ClassDef(Basic):
 
         if not iterable(attributes):
             raise TypeError('attributs must be an iterable')
-        attributes = Tuple(*attributes)
+        attributes = Tuple(*attributes, sympify=False)
 
         # methods
 
@@ -3045,9 +3168,9 @@ class ClassDef(Basic):
         imports = list(imports)
         for i in methods:
             imports += list(i.imports)
-     
+
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports)
+        imports = Tuple(*imports, sympify=False)
 
         # ...
         # look if the class has the method __del__
@@ -3075,7 +3198,7 @@ class ClassDef(Basic):
          #  methods = list(methods) + [free]
          # TODO move this somewhere else
 
-        methods = Tuple(*methods)
+        methods = Tuple(*methods, sympify=False)
 
         # ...
 
@@ -3253,7 +3376,7 @@ class Import(Basic):
         elif iterable(target):
             for i in target:
                 _target.append(_format(i))
-        target = Tuple(*_target)
+        target = Tuple(*_target, sympify=False)
 
         if not source is None:
             source = _format(source)
@@ -3590,94 +3713,6 @@ class Len(Function):
         return 'int'
 
 
-# TODO - add examples
-
-class ZerosLike(Function):
-
-    """Represents variable assignment using numpy.zeros_like for code generation.
-
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Variable
-        the input variable
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, ZerosLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = ZerosLike(y)
-    """
-
-    # TODO improve in the spirit of assign
-
-    def __new__(cls, rhs=None, lhs=None):
-        if isinstance(lhs, str):
-            lhs = Symbol(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-
-        assignable = (
-            Symbol,
-            MatrixSymbol,
-            MatrixElement,
-            Indexed,
-            Idx,
-            Variable,
-            )
-
-        if lhs and not isinstance(lhs, assignable):
-            raise TypeError('Cannot assign to lhs of type %s.'
-                            % type(lhs))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def init_value(self):
-
-        def _native_init_value(dtype):
-            if isinstance(dtype, NativeInteger):
-                return 0
-            elif isinstance(dtype, NativeReal):
-                return 0.0
-            elif isinstance(dtype, NativeComplex):
-                return 0.0
-            elif isinstance(dtype, NativeBool):
-                return BooleanFalse()
-            raise TypeError('Expecting a Native type, given {}'.format(dtype))
-
-        _native_types = (NativeInteger, NativeReal,
-                         NativeComplex, NativeBool)
-
-        rhs = self.rhs
-        if isinstance(rhs.dtype, _native_types):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, (Variable, IndexedVariable)):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, IndexedElement):
-            return _native_init_value(rhs.base.dtype)
-        else:
-            raise TypeError('Unknown type for {name}, given {dtype}'.format(dtype=type(rhs),
-                            name=rhs))
-
-
 class Print(Basic):
 
     """Represents a print function in the code.
@@ -3756,7 +3791,7 @@ class Del(Basic):
         # TODO: check that the variable is allocatable
 
         if not iterable(expr):
-            expr = Tuple(expr)
+            expr = Tuple(expr, sympify=False)
         return Basic.__new__(cls, expr)
 
     @property
@@ -3895,7 +3930,7 @@ class CommentBlock(Basic):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
-        
+
         return Basic.__new__(cls, txts)
 
     @property
@@ -3982,7 +4017,7 @@ class IndexedVariable(IndexedBase):
     @property
     def precision(self):
         return self.kw_args['precision']
- 
+
     @property
     def order(self):
         return self.kw_args['order']
@@ -4081,7 +4116,7 @@ class IndexedElement(Indexed):
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
-        
+
         return obj
 
     @property
@@ -4169,7 +4204,7 @@ class Concatinate(Basic):
         args = list(args)
 
         args = [ repr(arg) if isinstance(arg, str) else arg for arg in args]
-        
+
         return Basic.__new__(cls, args, is_list)
 
     @property
@@ -4182,7 +4217,7 @@ class Concatinate(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        
+
         args = '+'.join(sstr(arg) for arg in self.args)
 
         return args
@@ -4757,4 +4792,4 @@ def get_iterable_ranges(it, var_name=None):
 
 
 # ...
-
+from .numpyext import Linspace, Diag, Where
