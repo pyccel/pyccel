@@ -98,8 +98,10 @@ def compile_fortran(filename, compiler, flags,
             binary = os.path.splitext(os.path.basename(filename))[0]
             mod_file = ''
         else:
-            binary = "{folder}{binary}.o".format(folder=output,
-                                binary=os.path.splitext(os.path.basename(filename))[0])
+            f = os.path.join(output, os.path.splitext(os.path.basename(filename))[0])
+            binary = '{}.o'.format(f)
+#            binary = "{folder}{binary}.o".format(folder=output,
+#                                binary=os.path.splitext(os.path.basename(filename))[0])
             mod_file = "{folder}".format(folder=output)
 
     o_code = '-o'
@@ -164,7 +166,8 @@ def execute_pyccel(filename,
                    modules=[],
                    libs=[],
                    binary=None,
-                   output=''):
+                   output='',
+                   convert_only=False):
     """Executes the full process:
         - parsing the python code
         - annotating the python code
@@ -183,35 +186,40 @@ def execute_pyccel(filename,
 
     codegen = Codegen(ast, name)
     code = codegen.doprint()
-    fname = codegen.export(output+name)
+    fname = os.path.join(output, name)
+    fname = codegen.export(fname)
 
     # reset Errors singleton
     errors = Errors()
     errors.reset()
 
-    # ... constructs the compiler flags
-    if compiler is None:
-        compiler='gfortran'
+    if convert_only:
+        return fname
 
-    flags = construct_flags(compiler,
-                            fflags=fflags,
-                            debug=debug,
-                            accelerator=accelerator,
-                            include=include,
-                            libdir=libdir)
-    # ...
+    else:
+        # ... constructs the compiler flags
+        if compiler is None:
+            compiler='gfortran'
 
-    # ... compile fortran code
-    output, cmd = compile_fortran(fname, compiler, flags,
-                                  binary=binary,
-                                  verbose=verbose,
-                                  modules=modules,
-                                  is_module=codegen.is_module,
-                                  output=output,
-                                  libs=libs)
-    # ...
+        flags = construct_flags(compiler,
+                                fflags=fflags,
+                                debug=debug,
+                                accelerator=accelerator,
+                                include=include,
+                                libdir=libdir)
+        # ...
 
-    return output, cmd
+        # ... compile fortran code
+        output, cmd = compile_fortran(fname, compiler, flags,
+                                      binary=binary,
+                                      verbose=verbose,
+                                      modules=modules,
+                                      is_module=codegen.is_module,
+                                      output=output,
+                                      libs=libs)
+        # ...
+
+        return output, cmd
 
 
 if __name__ == '__main__':

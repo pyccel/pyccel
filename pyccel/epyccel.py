@@ -87,6 +87,12 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
     else:
         only = ''
 
+    if not libs:
+        libs = ''
+
+    if not includes:
+        includes = ''
+
     try:
         filename = '{}.f90'.format( modulename.replace('.','/') )
         filename = os.path.basename( filename )
