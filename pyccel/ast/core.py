@@ -769,7 +769,7 @@ def operator(op):
     return op_registry[op]
 
 
-class AugAssign(Basic):
+class AugAssign(Assign):
 
     """
     Represents augmented variable assignment for code generation.

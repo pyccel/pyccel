@@ -524,6 +524,7 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatinate(self, expr):
+         print(expr.args)
          args = expr.args
          if expr.is_list:
              code = ','.join(self._print(a) for a in expr.args)
