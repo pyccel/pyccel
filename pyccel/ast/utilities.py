@@ -7,7 +7,7 @@ from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
 
-from .core import Constant
+from .core import Constant, Variable, IndexedVariable
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
 from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex, Imag, Mod
@@ -193,3 +193,38 @@ def builtin_import(expr):
 
 
     return imports
+
+
+# TODO improve as symbols from sympy
+def variables(args, dtype):
+    """returns a list of variables in the same spirit as symbols of sympy."""
+    args = [Variable(dtype, i) for i in args]
+    args = tuple(args)
+    return args
+
+def indexed_variables(args, dtype, rank):
+    """returns a list of indexed variables in the same spirit as symbols of
+    sympy with cls=IndexedBase."""
+    args = [IndexedVariable(i, dtype=dtype, rank=rank) for i in args]
+    args = tuple(args)
+    return args
+
+# TODO: must add a Node Decorator in core
+def build_types_decorator(args):
+    """
+    builds a types decorator from a list of arguments (of FunctionDef)
+    """
+    types = []
+    for a in args:
+        if isinstance(a, Variable):
+            dtype = a.dtype.name.lower()
+            types.append(dtype)
+
+        elif isinstance(a, IndexedVariable):
+            dtype = a.dtype.name.lower()
+            shape = [':' for i in range(0, a.rank)]
+            shape = ','.join(i for i in shape)
+            dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
+            types.append(dtype)
+
+    return types

@@ -174,6 +174,16 @@ class FCodePrinter(CodePrinter):
         decs    = '\n'.join(self._print(i) for i in expr.declarations)
         body    = ''
 
+        # ... TODO add other elements
+        private_funcs = [f.name for f in expr.funcs if f.is_private]
+        private = private_funcs
+        if private:
+            private = ','.join(self._print(i) for i in private)
+            private = 'private :: {}'.format(private)
+        else:
+            private = ''
+        # ...
+
         # ...
         sep = self._print(SeparatorComment(40))
         interfaces = ''
@@ -211,12 +221,14 @@ class FCodePrinter(CodePrinter):
         return ('module {name}\n'
                 '{imports}\n'
                 'implicit none\n'
+                '{private}\n'
                 '{decs}\n'
                 '{interfaces}\n'
                 '{body}\n'
                 'end module\n').format(name=name,
                                        imports=imports,
                                        decs=decs,
+                                       private=private,
                                        interfaces=interfaces,
                                        body=body)
 
@@ -237,6 +249,16 @@ class FCodePrinter(CodePrinter):
         imports = '\n'.join(self._print(i) for i in imports)
         funcs   = ''
         body    = '\n'.join(self._print(i) for i in expr.body)
+
+        # ... TODO add other elements
+        private_funcs = [f.name for f in expr.funcs if f.is_private]
+        private = private_funcs
+        if private:
+            private = ','.join(self._print(i) for i in private)
+            private = 'private :: {}'.format(private)
+        else:
+            private = ''
+        # ...
 
         decs    = expr.declarations
         func_in_func = False
@@ -303,11 +325,13 @@ class FCodePrinter(CodePrinter):
                 'program {name}\n'
                 '{imports}\n'
                 'implicit none\n'
+                '{private}\n'
                 '{decs}\n'
                 '{body}\n'
                 '{funcs}\n'
                 'end program {name}\n').format(name=name,
                                                imports=imports,
+                                               private=private,
                                                decs=decs,
                                                body=body,
                                                funcs=funcs,
@@ -422,7 +446,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
-        
+
         return '!' + comments
 
 
@@ -560,7 +584,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Zeros(self, expr):
         return expr.fprint(self._print)
-  
+
     def _print_Linspace(self, expr):
         return expr.fprint(self._print)
 
