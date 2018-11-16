@@ -2436,7 +2436,6 @@ class Parser(object):
         #      - line and column
         #      - blocking errors
 
-        errors = Errors()
         classes = type(expr).__mro__
         import time
         for cls in classes:
@@ -2497,15 +2496,6 @@ class Parser(object):
         return expr
     def _annotate_Pass(self, expr, **settings):
         return expr
-
-
-   
-    def _annotate_complex(self, expr, **settings):
-        args = list(expr.args)
-        if len(args)==1:
-            args.append(Float(0))
-        args = self._annotate(args, **settings)
-        return Complex(*args)
 
     def _annotate_NumberSymbol(self, expr, **settings):
         return expr.n()
@@ -3052,8 +3042,7 @@ class Parser(object):
 
                     args = rhs.rhs.args
                     args = [rhs.lhs] + list(args)
-                    args = [self._annotate(i, **settings) for i in
-                            args]
+                    args = [self._annotate(i, **settings) for i in args]
 
                     args = macro.apply(args, results=results)
 
@@ -3082,7 +3071,7 @@ class Parser(object):
                 body.set_fst(fst)
                 new_args.append([arg[0], [body]])
             expr = IfTernaryOperator(*new_args)
-            return self._annotate(expr, **settings)
+            return self._annotate_If(expr, **settings)
 
         elif isinstance(rhs, FunctionDef):
 
@@ -3091,7 +3080,7 @@ class Parser(object):
             rhs = rhs.rename(_get_name(expr.lhs))
             for i in rhs.body:
                 i.set_fst(fst)
-            rhs = self._annotate(rhs, **settings)
+            rhs = self._annotate_FunctionDef(rhs, **settings)
             return rhs
 
         elif isinstance(rhs, Block):
@@ -3128,8 +3117,6 @@ class Parser(object):
                 elif isinstance(rhs, FunctionalMax):
                     stmt = Assign(lhs, Max(lhs, rhs.lhs))
 
-                
-                
                 return CodeBlock([rhs, stmt])
             return rhs
 
@@ -3357,7 +3344,7 @@ class Parser(object):
             body  = [Assign(var, func(*args))]
             body[0].set_fst(fst)
             body  = For(index, range_, body, strict=False)
-            body  = self._annotate(body, **settings)
+            body  = self._annotate_For(body, **settings)
             body  = [alloc , body]
             return CodeBlock(body)
 
@@ -3404,7 +3391,6 @@ class Parser(object):
         new_expr = Assign(lhs, rhs)
         if is_pointer:
             new_expr = AliasAssign(lhs, rhs)
-
 
         elif isinstance(expr, AugAssign):
             new_expr = AugAssign(lhs, expr.op, rhs)
@@ -3501,7 +3487,7 @@ class Parser(object):
                    bounding_box=self.bounding_box,
                    severity='error', blocker=self.blocking)
 
-        body = self._annotate(body, **settings)
+        body = [self._annotate(i, **settings) for i in body]
 
         if isinstance(iterable, Variable):
             return ForIterator(target, iterable, body)
@@ -3654,11 +3640,11 @@ class Parser(object):
 
     def _annotate_While(self, expr, **settings):
         test = self._annotate(expr.test, **settings)
-        body = self._annotate(expr.body, **settings)
+        body = [self._annotate(i, **settings) for i in expr.body]
         return While(test, body)
 
     def _annotate_If(self, expr, **settings):
-        args = self._annotate(expr.args, **settings)
+        args = [self._annotate(i, **settings) for i in expr.args]
         return expr.func(*args)
 
     def _annotate_VariableHeader(self, expr, **settings):
@@ -3718,8 +3704,8 @@ class Parser(object):
                 assigns[-1].set_fst(expr.fst)
 
         if len(assigns) == 0:
-            results = [self._annotate(result, **settings)
-                           for result in results]
+            results = [self._annotate_Symbol(result, **settings)
+                       for result in results]
             return Return(results)
         else:
             assigns  = [self._annotate_Assign(assign, **settings)
@@ -3982,7 +3968,7 @@ class Parser(object):
         return funcs
 
     def _annotate_Print(self, expr, **settings):
-        args = self._annotate(expr.expr, **settings)
+        args = [self._annotate(i, **settings) for i in expr.expr]
         if len(args) == 0:
             raise ValueError('no arguments given to print function')
 
@@ -4058,7 +4044,7 @@ class Parser(object):
 
     def _annotate_Del(self, expr, **settings):
 
-        ls = self._annotate(expr.variables)
+        ls = [self._annotate(i, **settings) for i in expr.variables]
         return Del(ls)
 
     def _annotate_Is(self, expr, **settings):
@@ -4175,13 +4161,13 @@ class Parser(object):
 
     def _annotate_With(self, expr, **settings):
 
-        domaine = self._annotate(expr.test)
+        domaine = self._annotate(expr.test, **settings)
         parent  = domaine.cls_base
         if not parent.is_with_construct:
             msg = '__enter__ or __exit__ methods not found'
             raise ValueError(msg)
 
-        body = self._annotate(expr.body)
+        body = [self._annotate(i, **settings) for i in expr.body]
         return With(domaine, body, None).block
 
 
