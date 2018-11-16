@@ -175,6 +175,7 @@ from sympy import Dict
 from sympy import Not
 from sympy import cache
 
+errors = Errors()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -1791,8 +1792,9 @@ class Parser(object):
             expr.set_fst(stmt)
             return expr
         elif isinstance(stmt, ArgumentGeneratorComprehensionNode):
-
+            
             result = self._fst_to_ast(stmt.result)
+
             generators = self._fst_to_ast(stmt.generators)
             parent = stmt.parent.parent.parent
 
@@ -1822,7 +1824,7 @@ class Parser(object):
             indices = indices[::-1]
             body = [body]
             if name == 'sum':
-                expr = FunctionalSum(body, result, lhs, indices,None)
+                expr = FunctionalSum(body, result, lhs, indices, None)
             elif name == 'min':
                 expr = FunctionalMin(body, result, lhs, indices, None)
             elif name == 'max':
@@ -1957,7 +1959,7 @@ class Parser(object):
             args.append(index)
             target = IndexedBase(lhs)[args]
             target = Assign(target, result)
-            assign1 = Assign(index, 0)
+            assign1 = Assign(index, Integer(0))
             assign1.set_fst(stmt)
             target.set_fst(stmt)
             generators[-1].insert2body(target)
@@ -2436,11 +2438,11 @@ class Parser(object):
 
         errors = Errors()
         classes = type(expr).__mro__
+        import time
         for cls in classes:
             annotation_method = '_annotate_' + cls.__name__
             if hasattr(self, annotation_method):
                 return getattr(self, annotation_method)(expr, **settings)
-         
         # Unknown object, we raise an error.
         
         raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
@@ -2497,17 +2499,13 @@ class Parser(object):
         return expr
 
 
-    def _annotate_int(self, expr, **settings):
-        return Integer(expr)
-
-    def _annotate_float(self, expr, **settings):
-        return Float(expr)
-
+   
     def _annotate_complex(self, expr, **settings):
-        from sympy import I
-        Re  = self._annotate(expr.args[0], **settings)
-        Im  = self._annotate(expr.args[1], **settings)
-        return Re + I*Im
+        args = list(expr.args)
+        if len(args)==1:
+            args.append(Float(0))
+        args = self._annotate(args, **settings)
+        return Complex(*args)
 
     def _annotate_NumberSymbol(self, expr, **settings):
         return expr.n()
@@ -2664,7 +2662,7 @@ class Parser(object):
 
         stmts, expr = extract_subexpressions(expr)
         if stmts:
-            stmts = [self._annotate(i, **settings) for stmt in stmts]
+            stmts = [self._annotate(i, **settings) for i in stmts]
 
         atoms_str = _atomic(expr, String)
         atoms_ls  = _atomic(expr, List)
@@ -2697,7 +2695,7 @@ class Parser(object):
     def _annotate_Mul(self, expr, **settings):
         stmts, expr = extract_subexpressions(expr)
         if stmts:
-            stmts = [self._annotate(i, **settings) for stmt in stmts]
+            stmts = [self._annotate(i, **settings) for i in stmts]
         args = [self._annotate(a, **settings) for a in expr.args]
         expr_new = Mul(*args, evaluate=False)
         expr_new = expr_new.doit(deep=False)
@@ -2710,7 +2708,7 @@ class Parser(object):
 
         stmts, expr = extract_subexpressions(expr)
         if stmts:
-            stmts = [self._annotate(i, **settings) for stmt in stmts]
+            stmts = [self._annotate(i, **settings) for i in stmts]
         args = [self._annotate(a, **settings) for a in expr.args]
         expr_new = Pow(*args, evaluate=False)
         expr_new = expr_new.doit(deep=False)
@@ -2963,6 +2961,16 @@ class Parser(object):
         msg = msg.format(expr=type(expr))
         raise NotImplementedError(msg)
 
+    def _annotate_Min(self, expr, **settings):
+        raise
+        args = self._annotate(expr.args, **settings)
+        return Min(*args)
+
+    def _annotate_Max(self, expr, **settings):
+        args = self._annotate(expr.args, **settings)
+        return Max(*args)
+
+
     def _annotate_Assign(self, expr, **settings):
 
         # TODO unset position at the end of this part
@@ -3103,15 +3111,25 @@ class Parser(object):
             return expr
 
         elif isinstance(rhs, GC):
-            if _get_name(rhs.lhs) != _get_name(lhs):
+            if str(rhs.lhs) != str(lhs):
+
+                if isinstance(lhs, Symbol):
+                    name = lhs.name
+                    if self.get_variable(name) is None:
+                        d_var = self._infere_type(rhs.lhs, **settings)
+                        dtype = d_var.pop('datatype')
+                        lhs = Variable(dtype, name , **d_var)
+                        self.insert_variable(lhs)
+
                 if isinstance(rhs, FunctionalSum):
                     stmt = AugAssign(lhs,'+',rhs.lhs)
                 elif isinstance(rhs, FunctionalMin):
                     stmt = Assign(lhs, Min(lhs,rhs.lhs))
                 elif isinstance(rhs, FunctionalMax):
                     stmt = Assign(lhs, Max(lhs, rhs.lhs))
-                stmt.set_fst(rhs.fst)
-                stmt = self._annotate(stmt, **settings)
+
+                
+                
                 return CodeBlock([rhs, stmt])
             return rhs
 
@@ -3125,12 +3143,20 @@ class Parser(object):
             # into a list of stmts
             stmts = rhs.body
             stmt  = stmts[-1]
+            lhs   = expr.lhs
+            if isinstance(lhs, Symbol):
+                name = lhs.name
+                if self.get_variable(name) is None:
+                    d_var = self._infere_type(stmt, **settings)
+                    dtype = d_var.pop('datatype')
+                    lhs = Variable(dtype, name , **d_var)
+                    self.insert_variable(lhs)
+
             if isinstance(expr, Assign):
-                stmt = Assign(expr.lhs, stmt)
+                stmt = Assign(lhs, stmt)
             elif isinstance(expr, AugAssign):
-                stmt = AugAssign(expr.lhs, expr.op, stmt)
+                stmt = AugAssign(lhs, expr.op, stmt)
             stmt.set_fst(fst)
-            stmt = self._annotate(stmt, **settings)
             stmts[-1] = stmt
             return CodeBlock(stmts)
 
@@ -3140,6 +3166,7 @@ class Parser(object):
 
             name = _get_name(rhs)
             func = self.get_function(name)
+            
             if isinstance(func, FunctionDef):
                 results = func.results
                 if results:
@@ -3225,7 +3252,7 @@ class Parser(object):
                 elif len(d_var) == 1:
                     d_var = d_var[0]
 
-            name = _get_name(lhs)
+            name = lhs.name
             dtype = d_var.pop('datatype')
 
             d_lhs = d_var.copy()
@@ -3245,7 +3272,7 @@ class Parser(object):
                 self.insert_variable(lhs, name=lhs.name)
 
             else:
-
+                
                 # TODO improve check type compatibility
                 if str(lhs.dtype) != str(var.dtype):
                     txt = '|{name}| {old} <-> {new}'
@@ -3308,6 +3335,8 @@ class Parser(object):
                 attributes += [member]
                 new_cls = ClassDef(cls_name, attributes, [], parent=parent)
                 self.insert_class(new_cls)
+            else:
+                lhs = self._annotate_DottedVariable(lhs, **settings)     
 
         else:
             lhs = self._annotate(lhs, **settings)
@@ -3367,17 +3396,22 @@ class Parser(object):
 
         if len(lhs) == 1:
             lhs = lhs[0]
+            
 
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
-        if is_pointer:
-            expr = AliasAssign(lhs, rhs)
-
+        is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        elif isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer:
-            expr = AliasAssign(lhs, rhs)
+        new_expr = Assign(lhs, rhs)
+        if is_pointer:
+            new_expr = AliasAssign(lhs, rhs)
 
-        elif expr.is_symbolic_alias:
-            expr = SymbolicAssign(lhs, rhs)
+
+        elif isinstance(expr, AugAssign):
+            new_expr = AugAssign(lhs, expr.op, rhs)
+
+
+        elif new_expr.is_symbolic_alias:
+            new_expr = SymbolicAssign(lhs, rhs)
 
             # in a symbolic assign, the rhs can be a lambda expression
             # it is then treated as a def node
@@ -3387,18 +3421,10 @@ class Parser(object):
                 self.insert_symbolic_function(expr)
             else:
                 raise NotImplementedError('TODO')
-
-        elif isinstance(expr, AugAssign):
-            expr = AugAssign(lhs, expr.op, rhs)
-
-            # we need to set the fst again in case
-            # we annotate it again
-        else:
-            expr = Assign(lhs, rhs)
-
-        expr.set_fst(fst)
+      
+        new_expr.set_fst(fst)
        
-        return expr
+        return new_expr
 
     def _annotate_For(self, expr, **settings):
 
@@ -3428,8 +3454,7 @@ class Parser(object):
             args = iterable.args
             indx = create_variable(args)
             for i in range(len(args)):
-                assign = Assign(iterator[i],
-                               IndexedBase(args[i])[indx])
+                assign = Assign(iterator[i], IndexedBase(args[i])[indx])
                 assign.set_fst(expr.fst)
                 body = [assign] + body
             iterator = indx
@@ -3437,8 +3462,7 @@ class Parser(object):
         elif isinstance(iterable, Enumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
-            assign = Assign(var,
-                           IndexedBase(iterable.args[0])[indx])
+            assign = Assign(var, IndexedBase(iterable.args[0])[indx])
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
@@ -3448,8 +3472,7 @@ class Parser(object):
             iterator = list(iterator)
             for i in range(len(args)):
                 indx   = create_variable(i)
-                assign = Assign(iterator[i],
-                                IndexedBase(args[i])[indx])
+                assign = Assign(iterator[i], IndexedBase(args[i])[indx])
 
                 assign.set_fst(expr.fst)
                 body        = [assign] + body
@@ -3477,18 +3500,21 @@ class Parser(object):
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=self.bounding_box,
                    severity='error', blocker=self.blocking)
+
         body = self._annotate(body, **settings)
 
         if isinstance(iterable, Variable):
             return ForIterator(target, iterable, body)
+
         return For(target, iterable, body)
 
 
-    def _annotate_GC(self, expr, **settings):
+    def _annotate_GeneratorComprehension(self, expr, **settings):
 
         result   = expr.expr
         lhs_name = _get_name(expr.lhs)
         lhs      = self.get_variable(lhs_name)
+        
         if lhs is None:
             lhs  = Variable('int', lhs_name)
             self.insert_variable(lhs)
@@ -3509,9 +3535,9 @@ class Parser(object):
 
 
         if isinstance(expr, FunctionalSum):
-            val = 0
+            val = Integer(0)
             if str_dtype(dtype) in ['real', 'complex']:
-                val = 0.0
+                val = Float(0.0)
         elif isinstance(expr, FunctionalMin):
             val = INF
         elif isinstance(expr, FunctionalMax):
@@ -3998,22 +4024,23 @@ class Parser(object):
         cls = ClassDef(name, [], [], parent=parent)
         self.insert_class(cls)
         const = None
+
         for (i, method) in enumerate(methods):
             m_name = str(method.name).replace("'", '')
-
-            # remove quotes for str representation
 
             if m_name == '__init__':
                 const = self._annotate_FunctionDef(method, **settings)
                 methods.pop(i)
+                break
 
-            methods = [self._annotate_FunctionDef(i, **settings) for i in methods]
+
 
         if not const:
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                    bounding_box=self.bounding_box,
                    severity='error', blocker=True)
 
+        methods = [self._annotate_FunctionDef(i, **settings) for i in methods]
         methods = [const] + methods
         header = self.get_header(name)
 
@@ -4031,9 +4058,8 @@ class Parser(object):
 
     def _annotate_Del(self, expr, **settings):
 
-        #ls = self._annotate(expr.variables)
-        #return Del(ls)
-        return expr
+        ls = self._annotate(expr.variables)
+        return Del(ls)
 
     def _annotate_Is(self, expr, **settings):
 

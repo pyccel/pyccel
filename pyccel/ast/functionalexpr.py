@@ -43,18 +43,18 @@ class GeneratorComprehension(AtomicExpr, Basic):
     pass
 
 
-class FunctionalSum(FunctionalFor, GeneratorComprehension):
+class FunctionalSum(GeneratorComprehension, FunctionalFor):
     name = 'sum'
 
 
-class FunctionalMax(FunctionalFor, GeneratorComprehension):
+class FunctionalMax(GeneratorComprehension, FunctionalFor):
     name = 'max'
 
 
-class FunctionalMin(FunctionalFor, GeneratorComprehension):
+class FunctionalMin(GeneratorComprehension, FunctionalFor):
     name = 'min'
 
 
-class FunctionalMap(FunctionalFor, GeneratorComprehension):
+class FunctionalMap(GeneratorComprehension, FunctionalFor):
     pass
 
