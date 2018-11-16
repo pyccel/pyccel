@@ -3418,7 +3418,7 @@ class Parser(object):
 
             F = self.get_symbolic_function(lhs)
             if F is None:
-                self.insert_symbolic_function(expr)
+                self.insert_symbolic_function(new_expr)
             else:
                 raise NotImplementedError('TODO')
       
