@@ -4059,6 +4059,8 @@ class IndexedVariable(IndexedBase):
     def _eval_subs(self, old, new):
         return self
 
+    def __str__(self):
+        return str(self.name)
 
 
 class IndexedElement(Indexed):
