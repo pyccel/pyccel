@@ -17,7 +17,7 @@ def test_codegen():
 
     init_dir = os.getcwd()
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, 'fcode')
+    path_dir = os.path.join(base_dir, 'scripts')
 
     files = sorted(os.listdir(path_dir))
     files = [f for f in files if (f.endswith(".py"))]

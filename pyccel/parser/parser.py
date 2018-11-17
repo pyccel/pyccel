@@ -627,7 +627,7 @@ class Parser(object):
         # we add the try/except to allow the parser to find all possible errors
 
         try:
-            ast = self._fst_to_ast(self.fst)
+            ast = self._syntax(self.fst)
 
         except Exception as e:
             errors.check()
@@ -1209,792 +1209,860 @@ class Parser(object):
 #==============================================================================
 #==============================================================================
 
-    def _fst_to_ast(self, stmt):
+    def _treat_iterable(self, stmt):
+    
+        """
+        since redbaron puts the first comments after a block statement
+        inside the block, we need to remove them. this is in particular the
+        case when using openmp/openacc pragmas like #$ omp end loop
+        """
+
+        ls = [self._syntax(i) for i in stmt]
+
+        if isinstance(stmt, (list, ListNode)):
+
+            return List(*ls, sympify=False)
+        else:
+            return Tuple(*ls, sympify=False)
+
+    def _syntax(self, stmt):
         """Creates AST from FST."""
 
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
+        
+        cls = type(stmt)
+        syntax_method = '_syntax_' + cls.__name__
+        if hasattr(self, syntax_method):
+            return getattr(self, syntax_method)(stmt)
+        
+        # Unknown object, we raise an error.
+        raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
+        
 
-        errors = Errors()
+    def _syntax_RedBaron(self, stmt):
+        return self._treat_iterable(stmt)
+        
+    def _syntax_LineProxyList(self, stmt):
+        return self._treat_iterable(stmt)
 
-        # ...
+    def _syntax_CommaProxyList(self, stmt):
+        return self._treat_iterable(stmt)
+        
+    def _syntax_NodeList(self, stmt):
+        return self._treat_iterable(stmt)
+        
+    def _syntax_TupleNode(self, stmt):
+        return self._treat_iterable(stmt)
+        
+    def _syntax_ListNode(self, stmt):
+        return self._treat_iterable(stmt)
+        
+    def _syntax_tuple(self, stmt):
+        return self._treat_iterable(stmt)
+        
+    def _syntax_list(self, stmt):
+        return self._treat_iterable(stmt)
+        
+        
+    def _syntax_DottedAsNameNode(self, stmt):
 
-        def _treat_iterable(stmt):
-            """
-            since redbaron puts the first comments after a block statement
-            inside the block, we need to remove them. this is in particular the
-            case when using openmp/openacc pragmas like #$ omp end loop
-            """
+        names = []
+        for a in stmt.value:
+            names.append(strip_ansi_escape.sub('', a.value))
 
-            ls = [self._fst_to_ast(i) for i in stmt]
+        if len(names) == 1:
+            return names[0]
+        else:
 
-            if isinstance(stmt, (list, ListNode)):
+            return DottedName(*names)
+            
+    def _syntax_NameAsNameNode(self, stmt):
 
-                return List(*ls, sympify=False)
-            else:
-                return Tuple(*ls, sympify=False)
+        if not isinstance(stmt.value, str):
+            raise TypeError('Expecting a string')
 
-        # ...
+        value = strip_ansi_escape.sub('', stmt.value)
+        if not stmt.target:
+            return value
 
-        if isinstance(stmt, (
-            RedBaron,
-            LineProxyList,
-            CommaProxyList,
-            NodeList,
-            TupleNode,
-            ListNode,
-            tuple,
-            list,
-            )):
-            return _treat_iterable(stmt)
-        elif isinstance(stmt, DottedAsNameNode):
+        old = value
+        new = self._syntax(stmt.target)
 
-            names = []
-            for a in stmt.value:
-                names.append(strip_ansi_escape.sub('', a.value))
+        # TODO improve
 
-            if len(names) == 1:
-                return names[0]
-            else:
+        if isinstance(old, str):
+            old = old.replace("'", '')
+        if isinstance(new, str):
+            new = new.replace("'", '')
+        return AsName(new, old)
+        
+    def _syntax_DictNode(self, stmt):
 
-                return DottedName(*names)
-        elif isinstance(stmt, NameAsNameNode):
+        d = {}
+        for i in stmt.value:
+            if not isinstance(i, DictitemNode):
+                raise PyccelSyntaxError('Expecting a DictitemNode')
 
-            if not isinstance(stmt.value, str):
-                raise TypeError('Expecting a string')
+            key = self._syntax(i.key)
+            value = self._syntax(i.value)
 
-            value = strip_ansi_escape.sub('', stmt.value)
-            if not stmt.target:
-                return value
+            # sympy does not allow keys to be strings
 
-            old = value
-            new = self._fst_to_ast(stmt.target)
-
-            # TODO improve
-
-            if isinstance(old, str):
-                old = old.replace("'", '')
-            if isinstance(new, str):
-                new = new.replace("'", '')
-            return AsName(new, old)
-        elif isinstance(stmt, DictNode):
-
-            d = {}
-            for i in stmt.value:
-                if not isinstance(i, DictitemNode):
-                    raise PyccelSyntaxError('Expecting a DictitemNode')
-
-                key = self._fst_to_ast(i.key)
-                value = self._fst_to_ast(i.value)
-
-                # sympy does not allow keys to be strings
-
-                if isinstance(key, str):
-                    errors.report(SYMPY_RESTRICTION_DICT_KEYS,
-                                  severity='error')
-
-                d[key] = value
-            return Dict(d)
-        elif stmt is None:
-
-            return Nil()
-        elif isinstance(stmt, str):
-
-            return repr(stmt)
-        elif isinstance(stmt, StringNode):
-            val =  stmt.value
-            if isinstance(stmt.parent,(RedBaron, DefNode)):
-                return CommentBlock(val)
-            return String(val)
-        elif isinstance(stmt, IntNode):
-
-            val = strip_ansi_escape.sub('', stmt.value)
-            return Integer(val)
-        elif isinstance(stmt, FloatNode):
-
-            val = strip_ansi_escape.sub('', stmt.value)
-
-            val = val[:20] if len(val)>20 else val
-            return Float(val)
-        elif isinstance(stmt, FloatExponantNode):
-
-            val = strip_ansi_escape.sub('', stmt.value)
-            val = val[:20] if len(val)>20 else val
-            return Float(val)
-        elif isinstance(stmt, ComplexNode):
-
-            val = strip_ansi_escape.sub('', stmt.value)
-            return sympify(val, locals=local_sympify)
-        elif isinstance(stmt, AssignmentNode):
-
-            lhs = self._fst_to_ast(stmt.target)
-            rhs = self._fst_to_ast(stmt.value)
-            if stmt.operator in ['+', '-', '*', '/']:
-                expr = AugAssign(lhs, stmt.operator, rhs)
-            else:
-                expr = Assign(lhs, rhs)
-
-                # we set the fst to keep track of needed information for errors
-
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, NameNode):
-            if stmt.value == 'None':
-                return Nil()
-
-            elif stmt.value == 'True':
-                return true
-
-            elif stmt.value == 'False':
-                return false
-
-            else:
-                val = strip_ansi_escape.sub('', stmt.value)
-                return Symbol(val)
-
-        elif isinstance(stmt, ImportNode):
-            if not isinstance(stmt.parent, (RedBaron, DefNode)):
-                errors.report(PYCCEL_RESTRICTION_IMPORT,
-                              bounding_box=stmt.absolute_bounding_box,
+            if isinstance(key, str):
+                errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                               severity='error')
 
-            if isinstance(stmt.parent, DefNode):
-                errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF,
-                              bounding_box=stmt.absolute_bounding_box,
-                              severity='error')
+            d[key] = value
+        return Dict(d)
+        
+    def _syntax_NoneType(self, stmt):
+        return Nil()
+        
+    def _syntax_str(self, stmt):
 
-            # in an import statement, we can have seperate target by commas
-            ls = self._fst_to_ast(stmt.value)
-            ls = get_default_path(ls)
-            expr = Import(ls)
-            expr.set_fst(stmt)
-            self.insert_import(expr)
-            return expr
+        return repr(stmt)
+        
+    def _syntax_StringNode(self, stmt):
+        val =  stmt.value
+        if isinstance(stmt.parent,(RedBaron, DefNode)):
+            return CommentBlock(val)
+        return String(val)
+        
+    def _syntax_IntNode(self, stmt):
 
-        elif isinstance(stmt, FromImportNode):
+        val = strip_ansi_escape.sub('', stmt.value)
+        return Integer(val)
+        
+    def _syntax_FloatNode(self, stmt):
 
-            if not isinstance(stmt.parent, (RedBaron, DefNode)):
-                errors.report(PYCCEL_RESTRICTION_IMPORT,
-                              bounding_box=stmt.absolute_bounding_box,
-                              severity='error')
+        val = strip_ansi_escape.sub('', stmt.value)
 
-            source = self._fst_to_ast(stmt.value)
-            if isinstance(source, DottedVariable):
-                source = DottedName(*source.names)
-            source = get_default_path(source)
-            targets = []
-            for i in stmt.targets:
-                s = self._fst_to_ast(i)
-                if s == '*':
-                    errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
-                                  bounding_box=stmt.absolute_bounding_box,
-                                  severity='error')
+        val = val[:20] if len(val)>20 else val
+        return Float(val)
+        
+    def _syntax_FloatExponantNode(self, stmt):
 
-                targets.append(s)
+        val = strip_ansi_escape.sub('', stmt.value)
+        val = val[:20] if len(val)>20 else val
+        return Float(val)
+        
+    def _syntax_ComplexNode(self, stmt):
 
-            if is_ignored_module(source):
-                return EmptyLine()
+        val = strip_ansi_escape.sub('', stmt.value)
+        return sympify(val, locals=local_sympify)
+        
+    def _syntax_AssignmentNode(self, stmt):
 
-            expr = Import(targets, source=source)
-            expr.set_fst(stmt)
-            self.insert_import(expr)
-            return expr
-
-        elif isinstance(stmt, DelNode):
-            arg = self._fst_to_ast(stmt.value)
-            return Del(arg)
-
-        elif isinstance(stmt, UnitaryOperatorNode):
-
-            target = self._fst_to_ast(stmt.target)
-            if stmt.value == 'not':
-                return Not(target)
-            elif stmt.value == '+':
-
-                return target
-            elif stmt.value == '-':
-
-                return -target
-            elif stmt.value == '~':
-
-                errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
-                              bounding_box=stmt.absolute_bounding_box,
-                              severity='error')
-            else:
-                msg = 'unknown/unavailable unary operator {node}'
-                msg = msg.format(node=type(stmt.value))
-                raise PyccelSyntaxError(msg)
-        elif isinstance(stmt, (BinaryOperatorNode,
-                        BooleanOperatorNode)):
-
-            first = self._fst_to_ast(stmt.first)
-            second = self._fst_to_ast(stmt.second)
-            if stmt.value == '+':
-                return Add(first, second, evaluate=False)
-            elif stmt.value == '*':
-
-                if isinstance(first, (Tuple, List)):
-                    return Dlist(first[0], second)
-                return Mul(first, second, evaluate=False)
-            elif stmt.value == '-':
-
-                if isinstance(stmt.second, BinaryOperatorNode) \
-                    and isinstance(second, (Add, Mul)):
-                    args = second.args
-                    second = second._new_rawargs(-args[0], args[1])
-                else:
-                    second = Mul(-1, second)
-                return Add(first, second, evaluate=False)
-            elif stmt.value == '/':
-                if isinstance(second, Mul) and isinstance(stmt.second,
-                                               BinaryOperatorNode):
-                    args = list(second.args)
-                    second = Pow(args[0], -1, evaluate=False)
-                    second = Mul(second, args[1], evaluate=False)
-                else:
-                    second = Pow(second, -1, evaluate=False)
-                return Mul(first, second, evaluate=False)
-            elif stmt.value == 'and':
-
-                return And(first, second, evaluate=False)
-            elif stmt.value == 'or':
-
-                return Or(first, second, evaluate=False)
-            elif stmt.value == '**':
-
-                return Pow(first, second, evaluate=False)
-            elif stmt.value == '//':
-
-                if isinstance(second, Mul) and isinstance(stmt.second,
-                                               BinaryOperatorNode):
-                    args = second.args
-                    second = Pow(args[0], -1, evaluate=False)
-                    first =  floor(Mul(first, second, evaluate=False))
-                    return Mul(first, args[1], evaluate=False)
-                else:
-                    second = Pow(second, -1, evaluate=False)
-                    return floor(Mul(first, second, evaluate=False))
-
-            elif stmt.value == '%':
-
-                return Mod(first, second)
-            else:
-                msg = 'unknown/unavailable binary operator {node}'
-                msg = msg.format(node=type(stmt.value))
-                raise PyccelSyntaxError(msg)
-
-        elif isinstance(stmt, ComparisonNode):
-
-            first = self._fst_to_ast(stmt.first)
-            second = self._fst_to_ast(stmt.second)
-            op = stmt.value.first
-            if op == '==':
-                return Eq(first, second, evaluate=False)
-            elif op == '!=':
-
-                return Ne(first, second, evaluate=False)
-            elif op == '<':
-
-                return Lt(first, second, evaluate=False)
-            elif op == '>':
-
-                return Gt(first, second, evaluate=False)
-            elif op == '<=':
-
-                return Le(first, second, evaluate=False)
-            elif op == '>=':
-
-                return Ge(first, second, evaluate=False)
-            elif op == 'is':
-
-                return Is(first, second)
-            else:
-                msg = 'unknown/unavailable binary operator {node}'
-                msg = msg.format(node=type(op))
-                raise PyccelSyntaxError(msg)
-        elif isinstance(stmt, PrintNode):
-
-            expr = self._fst_to_ast(stmt.value)
-            return Print(expr)
-        elif isinstance(stmt, AssociativeParenthesisNode):
-
-            return self._fst_to_ast(stmt.value)
-        elif isinstance(stmt, DefArgumentNode):
-
-            name = str(self._fst_to_ast(stmt.target))
-            name = strip_ansi_escape.sub('', name)
-            arg = Argument(name)
-            if stmt.value is None:
-                return arg
-            else:
-
-                value = self._fst_to_ast(stmt.value)
-                return ValuedArgument(arg, value)
-        elif isinstance(stmt, ReturnNode):
-
-            expr = Return(self._fst_to_ast(stmt.value))
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, PassNode):
-
-            return Pass()
-        elif isinstance(stmt, DefNode):
-
-            #  TODO check all inputs and which ones should be treated in stage 1 or 2
-
-            if isinstance(stmt.parent, ClassNode):
-                cls_name = stmt.parent.name
-            else:
-                cls_name = None
-
-            name = self._fst_to_ast(stmt.name)
-            name = name.replace("'", '')
-            name = strip_ansi_escape.sub('', name)
-
-            arguments    = self._fst_to_ast(stmt.arguments)
-            results      = []
-            local_vars   = []
-            global_vars  = []
-            header       = None
-            hide         = False
-            kind         = 'function'
-            is_pure      = False
-            is_elemental = False
-            is_private   = False
-            imports      = []
-
-            # TODO improve later
-            decorators = {}
-            for i in stmt.decorators:
-                decorators.update(self._fst_to_ast(i))
-
-            if 'bypass' in decorators.keys():
-                return EmptyLine()
-
-            # extract the types to construct a header
-            if 'types' in decorators.keys():
-                types = []
-                results = []
-                container = types
-                i = 0
-                n = len(decorators['types'])
-                ls = decorators['types']
-                while i<len(ls) :
-                    arg = ls[i]
-
-                    if isinstance(arg, Symbol):
-                        arg = arg.name
-                        container.append(arg)
-                    elif isinstance(arg, String):
-                        arg = str(arg)
-                        arg = arg.replace("'", '')
-                        container.append(arg)
-                    elif isinstance(arg, ValuedArgument):
-                        arg_name = arg.name
-                        arg  = arg.value
-                        container = results
-                        if not arg_name == 'results':
-                            msg = '> Wrong argument, given {}'.format(arg_name)
-                            raise NotImplementedError(msg)
-                        ls = arg if isinstance(arg, Tuple) else [arg]
-                        i = -1
-
-                    else:
-                        msg = '> Wrong type, given {}'.format(type(arg))
-                        raise NotImplementedError(msg)
-
-                    i = i+1
-
-                txt  = '#$ header ' + name
-                txt += '(' + ','.join(types) + ')'
-                if results:
-                    txt += ' results(' + ','.join(results) + ')'
-
-                header = hdr_parse(stmts=txt)
-                if name in self.static_functions:
-                    header = header.to_static()
-
-            body = stmt.value
-
-            if 'sympy' in decorators.keys():
-                # TODO maybe we should run pylint here
-                stmt.decorators.pop()
-                func = SympyFunction(name, arguments, [],
-                        [stmt.__str__()])
-                func.set_fst(stmt)
-                self.insert_function(func)
-                return EmptyLine()
-
-            elif 'python' in decorators.keys():
-
-                # TODO maybe we should run pylint here
-
-                stmt.decorators.pop()
-                func = PythonFunction(name, arguments, [],
-                        [stmt.__str__()])
-                func.set_fst(stmt)
-                self.insert_function(func)
-                return EmptyLine()
-
-            else:
-                body = self._fst_to_ast(body)
-
-            if 'pure' in decorators.keys():
-                is_pure = True
-
-            if 'elemental' in decorators.keys():
-                is_elemental = True
-
-            if 'private' in decorators.keys():
-                is_private = True
-
-            func = FunctionDef(
-                   name,
-                   arguments,
-                   results,
-                   body,
-                   local_vars=local_vars,
-                   global_vars=global_vars,
-                   cls_name=cls_name,
-                   hide=hide,
-                   kind=kind,
-                   is_pure=is_pure,
-                   is_elemental=is_elemental,
-                   is_private=is_private,
-                   imports=imports,
-                   decorators=decorators,
-                   header=header)
-
-            func.set_fst(stmt)
-            return func
-        elif isinstance(stmt, ClassNode):
-
-            name = self._fst_to_ast(stmt.name)
-            methods = [i for i in stmt.value if isinstance(i, DefNode)]
-            methods = self._fst_to_ast(methods)
-            attributes = methods[0].arguments
-            parent = [i.value for i in stmt.inherit_from]
-            expr = ClassDef(name=name, attributes=attributes,
-                            methods=methods, parent=parent)
+        lhs = self._syntax(stmt.target)
+        rhs = self._syntax(stmt.value)
+        if stmt.operator in ['+', '-', '*', '/']:
+            expr = AugAssign(lhs, stmt.operator, rhs)
+        else:
+            expr = Assign(lhs, rhs)
 
             # we set the fst to keep track of needed information for errors
 
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, AtomtrailersNode):
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_NameNode(self, stmt):
+        if stmt.value == 'None':
+            return Nil()
 
-            return self._fst_to_ast(stmt.value)
-        elif isinstance(stmt, GetitemNode):
+        elif stmt.value == 'True':
+            return true
 
-            ch = stmt
-            args = []
-            while isinstance(ch, GetitemNode):
-                val = self._fst_to_ast(ch.value)
-                if isinstance(val, Tuple):
-                    args += val
-                else:
-                    args.insert(0, val)
-                ch = ch.previous
-            args = tuple(args)
-            return args
-        elif isinstance(stmt, SliceNode):
+        elif stmt.value == 'False':
+            return false
 
-            upper = self._fst_to_ast(stmt.upper)
-            lower = self._fst_to_ast(stmt.lower)
-            if not isinstance(upper, Nil) and not isinstance(lower, Nil):
+        else:
+            val = strip_ansi_escape.sub('', stmt.value)
+            return Symbol(val)
 
-                return Slice(lower, upper)
-            elif not isinstance(lower, Nil):
+    def _syntax_ImportNode(self, stmt):
+        if not isinstance(stmt.parent, (RedBaron, DefNode)):
+            errors.report(PYCCEL_RESTRICTION_IMPORT,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='error')
 
-                return Slice(lower, None)
-            elif not isinstance(upper, Nil):
+        if isinstance(stmt.parent, DefNode):
+            errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='error')
 
-                return Slice(None, upper)
+        # in an import statement, we can have seperate target by commas
+        ls = self._syntax(stmt.value)
+        ls = get_default_path(ls)
+        expr = Import(ls)
+        expr.set_fst(stmt)
+        self.insert_import(expr)
+        return expr
+
+    def _syntax_FromImportNode(self, stmt):
+
+        if not isinstance(stmt.parent, (RedBaron, DefNode)):
+            errors.report(PYCCEL_RESTRICTION_IMPORT,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='error')
+
+        source = self._syntax(stmt.value)
+        if isinstance(source, DottedVariable):
+            source = DottedName(*source.names)
+        source = get_default_path(source)
+        targets = []
+        for i in stmt.targets:
+            s = self._syntax(i)
+            if s == '*':
+                errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
+                              bounding_box=stmt.absolute_bounding_box,
+                              severity='error')
+
+            targets.append(s)
+
+        if is_ignored_module(source):
+            return EmptyLine()
+
+        expr = Import(targets, source=source)
+        expr.set_fst(stmt)
+        self.insert_import(expr)
+        return expr
+
+    def _syntax_DelNode(self, stmt):
+        arg = self._syntax(stmt.value)
+        return Del(arg)
+
+    def _syntax_UnitaryOperatorNode(self, stmt):
+
+        target = self._syntax(stmt.target)
+        if stmt.value == 'not':
+            return Not(target)
+        elif stmt.value == '+':
+
+            return target
+        elif stmt.value == '-':
+
+            return -target
+        elif stmt.value == '~':
+
+            errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='error')
+        else:
+            msg = 'unknown/unavailable unary operator {node}'
+            msg = msg.format(node=type(stmt.value))
+            raise PyccelSyntaxError(msg)
+            
+    def _syntax_BinaryOperatorNode(self, stmt):
+
+        first = self._syntax(stmt.first)
+        second = self._syntax(stmt.second)
+        if stmt.value == '+':
+            return Add(first, second, evaluate=False)
+        elif stmt.value == '*':
+
+            if isinstance(first, (Tuple, List)):
+                return Dlist(first[0], second)
+            return Mul(first, second, evaluate=False)
+        elif stmt.value == '-':
+
+            if isinstance(stmt.second, BinaryOperatorNode) \
+                and isinstance(second, (Add, Mul)):
+                args = second.args
+                second = second._new_rawargs(-args[0], args[1])
             else:
+                second = Mul(-1, second)
+            return Add(first, second, evaluate=False)
+        elif stmt.value == '/':
+            if isinstance(second, Mul) and isinstance(stmt.second,
+                                           BinaryOperatorNode):
+                args = list(second.args)
+                second = Pow(args[0], -1, evaluate=False)
+                second = Mul(second, args[1], evaluate=False)
+            else:
+                second = Pow(second, -1, evaluate=False)
+            return Mul(first, second, evaluate=False)
+            
+        elif stmt.value == '**':
 
-                return Slice(None, None)
+            return Pow(first, second, evaluate=False)
+        elif stmt.value == '//':
 
-        elif isinstance(stmt, DotProxyList):
+            if isinstance(second, Mul) and isinstance(stmt.second,
+                                           BinaryOperatorNode):
+                args = second.args
+                second = Pow(args[0], -1, evaluate=False)
+                first =  floor(Mul(first, second, evaluate=False))
+                return Mul(first, args[1], evaluate=False)
+            else:
+                second = Pow(second, -1, evaluate=False)
+                return floor(Mul(first, second, evaluate=False))
 
+        elif stmt.value == '%':
+            return Mod(first, second)
+        else:
+            msg = 'unknown/unavailable BinaryOperatorNode {node}'
+            msg = msg.format(node=type(stmt.value))
+            raise PyccelSyntaxError(msg)
+
+            
+    def _syntax_BooleanOperatorNode(self, stmt):
+    
+        first = self._syntax(stmt.first)
+        second = self._syntax(stmt.second)
+        if stmt.value == 'and':
+
+            return And(first, second, evaluate=False)
+        elif stmt.value == 'or':
+
+            return Or(first, second, evaluate=False)
+        else:
+            msg = 'unknown/unavailable BooleanOperatorNode {node}'
+            msg = msg.format(node=type(stmt.value))
+            raise PyccelSyntaxError(msg)
+
+    def _syntax_ComparisonNode(self, stmt):
+
+        first = self._syntax(stmt.first)
+        second = self._syntax(stmt.second)
+        op = stmt.value.first
+        if op == '==':
+            return Eq(first, second, evaluate=False)
+        elif op == '!=':
+
+            return Ne(first, second, evaluate=False)
+        elif op == '<':
+
+            return Lt(first, second, evaluate=False)
+        elif op == '>':
+
+            return Gt(first, second, evaluate=False)
+        elif op == '<=':
+
+            return Le(first, second, evaluate=False)
+        elif op == '>=':
+
+            return Ge(first, second, evaluate=False)
+        elif op == 'is':
+
+            return Is(first, second)
+        else:
+            msg = 'unknown/unavailable binary operator {node}'
+            msg = msg.format(node=type(op))
+            raise PyccelSyntaxError(msg)
+            
+    def _syntax_PrintNode(self, stmt):
+
+        expr = self._syntax(stmt.value)
+        return Print(expr)
+        
+    def _syntax_AssociativeParenthesisNode(self, stmt):
+
+        return self._syntax(stmt.value)
+        
+    def _syntax_DefArgumentNode(self, stmt):
+
+        name = str(self._syntax(stmt.target))
+        name = strip_ansi_escape.sub('', name)
+        arg = Argument(name)
+        if stmt.value is None:
+            return arg
+        else:
+
+            value = self._syntax(stmt.value)
+            return ValuedArgument(arg, value)
+            
+    def _syntax_ReturnNode(self, stmt):
+
+        expr = Return(self._syntax(stmt.value))
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_PassNode(self, stmt):
+
+        return Pass()
+        
+    def _syntax_DefNode(self, stmt):
+
+        #  TODO check all inputs and which ones should be treated in stage 1 or 2
+
+        if isinstance(stmt.parent, ClassNode):
+            cls_name = stmt.parent.name
+        else:
+            cls_name = None
+
+        name = self._syntax(stmt.name)
+        name = name.replace("'", '')
+        name = strip_ansi_escape.sub('', name)
+
+        arguments    = self._syntax(stmt.arguments)
+        results      = []
+        local_vars   = []
+        global_vars  = []
+        header       = None
+        hide         = False
+        kind         = 'function'
+        is_pure      = False
+        is_elemental = False
+        is_private   = False
+        imports      = []
+
+        # TODO improve later
+        decorators = {}
+        for i in stmt.decorators:
+            decorators.update(self._syntax(i))
+
+        if 'bypass' in decorators.keys():
+            return EmptyLine()
+
+        # extract the types to construct a header
+        if 'types' in decorators.keys():
+            types = []
+            results = []
+            container = types
+            i = 0
+            n = len(decorators['types'])
+            ls = decorators['types']
+            while i<len(ls) :
+                arg = ls[i]
+
+                if isinstance(arg, Symbol):
+                    arg = arg.name
+                    container.append(arg)
+                elif isinstance(arg, String):
+                    arg = str(arg)
+                    arg = arg.replace("'", '')
+                    container.append(arg)
+                elif isinstance(arg, ValuedArgument):
+                    arg_name = arg.name
+                    arg  = arg.value
+                    container = results
+                    if not arg_name == 'results':
+                        msg = '> Wrong argument, given {}'.format(arg_name)
+                        raise NotImplementedError(msg)
+                    ls = arg if isinstance(arg, Tuple) else [arg]
+                    i = -1
+
+                else:
+                    msg = '> Wrong type, given {}'.format(type(arg))
+                    raise NotImplementedError(msg)
+
+                i = i+1
+
+            txt  = '#$ header ' + name
+            txt += '(' + ','.join(types) + ')'
+            if results:
+                txt += ' results(' + ','.join(results) + ')'
+
+            header = hdr_parse(stmts=txt)
+            if name in self.static_functions:
+                header = header.to_static()
+
+        body = stmt.value
+
+        if 'sympy' in decorators.keys():
+            # TODO maybe we should run pylint here
+            stmt.decorators.pop()
+            func = SympyFunction(name, arguments, [],
+                    [stmt.__str__()])
+            func.set_fst(stmt)
+            self.insert_function(func)
+            return EmptyLine()
+
+        elif 'python' in decorators.keys():
+
+            # TODO maybe we should run pylint here
+
+            stmt.decorators.pop()
+            func = PythonFunction(name, arguments, [],
+                    [stmt.__str__()])
+            func.set_fst(stmt)
+            self.insert_function(func)
+            return EmptyLine()
+
+        else:
+            body = self._syntax(body)
+
+        if 'pure' in decorators.keys():
+            is_pure = True
+
+        if 'elemental' in decorators.keys():
+            is_elemental = True
+
+        if 'private' in decorators.keys():
+            is_private = True
+
+        func = FunctionDef(
+               name,
+               arguments,
+               results,
+               body,
+               local_vars=local_vars,
+               global_vars=global_vars,
+               cls_name=cls_name,
+               hide=hide,
+               kind=kind,
+               is_pure=is_pure,
+               is_elemental=is_elemental,
+               is_private=is_private,
+               imports=imports,
+               decorators=decorators,
+               header=header)
+
+        func.set_fst(stmt)
+        return func
+        
+    def _syntax_ClassNode(self, stmt):
+
+        name = self._syntax(stmt.name)
+        methods = [i for i in stmt.value if isinstance(i, DefNode)]
+        methods = self._syntax(methods)
+        attributes = methods[0].arguments
+        parent = [i.value for i in stmt.inherit_from]
+        expr = ClassDef(name=name, attributes=attributes,
+                        methods=methods, parent=parent)
+
+        # we set the fst to keep track of needed information for errors
+
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_AtomtrailersNode(self, stmt):
+
+        return self._syntax(stmt.value)
+        
+    def _syntax_GetitemNode(self, stmt):
+
+        ch = stmt
+        args = []
+        while isinstance(ch, GetitemNode):
+            val = self._syntax(ch.value)
+            if isinstance(val, Tuple):
+                args += val
+            else:
+                args.insert(0, val)
+            ch = ch.previous
+        args = tuple(args)
+        return args
+        
+    def _syntax_SliceNode(self, stmt):
+
+        upper = self._syntax(stmt.upper)
+        lower = self._syntax(stmt.lower)
+        if not isinstance(upper, Nil) and not isinstance(lower, Nil):
+
+            return Slice(lower, upper)
+        elif not isinstance(lower, Nil):
+
+            return Slice(lower, None)
+        elif not isinstance(upper, Nil):
+
+            return Slice(None, upper)
+        else:
+
+            return Slice(None, None)
+
+    def _syntax_DotProxyList(self, stmt):
+
+        n = 0
+        ls = []
+        while n < len(stmt):
+            var = self._syntax(stmt[n])
+            while n < len(stmt) and not isinstance(stmt[n].next,
+                    DotNode):
+                n = n + 1
+            if n == len(stmt):
+                n = n - 1
+            if isinstance(stmt[n], GetitemNode):
+                args = self._syntax(stmt[n])
+                var = IndexedBase(var)[args]
+            elif isinstance(stmt[n], CallNode):
+                var = self._syntax(stmt[n])
+            ls.append(var)
+            n = n + 1
+
+        if len(ls) == 1:
+            expr = ls[0]
+        else:
             n = 0
-            ls = []
-            while n < len(stmt):
-                var = self._fst_to_ast(stmt[n])
-                while n < len(stmt) and not isinstance(stmt[n].next,
-                        DotNode):
-                    n = n + 1
-                if n == len(stmt):
-                    n = n - 1
-                if isinstance(stmt[n], GetitemNode):
-                    args = self._fst_to_ast(stmt[n])
-                    var = IndexedBase(var)[args]
-                elif isinstance(stmt[n], CallNode):
-                    var = self._fst_to_ast(stmt[n])
-                ls.append(var)
+            var = DottedVariable(ls[0], ls[1])
+            n = 2
+            while n < len(ls):
+                var = DottedVariable(var, ls[n])
                 n = n + 1
 
-            if len(ls) == 1:
-                expr = ls[0]
-            else:
-                n = 0
-                var = DottedVariable(ls[0], ls[1])
-                n = 2
-                while n < len(ls):
-                    var = DottedVariable(var, ls[n])
-                    n = n + 1
+            expr = var
+        return expr
+        
+    def _syntax_CallNode(self, stmt):
 
-                expr = var
-            return expr
-        elif isinstance(stmt, CallNode):
+        if len(stmt.value) > 0 and isinstance(stmt.value[0],
+                ArgumentGeneratorComprehensionNode):
+            return self._syntax(stmt.value[0])
 
-            if len(stmt.value) > 0 and isinstance(stmt.value[0],
-                    ArgumentGeneratorComprehensionNode):
-                return self._fst_to_ast(stmt.value[0])
+        args = self._syntax(stmt.value)
+        f_name = str(stmt.previous.value)
+        f_name = strip_ansi_escape.sub('', f_name)
+        if len(args) == 0:
+            args = (Nil(), )
+        func = Function(f_name)(*args)
+        return func
+        
+    def _syntax_CallArgumentNode(self, stmt):
 
-            args = self._fst_to_ast(stmt.value)
-            f_name = str(stmt.previous.value)
-            f_name = strip_ansi_escape.sub('', f_name)
-            if len(args) == 0:
-                args = (Nil(), )
-            func = Function(f_name)(*args)
-            return func
-        elif isinstance(stmt, CallArgumentNode):
+        target = stmt.target
+        val = self._syntax(stmt.value)
+        if target:
+            target = self._syntax(target)
+            return ValuedArgument(target, val)
 
-            target = stmt.target
-            val = self._fst_to_ast(stmt.value)
-            if target:
-                target = self._fst_to_ast(target)
-                return ValuedArgument(target, val)
+        return val
+        
+    def _syntax_DecoratorNode(self, stmt):
 
-            return val
-        elif isinstance(stmt, DecoratorNode):
+        name = strip_ansi_escape.sub('', stmt.value.dumps())
+        args = []
+        if stmt.call:
+            args = [self._syntax(i) for i in stmt.call.value]
+        return {name: args}
+        
+    def _syntax_ForNode(self, stmt):
 
-            name = strip_ansi_escape.sub('', stmt.value.dumps())
-            args = []
-            if stmt.call:
-                args = [self._fst_to_ast(i) for i in stmt.call.value]
-            return {name: args}
-        elif isinstance(stmt, ForNode):
+        iterator = self._syntax(stmt.iterator)
+        iterable = self._syntax(stmt.target)
+        body = list(self._syntax(stmt.value))
+        expr = For(iterator, iterable, body, strict=False)
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_ComprehensionLoopNode(self, stmt):
 
-            iterator = self._fst_to_ast(stmt.iterator)
-            iterable = self._fst_to_ast(stmt.target)
-            body = list(self._fst_to_ast(stmt.value))
-            expr = For(iterator, iterable, body, strict=False)
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, ComprehensionLoopNode):
+        iterator = self._syntax(stmt.iterator)
+        iterable = self._syntax(stmt.target)
+        ifs = stmt.ifs
+        expr = For(iterator, iterable, [], strict=False)
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_ArgumentGeneratorComprehensionNode(self, stmt):
+        
+        result = self._syntax(stmt.result)
 
-            iterator = self._fst_to_ast(stmt.iterator)
-            iterable = self._fst_to_ast(stmt.target)
-            ifs = stmt.ifs
-            expr = For(iterator, iterable, [], strict=False)
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, ArgumentGeneratorComprehensionNode):
-            
-            result = self._fst_to_ast(stmt.result)
+        generators = self._syntax(stmt.generators)
+        parent = stmt.parent.parent.parent
 
-            generators = self._fst_to_ast(stmt.generators)
-            parent = stmt.parent.parent.parent
+        if isinstance(parent, AssignmentNode):
+            lhs = self._syntax(parent.target)
+            name = strip_ansi_escape.sub('', parent.value[0].value)
+            cond = False
+        else:
+            lhs = create_variable(result)
+            name = stmt.parent.parent
+            name = strip_ansi_escape.sub('', name.value[0].value)
+            cond = True
+        body = result
+        if name == 'sum':
+            body = AugAssign(lhs, '+', body)
+        else:
+            body = Function(name)(lhs, body)
+            body = Assign(lhs, body)
 
-            if isinstance(parent, AssignmentNode):
-                lhs = self._fst_to_ast(parent.target)
-                name = strip_ansi_escape.sub('', parent.value[0].value)
-                cond = False
-            else:
-                lhs = create_variable(result)
-                name = stmt.parent.parent
-                name = strip_ansi_escape.sub('', name.value[0].value)
-                cond = True
-            body = result
-            if name == 'sum':
-                body = AugAssign(lhs, '+', body)
-            else:
-                body = Function(name)(lhs, body)
-                body = Assign(lhs, body)
+        body.set_fst(parent)
+        indices = []
+        generators = list(generators)
+        while len(generators) > 0:
+            indices.append(generators[-1].target)
+            generators[-1].insert2body(body)
+            body = generators.pop()
+        indices = indices[::-1]
+        body = [body]
+        if name == 'sum':
+            expr = FunctionalSum(body, result, lhs, indices, None)
+        elif name == 'min':
+            expr = FunctionalMin(body, result, lhs, indices, None)
+        elif name == 'max':
+            expr = FunctionalMax(body, result, lhs, indices, None)
+        else:
+            raise NotImplementedError('TODO')
 
-            body.set_fst(parent)
-            indices = []
-            generators = list(generators)
-            while len(generators) > 0:
-                indices.append(generators[-1].target)
-                generators[-1].insert2body(body)
-                body = generators.pop()
-            indices = indices[::-1]
-            body = [body]
-            if name == 'sum':
-                expr = FunctionalSum(body, result, lhs, indices, None)
-            elif name == 'min':
-                expr = FunctionalMin(body, result, lhs, indices, None)
-            elif name == 'max':
-                expr = FunctionalMax(body, result, lhs, indices, None)
-            else:
-                raise NotImplementedError('TODO')
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_IfelseblockNode(self, stmt):
 
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, IfelseblockNode):
+        args = self._syntax(stmt.value)
+        return If(*args)
+        
+    def _syntax_IfNode(self, stmt):
 
-            args = self._fst_to_ast(stmt.value)
-            return If(*args)
-        elif isinstance(stmt, (IfNode, ElifNode)):
+        test = self._syntax(stmt.test)
+        body = self._syntax(stmt.value)
+        return Tuple(test, body, sympify=False)
+        
+    def _syntax_ElifNode(self, stmt):
+        test = self._syntax(stmt.test)
+        body = self._syntax(stmt.value)
+        return Tuple(test, body, sympify=False)
+        
+    def _syntax_ElseNode(self, stmt):
 
-            test = self._fst_to_ast(stmt.test)
-            body = self._fst_to_ast(stmt.value)
-            return Tuple(test, body, sympify=False)
-        elif isinstance(stmt, ElseNode):
+        test = true
+        body = self._syntax(stmt.value)
+        return Tuple(test, body, sympify=False)
+        
+    def _syntax_TernaryOperatorNode(self, stmt):
 
-            test = true
-            body = self._fst_to_ast(stmt.value)
-            return Tuple(test, body, sympify=False)
-        elif isinstance(stmt, TernaryOperatorNode):
+        test1 = self._syntax(stmt.value)
+        first = self._syntax(stmt.first)
+        second = self._syntax(stmt.second)
+        args = [Tuple(test1, [first], sympify=False),
+                Tuple(true, [second], sympify=False)]
+        expr = IfTernaryOperator(*args)
+        expr.set_fst(stmt)
+        return expr
+        
+    def _syntax_WhileNode(self, stmt):
 
-            test1 = self._fst_to_ast(stmt.value)
-            first = self._fst_to_ast(stmt.first)
-            second = self._fst_to_ast(stmt.second)
-            args = [Tuple(test1, [first], sympify=False),
-                    Tuple(true, [second], sympify=False)]
-            expr = IfTernaryOperator(*args)
-            expr.set_fst(stmt)
-            return expr
-        elif isinstance(stmt, WhileNode):
+        test = self._syntax(stmt.test)
+        body = self._syntax(stmt.value)
+        return While(test, body)
+        
+    def _syntax_AssertNode(self, stmt):
 
-            test = self._fst_to_ast(stmt.test)
-            body = self._fst_to_ast(stmt.value)
-            return While(test, body)
-        elif isinstance(stmt, AssertNode):
+        expr = self._syntax(stmt.value)
+        return Assert(expr)
+        
+    def _syntax_EndlNode(self, stmt):
 
-            expr = self._fst_to_ast(stmt.value)
-            return Assert(expr)
-        elif isinstance(stmt, EndlNode):
+        return NewLine()
+        
+    def _syntax_CommentNode(self, stmt):
 
-            return NewLine()
-        elif isinstance(stmt, CommentNode):
+        # if annotated comment
 
-            # if annotated comment
+        if stmt.value.startswith('#$'):
+            env = stmt.value[2:].lstrip()
+            if env.startswith('omp'):
+                txt = reconstruct_pragma_multilines(stmt)
+                return omp_parse(stmts=txt)
+            elif env.startswith('acc'):
 
-            if stmt.value.startswith('#$'):
-                env = stmt.value[2:].lstrip()
-                if env.startswith('omp'):
-                    txt = reconstruct_pragma_multilines(stmt)
-                    return omp_parse(stmts=txt)
-                elif env.startswith('acc'):
+                txt = reconstruct_pragma_multilines(stmt)
+                return acc_parse(stmts=txt)
+            elif env.startswith('header'):
 
-                    txt = reconstruct_pragma_multilines(stmt)
-                    return acc_parse(stmts=txt)
-                elif env.startswith('header'):
+                txt = reconstruct_pragma_multilines(stmt)
+                expr = hdr_parse(stmts=txt)
+                if isinstance(expr, MetaVariable):
 
-                    txt = reconstruct_pragma_multilines(stmt)
-                    expr = hdr_parse(stmts=txt)
-                    if isinstance(expr, MetaVariable):
+                    # a metavar will not appear in the semantic stage.
+                    # but can be used to modify the ast
 
-                        # a metavar will not appear in the semantic stage.
-                        # but can be used to modify the ast
+                    self._metavars[str(expr.name)] = str(expr.value)
 
-                        self._metavars[str(expr.name)] = str(expr.value)
+                    # return NewLine()
 
-                        # return NewLine()
-
-                        expr = EmptyLine()
-                    else:
-                        expr.set_fst(stmt)
-
-                    return expr
+                    expr = EmptyLine()
                 else:
+                    expr.set_fst(stmt)
 
-                    # TODO an info should be reported saying that either we
-                    # found a multiline pragma or an invalid pragma statement
-
-                    return NewLine()
+                return expr
             else:
+
+                # TODO an info should be reported saying that either we
+                # found a multiline pragma or an invalid pragma statement
+
+                return NewLine()
+        else:
 
 #                    errors.report(PYCCEL_INVALID_HEADER,
 #                                  bounding_box=stmt.absolute_bounding_box,
 #                                  severity='error')
 
-                # TODO improve
+            # TODO improve
 
-                txt = stmt.value[1:].lstrip()
-                return Comment(txt)
+            txt = stmt.value[1:].lstrip()
+            return Comment(txt)
 
-        elif isinstance(stmt, BreakNode):
-            return Break()
+    def _syntax_BreakNode(self, stmt):
+        return Break()
 
-        elif isinstance(stmt, ContinueNode):
-            return Continue()
+    def _syntax_ContinueNode(self, stmt):
+        return Continue()
 
-        elif isinstance(stmt, StarNode):
-            return '*'
+    def _syntax_StarNode(self, stmt):
+        return '*'
 
-        elif isinstance(stmt, LambdaNode):
+    def _syntax_LambdaNode(self, stmt):
 
-            expr = self._fst_to_ast(stmt.value)
-            args = []
+        expr = self._syntax(stmt.value)
+        args = []
 
-            for i in stmt.arguments:
-                var = self._fst_to_ast(i.name)
-                args += [var]
+        for i in stmt.arguments:
+            var = self._syntax(i.name)
+            args += [var]
 
-            return Lambda(args, expr)
+        return Lambda(args, expr)
 
-        elif isinstance(stmt, WithNode):
-            domain = self._fst_to_ast(stmt.contexts[0].value)
-            body = self._fst_to_ast(stmt.value)
-            settings = None
-            return With(domain, body, settings)
+    def _syntax_WithNode(self, stmt):
+        domain = self._syntax(stmt.contexts[0].value)
+        body = self._syntax(stmt.value)
+        settings = None
+        return With(domain, body, settings)
 
-        elif isinstance(stmt, ListComprehensionNode):
+    def _syntax_ListComprehensionNode(self, stmt):
 
-            import numpy as np
-            result = self._fst_to_ast(stmt.result)
-            generators = list(self._fst_to_ast(stmt.generators))
-            lhs = self._fst_to_ast(stmt.parent.target)
-            index = create_variable(lhs)
-            if isinstance(result, (Tuple, list, tuple)):
-                rank = len(np.shape(result))
-            else:
-                rank = 0
-            args = [Slice(None, None)] * rank
-            args.append(index)
-            target = IndexedBase(lhs)[args]
-            target = Assign(target, result)
-            assign1 = Assign(index, Integer(0))
-            assign1.set_fst(stmt)
-            target.set_fst(stmt)
-            generators[-1].insert2body(target)
-            assign2 = Assign(index, index + 1)
-            assign2.set_fst(stmt)
-            generators[-1].insert2body(assign2)
-
-            indices = [generators[-1].target]
-            while len(generators) > 1:
-                F = generators.pop()
-                generators[-1].insert2body(F)
-                indices.append(generators[-1].target)
-            indices = indices[::-1]
-            return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                                 indices, index)
-
-        elif isinstance(stmt, (ExceptNode, FinallyNode, TryNode)):
-            # this is a blocking error, since we don't want to convert the try body
-            errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
-        elif isinstance(stmt, RaiseNode):
-            errors.report(PYCCEL_RESTRICTION_RAISE,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
-        elif isinstance(stmt, (YieldNode, YieldAtomNode)):
-            errors.report(PYCCEL_RESTRICTION_YIELD,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
+        import numpy as np
+        result = self._syntax(stmt.result)
+        generators = list(self._syntax(stmt.generators))
+        lhs = self._syntax(stmt.parent.target)
+        index = create_variable(lhs)
+        if isinstance(result, (Tuple, list, tuple)):
+            rank = len(np.shape(result))
         else:
-            raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
+            rank = 0
+        args = [Slice(None, None)] * rank
+        args.append(index)
+        target = IndexedBase(lhs)[args]
+        target = Assign(target, result)
+        assign1 = Assign(index, Integer(0))
+        assign1.set_fst(stmt)
+        target.set_fst(stmt)
+        generators[-1].insert2body(target)
+        assign2 = Assign(index, index + 1)
+        assign2.set_fst(stmt)
+        generators[-1].insert2body(assign2)
 
+        indices = [generators[-1].target]
+        while len(generators) > 1:
+            F = generators.pop()
+            generators[-1].insert2body(F)
+            indices.append(generators[-1].target)
+        indices = indices[::-1]
+        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
+                             indices, index)
+
+    def _syntax_TryNode(self, stmt):
+        # this is a blocking error, since we don't want to convert the try body
+        errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='error')
+
+    def _syntax_RaiseNode(self, stmt):
+        errors.report(PYCCEL_RESTRICTION_RAISE,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='error')
+
+    def _syntax_YieldAtomNode(self, stmt):
+        errors.report(PYCCEL_RESTRICTION_YIELD,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='error')
+                      
+    def _syntax_YieldNode(self, stmt):
+        errors.report(PYCCEL_RESTRICTION_YIELD,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='error')
 
 #==============================================================================
 #==============================================================================
@@ -2016,8 +2084,6 @@ class Parser(object):
             print ('*** type inference for : ', type(expr))
 
         d_var = {}
-
-        # d_var['datatype'] = None
 
         d_var['datatype'      ] = NativeSymbol()
         d_var['allocatable'   ] = None
