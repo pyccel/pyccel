@@ -261,20 +261,6 @@ def get_filename_from_import(module,output_folder='',context_import_path = {}):
 
 #==============================================================================
 
-def _get_name(var):
-    """."""
-
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase)):
-        return str(var)
-    if isinstance(var, (IndexedElement, Indexed)):
-        return str(var.base)
-    if isinstance(var, Application):
-        return str(type(var).__name__)
-    msg = 'Uncovered type {dtype}'.format(dtype=type(var))
-    raise NotImplementedError(msg)
-
-#==============================================================================
-
 class BasicParser(object):
 
     """ Class for a base Parser."""
@@ -565,6 +551,50 @@ class BasicParser(object):
         f.close()
         print ('> loaded   :', self.ast)
 
+    def insert_function(self, func):
+        """."""
+
+        if isinstance(func, SympyFunction):
+            self.insert_symbolic_function(func)
+        elif isinstance(func, PythonFunction):
+            self.insert_python_function(func)
+        elif isinstance(func, (FunctionDef, Interface)):
+            container = self._namespace['functions']
+            if isinstance(self._current, DottedName):
+                name = self._current.name[0]
+                container = self._scope[name]['functions']
+            container[str(func.name)] = func
+        else:
+            raise TypeError('Expected a Function definition')
+
+    def insert_symbolic_function(self, func):
+        """."""
+
+        container = self._namespace['symbolic_functions']
+        if isinstance(self._current, DottedName):
+            name = self._current.name[0]
+            container = self._scope[name]['symbolic_functions']
+        if isinstance(func, SympyFunction):
+            container[str(func.name)] = func
+        elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
+                Lambda):
+            container[str(func.lhs)] = func.rhs
+        else:
+            raise TypeError('Expected a symbolic_function')
+
+    def insert_python_function(self, func):
+        """."""
+
+        container = self._namespace['python_functions']
+        if isinstance(self._current, DottedName):
+            name = self._current.name[0]
+            container = self._scope[name]['python_functions']
+
+        if isinstance(func, PythonFunction):
+            container[str(func.name)] = func
+        else:
+            raise TypeError('Expected a python_function')
+
     def append_parent(self, parent):
         """."""
 
@@ -580,76 +610,6 @@ class BasicParser(object):
         self._sons.append(son)
 
 #==============================================================================
-
-    def annotate(self, **settings):
-        """."""
-
-        if self.semantic_done:
-            print ('> semantic analysis already done')
-            return self.ast
-
-        # TODO - add settings to Errors
-        #      - filename
-
-        errors = Errors()
-        if self.filename:
-            errors.set_target(self.filename, 'file')
-        errors.set_parser_stage('semantic')
-
-        # we first treat all sons to get imports
-
-        verbose = settings.pop('verbose', False)
-        self._annotate_parents(verbose=verbose)
-
-        # then we treat the current file
-
-        ast = self.ast
-
-        # we add the try/except to allow the parser to find all possible errors
-
-        try:
-            ast = self._annotate(ast, **settings)
-        except Exception as e:
-            errors.check()
-            if self.show_traceback:
-                traceback.print_exc()
-            raise SystemExit(0)
-
-        self._ast = ast
-
-        # in the case of a header file, we need to convert all headers to
-        # FunctionDef etc ...
-
-        if self.is_header_file:
-            target = []
-
-            for parent in self.parents:
-                for (key, item) in parent.imports.items():
-                    if get_filename_from_import(key) == self.filename:
-                        target += item
-
-            target = set(target)
-            target_headers = target.intersection(self.headers.keys())
-
-
-            for name in list(target_headers):
-                v = self.headers[name]
-                if isinstance(v, FunctionHeader) and not isinstance(v,
-                        MethodHeader):
-                    F = self.get_function(name)
-                    if F is None:
-                        interfaces = v.create_definition()
-                        for F in interfaces:
-                            self.insert_function(F)
-                    else:
-
-                        errors.report(IMPORTING_EXISTING_IDENTIFIED,
-                                symbol=name, blocker=True,
-                                severity='fatal')
-        errors.check()
-        self._semantic_done = True
-
-        return ast
 
     def _parse_sons(self, d_parsers, verbose=False):
         """Recursive algorithm for syntax analysis on a given file and its

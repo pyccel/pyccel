@@ -189,8 +189,6 @@ redbaron.ipython_behavior = False
 
 from pyccel.parser.base import BasicParser
 from pyccel.parser.base import is_ignored_module
-from pyccel.parser.base import get_filename_from_import
-from pyccel.parser.base import _get_name
 
 class SyntaxParser(BasicParser):
 
