@@ -279,12 +279,14 @@ class BasicParser(object):
 
     """ Class for a base Parser."""
 
-    def __init__(self, inputs, debug=False, headers=None, static=None, show_traceback=True,
-                    output_folder='', context_import_path = {}):
+    def __init__(self,
+                 debug=False,
+                 headers=None,
+                 static=None,
+                 show_traceback=True,
+                 output_folder='',
+                 context_import_path = {}):
         """Parser constructor.
-
-        inputs: str
-            filename or code to parse as a string
 
         debug: bool
             True if in debug mode.
@@ -379,26 +381,6 @@ class BasicParser(object):
                     raise TypeError('Expecting str. given {}'.format(type(i)))
 
             self._namespace['static'] = static
-
-        # check if inputs is a file
-        code = inputs
-        if os.path.isfile(inputs):
-
-            # we don't use is_valid_filename_py since it uses absolute path
-            # file extension
-
-            ext = inputs.split(""".""")[-1]
-            if not ext in ['py', 'pyh']:
-                errors = Errors()
-                errors.report(INVALID_FILE_EXTENSION, symbol=ext,
-                              severity='fatal')
-                errors.check()
-                raise SystemExit(0)
-
-            code = read_file(inputs)
-            self._filename = inputs
-
-        self._code = code
 
     @property
     def namespace(self):

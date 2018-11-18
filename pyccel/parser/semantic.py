@@ -131,10 +131,44 @@ from pyccel.parser.syntactic import SyntaxParser
 
 class SemanticParser(BasicParser):
 
-    """ Class for a Semantic Parser."""
+    """ Class for a Semantic Parser.
+    It takes a syntactic parser as input for the moment"""
 
-    def __init__(self, *args, **kwargs):
-        BasicParser.__init__(self, *args, **kwargs)
+    def __init__(self, inputs, **kwargs):
+
+        # ...
+        if not isinstance(inputs, SyntaxParser):
+            raise TypeError('> Expecting a syntactic parser as input')
+
+        parser = inputs
+        # ...
+
+        # ...
+        BasicParser.__init__(self, **kwargs)
+        # ...
+
+        # ...
+        self._fst = parser._fst
+        self._ast = parser._ast
+
+        self._filename  = parser._filename
+        self._metavars  = parser._metavars
+        self._namespace = parser._namespace
+
+        # we use it to detect the current method or function
+        self._imports = parser._imports
+
+        # we use it to store the imports
+        self._parents = parser._parents
+
+        # a Parser can have parents, who are importing it.
+        # imports are then its sons.
+        self._sons = parser._sons
+        self._d_parsers = parser._d_parsers
+
+        #
+        self._code = parser._code
+        # ...
 
     def _infere_type(self, expr, **settings):
         """
@@ -2379,4 +2413,5 @@ if __name__ == '__main__':
         raise ValueError('Expecting an argument for filename')
 
     parser = SyntaxParser(filename)
-    parser = SemanticParser(filename)
+    parser = SemanticParser(parser)
+    print(parser.ast)

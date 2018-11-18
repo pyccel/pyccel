@@ -194,10 +194,34 @@ from pyccel.parser.base import _get_name
 
 class SyntaxParser(BasicParser):
 
-    """ Class for a Syntax Parser."""
+    """ Class for a Syntax Parser.
 
-    def __init__(self, *args, **kwargs):
-        BasicParser.__init__(self, *args, **kwargs)
+        inputs: str
+            filename or code to parse as a string
+    """
+
+    def __init__(self, inputs, **kwargs):
+        BasicParser.__init__(self, **kwargs)
+
+        # check if inputs is a file
+        code = inputs
+        if os.path.isfile(inputs):
+
+            # we don't use is_valid_filename_py since it uses absolute path
+            # file extension
+
+            ext = inputs.split(""".""")[-1]
+            if not ext in ['py', 'pyh']:
+                errors = Errors()
+                errors.report(INVALID_FILE_EXTENSION, symbol=ext,
+                              severity='fatal')
+                errors.check()
+                raise SystemExit(0)
+
+            code = read_file(inputs)
+            self._filename = inputs
+
+        self._code = code
 
         try:
             code = self.code
