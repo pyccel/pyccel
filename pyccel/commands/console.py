@@ -63,7 +63,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='Using pyccel for Semantic Checking')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
-    
+
     # ...
 
     # ... backend compiler options
@@ -88,7 +88,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='add prefix module name.')
 
     group.add_argument('--language', type=str, help='target language')
- 
+
     # ...
 
     # ... Accelerators

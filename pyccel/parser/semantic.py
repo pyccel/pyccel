@@ -1149,13 +1149,10 @@ class SemanticParser(BasicParser):
         if var is None:
             var = self.get_symbolic_function(name)
 
-        # TODO this has been commented => not needed ?
-#        if var is None:
-#            print('error')
-#
-#            errors.report(UNDEFINED_VARIABLE, symbol=name,
-#            bounding_box=self.bounding_box,
-#            severity='error', blocker=self.blocking)
+        if var is None:
+            errors.report(UNDEFINED_VARIABLE, symbol=name,
+            bounding_box=self.bounding_box,
+            severity='error', blocker=self.blocking)
         return var
 
 
@@ -2825,3 +2822,4 @@ if __name__ == '__main__':
 #    print(parser.namespace)
     parser = SemanticParser(parser)
 #    print(parser.ast)
+#    parser.view_namespace('variables')
