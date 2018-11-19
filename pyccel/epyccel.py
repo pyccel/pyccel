@@ -123,7 +123,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
 #==============================================================================
 
 def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdirs = [], name = None,
-            context = None, compiler = None , mpi = False, static = None, only = None,
+            compiler = None , mpi = False, static = None, only = None,
             openmp = False):
     """Pyccelize a python function and wrap it using f2py.
 
@@ -148,10 +148,6 @@ def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdi
 
     name: str
         name of the function, if it is given as a string
-
-    context: ContextPyccel, list/tuple
-        a Pyccel context for user defined functions and other dependencies
-        needed to compile func. it also be a list/tuple of ContextPyccel
 
     static: list/tuple
         a list of 'static' functions as strings
@@ -237,7 +233,7 @@ def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdi
             # we must reload the module, otherwise it is still the .so one
             importlib.reload(mod)
             epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
-                    libs=libs, name=name, context=context, compiler=compiler,
+                    libs=libs, name=name, compiler=compiler,
                     mpi=mpi, static=static, only=only, openmp=openmp)
     # ...
 
@@ -331,41 +327,9 @@ def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdi
         libdirs = ['-L{}'.format(i) for i in libdirs]
         extra_args += ' '.join(i for i in libdirs)
 
-    if context:
-        if isinstance(context, ContextPyccel):
-            context = [context]
-        elif isinstance(context, (list, tuple)):
-            for i in context:
-                assert(isinstance(i, ContextPyccel))
-        else:
-            raise TypeError('Expecting a ContextPyccel or list/tuple of ContextPyccel')
-
-        imports = []
-        names_o = []
-        include_folders = []
-        context_import_path = []
-        for i in context:
-            names_o.append('{fol}{name}.o'.format(fol=i.os_folder,name=i.name))
-            include_folders.append('-I{}'.format(i.os_folder))
-            imports.append(i.imports)
-            context_import_path.append((i.name,i.os_folder))
-        context_import_path = dict(context_import_path)
-
-        extra_args = ' '.join(i for i in names_o)
-        include_args = ' '.join(i for i in include_folders)
-        imports = '\n'.join(i for i in imports)
-        # ...
-
-        # ... add import to initial code
-        code = '{imports}\n{code}'.format(imports=imports, code=code)
-        # ...
-    else:
-        context_import_path = {}
-
     try:
         # ...
-        pyccel = Parser(code, headers=d_headers, static=static, output_folder = output_folder,
-                            context_import_path=context_import_path)
+        pyccel = Parser(code, headers=d_headers, static=static, output_folder = output_folder)
         ast = pyccel.parse()
 
         settings = {}
@@ -529,158 +493,3 @@ def clean_extension_module( ext_mod, py_mod_name ):
     delattr( ext_mod, n )
 
 #==============================================================================
-
-# TODO check what we are inserting
-class ContextPyccel(object):
-    """Class for interactive use of Pyccel. It can be used within an IPython
-    session, Jupyter Notebook or ipyccel command line."""
-    def __init__(self, name, context_folder=None, output_folder=''):
-        self._name = 'epyccel__{}'.format(name)
-        self._constants = OrderedDict()
-        self._functions = OrderedDict()
-
-        if not context_folder:
-            context_folder = os.path.abspath('.').replace('/', '.')
-
-        self._folder = context_folder
-        if (len(self._folder)>0):
-            self._folder+='.'
-        self._os_folder = self._folder.replace('.','/')
-
-        contexts = context_folder.split('.')
-        outputs  =  output_folder.split('.')
-        n = min(len(contexts),len(outputs))
-        i=0
-        while(i<n and contexts[i]==outputs[i]):
-            i+=1
-        contexts = contexts[i:]
-        outputs  =  outputs[i:]
-
-        if (len(contexts)==0 and len(outputs)==0):
-            self._rel_folder = ''
-        else:
-            self._rel_folder = '.'*(len(outputs)+1)+'.'.join(contexts)
-            if (self._rel_folder[-1]!='.'):
-                self._rel_folder+='.'
-
-    @property
-    def folder(self):
-        return self._folder
-
-    @property
-    def os_folder(self):
-        return self._os_folder
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def constants(self):
-        return self._constants
-
-    @property
-    def functions(self):
-        return self._functions
-
-    def __str__(self):
-        # line separator
-        sep = '# ' + '.'*30 + '\n'
-
-        # ... constants
-        # TODO remove # if we want to export constants too
-        constants = '\n'.join('#{k} = {v}'.format(k=k,v=v) for k,v in list(self.constants.items()))
-        # ...
-
-        # ... functions
-        functions = ''
-        for k, (f,h) in list(self.functions.items()):
-            code_f = get_source_function(f)
-
-            functions = '{h}\n{f}\n{functions}'.format(h=h, f=code_f, functions=functions)
-        # ...
-
-        code = '{sep}{constants}\n{sep}{functions}'.format(sep=sep,
-                                                           constants=constants,
-                                                           functions=functions)
-
-        return code
-
-    def insert_constant(self, d, value=None):
-        """Inserts constants in the namespace.
-
-        d: str, dict
-            an identifier string or a dictionary of the form {'a': value_a, 'b': value_b} where `a` and
-            `b` are the constants identifiers and value_a, value_b their
-            associated values.
-
-        value: int, float, complex, str
-            value used if d is a string
-
-        """
-        if isinstance(d, str):
-            if value is None:
-                raise ValueError('Expecting a not None value')
-
-            self._constants[d] = value
-
-        elif isinstance(d, (dict, OrderedDict)):
-            for k,v in list(d.items()):
-                self._constants[k] = v
-
-        else:
-            raise ValueError('Expecting d to be a string or dict/OrderedDict')
-
-
-    def insert_function(self, func, types, kind='function', results=None):
-        """Inserts a function in the namespace."""
-        # function name
-        name = func.__name__
-
-        # ... construct a header from d_types
-        assert(isinstance(types, (list, tuple)))
-
-        types = ', '.join('{}'.format(i) for i in types)
-
-        header = '#$ header {kind} {name}'.format(name=name, kind=kind)
-        header = '{header}({types})'.format(header=header, types=types)
-
-        if results:
-            results = ', '.join('{}'.format(i) for i in results)
-            header = '{header} results({results})'.format(header=header, results=results)
-        # ...
-
-        self._functions[name] = (func, header)
-
-    # TODO add other things to import apart from functions
-    @property
-    def imports(self):
-        """Returns available imports from the context as a string."""
-        f_names = list(self.functions.keys())
-        f_names = ', '.join(f for f in f_names)
-
-        import_stmt = 'from {mod} import {f_names}'.format(mod=self.name,
-                                                          f_names=f_names)
-
-        return import_stmt
-
-    def compile(self, **settings):
-        """Convert to Fortran and compile the context."""
-        code = self.__str__()
-
-        # ... export the python code of the module
-        filename = '{}.py'.format(self.name)
-        f = open(filename, 'w')
-        for line in code:
-            f.write(line)
-        f.close()
-        # ...
-
-        # ...
-        verbose = settings.pop('verbose', False)
-
-        if not('fflags' in list(settings.keys())):
-            settings['fflags'] = '-fPIC -O3'
-
-        output, cmd = execute_pyccel(filename, verbose=verbose, **settings)
-        return output, cmd

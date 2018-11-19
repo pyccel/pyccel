@@ -195,7 +195,7 @@ def is_ignored_module(name):
     return False
 
 
-def get_filename_from_import(module,output_folder='',context_import_path = {}):
+def get_filename_from_import(module,output_folder=''):
     """Returns a valid filename with absolute path, that corresponds to the
     definition of module.
     The priority order is:
@@ -210,14 +210,6 @@ def get_filename_from_import(module,output_folder='',context_import_path = {}):
         return os.path.abspath(filename_pyh)
     if is_valid_filename_py(filename_py):
         return os.path.abspath(filename_py)
-
-    if (module in context_import_path):
-        poss_filename_pyh = '{0}{1}.pyh'.format(context_import_path[module],module)
-        poss_filename_py = '{0}{1}.py'.format(context_import_path[module],module)
-        if is_valid_filename_pyh(poss_filename_pyh):
-            return os.path.abspath(poss_filename_pyh)
-        if is_valid_filename_py(poss_filename_py):
-            return os.path.abspath(poss_filename_py)
 
     folders = output_folder.split(""".""")
     for i in range(len(folders)):
@@ -270,8 +262,7 @@ class BasicParser(object):
                  headers=None,
                  static=None,
                  show_traceback=False,
-                 output_folder='',
-                 context_import_path = {}):
+                 output_folder=''):
         """Parser constructor.
 
         debug: bool
@@ -306,7 +297,6 @@ class BasicParser(object):
         self._scope = {}
 
         self._output_folder       = output_folder
-        self._context_import_path = context_import_path
 
         # represent the namespace of a function
 

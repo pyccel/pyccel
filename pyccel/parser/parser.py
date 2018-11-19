@@ -28,7 +28,6 @@ class Parser(object):
         self._semantic_parser = None
 
         self._output_folder = kwargs.pop('output_folder', '')
-        self._context_import_path = kwargs.pop('context_import_path', {})
 
     @property
     def namespace(self):
@@ -163,7 +162,7 @@ class Parser(object):
 
             # get the absolute path corresponding to source
 
-            filename = get_filename_from_import(source,self._output_folder,self._context_import_path)
+            filename = get_filename_from_import(source,self._output_folder)
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
