@@ -269,7 +269,7 @@ class BasicParser(object):
                  debug=False,
                  headers=None,
                  static=None,
-                 show_traceback=True,
+                 show_traceback=False,
                  output_folder='',
                  context_import_path = {}):
         """Parser constructor.
