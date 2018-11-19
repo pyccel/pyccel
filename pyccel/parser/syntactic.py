@@ -269,34 +269,6 @@ class SyntaxParser(BasicParser):
 
         return ast
 
-    def insert_import(self, expr):
-        """."""
-
-        # TODO improve
-
-        if not isinstance(expr, Import):
-            raise TypeError('Expecting Import expression')
-        container = self._namespace['imports']
-        if self._current:
-            self._scope[self._current]['imports'].append(expr)
-
-        # if source is not specified, imported things are treated as sources
-        # TODO test if builtin import
-
-        source = expr.source
-        if source is None:
-            for t in expr.target:
-                name = str(t)
-                container[name] = None
-        else:
-            source = str(source)
-            if not source in pyccel_builtin_import_registery:
-                for t in expr.target:
-                    name = [str(t)]
-                    if not source in container.keys():
-                        container[source] = []
-                    container[source] += name
-
     def _treat_iterable(self, stmt):
 
         """

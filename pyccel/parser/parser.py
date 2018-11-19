@@ -99,6 +99,10 @@ class Parser(object):
         else:
             return self._syntax_parser.imports
 
+    @property
+    def fst(self):
+        return self._syntax_parser.fst
+
     def parse(self, d_parsers=None, verbose=False):
         parser = SyntaxParser(self._filename, **self._kwargs)
         self._syntax_parser = parser
