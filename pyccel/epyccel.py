@@ -17,6 +17,7 @@ from pyccel.parser.errors         import Errors, PyccelError
 from pyccel.parser.syntax.headers import parse
 from pyccel.codegen               import Codegen
 from pyccel.codegen.utilities     import execute_pyccel
+from pyccel.codegen.utilities     import construct_flags as construct_flags_pyccel
 from pyccel.ast                   import FunctionHeader
 from pyccel.ast.utilities         import build_types_decorator
 from pyccel.ast.core              import FunctionDef
@@ -92,6 +93,26 @@ def get_source_function(func):
 
 #==============================================================================
 
+def construct_flags(compiler, extra_args = '', openmp = False):
+
+    f90flags   = ''
+    opt        = ''
+
+    if openmp:
+        if compiler == 'gfortran':
+            extra_args += ' -lgomp '
+            f90flags   += ' -fopenmp '
+
+        elif compiler == 'ifort':
+            extra_args += ' -liomp5 '
+            f90flags   += ' -openmp -nostandard-realloc-lhs '
+            opt         = """ --opt='-xhost -0fast' """
+
+    return extra_args, f90flags, opt
+
+
+#==============================================================================
+
 def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
                     mpi=False, openmp=False, includes = [], only = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
@@ -113,18 +134,12 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
     else:
         raise NotImplementedError('Only gfortran and ifort are available for the moment')
 
+    extra_args, f90flags, opt = construct_flags( compiler,
+                                                 extra_args = extra_args,
+                                                 openmp = openmp )
+
     if mpi:
         compilers = '--f90exec=mpif90 '
-
-    if openmp:
-        if compiler == 'gfortran':
-            extra_args += ' -lgomp '
-            f90flags   += ' -fopenmp '
-
-        elif compiler == 'ifort':
-            extra_args += ' -liomp5 '
-            f90flags   += ' -openmp -nostandard-realloc-lhs '
-            opt         = """ --opt='-xhost -0fast' """
 
 
     if compiler:
@@ -543,18 +558,20 @@ def clean_extension_module( ext_mod, py_mod_name ):
 #==============================================================================
 
 
-def epyccel_function(func, namespace=[],
-                 compiler = None,
-                 fflags   = None,
-                 openmp   = False,
-                 openacc  = False,
-                 verbose  = False,
-                 debug    = False,
-                 include  = [],
-                 libdir   = [],
-                 modules  = [],
-                 libs     = [],
-                 folder   = None):
+def epyccel_function(func,
+                     namespace  = [],
+                     compiler   = None,
+                     fflags     = None,
+                     openmp     = False,
+                     openacc    = False,
+                     verbose    = False,
+                     debug      = False,
+                     include    = [],
+                     libdir     = [],
+                     modules    = [],
+                     libs       = [],
+                     extra_args = '',
+                     folder     = None):
 
     # ... get the function source code
     if not isinstance(func, FunctionType):
@@ -597,22 +614,27 @@ def epyccel_function(func, namespace=[],
     # ...
 
     # ...
-    if compiler is None:
-        compiler = 'gfortran'
-    # ...
-
-    # ...
-    if fflags is None:
-        fflags = '-fPIC -O2 -c'
-    # ...
-
-    # ...
     accelerator = None
     if openmp:
         accelerator = 'openmp'
 
     if openacc:
         accelerator = 'openacc'
+    # ...
+
+    # ...
+    if compiler is None:
+        compiler = 'gfortran'
+    # ...
+
+    # ...
+    if fflags is None:
+        fflags = construct_flags_pyccel( compiler,
+                                         fflags=None,
+                                         debug=debug,
+                                         accelerator=accelerator,
+                                         include=[],
+                                         libdir=[] )
     # ...
 
     # ... convert python to fortran using pyccel
@@ -678,11 +700,10 @@ def epyccel_function(func, namespace=[],
 
     fname = execute_pyccel(fname, output='', convert_only=True)
 
-    extra_args = ' -L{} '.format(curdir)
-
     output, cmd = new_compile_fortran( fname,
                                        extra_args = extra_args,
                                        libs       = [libname],
+                                       libdirs    = [curdir],
                                        compiler   = compiler,
                                        mpi        = False,
                                        openmp     = openmp)
@@ -696,10 +717,17 @@ def epyccel_function(func, namespace=[],
 #==============================================================================
 
 # assumes relative path
-def new_compile_fortran(filename, extra_args='',libs=[], compiler=None ,
-                    mpi=False, openmp=False, includes = [], only = []):
+def new_compile_fortran(filename,
+                        extra_args='',
+                        libs=[],
+                        libdirs=[],
+                        compiler=None ,
+                        mpi=False,
+                        openmp=False,
+                        includes = [],
+                        only = []):
 
-    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {extra_args} {includes} {only}"""
+    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {libdirs} {extra_args} {includes} {only}"""
 
     compilers  = ''
     f90flags   = ''
@@ -717,18 +745,12 @@ def new_compile_fortran(filename, extra_args='',libs=[], compiler=None ,
     if mpi:
         compilers = '--f90exec=mpif90 '
 
-    if openmp:
-        if compiler == 'gfortran':
-            extra_args += ' -lgomp '
-            f90flags   += ' -fopenmp '
-
-        elif compiler == 'ifort':
-            extra_args += ' -liomp5 '
-            f90flags   += ' -openmp -nostandard-realloc-lhs '
-            opt         = """ --opt='-xhost -0fast' """
-
     if compiler:
         compilers = compilers + '--fcompiler={}'.format(_compiler)
+
+    extra_args, f90flags, opt = construct_flags( compiler,
+                                                 extra_args = extra_args,
+                                                 openmp = openmp )
 
     if only:
         only = 'only: ' + ','.join(str(i) for i in only)
@@ -738,16 +760,22 @@ def new_compile_fortran(filename, extra_args='',libs=[], compiler=None ,
     if not libs:
         libs = ''
 
+    if not libdirs:
+        libdirs = ''
+
     if not includes:
         includes = ''
 
     modulename = filename.split('.')[0]
 
     libs = ' '.join('-l'+i.lower() for i in libs)
+    libdirs = ' '.join('-L'+i.lower() for i in libdirs)
+
     args = args_pattern.format( compilers  = compilers,
                                 f90flags   = f90flags,
                                 opt        = opt,
                                 libs       = libs,
+                                libdirs    = libdirs,
                                 modulename = modulename.rpartition('.')[2],
                                 filename   = filename,
                                 extra_args = extra_args,
