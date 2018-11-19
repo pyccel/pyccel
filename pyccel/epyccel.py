@@ -9,6 +9,8 @@ import subprocess
 import importlib
 import sys
 import os
+import string
+import random
 
 from pyccel.parser                import Parser
 from pyccel.parser.errors         import Errors, PyccelError
@@ -16,10 +18,56 @@ from pyccel.parser.syntax.headers import parse
 from pyccel.codegen               import Codegen
 from pyccel.codegen.utilities     import execute_pyccel
 from pyccel.ast                   import FunctionHeader
+from pyccel.ast.utilities         import build_types_decorator
+from pyccel.ast.core              import FunctionDef
+from pyccel.ast.core              import FunctionCall
+from spl.api.codegen.printing import pycode
+
 
 #==============================================================================
 
 PY_VERSION = sys.version_info[0:2]
+
+#==============================================================================
+
+def random_string( n ):
+    # we remove uppercase letters because of f2py
+    chars    = string.ascii_lowercase + string.digits
+    selector = random.SystemRandom()
+    return ''.join( selector.choice( chars ) for _ in range( n ) )
+
+#==============================================================================
+
+def mkdir_p(folder):
+    if os.path.isdir(folder):
+        return
+    os.makedirs(folder)
+
+#==============================================================================
+
+def write_code(filename, code, folder='__pycache__'):
+    if folder:
+        mkdir_p(folder)
+        filename = os.path.join(folder, filename)
+
+        # add __init__.py for imports
+        cmd = 'touch {}/__init__.py'.format(folder)
+        os.system(cmd)
+
+    f = open(filename, 'w')
+    for line in code:
+        f.write(line)
+    f.close()
+
+    return filename
+
+#==============================================================================
+
+def construct_header(func_name, args):
+    args = build_types_decorator(args, order='F')
+    args = ','.join("{}".format(i) for i in args)
+    pattern = '#$ header procedure static {name}({args})'
+    return pattern.format(name=func_name, args=args)
 
 #==============================================================================
 
@@ -493,3 +541,221 @@ def clean_extension_module( ext_mod, py_mod_name ):
     delattr( ext_mod, n )
 
 #==============================================================================
+
+
+def epyccel_function(func, namespace=[],
+                 compiler = None,
+                 fflags   = None,
+                 openmp   = False,
+                 openacc  = False,
+                 verbose  = False,
+                 debug    = False,
+                 include  = [],
+                 libdir   = [],
+                 modules  = [],
+                 libs     = [],
+                 folder   = None):
+
+    # ... get the function source code
+    if not isinstance(func, FunctionType):
+        raise TypeError('> Expecting a function')
+
+    code = get_source_function(func)
+
+    if verbose:
+        print ('------')
+        print (code)
+        print ('------')
+    # ...
+
+    # ...
+    tag = random_string( 6 )
+    # ...
+
+    # ...
+    module_name = 'mod_{}'.format(tag)
+    fname       = '{}.py'.format(module_name)
+    binary      = '{}.o'.format(module_name)
+    libname     = tag
+    # ...
+
+    # ...
+    if folder is None:
+        folder = '__pycache__'
+
+    mkdir_p(folder)
+    # ...
+
+    # ...
+    write_code(fname, code, folder=folder)
+    # ...
+
+    # ...
+    basedir = os.getcwd()
+    os.chdir(folder)
+    curdir = os.getcwd()
+    # ...
+
+    # ...
+    if compiler is None:
+        compiler = 'gfortran'
+    # ...
+
+    # ...
+    if fflags is None:
+        fflags = '-fPIC -O2 -c'
+    # ...
+
+    # ...
+    accelerator = None
+    if openmp:
+        accelerator = 'openmp'
+
+    if openacc:
+        accelerator = 'openacc'
+    # ...
+
+    # ... convert python to fortran using pyccel
+    #     we ask for the ast so that we can get the FunctionDef node
+    output, cmd, ast = execute_pyccel( fname,
+                                       compiler    = compiler,
+                                       fflags      = fflags,
+                                       debug       = debug,
+                                       verbose     = verbose,
+                                       accelerator = accelerator,
+                                       include     = include,
+                                       libdir      = libdir,
+                                       modules     = modules,
+                                       libs        = libs,
+                                       binary      = None,
+                                       output      = '',
+                                       return_ast  = True )
+    # ...
+
+    # ...
+    cmd = 'ar -r lib{libname}.a {binary} '.format(binary=binary, libname=libname)
+    os.system(cmd)
+
+    if verbose:
+        print(cmd)
+    # ...
+
+    # ... construct a f2py interface for the assembly
+    # be careful: because of f2py we must use lower case
+    func_name = func.__name__
+    node = None
+    n_stmt = len(ast)
+    i_stmt = 0
+    while ( node is None ) and ( i_stmt < n_stmt ):
+        stmt = ast[i_stmt]
+        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
+            node = stmt
+
+        i_stmt += 1
+
+    if node is None:
+        raise ValueError('> could not find {}'.format(func_name))
+
+    func = node
+    args = func.arguments
+
+    body = [FunctionCall(func, args)]
+
+    f2py_name = 'f2py_{}'.format(func_name)
+    header = construct_header(f2py_name, args)
+    func = FunctionDef(f2py_name, list(args), [], body)
+    code = pycode(func)
+    imports = 'from {mod} import {func}'.format(mod=module_name,
+                                                func=func_name)
+
+    code = '{imports}\n{header}\n{code}'.format(imports=imports,
+                                                header=header,
+                                                code=code)
+
+
+    filename = 'f2py_{}.py'.format(module_name)
+    fname = write_code(filename, code, folder=folder)
+
+    fname = execute_pyccel(fname, output='', convert_only=True)
+
+    extra_args = ' -L{} '.format(curdir)
+
+    output, cmd = new_compile_fortran( fname,
+                                       extra_args = extra_args,
+                                       libs       = [libname],
+                                       compiler   = compiler,
+                                       mpi        = False,
+                                       openmp     = openmp)
+    # ...
+
+    if verbose:
+        print(cmd)
+
+    os.chdir(basedir)
+
+#==============================================================================
+
+# assumes relative path
+def new_compile_fortran(filename, extra_args='',libs=[], compiler=None ,
+                    mpi=False, openmp=False, includes = [], only = []):
+
+    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {extra_args} {includes} {only}"""
+
+    compilers  = ''
+    f90flags   = ''
+    opt        = ''
+
+    if compiler == 'gfortran':
+        _compiler = 'gnu95'
+
+    elif compiler == 'ifort':
+        _compiler = 'intelem'
+
+    else:
+        raise NotImplementedError('Only gfortran and ifort are available for the moment')
+
+    if mpi:
+        compilers = '--f90exec=mpif90 '
+
+    if openmp:
+        if compiler == 'gfortran':
+            extra_args += ' -lgomp '
+            f90flags   += ' -fopenmp '
+
+        elif compiler == 'ifort':
+            extra_args += ' -liomp5 '
+            f90flags   += ' -openmp -nostandard-realloc-lhs '
+            opt         = """ --opt='-xhost -0fast' """
+
+    if compiler:
+        compilers = compilers + '--fcompiler={}'.format(_compiler)
+
+    if only:
+        only = 'only: ' + ','.join(str(i) for i in only)
+    else:
+        only = ''
+
+    if not libs:
+        libs = ''
+
+    if not includes:
+        includes = ''
+
+    modulename = filename.split('.')[0]
+
+    libs = ' '.join('-l'+i.lower() for i in libs)
+    args = args_pattern.format( compilers  = compilers,
+                                f90flags   = f90flags,
+                                opt        = opt,
+                                libs       = libs,
+                                modulename = modulename.rpartition('.')[2],
+                                filename   = filename,
+                                extra_args = extra_args,
+                                includes   = includes,
+                                only       = only )
+
+    cmd = """python{}.{} -m numpy.f2py {}"""
+
+    cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
+    output = subprocess.check_output(cmd, shell=True)
+    return output, cmd

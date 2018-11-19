@@ -218,10 +218,11 @@ def build_types_decorator(args, order=None):
     for a in args:
         if isinstance(a, Variable):
             dtype = a.dtype.name.lower()
-            types.append(dtype)
 
         elif isinstance(a, IndexedVariable):
             dtype = a.dtype.name.lower()
+
+        if a.rank > 0:
             shape = [':' for i in range(0, a.rank)]
             shape = ','.join(i for i in shape)
             dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)

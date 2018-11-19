@@ -156,18 +156,19 @@ def compile_fortran(filename, compiler, flags,
 # ...
 
 def execute_pyccel(filename,
-                   compiler=None,
-                   fflags=None,
-                   debug=False,
-                   verbose=False,
-                   accelerator=None,
-                   include=[],
-                   libdir=[],
-                   modules=[],
-                   libs=[],
-                   binary=None,
-                   output='',
-                   convert_only=False):
+                   compiler     = None,
+                   fflags       = None,
+                   debug        = False,
+                   verbose      = False,
+                   accelerator  = None,
+                   include      = [],
+                   libdir       = [],
+                   modules      = [],
+                   libs         = [],
+                   binary       = None,
+                   output       = '',
+                   convert_only = False,
+                   return_ast   = False):
     """Executes the full process:
         - parsing the python code
         - annotating the python code
@@ -219,7 +220,11 @@ def execute_pyccel(filename,
                                       libs=libs)
         # ...
 
-        return output, cmd
+        if not return_ast:
+            return output, cmd
+
+        else:
+            return output, cmd, ast
 
 
 if __name__ == '__main__':
