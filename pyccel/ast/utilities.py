@@ -210,7 +210,7 @@ def indexed_variables(args, dtype, rank):
     return args
 
 # TODO: must add a Node Decorator in core
-def build_types_decorator(args):
+def build_types_decorator(args, order=None):
     """
     builds a types decorator from a list of arguments (of FunctionDef)
     """
@@ -225,6 +225,8 @@ def build_types_decorator(args):
             shape = [':' for i in range(0, a.rank)]
             shape = ','.join(i for i in shape)
             dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
+            if order and a.rank > 1:
+                dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
             types.append(dtype)
 
     return types
