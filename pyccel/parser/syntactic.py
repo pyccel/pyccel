@@ -236,7 +236,7 @@ class SyntaxParser(BasicParser):
 
         self.parse(verbose=True)
 
-    def parse(self, d_parsers=None, verbose=False):
+    def parse(self, verbose=False):
         """converts redbaron fst to sympy ast."""
 
         if self.syntax_done:
@@ -266,10 +266,6 @@ class SyntaxParser(BasicParser):
 
         errors.check()
         self._visit_done = True
-
-        if d_parsers is None:
-            d_parsers = OrderedDict()
-        self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
 
         return ast
 

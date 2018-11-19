@@ -314,21 +314,9 @@ class BasicParser(object):
         self._current       = None
 
         # we use it to detect the current method or function
-
         self._imports = {}
 
-        # we use it to store the imports
-
-        self._parents = []
-
-        # a Parser can have parents, who are importing it.
-        # imports are then its sons.
-
-        self._sons = []
-        self._d_parsers = OrderedDict()
-
         # the following flags give us a status on the parsing stage
-
         self._syntax_done   = False
         self._semantic_done = False
 
@@ -441,24 +429,6 @@ class BasicParser(object):
     @property
     def semantic_done(self):
         return self._semantic_done
-
-    @property
-    def parents(self):
-        """Returns the parents parser."""
-
-        return self._parents
-
-    @property
-    def sons(self):
-        """Returns the sons parser."""
-
-        return self._sons
-
-    @property
-    def d_parsers(self):
-        """Returns the d_parsers parser."""
-
-        return self._d_parsers
 
     @property
     def is_header_file(self):
@@ -638,57 +608,6 @@ class BasicParser(object):
             for (k, v) in self.namespace[entry].items():
                 print ('{var} \t :: \t {value}'.format(var=k, value=v))
             print ('-------------------------')
-
-
-    def append_parent(self, parent):
-        """."""
-
-        # TODO check parent is not in parents
-
-        self._parents.append(parent)
-
-    def append_son(self, son):
-        """."""
-
-        # TODO check son is not in sons
-
-        self._sons.append(son)
-
-#==============================================================================
-
-    def _parse_sons(self, d_parsers, verbose=False):
-        """Recursive algorithm for syntax analysis on a given file and its
-        dependencies.
-        This function always terminates with an OrderedDict that contains parsers
-        for all involved files.
-        """
-
-        treated = set(d_parsers.keys())
-        imports = set(self.imports.keys())
-        imports = imports.difference(treated)
-        if not imports:
-            return d_parsers
-
-        for source in imports:
-            if verbose:
-                print ('>>> treating :: {}'.format(source))
-
-            # get the absolute path corresponding to source
-
-            filename = get_filename_from_import(source,self._output_folder,self._context_import_path)
-
-            q = Parser(filename)
-            q.parse(d_parsers=d_parsers)
-            d_parsers[source] = q
-
-        # link self to its sons
-
-        imports = list(self.imports.keys())
-        for source in imports:
-            d_parsers[source].append_parent(self)
-            self.append_son(d_parsers[source])
-
-        return d_parsers
 
     def _visit(self, expr, **settings):
         raise NotImplementedError('Must be implemented by the extension')

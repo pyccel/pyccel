@@ -151,6 +151,11 @@ class SemanticParser(BasicParser):
 
     def __init__(self, inputs, **kwargs):
 
+        # a Parser can have parents, who are importing it.
+        # imports are then its sons.
+        self._parents = kwargs.pop('parents', [])
+        self._d_parsers = kwargs.pop('d_parsers', OrderedDict())
+
         # ...
         if not isinstance(inputs, SyntaxParser):
             raise TypeError('> Expecting a syntactic parser as input')
@@ -173,24 +178,27 @@ class SemanticParser(BasicParser):
         # we use it to detect the current method or function
         self._imports = parser._imports
 
-        # we use it to store the imports
-        self._parents = parser._parents
-
-        # a Parser can have parents, who are importing it.
-        # imports are then its sons.
-        self._sons = parser._sons
-        self._d_parsers = parser._d_parsers
-
         #
         self._code = parser._code
         # ...
 
         # ... TOD add settings
         settings = {}
-        self.parse()
+        self.annotate()
         # ...
 
-    def parse(self, **settings):
+    @property
+    def parents(self):
+        """Returns the parents parser."""
+        return self._parents
+
+    @property
+    def d_parsers(self):
+        """Returns the d_parsers parser."""
+
+        return self._d_parsers
+
+    def annotate(self, **settings):
         """."""
 
         if self.semantic_done:
@@ -204,11 +212,6 @@ class SemanticParser(BasicParser):
         if self.filename:
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('semantic')
-
-        # we first treat all sons to get imports
-
-        verbose = settings.pop('verbose', False)
-        self._annotate_parents(verbose=verbose)
 
         # then we treat the current file
 
@@ -260,42 +263,6 @@ class SemanticParser(BasicParser):
         self._semantic_done = True
 
         return ast
-
-    def _annotate_parents(self, **settings):
-
-        verbose = settings.pop('verbose', False)
-
-        # ...
-
-        def _update_from_son(p):
-
-            # TODO - only import what is needed
-            #      - use insert_variable etc
-
-            for entry in ['variables', 'classes', 'functions',
-                          'cls_constructs']:
-                d_self = self._namespace[entry]
-                d_son = p.namespace[entry]
-                for (k, v) in list(d_son.items()):
-                    d_self[k] = v
-
-        # ...
-
-        # we first treat sons that have no imports
-
-        for p in self.sons:
-            if not p.sons:
-                if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
-
-        # finally we treat the remaining sons recursively
-
-        for p in self.sons:
-            if p.sons:
-                if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
-                p.annotate(**settings)
 
     def get_variable(self, name):
         """."""
