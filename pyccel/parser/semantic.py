@@ -67,6 +67,7 @@ from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.datatypes import sp_dtype, str_dtype
@@ -223,7 +224,8 @@ class SemanticParser(BasicParser):
             ast = self._visit(ast, **settings)
         except Exception as e:
             errors.check()
-            if self.show_traceback:
+#            if self.show_traceback:
+            if True:
                 traceback.print_exc()
             raise SystemExit(0)
 
@@ -2451,6 +2453,54 @@ class SemanticParser(BasicParser):
             if not func_ is None and func_.is_recursive:
                 is_recursive = True
 
+            # ... computing inout arguments
+            args_inout = []
+            for a in args:
+                args_inout.append(False)
+
+            results_names = [str(i) for i in results]
+
+            assigned = get_assigned_symbols(body)
+            assigned = [str(i) for i in assigned]
+
+            apps = list(Tuple(*body).atoms(Application))
+            apps = [i for i in apps if (i.__class__.__name__ in self.functions)]
+            d_apps = OrderedDict()
+            for a in args:
+                d_apps[a] = []
+
+            for f in apps:
+                a_args = set(f.args) & set(args)
+                for a in a_args:
+                    d_apps[a].append(f)
+
+            for i,a in enumerate(args):
+                if str(a) in results_names:
+                    args_inout[i] = True
+
+                elif str(a) in assigned:
+                    args_inout[i] = True
+
+                elif str(a) == 'self':
+                    args_inout[i] = True
+
+                if d_apps[a] and not( args_inout[i] ):
+                    intent = False
+                    n_fa = len(d_apps[a])
+                    i_fa = 0
+                    while not(intent) and i_fa < n_fa:
+                        fa = d_apps[a][i_fa]
+                        f_name = fa.__class__.__name__
+                        func = self.get_function(f_name)
+
+                        j = list(fa.args).index(a)
+                        intent = func.arguments_inout[j]
+                        if intent:
+                            args_inout[i] = True
+
+                        i_fa += 1
+            # ...
+
             func = FunctionDef(
                 name,
                 args,
@@ -2467,7 +2517,9 @@ class SemanticParser(BasicParser):
                 is_private=is_private,
                 imports=imports,
                 decorators=decorators,
-                is_recursive=is_recursive)
+                is_recursive=is_recursive,
+                arguments_inout=args_inout)
+
             if cls_name:
                 cls = self.get_class(cls_name)
                 methods = list(cls.methods) + [func]

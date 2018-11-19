@@ -1289,13 +1289,20 @@ class FCodePrinter(CodePrinter):
 
         results_names = [str(i) for i in expr.results]
 
-        for arg in expr.arguments:
-            if str(arg) in results_names + assigned_names:
+        for i,arg in enumerate(expr.arguments):
+            if expr.arguments_inout[i]:
                 dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
-            elif str(arg) == 'self':
-                dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
+
             else:
-                dec = Declare(arg.dtype, arg, intent='in', static=is_static)
+                if str(arg) in results_names + assigned_names:
+                    dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
+
+                elif str(arg) == 'self':
+                    dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
+
+                else:
+                    dec = Declare(arg.dtype, arg, intent='in', static=is_static)
+
             args_decs[str(arg)] = dec
 
         args_decs.update(decs)
