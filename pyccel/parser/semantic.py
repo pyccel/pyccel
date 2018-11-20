@@ -4,6 +4,7 @@ from collections import OrderedDict
 import traceback
 import importlib
 import pickle
+import time
 import os
 import sys
 import re
@@ -138,7 +139,7 @@ def _get_name(var):
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
     if isinstance(var, Application):
-        return str(type(var).__name__)
+        return type(var).__name__
     msg = 'Uncovered type {dtype}'.format(dtype=type(var))
     raise NotImplementedError(msg)
 
@@ -631,7 +632,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, IndexedElement):
 
             d_var['datatype'] = expr.dtype
-            name = _get_name(expr)
+            name = str(expr.base)
             var = self.get_variable(name)
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
@@ -658,7 +659,7 @@ class SemanticParser(BasicParser):
             return d_var
         elif isinstance(expr, IndexedVariable):
 
-            name = _get_name(expr)
+            name = str(expr)
             var = self.get_variable(name)
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
@@ -720,7 +721,7 @@ class SemanticParser(BasicParser):
             d_var['is_pointer'    ] = False
             return d_var
         elif isinstance(expr, Application):
-            name = _get_name(expr)
+            name = type(expr).__name__
             func = self.get_function(name)
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
@@ -979,7 +980,6 @@ class SemanticParser(BasicParser):
         #      - blocking errors
 
         classes = type(expr).__mro__
-        import time
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
@@ -1070,7 +1070,7 @@ class SemanticParser(BasicParser):
 
 
     def _visit_Indexed(self, expr, **settings):
-        name = _get_name(expr)
+        name = str(expr.base)
         var = self.get_variable(name)
         if var is None:
             errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
@@ -1518,7 +1518,7 @@ class SemanticParser(BasicParser):
         assigns = None
 
         if isinstance(rhs, Application):
-            name = _get_name(rhs)
+            name = type(rhs).__name__
             macro = self.get_macro(name)
             if not macro is None:
 
