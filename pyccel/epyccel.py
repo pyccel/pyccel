@@ -12,17 +12,18 @@ import os
 import string
 import random
 
-from pyccel.parser                import Parser
-from pyccel.parser.errors         import Errors, PyccelError
-from pyccel.parser.syntax.headers import parse
-from pyccel.codegen               import Codegen
-from pyccel.codegen.utilities     import execute_pyccel
-from pyccel.codegen.utilities     import construct_flags as construct_flags_pyccel
-from pyccel.ast                   import FunctionHeader
-from pyccel.ast.utilities         import build_types_decorator
-from pyccel.ast.core              import FunctionDef
-from pyccel.ast.core              import FunctionCall
-from spl.api.codegen.printing import pycode
+from pyccel.parser                  import Parser
+from pyccel.parser.errors           import Errors, PyccelError
+from pyccel.parser.syntax.headers   import parse
+from pyccel.codegen                 import Codegen
+from pyccel.codegen.utilities       import execute_pyccel
+from pyccel.codegen.utilities       import construct_flags as construct_flags_pyccel
+from pyccel.ast                     import FunctionHeader
+from pyccel.ast.utilities           import build_types_decorator
+from pyccel.ast.core                import FunctionDef
+from pyccel.ast.core                import FunctionCall
+from pyccel.ast.f2py                import F2PY_Function
+from pyccel.codegen.printing.pycode import pycode
 
 
 #==============================================================================
@@ -61,14 +62,6 @@ def write_code(filename, code, folder='__pycache__'):
     f.close()
 
     return filename
-
-#==============================================================================
-
-def construct_header(func_name, args):
-    args = build_types_decorator(args, order='F')
-    args = ','.join("{}".format(i) for i in args)
-    pattern = '#$ header procedure static {name}({args})'
-    return pattern.format(name=func_name, args=args)
 
 #==============================================================================
 
@@ -681,24 +674,12 @@ def epyccel_function(func,
     # be careful: because of f2py we must use lower case
     func_name = func.__name__
     func = get_function_from_ast(ast, func_name)
-    args = func.arguments
 
-    body = [FunctionCall(func, args)]
+    f2py_func = F2PY_Function(func, module_name)
+    code = pycode(f2py_func)
 
     f2py_module_name = 'f2py_{}'.format(module_name)
-    f2py_func_name = 'f2py_{}'.format(func_name)
-
-    f2py_func = FunctionDef(f2py_func_name, list(args), [], body)
-
-    code = pycode(f2py_func)
-    header = construct_header(f2py_func_name, args)
-    imports = 'from {mod} import {func}'.format( mod  = module_name,
-                                                 func = func_name )
-
-    code = '{imports}\n{header}\n{code}'.format( imports = imports,
-                                                 header  = header,
-                                                 code    = code )
-
+    f2py_func_name   = f2py_func.name
 
     filename = '{}.py'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)

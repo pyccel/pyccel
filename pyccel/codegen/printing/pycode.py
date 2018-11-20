@@ -9,6 +9,20 @@ from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+from pyccel.ast.utilities  import build_types_decorator
+from pyccel.ast.core       import FunctionDef
+from pyccel.ast.core       import FunctionCall
+
+
+#==============================================================================
+
+def _construct_header(func_name, args):
+    args = build_types_decorator(args, order='F')
+    args = ','.join("{}".format(i) for i in args)
+    pattern = '#$ header procedure static {name}({args})'
+    return pattern.format(name=func_name, args=args)
+
+#==============================================================================
 
 class PythonCodePrinter(SympyPythonCodePrinter):
     _kf = dict(chain(
@@ -197,6 +211,28 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         fs = ', '.join(i for i in args)
 
         return 'print({0})'.format(fs)
+
+    def _print_F2PY_Function(self, expr):
+        func = expr.func
+        module_name = expr.module_name
+        func_name = func.name
+
+        args = func.arguments
+        body = [FunctionCall(func, args)]
+
+        f2py_func_name = 'f2py_{}'.format(func_name)
+        f2py_func = FunctionDef(f2py_func_name, list(args), [], body)
+
+        code = self._print(f2py_func)
+        header = _construct_header(f2py_func_name, args)
+        imports = 'from {mod} import {func}'.format( mod  = module_name,
+                                                     func = func_name )
+
+        code = '{imports}\n{header}\n{code}'.format( imports = imports,
+                                                     header  = header,
+                                                     code    = code )
+
+        return code
 
 
 def pycode(expr, **settings):
