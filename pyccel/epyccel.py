@@ -220,7 +220,7 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
 
 #==============================================================================
 
-def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdirs = [], name = None,
+def epyccel_old(func, inputs = None, verbose = False, modules = [], libs = [], libdirs = [], name = None,
             compiler = None , mpi = False, static = None, only = None,
             openmp = False):
     """Pyccelize a python function and wrap it using f2py.
@@ -330,7 +330,7 @@ def epyccel(func, inputs = None, verbose = False, modules = [], libs = [], libdi
             mod = importlib.import_module(name)
             # we must reload the module, otherwise it is still the .so one
             importlib.reload(mod)
-            epyccel(mod, inputs=inputs, verbose=verbose, modules=modules,
+            epyccel_old(mod, inputs=inputs, verbose=verbose, modules=modules,
                     libs=libs, name=name, compiler=compiler,
                     mpi=mpi, static=static, only=only, openmp=openmp)
     # ...
@@ -538,7 +538,7 @@ def epyccel_mpi( mod, comm, root=0 ):
 
     # Master process calls epyccel
     if comm.rank == root:
-        fmod      = epyccel( mod, mpi=True )
+        fmod      = epyccel_old( mod, mpi=True )
         fmod_path = fmod.__file__
         fmod_name = fmod.__name__
     else:
@@ -977,3 +977,17 @@ def epyccel_module(module,
     # ...
 
     return package
+
+#==============================================================================
+
+def epyccel( inputs, **kwargs ):
+
+    if isinstance( inputs, FunctionType ):
+        return epyccel_function( inputs, **kwargs )
+
+    elif isinstance( inputs, ModuleType ):
+        return epyccel_module( inputs, **kwargs )
+
+    else:
+        raise TypeError('> Expecting a function or a module')
+

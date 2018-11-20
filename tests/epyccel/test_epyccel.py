@@ -7,44 +7,48 @@ import os
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
+VERBOSE = False
+#VERBOSE = True
+
 def clean_test():
-    cmd = 'rm -f *.f90 *.so'
+    cmd = 'rm -rf __pycache__/*'
     os.system(cmd)
 
 # ..............................................
-#  functions for which we will provide headers
-# ..............................................
+@types('int')
 def f1(x):
     y = x - 1
     return y
 
+@types('int [:]')
 def f2(x):
     y = x[0] - 1
     return y
 
+@types('int [:]')
 def f3(x):
     y = x - 1
     return y
 
+@types('real [:,:]')
 def f4(x):
     y = x - 1.0
     return y
 
+@types('real [:]')
 def f5(m1, x):
     x[:] = 0.
     for i in range(0, m1):
         x[i] = i * 1.
 
+@types('int', 'int', 'real [:,:](order = F)')
 def f6(m1, m2, x):
     x[:,:] = 0.
     for i in range(0, m1):
         for j in range(0, m2):
             x[i,j] = (i+j) * 1.
 
-# ..............................................
-#        functions with types decorator
-# ..............................................
-@types(int)
+@types('int')
 def g1(x):
     y = x+1
     return y
@@ -54,36 +58,32 @@ def g2(x):
     y = x + 1
     return y
 
-@types(int,int,int)
+@types('int', 'int', 'int')
 def g3(x, n=2, m=3):
     y = x - n*m
     return y
 
-@types(int,int)
+@types('int', 'int')
 def g4(x, m=None):
     if m is None:
         y = x + 1
     else:
         y = x - 1
     return y
+# ..............................................
 
 
-#==============================================================================
-# TEST FUNCTIONS WITH HEADERS
-#==============================================================================
-
-def test_header_f1():
-    f = epyccel(f1, '#$ header procedure f1(int)')
+#------------------------------------------------------------------------------
+def test_decorator_f1():
+    f = epyccel(f1, verbose=VERBOSE)
 
     # ...
     assert f(3) == f1(3)
     # ...
 
-    clean_test()
-
 #------------------------------------------------------------------------------
-def test_header_f2():
-    f = epyccel(f2, '#$ header procedure f2(int [:])')
+def test_decorator_f2():
+    f = epyccel(f2)
 
     # ...
     x = np.array([3, 4, 5, 6], dtype=int)
@@ -95,34 +95,28 @@ def test_header_f2():
     assert f(x) == f2(x)
     # ...
 
-    clean_test()
-
 #------------------------------------------------------------------------------
-def test_header_f3():
+def test_decorator_f3():
 
-    f = epyccel(f3, '#$ header procedure f3(int [:])')
+    f = epyccel(f3)
 
     # ...
     x = np.array([3, 4, 5, 6], dtype=int)
     assert np.array_equal( f(x), f3(x) )
     # ...
 
-    clean_test()
-
 #------------------------------------------------------------------------------
-def test_header_f4():
-    f = epyccel(f4, '#$ header procedure f4(double [:,:])')
+def test_decorator_f4():
+    f = epyccel(f4)
 
     # ...
     x = np.random.random((2, 3))
     assert np.allclose( f(x), f4(x), rtol=1e-15, atol=1e-15 )
     # ...
 
-    clean_test()
-
 #------------------------------------------------------------------------------
-def test_header_f5():
-    f = epyccel(f5, '#$ header procedure f5(int, double [:])')
+def test_decorator_f5():
+    f = epyccel(f5)
 
     # ...
     m1 = 3
@@ -136,11 +130,9 @@ def test_header_f5():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
-    clean_test()
-
 #------------------------------------------------------------------------------
-def test_header_f6():
-    f = epyccel(f6, '#$ header procedure f6(int, int, double [:,:](order = F))')
+def test_decorator_f6():
+    f = epyccel(f6)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -154,21 +146,14 @@ def test_header_f6():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
-    clean_test()
-
-#==============================================================================
-# TEST FUNCTIONS WITH DECORATORS
-#==============================================================================
-
-def test_decorators_g1():
+#------------------------------------------------------------------------------
+def test_decorator_g1():
 
     f = epyccel(g1)
     assert f(3) == g1(3)
 
-    clean_test()
-
-#------------------------------------------------------------------------------
-def test_decorators_g2():
+##------------------------------------------------------------------------------
+def test_decorator_g2():
 
     f = epyccel(g2)
 
@@ -180,20 +165,16 @@ def test_decorators_g2():
 
     assert np.array_equal( x, x_expected )
 
-    clean_test()
-
 #------------------------------------------------------------------------------
-def test_decorators_g3():
+def test_decorator_g3():
 
     f = epyccel(g3)
     assert f(3,2,4) == g3(3,2,4)
 
-    clean_test()
-
-#------------------------------------------------------------------------------
-# TODO: not working yet. optional arg is placed before out!
-@pytest.mark.xfail
-def test_decorators_g4():
+##------------------------------------------------------------------------------
+## TODO: not working yet. optional arg is placed before out!
+#@pytest.mark.xfail
+def test_decorator_g4():
 
     f = epyccel(g4)
     assert f(3) == g4(3)
@@ -202,8 +183,6 @@ def test_decorators_g4():
     print(g4(3,2))
     assert f(3, 2) == g4(3, 2)
     # ...
-
-    clean_test()
 
 #==============================================================================
 # TEST MODULE
@@ -228,12 +207,26 @@ def test_module1():
     assert np.array_equal( x, x_expected )
     # ...
 
-    clean_test()
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+#
+#def teardown_module():
+#    clean_test()
+#
 
-#==============================================================================
-# CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-#==============================================================================
+######################################
+if __name__ == '__main__':
+#    test_decorator_f1()
+#    test_decorator_f2()
+#    test_decorator_f6() # TODO change ordering
+#    test_decorator_g1()
+#    test_decorator_g3()
+#    test_module1
 
-def teardown_module():
-    clean_test()
+    test_decorator_f3()
+#    test_decorator_f4()
+#    test_decorator_f5()
+#    test_decorator_g2()
+#    test_decorator_g4()
 

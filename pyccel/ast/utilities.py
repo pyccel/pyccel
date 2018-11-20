@@ -222,12 +222,16 @@ def build_types_decorator(args, order=None):
         elif isinstance(a, IndexedVariable):
             dtype = a.dtype.name.lower()
 
+        else:
+            raise TypeError('unepected type for {}'.format(a))
+
         if a.rank > 0:
             shape = [':' for i in range(0, a.rank)]
             shape = ','.join(i for i in shape)
             dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
-            types.append(dtype)
+
+        types.append(dtype)
 
     return types

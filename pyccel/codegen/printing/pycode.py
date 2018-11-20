@@ -12,6 +12,7 @@ from sympy.printing.pycode import _known_constants_math
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import FunctionDef
 from pyccel.ast.core       import FunctionCall
+from pyccel.ast.core       import Assign, Return
 
 
 #==============================================================================
@@ -63,7 +64,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         if decorators:
             for n,args in decorators.items():
                 if args:
-                    args = ','.join("'{}'".format(i) for i in args)
+                    args = ','.join("{}".format(i) for i in args)
                     dec = '@{name}({args})'.format(name=n, args=args)
 
                 else:
@@ -218,10 +219,17 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         func_name = func.name
 
         args = func.arguments
-        body = [FunctionCall(func, args)]
+        results = func.results
+        if results:
+#            print(results)
+            if len(results) == 1:
+                body  = [Assign(results[0], FunctionCall(func, args))]
+                body += [Return(results[0])]
+        else:
+            body = [FunctionCall(func, args)]
 
         f2py_func_name = 'f2py_{}'.format(func_name)
-        f2py_func = FunctionDef(f2py_func_name, list(args), [], body)
+        f2py_func = FunctionDef(f2py_func_name, list(args), results, body)
 
         code = self._print(f2py_func)
         header = _construct_header(f2py_func_name, args)
