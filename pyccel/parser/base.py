@@ -322,7 +322,7 @@ class BasicParser(object):
 
         # current position for errors
 
-        self._bounding_box = None
+        self._current_fst_node = None
 
         # flag for blocking errors. if True, an error with this flag will cause
         # Pyccel to stop

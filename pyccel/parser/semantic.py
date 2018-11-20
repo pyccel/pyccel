@@ -1053,8 +1053,8 @@ class SemanticParser(BasicParser):
         if var is None:
             #TODO error not yet tested
             errors.report(UNDEFINED_VARIABLE, symbol=name,
-                          bounding_box=self.bounding_box,
-                          severity='error', blocker=self.blocking)
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='error', blocker=self.blocking)
         return var
 
 
@@ -1076,8 +1076,8 @@ class SemanticParser(BasicParser):
         var = self.get_variable(name)
         if var is None:
             errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
-                          bounding_box=self.bounding_box,
-                          severity='error', blocker=self.blocking)
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='error', blocker=self.blocking)
 
          # TODO check consistency of indices with shape/rank
 
@@ -1120,7 +1120,7 @@ class SemanticParser(BasicParser):
 
         if var is None:
             errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=self.bounding_box,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
             severity='error', blocker=self.blocking)
         return var
 
@@ -1369,8 +1369,8 @@ class SemanticParser(BasicParser):
                 # TODO improve case of class with the no __init__
 
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                       bounding_box=self.bounding_box,
-                       severity='error', blocker=True)
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='error', blocker=True)
             args = expr.args
             m_args = method.arguments[1:]  # we delete the self arg
 
@@ -1398,8 +1398,8 @@ class SemanticParser(BasicParser):
 
             if func is None:
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
-                       bounding_box=self.bounding_box,
-                       severity='error', blocker=self.blocking)
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='error', blocker=self.blocking)
             else:
                 if not isinstance(func, (FunctionDef, Interface)):
 
@@ -1509,7 +1509,7 @@ class SemanticParser(BasicParser):
         # TODO unset position at the end of this part
         fst = expr.fst
         if fst:
-            self._bounding_box = fst.absolute_bounding_box
+            self._current_fst_node = fst
         else:
             msg = 'Found a node without fst member ({})'
             msg = msg.format(type(expr))
@@ -1542,8 +1542,8 @@ class SemanticParser(BasicParser):
                     var = self.get_variable(_name)
                     if var is None:
                         errors.report(UNDEFINED_VARIABLE,
-                             symbol=_name, bounding_box=self.bounding_box,
-                             severity='error', blocker=self.blocking)
+                        symbol=_name,severity='error', blocker=self.blocking,
+                        bounding_box=self._current_fst_node.absolute_bounding_box)
                     results.append(var)
 
                 # ...
@@ -1577,8 +1577,8 @@ class SemanticParser(BasicParser):
                         var = self.get_variable(_name)
                         if var is None:
                             errors.report(UNDEFINED_VARIABLE,
-                            symbol=_name, bounding_box=self.bounding_box,
-                            severity='error', blocker=self.blocking)
+                            symbol=_name,severity='error', blocker=self.blocking,
+                            bounding_box=self._current_fst_node.absolute_bounding_box)
                         results.append(var)
 
                     # ...
@@ -1721,8 +1721,8 @@ class SemanticParser(BasicParser):
                         if var is None:
                             # TODO have a specific error message
                             errors.report(UNDEFINED_VARIABLE,
-                                 symbol=_name, bounding_box=self.bounding_box,
-                                 severity='error', blocker=self.blocking)
+                            symbol=_name,severity='error', blocker=self.blocking,
+                            bounding_box=self._current_fst_node.absolute_bounding_box)
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -1742,8 +1742,8 @@ class SemanticParser(BasicParser):
 
             if func is None:
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
-                bounding_box=self.bounding_box, severity='error',
-                blocker=self.blocking)
+                bounding_box=self._current_fst_node.absolute_bounding_box, 
+                severity='error',blocker=self.blocking)
 
             dvar  = self._infere_type(rhs.args[1], **settings)
             d_var = [self._infere_type(result, **settings) for result in func.results]
@@ -1812,12 +1812,12 @@ class SemanticParser(BasicParser):
                     # TODO add other native types
                     if isinstance(rhs, (Integer, Float)):
                         errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                        symbol=txt,bounding_box=self.bounding_box,
+                        symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=False)
 
                     else:
                         errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                        symbol=txt, bounding_box=self.bounding_box,
+                        symbol=txt, bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='internal', blocker=False)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -2027,7 +2027,7 @@ class SemanticParser(BasicParser):
             # TODO ERROR not tested yet
 
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
-                   bounding_box=self.bounding_box,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='error', blocker=self.blocking)
 
         body = [self._visit(i, **settings) for i in body]
@@ -2284,7 +2284,7 @@ class SemanticParser(BasicParser):
             # TODO ERROR wrong position
 
             errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
-                   bounding_box=self.bounding_box,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='error', blocker=self.blocking)
 
         # we construct a FunctionDef from its header
@@ -2616,7 +2616,7 @@ class SemanticParser(BasicParser):
 
         if not const:
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
-                   bounding_box=self.bounding_box,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='error', blocker=True)
 
         methods = [self._visit_FunctionDef(i, **settings) for i in methods]
@@ -2646,16 +2646,16 @@ class SemanticParser(BasicParser):
 
         if not isinstance(expr.rhs, Nil):
            errors.report(PYCCEL_RESTRICTION_IS_RHS,
-                         bounding_box=self.bounding_box,
-                         severity='error', blocker=self.blocking)
+           bounding_box=self._current_fst_node.absolute_bounding_box,
+           severity='error', blocker=self.blocking)
 
         name = expr.lhs
         var = self.get_variable(str(name))
         if var is None:
 
             errors.report(UNDEFINED_VARIABLE, symbol=name,
-                   bounding_box=self.bounding_box,
-                   severity='error', blocker=self.blocking)
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='error', blocker=self.blocking)
 
         return Is(var, expr.rhs)
 
@@ -2775,8 +2775,8 @@ class SemanticParser(BasicParser):
             func = self.get_function(f_name)
             if func is None:
                 errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                symbol=f_name, bounding_box=self.bounding_box,
-                severity='error', blocker=self.blocking)
+                symbol=f_name,severity='error', blocker=self.blocking,
+                bounding_box=self._current_fst_node.absolute_bounding_box)
         else:
             interfaces = header.create_definition()
 
@@ -2804,8 +2804,8 @@ class SemanticParser(BasicParser):
             var = self.get_variable(master)
             if var is None:
                 errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                symbol=master, bounding_box=self.bounding_box,
-                severity='error', blocker=self.blocking)
+                symbol=master,severity='error', blocker=self.blocking,
+                bounding_box=self._current_fst_node.absolute_bounding_box)
         else:
             var = Variable(header.dtype, header.name)
 
