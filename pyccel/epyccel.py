@@ -113,6 +113,26 @@ def construct_flags(compiler, extra_args = '', openmp = False):
 
 #==============================================================================
 
+# TODO must be moved to pyccel/ast/utilities.py
+def get_function_from_ast(ast, func_name):
+    node = None
+    n_stmt = len(ast)
+    i_stmt = 0
+    while ( node is None ) and ( i_stmt < n_stmt ):
+        stmt = ast[i_stmt]
+        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
+            node = stmt
+
+        i_stmt += 1
+
+    if node is None:
+        print('> could not find {}'.format(func_name))
+
+    return node
+
+
+#==============================================================================
+
 def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
                     mpi=False, openmp=False, includes = [], only = []):
     """use f2py to compile a source code. We ensure here that the f2py used is
@@ -660,20 +680,7 @@ def epyccel_function(func,
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
     func_name = func.__name__
-    node = None
-    n_stmt = len(ast)
-    i_stmt = 0
-    while ( node is None ) and ( i_stmt < n_stmt ):
-        stmt = ast[i_stmt]
-        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
-            node = stmt
-
-        i_stmt += 1
-
-    if node is None:
-        raise ValueError('> could not find {}'.format(func_name))
-
-    func = node
+    func = get_function_from_ast(ast, func_name)
     args = func.arguments
 
     body = [FunctionCall(func, args)]
