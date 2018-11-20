@@ -36,5 +36,8 @@ def private(f):
 def elemental(f):
     return f
 
+def external(f):
+    return f
+
 
 

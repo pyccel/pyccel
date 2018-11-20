@@ -235,6 +235,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
 
+    def _print_F2PY_Module(self, expr):
+        code = '\n'.join(self._print(f) for f in expr.functions)
+        return code
+
+
 def pycode(expr, **settings):
     """ Converts an expr to a string of Python code
     Parameters

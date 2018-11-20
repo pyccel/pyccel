@@ -22,7 +22,7 @@ from pyccel.ast                     import FunctionHeader
 from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
 from pyccel.ast.core                import FunctionCall
-from pyccel.ast.f2py                import F2PY_Function
+from pyccel.ast.f2py                import F2PY_Function, F2PY_Module
 from pyccel.codegen.printing.pycode import pycode
 
 
@@ -47,14 +47,21 @@ def mkdir_p(folder):
 
 #==============================================================================
 
-def write_code(filename, code, folder='__pycache__'):
-    if folder:
-        mkdir_p(folder)
-        filename = os.path.join(folder, filename)
+def write_code(filename, code, folder=None):
+    if not folder:
+        folder = os.getcwd()
 
-        # add __init__.py for imports
-        cmd = 'touch {}/__init__.py'.format(folder)
-        os.system(cmd)
+    folder = os.path.abspath(folder)
+    if not os.path.isdir(folder):
+        raise ValueError('{} folder does not exist'.format(folder))
+
+    filename = os.path.basename( filename )
+    filename = os.path.join(folder, filename)
+
+    # TODO check if init exists
+    # add __init__.py for imports
+    cmd = 'touch {}/__init__.py'.format(folder)
+    os.system(cmd)
 
     f = open(filename, 'w')
     for line in code:
@@ -123,6 +130,20 @@ def get_function_from_ast(ast, func_name):
 
     return node
 
+#==============================================================================
+
+# TODO must be moved to pyccel/ast/utilities.py
+def get_external_function_from_ast(ast):
+    nodes   = []
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef) and stmt.is_external:
+
+            nodes += [stmt]
+
+    if not nodes:
+        print('> could not find {}'.format(func_name))
+
+    return nodes
 
 #==============================================================================
 
@@ -568,8 +589,83 @@ def clean_extension_module( ext_mod, py_mod_name ):
     # Remove f2py automatic attribute
     delattr( ext_mod, n )
 
+
 #==============================================================================
 
+# assumes relative path
+# TODO add openacc
+def compile_f2py(filename,
+                        extra_args='',
+                        libs=[],
+                        libdirs=[],
+                        compiler=None ,
+                        mpi=False,
+                        openmp=False,
+                        includes = [],
+                        only = []):
+
+    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {libdirs} {extra_args} {includes} {only}"""
+
+    compilers  = ''
+    f90flags   = ''
+    opt        = ''
+
+    if compiler == 'gfortran':
+        _compiler = 'gnu95'
+
+    elif compiler == 'ifort':
+        _compiler = 'intelem'
+
+    else:
+        raise NotImplementedError('Only gfortran and ifort are available for the moment')
+
+    if mpi:
+        compilers = '--f90exec=mpif90 '
+
+    if compiler:
+        compilers = compilers + '--fcompiler={}'.format(_compiler)
+
+    extra_args, f90flags, opt = construct_flags( compiler,
+                                                 extra_args = extra_args,
+                                                 openmp = openmp )
+
+    if only:
+        only = 'only: ' + ','.join(str(i) for i in only)
+    else:
+        only = ''
+
+    if not libs:
+        libs = ''
+
+    if not libdirs:
+        libdirs = ''
+
+    if not includes:
+        includes = ''
+
+    modulename = filename.split('.')[0]
+
+    libs = ' '.join('-l'+i.lower() for i in libs)
+    libdirs = ' '.join('-L'+i.lower() for i in libdirs)
+
+    args = args_pattern.format( compilers  = compilers,
+                                f90flags   = f90flags,
+                                opt        = opt,
+                                libs       = libs,
+                                libdirs    = libdirs,
+                                modulename = modulename.rpartition('.')[2],
+                                filename   = filename,
+                                extra_args = extra_args,
+                                includes   = includes,
+                                only       = only )
+
+    cmd = """python{}.{} -m numpy.f2py {}"""
+
+    cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
+    output = subprocess.check_output(cmd, shell=True)
+    return output, cmd
+
+#==============================================================================
 
 def epyccel_function(func,
                      namespace  = globals(),
@@ -606,8 +702,11 @@ def epyccel_function(func,
 
     # ...
     if folder is None:
+        basedir = os.getcwd()
         folder = '__pycache__'
+        folder = os.path.join( basedir, folder )
 
+    folder = os.path.abspath( folder )
     mkdir_p(folder)
     # ...
 
@@ -698,14 +797,11 @@ def epyccel_function(func,
         print(cmd)
     # ...
 
-    os.chdir(basedir)
-
     # ...
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    name = os.path.join(folder, f2py_module_name)
-    name = name.replace('/', '.')
+    name = f2py_module_name
 
     import_mod = 'from {name} import {module_name}'.format( name        = name,
                                                             module_name = f2py_module_name)
@@ -716,89 +812,193 @@ def epyccel_function(func,
     code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
                                                  assign_func = assign_func )
 
-    exec(code, namespace)
-    f = namespace[func_name]
-
-    filename = '__epyccel__{}.py'.format(func_name)
+    _module_name = '__epyccel__{}'.format(module_name)
+    filename = '{}.py'.format(_module_name)
     fname = write_code(filename, code, folder=folder)
+
+    sys.path.append(folder)
+    package = importlib.import_module( _module_name )
+    sys.path.remove(folder)
+
+    func = getattr(package, func_name)
+
+    os.chdir(basedir)
 
     if verbose:
         print('> epyccel interface has been stored in {}'.format(fname))
     # ...
 
-    return f
+    return func
 
 #==============================================================================
 
-# assumes relative path
-# TODO add openacc
-def compile_f2py(filename,
-                        extra_args='',
-                        libs=[],
-                        libdirs=[],
-                        compiler=None ,
-                        mpi=False,
-                        openmp=False,
-                        includes = [],
-                        only = []):
+def epyccel_module(module,
+                   namespace  = globals(),
+                   compiler   = None,
+                   fflags     = None,
+                   openmp     = False,
+                   openacc    = False,
+                   verbose    = False,
+                   debug      = False,
+                   include    = [],
+                   libdir     = [],
+                   modules    = [],
+                   libs       = [],
+                   extra_args = '',
+                   folder     = None):
 
-    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {libdirs} {extra_args} {includes} {only}"""
+    # ... get the module source code
+    if not isinstance(module, ModuleType):
+        raise TypeError('> Expecting a module')
 
-    compilers  = ''
-    f90flags   = ''
-    opt        = ''
+    lines = inspect.getsourcelines(module)[0]
+    code = ''.join(lines)
+    # ...
 
-    if compiler == 'gfortran':
-        _compiler = 'gnu95'
+    # ...
+    tag = random_string( 6 )
+    # ...
 
-    elif compiler == 'ifort':
-        _compiler = 'intelem'
+    # ...
+    module_name = module.__name__
+    fname       = module.__file__
+    binary      = '{}.o'.format(module_name)
+    libname     = tag
+    # ...
 
-    else:
-        raise NotImplementedError('Only gfortran and ifort are available for the moment')
+    # ...
+    if folder is None:
+        basedir = os.getcwd()
+        folder = '__pycache__'
+        folder = os.path.join( basedir, folder )
 
-    if mpi:
-        compilers = '--f90exec=mpif90 '
+    folder = os.path.abspath( folder )
+    mkdir_p(folder)
+    # ...
 
-    if compiler:
-        compilers = compilers + '--fcompiler={}'.format(_compiler)
+    # ...
+    basedir = os.getcwd()
+    os.chdir(folder)
+    curdir = os.getcwd()
+    # ...
 
-    extra_args, f90flags, opt = construct_flags( compiler,
-                                                 extra_args = extra_args,
-                                                 openmp = openmp )
+    # ... we need to store the python file in the folder, so that execute_pyccel
+    #     can run
+    cmd = 'cp {fname} {new}'.format(fname=fname, new=os.path.basename(fname))
+    os.system(cmd)
+    fname = os.path.basename(fname)
+    # ...
 
-    if only:
-        only = 'only: ' + ','.join(str(i) for i in only)
-    else:
-        only = ''
+    # ...
+    accelerator = None
+    if openmp:
+        accelerator = 'openmp'
 
-    if not libs:
-        libs = ''
+    if openacc:
+        accelerator = 'openacc'
+    # ...
 
-    if not libdirs:
-        libdirs = ''
+    # ...
+    if compiler is None:
+        compiler = 'gfortran'
+    # ...
 
-    if not includes:
-        includes = ''
+    # ...
+    if fflags is None:
+        fflags = construct_flags_pyccel( compiler,
+                                         fflags=None,
+                                         debug=debug,
+                                         accelerator=accelerator,
+                                         include=[],
+                                         libdir=[] )
+    # ...
 
-    modulename = filename.split('.')[0]
+    # ... convert python to fortran using pyccel
+    #     we ask for the ast so that we can get the FunctionDef node
+    output, cmd, ast = execute_pyccel( fname,
+                                       compiler    = compiler,
+                                       fflags      = fflags,
+                                       debug       = debug,
+                                       verbose     = verbose,
+                                       accelerator = accelerator,
+                                       include     = include,
+                                       libdir      = libdir,
+                                       modules     = modules,
+                                       libs        = libs,
+                                       binary      = None,
+                                       output      = '',
+                                       return_ast  = True )
+    # ...
 
-    libs = ' '.join('-l'+i.lower() for i in libs)
-    libdirs = ' '.join('-L'+i.lower() for i in libdirs)
+    # ...
+    cmd = 'ar -r lib{libname}.a {binary} '.format(binary=binary, libname=libname)
+    os.system(cmd)
 
-    args = args_pattern.format( compilers  = compilers,
-                                f90flags   = f90flags,
-                                opt        = opt,
-                                libs       = libs,
-                                libdirs    = libdirs,
-                                modulename = modulename.rpartition('.')[2],
-                                filename   = filename,
+    if verbose:
+        print(cmd)
+    # ...
+
+    # ... construct a f2py interface for the assembly
+    # be careful: because of f2py we must use lower case
+    funcs = get_external_function_from_ast(ast)
+
+    f2py_module = F2PY_Module(funcs, module_name)
+    code = pycode(f2py_module)
+
+    f2py_module_name = f2py_module.name
+
+    filename = '{}.py'.format(f2py_module_name)
+    fname = write_code(filename, code, folder=folder)
+
+    fname = execute_pyccel(fname, output='', convert_only=True)
+
+    output, cmd = compile_f2py( fname,
                                 extra_args = extra_args,
-                                includes   = includes,
-                                only       = only )
+                                libs       = [libname],
+                                libdirs    = [curdir],
+                                compiler   = compiler,
+                                mpi        = False,
+                                openmp     = openmp )
 
-    cmd = """python{}.{} -m numpy.f2py {}"""
+    if verbose:
+        print(cmd)
+    # ...
 
-    cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
-    output = subprocess.check_output(cmd, shell=True)
-    return output, cmd
+    # ...
+    # update module name for dependencies
+    # needed for interface when importing assembly
+    # name.name is needed for f2py
+    name = f2py_module_name
+
+    import_mod = 'from {name} import {module_name}'.format( name        = name,
+                                                            module_name = f2py_module_name)
+
+    assign_func = ''
+    for expr in f2py_module.functions:
+        func_name      = expr.func.name
+        f2py_func_name = expr.name
+        stmt = '{func} = {module}.{f2py_func}'.format( func      = func_name,
+                                                       module    = f2py_module_name,
+                                                       f2py_func = f2py_func_name )
+
+        assign_func = '{assign_func}\n{stmt}'.format( assign_func = assign_func,
+                                                      stmt        = stmt )
+
+    code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
+                                                 assign_func = assign_func )
+
+    _module_name = '__epyccel__{}'.format(module_name)
+    filename = '{}.py'.format(_module_name)
+    fname = write_code(filename, code, folder=folder)
+
+    sys.path.append(folder)
+    package = importlib.import_module( _module_name )
+    sys.path.remove(folder)
+
+    os.chdir(basedir)
+
+    if verbose:
+        print('> epyccel interface has been stored in {}'.format(fname))
+    # ...
+
+    return package
