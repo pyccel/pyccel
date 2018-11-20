@@ -130,7 +130,7 @@ def compile_fortran(filename, compiler, flags,
 
     output = subprocess.check_output(cmd, shell=True)
 
-    if verbose:
+    if output:
         print(output)
 
     # TODO shall we uncomment this?

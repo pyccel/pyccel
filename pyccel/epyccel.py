@@ -559,7 +559,7 @@ def clean_extension_module( ext_mod, py_mod_name ):
 
 
 def epyccel_function(func,
-                     namespace  = [],
+                     namespace  = globals(),
                      compiler   = None,
                      fflags     = None,
                      openmp     = False,
@@ -578,11 +578,6 @@ def epyccel_function(func,
         raise TypeError('> Expecting a function')
 
     code = get_source_function(func)
-
-    if verbose:
-        print ('------')
-        print (code)
-        print ('------')
     # ...
 
     # ...
@@ -683,41 +678,73 @@ def epyccel_function(func,
 
     body = [FunctionCall(func, args)]
 
-    f2py_name = 'f2py_{}'.format(func_name)
-    header = construct_header(f2py_name, args)
-    func = FunctionDef(f2py_name, list(args), [], body)
-    code = pycode(func)
-    imports = 'from {mod} import {func}'.format(mod=module_name,
-                                                func=func_name)
+    f2py_module_name = 'f2py_{}'.format(module_name)
+    f2py_func_name = 'f2py_{}'.format(func_name)
 
-    code = '{imports}\n{header}\n{code}'.format(imports=imports,
-                                                header=header,
-                                                code=code)
+    f2py_func = FunctionDef(f2py_func_name, list(args), [], body)
+
+    code = pycode(f2py_func)
+    header = construct_header(f2py_func_name, args)
+    imports = 'from {mod} import {func}'.format( mod  = module_name,
+                                                 func = func_name )
+
+    code = '{imports}\n{header}\n{code}'.format( imports = imports,
+                                                 header  = header,
+                                                 code    = code )
 
 
-    filename = 'f2py_{}.py'.format(module_name)
+    filename = '{}.py'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
 
     fname = execute_pyccel(fname, output='', convert_only=True)
 
-    output, cmd = new_compile_fortran( fname,
-                                       extra_args = extra_args,
-                                       libs       = [libname],
-                                       libdirs    = [curdir],
-                                       compiler   = compiler,
-                                       mpi        = False,
-                                       openmp     = openmp)
-    # ...
+    output, cmd = compile_f2py( fname,
+                                extra_args = extra_args,
+                                libs       = [libname],
+                                libdirs    = [curdir],
+                                compiler   = compiler,
+                                mpi        = False,
+                                openmp     = openmp )
 
     if verbose:
         print(cmd)
+    # ...
 
     os.chdir(basedir)
+
+    # ...
+    # update module name for dependencies
+    # needed for interface when importing assembly
+    # name.name is needed for f2py
+    name = os.path.join(folder, f2py_module_name)
+    name = name.replace('/', '.')
+
+    import_mod = 'from {name} import {module_name}'.format( name        = name,
+                                                            module_name = f2py_module_name)
+    assign_func = '{func} = {module}.{f2py_func}'.format( func      = func_name,
+                                                          module    = f2py_module_name,
+                                                          f2py_func = f2py_func_name )
+
+    code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
+                                                 assign_func = assign_func )
+
+    exec(code, namespace)
+    f = namespace[func_name]
+
+    filename = '__epyccel__{}.py'.format(func_name)
+    fname = write_code(filename, code, folder=folder)
+
+    if verbose:
+        print('> epyccel interface has been stored in {}'.format(fname))
+    # ...
+
+    return f
 
 #==============================================================================
 
 # assumes relative path
-def new_compile_fortran(filename,
+# TODO add openacc
+def compile_f2py(filename,
                         extra_args='',
                         libs=[],
                         libdirs=[],
