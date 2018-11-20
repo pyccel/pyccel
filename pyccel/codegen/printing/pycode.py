@@ -239,6 +239,46 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         code = '\n'.join(self._print(f) for f in expr.functions)
         return code
 
+    def _print_F2PY_FunctionInterface(self, expr):
+        f2py_module_name = expr.f2py_module_name
+        f2py_func        = expr.f2py_function
+        f2py_func_name   = f2py_func.name
+        func_name        = f2py_func.func.name
+
+        import_mod = 'from {name} import {module_name}'.format( name        = f2py_module_name,
+                                                                module_name = f2py_module_name)
+        assign_func = '{func} = {module}.{f2py_func}'.format( func      = func_name,
+                                                              module    = f2py_module_name,
+                                                              f2py_func = f2py_func_name )
+
+        code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
+                                                     assign_func = assign_func )
+
+        return code
+
+    def _print_F2PY_ModuleInterface(self, expr):
+        f2py_module = expr.module
+        name = f2py_module.name
+
+        import_mod = 'from {name} import {module_name}'.format( name        = name,
+                                                                module_name = name)
+
+        assign_func = ''
+        for f in f2py_module.functions:
+            func_name      = f.func.name
+            f2py_func_name = f.name
+            stmt = '{func} = {module}.{f2py_func}'.format( func      = func_name,
+                                                           module    = name,
+                                                           f2py_func = f2py_func_name )
+
+            assign_func = '{assign_func}\n{stmt}'.format( assign_func = assign_func,
+                                                          stmt        = stmt )
+
+        code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
+                                                     assign_func = assign_func )
+        return code
+
+
 
 def pycode(expr, **settings):
     """ Converts an expr to a string of Python code

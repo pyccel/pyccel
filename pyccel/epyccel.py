@@ -23,6 +23,7 @@ from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
 from pyccel.ast.core                import FunctionCall
 from pyccel.ast.f2py                import F2PY_Function, F2PY_Module
+from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
 from pyccel.codegen.printing.pycode import pycode
 
 
@@ -801,16 +802,7 @@ def epyccel_function(func,
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    name = f2py_module_name
-
-    import_mod = 'from {name} import {module_name}'.format( name        = name,
-                                                            module_name = f2py_module_name)
-    assign_func = '{func} = {module}.{f2py_func}'.format( func      = func_name,
-                                                          module    = f2py_module_name,
-                                                          f2py_func = f2py_func_name )
-
-    code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
-                                                 assign_func = assign_func )
+    code = pycode(F2PY_FunctionInterface(f2py_func, f2py_module_name))
 
     _module_name = '__epyccel__{}'.format(module_name)
     filename = '{}.py'.format(_module_name)
@@ -968,24 +960,7 @@ def epyccel_module(module,
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    name = f2py_module_name
-
-    import_mod = 'from {name} import {module_name}'.format( name        = name,
-                                                            module_name = f2py_module_name)
-
-    assign_func = ''
-    for expr in f2py_module.functions:
-        func_name      = expr.func.name
-        f2py_func_name = expr.name
-        stmt = '{func} = {module}.{f2py_func}'.format( func      = func_name,
-                                                       module    = f2py_module_name,
-                                                       f2py_func = f2py_func_name )
-
-        assign_func = '{assign_func}\n{stmt}'.format( assign_func = assign_func,
-                                                      stmt        = stmt )
-
-    code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
-                                                 assign_func = assign_func )
+    code = pycode(F2PY_ModuleInterface(f2py_module))
 
     _module_name = '__epyccel__{}'.format(module_name)
     filename = '{}.py'.format(_module_name)

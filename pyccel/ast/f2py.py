@@ -21,6 +21,8 @@ class F2PY_Function(Basic):
     def name(self):
         return 'f2py_{}'.format(self.func.name).lower()
 
+#=======================================================================================
+
 # module_name and name are different here
 # module_name is the original module name
 # name is the name we are giving for the new module
@@ -44,3 +46,38 @@ class F2PY_Module(Basic):
     @property
     def name(self):
         return 'f2py_{}'.format(self.module_name).lower()
+
+#=======================================================================================
+
+# this is used as a python interface for a F2PY_Function
+# it takes a F2PY_Function as input
+class F2PY_FunctionInterface(Basic):
+
+    def __new__(cls, func, f2py_module_name):
+        if not isinstance(func, F2PY_Function):
+            raise TypeError('Expecting a F2PY_Function')
+
+        return Basic.__new__(cls, func, f2py_module_name)
+
+    @property
+    def f2py_function(self):
+        return self.args[0]
+
+    @property
+    def f2py_module_name(self):
+        return self.args[1]
+
+#=======================================================================================
+
+class F2PY_ModuleInterface(Basic):
+
+    def __new__(cls, module):
+        if not isinstance(module, F2PY_Module):
+            raise TypeError('Expecting a F2PY_Module')
+
+        return Basic.__new__(cls, module)
+
+    @property
+    def module(self):
+        return self.args[0]
+
