@@ -2665,6 +2665,7 @@ class FunctionDef(Basic):
         is_pure=False,
         is_elemental=False,
         is_private=False,
+        arguments_inout=[],
         ):
 
         # name
@@ -2746,6 +2747,16 @@ class FunctionDef(Basic):
         if not isinstance(is_private, bool):
             raise TypeError('Expecting a boolean for private')
 
+        if arguments_inout:
+            if not isinstance(arguments_inout, (list, tuple, Tuple)):
+                raise TypeError('Expecting an iterable ')
+
+            if not all([isinstance(i, bool) for i in arguments_inout]):
+                raise ValueError('Expecting booleans')
+
+        else:
+            # TODO shall we keep this?
+            arguments_inout = [False for a in arguments]
 
         return Basic.__new__(
             cls,
@@ -2765,7 +2776,8 @@ class FunctionDef(Basic):
             is_recursive,
             is_pure,
             is_elemental,
-            is_private)
+            is_private,
+            arguments_inout)
 
     @property
     def name(self):
@@ -2834,6 +2846,10 @@ class FunctionDef(Basic):
     @property
     def is_private(self):
         return self._args[16]
+
+    @property
+    def arguments_inout(self):
+        return self._args[17]
 
     def print_body(self):
         for s in self.body:
@@ -4058,6 +4074,8 @@ class IndexedVariable(IndexedBase):
     def _eval_subs(self, old, new):
         return self
 
+    def __str__(self):
+        return str(self.name)
 
 
 class IndexedElement(Indexed):
