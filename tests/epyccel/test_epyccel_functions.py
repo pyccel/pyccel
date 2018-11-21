@@ -115,7 +115,7 @@ def test_decorator_f6():
     m1 = 2 ; m2 = 3
 
     x = np.zeros((m1,m2))
-    f(m1, m2, x.transpose())
+    f(m1, m2, x)
 
     x_expected = np.zeros((m1,m2))
     f6(m1, m2, x_expected)

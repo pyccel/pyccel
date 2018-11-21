@@ -16,6 +16,15 @@ from pyccel.ast.core       import Assign, Return
 
 
 #==============================================================================
+pattern_f2py_func = """
+from pyccel.decorators import f2py_compatible
+from {module_name} import {module_name}
+@f2py_compatible
+def {name}(*args):
+    return {module_name}.{f2py_func}(*args)
+"""
+
+#==============================================================================
 
 def _construct_header(func_name, args):
     args = build_types_decorator(args, order='F')
@@ -219,37 +228,42 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         f2py_func_name   = f2py_func.name
         func_name        = expr.parent.name
 
-        import_mod = 'from {name} import {module_name}'.format( name        = f2py_module_name,
-                                                                module_name = f2py_module_name)
-        assign_func = '{func} = {module}.{f2py_func}'.format( func      = func_name,
-                                                              module    = f2py_module_name,
-                                                              f2py_func = f2py_func_name )
-
-        code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
-                                                     assign_func = assign_func )
-
+        code = pattern_f2py_func.format( name        = func_name,
+                                         module_name = f2py_module_name,
+                                         f2py_func   = f2py_func_name)
         return code
 
     def _print_F2PY_ModuleInterface(self, expr):
         f2py_module = expr.module
         name = f2py_module.name
 
-        import_mod = 'from {name} import {module_name}'.format( name        = name,
-                                                                module_name = name)
+#        import_mod = 'from {name} import {module_name}'.format( name        = name,
+#                                                                module_name = name)
 
-        assign_func = ''
+        code = ''
         for f in f2py_module.funcs:
             func_name      = expr.parents[f.name]
             f2py_func_name = f.name
-            stmt = '{func} = {module}.{f2py_func}'.format( func      = func_name,
-                                                           module    = name,
-                                                           f2py_func = f2py_func_name )
 
-            assign_func = '{assign_func}\n{stmt}'.format( assign_func = assign_func,
-                                                          stmt        = stmt )
+            func_code = pattern_f2py_func.format( name        = func_name,
+                                                  module_name = name,
+                                                  f2py_func   = f2py_func_name)
 
-        code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
-                                                     assign_func = assign_func )
+            code = '{func_code}\n{code}'.format( func_code = func_code,
+                                                 code = code )
+
+
+#            stmt = '{func} = {module}.{f2py_func}'.format( func      = func_name,
+#                                                           module    = name,
+#                                                           f2py_func = f2py_func_name )
+#
+#            assign_func = '{assign_func}\n{stmt}'.format( assign_func = assign_func,
+#                                                          stmt        = stmt )
+#
+#        code = '{import_mod}\n{assign_func}'.format( import_mod = import_mod,
+#                                                     assign_func = assign_func )
+
+        print(code)
         return code
 
 
