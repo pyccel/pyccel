@@ -21,6 +21,7 @@ from pyccel.codegen.utilities       import construct_flags as construct_flags_py
 from pyccel.ast                     import FunctionHeader
 from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
+from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
 from pyccel.ast.f2py                import F2PY_Function, F2PY_Module
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
@@ -596,17 +597,18 @@ def clean_extension_module( ext_mod, py_mod_name ):
 
 # assumes relative path
 # TODO add openacc
-def compile_f2py(filename,
-                        extra_args='',
-                        libs=[],
-                        libdirs=[],
-                        compiler=None ,
-                        mpi=False,
-                        openmp=False,
-                        includes = [],
-                        only = []):
+def compile_f2py( filename,
+                  extra_args='',
+                  libs=[],
+                  libdirs=[],
+                  compiler=None ,
+                  mpi=False,
+                  openmp=False,
+                  includes = [],
+                  only = [],
+                  pyf = '' ):
 
-    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {filename} {libdirs} {extra_args} {includes} {only}"""
+    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
 
     compilers  = ''
     f90flags   = ''
@@ -659,12 +661,27 @@ def compile_f2py(filename,
                                 filename   = filename,
                                 extra_args = extra_args,
                                 includes   = includes,
-                                only       = only )
+                                only       = only,
+                                pyf        = pyf )
 
     cmd = """python{}.{} -m numpy.f2py {}"""
 
     cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
     output = subprocess.check_output(cmd, shell=True)
+
+#    # .... TODO: TO REMOVE
+#    pattern_1 = 'f2py  {modulename}.f90 -h {modulename}.pyf -m {modulename}'
+#    cmd_1 = pattern_1.format(modulename=modulename)
+#
+#    pattern_2 = 'f2py -c --fcompiler=gnu95 --f90flags=''  {modulename}.pyf {modulename}.f90 {libdirs} {libs}'
+#    cmd_2 = pattern_2.format(modulename=modulename, libs=libs, libdirs=libdirs)
+#
+#    print('*****************')
+#    print(cmd_1)
+#    print(cmd_2)
+#    print('*****************')
+#    # ....
+
     return output, cmd
 
 #==============================================================================
@@ -779,27 +796,24 @@ def epyccel_function(func,
     f2py_func = F2PY_Function(func, module_name)
     f2py_module_name = 'f2py_{}'.format(module_name)
 
+
+    imports = [Import(func_name, module_name)]
+
     expr = Module( f2py_module_name,
                    variables = [],
                    funcs = [f2py_func],
                    interfaces = [],
                    classes = [],
-                   imports = [] )
+                   imports = imports )
 
     code = fcode(expr)
-    print(code)
-    import sys; sys.exit(0)
 
     f2py_module_name = 'f2py_{}'.format(module_name)
-    f2py_func_name   = f2py_func.name
 
     filename = '{}.f90'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
 
-    print(code)
-    fname = execute_pyccel(fname, output='', convert_only=True)
-
-    output, cmd = compile_f2py( fname,
+    output, cmd = compile_f2py( filename,
                                 extra_args = extra_args,
                                 libs       = [libname],
                                 libdirs    = [curdir],

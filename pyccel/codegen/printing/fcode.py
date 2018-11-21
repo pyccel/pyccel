@@ -2120,7 +2120,11 @@ class FCodePrinter(CodePrinter):
                                                  args = newargs )
 
         else:
-            raise NotImplementedError('TODO')
+            assert(len(results) == 1)
+            args = ','.join(self._print(i) for i in args)
+            rhs = results[0]
+            code = '{name}({args})'.format( name = str(func.name),
+                                            args = args)
 
         return code
 
