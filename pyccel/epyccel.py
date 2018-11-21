@@ -861,7 +861,7 @@ def epyccel_module(module,
     # ...
 
     # ...
-    module_name = module.__name__
+    module_name = module.__name__.split('.')[-1]
     fname       = module.__file__
     binary      = '{}.o'.format(module_name)
     libname     = tag
