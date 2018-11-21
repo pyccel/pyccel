@@ -187,17 +187,23 @@ def execute_pyccel(filename,
 
     codegen = Codegen(ast, name)
     code = codegen.doprint()
-    fname = os.path.join(output, name)
-    fname = codegen.export(fname)
-
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
 
     if convert_only:
-        return fname
+        if not return_ast:
+            return code
+
+        else:
+            return code, ast
 
     else:
+
+        fname = os.path.join(output, name)
+        fname = codegen.export(fname)
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
         # ... constructs the compiler flags
         if compiler is None:
             compiler='gfortran'

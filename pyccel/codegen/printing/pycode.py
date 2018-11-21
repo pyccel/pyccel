@@ -257,7 +257,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         f2py_module_name = expr.f2py_module_name
         f2py_func        = expr.f2py_function
         f2py_func_name   = f2py_func.name
-        func_name        = f2py_func.func.name
+        func_name        = expr.parent.name
 
         import_mod = 'from {name} import {module_name}'.format( name        = f2py_module_name,
                                                                 module_name = f2py_module_name)

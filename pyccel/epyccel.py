@@ -25,6 +25,7 @@ from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
 from pyccel.ast.f2py                import F2PY_Function, F2PY_Module
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
+from pyccel.ast.f2py                import as_static_function
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 
@@ -716,7 +717,6 @@ def epyccel_function(func,
     module_name = 'mod_{}'.format(tag)
     fname       = '{}.py'.format(module_name)
     binary      = '{}.o'.format(module_name)
-    libname     = tag
     # ...
 
     # ...
@@ -765,27 +765,15 @@ def epyccel_function(func,
 
     # ... convert python to fortran using pyccel
     #     we ask for the ast so that we can get the FunctionDef node
-    output, cmd, ast = execute_pyccel( fname,
-                                       compiler    = compiler,
-                                       fflags      = fflags,
-                                       debug       = debug,
-                                       verbose     = verbose,
-                                       accelerator = accelerator,
-                                       include     = include,
-                                       libdir      = libdir,
-                                       modules     = modules,
-                                       libs        = libs,
-                                       binary      = None,
-                                       output      = '',
-                                       return_ast  = True )
-    # ...
-
-    # ...
-    cmd = 'ar -r lib{libname}.a {binary} '.format(binary=binary, libname=libname)
-    os.system(cmd)
-
-    if verbose:
-        print(cmd)
+    fname, ast = execute_pyccel( fname,
+                                 compiler     = compiler,
+                                 fflags       = fflags,
+                                 debug        = debug,
+                                 verbose      = verbose,
+                                 accelerator  = accelerator,
+                                 modules      = modules,
+                                 convert_only = True,
+                                 return_ast   = True )
     # ...
 
     # ... construct a f2py interface for the assembly
@@ -793,18 +781,19 @@ def epyccel_function(func,
     func_name = func.__name__
     func = get_function_from_ast(ast, func_name)
 
-    f2py_func = F2PY_Function(func, module_name)
     f2py_module_name = 'f2py_{}'.format(module_name)
 
+    static_func = as_static_function(func)
 
-    imports = [Import(func_name, module_name)]
+#    imports = [Import(func_name, module_name)]
 
     expr = Module( f2py_module_name,
                    variables = [],
-                   funcs = [f2py_func],
+                   funcs = [static_func],
                    interfaces = [],
                    classes = [],
-                   imports = imports )
+#                   imports = imports )
+                   imports = [] )
 
     code = fcode(expr)
 
@@ -815,8 +804,6 @@ def epyccel_function(func,
 
     output, cmd = compile_f2py( filename,
                                 extra_args = extra_args,
-                                libs       = [libname],
-                                libdirs    = [curdir],
                                 compiler   = compiler,
                                 mpi        = False,
                                 openmp     = openmp )
@@ -829,7 +816,8 @@ def epyccel_function(func,
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    code = pycode(F2PY_FunctionInterface(f2py_func, f2py_module_name))
+    code = pycode(F2PY_FunctionInterface(static_func, f2py_module_name,
+                                         parent = func))
 
     _module_name = '__epyccel__{}'.format(module_name)
     filename = '{}.py'.format(_module_name)
@@ -969,7 +957,10 @@ def epyccel_module(module,
     filename = '{}.py'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
 
-    fname = execute_pyccel(fname, output='', convert_only=True)
+    code = execute_pyccel(fname, output='', convert_only=True)
+
+    filename = '{}.f90'.format(f2py_module_name)
+    fname = write_code(filename, code, folder=folder)
 
     output, cmd = compile_f2py( fname,
                                 extra_args = extra_args,
