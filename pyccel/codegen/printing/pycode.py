@@ -213,46 +213,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         return 'print({0})'.format(fs)
 
-    def _print_F2PY_Function(self, expr):
-        func = expr.func
-        module_name = expr.module_name
-        func_name = func.name
-
-        args = func.arguments
-        results = func.results
-        if results:
-#            print(results)
-            if len(results) == 1:
-                result = results[0]
-                if result.rank > 0:
-                    body = [Assign(result, FunctionCall(func, args))]
-                    args = list(args) + [result]
-#                    body = [FunctionCall(func, args)]
-                else:
-                    body  = [Assign(result, FunctionCall(func, args))]
-                    body += [Return(result)]
-        else:
-            body = [FunctionCall(func, args)]
-
-        f2py_func_name = 'f2py_{}'.format(func_name)
-        f2py_func = FunctionDef(f2py_func_name, list(args), results, body)
-
-        code = self._print(f2py_func)
-        header = _construct_header(f2py_func_name, args)
-        imports = 'from {mod} import {func}'.format( mod  = module_name,
-                                                     func = func_name )
-
-        code = '{imports}\n{header}\n{code}'.format( imports = imports,
-                                                     header  = header,
-                                                     code    = code )
-
-        return code
-
-
-    def _print_F2PY_Module(self, expr):
-        code = '\n'.join(self._print(f) for f in expr.functions)
-        return code
-
     def _print_F2PY_FunctionInterface(self, expr):
         f2py_module_name = expr.f2py_module_name
         f2py_func        = expr.f2py_function
@@ -278,8 +238,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                                                                 module_name = name)
 
         assign_func = ''
-        for f in f2py_module.functions:
-            func_name      = f.func.name
+        for f in f2py_module.funcs:
+            func_name      = expr.parents[f.name]
             f2py_func_name = f.name
             stmt = '{func} = {module}.{f2py_func}'.format( func      = func_name,
                                                            module    = name,

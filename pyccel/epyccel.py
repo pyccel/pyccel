@@ -23,7 +23,6 @@ from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
 from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
-from pyccel.ast.f2py                import F2PY_Function, F2PY_Module
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
 from pyccel.ast.f2py                import as_static_function
 from pyccel.codegen.printing.pycode import pycode
@@ -139,15 +138,16 @@ def get_function_from_ast(ast, func_name):
 # TODO must be moved to pyccel/ast/utilities.py
 def get_external_function_from_ast(ast):
     nodes   = []
+    others  = []
     for stmt in ast:
-        if isinstance(stmt, FunctionDef) and stmt.is_external:
+        if isinstance(stmt, FunctionDef):
+            if stmt.is_external:
+                nodes += [stmt]
 
-            nodes += [stmt]
+            else:
+                others += [stmt]
 
-    if not nodes:
-        print('> could not find {}'.format(func_name))
-
-    return nodes
+    return nodes, others
 
 #==============================================================================
 
@@ -785,19 +785,14 @@ def epyccel_function(func,
 
     static_func = as_static_function(func)
 
-#    imports = [Import(func_name, module_name)]
-
-    expr = Module( f2py_module_name,
+    f2py_module = Module( f2py_module_name,
                    variables = [],
                    funcs = [static_func],
                    interfaces = [],
                    classes = [],
-#                   imports = imports )
                    imports = [] )
 
-    code = fcode(expr)
-
-    f2py_module_name = 'f2py_{}'.format(module_name)
+    code = fcode(f2py_module)
 
     filename = '{}.f90'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
@@ -816,8 +811,7 @@ def epyccel_function(func,
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    code = pycode(F2PY_FunctionInterface(static_func, f2py_module_name,
-                                         parent = func))
+    code = pycode(F2PY_FunctionInterface(static_func, f2py_module_name, func))
 
     _module_name = '__epyccel__{}'.format(module_name)
     filename = '{}.py'.format(_module_name)
@@ -947,22 +941,33 @@ def epyccel_module(module,
 
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
-    funcs = get_external_function_from_ast(ast)
+    funcs, others = get_external_function_from_ast(ast)
+    static_funcs = []
+    parents = OrderedDict()
+    for f in funcs:
+        static_func = as_static_function(f)
+        static_funcs.append(static_func)
+        parents[static_func.name] = f.name
 
-    f2py_module = F2PY_Module(funcs, module_name)
-    code = pycode(f2py_module)
+    imports = []
+    for f in others:
+        imports += [Import(f.name, module_name.lower())]
 
-    f2py_module_name = f2py_module.name
+    f2py_module_name = 'f2py_{}'.format(module_name)
+    f2py_module_name = f2py_module_name.lower()
+    f2py_module = Module( f2py_module_name,
+                          variables = [],
+                          funcs = static_funcs,
+                          interfaces = [],
+                          classes = [],
+                          imports = imports )
 
-    filename = '{}.py'.format(f2py_module_name)
-    fname = write_code(filename, code, folder=folder)
-
-    code = execute_pyccel(fname, output='', convert_only=True)
+    code = fcode(f2py_module)
 
     filename = '{}.f90'.format(f2py_module_name)
-    fname = write_code(filename, code, folder=folder)
+    write_code(filename, code, folder=folder)
 
-    output, cmd = compile_f2py( fname,
+    output, cmd = compile_f2py( filename,
                                 extra_args = extra_args,
                                 libs       = [libname],
                                 libdirs    = [curdir],
@@ -978,7 +983,7 @@ def epyccel_module(module,
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    code = pycode(F2PY_ModuleInterface(f2py_module))
+    code = pycode(F2PY_ModuleInterface(f2py_module, parents))
 
     _module_name = '__epyccel__{}'.format(module_name)
     filename = '{}.py'.format(_module_name)
