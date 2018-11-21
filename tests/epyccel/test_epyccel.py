@@ -124,28 +124,6 @@ def test_decorator_f6():
     # ...
 
 
-#==============================================================================
-# TEST MODULE
-#==============================================================================
-
-def test_module1():
-
-    import test_mod as mod
-
-    # ...
-    m = epyccel(mod)
-    assert m.g1(3) == mod.g1(3)
-    # ...
-
-    # ...
-    x = np.array([2, 3, 4], dtype=int)
-    x_expected = x.copy()
-
-    m.g2(x)
-    mod.g2(x_expected)
-
-    assert np.array_equal( x, x_expected )
-    # ...
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
@@ -163,4 +141,4 @@ if __name__ == '__main__':
     test_decorator_f4()
     test_decorator_f5()
     test_decorator_f6()
-#    test_module1
+

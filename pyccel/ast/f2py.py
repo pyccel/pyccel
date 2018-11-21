@@ -130,6 +130,7 @@ def as_static_function(func):
     # ...
 
     return FunctionDef( name, list(args), results, body,
+                        local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout )
 
