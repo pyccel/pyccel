@@ -3,23 +3,36 @@
 from sympy import Tuple
 from sympy.core.basic import Basic
 
+from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import Import
+
 #=======================================================================================
-class F2PY_Function(Basic):
+class F2PY_Function(FunctionDef):
 
     def __new__(cls, func, module_name):
-        return Basic.__new__(cls, func, module_name)
+        # TODO create a static function when using arrays as output
 
-    @property
-    def func(self):
-        return self.args[0]
+        args    = func.arguments
+        results = func.results
+        if results:
+            if len(results) == 1:
+                result = results[0]
+                if result.rank > 0:
+                    body = [FunctionCall(func, args)]
+                    # updates args
+                    args = list(args) + [result]
+                else:
+                    body  = [Assign(result, FunctionCall(func, args))]
+                    body += [Return(result)]
+        else:
+            body = [FunctionCall(func, args)]
 
-    @property
-    def module_name(self):
-        return self.args[1]
+        imports = [Import(func.name, module_name)]
 
-    @property
-    def name(self):
-        return 'f2py_{}'.format(self.func.name).lower()
+        name = 'f2py_{}'.format(func.name)
+
+        return FunctionDef.__new__(cls, name, list(args), results, body, imports = imports)
 
 #=======================================================================================
 

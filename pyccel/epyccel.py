@@ -21,10 +21,11 @@ from pyccel.codegen.utilities       import construct_flags as construct_flags_py
 from pyccel.ast                     import FunctionHeader
 from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
-from pyccel.ast.core                import FunctionCall
+from pyccel.ast.core                import Module
 from pyccel.ast.f2py                import F2PY_Function, F2PY_Module
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
 from pyccel.codegen.printing.pycode import pycode
+from pyccel.codegen.printing.fcode  import fcode
 
 
 #==============================================================================
@@ -776,14 +777,26 @@ def epyccel_function(func,
     func = get_function_from_ast(ast, func_name)
 
     f2py_func = F2PY_Function(func, module_name)
-    code = pycode(f2py_func)
+    f2py_module_name = 'f2py_{}'.format(module_name)
+
+    expr = Module( f2py_module_name,
+                   variables = [],
+                   funcs = [f2py_func],
+                   interfaces = [],
+                   classes = [],
+                   imports = [] )
+
+    code = fcode(expr)
+    print(code)
+    import sys; sys.exit(0)
 
     f2py_module_name = 'f2py_{}'.format(module_name)
     f2py_func_name   = f2py_func.name
 
-    filename = '{}.py'.format(f2py_module_name)
+    filename = '{}.f90'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
 
+    print(code)
     fname = execute_pyccel(fname, output='', convert_only=True)
 
     output, cmd = compile_f2py( fname,

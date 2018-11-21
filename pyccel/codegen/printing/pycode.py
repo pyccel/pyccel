@@ -223,8 +223,14 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         if results:
 #            print(results)
             if len(results) == 1:
-                body  = [Assign(results[0], FunctionCall(func, args))]
-                body += [Return(results[0])]
+                result = results[0]
+                if result.rank > 0:
+                    body = [Assign(result, FunctionCall(func, args))]
+                    args = list(args) + [result]
+#                    body = [FunctionCall(func, args)]
+                else:
+                    body  = [Assign(result, FunctionCall(func, args))]
+                    body += [Return(result)]
         else:
             body = [FunctionCall(func, args)]
 

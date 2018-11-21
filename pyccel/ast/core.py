@@ -1408,6 +1408,7 @@ class Module(Basic):
 
         if not iterable(funcs):
             raise TypeError('funcs must be an iterable')
+
         for i in funcs:
             if not isinstance(i, FunctionDef):
                 raise TypeError('Only a FunctionDef instance is allowed.'
@@ -2461,7 +2462,9 @@ class FunctionCall(Basic):
         if not isinstance(func, (str, FunctionDef, Function)):
             raise TypeError('> expecting a str, FunctionDef, Function')
 
+        funcdef = None
         if isinstance(func, FunctionDef):
+            funcdef = func
             func = func.name
         # ...
 
@@ -2472,7 +2475,11 @@ class FunctionCall(Basic):
         args = Tuple(*args, sympify=False)
         # ...
 
-        return Basic.__new__(cls, func, args)
+        obj = Basic.__new__(cls, func, args)
+
+        obj._funcdef = funcdef
+
+        return obj
 
     @property
     def func(self):
@@ -2481,6 +2488,10 @@ class FunctionCall(Basic):
     @property
     def arguments(self):
         return self._args[1]
+
+    @property
+    def funcdef(self):
+        return self._funcdef
 
 class Return(Basic):
 
