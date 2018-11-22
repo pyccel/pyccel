@@ -185,14 +185,3 @@ def test_decorator_f6_3():
 #def teardown_module():
 #    clean_test()
 #
-
-######################################
-if __name__ == '__main__':
-    test_decorator_f1()
-    test_decorator_f2()
-    test_decorator_f3()
-    test_decorator_f4()
-    test_decorator_f5()
-    test_decorator_f6_1()
-    test_decorator_f6_2()
-    test_decorator_f6_3()

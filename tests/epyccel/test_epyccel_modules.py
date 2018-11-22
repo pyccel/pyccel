@@ -37,8 +37,3 @@ def test_module_2():
 
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
-
-##################################"
-if __name__ == '__main__':
-    test_module_1()
-    test_module_2()
