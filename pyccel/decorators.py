@@ -51,7 +51,9 @@ class f2py_compatible(object):
     def __call__(self, *args):
         newargs = []
         for a in args:
-            if isinstance(a, np.ndarray) and len(a.shape) > 1:
+            if ( isinstance(a, np.ndarray) and
+                ( len(a.shape) > 1)        and
+                a.flags['C_CONTIGUOUS'] ):
                 newargs.append(a.transpose())
 
             else:
