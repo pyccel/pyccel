@@ -5,6 +5,354 @@ from pyccel.epyccel import epyccel
 from modules        import arrays
 
 #==============================================================================
+# TEST: 1D ARRAYS OF INT
+#==============================================================================
+
+def test_array_int_1d_scalar_add():
+
+    f1 = arrays.array_int_1d_scalar_add
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_scalar_sub():
+
+    f1 = arrays.array_int_1d_scalar_sub
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_scalar_mul():
+
+    f1 = arrays.array_int_1d_scalar_mul
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_scalar_idiv():
+
+    f1 = arrays.array_int_1d_scalar_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_add():
+
+    f1 = arrays.array_int_1d_add
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_sub():
+
+    f1 = arrays.array_int_1d_sub
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_mul():
+
+    f1 = arrays.array_int_1d_mul
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_idiv():
+
+    f1 = arrays.array_int_1d_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+#==============================================================================
+# TEST: 2D ARRAYS OF INT WITH C ORDERING
+#==============================================================================
+
+def test_array_int_2d_C_scalar_add():
+
+    f1 = arrays.array_int_2d_C_scalar_add
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_scalar_sub():
+
+    f1 = arrays.array_int_2d_C_scalar_sub
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_scalar_mul():
+
+    f1 = arrays.array_int_2d_C_scalar_mul
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_scalar_idiv():
+
+    f1 = arrays.array_int_2d_C_scalar_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_add():
+
+    f1 = arrays.array_int_2d_C_add
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_sub():
+
+    f1 = arrays.array_int_2d_C_sub
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_mul():
+
+    f1 = arrays.array_int_2d_C_mul
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_C_idiv():
+
+    f1 = arrays.array_int_2d_C_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+#==============================================================================
+# TEST: 2D ARRAYS OF INT WITH F ORDERING
+#==============================================================================
+
+def test_array_int_2d_F_scalar_add():
+
+    f1 = arrays.array_int_2d_F_scalar_add
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_scalar_sub():
+
+    f1 = arrays.array_int_2d_F_scalar_sub
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_scalar_mul():
+
+    f1 = arrays.array_int_2d_F_scalar_mul
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_scalar_idiv():
+
+    f1 = arrays.array_int_2d_F_scalar_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_add():
+
+    f1 = arrays.array_int_2d_F_add
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_sub():
+
+    f1 = arrays.array_int_2d_F_sub
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_mul():
+
+    f1 = arrays.array_int_2d_F_mul
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_idiv():
+
+    f1 = arrays.array_int_2d_F_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = x1.copy()
+    a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+#==============================================================================
 # TEST: 1D ARRAYS OF REAL
 #==============================================================================
 
