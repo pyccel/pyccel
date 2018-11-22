@@ -7,10 +7,19 @@ def test_module_1():
     modnew = epyccel(mod)
 
     from numpy import zeros
-    x = zeros(5)
+
+    # ...
+    x_expected = zeros(5)
+    x          = zeros(5)
+
+    mod.f(x_expected)
+    mod.g(x_expected)
+
     modnew.f(x)
     modnew.g(x)
-    print(x)
+
+    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    # ...
 
 def test_module_2():
     import modules.Module_2 as mod
@@ -26,16 +35,10 @@ def test_module_2():
     x_expected = np.zeros((m1,m2))
     mod.f6(m1, m2, x_expected)
 
-    print(x)
-    print(x_expected)
-
-#    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
-#    # ...
-#    modnew.f(x)
-#    modnew.g(x)
-#    print(x)
+    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
+    # ...
 
 ##################################"
 if __name__ == '__main__':
-#    test_module_1()
+    test_module_1()
     test_module_2()

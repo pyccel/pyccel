@@ -236,11 +236,19 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         f2py_func_name   = f2py_func.name
         func_name        = expr.parent.name
 
-        if self.assert_contiguous:
+        # ...
+        assert_contiguous = self.assert_contiguous
+
+        # set assert_contiguous to True
+        if not f2py_func.has_multiarray():
+            assert_contiguous = True
+
+        if assert_contiguous:
             pattern = pattern_f2py_func_contiguous
 
         else:
             pattern = pattern_f2py_func
+        # ...
 
         code = pattern.format( name        = func_name,
                                module_name = f2py_module_name,
@@ -258,16 +266,24 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         f2py_module = expr.module
         name = f2py_module.name
 
-        if self.assert_contiguous:
-            pattern = pattern_f2py_func_contiguous
-
-        else:
-            pattern = pattern_f2py_func
-
         code = ''
         for f in f2py_module.funcs:
             func_name      = expr.parents[f.name]
             f2py_func_name = f.name
+
+            # ...
+            assert_contiguous = self.assert_contiguous
+
+            # set assert_contiguous to True
+            if not f.has_multiarray():
+                assert_contiguous = True
+
+            if assert_contiguous:
+                pattern = pattern_f2py_func_contiguous
+
+            else:
+                pattern = pattern_f2py_func
+            # ...
 
             func_code = pattern.format( name        = func_name,
                                         module_name = name,

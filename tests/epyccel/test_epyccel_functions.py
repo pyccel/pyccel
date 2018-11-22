@@ -7,8 +7,6 @@ import os
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
-#VERBOSE = False
-VERBOSE = True
 
 def clean_test():
     cmd = 'rm -rf __pycache__/*'
@@ -48,34 +46,26 @@ def test_decorator_f2():
     # ...
 
 #------------------------------------------------------------------------------
-# TODO we need to pass the size of the returned array for the moment
 def test_decorator_f3():
     @types('int [:]')
     def f3(x):
         y = x - 1
         return y
 
-    f = epyccel(f3)
-
-    # ...
-    x = np.array([3, 4, 5, 6], dtype=int)
-    assert np.array_equal( f(x, len(x)), f3(x) )
-    # ...
+    from pyccel.ast import AstFunctionResultError
+    with pytest.raises(AstFunctionResultError):
+        f = epyccel(f3)
 
 #------------------------------------------------------------------------------
-# TODO we need to pass the shape of the returned array for the moment
 def test_decorator_f4():
     @types('real [:,:]')
     def f4(x):
         y = x - 1.0
         return y
 
-    f = epyccel(f4)
-
-    # ...
-    x = np.random.random((2, 3))
-    assert np.allclose( f(x, *x.shape), f4(x), rtol=1e-15, atol=1e-15 )
-    # ...
+    from pyccel.ast import AstFunctionResultError
+    with pytest.raises(AstFunctionResultError):
+        f = epyccel(f4)
 
 #------------------------------------------------------------------------------
 def test_decorator_f5():
@@ -198,11 +188,11 @@ def test_decorator_f6_3():
 
 ######################################
 if __name__ == '__main__':
-#    test_decorator_f1()
-#    test_decorator_f2()
-#    test_decorator_f3()
-#    test_decorator_f4()
-#    test_decorator_f5()
+    test_decorator_f1()
+    test_decorator_f2()
+    test_decorator_f3()
+    test_decorator_f4()
+    test_decorator_f5()
     test_decorator_f6_1()
     test_decorator_f6_2()
     test_decorator_f6_3()

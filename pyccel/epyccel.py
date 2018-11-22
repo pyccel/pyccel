@@ -782,20 +782,6 @@ def epyccel_function(func,
     # be careful: because of f2py we must use lower case
     func_name = func.__name__
     func = get_function_from_ast(ast, func_name)
-
-    # ... looking for arrays of rank > 1
-    found = False
-    for a in list(func.arguments) + list(func.results):
-        if isinstance(a, (Variable, IndexedVariable)):
-            if a.rank > 1:
-                found = True
-
-        if found:
-            break
-
-    # set assert_contiguous to True
-    if not found:
-        assert_contiguous = True
     # ...
 
     f2py_module_name = 'f2py_{}'.format(module_name)
