@@ -23,6 +23,7 @@ from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
 from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
+from pyccel.ast.core                import Variable, IndexedVariable
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
 from pyccel.ast.f2py                import as_static_function
 from pyccel.codegen.printing.pycode import pycode
@@ -700,7 +701,8 @@ def epyccel_function(func,
                      modules    = [],
                      libs       = [],
                      extra_args = '',
-                     folder     = None):
+                     folder     = None,
+                     assert_contiguous = False):
 
     # ... get the function source code
     if not isinstance(func, FunctionType):
@@ -781,6 +783,21 @@ def epyccel_function(func,
     func_name = func.__name__
     func = get_function_from_ast(ast, func_name)
 
+    # ... looking for arrays of rank > 1
+    found = False
+    for a in list(func.arguments) + list(func.results):
+        if isinstance(a, (Variable, IndexedVariable)):
+            if a.rank > 1:
+                found = True
+
+        if found:
+            break
+
+    # set assert_contiguous to True
+    if not found:
+        assert_contiguous = True
+    # ...
+
     f2py_module_name = 'f2py_{}'.format(module_name)
 
     static_func = as_static_function(func)
@@ -811,7 +828,9 @@ def epyccel_function(func,
     # update module name for dependencies
     # needed for interface when importing assembly
     # name.name is needed for f2py
-    code = pycode(F2PY_FunctionInterface(static_func, f2py_module_name, func))
+    settings = {'assert_contiguous': assert_contiguous}
+    code = pycode(F2PY_FunctionInterface(static_func, f2py_module_name, func),
+                  **settings)
 
     _module_name = '__epyccel__{}'.format(module_name)
     filename = '{}.py'.format(_module_name)

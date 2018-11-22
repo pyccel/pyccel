@@ -22,6 +22,10 @@ def {name}(*args):
     return {module_name}.{f2py_func}(*args)
 """
 
+pattern_f2py_func_contiguous = """
+{name} = {module_name}.{f2py_func}
+"""
+
 #==============================================================================
 
 def _construct_header(func_name, args):
@@ -38,6 +42,12 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         [(k, '' + v) for k, v in _known_functions_math.items()]
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
+
+
+    def __init__(self, settings=None):
+        self.assert_contiguous = settings.pop('assert_contiguous', False)
+
+        SympyPythonCodePrinter.__init__(self, settings=settings)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -226,13 +236,21 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         f2py_func_name   = f2py_func.name
         func_name        = expr.parent.name
 
-        code = pattern_f2py_func.format( name        = func_name,
-                                         module_name = f2py_module_name,
-                                         f2py_func   = f2py_func_name)
+        if self.assert_contiguous:
+            pattern = pattern_f2py_func_contiguous
+
+        else:
+            pattern = pattern_f2py_func
+
+        code = pattern.format( name        = func_name,
+                               module_name = f2py_module_name,
+                               f2py_func   = f2py_func_name)
 
         code = 'from {module_name} import {module_name}\n{code}'.format( code = code,
                                                                          module_name = f2py_module_name )
-        code = 'from pyccel.decorators import f2py_compatible\n{code}'.format( code = code )
+
+        if not self.assert_contiguous:
+            code = 'from pyccel.decorators import f2py_compatible\n{code}'.format( code = code )
 
         return code
 
@@ -240,21 +258,29 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         f2py_module = expr.module
         name = f2py_module.name
 
+        if self.assert_contiguous:
+            pattern = pattern_f2py_func_contiguous
+
+        else:
+            pattern = pattern_f2py_func
+
         code = ''
         for f in f2py_module.funcs:
             func_name      = expr.parents[f.name]
             f2py_func_name = f.name
 
-            func_code = pattern_f2py_func.format( name        = func_name,
-                                                  module_name = name,
-                                                  f2py_func   = f2py_func_name)
+            func_code = pattern.format( name        = func_name,
+                                        module_name = name,
+                                        f2py_func   = f2py_func_name)
 
             code = '{func_code}\n{code}'.format( func_code = func_code,
                                                  code = code )
 
         code = 'from {module_name} import {module_name}\n{code}'.format( code = code,
                                                                          module_name = name )
-        code = 'from pyccel.decorators import f2py_compatible\n{code}'.format( code = code )
+
+        if not self.assert_contiguous:
+            code = 'from pyccel.decorators import f2py_compatible\n{code}'.format( code = code )
 
         return code
 
