@@ -78,7 +78,7 @@ def as_static_function(func):
         else:
             raise NotImplementedError('when len(results) > 1')
 
-    name = 'f2py_{}'.format(func.name)
+    name = 'f2py_{}'.format(func.name).lower()
 
     # ...
     results_names = [i.name for i in results]

@@ -3039,8 +3039,8 @@ class FunctionDef(Basic):
             raise ValueError('> Expecting a static FunctionDef')
 
         # ... chack sanity
-        arg_names = [a.name for a in self.arguments]
-        allocatables = [r for r in self.results if not( r.name in arg_names ) and r.allocatable ]
+        arg_names = [str(a.name) for a in self.arguments]
+        allocatables = [r for r in self.results if not( str(r.name) in arg_names ) and r.allocatable ]
         if allocatables:
             raise AstFunctionResultError(allocatables)
         # ...
