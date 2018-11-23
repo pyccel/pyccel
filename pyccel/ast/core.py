@@ -257,6 +257,8 @@ def extract_subexpressions(expr):
     func_names = ('diag', 'empty', 'zip', 'enumerate')
     #TODO put only imported functions
     def substitute(expr):
+        if isinstance(expr, id_cls):
+            return expr
         if isinstance(expr, cls):
             args = expr.args
             args = [substitute(arg) for arg in args]
@@ -274,9 +276,6 @@ def extract_subexpressions(expr):
             else:
                 expr = expr.func(*args, evaluate=False)
                 return expr
-        elif isinstance(expr, id_cls):
-
-            return expr
         elif isinstance(expr, GC):
             stmts.append(expr)
             return expr.lhs
