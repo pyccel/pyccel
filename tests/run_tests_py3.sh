@@ -13,5 +13,8 @@
 #python3 tests/external/test_external.py  
 #python3 tests/macro/test_macro.py  
 
-cd tests/epyccel/ ; python3 test_epyccel_functions.py ; cd ../.. 
-cd tests/epyccel/ ; python3 test_epyccel_modules.py ; cd ../.. 
+python3 -m pytest tests/epyccel/test_epyccel_functions.py
+python3 -m pytest tests/epyccel/test_epyccel_modules.py
+python3 -m pytest tests/epyccel/test_arrays.py
+python3 -m pytest tests/epyccel/test_loops.py
+

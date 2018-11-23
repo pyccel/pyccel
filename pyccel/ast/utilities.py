@@ -232,6 +232,9 @@ def build_types_decorator(args, order=None):
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
 
+        if not ( dtype.startswith("'") and dtype.endswith("'") ):
+            dtype = "'{}'".format(dtype)
+
         types.append(dtype)
 
     return types

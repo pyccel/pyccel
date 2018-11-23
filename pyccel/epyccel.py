@@ -23,7 +23,6 @@ from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
 from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
-from pyccel.ast.core                import Variable, IndexedVariable
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
 from pyccel.ast.f2py                import as_static_function
 from pyccel.codegen.printing.pycode import pycode

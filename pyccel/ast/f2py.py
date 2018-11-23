@@ -85,6 +85,9 @@ def as_static_function(func):
     _args = []
     _arguments_inout = []
     for i_a,a in enumerate(args):
+        if not isinstance( a, Variable ):
+            raise TypeError('Expecting a Variable type for {}'.format(a))
+
         rank = a.rank
         if rank > 0:
             # ...
