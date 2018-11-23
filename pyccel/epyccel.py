@@ -25,6 +25,7 @@ from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
 from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
 from pyccel.ast.f2py                import as_static_function
+from pyccel.ast.f2py                import as_static_function_call
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 
@@ -96,20 +97,21 @@ def get_source_function(func):
 
 #==============================================================================
 
-def construct_flags(compiler, extra_args = '', openmp = False):
+def construct_flags(compiler, extra_args = '', accelerator = None):
 
     f90flags   = ''
     opt        = ''
 
-    if openmp:
-        if compiler == 'gfortran':
-            extra_args += ' -lgomp '
-            f90flags   += ' -fopenmp '
+    if accelerator:
+        if accelerator == 'openmp':
+            if compiler == 'gfortran':
+                extra_args += ' -lgomp '
+                f90flags   += ' -fopenmp '
 
-        elif compiler == 'ifort':
-            extra_args += ' -liomp5 '
-            f90flags   += ' -openmp -nostandard-realloc-lhs '
-            opt         = """ --opt='-xhost -0fast' """
+            elif compiler == 'ifort':
+                extra_args += ' -liomp5 '
+                f90flags   += ' -openmp -nostandard-realloc-lhs '
+                opt         = """ --opt='-xhost -0fast' """
 
     return extra_args, f90flags, opt
 
@@ -141,7 +143,7 @@ def get_external_function_from_ast(ast):
     others  = []
     for stmt in ast:
         if isinstance(stmt, FunctionDef):
-            if stmt.is_external:
+            if stmt.is_external or stmt.is_external_call:
                 nodes += [stmt]
 
             else:
@@ -604,7 +606,7 @@ def compile_f2py( filename,
                   libdirs=[],
                   compiler=None ,
                   mpi=False,
-                  openmp=False,
+                  accelerator=None,
                   includes = [],
                   only = [],
                   pyf = '' ):
@@ -632,7 +634,7 @@ def compile_f2py( filename,
 
     extra_args, f90flags, opt = construct_flags( compiler,
                                                  extra_args = extra_args,
-                                                 openmp = openmp )
+                                                 accelerator = accelerator )
 
     if only:
         only = 'only: ' + ','.join(str(i) for i in only)
@@ -688,19 +690,18 @@ def compile_f2py( filename,
 #==============================================================================
 
 def epyccel_function(func,
-                     namespace  = globals(),
-                     compiler   = None,
-                     fflags     = None,
-                     openmp     = False,
-                     openacc    = False,
-                     verbose    = False,
-                     debug      = False,
-                     include    = [],
-                     libdir     = [],
-                     modules    = [],
-                     libs       = [],
-                     extra_args = '',
-                     folder     = None,
+                     namespace   = globals(),
+                     compiler    = None,
+                     fflags      = None,
+                     accelerator = None,
+                     verbose     = False,
+                     debug       = False,
+                     include     = [],
+                     libdir      = [],
+                     modules     = [],
+                     libs        = [],
+                     extra_args  = '',
+                     folder      = None,
                      assert_contiguous = False):
 
     # ... get the function source code
@@ -738,15 +739,6 @@ def epyccel_function(func,
     basedir = os.getcwd()
     os.chdir(folder)
     curdir = os.getcwd()
-    # ...
-
-    # ...
-    accelerator = None
-    if openmp:
-        accelerator = 'openmp'
-
-    if openacc:
-        accelerator = 'openacc'
     # ...
 
     # ...
@@ -800,10 +792,10 @@ def epyccel_function(func,
     fname = write_code(filename, code, folder=folder)
 
     output, cmd = compile_f2py( filename,
-                                extra_args = extra_args,
-                                compiler   = compiler,
-                                mpi        = False,
-                                openmp     = openmp )
+                                extra_args  = extra_args,
+                                compiler    = compiler,
+                                mpi         = False,
+                                accelerator = accelerator )
 
     if verbose:
         print(cmd)
@@ -838,19 +830,18 @@ def epyccel_function(func,
 #==============================================================================
 
 def epyccel_module(module,
-                   namespace  = globals(),
-                   compiler   = None,
-                   fflags     = None,
-                   openmp     = False,
-                   openacc    = False,
-                   verbose    = False,
-                   debug      = False,
-                   include    = [],
-                   libdir     = [],
-                   modules    = [],
-                   libs       = [],
-                   extra_args = '',
-                   folder     = None):
+                   namespace   = globals(),
+                   compiler    = None,
+                   fflags      = None,
+                   accelerator = None,
+                   verbose     = False,
+                   debug       = False,
+                   include     = [],
+                   libdir      = [],
+                   modules     = [],
+                   libs        = [],
+                   extra_args  = '',
+                   folder      = None):
 
     # ... get the module source code
     if not isinstance(module, ModuleType):
@@ -895,15 +886,6 @@ def epyccel_module(module,
     # ...
 
     # ...
-    accelerator = None
-    if openmp:
-        accelerator = 'openmp'
-
-    if openacc:
-        accelerator = 'openacc'
-    # ...
-
-    # ...
     if compiler is None:
         compiler = 'gfortran'
     # ...
@@ -917,6 +899,9 @@ def epyccel_module(module,
                                          include=[],
                                          libdir=[] )
     # ...
+
+    # add -fPIC
+    fflags = ' {} -fPIC '.format(fflags)
 
     # ... convert python to fortran using pyccel
     #     we ask for the ast so that we can get the FunctionDef node
@@ -947,13 +932,19 @@ def epyccel_module(module,
     # be careful: because of f2py we must use lower case
     funcs, others = get_external_function_from_ast(ast)
     static_funcs = []
+    imports = []
     parents = OrderedDict()
     for f in funcs:
-        static_func = as_static_function(f)
+        if f.is_external:
+            static_func = as_static_function(f)
+
+        elif f.is_external_call:
+            static_func = as_static_function_call(f)
+            imports += [Import(f.name, module_name.lower())]
+
         static_funcs.append(static_func)
         parents[static_func.name] = f.name
 
-    imports = []
     for f in others:
         imports += [Import(f.name, module_name.lower())]
 
@@ -972,12 +963,12 @@ def epyccel_module(module,
     write_code(filename, code, folder=folder)
 
     output, cmd = compile_f2py( filename,
-                                extra_args = extra_args,
-                                libs       = [libname],
-                                libdirs    = [curdir],
-                                compiler   = compiler,
-                                mpi        = False,
-                                openmp     = openmp )
+                                extra_args  = extra_args,
+                                libs        = [libname],
+                                libdirs     = [curdir],
+                                compiler    = compiler,
+                                accelerator = accelerator,
+                                mpi         = False )
 
     if verbose:
         print(cmd)

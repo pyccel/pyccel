@@ -39,6 +39,9 @@ def elemental(f):
 def external(f):
     return f
 
+def external_call(f):
+    return f
+
 
 
 # TODO documentation

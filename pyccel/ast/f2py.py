@@ -11,6 +11,27 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import Module
 
 #=======================================================================================
+def sanitize_arguments(args):
+    _args = []
+    for a in args:
+        if isinstance( a, Variable ):
+            _args.append(a)
+
+        elif isinstance( a, IndexedVariable ):
+            a_new = Variable( a.dtype, str(a.name),
+                              shape       = a.shape,
+                              rank        = a.rank,
+                              order       = a.order,
+                              precision   = a.precision)
+
+            _args.append(a_new)
+
+        else:
+            raise NotImplementedError('TODO for {}'.format(type(a)))
+
+    return _args
+
+#=======================================================================================
 
 class F2PY_FunctionInterface(Basic):
 
@@ -137,3 +158,18 @@ def as_static_function(func):
                         is_static = True,
                         arguments_inout = arguments_inout )
 
+
+#=======================================================================================
+def as_static_function_call(func):
+    assert(isinstance(func, FunctionDef))
+
+    args = func.arguments
+    args = sanitize_arguments(args)
+
+    body = [FunctionCall(func, args)]
+
+    func = FunctionDef(func.name, list(args), [], body,
+                       arguments_inout = func.arguments_inout)
+    static_func = as_static_function(func)
+
+    return static_func

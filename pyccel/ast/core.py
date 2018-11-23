@@ -2641,6 +2641,9 @@ class FunctionDef(Basic):
     is_external: bool
         True for a function will be visible with f2py
 
+    is_external_call: bool
+        True for a function call will be visible with f2py
+
     imports: list, tuple
         a list of needed imports
 
@@ -2695,6 +2698,7 @@ class FunctionDef(Basic):
         is_elemental=False,
         is_private=False,
         is_external=False,
+        is_external_call=False,
         arguments_inout=[],
         ):
 
@@ -2780,6 +2784,9 @@ class FunctionDef(Basic):
         if not isinstance(is_external, bool):
             raise TypeError('Expecting a boolean for external')
 
+        if not isinstance(is_external_call, bool):
+            raise TypeError('Expecting a boolean for external_call')
+
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple, Tuple)):
                 raise TypeError('Expecting an iterable ')
@@ -2811,6 +2818,7 @@ class FunctionDef(Basic):
             is_elemental,
             is_private,
             is_external,
+            is_external_call,
             arguments_inout)
 
     @property
@@ -2886,8 +2894,12 @@ class FunctionDef(Basic):
         return self._args[17]
 
     @property
-    def arguments_inout(self):
+    def is_external_call(self):
         return self._args[18]
+
+    @property
+    def arguments_inout(self):
+        return self._args[19]
 
     def print_body(self):
         for s in self.body:
