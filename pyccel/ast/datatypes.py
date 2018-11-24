@@ -101,16 +101,16 @@ class NdArray(DataType):
     pass
 
 class NdArrayInt(NdArray, NativeInteger):
-    _name = 'NdArrayInt'
+    _name = 'int'
     pass
 
 class NdArrayReal(NdArray, NativeReal):
-    _name = 'NdArrayReal'
+    _name = 'real'
     pass
 
 
 class NdArrayComplex(NdArray, NativeComplex):
-    _name = 'NdArrayComplex'
+    _name = 'complex'
     pass
 
 # TODO to be removed
@@ -296,7 +296,7 @@ def datatype(arg):
         DataType
 
     """
-    
+
 
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
@@ -309,8 +309,8 @@ def datatype(arg):
 
 
 def sp_dtype(expr):
-    """ 
-    return the datatype of a sympy types expression 
+    """
+    return the datatype of a sympy types expression
 
     """
     if expr.is_integer:

@@ -2271,6 +2271,8 @@ class SemanticParser(BasicParser):
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         is_private   = expr.is_private
+        is_external  = expr.is_external
+        is_external_call  = expr.is_external_call
 
         header = expr.header
         if header is None:
@@ -2515,6 +2517,8 @@ class SemanticParser(BasicParser):
                 is_pure=is_pure,
                 is_elemental=is_elemental,
                 is_private=is_private,
+                is_external=is_external,
+                is_external_call=is_external_call,
                 imports=imports,
                 decorators=decorators,
                 is_recursive=is_recursive,

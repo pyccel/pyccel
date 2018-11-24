@@ -130,7 +130,7 @@ def compile_fortran(filename, compiler, flags,
 
     output = subprocess.check_output(cmd, shell=True)
 
-    if verbose:
+    if output:
         print(output)
 
     # TODO shall we uncomment this?
@@ -156,18 +156,19 @@ def compile_fortran(filename, compiler, flags,
 # ...
 
 def execute_pyccel(filename,
-                   compiler=None,
-                   fflags=None,
-                   debug=False,
-                   verbose=False,
-                   accelerator=None,
-                   include=[],
-                   libdir=[],
-                   modules=[],
-                   libs=[],
-                   binary=None,
-                   output='',
-                   convert_only=False):
+                   compiler     = None,
+                   fflags       = None,
+                   debug        = False,
+                   verbose      = False,
+                   accelerator  = None,
+                   include      = [],
+                   libdir       = [],
+                   modules      = [],
+                   libs         = [],
+                   binary       = None,
+                   output       = '',
+                   convert_only = False,
+                   return_ast   = False):
     """Executes the full process:
         - parsing the python code
         - annotating the python code
@@ -186,17 +187,23 @@ def execute_pyccel(filename,
 
     codegen = Codegen(ast, name)
     code = codegen.doprint()
-    fname = os.path.join(output, name)
-    fname = codegen.export(fname)
-
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
 
     if convert_only:
-        return fname
+        if not return_ast:
+            return code
+
+        else:
+            return code, ast
 
     else:
+
+        fname = os.path.join(output, name)
+        fname = codegen.export(fname)
+
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
         # ... constructs the compiler flags
         if compiler is None:
             compiler='gfortran'
@@ -219,7 +226,11 @@ def execute_pyccel(filename,
                                       libs=libs)
         # ...
 
-        return output, cmd
+        if not return_ast:
+            return output, cmd
+
+        else:
+            return output, cmd, ast
 
 
 if __name__ == '__main__':

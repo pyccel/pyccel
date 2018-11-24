@@ -35,6 +35,7 @@ from pyccel.ast.numpyext import Sum, Rand, Complex
 from pyccel.ast.numpyext import ZerosLike, FullLike
 
 
+from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
@@ -42,6 +43,7 @@ from pyccel.ast.core import String
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
+from pyccel.ast.core import Import
 from pyccel.ast.core import SeparatorComment, CommentBlock
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
@@ -2104,6 +2106,30 @@ class FCodePrinter(CodePrinter):
             end = expr.end - 1
             end = self._print(end)
         return '{0}:{1}'.format(start, end)
+
+#=======================================================================================
+
+    def _print_FunctionCall(self, expr):
+        func = expr.funcdef
+        args = expr.arguments
+        results = func.results
+        if func.is_procedure:
+            newargs = list(args) + list(results)
+            newargs = ','.join(self._print(i) for i in newargs)
+            code = 'call {name}({args})'.format( name = str(func.name),
+                                                 args = newargs )
+
+        else:
+            assert(len(results) == 1)
+            args = ','.join(self._print(i) for i in args)
+            rhs = results[0]
+            code = '{name}({args})'.format( name = str(func.name),
+                                            args = args)
+
+        return code
+
+#=======================================================================================
+
 
     def _pad_leading_columns(self, lines):
         result = []

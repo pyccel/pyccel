@@ -9,6 +9,32 @@ from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+from pyccel.ast.utilities  import build_types_decorator
+from pyccel.ast.core       import FunctionDef
+from pyccel.ast.core       import FunctionCall
+from pyccel.ast.core       import Assign, Return
+
+
+#==============================================================================
+pattern_f2py_func = """
+@f2py_compatible
+def {name}(*args):
+    return {module_name}.{f2py_func}(*args)
+"""
+
+pattern_f2py_func_contiguous = """
+{name} = {module_name}.{f2py_func}
+"""
+
+#==============================================================================
+
+def _construct_header(func_name, args):
+    args = build_types_decorator(args, order='F')
+    args = ','.join("{}".format(i) for i in args)
+    pattern = '#$ header procedure static {name}({args})'
+    return pattern.format(name=func_name, args=args)
+
+#==============================================================================
 
 class PythonCodePrinter(SympyPythonCodePrinter):
     _kf = dict(chain(
@@ -16,6 +42,12 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         [(k, '' + v) for k, v in _known_functions_math.items()]
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
+
+
+    def __init__(self, settings=None):
+        self.assert_contiguous = settings.pop('assert_contiguous', False)
+
+        SympyPythonCodePrinter.__init__(self, settings=settings)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -49,7 +81,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         if decorators:
             for n,args in decorators.items():
                 if args:
-                    args = ','.join("'{}'".format(i) for i in args)
+                    args = ','.join("{}".format(i) for i in args)
                     dec = '@{name}({args})'.format(name=n, args=args)
 
                 else:
@@ -197,6 +229,77 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         fs = ', '.join(i for i in args)
 
         return 'print({0})'.format(fs)
+
+    def _print_F2PY_FunctionInterface(self, expr):
+        f2py_module_name = expr.f2py_module_name
+        f2py_func        = expr.f2py_function
+        f2py_func_name   = f2py_func.name
+        func_name        = expr.parent.name
+
+        # ...
+        assert_contiguous = self.assert_contiguous
+
+        # set assert_contiguous to True
+        if not f2py_func.has_multiarray():
+            assert_contiguous = True
+
+        if assert_contiguous:
+            pattern = pattern_f2py_func_contiguous
+
+        else:
+            pattern = pattern_f2py_func
+        # ...
+
+        code = pattern.format( name        = func_name,
+                               module_name = f2py_module_name,
+                               f2py_func   = f2py_func_name)
+
+        code = 'from {module_name} import {module_name}\n{code}'.format( code = code,
+                                                                         module_name = f2py_module_name )
+
+        if not self.assert_contiguous:
+            code = 'from pyccel.decorators import f2py_compatible\n{code}'.format( code = code )
+
+        return code
+
+    def _print_F2PY_ModuleInterface(self, expr):
+        f2py_module = expr.module
+        name = f2py_module.name
+
+        code = ''
+        for f in f2py_module.funcs:
+            func_name      = expr.parents[f.name]
+            f2py_func_name = f.name
+
+            # ...
+            assert_contiguous = self.assert_contiguous
+
+            # set assert_contiguous to True
+            if not f.has_multiarray():
+                assert_contiguous = True
+
+            if assert_contiguous:
+                pattern = pattern_f2py_func_contiguous
+
+            else:
+                pattern = pattern_f2py_func
+            # ...
+
+            func_code = pattern.format( name        = func_name,
+                                        module_name = name,
+                                        f2py_func   = f2py_func_name)
+
+            code = '{func_code}\n{code}'.format( func_code = func_code,
+                                                 code = code )
+
+        code = 'from {module_name} import {module_name}\n{code}'.format( code = code,
+                                                                         module_name = name )
+
+        if not self.assert_contiguous:
+            code = 'from pyccel.decorators import f2py_compatible\n{code}'.format( code = code )
+
+        return code
+
 
 
 def pycode(expr, **settings):

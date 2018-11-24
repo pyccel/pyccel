@@ -55,6 +55,20 @@ local_sympify = {'N': Symbol('N'), 'S': Symbol('S'),
                 'zeros':Symbol('zeros'),'ones':Symbol('ones')
                 ,'Point':Symbol('Point')}
 
+class AstError(Exception):
+    pass
+
+class AstFunctionResultError(AstError):
+    def __init__(self, var):
+        if isinstance(var, (list, tuple, Tuple)):
+            var = ', '.join(str(i) for i in var)
+
+        msg = 'Found allocatable result(s) that is/are not inout [{}]'.format(var)
+
+        # Call the base class constructor with the parameters it needs
+        super(AstFunctionResultError, self).__init__(msg)
+
+
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
@@ -1407,6 +1421,7 @@ class Module(Basic):
 
         if not iterable(funcs):
             raise TypeError('funcs must be an iterable')
+
         for i in funcs:
             if not isinstance(i, FunctionDef):
                 raise TypeError('Only a FunctionDef instance is allowed.'
@@ -2460,7 +2475,9 @@ class FunctionCall(Basic):
         if not isinstance(func, (str, FunctionDef, Function)):
             raise TypeError('> expecting a str, FunctionDef, Function')
 
+        funcdef = None
         if isinstance(func, FunctionDef):
+            funcdef = func
             func = func.name
         # ...
 
@@ -2471,7 +2488,11 @@ class FunctionCall(Basic):
         args = Tuple(*args, sympify=False)
         # ...
 
-        return Basic.__new__(cls, func, args)
+        obj = Basic.__new__(cls, func, args)
+
+        obj._funcdef = funcdef
+
+        return obj
 
     @property
     def func(self):
@@ -2480,6 +2501,10 @@ class FunctionCall(Basic):
     @property
     def arguments(self):
         return self._args[1]
+
+    @property
+    def funcdef(self):
+        return self._funcdef
 
 class Return(Basic):
 
@@ -2612,6 +2637,12 @@ class FunctionDef(Basic):
     is_static: bool
         True for static functions. Needed for f2py
 
+    is_external: bool
+        True for a function will be visible with f2py
+
+    is_external_call: bool
+        True for a function call will be visible with f2py
+
     imports: list, tuple
         a list of needed imports
 
@@ -2665,6 +2696,8 @@ class FunctionDef(Basic):
         is_pure=False,
         is_elemental=False,
         is_private=False,
+        is_external=False,
+        is_external_call=False,
         arguments_inout=[],
         ):
 
@@ -2747,6 +2780,12 @@ class FunctionDef(Basic):
         if not isinstance(is_private, bool):
             raise TypeError('Expecting a boolean for private')
 
+        if not isinstance(is_external, bool):
+            raise TypeError('Expecting a boolean for external')
+
+        if not isinstance(is_external_call, bool):
+            raise TypeError('Expecting a boolean for external_call')
+
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple, Tuple)):
                 raise TypeError('Expecting an iterable ')
@@ -2777,6 +2816,8 @@ class FunctionDef(Basic):
             is_pure,
             is_elemental,
             is_private,
+            is_external,
+            is_external_call,
             arguments_inout)
 
     @property
@@ -2848,8 +2889,16 @@ class FunctionDef(Basic):
         return self._args[16]
 
     @property
-    def arguments_inout(self):
+    def is_external(self):
         return self._args[17]
+
+    @property
+    def is_external_call(self):
+        return self._args[18]
+
+    @property
+    def arguments_inout(self):
+        return self._args[19]
 
     def print_body(self):
         for s in self.body:
@@ -2993,6 +3042,30 @@ class FunctionDef(Basic):
     # TODO
     def check_elemental(self):
         raise NotImplementedError('')
+
+    # looking for arrays of rank > 1
+    # this function is only called for static FunctionDef => when using f2py
+    def has_multiarray(self):
+        if not self.is_static:
+            raise ValueError('> Expecting a static FunctionDef')
+
+        # ... chack sanity
+        arg_names = [str(a.name) for a in self.arguments]
+        allocatables = [r for r in self.results if not( str(r.name) in arg_names ) and r.allocatable ]
+        if allocatables:
+            raise AstFunctionResultError(allocatables)
+        # ...
+
+        found = False
+        for a in list(self.arguments) + list(self.results):
+            if isinstance(a, (Variable, IndexedVariable)):
+                if a.rank > 1:
+                    found = True
+
+            if found:
+                break
+
+        return found
 
 
 class SympyFunction(FunctionDef):

@@ -36,5 +36,30 @@ def private(f):
 def elemental(f):
     return f
 
+def external(f):
+    return f
+
+def external_call(f):
+    return f
 
 
+
+# TODO documentation
+import numpy as np
+class f2py_compatible(object):
+
+    def __init__(self, f):
+        self.f = f
+
+    def __call__(self, *args):
+        newargs = []
+        for a in args:
+            if ( isinstance(a, np.ndarray) and
+                ( len(a.shape) > 1)        and
+                a.flags['C_CONTIGUOUS'] ):
+                newargs.append(a.transpose())
+
+            else:
+                newargs.append(a)
+
+        self.f(*newargs)

@@ -12,6 +12,7 @@
 *.pyo
 .ipynb_checkpoints/
 .cache
+__pycache__
 
 build
 *egg*
