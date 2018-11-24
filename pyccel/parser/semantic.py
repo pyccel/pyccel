@@ -1620,7 +1620,7 @@ class SemanticParser(BasicParser):
 
             # case of lambdify
 
-            rhs = rhs.rename(_get_name(expr.lhs))
+            rhs = rhs.rename(expr.lhs.name)
             for i in rhs.body:
                 i.set_fst(fst)
             rhs = self._visit_FunctionDef(rhs, **settings)
@@ -2388,7 +2388,7 @@ class SemanticParser(BasicParser):
                             # TODO can this be improved? add some check
 
                             d_var['shape'] = Tuple(*additional_args, sympify=False)
-                        a_new = Variable(dtype, _get_name(a), **d_var)
+                        a_new = Variable(dtype, a.name, **d_var)
 
                     if additional_args:
                         args += additional_args
