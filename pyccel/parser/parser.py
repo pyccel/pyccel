@@ -34,42 +34,6 @@ class Parser(object):
         return self._namespace
 
     @property
-    def headers(self):
-        return self.namespace['headers']
-
-    @property
-    def imports(self):
-        return self.namespace['imports']
-
-    @property
-    def functions(self):
-        return self.namespace['functions']
-
-    @property
-    def variables(self):
-        return self.namespace['variables']
-
-    @property
-    def classes(self):
-        return self.namespace['classes']
-
-    @property
-    def python_functions(self):
-        return self.namespace['python_functions']
-
-    @property
-    def symbolic_functions(self):
-        return self.namespace['symbolic_functions']
-
-    @property
-    def static_functions(self):
-        return self.namespace['static']
-
-    @property
-    def macros(self):
-        return self.namespace['macros']
-
-    @property
     def metavars(self):
         return self._metavars
 
@@ -180,23 +144,7 @@ class Parser(object):
     def _annotate_parents(self, **settings):
 
         verbose = settings.pop('verbose', False)
-
-        # ...
-
-        def _update_from_son(p):
-
-            # TODO - only import what is needed
-            #      - use insert_variable etc
-
-            for entry in ['variables', 'classes', 'functions',
-                          'cls_constructs']:
-                d_self = self._namespace[entry]
-                d_son = p.namespace[entry]
-                for (k, v) in list(d_son.items()):
-                    d_self[k] = v
-
-        # ...
-
+        
         # we first treat sons that have no imports
 
         for p in self.sons:

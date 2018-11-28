@@ -249,7 +249,78 @@ def get_filename_from_import(module,output_folder=''):
     errors = Errors()
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
+                  
 
+#==============================================================================
+
+class Scope(object):
+    """."""
+    
+    def __init__(self):
+    
+        self._imports   = OrderedDict()
+        self._variables = OrderedDict()
+        self._classes   = OrderedDict()
+        self._functions = OrderedDict()
+        self._macros    = OrderedDict()
+        self._headers   = OrderedDict()
+        
+        # TODO use another name for headers
+        #      => reserved keyword, or use __
+        self.parent_scope        = None
+        self._sons_scopes        = OrderedDict()
+        self._static_functions   = []
+        self._cls_constructs     = OrderedDict()
+        self._symbolic_functions = OrderedDict()
+        self._python_functions   = OrderedDict()
+        
+    @property
+    def imports(self):
+        return self._imports
+        
+    @property
+    def variables(self):
+        return self._variables
+        
+    @property
+    def classes(self):
+        return self._classes
+        
+    @property
+    def functions(self):
+        return self._functions
+        
+    @property
+    def macros(self):
+        return self._macros
+        
+    @property
+    def headers(self):
+        return self._headers
+        
+    @property
+    def static_functions(self):
+        return self._static_functions
+        
+    @property
+    def cls_constructs(self):
+        return self._cls_constructs
+        
+    @property
+    def sons_scopes(self):
+        return self._sons_scopes
+        
+    @property
+    def symbolic_functions(self):
+        return self._symbolic_functions
+        
+    @property
+    def python_functions(self):
+        return self._python_functions
+        
+
+
+        
 
 #==============================================================================
 
@@ -282,29 +353,16 @@ class BasicParser(object):
         self._ast = None
 
         self._filename  = None
-        self._metavars  = {}
-        self._namespace = {}
+        self._metavars  = OrderedDict()
+        self._namespace = Scope()
 
-        self._namespace['imports'       ] = OrderedDict()
-        self._namespace['variables'     ] = {}
-        self._namespace['classes'       ] = {}
-        self._namespace['functions'     ] = {}
-        self._namespace['macros'        ] = {}
-        self._namespace['cls_constructs'] = {}
 
-        self._namespace['symbolic_functions']   = {}
-        self._namespace['python_functions'  ]   = {}
-        self._scope = {}
-
-        self._output_folder       = output_folder
+        self._output_folder    = output_folder
 
         # represent the namespace of a function
 
-        self._current_class = None
-        self._current       = None
-
-        # we use it to detect the current method or function
-        self._imports = {}
+        self._current_class    = None
+        self._current_function = None
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -324,18 +382,14 @@ class BasicParser(object):
 
         self._show_traceback = show_traceback
 
-        # TODO use another name for headers
-        #      => reserved keyword, or use __
-
-        self._namespace['headers'] = {}
         if headers:
             if not isinstance(headers, dict):
                 raise TypeError('Expecting a dict of headers')
 
-            for (key, value) in list(headers.items()):
-                self._namespace['headers'][key] = value
+        
+            self.namespace.headers.update(headers)
 
-        self._namespace['static'] = []
+
         if static:
             if not isinstance(static, (list, tuple)):
                 raise TypeError('Expecting a list/tuple of static')
@@ -344,47 +398,15 @@ class BasicParser(object):
                 if not isinstance(i, str):
                     raise TypeError('Expecting str. given {}'.format(type(i)))
 
-            self._namespace['static'] = static
+            self._namespace.static_functions.extend(static)
 
     @property
     def namespace(self):
         return self._namespace
-
-    @property
-    def headers(self):
-        return self.namespace['headers']
-
+        
     @property
     def imports(self):
-        return self.namespace['imports']
-
-    @property
-    def functions(self):
-        return self.namespace['functions']
-
-    @property
-    def variables(self):
-        return self.namespace['variables']
-
-    @property
-    def classes(self):
-        return self.namespace['classes']
-
-    @property
-    def python_functions(self):
-        return self.namespace['python_functions']
-
-    @property
-    def symbolic_functions(self):
-        return self.namespace['symbolic_functions']
-
-    @property
-    def static_functions(self):
-        return self.namespace['static']
-
-    @property
-    def macros(self):
-        return self.namespace['macros']
+        return self.namespace.imports
 
     @property
     def filename(self):
@@ -519,21 +541,15 @@ class BasicParser(object):
         elif isinstance(func, PythonFunction):
             self.insert_python_function(func)
         elif isinstance(func, (FunctionDef, Interface)):
-            container = self._namespace['functions']
-            if isinstance(self._current, DottedName):
-                name = self._current.name[0]
-                container = self._scope[name]['functions']
+            container = self.namespace.functions
             container[str(func.name)] = func
         else:
             raise TypeError('Expected a Function definition')
 
     def insert_symbolic_function(self, func):
         """."""
-
-        container = self._namespace['symbolic_functions']
-        if isinstance(self._current, DottedName):
-            name = self._current.name[0]
-            container = self._scope[name]['symbolic_functions']
+        
+        container = self.namespace.symbolic_functions
         if isinstance(func, SympyFunction):
             container[str(func.name)] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
@@ -545,11 +561,8 @@ class BasicParser(object):
     def insert_python_function(self, func):
         """."""
 
-        container = self._namespace['python_functions']
-        if isinstance(self._current, DottedName):
-            name = self._current.name[0]
-            container = self._scope[name]['python_functions']
-
+        container = self.namespace.python_functions
+        
         if isinstance(func, PythonFunction):
             container[str(func.name)] = func
         else:
@@ -562,10 +575,8 @@ class BasicParser(object):
 
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
-        container = self._namespace['imports']
-        if self._current:
-            self._scope[self._current]['imports'].append(expr)
-
+        container = self.namespace.imports
+        
         # if source is not specified, imported things are treated as sources
         # TODO test if builtin import
 

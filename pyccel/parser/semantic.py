@@ -126,7 +126,7 @@ from sympy import cache
 
 errors = Errors()
 
-from pyccel.parser.base      import BasicParser
+from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
@@ -178,7 +178,6 @@ class SemanticParser(BasicParser):
         self._namespace = parser._namespace
 
         # we use it to detect the current method or function
-        self._imports = parser._imports
 
         #
         self._code = parser._code
@@ -216,7 +215,7 @@ class SemanticParser(BasicParser):
         errors.set_parser_stage('semantic')
 
         # then we treat the current file
-
+        
         ast = self.ast
 
         # we add the try/except to allow the parser to find all possible errors
@@ -244,11 +243,11 @@ class SemanticParser(BasicParser):
                         target += item
 
             target = set(target)
-            target_headers = target.intersection(self.headers.keys())
+            target_headers = target.intersection(self.namespace.headers.keys())
 
 
             for name in list(target_headers):
-                v = self.headers[name]
+                v = self.namespace.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
                         MethodHeader):
                     F = self.get_function(name)
@@ -267,6 +266,20 @@ class SemanticParser(BasicParser):
 
         return ast
 
+
+    def get_variable_from_scope(self, name):
+        """."""
+        container = self.namespace
+        imports   = container.imports
+        
+        if name in container.variables:
+            return container.variables[name]
+        elif name in container.imports:
+            return container.imports[name]
+
+
+        return None
+
     def get_variable(self, name):
         """."""
 
@@ -275,68 +288,92 @@ class SemanticParser(BasicParser):
                 if str(i.name) == name:
                     var = i
                     return var
-        if self._current:
-            if name in self._scope[self._current]['variables']:
-                return self._scope[self._current]['variables'][name]
-            if name in self._imports[self._current]:
-                return self._imports[self._current][name]
-            if isinstance(self._current, DottedName):
-                scp = self._current.name[0]
-                if name in self._scope[scp]['variables']:
-                    return self._scope[scp]['variables'][name]
-                if name in self._imports[scp]:
-                    return self._imports[scp][name]
-        if name in self._namespace['variables']:
-            return self._namespace['variables'][name]
-        if name in self._imports:
-            return self._imports[name]
+                    
+        container = self.namespace
+        imports   = container.imports
+        while container:
+            if name in container.variables:
+                return container.variables[name]
+            elif name in container.imports:
+                return container.imports[name]
+            container = container.parent_scope
+
 
         return None
 
     def get_variables(self, source=None):
         if source == 'parent':
-            if isinstance(self._current, DottedName):
-                name = self._current.name[0]
-            elif not self._current is None:
-                return self._namespace['variables'].values()
-            else:
-                msg = 'there is no parent to extract variables from'
-                raise TypeError(msg)
-            return self._scope[name]['variables'].values()
+            return self.namespace.parent_scope.variables.values()
         else:
-            return self._scope[self._current]['variables'].values()
+            return self.namespace.variables.values()
 
-    def insert_variable(self, expr, name=None):
-        """."""
-
-        # TODO add some checks before
-
-        if name is None:
-            name = str(expr)
-        if not isinstance(expr, Variable):
-            raise TypeError('variable must be of type Variable')
-
-        if self._current:
-            self._scope[self._current]['variables'][name] = expr
-        else:
-            self._namespace['variables'][name] = expr
+    def get_parent_functions(self):
+        container = self.namespace
+        funcs = container.functions.copy()
+        container = container.parent_scope
+        while container:
+            for i in container.functions:
+                if not i in funcs:
+                    funcs[i] = container.functions[i]
+        return funcs
+    
 
     def get_class(self, name):
         """."""
 
-        cls = None
-        if name in self._namespace['classes']:
-            cls = self._namespace['classes'][name]
-        return cls
+        container = self.namespace
+        while container:
+            if name in container.classes:
+                return container.classes[name]
+            container = container.parent_scope
+        return None
+        
+    def insert_variable(self, var, name=None):
+        """."""
 
-    def insert_class(self, cls):
+        # TODO add some checks before
+        if not isinstance(var, Variable):
+            raise TypeError('variable must be of type Variable')
+
+        if name is None:
+            name = str(var.name)
+            
+        self.namespace.variables[name] = var
+
+
+    def insert_class(self, cls, parent=False):
         """."""
 
         if isinstance(cls, ClassDef):
             name = str(cls.name)
-            self._namespace['classes'][name] = cls
+            container = self.namespace
+            if parent:
+                container = container.parent_scope
+            container.classes[name] = cls
         else:
             raise TypeError('Expected A class definition ')
+            
+    def insert_header(self, expr):
+        """."""
+        if isinstance(expr, MethodHeader):
+            self.namespace.headers[expr.name] = expr
+        elif isinstance(expr, FunctionHeader):
+            self.namespace.headers[expr.func] = expr
+        elif isinstance(expr, ClassHeader):
+            self.namespace.headers[expr.name] = expr
+
+            #  create a new Datatype for the current class
+
+            iterable = 'iterable' in expr.options
+            with_construct = 'with' in expr.options
+            dtype = DataTypeFactory(str(expr.name), '_name',
+                                    is_iterable=iterable,
+                                    is_with_construct=with_construct)
+            self.set_class_construct(str(expr.name), dtype)
+        else:
+            msg = 'header of type{0} is not supported'
+            msg = msg.format(str(type(expr)))
+            raise TypeError(msg)
 
     def get_function(self, name):
         """."""
@@ -344,74 +381,75 @@ class SemanticParser(BasicParser):
         # TODO shall we keep the elif in _imports?
 
         func = None
-        if self._current:
-            container = self._scope[self._current]['functions']
-            if name in container:
-                return container[name]
-            container = self._imports[self._current]
-            if name in container:
-                return container[name]
 
-        if name in self._namespace['functions']:
-            func = self._namespace['functions'][name]
-            if self._current == name and not func.is_recursive:
-                func = func.set_recursive()
-                self._namespace['functions'][name] = func
-            return func
-
-        if name in self._imports:
-            if not isinstance(self._imports[name], dict):
-                return self._imports[name]
-
-        return None
+        container = self.namespace
+        while container:
+            if name in container.functions:
+                func = container.functions[name]
+                break
+            if name in container.imports:
+                func =  container.imports[name]
+                break
+            container = container.parent_scope
+                
+   
+        if func and self._current_function == name and not func.is_recursive:
+            func = func.set_recursive()
+            container.functions[name] = func
+            
+        return func
+        
+        
 
     def get_symbolic_function(self, name):
         """."""
 
         # TODO shall we keep the elif in _imports?
+        container = self.namespace
+        while container:
+            if name in container.symbolic_functions:
+                return container.symbolic_functions[name]
+            
+            if name in container.imports:
+                return container.imports[name]
+            container = container.parent_scope
 
-        func = None
-        if name in self._namespace['symbolic_functions']:
-            func = self._namespace['symbolic_functions'][name]
-        elif name in self._imports:
-            func = self._imports[name]
-        return func
+        return None
 
     def get_python_function(self, name):
         """."""
 
         # TODO shall we keep the elif in _imports?
+        container = self.namespace
+        while container:
+            if name in container.python_functions:
+                return container.python_functions[name]
+ 
+            if name in container.imports:
+                return container.imports[name]
+                
+            container = container.parent_scope
 
-        func = None
-        if name in self._namespace['python_functions']:
-            func = self._namespace['python_functions'][name]
-        elif name in self._imports:
-            func = self._imports[name]
-        return func
+        return None
 
     def get_macro(self, name):
         """."""
 
         # TODO shall we keep the elif in _imports?
 
-        macro = None
-        if name in self._namespace['macros']:
-            macro = self._namespace['macros'][name]
+        container = self.namespace
+        while container:
+            if name in container.macros:
+                return container.macros[name]
+            container = container.parent_scope
 
-        # TODO uncomment
-#        elif name in self._imports:
-#            macro = self._imports[name]
-
-        return macro
+        return None
 
     def insert_macro(self, macro):
         """."""
 
-        container = self._namespace['macros']
-        if isinstance(self._current, DottedName):
-            name = self._current.name[0]
-            container = self._scope[name]['macros']
-
+        container = self.namespace.macros
+       
         if isinstance(macro, (MacroFunction, MacroVariable)):
             name = macro.name
             if isinstance(macro.name, DottedName):
@@ -423,27 +461,20 @@ class SemanticParser(BasicParser):
     def remove_variable(self, name):
         """."""
 
-        # TODO improve to checkt each level of scoping
-
-        if self._current:
-            self._scope[self._current]['variables'].pop(name, None)
-        else:
-            self._namespace['variables'].pop(name, None)
-
+        container = self.namespace
+        while container:
+            if name in container.variables:
+                container.pop(name)
+                break
+            container = container.parent_scope
+            
     def update_variable(self, var, **options):
         """."""
 
-        # TODO improve _get_variable_name
-        def _get_variable_name(var):
-            if not isinstance(var, Variable):
-                raise NotImplementedError('TODO')
-
-            return var.name
-
-        name = _get_variable_name(var).split(""".""")
+        name = _get_name(var).split(""".""")
         var = self.get_variable(name[0])
         if len(name) > 1:
-            name_ = _get_variable_name(var)
+            name_ = _get_name(var)
             for i in var.cls_base.attributes:
                 if str(i.name) == name[1]:
                     var = i
@@ -468,70 +499,52 @@ class SemanticParser(BasicParser):
 
     def get_header(self, name):
         """."""
-
-        if name in self.headers:
-            return self.headers[name]
+        container = self.namespace
+        while container:
+            if name in container.headers:
+                return container.headers[name]
+            container = container.parent_scope
         return None
 
     def get_class_construct(self, name):
         """Returns the class datatype for name."""
+        container = self.namespace
+        while container:
+            if name in container.cls_constructs:
+                return container.cls_constructs[name]
+            container = container.parent_scope
+            
+        raise PyccelSemanticError('class construct {} not found'.format(name))
 
-        return self._namespace['cls_constructs'][name]
 
     def set_class_construct(self, name, value):
         """Sets the class datatype for name."""
 
-        self._namespace['cls_constructs'][name] = value
+        self.namespace.cls_constructs[name] = value
 
-    def set_current_fun(self, name):
+    def set_current_function(self, name):
         """."""
 
         if name:
-            if self._current:
-                name = DottedName(self._current, name)
-                self._current = name
-            self._scope[name] = {}
-
-            self._scope[name]['variables'] = {}
-            self._scope[name]['functions'] = {}
-            self._scope[name]['macros'   ] = {}
-            self._scope[name]['imports'  ] = []
-
-            self._scope[name]['symbolic_functions'] = {}
-            self._scope[name]['python_functions'  ] = {}
-
-            self._imports[name] = {}
+            if self._current_function:
+                name = DottedName(self._current_function, name)
+                self._current_function = name
+            self.namespace.sons_scopes[name] = Scope()
+            self.namespace.sons_scopes[name].parent_scope = self.namespace
+            self._namespace = self.namespace.sons_scopes[name]
         else:
-
-            if isinstance(self._current, DottedName):
+            self._namespace = self.namespace.parent_scope
+            if isinstance(self._current_function, DottedName):
 
                 # case of a function inside a function
 
-                name = self._current.name[0]
-        self._current = name
+                name = self._current_function.name[:-1]
+                if len(name)>1:
+                    name = DottedName(*name)
+                else:
+                    name = name[0]
+        self._current_function = name
 
-    def insert_header(self, expr):
-        """."""
-
-        if isinstance(expr, MethodHeader):
-            self._namespace['headers'][str(expr.name)] = expr
-        if isinstance(expr, FunctionHeader):
-            self._namespace['headers'][str(expr.func)] = expr
-        elif isinstance(expr, ClassHeader):
-            self._namespace['headers'][str(expr.name)] = expr
-
-            #  create a new Datatype for the current class
-
-            iterable = 'iterable' in expr.options
-            with_construct = 'with' in expr.options
-            dtype = DataTypeFactory(str(expr.name), '_name',
-                                    is_iterable=iterable,
-                                    is_with_construct=with_construct)
-            self.set_class_construct(str(expr.name), dtype)
-        else:
-            msg = 'header of type{0} is not supported'
-            msg = msg.format(str(type(expr)))
-            raise TypeError(msg)
 
     def _collect_returns_stmt(self, ast):
         vars_ = []
@@ -1111,6 +1124,7 @@ class SemanticParser(BasicParser):
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
+
         var = self.get_variable(name)
 
         if var is None:
@@ -1355,7 +1369,7 @@ class SemanticParser(BasicParser):
                 return CodeBlock(stmts)
             return F
 
-        elif name in self._namespace['cls_constructs'].keys():
+        elif name in self._namespace.cls_constructs.keys():
 
             # TODO improve the test
             # we must not invoke the namespace like this
@@ -1797,7 +1811,7 @@ class SemanticParser(BasicParser):
 
 
             lhs = Variable(dtype, name, **d_lhs)
-            var = self.get_variable(name)
+            var = self.get_variable_from_scope(name)
             if var is None:
                 self.insert_variable(lhs, name=lhs.name)
 
@@ -1832,7 +1846,8 @@ class SemanticParser(BasicParser):
 
             dtype = d_var.pop('datatype')
             name = lhs.lhs.name
-            if self._current == '__init__':
+            if self._current_function == '__init__':
+                
                 cls      = self.get_variable('self')
                 cls_name = str(cls.cls_base.name)
                 cls      = self.get_class(cls_name)
@@ -1864,7 +1879,7 @@ class SemanticParser(BasicParser):
                 # update the attributes of the class and push it to the namespace
                 attributes += [member]
                 new_cls = ClassDef(cls_name, attributes, [], parent=parent)
-                self.insert_class(new_cls)
+                self.insert_class(new_cls, parent=True)
             else:
                 lhs = self._visit_DottedVariable(lhs, **settings)
 
@@ -2215,7 +2230,7 @@ class SemanticParser(BasicParser):
 
     def _visit_InterfaceHeader(self, expr, **settings):
 
-        container = self.namespace['functions']
+        container = self.namespace.functions
 
         # TODO improve test all possible containers
 
@@ -2280,11 +2295,11 @@ class SemanticParser(BasicParser):
                 header = self.get_header(cls_name +'.'+ name)
             else:
                 header = self.get_header(name)
-
+                
         if expr.arguments and not header:
 
             # TODO ERROR wrong position
-
+            
             errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                    bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='error', blocker=self.blocking)
@@ -2335,9 +2350,10 @@ class SemanticParser(BasicParser):
             global_vars = []
             imports     = []
             arg         = None
-
-            self.set_current_fun(name)
             arguments = expr.arguments
+            
+            self.set_current_function(name)
+
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
                 arguments = arguments[1:]
@@ -2448,9 +2464,9 @@ class SemanticParser(BasicParser):
             is_recursive = False
 
             # get the imports
-            imports = self._scope[self._current]['imports']
+            imports = self.namespace.imports
             imports = list(set(imports))
-            self.set_current_fun(None)
+            self.set_current_function(None)
             func_   = self.get_function(name)
             if not func_ is None and func_.is_recursive:
                 is_recursive = True
@@ -2466,7 +2482,8 @@ class SemanticParser(BasicParser):
             assigned = [str(i) for i in assigned]
 
             apps = list(Tuple(*body).atoms(Application))
-            apps = [i for i in apps if (i.__class__.__name__ in self.functions)]
+            apps = [i for i in apps if (i.__class__.__name__ 
+                    in self.get_parent_functions())]
             d_apps = OrderedDict()
             for a in args:
                 d_apps[a] = []
@@ -2670,9 +2687,7 @@ class SemanticParser(BasicParser):
         #      - should not use namespace
 
         if expr.source:
-            container = self._imports
-            if self._current:
-                container = container[self._current]
+            container = self.namespace.imports
 
             if str(expr.source) in pyccel_builtin_import_registery:
 
@@ -2703,28 +2718,19 @@ class SemanticParser(BasicParser):
                 # TODO shall we improve it?
                 targets = [_get_name(i) for i in expr.target]
                 p       = self.d_parsers[str(expr.source)]
-                for entry in ['variables', 'classes',
+                
+                for entry in ['variables', 'classes', 'macros',
                               'functions', 'cls_constructs']:
 
-                    d_self = self._namespace[entry]
-                    d_son = p.namespace[entry]
-                    for (k, v) in list(d_son.items()):
+                    d_self = getattr(self.namespace, entry)
+                    d_son = getattr(p.namespace, entry)
+                    d_self.update(d_son)
 
-                        # TODO test if it is not already in the namespace
-
-                        if k in targets:
-                            d_self[k] = v
-
-                # we add all the macros from the son
-
-                self._namespace['macros'
-                                    ].update(p.namespace['macros'])
 
                 # ... meta variables
 
                 if 'ignore_at_import' in list(p.metavars.keys()):
-                    __ignore_at_import__ = \
-                        p.metavars['ignore_at_import']
+                    __ignore_at_import__ = p.metavars['ignore_at_import']
 
                 if 'import_all' in list(p.metavars.keys()):
                     __import_all__ = p.metavars['import_all']
@@ -2732,28 +2738,20 @@ class SemanticParser(BasicParser):
                 if 'module_name' in list(p.metavars.keys()):
                     __module_name__ = p.metavars['module_name']
                     expr = Import(expr.target, __module_name__)
+                    self.insert_import(expr)
 
                 # ...
                 if 'print' in p.metavars.keys():
                     source = str(expr.source).split('.')[-1]
                     source = 'mod_' + source
-                    expr   = Import(expr.target,source=source)
-
-
-                if not __ignore_at_import__:
-                    return expr
-                else:
-                    if __import_all__:
-                        expr = Import(__module_name__)
-                        self.insert_import(expr)
-
-                        # we return the expr when we are in
-                        # program
-
-                        if self._current is None:
-                            return expr
-                    return EmptyLine()
-        return expr
+                    expr   = Import(expr.target, source=source)
+                    self.insert_import(expr)
+                
+                if __import_all__:
+                    expr = Import(__module_name__)
+                    self.insert_import(expr)
+               
+        return EmptyLine()
 
 
     def _visit_With(self, expr, **settings):

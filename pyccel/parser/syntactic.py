@@ -238,7 +238,7 @@ class SyntaxParser(BasicParser):
 
     def parse(self, verbose=False):
         """converts redbaron fst to sympy ast."""
-
+        
         if self.syntax_done:
             print ('> syntax analysis already done')
             return self.ast
@@ -253,20 +253,13 @@ class SyntaxParser(BasicParser):
 
         # we add the try/except to allow the parser to find all possible errors
 
-        try:
-            ast = self._visit(self.fst)
-
-        except Exception as e:
-            errors.check()
-            if self.show_traceback:
-                traceback.print_exc()
-            raise SystemExit(0)
-
+        ast = self._visit(self.fst)
+            
         self._ast = ast
 
         errors.check()
         self._visit_done = True
-
+        
         return ast
 
     def _treat_iterable(self, stmt):
@@ -718,7 +711,7 @@ class SyntaxParser(BasicParser):
                 txt += ' results(' + ','.join(results) + ')'
 
             header = hdr_parse(stmts=txt)
-            if name in self.static_functions:
+            if name in self.namespace.static_functions:
                 header = header.to_static()
 
         body = stmt.value
