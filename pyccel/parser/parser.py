@@ -91,7 +91,7 @@ class Parser(object):
         self._semantic_parser = parser
         self._namespace = parser.namespace
         self._metavars = parser.metavars
-        return parser.ast
+        return parser
 
     def append_parent(self, parent):
         """."""

@@ -66,6 +66,7 @@ from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
 
+from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.ast.parallel.mpi     import MPI
@@ -137,11 +138,12 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, settings={}):
+    def __init__(self, parser,settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
 
         CodePrinter.__init__(self, settings)
+        self.parser = parser
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -343,6 +345,10 @@ class FCodePrinter(CodePrinter):
 
         prefix_as = ''
         source = ''
+        print(expr, expr.source, expr.target)
+        if str(expr.source) in pyccel_builtin_import_registery:
+            return ''
+            
         if expr.source is None:
             prefix = 'use'
         else:
@@ -353,9 +359,8 @@ class FCodePrinter(CodePrinter):
             prefix = 'use {}, only:'.format(source)
             prefix_as = 'use {},'.format(source)
 
-        # TODO - improve
         # importing of pyccel extensions is not printed
-        if source in ['numpy', 'scipy', 'itertools','math']:
+        if source in pyccel_builtin_import_registery:
             return ''
         if 'mpi4py' == str(expr.target[0]):
             return 'use mpi'
@@ -2241,7 +2246,7 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, assign_to=None, **settings):
+def fcode(expr, parser,assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
@@ -2260,4 +2265,4 @@ def fcode(expr, assign_to=None, **settings):
         for examples.
     """
 
-    return FCodePrinter(settings).doprint(expr, assign_to)
+    return FCodePrinter(parser,settings).doprint(expr, assign_to)

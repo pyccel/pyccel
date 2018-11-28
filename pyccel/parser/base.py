@@ -584,7 +584,7 @@ class BasicParser(object):
         if source is None:
             for t in expr.target:
                 name = str(t)
-                container[name] = None
+                container[name] = []
         else:
             source = str(source)
             if not source in pyccel_builtin_import_registery:
