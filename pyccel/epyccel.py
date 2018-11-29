@@ -702,6 +702,7 @@ def epyccel_function(func,
                      libs        = [],
                      extra_args  = '',
                      folder      = None,
+                     mpi         = False,
                      assert_contiguous = False):
 
     # ... get the function source code
@@ -794,7 +795,7 @@ def epyccel_function(func,
     output, cmd = compile_f2py( filename,
                                 extra_args  = extra_args,
                                 compiler    = compiler,
-                                mpi         = False,
+                                mpi         = mpi,
                                 accelerator = accelerator )
 
     if verbose:
@@ -841,6 +842,7 @@ def epyccel_module(module,
                    modules     = [],
                    libs        = [],
                    extra_args  = '',
+                   mpi         = False,
                    folder      = None):
 
     # ... get the module source code
@@ -968,7 +970,7 @@ def epyccel_module(module,
                                 libdirs     = [curdir],
                                 compiler    = compiler,
                                 accelerator = accelerator,
-                                mpi         = False )
+                                mpi         = mpi )
 
     if verbose:
         print(cmd)
@@ -1000,12 +1002,55 @@ def epyccel_module(module,
 
 def epyccel( inputs, **kwargs ):
 
-    if isinstance( inputs, FunctionType ):
-        return epyccel_function( inputs, **kwargs )
+    # ...
+    def _epyccel_seq(inputs, **kwargs):
+        if isinstance( inputs, FunctionType ):
+            return epyccel_function( inputs, **kwargs )
 
-    elif isinstance( inputs, ModuleType ):
-        return epyccel_module( inputs, **kwargs )
+        elif isinstance( inputs, ModuleType ):
+            return epyccel_module( inputs, **kwargs )
+
+        else:
+            raise TypeError('> Expecting a function or a module')
+    # ...
+
+    comm = kwargs.pop('comm', None)
+    root = kwargs.pop('root', 0)
+
+    if not(comm is None):
+        # TODO not tested for a function
+        from mpi4py import MPI
+
+        assert isinstance( comm, MPI.Comm   )
+        assert isinstance( root, int        )
+
+        # Master process calls epyccel
+        if comm.rank == root:
+            kwargs['mpi'] = True
+            fmod      = _epyccel_seq( inputs, **kwargs )
+            fmod_path = fmod.__file__
+            fmod_name = fmod.__name__
+
+            fmod_path = os.path.abspath( fmod_path )
+
+        else:
+            fmod_path = None
+            fmod_name = None
+
+        # Broadcast Fortran module path/name to all processes
+        fmod_path = comm.bcast( fmod_path, root=root )
+        fmod_name = comm.bcast( fmod_name, root=root )
+
+        # Non-master processes import Fortran module directly from its path
+        if comm.rank != root:
+            folder = os.path.abspath(os.path.join(fmod_path, os.pardir))
+
+            sys.path.append(folder)
+            fmod = importlib.import_module( fmod_name )
+            sys.path.remove(folder)
+
+        # Return Fortran module
+        return fmod
 
     else:
-        raise TypeError('> Expecting a function or a module')
-
+        return _epyccel_seq( inputs, **kwargs )
