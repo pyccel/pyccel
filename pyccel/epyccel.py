@@ -928,8 +928,8 @@ def epyccel_module(module,
                                        return_ast  = True )
     # ...
 
-    # ...
-    cmd = 'ar -r lib{libname}.a {binary} '.format(binary=binary, libname=libname)
+    # ... add -c to not warn if the library had to be created
+    cmd = 'ar -rc lib{libname}.a {binary} '.format(binary=binary, libname=libname)
     output = subprocess.check_output(cmd, shell=True)
 
     if verbose:
