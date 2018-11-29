@@ -1022,13 +1022,14 @@ def epyccel( inputs, **kwargs ):
 
     comm = kwargs.pop('comm', None)
     root = kwargs.pop('root', 0)
+    bcast = kwargs.pop('bcast', True)
 
     if not(comm is None):
         # TODO not tested for a function
         from mpi4py import MPI
 
-        assert isinstance( comm, MPI.Comm   )
-        assert isinstance( root, int        )
+        assert isinstance( comm, MPI.Comm )
+        assert isinstance( root, int      )
 
         # Master process calls epyccel
         if comm.rank == root:
@@ -1042,18 +1043,21 @@ def epyccel( inputs, **kwargs ):
         else:
             fmod_path = None
             fmod_name = None
+            fmod      = None
 
-        # Broadcast Fortran module path/name to all processes
-        fmod_path = comm.bcast( fmod_path, root=root )
-        fmod_name = comm.bcast( fmod_name, root=root )
+        if bcast:
 
-        # Non-master processes import Fortran module directly from its path
-        if comm.rank != root:
-            folder = os.path.abspath(os.path.join(fmod_path, os.pardir))
+            # Broadcast Fortran module path/name to all processes
+            fmod_path = comm.bcast( fmod_path, root=root )
+            fmod_name = comm.bcast( fmod_name, root=root )
 
-            sys.path.append(folder)
-            fmod = importlib.import_module( fmod_name )
-            sys.path.remove(folder)
+            # Non-master processes import Fortran module directly from its path
+            if comm.rank != root:
+                folder = os.path.abspath(os.path.join(fmod_path, os.pardir))
+
+                sys.path.append(folder)
+                fmod = importlib.import_module( fmod_name )
+                sys.path.remove(folder)
 
         # Return Fortran module
         return fmod
