@@ -758,6 +758,7 @@ def epyccel_function(func,
 
     # ... convert python to fortran using pyccel
     #     we ask for the ast so that we can get the FunctionDef node
+   
     fname, ast = execute_pyccel( fname,
                                  compiler     = compiler,
                                  fflags       = fflags,
@@ -772,6 +773,7 @@ def epyccel_function(func,
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
     func_name = func.__name__
+    
     func = get_function_from_ast(ast, func_name)
     # ...
 
@@ -787,7 +789,6 @@ def epyccel_function(func,
                    imports = [] )
 
     code = fcode(f2py_module)
-
     filename = '{}.f90'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
 

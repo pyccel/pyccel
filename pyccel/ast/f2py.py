@@ -85,6 +85,7 @@ def as_static_function(func):
     results = func.results
     body    = func.body
     arguments_inout = func.arguments_inout
+    functions = func.functions
     _results = []
     if results:
         if len(results) == 1:
@@ -156,7 +157,7 @@ def as_static_function(func):
     return FunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
-                        arguments_inout = arguments_inout )
+                        arguments_inout = arguments_inout,functions=functions )
 
 
 #=======================================================================================
@@ -165,11 +166,12 @@ def as_static_function_call(func):
 
     args = func.arguments
     args = sanitize_arguments(args)
-
+    functions = func.functions
     body = [FunctionCall(func, args)]
 
     func = FunctionDef(func.name, list(args), [], body,
-                       arguments_inout = func.arguments_inout)
+                       arguments_inout = func.arguments_inout,
+                       functions=functions)
     static_func = as_static_function(func)
 
     return static_func

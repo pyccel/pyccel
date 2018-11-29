@@ -2696,10 +2696,11 @@ class FunctionDef(Basic):
         is_pure=False,
         is_elemental=False,
         is_private=False,
+        is_header=False,
         is_external=False,
         is_external_call=False,
         arguments_inout=[],
-        ):
+        functions = []):
 
         # name
 
@@ -2779,6 +2780,10 @@ class FunctionDef(Basic):
 
         if not isinstance(is_private, bool):
             raise TypeError('Expecting a boolean for private')
+        
+        if not isinstance(is_header, bool):
+            raise TypeError('Expecting a boolean for private')
+
 
         if not isinstance(is_external, bool):
             raise TypeError('Expecting a boolean for external')
@@ -2796,6 +2801,11 @@ class FunctionDef(Basic):
         else:
             # TODO shall we keep this?
             arguments_inout = [False for a in arguments]
+            
+        if functions:
+            for i in functions:
+                if not isinstance(i, FunctionDef):
+                    raise TypeError('Expecting a FunctionDef')
 
         return Basic.__new__(
             cls,
@@ -2816,9 +2826,11 @@ class FunctionDef(Basic):
             is_pure,
             is_elemental,
             is_private,
+            is_header,
             is_external,
             is_external_call,
-            arguments_inout)
+            arguments_inout,
+            functions,)
 
     @property
     def name(self):
@@ -2887,18 +2899,26 @@ class FunctionDef(Basic):
     @property
     def is_private(self):
         return self._args[16]
-
+        
     @property
-    def is_external(self):
+    def is_header(self):
         return self._args[17]
 
     @property
-    def is_external_call(self):
+    def is_external(self):
         return self._args[18]
 
     @property
-    def arguments_inout(self):
+    def is_external_call(self):
         return self._args[19]
+
+    @property
+    def arguments_inout(self):
+        return self._args[20]
+        
+    @property
+    def functions(self):
+        return self._args[21]
 
     def print_body(self):
         for s in self.body:
@@ -2923,6 +2943,7 @@ class FunctionDef(Basic):
             imports = self.imports,
             decorators = self.decorators,
             is_recursive=True,
+            functions=self.functions,
             )
 
     def rename(self, newname):
@@ -2949,7 +2970,7 @@ class FunctionDef(Basic):
             imports = self.imports,
             decorators = self.decorators,
             is_recursive=self.is_recursive,
-            )
+            functions=self.functions,)
 
     def vectorize(self, body , header):
         """ return vectorized FunctionDef """

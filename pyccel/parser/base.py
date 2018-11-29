@@ -259,6 +259,15 @@ class Scope(object):
     def __init__(self):
     
         self._imports   = OrderedDict()
+        
+        self._imports['functions'] = OrderedDict()
+        self._imports['variables'] = OrderedDict()
+        self._imports['classes'  ] = OrderedDict()
+        self._imports['imports'  ] = OrderedDict()
+        
+        self._imports['python_functions'  ] = OrderedDict()
+        self._imports['symbolic_functions'] = OrderedDict()
+        
         self._variables = OrderedDict()
         self._classes   = OrderedDict()
         self._functions = OrderedDict()
@@ -403,10 +412,6 @@ class BasicParser(object):
     @property
     def namespace(self):
         return self._namespace
-        
-    @property
-    def imports(self):
-        return self.namespace.imports
 
     @property
     def filename(self):
@@ -452,8 +457,8 @@ class BasicParser(object):
             return False
 
     @property
-    def bounding_box(self):
-        return self._bounding_box
+    def current_fst_node(self):
+        return self._current_fst_node
 
     @property
     def blocking(self):
@@ -571,15 +576,13 @@ class BasicParser(object):
     def insert_import(self, expr):
         """."""
 
-        # TODO improve
-
+        # this method is only used in the syntatic stage
+        
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
-        container = self.namespace.imports
+        container = self.namespace.imports['imports']
         
         # if source is not specified, imported things are treated as sources
-        # TODO test if builtin import
-
         source = expr.source
         if source is None:
             for t in expr.target:

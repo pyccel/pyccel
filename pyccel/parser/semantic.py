@@ -176,6 +176,7 @@ class SemanticParser(BasicParser):
         self._filename  = parser._filename
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
+        self._namespace.imports['imports'] = OrderedDict()
 
         # we use it to detect the current method or function
 
@@ -274,8 +275,8 @@ class SemanticParser(BasicParser):
         
         if name in container.variables:
             return container.variables[name]
-        elif name in container.imports:
-            return container.imports[name]
+        elif name in container.imports['variables']:
+            return container.imports['variables'][name]
 
 
         return None
@@ -294,8 +295,8 @@ class SemanticParser(BasicParser):
         while container:
             if name in container.variables:
                 return container.variables[name]
-            elif name in container.imports:
-                return container.imports[name]
+            elif name in container.imports['variables']:
+                return container.imports['variables'][name]
             container = container.parent_scope
 
 
@@ -322,9 +323,13 @@ class SemanticParser(BasicParser):
         """."""
 
         container = self.namespace
+
         while container:
             if name in container.classes:
                 return container.classes[name]
+            elif name in container.imports['classes']:
+                return container.imports['classes'][name]
+            
             container = container.parent_scope
         return None
         
@@ -337,7 +342,7 @@ class SemanticParser(BasicParser):
 
         if name is None:
             name = str(var.name)
-            
+        
         self.namespace.variables[name] = var
 
 
@@ -381,14 +386,15 @@ class SemanticParser(BasicParser):
         # TODO shall we keep the elif in _imports?
 
         func = None
-
+      
         container = self.namespace
         while container:
             if name in container.functions:
                 func = container.functions[name]
                 break
-            if name in container.imports:
-                func =  container.imports[name]
+
+            if name in container.imports['functions']:
+                func =  container.imports['functions'][name]
                 break
             container = container.parent_scope
                 
@@ -410,8 +416,8 @@ class SemanticParser(BasicParser):
             if name in container.symbolic_functions:
                 return container.symbolic_functions[name]
             
-            if name in container.imports:
-                return container.imports[name]
+            if name in container.imports['symbolic_functions']:
+                return container.imports['symbolic_functions'][name]
             container = container.parent_scope
 
         return None
@@ -425,8 +431,8 @@ class SemanticParser(BasicParser):
             if name in container.python_functions:
                 return container.python_functions[name]
  
-            if name in container.imports:
-                return container.imports[name]
+            if name in container.imports['python_functions']:
+                return container.imports['python_functions'][name]
                 
             container = container.parent_scope
 
@@ -1150,16 +1156,19 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr.rhs, Symbol) and not expr.rhs.name \
             in attr_name:
-            for i in first.cls_base.methods:
+            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            for i in methods:
                 if str(i.name) == expr.rhs.name and 'property' \
                     in i.decorators.keys():
-
+                    if isinstance(i, Interface):
+                        raise NotImplementedError('TODO')
                     d_var = self._infere_type(i.results[0], **settings)
                     dtype = d_var['datatype']
                     assumptions = {str_dtype(dtype): True}
                     second = Function(expr.rhs.name, **assumptions)(Nil())
 
                     return DottedVariable(first, second)
+            raise ValueError('attribute {} not found'.format(expr.rhs.name))
 
         if not isinstance(expr.rhs, Application):
             macro = self.get_macro(rhs_name)
@@ -1169,6 +1178,7 @@ class SemanticParser(BasicParser):
             self._current_class = first.cls_base
             second = self._visit(expr.rhs, **settings)
             self._current_class = None
+            return DottedVariable(first, second)
         else:
 
             macro = self.get_macro(rhs_name)
@@ -1187,22 +1197,33 @@ class SemanticParser(BasicParser):
                     raise NotImplementedError(msg)
             args = [self._visit(arg, **settings) for arg in
                     expr.rhs.args]
-            for i in first.cls_base.methods:
-                if str(i.name.name) == rhs_name:
-                    if len(i.results) == 1:
-                        d_var = self._infere_type(i.results[0], **settings)
+            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            for i in methods:
+                if str(i.name) == rhs_name:
+                    if isinstance(i, Interface):
+                        results = i.functions[0].results
+                        if len(results)>0:
+                            raise NotImplementedError('TODO')
+                    else:
+                        results = i.results
+                        
+                    if len(results) == 1:
+                        d_var = self._infere_type(results[0], **settings)
                         dtype = d_var['datatype']
                         assumptions = {str_dtype(dtype): True}
-                        second = Function(i.name.name, **assumptions)(*args)
+                        second = Function(rhs_name, **assumptions)(*args)
 
-                    elif len(i.results) == 0:
-                        second = Subroutine(i.name.name)(*args)
-                    elif len(i.results) > 1:
+                    elif len(results) == 0:
+                        second = Subroutine(rhs_name)(*args)
+                    elif len(results) > 1:
                         msg = 'TODO case multiple return variables'
                         raise NotImplementedError(msg)
+                        
+                    
+                    return DottedVariable(first, second)
 
-                    expr = DottedVariable(first, second)
-                    return expr
+            raise ValueError('attribute {} not found'.format(rhs_name))
+
         return DottedVariable(first, second)
 
     def _visit_Add(self, expr, **settings):
@@ -1570,16 +1591,18 @@ class SemanticParser(BasicParser):
                 else:
                     msg = 'TODO treate interface case'
                     raise NotImplementedError(msg)
-
-        if isinstance(rhs, DottedVariable):
+            else:
+                rhs = self._visit_Application(rhs, **settings)
+                
+        elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
             name = _get_name(var)
             macro = self.get_macro(name)
             if not macro is None:
                 master = macro.master
                 if isinstance(macro, MacroVariable):
-                    self.insert_variable(master)
                     rhs = master
+                    annotated_rhs = True
                 else:
                     name = macro.name
                     master_args = macro.master_arguments
@@ -1609,9 +1632,10 @@ class SemanticParser(BasicParser):
                         return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO')
-
-
-        rhs = self._visit(rhs, **settings)
+            else:
+                rhs = self._visit_DottedVariable(rhs, **settings)
+        else:
+            rhs = self._visit(rhs, **settings)
 
         if isinstance(rhs, IfTernaryOperator):
             args = rhs.args
@@ -2230,16 +2254,19 @@ class SemanticParser(BasicParser):
 
     def _visit_InterfaceHeader(self, expr, **settings):
 
-        container = self.namespace.functions
-
+        containers = [self.namespace.functions ,
+        self.namespace.imports['functions']]
         # TODO improve test all possible containers
-
-        if set(expr.funcs).issubset(container.keys()):
-            name  = expr.name
-            funcs = []
-            for i in expr.funcs:
-                funcs += [container[i]]
-
+        name = None
+        for container in containers:
+            if set(expr.funcs).issubset(container.keys()):
+                name  = expr.name
+                funcs = []
+                for i in expr.funcs:
+                    funcs += [container[i]]
+                    
+        if name is None:
+            raise ValueError('inteface functions {} not found'.format(expr.funcs))
         expr            = Interface(name, funcs, hide=True)
         container[name] = expr
         return expr
@@ -2282,6 +2309,7 @@ class SemanticParser(BasicParser):
         kind         = 'function'
         decorators   = expr.decorators
         funcs        = []
+        sub_funcs    = []
         is_static    = False
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
@@ -2464,9 +2492,12 @@ class SemanticParser(BasicParser):
             is_recursive = False
 
             # get the imports
-            imports = self.namespace.imports
-            imports = list(set(imports))
+            imports   = self.namespace.imports['imports'].values()
+            imports   = list(set(imports))
+            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
+            
             self.set_current_function(None)
+            
             func_   = self.get_function(name)
             if not func_ is None and func_.is_recursive:
                 is_recursive = True
@@ -2484,6 +2515,7 @@ class SemanticParser(BasicParser):
             apps = list(Tuple(*body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__ 
                     in self.get_parent_functions())]
+                    
             d_apps = OrderedDict()
             for a in args:
                 d_apps[a] = []
@@ -2539,7 +2571,8 @@ class SemanticParser(BasicParser):
                 imports=imports,
                 decorators=decorators,
                 is_recursive=is_recursive,
-                arguments_inout=args_inout)
+                arguments_inout=args_inout,
+                functions = sub_funcs)
 
             if cls_name:
                 cls = self.get_class(cls_name)
@@ -2568,7 +2601,8 @@ class SemanticParser(BasicParser):
             self.insert_function(funcs)
 
         if vec_func:
-           vec_func  = self._visit(vec_func, **settings)
+           self._visit_FunctionDef(vec_func, **settings)
+           vec_func = self.namespace.functions.pop(vec_name)
            if isinstance(funcs, Interface):
                funcs = list(funcs.funcs)+[vec_func]
            else:
@@ -2579,7 +2613,7 @@ class SemanticParser(BasicParser):
            self.insert_function(funcs)
 
 
-        return funcs
+        return EmptyLine()
 
     def _visit_Print(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
@@ -2629,8 +2663,9 @@ class SemanticParser(BasicParser):
             m_name = str(method.name).replace("'", '')
 
             if m_name == '__init__':
-                const = self._visit_FunctionDef(method, **settings)
+                self._visit_FunctionDef(method, **settings)
                 methods.pop(i)
+                const = self.namespace.functions.pop(m_name)
                 break
 
 
@@ -2639,9 +2674,15 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                    bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='error', blocker=True)
-
-        methods = [self._visit_FunctionDef(i, **settings) for i in methods]
-        methods = [const] + methods
+                   
+        ms = []
+        for i in methods:
+            self._visit_FunctionDef(i, **settings)
+            m_name = str(i.name).replace("'", '')
+            m = self.namespace.functions.pop(m_name)
+            ms.append(m)
+        
+        methods = [const] + ms
         header = self.get_header(name)
 
         if not header:
@@ -2653,9 +2694,11 @@ class SemanticParser(BasicParser):
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
-        return ClassDef(name, attributes, methods,
-                       interfaces=interfaces, parent=parent)
-
+                
+        cls = ClassDef(name, attributes, methods, interfaces=interfaces, parent=parent)
+        self.insert_class(cls)
+        return EmptyLine()
+        
     def _visit_Del(self, expr, **settings):
 
         ls = [self._visit(i, **settings) for i in expr.variables]
@@ -2697,7 +2740,7 @@ class SemanticParser(BasicParser):
                         F = self.get_variable(name)
 
                         if F is None:
-                            container[name] = atom
+                            container['functions'][name] = atom
                         elif name in container:
                             errors.report(FOUND_DUPLICATED_IMPORT,
                                         symbol=name, severity='warning')
@@ -2712,19 +2755,21 @@ class SemanticParser(BasicParser):
                 __ignore_at_import__ = False
                 __module_name__      = None
                 __import_all__       = False
+                __print__            = False
 
                 # we need to use str here since source has been defined
                 # using repr.
                 # TODO shall we improve it?
-                targets = [_get_name(i) for i in expr.target]
-                p       = self.d_parsers[str(expr.source)]
-                
-                for entry in ['variables', 'classes', 'macros',
-                              'functions', 'cls_constructs']:
+                source = str(expr.source)
+                p       = self.d_parsers[source]
+                for entry in ['variables', 'classes', 'functions']:
 
-                    d_self = getattr(self.namespace, entry)
+
                     d_son = getattr(p.namespace, entry)
-                    d_self.update(d_son)
+                    container[entry].update(d_son)
+                    
+                self.namespace.cls_constructs.update(p.namespace.cls_constructs)
+                self.namespace.macros.update(p.namespace.macros)
 
 
                 # ... meta variables
@@ -2737,21 +2782,32 @@ class SemanticParser(BasicParser):
 
                 if 'module_name' in list(p.metavars.keys()):
                     __module_name__ = p.metavars['module_name']
+                
+                if 'print' in list(p.metavars.keys()):
+                    __print__ = True
+                    
+                if __import_all__:
+                    expr = Import(__module_name__)
+                    container['imports'][__module_name__] = expr
+
+                elif __module_name__:
                     expr = Import(expr.target, __module_name__)
-                    self.insert_import(expr)
+                    container['imports'][__module_name__] = expr
+                    return EmptyLine()
 
                 # ...
-                if 'print' in p.metavars.keys():
+                elif __print__ in p.metavars.keys():
                     source = str(expr.source).split('.')[-1]
                     source = 'mod_' + source
                     expr   = Import(expr.target, source=source)
-                    self.insert_import(expr)
+                    container['imports'][source] = expr
+
                 
-                if __import_all__:
-                    expr = Import(__module_name__)
-                    self.insert_import(expr)
-               
-        return EmptyLine()
+
+                    
+            return EmptyLine()
+        else:   
+            return EmptyLine()
 
 
     def _visit_With(self, expr, **settings):

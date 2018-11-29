@@ -62,6 +62,7 @@ class Codegen(object):
 
         self._collect_statments()
         self._set_kind()
+
         
     @property
     def parser(self):
@@ -163,25 +164,30 @@ class Codegen(object):
         namespace  = self.parser.namespace
         funcs      = []
         interfaces = []
+        body = []
         
+
         for i in namespace.functions.values():
-            if isinstance(i, FunctionDef):
+            if isinstance(i, FunctionDef) and not i.is_header:
                 funcs.append(i)
             elif isinstance(i, Interface):
                 interfaces.append(i)
-            else:
-                raise TypeError('Expected a functions or an interface')
-        
-        self._stmts['imports'   ] = [i  for i in list(namespace.imports.values()) if isinstance(i, Import)]
+            
+        self._stmts['imports'   ] = list(namespace.imports['imports'].values())
         self._stmts['variables' ] = list(namespace.variables.values())
         self._stmts['routines'  ] = funcs
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
+        self._stmts['body']       = self.ast
+
+
+
 
 
     def _set_kind(self):
         """Finds the source code kind."""
-
+ 
+        
 
         is_module = len(self.variables)+len(self.imports) == 0
 
@@ -195,6 +201,7 @@ class Codegen(object):
         #  ...
 
         expr = None
+        
         if self.is_module:
             expr = Module(
                 self.name,
@@ -214,6 +221,7 @@ class Codegen(object):
                 self.body,
                 imports=self.imports,
                 modules=self.modules)
+
         else:
             raise NotImplementedError('TODO')
 
@@ -234,22 +242,26 @@ class Codegen(object):
 
         self._language = language
 
-        # ...
-
         # ... define the printing function to be used
 
         printer = printer_registry[language]
 
         # ...
 
+  
+        errors = Errors()
+        errors.set_parser_stage('codegen')
+        
         # ...
-
+        
         code = printer(self.expr, self.parser, **settings)
 
         # ...
-
+        errors.check()
+        
         self._code = code
-
+        
+        
         return code
 
     def export(self, filename=None):

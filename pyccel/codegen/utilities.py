@@ -186,8 +186,13 @@ def execute_pyccel(filename,
     name = os.path.splitext(name)[0]
 
     codegen = Codegen(ast, name)
-    code = codegen.doprint()
+    code    = codegen.doprint()
+    ast     = codegen.routines + codegen.interfaces
 
+    #S.H we only need to return functions
+    #the actual ast doesn't contain the functions
+    # we need to get it from the namespace
+    
     if convert_only:
         if not return_ast:
             return code
