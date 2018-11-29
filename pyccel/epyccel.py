@@ -11,6 +11,8 @@ import sys
 import os
 import string
 import random
+from shutil import copyfile
+
 
 from pyccel.parser                  import Parser
 from pyccel.parser.errors           import Errors, PyccelError
@@ -50,6 +52,11 @@ def mkdir_p(folder):
     os.makedirs(folder)
 
 #==============================================================================
+def touch(path):
+    with open(path, 'a'):
+        os.utime(path, None)
+
+#==============================================================================
 
 def write_code(filename, code, folder=None):
     if not folder:
@@ -62,10 +69,10 @@ def write_code(filename, code, folder=None):
     filename = os.path.basename( filename )
     filename = os.path.join(folder, filename)
 
-    # TODO check if init exists
+    # TODO check if __init__.py exists
     # add __init__.py for imports
-    cmd = 'touch {}/__init__.py'.format(folder)
-    os.system(cmd)
+    init_fname = os.path.join(folder, '__init__.py')
+    touch(init_fname)
 
     f = open(filename, 'w')
     for line in code:
@@ -329,7 +336,7 @@ def epyccel_old(func, inputs = None, verbose = False, modules = [], libs = [], l
 
             # clean
             cmd = 'rm -f {}'.format(module_filename)
-            os.system(cmd)
+            output = subprocess.check_output(cmd, shell=True)
 
             # then re-run again
             mod = importlib.import_module(name)
@@ -882,8 +889,7 @@ def epyccel_module(module,
 
     # ... we need to store the python file in the folder, so that execute_pyccel
     #     can run
-    cmd = 'cp {fname} {new}'.format(fname=fname, new=os.path.basename(fname))
-    os.system(cmd)
+    copyfile(fname, os.path.basename(fname))
     fname = os.path.basename(fname)
     # ...
 
@@ -924,7 +930,7 @@ def epyccel_module(module,
 
     # ...
     cmd = 'ar -r lib{libname}.a {binary} '.format(binary=binary, libname=libname)
-    os.system(cmd)
+    output = subprocess.check_output(cmd, shell=True)
 
     if verbose:
         print(cmd)
