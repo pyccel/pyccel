@@ -139,13 +139,34 @@ def fst_move_directives(x):
     containers = defs + withs
     for stmt in containers:
         fst_move_directives(stmt.value)
+        i_son = x.index(stmt)
+
+        while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+            cmt = stmt.value[-1]
+            
+            stmt.value.remove(cmt)
+            # insert right after the function
+            x.insert(i_son + 1, cmt)
+
+            
+
     # ...
 
     # ... if statements are inside IfelseblockNode
     ifblocks = get_ifblocks(x)
+    
     for ifblock in ifblocks:
+        i_son = x.index(ifblock)
         for stmt in ifblock.value:
             fst_move_directives(stmt.value)
+            
+            while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+                cmt = stmt.value[-1]
+                stmt.value.remove(cmt)
+                # insert right after the function
+                x.insert(i_son + 1, cmt)
+
+
     # ...
 
     # ... loops

@@ -13,9 +13,7 @@ class Parser(object):
 
         self._filename = filename
         self._kwargs = kwargs
-
-        self._namespace = OrderedDict()
-
+        
         # we use it to store the imports
         self._parents = []
 
@@ -28,50 +26,6 @@ class Parser(object):
         self._semantic_parser = None
 
         self._output_folder = kwargs.pop('output_folder', '')
-
-    @property
-    def namespace(self):
-        return self._namespace
-
-    @property
-    def headers(self):
-        return self.namespace['headers']
-
-    @property
-    def imports(self):
-        return self.namespace['imports']
-
-    @property
-    def functions(self):
-        return self.namespace['functions']
-
-    @property
-    def variables(self):
-        return self.namespace['variables']
-
-    @property
-    def classes(self):
-        return self.namespace['classes']
-
-    @property
-    def python_functions(self):
-        return self.namespace['python_functions']
-
-    @property
-    def symbolic_functions(self):
-        return self.namespace['symbolic_functions']
-
-    @property
-    def static_functions(self):
-        return self.namespace['static']
-
-    @property
-    def macros(self):
-        return self.namespace['macros']
-
-    @property
-    def metavars(self):
-        return self._metavars
 
     @property
     def d_parsers(self):
@@ -90,13 +44,27 @@ class Parser(object):
         """Returns the sons parser."""
 
         return self._sons
-
+        
+    @property
+    def metavars(self):
+        if self._semantic_parser:
+            return self._semantic_parser.metavars
+        else:
+            return self._syntax_parser.metavars
+            
+    @property
+    def namespace(self):
+        if self._semantic_parser:
+            return self._semantic_parser.namespace
+        else:
+            return self._syntax_parser.namespace
+            
     @property
     def imports(self):
         if self._semantic_parser:
-            return self._semantic_parser.imports
+            raise NotImplementedError('TODO')
         else:
-            return self._syntax_parser.imports
+            return self._syntax_parser.namespace.imports['imports']
 
     @property
     def fst(self):
@@ -105,8 +73,6 @@ class Parser(object):
     def parse(self, d_parsers=None, verbose=False):
         parser = SyntaxParser(self._filename, **self._kwargs)
         self._syntax_parser = parser
-        self._namespace = parser.namespace
-        self._metavars = parser.metavars
 
         if d_parsers is None:
             d_parsers = OrderedDict()
@@ -125,9 +91,8 @@ class Parser(object):
                                 parents=self.parents,
                                 **settings)
         self._semantic_parser = parser
-        self._namespace = parser.namespace
-        self._metavars = parser.metavars
-        return parser.ast
+        
+        return parser
 
     def append_parent(self, parent):
         """."""
@@ -180,23 +145,7 @@ class Parser(object):
     def _annotate_parents(self, **settings):
 
         verbose = settings.pop('verbose', False)
-
-        # ...
-
-        def _update_from_son(p):
-
-            # TODO - only import what is needed
-            #      - use insert_variable etc
-
-            for entry in ['variables', 'classes', 'functions',
-                          'cls_constructs']:
-                d_self = self._namespace[entry]
-                d_son = p.namespace[entry]
-                for (k, v) in list(d_son.items()):
-                    d_self[k] = v
-
-        # ...
-
+        
         # we first treat sons that have no imports
 
         for p in self.sons:

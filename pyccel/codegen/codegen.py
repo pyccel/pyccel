@@ -37,8 +37,8 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
-        
-        self._ast      = expr
+        self._parser   = expr
+        self._ast      = expr.ast
         self._name     = name
         self._kind     = None
         self._code     = None
@@ -62,6 +62,11 @@ class Codegen(object):
 
         self._collect_statments()
         self._set_kind()
+
+        
+    @property
+    def parser(self):
+        return self._parser
 
     @property
     def name(self):
@@ -156,73 +161,35 @@ class Codegen(object):
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
          
-        errors = Errors()
-        errors.set_parser_stage('codegen')
-
-        modules    = []
-        classes    = []
-        routines   = []
+        namespace  = self.parser.namespace
+        funcs      = []
         interfaces = []
-        imports    = []
-        body       = []
-        variables  = []
+        body = []
         
 
-        for stmt in self.ast:
-            if isinstance(stmt, EmptyLine):
-                continue
-            elif isinstance(stmt, FunctionDef):
-                routines += [stmt]
-            elif isinstance(stmt, ClassDef):
-                classes += [stmt]
-            elif isinstance(stmt, Import):
-                imports += [stmt]
-            elif isinstance(stmt, Module):
-                modules += [stmt]
-            elif isinstance(stmt, Interface):
-                interfaces += [stmt]
-            else:
-
-                # TODO improve later, as in the old codegen
-                # we don't generate code for symbolic assignments
-                # we must also look in For While and If bodies
-
-                if isinstance(stmt, SymbolicAssign):
-                    errors.report(FOUND_SYMBOLIC_ASSIGN,
-                                  symbol=stmt.lhs, severity='warning')
-                    body += [Comment(str(stmt))]
-                elif isinstance(stmt, Assign) and isinstance(stmt.rhs, Is):
-                    errors.report(FOUND_IS_IN_ASSIGN, symbol=stmt.lhs,
-                                  severity='warning')
-                    body += [Comment(str(stmt))]
-                else:
-                    body += [stmt]
-
-
-        self._stmts['imports'   ] = imports
-        self._stmts['variables' ] = collect_vars(self.ast)
-        self._stmts['body'      ] = body
-        self._stmts['routines'  ] = routines
-        self._stmts['classes'   ] = classes
-        self._stmts['modules'   ] = modules
+        for i in namespace.functions.values():
+            if isinstance(i, FunctionDef) and not i.is_header:
+                funcs.append(i)
+            elif isinstance(i, Interface):
+                interfaces.append(i)
+            
+        self._stmts['imports'   ] = list(namespace.imports['imports'].values())
+        self._stmts['variables' ] = list(namespace.variables.values())
+        self._stmts['routines'  ] = funcs
+        self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
+        self._stmts['body']       = self.ast
 
-        errors.check()
 
-    # TODO improve to have a kind = None
-    #      => must have a condition to be aprogram
+
+
 
     def _set_kind(self):
         """Finds the source code kind."""
+ 
+        
 
-        #  ...
-
-        _stmts = (Header, EmptyLine, NewLine, Comment)
-        body = self.body
-
-        ls = [i for i in body if not isinstance(i, _stmts)]
-
-        is_module = len(ls) == 0
+        is_module = len(self.variables)+len(self.imports) == 0
 
         if is_module:
             self._kind = 'module'
@@ -234,6 +201,7 @@ class Codegen(object):
         #  ...
 
         expr = None
+        
         if self.is_module:
             expr = Module(
                 self.name,
@@ -253,6 +221,7 @@ class Codegen(object):
                 self.body,
                 imports=self.imports,
                 modules=self.modules)
+
         else:
             raise NotImplementedError('TODO')
 
@@ -273,22 +242,26 @@ class Codegen(object):
 
         self._language = language
 
-        # ...
-
         # ... define the printing function to be used
 
         printer = printer_registry[language]
 
         # ...
 
+  
+        errors = Errors()
+        errors.set_parser_stage('codegen')
+        
         # ...
-
-        code = printer(self.expr, **settings)
+        
+        code = printer(self.expr, self.parser, **settings)
 
         # ...
-
+        errors.check()
+        
         self._code = code
-
+        
+        
         return code
 
     def export(self, filename=None):

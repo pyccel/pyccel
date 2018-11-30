@@ -44,7 +44,7 @@ from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
 from pyccel.ast.core import Import
-from pyccel.ast.core import SeparatorComment, CommentBlock
+from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import Subroutine
@@ -58,7 +58,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If, Nil)
+                             Print, If, Nil, Is)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
@@ -66,11 +66,15 @@ from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
 
+from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.ast.parallel.mpi     import MPI
 from pyccel.ast.parallel.openmp  import OMP_For
 from pyccel.ast.parallel.openacc import ACC_For
+
+from pyccel.parser.errors import Errors, PyccelCodegenError
+from pyccel.parser.messages import *
 
 from collections import OrderedDict
 import functools
@@ -106,6 +110,7 @@ _default_methods = {
     '__del__' : 'free',
 }
 
+errors = Errors()
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -137,11 +142,12 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, settings={}):
+    def __init__(self, parser,settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
 
         CodePrinter.__init__(self, settings)
+        self.parser = parser
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -245,8 +251,8 @@ class FCodePrinter(CodePrinter):
         # TODO should we find a better way to do this?
         imports = list(expr.imports)
         for i in expr.imports:
-                if 'mpi4py' == str(i.target[0]):
-                    mpi = True
+            if 'mpi4py' == str(i.target[0]):
+                mpi = True
 
         imports = '\n'.join(self._print(i) for i in imports)
         funcs   = ''
@@ -343,6 +349,9 @@ class FCodePrinter(CodePrinter):
 
         prefix_as = ''
         source = ''
+        if str(expr.source) in pyccel_builtin_import_registery:
+            return ''
+            
         if expr.source is None:
             prefix = 'use'
         else:
@@ -353,9 +362,8 @@ class FCodePrinter(CodePrinter):
             prefix = 'use {}, only:'.format(source)
             prefix_as = 'use {},'.format(source)
 
-        # TODO - improve
         # importing of pyccel extensions is not printed
-        if source in ['numpy', 'scipy', 'itertools','math']:
+        if source in pyccel_builtin_import_registery:
             return ''
         if 'mpi4py' == str(expr.target[0]):
             return 'use mpi'
@@ -928,48 +936,62 @@ class FCodePrinter(CodePrinter):
         return '\n'.join(self._print(i) for i in expr.body)
 
     # TODO the ifs as they are are, is not optimal => use elif
+    def _print_SymbolicAssign(self, expr):
+        errors.report(FOUND_SYMBOLIC_ASSIGN,
+                      symbol=expr.lhs, severity='warning')
+
+        stmt = Comment(str(expr))
+        return self._print_Comment(stmt)
+        
+    
     def _print_Assign(self, expr):
+    
         lhs_code = self._print(expr.lhs)
         is_procedure = False
-
+        rhs = expr.rhs
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
-        if isinstance(expr.rhs, NINF):
+        if isinstance(rhs, Is):
+            errors.report(FOUND_IS_IN_ASSIGN, symbol=expr.lhs,
+                          severity='warning')
+            return self._print_Comment(Comment(str(expr)))
+            
+        if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
-        if isinstance(expr.rhs, INF):
+        if isinstance(rhs, INF):
             rhs_code = 'Huge({0})'.format(lhs_code)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
-        if isinstance(expr.rhs, (Range, Product)):
+        if isinstance(rhs, (Range, Product)):
             return ''
 
-        if isinstance(expr.rhs, Len):
+        if isinstance(rhs, Len):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
-        if isinstance(expr.rhs, (Int, Real, Complex)):
+        if isinstance(rhs, (Int, Real, Complex)):
            lhs = self._print(expr.lhs)
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
-        if isinstance(expr.rhs, (Zeros, Array, Shape, Linspace, Diag, Cross, Where)):
-            return expr.rhs.fprint(self._print, expr.lhs)
+        if isinstance(rhs, (Zeros, Array, Shape, Linspace, Diag, Cross, Where)):
+            return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(expr.rhs, ZerosLike):
-            return expr.rhs.fprint(self._print, expr.lhs)
+        if isinstance(rhs, ZerosLike):
+            return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(expr.rhs, FullLike):
-            return expr.rhs.fprint(self._print, expr.lhs)
+        if isinstance(rhs, FullLike):
+            return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(expr.rhs, Mod):
+        if isinstance(rhs, Mod):
             lhs = self._print(expr.lhs)
-            args = ','.join(self._print(i) for i in expr.rhs.args)
+            args = ','.join(self._print(i) for i in rhs.args)
             rhs  = 'modulo({})'.format(args)
-            return '{0} = {1}'.format(lhs,rhs)
+            return '{0} = {1}'.format(lhs, rhs)
 
-        elif isinstance(expr.rhs, Shape):
+        elif isinstance(rhs, Shape):
             a = expr.rhs.rhs
 
             lhs = self._print(expr.lhs)
@@ -997,12 +1019,12 @@ class FCodePrinter(CodePrinter):
 
             return self._get_statement(code)
 
-        elif isinstance(expr.rhs, FunctionDef):
-            rhs_code = self._print(expr.rhs.name)
-            is_procedure = expr.rhs.is_procedure
+        elif isinstance(rhs, FunctionDef):
+            rhs_code = self._print(rhs.name)
+            is_procedure = rhs.is_procedure
 
-        elif isinstance(expr.rhs, ConstructorCall):
-            func = expr.rhs.func
+        elif isinstance(rhs, ConstructorCall):
+            func = rhs.func
             name = str(func.name)
 
             # TODO uncomment later
@@ -1020,17 +1042,17 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(name)
             rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
             #TODO use is_procedure property
-            is_procedure = (expr.rhs.kind == 'procedure')
+            is_procedure = (rhs.kind == 'procedure')
 
-            code_args = ', '.join(self._print(i) for i in expr.rhs.arguments)
+            code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
 
-        elif isinstance(expr.rhs, Function):
+        elif isinstance(rhs, Function):
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            name = type(expr.rhs).__name__
+            name = type(rhs).__name__
             rhs_code = self._print(name)
-            args = expr.rhs.args
+            args = rhs.args
             code_args = ', '.join(self._print(i) for i in args)
 
             if isinstance(expr.lhs, (tuple, list, Tuple)):
@@ -1048,7 +1070,7 @@ class FCodePrinter(CodePrinter):
             return ''
         else:
 
-            rhs_code = self._print(expr.rhs)
+            rhs_code = self._print(rhs)
 #            print("ASSIGN = ", rhs_code)
 
         code = ''
@@ -1226,15 +1248,9 @@ class FCodePrinter(CodePrinter):
             # TODO uncomment and validate this
 #            expr = subs(expr, result, str(expr.name))
 
-            body = []
-            functions = []
-            for stmt in expr.body:
-                if isinstance(stmt, Declare):
-                    pass
-                elif isinstance(stmt, FunctionDef):
-                    functions += [stmt]
-                elif not isinstance(stmt, list): # for list of Results
-                    body.append(stmt)
+            body = expr.body
+            functions = expr.functions
+          
 
             ret_type = self._print(result.dtype)
             ret_type += '(kind={0})'.format(str(result.precision))
@@ -1272,17 +1288,9 @@ class FCodePrinter(CodePrinter):
             func_type = 'subroutine'
 
             names = [str(res.name) for res in expr.results]
-            body = []
-            functions = []
-            for stmt in expr.body:
-                if isinstance(stmt, Declare):
-                    pass
-                elif isinstance(stmt, FunctionDef):
-                    functions += [stmt]
-                elif not isinstance(stmt, Return):
-                    body.append(stmt)
-                elif isinstance(stmt,Return):
-                    body += [stmt]
+            body = expr.body
+            functions = expr.functions
+
 
         # ... TODO improve to treat variables that are assigned within blocks: if, etc
         symbols = get_assigned_symbols(expr.body)
@@ -1331,10 +1339,10 @@ class FCodePrinter(CodePrinter):
             body_code = body_code +'\ncontains \n' +functions_code
         body_code = prelude + '\n\n' + body_code
         imports = '\n'.join(self._print(i) for i in expr.imports)
+        
         return ('{0}({1}) {2}\n'
                 '{3}\n'
                 'implicit none\n'
-#                'integer, parameter:: dp=kind(0.d0)\n'
                 '{4}\n'
                 'end {5}').format(sig, arg_code, func_end, imports, body_code, func_type)
 
@@ -2241,7 +2249,7 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, assign_to=None, **settings):
+def fcode(expr, parser=None, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
@@ -2260,4 +2268,4 @@ def fcode(expr, assign_to=None, **settings):
         for examples.
     """
 
-    return FCodePrinter(settings).doprint(expr, assign_to)
+    return FCodePrinter(parser, settings).doprint(expr, assign_to)
