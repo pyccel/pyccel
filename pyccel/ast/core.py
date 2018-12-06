@@ -1982,6 +1982,7 @@ class Variable(Symbol):
         name,
         rank=0,
         allocatable=False,
+        is_stack_array = False,
         is_pointer=False,
         is_target=False,
         is_polymorphic=None,
@@ -2013,6 +2014,11 @@ class Variable(Symbol):
             is_target = False
         elif not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
+            
+        if is_stack_array is None:
+            is_stack_array = False
+        elif not isinstance(is_stack_array, bool):
+            raise TypeError('is_stack_array must be a boolean.')
 
         if is_polymorphic is None:
             if isinstance(dtype, CustomDataType):
@@ -2071,6 +2077,7 @@ class Variable(Symbol):
             is_optional,
             order,
             precision,
+            is_stack_array,
             )
 
         assumptions = {}
@@ -2144,6 +2151,10 @@ class Variable(Symbol):
     @property
     def precision(self):
         return self._args[12]
+        
+    @property
+    def is_stack_array(self):
+        return self._args[13]
 
     @property
     def is_ndarray(self):

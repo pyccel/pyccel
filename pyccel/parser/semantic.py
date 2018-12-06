@@ -532,12 +532,11 @@ class SemanticParser(BasicParser):
         """."""
 
         if name:
-            if self._current_function:
-                name = DottedName(self._current_function, name)
-                self._current_function = name
             self.namespace.sons_scopes[name] = Scope()
             self.namespace.sons_scopes[name].parent_scope = self.namespace
             self._namespace = self.namespace.sons_scopes[name]
+            if self._current_function:
+                name = DottedName(self._current_function, name)
         else:
             self._namespace = self.namespace.parent_scope
             if isinstance(self._current_function, DottedName):
@@ -584,16 +583,19 @@ class SemanticParser(BasicParser):
         d_var = {}
 
         d_var['datatype'      ] = NativeSymbol()
-        d_var['allocatable'   ] = None
+        d_var['precision'     ] = 0
         d_var['shape'         ] = ()
         d_var['rank'          ] = 0
+        d_var['allocatable'   ] = None
+        d_var['is_stack_array'] = None
         d_var['is_pointer'    ] = None
         d_var['is_target'     ] = None
         d_var['is_polymorphic'] = None
         d_var['is_optional'   ] = None
         d_var['cls_base'      ] = None
         d_var['cls_parameters'] = None
-        d_var['precision'     ] = 0
+
+
 
         # TODO improve => put settings as attribut of Parser
 
@@ -2310,7 +2312,6 @@ class SemanticParser(BasicParser):
         decorators   = expr.decorators
         funcs        = []
         sub_funcs    = []
-        is_static    = False
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         is_private   = expr.is_private
@@ -2336,10 +2337,6 @@ class SemanticParser(BasicParser):
 
         if header:
             interfaces = header.create_definition()
-
-            # is_static will be used for f2py
-
-            is_static  = header.is_static
 
             # get function kind from the header
 
@@ -2408,32 +2405,7 @@ class SemanticParser(BasicParser):
                                     value=a.value, **d_var)
                     else:
 
-                        # add shape as arguments if is_static and arg is array
-
                         rank = d_var['rank']
-                        if is_static and rank > 0:
-                            for i in range(0, rank):
-                                n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
-                                n_arg  = Variable('int', n_name)
-
-                                # TODO clean namespace later
-
-                                var = self.get_variable(n_name)
-                                if not var is None:
-
-                                    # TODO ERROR not tested yet
-
-                                    errors.report(REDEFINING_VARIABLE,
-                                    symbol=n_name, severity='error',
-                                    blocker=self.blocking)
-
-                                self.insert_variable(n_arg)
-                                additional_args += [n_arg]
-
-                            # update shape
-                            # TODO can this be improved? add some check
-
-                            d_var['shape'] = Tuple(*additional_args, sympify=False)
                         a_new = Variable(dtype, a.name, **d_var)
 
                     if additional_args:
@@ -2466,7 +2438,7 @@ class SemanticParser(BasicParser):
 
             if not all(i == results[0] for i in results):
                 #case of multiple return
-                # with diffrent variable name
+                # with different variable name
                 msg = 'TODO not available yet'
                 raise PyccelSemanticError(msg)
 
@@ -2482,7 +2454,22 @@ class SemanticParser(BasicParser):
             for var in self.get_variables():
                 if not var in args + results:
                     local_vars += [var]
+                    
+            if 'stack_array' in decorators: 
 
+                for i in range(len(local_vars)):
+                    var = local_vars[i]
+                    var_name = var.name
+                    if var_name in decorators['stack_array']:
+                        d_var = self._infere_type(var, **settings)
+                        d_var['is_stack_array'] = True
+                        d_var['allocatable'] = False
+                        d_var['is_pointer']  = False
+                        d_var['is_target']   = False
+                        dtype = d_var.pop('datatype')
+                        var   = Variable(dtype, var_name, **d_var)
+                        local_vars[i] = var
+                
             # TODO should we add all the variables or only the ones used in the function
 
             for var in self.get_variables('parent'):
@@ -2562,7 +2549,6 @@ class SemanticParser(BasicParser):
                 cls_name=cls_name,
                 hide=hide,
                 kind=kind,
-                is_static=is_static,
                 is_pure=is_pure,
                 is_elemental=is_elemental,
                 is_private=is_private,
@@ -2578,15 +2564,15 @@ class SemanticParser(BasicParser):
                 cls = self.get_class(cls_name)
                 methods = list(cls.methods) + [func]
 
-                # update the class  methods
+                # update the class methods
 
-                self.insert_class(ClassDef(cls_name,
-                        cls.attributes, methods, parent=cls.parent))
+                self.insert_class(ClassDef(cls_name, cls.attributes, 
+                methods, parent=cls.parent))
 
             funcs += [func]
+            
             #clear the sympy cache
-            #TODO move that inside FunctionDef
-            #and clear all variable except the global one
+            #TODO clear all variable except the global ones
             cache.clear_cache()
 
         if len(funcs) == 1:
@@ -2594,8 +2580,7 @@ class SemanticParser(BasicParser):
             self.insert_function(funcs)
 
         else:
-            funcs = [f.rename(name + '_' + str(i)) for (i,
-                     f) in enumerate(funcs)]
+            funcs = [f.rename(name+'_'+ str(i)) for (i,f) in enumerate(funcs)]
 
             funcs = Interface(name, funcs)
             self.insert_function(funcs)
@@ -2688,15 +2673,19 @@ class SemanticParser(BasicParser):
         if not header:
             msg = 'Expecting a header class for {classe} but could not find it.'
             raise ValueError(msg.format(classe=name))
+            
         options    = header.options
         attributes = self.get_class(name).attributes
+        
         for i in methods:
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
                 
-        cls = ClassDef(name, attributes, methods, interfaces=interfaces, parent=parent)
+        cls = ClassDef(name, attributes, methods, 
+              interfaces=interfaces, parent=parent)
         self.insert_class(cls)
+        
         return EmptyLine()
         
     def _visit_Del(self, expr, **settings):
@@ -2761,12 +2750,13 @@ class SemanticParser(BasicParser):
                 # using repr.
                 # TODO shall we improve it?
                 source = str(expr.source)
+                targets = [_get_name(i) for i in expr.target]
                 p       = self.d_parsers[source]
                 for entry in ['variables', 'classes', 'functions']:
-
-
                     d_son = getattr(p.namespace, entry)
-                    container[entry].update(d_son)
+                    for k in targets:
+                        if k in d_son:
+                            container[entry][k] = d_son[k]
                     
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)

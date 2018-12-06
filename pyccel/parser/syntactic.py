@@ -252,8 +252,14 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         # we add the try/except to allow the parser to find all possible errors
+        try:
+            ast = self._visit(self.fst)
+        except Exception as e:
+            errors.check()
+            if self.show_traceback:
+                traceback.print_exc()
+            raise SystemExit(0)
 
-        ast = self._visit(self.fst)
             
         self._ast = ast
 
@@ -668,11 +674,16 @@ class SyntaxParser(BasicParser):
         for i in stmt.decorators:
             decorators.update(self._visit(i))
 
-        if 'bypass' in decorators.keys():
+        if 'bypass' in decorators:
             return EmptyLine()
-
+            
+        if 'stack_array' in decorators:
+            args = decorators['stack_array']
+            for i in range(len(args)):
+                args[i] = str(args[i]).replace("'", '')
+            decorators['stack_array'] = args
         # extract the types to construct a header
-        if 'types' in decorators.keys():
+        if 'types' in decorators:
             types = []
             results = []
             container = types

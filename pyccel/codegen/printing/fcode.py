@@ -142,17 +142,49 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser,settings={}):
+    def __init__(self, parser, settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
 
         CodePrinter.__init__(self, settings)
         self.parser = parser
+        self._namespace = self.parser.namespace
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
+        self._current_function = None
 
         self.prefix_module = prefix_module
+    
+    
+    def set_current_function(self, name):
+        
+        if name:
+            print(name,self._namespace.sons_scopes.keys())
+            self._namespace = self._namespace.sons_scopes[name]
+            if self._current_function:
+                name = DottedName(self._current_function, name)
+        else:
+            self._namespace = self._namespace.parent_scope
+            if isinstance(self._current_function, DottedName):
+
+                # case of a function inside a function
+
+                name = self._current_function.name[:-1]
+                if len(name)>1:
+                    name = DottedName(*name)
+                else:
+                    name = name[0]
+        self._current_function = name
+        
+    def get_function(self, name):
+        container = self._namespace
+        while container:
+            if name in container.functions:
+                return container.functions[name]
+            container = container.parent_scope
+        raise ValueError('function {} not found'.format(name))
+        
 
     def _get_statement(self, codestring):
         return codestring
@@ -786,6 +818,7 @@ class FCodePrinter(CodePrinter):
         shape       = var.shape
         is_pointer = var.is_pointer
         is_target = var.is_target
+        is_stack_array = var.is_stack_array
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
         is_static = expr.static
@@ -846,17 +879,20 @@ class FCodePrinter(CodePrinter):
         allocatablestr = ''
 
         # TODO improve
+
         if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
-            (not(allocatable or is_pointer) or is_static)):
+            (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
             enable_alloc = False
 
         elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
-            (not(allocatable or is_pointer) or is_static)):
+            (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
+            
             rankstr =  ','.join('{0}:{1}'.format(self._print(s),
                                                  self._print(i-1)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
+            
             enable_alloc = False
 
         elif (rank > 0) and allocatable and intent:
@@ -976,13 +1012,20 @@ class FCodePrinter(CodePrinter):
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
-        if isinstance(rhs, (Zeros, Array, Shape, Linspace, Diag, Cross, Where)):
+        if isinstance(rhs, (Array, Shape, Linspace, Diag, Cross, Where)):
             return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(rhs, ZerosLike):
-            return rhs.fprint(self._print, expr.lhs)
-
-        if isinstance(rhs, FullLike):
+        if isinstance(rhs, (ZerosLike, Zeros, FullLike)):
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                vars = func.local_vars
+                lhs_name = expr.lhs.name
+                for i in vars:
+                    if lhs_name == i.name:
+                        if i.is_stack_array:
+                            return '{} = {}'.format(lhs_name, rhs.init_value)
+                            
             return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, Mod):
@@ -1209,12 +1252,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
+        name = self._print(expr.name)
+
         if expr.hide:
             return ''
         # ...
 
-        name = self._print(expr.name)
-
+        
+        self.set_current_function(name)
+        
         is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
@@ -1340,6 +1386,7 @@ class FCodePrinter(CodePrinter):
         body_code = prelude + '\n\n' + body_code
         imports = '\n'.join(self._print(i) for i in expr.imports)
         
+        self.set_current_function(None)
         return ('{0}({1}) {2}\n'
                 '{3}\n'
                 'implicit none\n'

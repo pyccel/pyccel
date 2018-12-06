@@ -176,7 +176,7 @@ def execute_pyccel(filename,
         - compiling the fortran code.
 
     """
-    pyccel = Parser(filename,output_folder=output.replace('/','.'))
+    pyccel = Parser(filename, output_folder=output.replace('/','.'))
     ast = pyccel.parse()
 
     settings = {}
@@ -187,18 +187,16 @@ def execute_pyccel(filename,
 
     codegen = Codegen(ast, name)
     code    = codegen.doprint()
-    ast     = codegen.routines + codegen.interfaces
+    
 
-    #S.H we only need to return functions
-    #the actual ast doesn't contain the functions
-    # we need to get it from the namespace
+    #S.H we return the Codegen instance instead of the ast
     
     if convert_only:
         if not return_ast:
             return code
 
         else:
-            return code, ast
+            return code, codegen
 
     else:
 
@@ -235,7 +233,7 @@ def execute_pyccel(filename,
             return output, cmd
 
         else:
-            return output, cmd, ast
+            return output, cmd, codegen
 
 
 if __name__ == '__main__':

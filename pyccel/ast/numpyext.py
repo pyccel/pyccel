@@ -1183,6 +1183,10 @@ class FullLike(Function):
     @property
     def rhs(self):
         return self._args[1]
+        
+    @property
+    def init_value(self):
+        return self.rhs
 
     def fprint(self, printer, lhs):
         """Fortran print."""

@@ -781,22 +781,24 @@ def epyccel_function(func,
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
     func_name = func.__name__
-    
-    func = get_function_from_ast(ast, func_name)
+    funcs     = ast.routines + ast.interfaces
+    func      = get_function_from_ast(funcs, func_name)
+    namespace = ast.parser.namespace.sons_scopes
     # ...
 
     f2py_module_name = 'f2py_{}'.format(module_name)
 
-    static_func = as_static_function(func)
-
+    static_func  = as_static_function(func)
+    namespace['f2py_'+func_name.lower()] = namespace[func_name]
+    
     f2py_module = Module( f2py_module_name,
-                   variables = [],
-                   funcs = [static_func],
-                   interfaces = [],
-                   classes = [],
-                   imports = [] )
+                          variables = [],
+                          funcs = [static_func],
+                          interfaces = [],
+                          classes = [],
+                          imports = [] )
 
-    code = fcode(f2py_module)
+    code = fcode(f2py_module, ast.parser)
     filename = '{}.f90'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
 
@@ -939,16 +941,23 @@ def epyccel_module(module,
 
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
-    funcs, others = get_external_function_from_ast(ast)
+
+    funcs = ast.routines + ast.interfaces
+    namespace = ast.parser.namespace.sons_scopes
+    
+    funcs, others = get_external_function_from_ast(funcs)
     static_funcs = []
     imports = []
     parents = OrderedDict()
     for f in funcs:
         if f.is_external:
             static_func = as_static_function(f)
+            namespace['f2py_'+str(f.name).lower()] = namespace[str(f.name)]
+            # S.H we set the new scope name 
 
         elif f.is_external_call:
             static_func = as_static_function_call(f)
+            namespace[str(static_func.name).lower()] = namespace[str(f.name)]
             imports += [Import(f.name, module_name.lower())]
 
         static_funcs.append(static_func)
@@ -966,7 +975,7 @@ def epyccel_module(module,
                           classes = [],
                           imports = imports )
 
-    code = fcode(f2py_module)
+    code = fcode(f2py_module, ast.parser)
 
     filename = '{}.f90'.format(f2py_module_name)
     write_code(filename, code, folder=folder)

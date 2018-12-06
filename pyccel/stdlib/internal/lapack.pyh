@@ -3,7 +3,7 @@
 #$ header metavar module_version='3.8'
 #$ header metavar ignore_at_import=True
 #$ header metavar libraries='${LAPACK_LIBRARIES}'
-
+#$ header metavar save=True
 
 # .......................................
 # change subroutines str dtype to char
