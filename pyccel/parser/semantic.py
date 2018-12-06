@@ -2481,14 +2481,19 @@ class SemanticParser(BasicParser):
             # get the imports
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
-            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
             
-            self.set_current_function(None)
+            func_   = self.namespace.functions.pop(name, None)
             
-            func_   = self.get_function(name)
             if not func_ is None and func_.is_recursive:
                 is_recursive = True
-
+                
+            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
+            
+            
+            
+            
+                
+            self.set_current_function(None)
             # ... computing inout arguments
             args_inout = []
             for a in args:
@@ -2538,27 +2543,27 @@ class SemanticParser(BasicParser):
 
                         i_fa += 1
             # ...
+           
 
-            func = FunctionDef(
-                name,
-                args,
-                results,
-                body,
-                local_vars=local_vars,
-                global_vars=global_vars,
-                cls_name=cls_name,
-                hide=hide,
-                kind=kind,
-                is_pure=is_pure,
-                is_elemental=is_elemental,
-                is_private=is_private,
-                is_external=is_external,
-                is_external_call=is_external_call,
-                imports=imports,
-                decorators=decorators,
-                is_recursive=is_recursive,
-                arguments_inout=args_inout,
-                functions = sub_funcs)
+            func = FunctionDef(name,
+                    args,
+                    results,
+                    body,
+                    local_vars=local_vars,
+                    global_vars=global_vars,
+                    cls_name=cls_name,
+                    hide=hide,
+                    kind=kind,
+                    is_pure=is_pure,
+                    is_elemental=is_elemental,
+                    is_private=is_private,
+                    is_external=is_external,
+                    is_external_call=is_external_call,
+                    imports=imports,
+                    decorators=decorators,
+                    is_recursive=is_recursive,
+                    arguments_inout=args_inout,
+                    functions = sub_funcs)
 
             if cls_name:
                 cls = self.get_class(cls_name)
@@ -2580,9 +2585,13 @@ class SemanticParser(BasicParser):
             self.insert_function(funcs)
 
         else:
-            funcs = [f.rename(name+'_'+ str(i)) for (i,f) in enumerate(funcs)]
+            new_funcs = []
+            for i,f in enumerate(funcs):
+                #TODO add new scope for the interface
+                self.namespace.sons_scopes[name+'_'+ str(i)] = self.namespace.sons_scopes[name]
+                new_funcs.append(f.rename(name+'_'+ str(i)))
 
-            funcs = Interface(name, funcs)
+            funcs = Interface(name, new_funcs)
             self.insert_function(funcs)
 
         if vec_func:
@@ -2591,8 +2600,9 @@ class SemanticParser(BasicParser):
            if isinstance(funcs, Interface):
                funcs = list(funcs.funcs)+[vec_func]
            else:
+               self.namespace.sons_scopes['sc_'+ name] = self.namespace.sons_scopes[name]
                funcs = funcs.rename('sc_'+ name)
-               funcs = [funcs,vec_func]
+               funcs = [funcs, vec_func]
 
            funcs = Interface(name, funcs)
            self.insert_function(funcs)

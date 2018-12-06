@@ -160,7 +160,6 @@ class FCodePrinter(CodePrinter):
     def set_current_function(self, name):
         
         if name:
-            print(name,self._namespace.sons_scopes.keys())
             self._namespace = self._namespace.sons_scopes[name]
             if self._current_function:
                 name = DottedName(self._current_function, name)
