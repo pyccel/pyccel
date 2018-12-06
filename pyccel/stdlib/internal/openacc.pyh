@@ -20,6 +20,7 @@
 
 #$ header metavar module_name='openacc'
 #$ header metavar module_version='2.5'
+#$ header metavar save=True
 
 # ............................................................
 #            Runtime Library Routines for Fortran

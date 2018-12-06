@@ -36,7 +36,7 @@ a      = zeros ((nb_lines, nb_columns), 'int')
 status = zeros (mpi_status_size, 'int')
 
 # Initialization of the matrix on each process
-a = 1000 + rank
+a[:,:] = 1000 + rank
 
 # Definition of the type_line datatype
 type_line = -1

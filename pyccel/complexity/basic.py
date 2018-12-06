@@ -20,7 +20,7 @@ class Complexity(object):
         pyccel = Parser(filename_or_text)
         self._ast = pyccel.parse()
         settings = {}
-        self._ast = pyccel.annotate(**settings)
+        self._ast = pyccel.annotate(**settings).ast
 
     @property
     def ast(self):

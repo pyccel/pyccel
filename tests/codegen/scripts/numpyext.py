@@ -3,10 +3,14 @@ from numpy import ones
 from numpy import sum
 from numpy import array
 from numpy import shape
+from numpy import diag, cross
+from numpy import zeros_like
+from numpy import full_like
+from numpy import int
 
-a = array((1,2,3,5,8,5), 'float')
-b = array((5,8,6,9,8,2), 'int')
-d = array(((5,8,6,9,8,2),
+x1 = array((1,2,3,5,8,5), 'float')
+x2 = array((5,8,6,9,8,2), 'int')
+x3 = array(((5,8,6,9,8,2),
            (5,8,6,9,8,2),
            (5,8,6,9,8,2),
            (5,8,6,9,8,2),
@@ -14,40 +18,39 @@ d = array(((5,8,6,9,8,2),
            (5,8,6,9,8,2)),
           'double')
 
-k = zeros((len(a),len(a)), 'int')
+x4 = zeros((len(x1),len(x1)), 'int')
+
+x1[:] = 2.
 
 n = 5
-x1 = zeros(4)
-x2 = zeros(n)
-x3 = zeros(n, 'int')
+x5 = zeros(4)
+x6 = zeros(n)
+x7 = zeros(n, 'int')
 
-y1 = zeros((4, 3))
-y2 = zeros((n, 2*n))
+x8 = zeros((4, 3))
+x9 = zeros((n, 2*n))
 
 m = 5
-a1 = ones(4)
-a2 = ones(n)
-a3 = ones(n, 'int')
+x10 = ones(4)
+x11 = ones(n)
+x12 = ones(n, 'int')
 
-b1 = ones((4, 3))
-b2 = ones((n, 2*n))
+x13 = ones((4, 3))
+x14 = ones((n, 2*n))
 
-x = array([1.,2.,3.])
-z = x
+x15 = array([1.,2.,3.])
+x16 = x15
 
-nn = shape(x)
+nn = shape(x14)
 mm = shape(array([1.,2.,3.]))
 
-a[:] = 2.
+x17 = ones((n,m,2), 'double')
+print(sum(x17)==n*m*2)
 
-# TODO must give an error. Incompatible type
-#b = int(a)
-
-# TODO not working yet
-#tt = zeros_like(x)
-
-z1 = ones((n,m,2), 'double')
-print(sum(z1)==n*m*2)
+x18 = zeros((3, 3))
+x19 = diag(x18)
+x20 = diag(x18)
+x21 = cross(x19, x20)
 
 # TODO not working
 #from numpy.random import random
@@ -58,3 +61,13 @@ print(sum(z1)==n*m*2)
 #from numpy.random import rand
 #yr = rand()
 #print(yr)
+
+xa1 = zeros_like(x1)
+xa2 = zeros_like(x2)
+xa3 = zeros_like(x3)
+
+xb1 = full_like(x1)
+xb2 = full_like(x2)
+xb3 = full_like(x3)
+
+

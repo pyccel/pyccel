@@ -219,7 +219,8 @@ class FunctionHeader(Header):
                              hide=hide,
                              kind=kind,
                              is_static=is_static,
-                             imports=imports)
+                             imports=imports,
+                             is_header=True)
             funcs += [func]
 
         return funcs

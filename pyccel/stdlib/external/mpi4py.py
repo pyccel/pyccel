@@ -73,10 +73,10 @@ from pyccel.stdlib.internal.mpi import MPI_LXOR
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
 from pyccel.stdlib.internal.mpi import MPI_DOUBLE
 
-#.............................
+#===================================================================================
+
 #$ header class MPI_(public)
 #$ header method __init__(MPI_)   
-
 
 class MPI_:
     def __init__(self):
@@ -96,7 +96,7 @@ class MPI_:
 
 MPI = MPI_()
 
-#..................................
+#====================================================================================
 
 ierr = -1
 #$ header macro x.COMM_WORLD := mpi_comm_world
@@ -133,11 +133,11 @@ ierr = -1
 
 #$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, MPI_STATUS_IGNORE, ierr) 
 
-#$ header macro (x),y.reduce(data, op=MPI_SUM, root=0) := mpi_reduce(data, x, data.count, data.dtype, op ,root, y, ierr)
-#$ header macro (x),y.allreduce(data, op=MPI_SUM) := mpi_allreduce(data, x, data.count, data.dtype, op , y, ierr)
+#$ header macro (x), y.reduce(data, op=MPI_SUM, root=0) := mpi_reduce(data, x, data.count, data.dtype, op ,root, y, ierr)
+#$ header macro (x), y.allreduce(data, op=MPI_SUM) := mpi_allreduce(data, x, data.count, data.dtype, op , y, ierr)
 
-#$ header macro  y.bcast(data, root=0) := mpi_bcast(data, data.count, data.dtype, root, y, ierr)
-#$ header macro  (x),y.gather(data, root=0) := mpi_gather(data, data.count, data.dtype, x, x.count, x.dtype, root, y, ierr)
+#$ header macro       y.bcast(data, root=0)  := mpi_bcast(data, data.count, data.dtype, root, y, ierr)
+#$ header macro  (x), y.gather(data, root=0) := mpi_gather(data, data.count, data.dtype, x, data.count, x.dtype, root, y, ierr)
 
 #.....................
 ##$ header macro (x),y.scatter
@@ -172,7 +172,7 @@ ierr = -1
 #$ header macro y.Allreduce(data, recvbuf, op=MPI_SUM) := mpi_allreduce(data, recvbuf, data.count, data.dtype, op , y, ierr)
 #$ header macro x.Allgatherv(A,[B,Bcounts,Bdisps,Bdtype = B.dtype]) := mpi_allgatherv(A, A.count, A.dtype, B, Bcounts, Bdisps, Bdtype, x, ierr)
 
-#$ header macro  y.Gather(data, recvbuf, root=0) := mpi_gather(data, data.count, data.dtype, recvbuf, recvbuf.count, recvbuf.dtype, root, y, ierr)
+#$ header macro  y.Gather(data, recvbuf, root=0) := mpi_gather(data, data.count, data.dtype, recvbuf, data.count, recvbuf.dtype, root, y, ierr)
 
 #$ header macro  y.Bcast(data, root=0) := mpi_bcast(data, data.count, data.dtype, root, y, ierr)
 

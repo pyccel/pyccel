@@ -11,25 +11,21 @@ def test_sum_natural_numbers():
     f2 = epyccel( f1 )
     assert f1( 42 ) == f2( 42 )
 
-# ...
 def test_factorial():
     f1 = loops.factorial
     f2 = epyccel( f1 )
     assert f1( 11 ) == f2( 11 )
 
-# ...
 def test_fibonacci():
     f1 = loops.fibonacci
     f2 = epyccel( f1 )
     assert f1( 42 ) == f2( 42 )
 
-# ...
 def test_double_loop():
     f1 = loops.double_loop
     f2 = epyccel( f1 )
     assert f1( 2 ) == f2( 2 )
 
-# ...
 def test_double_loop_on_2d_array_C():
 
     f1 = loops.double_loop_on_2d_array_C
@@ -42,7 +38,6 @@ def test_double_loop_on_2d_array_C():
     f2( y.transpose() )
     assert np.array_equal( x, y )
 
-# ...
 def test_double_loop_on_2d_array_F():
 
     f1 = loops.double_loop_on_2d_array_F
@@ -55,7 +50,6 @@ def test_double_loop_on_2d_array_F():
     f2( y )
     assert np.array_equal( x, y )
 
-# ...
 def test_product_loop_on_2d_array_C():
 
     f1 = loops.product_loop_on_2d_array_C
@@ -68,7 +62,6 @@ def test_product_loop_on_2d_array_C():
     f2( y.transpose() )
     assert np.array_equal( x, y )
 
-# ...
 def test_product_loop_on_2d_array_F():
 
     f1 = loops.product_loop_on_2d_array_F
@@ -81,7 +74,6 @@ def test_product_loop_on_2d_array_F():
     f2( y )
     assert np.array_equal( x, y )
 
-# ...
 def test_map_on_1d_array():
 
     f1 = loops.map_on_1d_array
@@ -91,7 +83,6 @@ def test_map_on_1d_array():
 
     assert np.array_equal( f1(z), f2(z) )
 
-# ...
 def test_enumerate_on_1d_array():
 
     f1 = loops.enumerate_on_1d_array
@@ -101,10 +92,21 @@ def test_enumerate_on_1d_array():
 
     assert np.array_equal( f1(z), f2(z) )
 
-# ...
 def test_zip_prod():
 
     f1 = loops.zip_prod
     f2 = epyccel( f1 )
 
     assert np.array_equal( f1(10), f2(10) )
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+#
+#def teardown_module():
+#    import os, glob
+#    dirname  = os.path.dirname( loops.__file__ )
+#    pattern  = os.path.join( dirname, '__epyccel__*' )
+#    filelist = glob.glob( pattern )
+#    for f in filelist:
+#        os.remove( f )

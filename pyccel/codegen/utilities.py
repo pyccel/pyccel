@@ -98,8 +98,10 @@ def compile_fortran(filename, compiler, flags,
             binary = os.path.splitext(os.path.basename(filename))[0]
             mod_file = ''
         else:
-            binary = "{folder}{binary}.o".format(folder=output,
-                                binary=os.path.splitext(os.path.basename(filename))[0])
+            f = os.path.join(output, os.path.splitext(os.path.basename(filename))[0])
+            binary = '{}.o'.format(f)
+#            binary = "{folder}{binary}.o".format(folder=output,
+#                                binary=os.path.splitext(os.path.basename(filename))[0])
             mod_file = "{folder}".format(folder=output)
 
     o_code = '-o'
@@ -128,7 +130,7 @@ def compile_fortran(filename, compiler, flags,
 
     output = subprocess.check_output(cmd, shell=True)
 
-    if verbose:
+    if output:
         print(output)
 
     # TODO shall we uncomment this?
@@ -154,17 +156,19 @@ def compile_fortran(filename, compiler, flags,
 # ...
 
 def execute_pyccel(filename,
-                   compiler=None,
-                   fflags=None,
-                   debug=False,
-                   verbose=False,
-                   accelerator=None,
-                   include=[],
-                   libdir=[],
-                   modules=[],
-                   libs=[],
-                   binary=None,
-                   output=''):
+                   compiler     = None,
+                   fflags       = None,
+                   debug        = False,
+                   verbose      = False,
+                   accelerator  = None,
+                   include      = [],
+                   libdir       = [],
+                   modules      = [],
+                   libs         = [],
+                   binary       = None,
+                   output       = '',
+                   convert_only = False,
+                   return_ast   = False):
     """Executes the full process:
         - parsing the python code
         - annotating the python code
@@ -172,7 +176,7 @@ def execute_pyccel(filename,
         - compiling the fortran code.
 
     """
-    pyccel = Parser(filename,output_folder=output.replace('/','.'))
+    pyccel = Parser(filename, output_folder=output.replace('/','.'))
     ast = pyccel.parse()
 
     settings = {}
@@ -182,36 +186,54 @@ def execute_pyccel(filename,
     name = os.path.splitext(name)[0]
 
     codegen = Codegen(ast, name)
-    code = codegen.doprint()
-    fname = codegen.export(output+name)
+    code    = codegen.doprint()
+    
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+    #S.H we return the Codegen instance instead of the ast
+    
+    if convert_only:
+        if not return_ast:
+            return code
 
-    # ... constructs the compiler flags
-    if compiler is None:
-        compiler='gfortran'
+        else:
+            return code, codegen
 
-    flags = construct_flags(compiler,
-                            fflags=fflags,
-                            debug=debug,
-                            accelerator=accelerator,
-                            include=include,
-                            libdir=libdir)
-    # ...
+    else:
 
-    # ... compile fortran code
-    output, cmd = compile_fortran(fname, compiler, flags,
-                                  binary=binary,
-                                  verbose=verbose,
-                                  modules=modules,
-                                  is_module=codegen.is_module,
-                                  output=output,
-                                  libs=libs)
-    # ...
+        fname = os.path.join(output, name)
+        fname = codegen.export(fname)
 
-    return output, cmd
+        # reset Errors singleton
+        errors = Errors()
+        errors.reset()
+
+        # ... constructs the compiler flags
+        if compiler is None:
+            compiler='gfortran'
+
+        flags = construct_flags(compiler,
+                                fflags=fflags,
+                                debug=debug,
+                                accelerator=accelerator,
+                                include=include,
+                                libdir=libdir)
+        # ...
+
+        # ... compile fortran code
+        output, cmd = compile_fortran(fname, compiler, flags,
+                                      binary=binary,
+                                      verbose=verbose,
+                                      modules=modules,
+                                      is_module=codegen.is_module,
+                                      output=output,
+                                      libs=libs)
+        # ...
+
+        if not return_ast:
+            return output, cmd
+
+        else:
+            return output, cmd, codegen
 
 
 if __name__ == '__main__':

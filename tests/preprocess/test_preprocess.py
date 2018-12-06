@@ -26,6 +26,7 @@ def test_preprocess():
         print('> testing {0}'.format(str(f)))
 
         pyccel = Parser(f)
+        pyccel.parse()
         print(pyccel.fst)
 
         # reset Errors singleton
