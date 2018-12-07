@@ -7,7 +7,7 @@ import os
 from pyccel.codegen.printing import fcode, ccode
 
 from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
-from pyccel.ast import Header, EmptyLine, NewLine, Comment
+from pyccel.ast import Header, EmptyLine, NewLine, Comment, CommentBlock
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign , CodeBlock
 from pyccel.ast import Variable, DottedName
 from pyccel.ast import For, If, While, FunctionalFor, ForIterator
@@ -179,7 +179,7 @@ class Codegen(object):
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
-
+        
 
 
 
@@ -188,8 +188,10 @@ class Codegen(object):
         """Finds the source code kind."""
  
         
+        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock)
+        is_module = all(isinstance(i,cls) for i in self.ast)
+        
 
-        is_module = len(self.variables)+len(self.imports) == 0
 
         if is_module:
             self._kind = 'module'
