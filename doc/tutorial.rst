@@ -23,7 +23,7 @@ Pyccel sources can be found on https://github.com/pyccel/pyccel.
 
 you first need to install all Python dependencies::
 
-  $ python3 -m pip install -r requirements.txt
+  $ sudo python3 -m pip install -r requirements.txt
     
 then you install Pyccel:
 
@@ -69,10 +69,6 @@ Create a file *helloworld.py* and copy paste the following lines (be careful wit
 Now, run the command::
 
   pyccel helloworld.py
-
-the result is::
-
-  > * Hello World!!
 
 This will generate a *Fortran* code in helloworld.f90
 

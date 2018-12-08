@@ -289,7 +289,8 @@ class Int(Function):
         """Fortran print."""
 
         value = printer(self.arg)
-        code = 'Int({0})'.format(value)
+        prec  = printer(self.precision)
+        code  = 'Int({0}, {1})'.format(value, prec)
         return code
 
 
@@ -429,7 +430,8 @@ class Complex(Function):
 
         value0 = printer(self.real_part)
         value1 = printer(self.imag_part)
-        code = 'complex({0},{1})'.format(value0,value1)
+        prec   = printer(self.precision)
+        code = 'cmplx({0}, {1}, {2})'.format(value0, value1, prec)
         return code
 
 
