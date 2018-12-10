@@ -8,18 +8,18 @@ Datatypes and Precision
 Native types
 ^^^^^^^^^^^^
 
-========  ===============
- Python    Fortran
-========  ===============
-int32      integer(kind=4)
-int64      integer(kind=8)
-float32    real(kind=4)
-float64    real(kind=8)
-complex64  complex(kind=16)
-complex128 complex(kind=)
-tuple      static array
-list       dynamic array
-========  ===============
+============  =================
+ Python        Fortran
+============  =================
+ int32         integer(kind=4)
+ int64         integer(kind=8)
+ float32       real(kind=4)
+ float64       real(kind=8)
+ complex64     complex(kind=4)
+ complex128    complex(kind=8)
+ tuple         static array
+ list          dynamic array
+============  =================
 
 - The following stamtements are all understood by Pyccel and will give the desired datatype and the precision.
 
@@ -70,14 +70,10 @@ list       dynamic array
     x3 = Int(1, 4)
     x4 = Int(1, 8)
 
-
-
     y1 = 1.0d0
     y2 = Real(1.0d0, 8)
     y3 = Real(1.0d0, 4)
     y4 = Real(1.0d0, 8)
-
-
 
     z1 = cmplx(1.0d0,1)
     z2 = cmplx(1.0d0, 0.0d0, 8)
@@ -111,9 +107,6 @@ Arrays
     integer(kind=4), allocatable, target :: x (:) 
     real(kind=8), allocatable :: y (:,:) 
 
-
-
-
     allocate(x(0:2))
     x = (/ 1, 2, 3 /)
 
@@ -121,16 +114,13 @@ Arrays
 
     end program prog_arrays
 
-.. |todo|:: memory allocation within the scope of definition
-
-
 Dynamic *vs* Static typing
 __________________________
 
 Since our aim is to generate code in a low-level language, which is in most cases of static typed, we will have to devise an alternative way to construct/find the appropriate type of a given variable. 
 This can be done by including the concept of *constructors* or use specific *headers* to assist *Pyccel* in finding/infering the appropriate type.
 
-Let's explain this more precisely; we consider the following code
+Let's explain this more precisely, we consider the following code
 
 .. code-block:: python
 

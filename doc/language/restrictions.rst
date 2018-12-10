@@ -41,10 +41,10 @@ Subset Limitations
 ^^^^^^^^^^^^^^^^^^
 * multiple inheritance
 * nested classes
-* argument unpacking *args and **kwargs 
+* argument unpacking (*args and **kwargs) 
 * Try,Except and Finaly block
-
-
+* yield keyword and generators
+* sets and dictionaries
 
 
 
