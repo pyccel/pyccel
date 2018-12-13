@@ -1,6 +1,7 @@
 sphinx
 sphinxcontrib-bibtex==0.3.6
 
+git+git://github.com/saidctb/sphinx-execute-code
 numpy
 scipy
 textx==1.6.1

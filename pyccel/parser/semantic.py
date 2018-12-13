@@ -604,6 +604,7 @@ class SemanticParser(BasicParser):
         if isinstance(expr, type(None)):
 
             return d_var
+            
         elif isinstance(expr, (Integer, int)):
 
             d_var['datatype'   ] = 'int'
@@ -611,6 +612,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['precision'  ] = 4
             return d_var
+            
         elif isinstance(expr, (Float, float)):
 
             d_var['datatype'   ] = DEFAULT_FLOAT
@@ -618,12 +620,14 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['precision'  ] = 8
             return d_var
+            
         elif isinstance(expr, String):
 
             d_var['datatype'   ] = 'str'
             d_var['allocatable'] = False
             d_var['rank'       ] = 0
             return d_var
+            
         elif isinstance(expr, ImaginaryUnit):
 
             d_var['datatype'   ] = 'complex'
@@ -631,6 +635,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['precision'  ] = 8
             return d_var
+            
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
@@ -645,6 +650,7 @@ class SemanticParser(BasicParser):
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
             return d_var
+            
         elif isinstance(expr, (BooleanTrue, BooleanFalse)):
 
             d_var['datatype'   ] = NativeBool()
@@ -652,6 +658,7 @@ class SemanticParser(BasicParser):
             d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
             return d_var
+            
         elif isinstance(expr, IndexedElement):
 
             d_var['datatype'] = expr.dtype
@@ -678,8 +685,8 @@ class SemanticParser(BasicParser):
             d_var['shape'    ] = shape
             d_var['rank'     ] = rank
             d_var['precision'] = var.precision
-
             return d_var
+            
         elif isinstance(expr, IndexedVariable):
 
             name = str(expr)
@@ -692,6 +699,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = var.rank
             d_var['precision'  ] = var.precision
             return d_var
+            
         elif isinstance(expr, Range):
 
             d_var['datatype'   ] = NativeRange()
@@ -700,6 +708,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
             return d_var
+            
         elif isinstance(expr, Is):
 
             d_var['datatype'   ] = NativeBool()
@@ -707,6 +716,7 @@ class SemanticParser(BasicParser):
             d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
             return d_var
+            
         elif isinstance(expr, DottedVariable):
 
             if isinstance(expr.lhs, DottedVariable):
@@ -725,6 +735,7 @@ class SemanticParser(BasicParser):
             d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
             return d_var
+            
         elif isinstance(expr, ConstructorCall):
             cls_name = expr.func.cls_name
             cls = self.get_class(cls_name)
@@ -743,7 +754,9 @@ class SemanticParser(BasicParser):
             d_var['cls_base'      ] = cls
             d_var['is_pointer'    ] = False
             return d_var
+            
         elif isinstance(expr, Application):
+        
             name = type(expr).__name__
             func = self.get_function(name)
             if isinstance(func, FunctionDef):
@@ -768,16 +781,17 @@ class SemanticParser(BasicParser):
 
                 dvar['datatype'] = str_dtype(dvar['datatype'])
 
-                d_var = {}
-                d_var['allocatable'] = True
-                d_var['shape'      ] = dvar['shape']
-                d_var['rank'       ] = dvar['rank']
-                d_var['is_pointer' ] = False
-                d_var['datatype'   ] = 'ndarray' + dvar['datatype']
-                d_var['precision'  ] = dvar['precision']
+
+                d_var['allocatable'   ] = True
+                d_var['shape'         ] = dvar['shape']
+                d_var['rank'          ] = dvar['rank']
+                d_var['is_pointer'    ] = False
+                d_var['is_stack_array'] = False
+                d_var['datatype'      ] = 'ndarray' + dvar['datatype']
+                d_var['precision'     ] = dvar['precision']
 
                 d_var['is_target'] = True # ISSUE 177: TODO this should be done using update_variable
-
+                
             elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
@@ -807,6 +821,7 @@ class SemanticParser(BasicParser):
                 d_var['allocatable'] = d_vars[i]['allocatable']
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = d_vars[i].pop('precision',4)
+                
             elif name in ['Norm']:
                 d_var = self._infere_type(expr.arg,**settings)
 
