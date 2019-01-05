@@ -24,7 +24,7 @@ This will generate us the following code.
 .. execute_code::
     :hide_headers:
     :hide_code:
-    :output_language: python
+    :output_language: fortran
     :filename: language/scripts/f_oop.py
         
 Notice that in Fortran the class must be in Module that's why the class and the functions where put in a module

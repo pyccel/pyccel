@@ -2053,15 +2053,16 @@ class SemanticParser(BasicParser):
             body     = [assign] + body
 
         elif isinstance(iterable, Product):
-            args     = iterable.args
+            args     = iterable.elements
             iterator = list(iterator)
             for i in range(len(args)):
-                indx   = create_variable(i)
-                assign = Assign(iterator[i], IndexedBase(args[i])[indx])
-
-                assign.set_fst(expr.fst)
-                body        = [assign] + body
-                iterator[i] = indx
+                if not isinstance(args[i], Range):
+                    indx   = create_variable(i)
+                    assign = Assign(iterator[i], IndexedBase(args[i])[indx])
+                    
+                    assign.set_fst(expr.fst)
+                    body        = [assign] + body
+                    iterator[i] = indx
 
         if isinstance(iterator, Symbol):
             name   = iterator.name
@@ -2070,6 +2071,7 @@ class SemanticParser(BasicParser):
             if var is None:
                 target = Variable('int', name, rank=0)
                 self.insert_variable(target)
+                
         elif isinstance(iterator, list):
             target = []
             for i in iterator:
