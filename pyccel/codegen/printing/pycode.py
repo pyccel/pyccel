@@ -37,7 +37,6 @@ def _construct_header(func_name, args):
     return pattern.format(name=func_name, args=args)
 
 #==============================================================================
-
 class PythonCodePrinter(SympyPythonCodePrinter):
     _kf = dict(chain(
         _known_functions.items(),
@@ -129,9 +128,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_For(self, expr):
         iter   = self._print(expr.iterable)
         target = expr.target
-        if not iterable(target):
+        if not isinstance(target,(list, tuple, Tuple)):
             target = [target]
-        target = ','.join(self._print(i) for i in expr.target)
+        target = ','.join(self._print(i) for i in target)
         body   = '\n'.join(self._print(i) for i in expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
