@@ -1386,11 +1386,13 @@ class FCodePrinter(CodePrinter):
         imports = '\n'.join(self._print(i) for i in expr.imports)
         
         self.set_current_function(None)
-        return ('{0}({1}) {2}\n'
+        func = ('{0}({1}) {2}\n'
                 '{3}\n'
                 'implicit none\n'
                 '{4}\n'
                 'end {5}').format(sig, arg_code, func_end, imports, body_code, func_type)
+
+        return func
 
     def _print_Pass(self, expr):
         return ''

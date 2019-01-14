@@ -90,6 +90,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                     dec = '@{name}'.format(name=n)
 
                 code = '{dec}\n{code}'.format(dec=dec, code=code)
+        header = expr.header
+        if header:
+            header = self._print(header)
+            code = '{header}\n{code}'.format(header=header, code=code)
 
         return code
 

@@ -220,9 +220,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
                                     extra_args = extra_args,
                                     includes   = includes,
                                     only       = only )
-
+        
         cmd = """python{}.{} -m numpy.f2py {}"""
-
+        
         cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
@@ -622,7 +622,7 @@ def compile_f2py( filename,
 
     compilers  = ''
     f90flags   = ''
-    opt        = ''
+    
 
     if compiler == 'gfortran':
         _compiler = 'gnu95'
@@ -642,6 +642,8 @@ def compile_f2py( filename,
     extra_args, f90flags, opt = construct_flags( compiler,
                                                  extra_args = extra_args,
                                                  accelerator = accelerator )
+                                                 
+    opt = "--opt='-O2'"
 
     if only:
         only = 'only: ' + ','.join(str(i) for i in only)
@@ -952,6 +954,7 @@ def epyccel_module(module,
     for f in funcs:
         if f.is_external:
             static_func = as_static_function(f)
+            
             namespace['f2py_'+str(f.name).lower()] = namespace[str(f.name)]
             # S.H we set the new scope name 
 
