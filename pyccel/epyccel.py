@@ -643,7 +643,7 @@ def compile_f2py( filename,
                                                  extra_args = extra_args,
                                                  accelerator = accelerator )
                                                  
-    opt = "--opt='-O2'"
+    opt = "--opt='-O3'"
 
     if only:
         only = 'only: ' + ','.join(str(i) for i in only)
@@ -677,7 +677,6 @@ def compile_f2py( filename,
                                 pyf        = pyf )
 
     cmd = """python{}.{} -m numpy.f2py {}"""
-
     cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
     output = subprocess.check_output(cmd, shell=True)
 
