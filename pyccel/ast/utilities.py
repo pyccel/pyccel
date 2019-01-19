@@ -194,21 +194,6 @@ def builtin_import(expr):
 
     return imports
 
-
-# TODO improve as symbols from sympy
-def variables(args, dtype):
-    """returns a list of variables in the same spirit as symbols of sympy."""
-    args = [Variable(dtype, i) for i in args]
-    args = tuple(args)
-    return args
-
-def indexed_variables(args, dtype, rank):
-    """returns a list of indexed variables in the same spirit as symbols of
-    sympy with cls=IndexedBase."""
-    args = [IndexedVariable(i, dtype=dtype, rank=rank) for i in args]
-    args = tuple(args)
-    return args
-
 # TODO: must add a Node Decorator in core
 def build_types_decorator(args, order=None):
     """

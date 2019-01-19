@@ -1022,7 +1022,7 @@ class Product(Basic):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('args must be an iterable')
         elif len(args) < 2:
-            raise ValueError('args must be of lenght > 2')
+            return args[0]
         return Basic.__new__(cls, *args)
 
     @property

@@ -4,6 +4,8 @@ from itertools import chain
 
 from sympy.core import Symbol
 from sympy import Tuple
+from sympy.core.compatibility import iterable
+
 from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
@@ -35,7 +37,6 @@ def _construct_header(func_name, args):
     return pattern.format(name=func_name, args=args)
 
 #==============================================================================
-
 class PythonCodePrinter(SympyPythonCodePrinter):
     _kf = dict(chain(
         _known_functions.items(),
@@ -72,10 +73,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         body = '\n'.join(self._print(i) for i in expr.body)
         body = self._indent_codestring(body)
         args = ', '.join(self._print(i) for i in expr.arguments)
-
-        #imports = '\n'.join(self._print(i) for i in expr.imports)
+    
+        imports = '\n'.join(self._print(i) for i in expr.imports)
+        imports = self._indent_codestring(imports)
         code = ('def {name}({args}):\n'
-                '{body}\n').format(name=name, args=args, body=body)
+                '\n{imports}\n{body}\n').format(name=name, args=args,imports=imports, body=body)
 
         decorators = expr.decorators
         if decorators:
@@ -88,6 +90,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                     dec = '@{name}'.format(name=n)
 
                 code = '{dec}\n{code}'.format(dec=dec, code=code)
+        header = expr.header
+        if header:
+            header = self._print(header)
+            code = '{header}\n{code}'.format(header=header, code=code)
 
         return code
 
@@ -125,7 +131,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_For(self, expr):
         iter   = self._print(expr.iterable)
-        target = self._print(expr.target)
+        target = expr.target
+        if not isinstance(target,(list, tuple, Tuple)):
+            target = [target]
+        target = ','.join(self._print(i) for i in target)
         body   = '\n'.join(self._print(i) for i in expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
@@ -149,6 +158,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         stop  = self._print(expr.stop)
         step  = self._print(expr.step)
         return 'range({}, {}, {})'.format(start,stop,step)
+        
+    def _print_Product(self, expr):
+        args = ','.join(self._print(i) for i in expr.elements)
+        return 'product({})'.format(args)
 
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)
