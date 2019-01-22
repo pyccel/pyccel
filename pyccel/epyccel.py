@@ -178,8 +178,11 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
     elif compiler == 'ifort':
         _compiler = 'intelem'
 
+    elif compiler == 'pgfortran':
+       _compiler = 'pg'
+
     else:
-        raise NotImplementedError('Only gfortran and ifort are available for the moment')
+        raise NotImplementedError('Only gfortran, ifort and pgi are available for the moment')
 
     extra_args, f90flags, opt = construct_flags( compiler,
                                                  extra_args = extra_args,
@@ -630,8 +633,11 @@ def compile_f2py( filename,
     elif compiler == 'ifort':
         _compiler = 'intelem'
 
+    elif compiler == 'pgfortran':
+       _compiler = 'pg'
+    
     else:
-        raise NotImplementedError('Only gfortran and ifort are available for the moment')
+        raise NotImplementedError('Only gfortran ifort and pgi are available for the moment')
 
     if mpi:
         compilers = '--f90exec=mpif90 '
