@@ -931,13 +931,13 @@ class While(Basic):
     While(n > 1, (n := n - 1,))
     """
 
-    def __new__(cls, test, body):
+    def __new__(cls, test, body, local_vars=[]):
         test = sympify(test, locals=local_sympify)
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
         body = Tuple(*(sympify(i, locals=local_sympify) for i in body),sympify=False)
-        return Basic.__new__(cls, test, body)
+        return Basic.__new__(cls, test, body, local_vars)
 
     @property
     def test(self):
@@ -946,6 +946,10 @@ class While(Basic):
     @property
     def body(self):
         return self._args[1]
+        
+    @property
+    def local_vars(self):
+        return self._args[2]
 
 
 class With(Basic):
@@ -1677,6 +1681,7 @@ class For(Basic):
         target,
         iter,
         body,
+        local_vars = [],
         strict=True,
         ):
         if strict:
@@ -1697,7 +1702,7 @@ class For(Basic):
 
             body = Tuple(*(sympify(i, locals=local_sympify) for i in
                          body), sympify=False)
-        return Basic.__new__(cls, target, iter, body)
+        return Basic.__new__(cls, target, iter, body, local_vars)
 
     @property
     def target(self):
@@ -1710,6 +1715,10 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
+        
+    @property
+    def local_vars(self):
+        return self._args[3]
 
     def insert2body(self, stmt):
         self.body.append(stmt)
