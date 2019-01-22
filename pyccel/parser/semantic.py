@@ -1893,19 +1893,11 @@ class SemanticParser(BasicParser):
                 if str(lhs.dtype) != str(var.dtype):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
-                    
-                    # case where the rhs is of native type
-                    # TODO add other native types
-                    if isinstance(rhs, (Integer, Float)):
-                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                        symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='error', blocker=False)
+                 
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=False)
 
-                    else:
-
-                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                        symbol=txt, bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='error', blocker=False)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
