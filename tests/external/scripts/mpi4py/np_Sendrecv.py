@@ -1,21 +1,22 @@
 from mpi4py import MPI
 
+# we must initialize rank and size
 rank = -1
-#we must initialize rank
+size = -1
+
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
+size = comm.Get_size()
 
-if rank == 0:
-    partner = 1
+# Send messages around in a ring
+source = (rank - 1) % size
+dest   = (rank + 1) % size
 
-if rank == 1:
-    partner = 0
-
+# Create message to be sent, initialize receive buffer, choose some tag
 msg = rank + 1000
 val = -1
 tag = 1234
 
-val=comm.Sendrecv(msg, 1, tag, source=partner, recvtag=tag)
-#both of these works
-#comm.Sendrecv(msg, 1, tag, val, partner, tag)
-print('I, process ', rank, ', I received', val, ' from process ', partner)
+val = comm.Sendrecv( msg, dest, sendtag=tag, source=source, recvtag=tag )
+
+print( 'I, process ', rank, ', have received value ', val, ' from process ', source )

@@ -63,6 +63,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='Using pyccel for Semantic Checking')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
+
     # ...
 
     # ... backend compiler options
@@ -79,6 +80,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='path to lib directory.')
     group.add_argument('--libs', type=str, \
                        help='list of libraries to link with.')
+    group.add_argument('--output', type=str, default = '',\
+                       help='folder in which the output is stored.')
+    group.add_argument('--prefix', type=str, default = '',\
+                       help='add prefix to the generated file.')
+    group.add_argument('--prefix-module', type=str, default = '',\
+                       help='add prefix module name.')
+
+    group.add_argument('--language', type=str, help='target language')
+
     # ...
 
     # ... Accelerators
@@ -98,8 +108,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ...
 
     # TODO move to another cmd line
-#    parser.add_argument('--analysis', action='store_true', \
-#                        help='enables code analysis mode.')
+    parser.add_argument('--analysis', action='store_true', \
+                        help='enables code analysis mode.')
     # ...
 
     # ...
@@ -171,6 +181,13 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     fflags  = args.fflags
     libdir  = args.libdir
     libs    = args.libs
+    output_folder = args.output
+    prefix = args.prefix
+    prefix_module = args.prefix_module
+    language = args.language
+
+    if (len(output_folder)>0 and output_folder[-1]!='/'):
+        output_folder+='/'
 
     if not include:
         include = []
@@ -206,26 +223,37 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     elif args.convert_only:
         pyccel = Parser(filename)
         ast = pyccel.parse()
-        
         settings = {}
+        if args.language:
+            settings['language'] = args.language
         ast = pyccel.annotate(**settings)
         name = os.path.basename(filename)
         name = os.path.splitext(name)[0]
         codegen = Codegen(ast, name)
-        code = codegen.doprint()
-        codegen.export()
- 
+        settings['prefix_module'] = prefix_module
+        code = codegen.doprint(**settings)
+        if prefix:
+            name = '{prefix}{name}'.format(prefix=prefix, name=name)
+
+        codegen.export(output_folder+name)
+
         for son in pyccel.sons:
             if 'print' in son.metavars.keys():
                 name = son.filename.split('/')[-1].strip('.py')
                 name = 'mod_'+name
                 codegen = Codegen(son.ast, name)
                 code = codegen.doprint()
-                codegen.export() 
-                
-                
-        
-        
+                codegen.export()
+
+
+
+
+
+    elif args.analysis:
+        # TODO move to another cmd line
+        from pyccel.complexity.arithmetic import OpComplexity
+        complexity = OpComplexity(filename)
+        print(" arithmetic cost         ~ " + str(complexity.cost()))
 
     else:
         # TODO shall we add them in the cmd line?
@@ -236,21 +264,14 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        compiler=compiler,
                        fflags=fflags,
                        debug=False,
+                       verbose=verbose,
                        accelerator=accelerator,
                        include=include,
                        libdir=libdir,
                        modules=modules,
                        libs=libs,
-                       binary=binary)
+                       binary=binary,
+                       output=output_folder)
 
-#    elif analysis:
-#        # TODO move to another cmd line
-#
-#        from pyccel.complexity.memory import MemComplexity
-#
-#        local_vars = []
-#        if args.local_vars:
-#            local_vars = args.local_vars.split(',')
-#        complexity = MemComplexity(filename)
-#        complexity.intensity(verbose=True, local_vars=local_vars)
-    # ...
+
+

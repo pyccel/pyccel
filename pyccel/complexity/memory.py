@@ -1,27 +1,23 @@
 # coding: utf-8
 
-from sympy import sympify, simplify, Symbol, Add
-from sympy import preorder_traversal
+from sympy import Symbol, sympify, Tuple
+from sympy import Poly, LT
 from sympy.core.expr import Expr
-from sympy.core.singleton import S
-from sympy.tensor.indexed import Idx
 
-from pyccel.parser.parser  import PyccelParser
 
-from pyccel.ast import (For, Assign, Declare, Variable,
-                        datatype, While, NativeReal,
+from pyccel.ast import (For, Assign, While,NewLine,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
-                        IndexedVariable, Slice, If,
-                        Zeros, Ones, Array, Len, Dot, IndexedElement)
+                        If, Zeros, Ones, Array, 
+                        Len, Dot, IndexedElement)
 
-from pyccel.complexity.basic      import Complexity
-from pyccel.complexity.arithmetic import count_ops
+from pyccel.complexity.basic import Complexity
+
 
 __all__ = ["count_access", "MemComplexity"]
 
 # ...
-def count_access(expr, visual=True, local_vars=[]):
+def count_access(expr, visual=True):
     """
     returns the number of access to memory in terms of WRITE and READ.
 
@@ -35,86 +31,38 @@ def count_access(expr, visual=True, local_vars=[]):
         list of variables that are supposed to be in the fast memory. We will
         ignore their corresponding memory accesses.
     """
-    if not isinstance(expr, (Assign, For)):
-        expr = sympify(expr)
-
-    ops   = []
+ 
     WRITE = Symbol('WRITE')
     READ  = Symbol('READ')
 
-    local_vars = [str(a) for a in local_vars]
 
     if isinstance(expr, Expr):
-        indices = []
-        for arg in preorder_traversal(expr):
-            if isinstance(arg, Idx):
-                for a in arg.free_symbols:
-                    indices.append(str(a))
-
+       
         atoms = expr.atoms(Symbol)
-        atoms = [str(i) for i in atoms]
+        return READ*len(atoms)
 
-        atoms      = set(atoms)
-        indices    = set(indices)
-        local_vars = set(local_vars)
-        ignored = indices.union(local_vars)
-        atoms = atoms - ignored
-        ops = [READ]*len(atoms)
     elif isinstance(expr, Assign):
-        if isinstance(expr.lhs, IndexedElement):
-            name = str(expr.lhs.base)
-        else:
-            name = str(expr.lhs)
-        ops  = [count_access(expr.rhs, visual=visual, local_vars=local_vars)]
-        if not name in local_vars:
-            ops += [WRITE]
+        return count_access(expr.rhs, visual) + WRITE
+   
+    elif isinstance(expr, Tuple):
+        return sum(count_access(i, visual) for i in expr)
+
     elif isinstance(expr, For):
-        b = expr.iterable.args[0]
-        e = expr.iterable.args[1]
-        if isinstance(b, Symbol):
-            local_vars.append(b)
-        if isinstance(e, Symbol):
-            local_vars.append(e)
-        ops = [count_access(i, visual=visual, local_vars=local_vars) for i in expr.body]
-        ops = [i * (e-b) for i in ops]
+        s = expr.iterable.size
+        ops = sum(count_access(i, visual) for i in expr.body)
+        return ops*s
+
     elif isinstance(expr, (Zeros, Ones)):
-        ops = []
+        import numpy as np
+        return WRITE*np.prod(expr.shape)
 
-    if not ops:
-        return S.Zero
+    elif isinstance(expr, NewLine):
+        return 0
+    else:
+        raise NotImplementedError('TODO count_access for {}'.format(type(expr)))
 
-    ops = simplify(Add(*ops))
 
-    return ops
-# ...
 
-# ...
-def free_parameters(expr):
-    """
-    Returns the free parameters of a given expression. In general, this
-    corresponds to length of a For loop.
-
-    expr: sympy.Expr
-        any sympy expression or pyccel.ast.core object
-    """
-    args = []
-    if isinstance(expr, For):
-        b = expr.iterable.args[0]
-        e = expr.iterable.args[1]
-        if isinstance(b, Symbol):
-            args.append(str(b))
-        if isinstance(e, Symbol):
-            args.append(str(e))
-        for i in expr.body:
-            args += free_parameters(i)
-        args = set(args)
-        args = list(args)
-
-    return args
-# ...
-
-# ...
-from sympy import Poly, LT
 def leading_term(expr, *args):
     """
     Returns the leading term in a sympy Polynomial.
@@ -196,23 +144,7 @@ class MemComplexity(Complexity):
 
     and this is exactly what we were expecting.
     """
-
-    @property
-    def free_parameters(self):
-        """
-        Returns the free parameters. In general, this
-        corresponds to length of a For loop.
-        """
-        # ...
-        args = []
-        for stmt in self.ast.statements:
-            if isinstance(stmt, ForStmt):
-                args += free_parameters(stmt.expr)
-        # ...
-        args = [Symbol(i) for i in args]
-        return args
-
-    def cost(self, local_vars=[]):
+    def cost(self):
         """
         Computes the complexity of the given code.
 
@@ -220,30 +152,8 @@ class MemComplexity(Complexity):
             list of variables that are supposed to be in the fast memory. We will
             ignore their corresponding memory accesses.
         """
-        # ...
-        m = S.Zero
-        f = S.Zero
-        # ...
 
-        # ...
-        for stmt in self.ast.statements:
-            if isinstance(stmt, (AssignStmt, ForStmt)):
-                m += count_access(stmt.expr, visual=True, local_vars=local_vars)
-                f += count_ops(stmt.expr, visual=True)
-        # ...
-
-        # ...
-        m = simplify(m)
-        f = simplify(f)
-        # ...
-
-        # ...
-        d = {}
-        d['m'] = m
-        d['f'] = f
-        # ...
-
-        return d
+        return count_access(self.ast, visual=True)
 
     def intensity(self, d=None, args=None, local_vars=[], verbose=False):
         """
@@ -290,13 +200,5 @@ class MemComplexity(Complexity):
         # ...
 
         return q
-# ...
 
-#    # ... computational intensity
-#    q = f / m
-#    q = simplify(q)
-#    t_f = Symbol('t_f')
-#    t_m = Symbol('t_m')
-#    c = f * t_f + m * t_m
-#    # ...
 

@@ -9,6 +9,7 @@
 #$ header metavar module_version='3.1'
 #$ header metavar ignore_at_import=True
 #$ header metavar import_all=True
+#$ header metavar save=True
 #
 
 # ............................................................

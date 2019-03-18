@@ -4,8 +4,6 @@
 """
 
 from os.path import join, dirname
-from textx.metamodel import metamodel_from_file
-from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import AnnotatedComment
@@ -421,6 +419,7 @@ def parse(filename=None, stmts=None, debug=False):
     # Get meta-model from language description
     grammar = join(this_folder, '../grammar/openmp.tx')
 
+    from textx.metamodel import metamodel_from_file
     meta = metamodel_from_file(grammar, debug=debug, classes=omp_classes)
 
     # Instantiate model

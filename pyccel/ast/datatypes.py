@@ -5,22 +5,25 @@ from .basic import Basic
 
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
-from sympy import sympify
-from sympy import ImmutableDenseMatrix
+from sympy import Eq, Ne, Lt, Gt, Le, Ge
 
 
-default_precision = {'real': 8, 'int': 4, 'complex': 8}
+default_precision = {'real': 8, 'int': 4, 'complex': 8, 'bool':1}
 dtype_and_precsision_registry = {'real':('real',8),
                                  'double':('real',8),
-                                 'float':('real',4),
+                                 'float':('real',8),
                                  'float32':('real',4),
                                  'float64':('real',8),
                                  'complex':('complex',8),
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
-                                 'int':('int',4),
+                                 'int8' :('int',1),
+                                 'int16':('int',2),
                                  'int32':('int',4),
-                                 'int64':('int',8)}
+                                 'int64':('int',8),
+                                 'int'  :('int',4),
+                                 'integer':('int',4),
+                                 'bool' :('bool',1)}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -106,16 +109,16 @@ class NdArray(DataType):
     pass
 
 class NdArrayInt(NdArray, NativeInteger):
-    _name = 'NdArrayInt'
+    _name = 'int'
     pass
 
 class NdArrayReal(NdArray, NativeReal):
-    _name = 'NdArrayReal'
+    _name = 'real'
     pass
 
 
 class NdArrayComplex(NdArray, NativeComplex):
-    _name = 'NdArrayComplex'
+    _name = 'complex'
     pass
 
 # TODO to be removed
@@ -191,6 +194,7 @@ dtype_registry = {'bool': Bool,
                   '*real': RealList,
                   '*complex': ComplexList,
                   'ndarrayint': NdArrayInt,
+                  'ndarrayinteger':NdArrayInt,
                   'ndarrayreal': NdArrayReal,
                   'ndarraycomplex': NdArrayComplex,
                   '*': Generic,
@@ -300,37 +304,60 @@ def datatype(arg):
         DataType
 
     """
-    def infer_dtype(arg):
-        if arg.is_Boolean:
-            return Bool
-        elif arg.is_integer:
-            return Int
-        elif arg.is_real:
-            return Real
-        elif arg.is_complex:
-            return Complex
+
+
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
-    elif isinstance(arg, (Variable, IndexedVariable, IndexedElement)):
-        if isinstance(arg.dtype, DataType):
-            return dtype_registry[arg.dtype.name.lower()]
-        else:
-            raise TypeError('Expecting a DataType')
+    if isinstance(arg, DataType):
+        return dtype_registry[arg.dtype.name.lower()]
     else:
-        
-        arg = sympify(arg, locals=local_sympify)
-        if isinstance(arg, ImmutableDenseMatrix):
-            dts = [infer_dtype(i) for i in arg]
-            if all([i is Bool for i in dts]):
-                return Bool
-            elif all([i is Int for i in dts]):
-                return Int
-            else:
-                return Real
-        else:
-            return infer_dtype(arg)
+        raise TypeError('Expecting a DataType')
 
-from .core import Variable, IndexedVariable, IndexedElement
-from .core import local_sympify
+
+def sp_dtype(expr):
+    """
+    return the datatype of a sympy types expression
+
+    """
+    if expr.is_integer:
+        return 'int'
+    elif expr.is_real:
+        return 'real'
+    elif expr.is_complex:
+        return 'complex'
+    elif expr.is_Boolean:
+        return 'bool'
+    elif isinstance(expr,(Eq, Ne, Lt, Gt, Le, Ge)):
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(expr)))
+
+
+def str_dtype(dtype):
+
+    """
+    return a sympy datatype as string
+    dtype: str, Native Type
+
+    """
+    if isinstance(dtype, str):
+        if dtype == 'int':
+            return 'integer'
+        elif dtype== 'real':
+            return 'real'
+        else:
+            return dtype
+    if isinstance(dtype, NativeInteger):
+        return 'integer'
+    elif isinstance(dtype, NativeReal):
+        return 'real'
+    elif isinstance(dtype, NativeComplex):
+        return 'complex'
+    elif isinstance(dtype, NativeBool):
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
+
+

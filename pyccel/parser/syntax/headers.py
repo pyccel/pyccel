@@ -8,10 +8,8 @@ from os.path import join, dirname
 from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
 from sympy import sympify
-
-from textx.metamodel import metamodel_from_file
-from textx.export import metamodel_export, model_export
 from sympy import Tuple
+
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
 from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
@@ -50,7 +48,7 @@ class ListType(BasicStmt):
         precisions = [i.expr['precision'] for i in self.dtype]
         if not (all(dtypes[0]==i for i in dtypes)):
             raise TypeError('all element of the TypeList must have the same type')
-        
+
         d_var = {}
         d_var['datatype'] = str(dtypes[0])
         d_var['rank'] = len(dtypes)
@@ -77,7 +75,7 @@ class Type(BasicStmt):
         self.dtype = kwargs.pop('dtype')
         self.trailer = kwargs.pop('trailer', [])
         self.precision = kwargs.pop('prec')
-       
+
         super(Type, self).__init__(**kwargs)
 
     @property
@@ -88,7 +86,7 @@ class Type(BasicStmt):
             dtype,precision = dtype_registry[dtype]
         trailer = self.trailer
         order = 'C'
-    
+
         if trailer:
             if trailer.order:
                 order = str(trailer.order)
@@ -106,7 +104,7 @@ class Type(BasicStmt):
                 d_var['precision'] = 8
             elif dtype=='int':
                 d_var['precision'] = 4
-        
+
         if d_var['rank']>1:
             d_var['order'] = order
         return d_var
@@ -131,7 +129,7 @@ class UnionTypeStmt(BasicStmt):
         self.dtypes = kwargs.pop('dtype')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
-    
+
     @property
     def expr(self):
         l = []
@@ -324,10 +322,10 @@ class MacroArg(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-       
+
         self.arg = kwargs.pop('arg')
         self.value = kwargs.pop('value',None)
-        
+
         super(MacroArg, self).__init__(**kwargs)
 
     @property
@@ -337,7 +335,7 @@ class MacroArg(BasicStmt):
             return Tuple(*arg_.expr)
         arg = Symbol(str(arg_))
         value = self.value
-        if not(value is None): 
+        if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
             else:
@@ -377,7 +375,7 @@ class MacroList(BasicStmt):
              else:
                  ls.append(i)
          self.ls = ls
-         
+
          super(MacroList, self).__init__(**kwargs)
 
      @property
@@ -397,7 +395,7 @@ class FunctionMacroStmt(BasicStmt):
         master: str
             master function name
         """
-        
+
         self.name = tuple(kwargs.pop('name'))
         self.results = kwargs.pop('results',None)
         self.args = kwargs.pop('args')
@@ -420,7 +418,7 @@ class FunctionMacroStmt(BasicStmt):
                 args.append(i.expr)
             else:
                 raise TypeError('argument must be of type MacroArg')
-     
+
 
         if len(self.master_name)==1:
             master_name = str(self.master_name[0])
@@ -432,14 +430,14 @@ class FunctionMacroStmt(BasicStmt):
             if isinstance(i, MacroStmt):
                 master_args.append(i.expr)
             else:
-                master_args.append(Symbol(str(i)))       
-       
+                master_args.append(Symbol(str(i)))
+
 
         results = self.results
         if (results is None):
             results = []
 
-       
+
         if len(args + master_args + results) == 0:
             return MacroVariable(name, master_name)
 
@@ -475,6 +473,7 @@ def parse(filename=None, stmts=None, debug=False):
     # Get meta-model from language description
     grammar = join(this_folder, '../grammar/headers.tx')
 
+    from textx.metamodel import metamodel_from_file
     meta = metamodel_from_file(grammar, debug=debug, classes=hdr_classes)
 
     # Instantiate model

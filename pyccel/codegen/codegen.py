@@ -4,44 +4,48 @@
 from pyccel.parser import Parser
 import os
 
-from pyccel.codegen.printing import fcode
+from pyccel.codegen.printing import fcode, ccode
 
 from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
-from pyccel.ast import Header, EmptyLine, NewLine, Comment
+from pyccel.ast import Header, EmptyLine, NewLine, Comment, CommentBlock
 from pyccel.ast import Assign, AliasAssign, SymbolicAssign , CodeBlock
 from pyccel.ast import Variable, DottedName
 from pyccel.ast import For, If, While, FunctionalFor, ForIterator
 from pyccel.ast import Is
 from pyccel.ast import GeneratorComprehension as GC
-
+from pyccel.ast import collect_vars
 from pyccel.parser.errors import Errors, PyccelCodegenError
 
 # TODO improve this import
 
 from pyccel.parser.messages import *
 
-_extension_registry = {'fortran': 'f90'}
+_extension_registry = {'fortran': 'f90', 'c':'c'}
+printer_registry    = {'fortran':fcode, 'c':ccode}
 
 
 class Codegen(object):
 
     """Abstract class for code generator."""
 
-    def __init__(self, expr, name):
+    def __init__(self, parser, name):
         """Constructor for Codegen.
 
-        expr: sympy expression
-            expression representing the AST as a sympy object
+        parser: pyccel parser
+            
 
         name: str
             name of the generated module or program.
         """
-
-        self._ast = expr
-        self._name = name
-        self._kind = None
-        self._code = None
+        self._parser   = parser
+        self._ast      = parser.ast
+        self._name     = name
+        self._kind     = None
+        self._code     = None
         self._language = None
+
+        #TODO verify module name != function name
+        #it generates a compilation error
 
         self._stmts = {}
         _structs = [
@@ -58,6 +62,11 @@ class Codegen(object):
 
         self._collect_statments()
         self._set_kind()
+
+        
+    @property
+    def parser(self):
+        return self._parser
 
     @property
     def name(self):
@@ -151,93 +160,39 @@ class Codegen(object):
 
     def _collect_statments(self):
         """Collects statments and split them into routines, classes, etc."""
+         
+        namespace  = self.parser.namespace
 
-        def collect_vars(ast):
-            vars_ = []
-            for stmt in ast:
-                if isinstance(stmt, For):
-                    if isinstance(stmt.target, Variable):
-                        vars_ += [stmt.target] + collect_vars(stmt.body)
-                    else:
-                        vars_ += stmt.target + collect_vars(stmt.body)
-                elif isinstance(stmt, FunctionalFor):
-                    vars_ += [stmt.target] + stmt.indexes + collect_vars(stmt.loops)
-                elif isinstance(stmt, If):
-                    vars_ += collect_vars(stmt.bodies)
-                elif isinstance(stmt, (While, CodeBlock)):
-                    vars_ += collect_vars(stmt.body)
-                elif isinstance(stmt, (Assign, AliasAssign)):
-                    if isinstance(stmt.lhs, Variable):
-                        if not isinstance(stmt.lhs.name, DottedName):
-                            vars_ += [stmt.lhs]
-            return vars_
-
-        errors = Errors()
-        errors.set_parser_stage('codegen')
-
-        variables = []
-        routines = []
-        classes = []
-        imports = []
-        modules = []
-        body = []
+        funcs      = []
         interfaces = []
-        decs = []
+        body = []
+        
 
-        for stmt in self.ast:
-            if isinstance(stmt, EmptyLine):
-                continue
-            elif isinstance(stmt, FunctionDef):
-                routines += [stmt]
-            elif isinstance(stmt, ClassDef):
-                classes += [stmt]
-            elif isinstance(stmt, Import):
-                imports += [stmt]
-            elif isinstance(stmt, Module):
-                modules += [stmt]
-            elif isinstance(stmt, Interface):
-                interfaces += [stmt]
-            else:
-
-                # TODO improve later, as in the old codegen
-                # we don't generate code for symbolic assignments
-                # we must also look in For While and If bodies
-
-                if isinstance(stmt, SymbolicAssign):
-                    errors.report(FOUND_SYMBOLIC_ASSIGN,
-                                  symbol=stmt.lhs, severity='warning')
-                    body += [Comment(str(stmt))]
-                elif isinstance(stmt, Assign) and isinstance(stmt.rhs, Is):
-                    errors.report(FOUND_IS_IN_ASSIGN, symbol=stmt.lhs,
-                                  severity='warning')
-                    body += [Comment(str(stmt))]
-                else:
-                    body += [stmt]
-
-        variables = collect_vars(self.ast)
-        self._stmts['imports'] = imports
-        self._stmts['variables'] = list(set(variables))
-        self._stmts['body'] = body
-        self._stmts['routines'] = routines
-        self._stmts['classes'] = classes
-        self._stmts['modules'] = modules
+        for i in namespace.functions.values():
+            if isinstance(i, FunctionDef) and not i.is_header:
+                funcs.append(i)
+            elif isinstance(i, Interface):
+                interfaces.append(i)
+            
+        self._stmts['imports'   ] = list(namespace.imports['imports'].values())
+        self._stmts['variables' ] = list(set(self.parser.get_variables(namespace)))
+        self._stmts['routines'  ] = funcs
+        self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
+        self._stmts['body']       = self.ast
+        
 
-        errors.check()
 
-    # TODO improve to have a kind = None
-    #      => must have a condition to be aprogram
 
     def _set_kind(self):
         """Finds the source code kind."""
+ 
+        
+        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock)
+        is_module = all(isinstance(i,cls) for i in self.ast)
+        
 
-        #  ...
 
-        _stmts = (Header, EmptyLine, NewLine, Comment)
-        body = self.body
-
-        ls = [i for i in body if not isinstance(i, _stmts)]
-        is_module = len(ls) == 0
         if is_module:
             self._kind = 'module'
         else:
@@ -248,6 +203,7 @@ class Codegen(object):
         #  ...
 
         expr = None
+        
         if self.is_module:
             expr = Module(
                 self.name,
@@ -255,8 +211,8 @@ class Codegen(object):
                 self.routines,
                 self.interfaces,
                 self.classes,
-                imports=self.imports,
-                )
+                imports=self.imports)
+
         elif self.is_program:
             expr = Program(
                 self.name,
@@ -266,12 +222,12 @@ class Codegen(object):
                 self.classes,
                 self.body,
                 imports=self.imports,
-                modules=self.modules,
-                )
+                modules=self.modules)
+
         else:
             raise NotImplementedError('TODO')
-        
-        
+
+
         self._expr = expr
 
         #  ...
@@ -282,26 +238,32 @@ class Codegen(object):
         # ... finds the target language
 
         language = settings.pop('language', 'fortran')
-        if not language == 'fortran':
-            raise ValueError('Only fortran is available')
-        self._language = language
 
-        # ...
+        if not language in ['fortran', 'c']:
+            raise ValueError('the language {} not available'.format(lanugage))
+
+        self._language = language
 
         # ... define the printing function to be used
 
-        printer = settings.pop('printer', fcode)
+        printer = printer_registry[language]
 
         # ...
 
+  
+        errors = Errors()
+        errors.set_parser_stage('codegen')
+        
         # ...
-
-        code = printer(self.expr)
+        
+        code = printer(self.expr, self.parser, **settings)
 
         # ...
-
+        errors.check()
+        
         self._code = code
-
+        
+        
         return code
 
     def export(self, filename=None):
@@ -309,7 +271,7 @@ class Codegen(object):
         if filename is None:
             filename = '{name}.{ext}'.format(name=self.name, ext=ext)
         else:
-            raise NotImplementedError('TODO')
+            filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         code = self.code
         f = open(filename, 'w')
@@ -319,8 +281,7 @@ class Codegen(object):
 
         return filename
 
-
 class FCodegen(Codegen):
-
     pass
+
 

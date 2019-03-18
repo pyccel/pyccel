@@ -3,16 +3,13 @@
 #$ header metavar module_version='3.8'
 #$ header metavar ignore_at_import=True
 #$ header metavar libraries='${LAPACK_LIBRARIES}'
-
+#$ header metavar save=True
 
 # .......................................
 # change subroutines str dtype to char
 # .......................................
 #             
 # .......................................
-
-#$ header function dgbtrf(int, int, int, int, double [:,:], int, int [:], int)
-#$ header function dgbtrs(str, int, int, int, int, double [:,:], int, int [:], double [:,:], int, int)
 
 #$ header function dgetrf(int, int, double [:,:], int, int [:], int)
 #$ header function dgetri(int, double [:,:], int, int [:], double [:], int, int)

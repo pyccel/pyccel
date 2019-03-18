@@ -7,7 +7,8 @@ from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
-from pyccel.ast.core import Assign, datatype, Variable
+from pyccel.ast.core import Assign, datatype, Variable, Import
+from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -19,25 +20,33 @@ __all__ = ["CCodePrinter", "ccode"]
 known_functions = {
     "Abs": [(lambda x: not x.is_integer, "fabs")],
     "gamma": "tgamma",
-    "sin": "sin",
-    "cos": "cos",
-    "tan": "tan",
-    "asin": "asin",
-    "acos": "acos",
-    "atan": "atan",
+    "sin"  : "sin",
+    "cos"  : "cos",
+    "tan"  : "tan",
+    "asin" : "asin",
+    "acos" : "acos",
+    "atan" : "atan",
     "atan2": "atan2",
-    "exp": "exp",
-    "log": "log",
-    "erf": "erf",
-    "sinh": "sinh",
-    "cosh": "cosh",
-    "tanh": "tanh",
+    "exp"  : "exp",
+    "log"  : "log",
+    "erf"  : "erf",
+    "sinh" : "sinh",
+    "cosh" : "cosh",
+    "tanh" : "tanh",
     "asinh": "asinh",
     "acosh": "acosh",
     "atanh": "atanh",
     "floor": "floor",
     "ceiling": "ceil",
 }
+
+dtype_registry = {('real',8)    : 'double',
+                  ('real',4)    : 'float',
+                  ('complex',8) : 'double complex',
+                  ('complex',4) : 'float complex', 
+                  ('int',4)     : 'int',
+                  ('int',8)     : 'long',
+                  ('bool',1)    : 'int'}
 
 
 class CCodePrinter(CodePrinter):
@@ -55,11 +64,15 @@ class CCodePrinter(CodePrinter):
     }
 
     def __init__(self, settings={}):
+
+        prefix_module = settings.pop('prefix_module', None)
+
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
+        self.prefix_module = prefix_module
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -80,12 +93,20 @@ class CCodePrinter(CodePrinter):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
     def _print_Import(self, expr):
-        return '#include "{0}"'.format(expr.fil)
+         imports = ['#include "{0}"'.format(i) for i in expr.target]
+         return '\n'.join(i for i in imports)
 
     def _print_Declare(self, expr):
         dtype = self._print(expr.dtype)
-        variables = ', '.join(self._print(i.name) for i in expr.variables)
-        return '{0} {1};'.format(dtype, variables)
+        prec  = expr.variable.precision
+        rank  = expr.variable.rank
+        dtype = dtype_registry[(dtype, prec)]
+        variable = self._print(expr.variable) 
+
+        if rank > 0:
+            return '{0} *{1};'.format(dtype, variable)
+        
+        return '{0} {1};'.format(dtype, variable)
 
     def _print_NativeBool(self, expr):
         return 'bool'
@@ -93,11 +114,8 @@ class CCodePrinter(CodePrinter):
     def _print_NativeInteger(self, expr):
         return 'int'
 
-    def _print_NativeFloat(self, expr):
-        return 'float'
-
-    def _print_NativeDouble(self, expr):
-        return 'double'
+    def _print_NativeReal(self, expr):
+        return 'real'
 
     def _print_NativeVoid(self, expr):
         return 'void'
@@ -122,6 +140,11 @@ class CCodePrinter(CodePrinter):
         op = expr.op._symbol
         rhs_code = self._print(expr.rhs)
         return "{0} {1}= {2};".format(lhs_code, op, rhs_code)
+
+    def _print_Assign(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -216,6 +239,74 @@ class CCodePrinter(CodePrinter):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
+
+    def _print_Comment(self, expr):
+        comments = self._print(expr.text)
+        
+        return '/*' + comments + '*/'
+
+
+    def _print_CommentBlock(self, expr):
+        txts = expr.comments
+        ln = max(len(i) for i in txts)
+        if ln<20:
+            ln = 20
+        top  = '/*' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '*/'
+        ln = len(top)
+        bottom = '/*' + '_'*(ln-2) + '*/'
+
+        for i in range(len(txts)):
+            txts[i] = '/*' + txts[i] + ' '*(ln -2 - len(txts[i])) + '*/'
+
+
+        body = '\n'.join(i for i in txts)
+
+        return ('{0}\n'
+                '{1}\n'
+                '{2}').format(top, body, bottom)
+
+    def _print_EmptyLine(self, expr):
+        return ''
+
+    def _print_NewLine(self, expr):
+        return '\n'
+
+
+    def _print_Program(self, expr):
+
+        name = 'prog_{0}'.format(self._print(expr.name))
+        name = name.replace('.', '_')
+
+        imports  = list(expr.imports)
+        imports += [Import('stdlib.h')]
+        imports  = '\n'.join(self._print(i) for i in imports)
+        body     = '\n'.join(self._print(i) for i in expr.body)
+        decs     = '\n'.join(self._print(i) for i in expr.declarations)
+  
+        sep = self._print(SeparatorComment(40))
+        
+        funcs = ''
+        for i in expr.funcs:
+            funcs = ('{funcs}\n'
+                     '{sep}\n'
+                     '{f}\n'
+                     '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
+
+        if funcs:
+            funcs = 'contains\n{0}'.format(funcs)
+        
+        return ('{imports}\n'
+                '{funcs}\n'
+                'int main(){{\n'
+                '{decs}\n'
+                '{body}\n'
+                'return 0;\n'
+                '}}').format(imports=imports,
+                                    decs=decs,
+                                    body=body,
+                                    funcs=funcs)
+
+
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""

@@ -4,38 +4,99 @@
 from sympy.core.function import Application
 from .core import DottedName
 from .core import Import
-from .core import Range, Len , Enumerate, Zip, Product
+from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
-from .core import Constant,ZerosLike
-from .numpyext import Zeros, Ones, Empty
-from .numpyext import Array, Shape, Int, Rand, Sum, Matmul, Real, Complex
+
+from .core import Constant, Variable, IndexedVariable
+from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
+from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
+from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Log
+from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
+from .numpyext import numpy_constants, Linspace
+from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
-from sympy import Not,Float
-from sympy import (Abs, sin, cos, exp, csc, cos, sec, tan, cot, Mod, Max, Min)
+from sympy import Not, Float
+from sympy import Function
+from sympy import (sin, cos, exp, csc, cos, sec, tan, cot)
 
 import scipy.constants as sc_constants
 
 math_functions = {
-    'abs': Abs,
-    'sqrt': Sqrt,
-    'sin': sin,
-    'cos': cos,
-    'exp': exp,
-    'log': Log,
-    'csc': csc,
-    'sec': sec,
-    'tan': tan,
-    'cot': cot,
-    'asin': Asin,
-    'acsc': Acsc,
+    'abs'   : Abs,
+    'sqrt'  : Sqrt,
+    'sin'   : sin,
+    'cos'   : cos,
+    'exp'   : exp,
+    'log'   : Log,
+    'csc'   : csc,
+    'sec'   : sec,
+    'tan'   : tan,
+    'cot'   : cot,
+    'asin'  : Asin,
+    'acsc'  : Acsc,
     'arccos': Acos,
-    'acos':Acos,
-    'asec': Asec,
-    'atan': Atan,
-    'acot': Acot
+    'acos'  : Acos,
+    'asec'  : Asec,
+    'atan'  : Atan,
+    'acot'  : Acot,
+    'sinh'  : Sinh,
+    'cosh'  : Cosh,
+    'tanh'  : Tanh
     }
+
+# TODO split numpy_functions into multiple dictionaries following
+# https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
+numpy_functions = {
+    # ... array creation routines
+    'zeros'     : Zeros,
+    'empty'     : Empty,
+    'ones'      : Ones,
+    'zeros_like': ZerosLike,
+    'empty_like': EmptyLike,
+    'full_like' : FullLike,
+    'array'     : Array,
+    # ...
+    'shape'     : Shape,
+    'norm'      : Norm,
+    'int'       : Int,
+    'real'      : Real,
+    'imag'      : Imag,
+    'float'     : Real,
+    'double'    : Real,
+    'Mod'       : Mod,
+    'float32'   : Float32,
+    'float64'   : Float64,
+    'int32'     : Int32,
+    'int64'     : Int64,
+    'complex128': Complex128,
+    'complex64' : Complex64,
+    'sum'       : Sum,
+    'rand'      : Rand,
+    'random'    : Rand,
+    'linspace'  : Linspace,
+    'diag'      : Diag,
+    'where'     : Where,
+    'cross'     : Cross,
+}
+
+builtin_functions_dict = {
+    'range'    : Range,
+    'zip'      : Zip,
+    'enumerate': Enumerate,
+    'int'      : Int,
+    'float'    : Real,
+    'sum'      : Sum,
+    'len'      : Len,
+    'Mod'      : Mod,
+    'abs'      : Abs,
+    'max'      : Max,
+    'Max'      : Max,
+    'min'      : Min,
+    'Min'      : Min,
+    'floor'    : floor,
+    'not'      : Not
+}
 
 scipy_constants = {
     'pi': Constant('real', 'pi', value=sc_constants.pi),
@@ -54,62 +115,26 @@ def builtin_function(expr, args=None):
     else:
         raise TypeError('expr must be of type str or Function')
 
-    if name == 'range':
-        return Range(*args)
-    elif name == 'zip':
-        return Zip(*args)
-    elif name == 'enumerate':
-        return Enumerate(*args)
-    if name == 'array':
+    dic = builtin_functions_dict
+
+    if name in dic.keys() :
+        return dic[name](*args)
+    elif name == 'array':
         return Array(*args)
-    if name in ['int']:
-        return Int(*args)
-    if name in ['float']:
-        return Real(*args)
-    if name == 'len':
-        return Len(*args)
-    if name == 'sum':
-        return Sum(*args)
-    if name == 'Mod':
-        return Mod(*args)
-    if name == 'abs':
-        return Abs(*args)
-    if name in ['max', 'Max']:
-        return Max(*args)
-    if name in ['min', 'Min']:
-        return Min(*args)
-    if name == 'floor':
-        return floor(*args)
     elif name in ['complex']:
         if len(args)==1:
             args = [args[0],Float(0)]
         return Complex(args[0],args[1])
     elif name == 'Not':
         return Not(*args)
-    
 
-    if name == 'lambdify':
-       if isinstance(args, Lambda):
-           expr_ = args.expr
-           expr_ = Return(expr_)
-           expr_.set_fst(expr)
-           f_arguments = args.variables
-           func = FunctionDef('lambda', f_arguments, [], [expr_])
-           return func
-           
-       code = compile(args.body[0],'','single')
-       g={}
-       eval(code,g)
-       f_name = str(args.name)
-       code = g[f_name]
-       args_ = args.arguments
-       expr_ = code(*args_)
-       f_arguments = list(expr_.free_symbols)
-       expr_ = Return(expr_)
-       expr_.set_fst(expr)
-       body = [expr_]
-       func = FunctionDef(f_name, f_arguments, [], body ,decorators = args.decorators)
-       return func
+    elif name == 'map':
+        func = Function(str(expr.args[0].name))
+        args = [func]+list(args[1:])
+        return Map(*args)
+
+    elif name == 'lambdify':
+        return lambdify(expr, args)
 
     return None
 
@@ -136,62 +161,15 @@ def builtin_import(expr):
     for i in range(len(expr.target)):
         if source == 'numpy':
 
-        # TODO improve
-
             target = str(expr.target[i])
-            if target == 'zeros':
-                imports.append((target, Zeros))
-
-            elif target == 'ones':
-                imports.append((target, Ones))
-
-            elif target == 'empty':
-                imports.append((target, Empty))
-   
-            elif target == 'zeros_like':
-                imports.append((target,ZerosLike))
-
-            elif target == 'array':
-                imports.append((target, Array))
-
-            elif target == 'shape':
-                imports.append((target, Shape))
-
-            elif target == 'int':
-                imports.append((target, Int))
-  
-            elif target == 'real':
-                imports.append((target, Real))
-
-            elif target == 'float32':
-                imports.append((target, Float32))
-
-            elif target == 'float64':
-                imports.append((target, Float64))
-
-            elif target == 'int64':
-                imports.append((target, Int64))
-
-            elif target == 'int32':
-                imports.append((target, Int32))
-
-            elif target == 'complex128':
-                imports.append((target, Complex128))
-
-            elif target == 'complex64':
-                imports.append((target, Complex64))
-
-            elif target == 'sum':
-                imports.append((target,Sum))
-                
-            elif target == 'matmul':
-                imports.append((target,Matmul))
-
-            elif target in ['rand', 'random']:
-                imports.append((target, Rand))
+            if target in numpy_functions.keys():
+                imports.append((target, numpy_functions[target]))
 
             elif target in math_functions.keys():
                 imports.append((target, math_functions[target]))
+
+            elif target in numpy_constants.keys():
+                imports.append((target, numpy_constants[target]))
 
         elif source == 'math':
 
@@ -208,10 +186,40 @@ def builtin_import(expr):
                 imports.append((target, scipy_constants[target]))
         elif source == 'itertools':
             target = str(expr.target[i])
-        
+
             if target == 'product':
                 imports.append((target, Product))
-        
-    
+
+
 
     return imports
+
+# TODO: must add a Node Decorator in core
+def build_types_decorator(args, order=None):
+    """
+    builds a types decorator from a list of arguments (of FunctionDef)
+    """
+    types = []
+    for a in args:
+        if isinstance(a, Variable):
+            dtype = a.dtype.name.lower()
+
+        elif isinstance(a, IndexedVariable):
+            dtype = a.dtype.name.lower()
+
+        else:
+            raise TypeError('unepected type for {}'.format(a))
+
+        if a.rank > 0:
+            shape = [':' for i in range(0, a.rank)]
+            shape = ','.join(i for i in shape)
+            dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
+            if order and a.rank > 1:
+                dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
+
+        if not ( dtype.startswith("'") and dtype.endswith("'") ):
+            dtype = "'{}'".format(dtype)
+
+        types.append(dtype)
+
+    return types

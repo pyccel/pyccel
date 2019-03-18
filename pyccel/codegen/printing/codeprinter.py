@@ -14,9 +14,7 @@ from sympy.printing.precedence import precedence
 
 from pyccel.ast.core import Assign,DottedVariable
 from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import FunctionCall
-from pyccel.ast.core import ZerosLike
-from pyccel.ast import Real 
+from pyccel.ast import Real
 
 
 # TODO: add examples
@@ -88,7 +86,7 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
 
-  
+
 
     def _print_NumberSymbol(self, expr):
         return str(expr)

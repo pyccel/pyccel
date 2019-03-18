@@ -12,10 +12,14 @@ from sympy import Symbol
 from sympy.printing.dot import dotprint
 import os
 
-pyccel_external_lib = {"mpi4py"             :"pyccel.stdlib.external.mpi4py",
-                       "scipy.linalg.lapack":"pyccel.stdlib.external.lapack",
-                       "scipy.linalg.blas"  :"pyccel.stdlib.external.blas",
-                       "scipy.fftpack"      :"pyccel.stdlib.external.dfftpack"}
+pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
+                       "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
+                       "scipy.linalg.blas"  : "pyccel.stdlib.external.blas",
+                       "scipy.fftpack"      : "pyccel.stdlib.external.dfftpack",
+                       "fitpack"            : "pyccel.stdlib.internal.fitpack",
+                       "numpy.random"       : "numpy",
+                       "numpy.linalg"       : "numpy",
+                       "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
 
 
 def read_file(filename):
@@ -135,13 +139,34 @@ def fst_move_directives(x):
     containers = defs + withs
     for stmt in containers:
         fst_move_directives(stmt.value)
+        i_son = x.index(stmt)
+
+        while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+            cmt = stmt.value[-1]
+            
+            stmt.value.remove(cmt)
+            # insert right after the function
+            x.insert(i_son + 1, cmt)
+
+            
+
     # ...
 
     # ... if statements are inside IfelseblockNode
     ifblocks = get_ifblocks(x)
+    
     for ifblock in ifblocks:
+        i_son = x.index(ifblock)
         for stmt in ifblock.value:
             fst_move_directives(stmt.value)
+            
+            while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+                cmt = stmt.value[-1]
+                stmt.value.remove(cmt)
+                # insert right after the function
+                x.insert(i_son + 1, cmt)
+
+
     # ...
 
     # ... loops

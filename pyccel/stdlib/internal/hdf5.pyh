@@ -4,6 +4,7 @@
 #$ header metavar module_version='1.8.8'
 #$ header metavar ignore_at_import=True
 #$ header metavar libraries='${HDF5_LIBRARIES}'
+#$ header metavar save=True
 
 # .......................................
 #        H5: General Library Functions   

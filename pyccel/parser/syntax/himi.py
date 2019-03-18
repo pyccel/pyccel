@@ -6,8 +6,6 @@ This module contains the syntax associated to the types.tx grammar
 
 from os.path import join, dirname
 from sympy.utilities.iterables import iterable
-from textx.metamodel import metamodel_from_file
-from textx.export import metamodel_export, model_export
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast import DataType, datatype
@@ -128,6 +126,7 @@ def parse(filename=None, stmts=None, debug=False):
     # Get meta-model from language description
     grammar = join(this_folder, '../grammar/himi.tx')
 
+    from textx.metamodel import metamodel_from_file
     meta = metamodel_from_file(grammar, debug=debug, classes=types_classes)
 
     # Instantiate model

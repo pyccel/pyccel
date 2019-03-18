@@ -1,25 +1,27 @@
 Overview
 ========
 
-.. tikz:: Constructing the AST for pure python code (no OpenMP/OpenACC). 
+.. todo:: add diagram
 
-  \node[draw=black, rectangle, fill=red!40] (fst)  
-  at (0,0)  {FST};
-
-  \node at (0.5,0) [color=gray,above=3mm,right=0mm,font=\fontsize{10}{10.2}] {syntax};
-  \node at (0.5,0) [color=gray,below=3mm,right=0mm,font=\fontsize{10}{10.2}] {analysis};
-
-  \node[draw=black, rectangle, fill=red!20, font=\fontsize{10}{10.2}] (ast1)  
-  at (3,0)  {AST};
-
-  \node at (3.5,0) [color=gray,above=3mm,right=0mm,font=\fontsize{9}{10.2}] {semantic};
-  \node at (3.5,0) [color=gray,below=3mm,right=0mm,font=\fontsize{9}{10.2}] {analysis};
-
-  \node[draw=black, rectangle, fill=green!20, font=\fontsize{10}{10.2}] (ast2)  
-  at (7,0)  {Decorated AST};
-
-  \draw[->,very thick] (fst)  -- (ast1) ;
-  \draw[->,very thick] (ast1) -- (ast2) ;
+.. .. tikz:: Constructing the AST for pure python code (no OpenMP/OpenACC). 
+.. 
+..   \node[draw=black, rectangle, fill=red!40] (fst)  
+..   at (0,0)  {FST};
+.. 
+..   \node at (0.5,0) [color=gray,above=3mm,right=0mm,font=\fontsize{10}{10.2}] {syntax};
+..   \node at (0.5,0) [color=gray,below=3mm,right=0mm,font=\fontsize{10}{10.2}] {analysis};
+.. 
+..   \node[draw=black, rectangle, fill=red!20, font=\fontsize{10}{10.2}] (ast1)  
+..   at (3,0)  {AST};
+.. 
+..   \node at (3.5,0) [color=gray,above=3mm,right=0mm,font=\fontsize{9}{10.2}] {semantic};
+..   \node at (3.5,0) [color=gray,below=3mm,right=0mm,font=\fontsize{9}{10.2}] {analysis};
+.. 
+..   \node[draw=black, rectangle, fill=green!20, font=\fontsize{10}{10.2}] (ast2)  
+..   at (7,0)  {Decorated AST};
+.. 
+..   \draw[->,very thick] (fst)  -- (ast1) ;
+..   \draw[->,very thick] (ast1) -- (ast2) ;
 
 Syntax
 ******
