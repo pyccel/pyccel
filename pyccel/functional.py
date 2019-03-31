@@ -1,7 +1,10 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import numpy as np
 from types import FunctionType
+
+from sympy import Indexed, IndexedBase, Tuple
 
 from pyccel.codegen.utilities       import construct_flags as construct_flags_pyccel
 from pyccel.codegen.utilities       import execute_pyccel
@@ -10,6 +13,13 @@ from pyccel.epyccel import random_string
 from pyccel.epyccel import write_code
 from pyccel.epyccel import mkdir_p
 from pyccel.epyccel import get_function_from_ast
+from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
+from pyccel.ast import Variable, Len, Assign
+from pyccel.ast import For, Range, FunctionDef
+from pyccel.ast.core import FunctionCall
+from pyccel.codegen.printing.pycode import pycode
+from pyccel.codegen.printing.fcode  import fcode
+from pyccel.ast.utilities import build_types_decorator
 
 _avail_patterns = ['map']
 
@@ -31,7 +41,7 @@ def lambdify(pattern, *args, **kwargs):
 def _lambdify_map(*args, **kwargs):
 
     # ... get arguments
-    func, types = _extract_args_map(*args)
+    func, ranks = _extract_args_map(*args, **kwargs)
     # ...
 
     # ... get optional arguments
@@ -113,19 +123,169 @@ def _lambdify_map(*args, **kwargs):
     namespace = ast.parser.namespace.sons_scopes
     # ...
 
-    print(func)
-    print(func.decorators)
+    # ...
+    if not(len(func.arguments) == len(ranks)):
+        raise ValueError('Wrong number of ranks for function arguments')
+    # ...
+
+#    # ...
+#    print(func.arguments)
+#    print([i.dtype for i in func.arguments])
+#    print(ranks)
+#    # ...
+
+    # ...
+    extended_args = [i for i,rank in zip(func.arguments, ranks) if rank > 0]
+    # ...
+
+    # ...
+    args = []
+    d_args = {}
+    for arg,rank in zip(func.arguments, ranks):
+        if (rank == 0) or (rank is None):
+            var = arg
+
+        else:
+            name  = 'arr_{}'.format(arg.name)
+            dtype = arg.dtype
+
+            if arg.rank > 0:
+                raise ValueError('Expecting argument to be a scalar')
+
+            var = Variable( dtype,
+                            name,
+                            rank=rank,
+                            allocatable=arg.allocatable,
+                            is_stack_array = arg.is_stack_array,
+                            is_pointer=arg.is_pointer,
+                            is_target=arg.is_target,
+                            is_polymorphic=arg.is_polymorphic,
+                            is_optional=arg.is_optional,
+#                            shape=None,
+#                            cls_base=None,
+#                            cls_parameters=None,
+                            order=arg.order,
+                            precision=arg.precision)
+
+        args += [var]
+        d_args[arg] = var
+    # ...
+
+#    print(args)
+
+    # ... declare lengths and indices
+    lengths   = []
+    d_lengths = {}
+    indices   = []
+    d_indices = {}
+    for arg in extended_args:
+        x     = d_args[arg]
+        nx    = Variable('int', 'len_'+x.name)
+        i_arg = Variable('int', 'i_'+arg.name)
+
+        lengths      += [nx]
+        d_lengths[x]  = nx
+
+        indices      += [i_arg]
+        d_indices[x]  = i_arg
+    # ...
+
+    # ...
+    results = []
+    d_results = {}
+    for res in func.results:
+        name  = 'arr_{}'.format(res.name)
+        dtype = res.dtype
+
+        var = Variable( dtype,
+                        name,
+                        rank=int(np.asarray(ranks).sum()),
+                        allocatable=res.allocatable,
+                        is_stack_array = res.is_stack_array,
+                        is_pointer=res.is_pointer,
+                        is_target=res.is_target,
+                        is_polymorphic=res.is_polymorphic,
+                        is_optional=res.is_optional,
+#                            shape=None,
+#                            cls_base=None,
+#                            cls_parameters=None,
+                        order=res.order,
+                        precision=res.precision)
+
+        results += [var]
+        d_results[res] = var
+    # ...
+
+    # ... declare an empty body
+    body = []
+    # ...
+
+    # ... assign lengths
+    for arg in extended_args:
+        x  = d_args[arg]
+        nx = d_lengths[x]
+        stmt = Assign(nx, Len(x))
+
+        body += [stmt]
+    # ...
+
+    # ... call to the function to be mapped
+    lhs = []
+    for r in results:
+        lhs.append(IndexedBase(r.name)[indices])
+
+    lhs = Tuple(*lhs)
+    if len(lhs) == 1:
+        lhs = lhs[0]
+
+    rhs = FunctionCall(func, func.arguments)
+
+    stmts = [Assign(lhs, rhs)]
+    # ...
+
+    # ... create loop
+    for x in extended_args:
+        arr_x = d_args[x]
+        nx    = d_lengths[arr_x]
+        ix    = d_indices[arr_x]
+
+        stmts = [Assign(x, IndexedBase(arr_x.name)[ix])] + stmts
+        stmts = [For(ix, Range(0, nx), stmts, strict=False)]
+
+    body += stmts
+    # ...
+
+    # ... update arguments = args + results
+    args += results
+    # ...
+
+    # ...
+    decorators = {'types': build_types_decorator(args)}
+
+    g_name = 'map_{}'.format(func_name)
+    g = FunctionDef(g_name, args, [], body,
+                    decorators=decorators)
+    # ...
+
+
+    code = pycode(g)
+#    code = fcode(g, ast.parser)
+    print(code)
+
+
+
 
 #==============================================================================
-def _extract_args_map(*args):
-    if not(len(args) >= 2):
-        raise ValueError('Expecting at least 2 arguments')
+# TODO allow rank to be a dictionary
+def _extract_args_map(*args, **kwargs):
+    assert(len(args) == 1)
 
     func = args[0]
-    # TODO other args
-    types = None
-
     if not isinstance(func, FunctionType):
         raise TypeError('> Expecting a function')
 
-    return func, types
+    rank = kwargs.pop('rank', None)
+    if rank is None:
+        raise ValueError('rank must be provided as optional argument')
+
+    return func, rank
