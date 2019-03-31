@@ -1,6 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import sys
+import importlib
 import numpy as np
 from types import FunctionType
 
@@ -16,7 +18,9 @@ from pyccel.epyccel import get_function_from_ast
 from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
 from pyccel.ast import Variable, Len, Assign
 from pyccel.ast import For, Range, FunctionDef
-from pyccel.ast.core import FunctionCall
+from pyccel.ast import FunctionCall
+from pyccel.ast import Comment, AnnotatedComment
+from pyccel.ast import Print
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
@@ -60,6 +64,12 @@ def _lambdify_map(*args, **kwargs):
     mpi               = kwargs.pop('mpi'              , False)
     assert_contiguous = kwargs.pop('assert_contiguous', False)
 
+    # TODO
+    accel = None
+#    if accelerator is None:
+#        accelerator = 'openmp'
+#        accel = 'omp'
+
     if fflags is None:
         fflags = construct_flags_pyccel( compiler,
                                          fflags=None,
@@ -69,8 +79,16 @@ def _lambdify_map(*args, **kwargs):
                                          libdir=[] )
     # ...
 
+    # ... parallel options
+    parallel = kwargs.pop('parallel', True)
+    # ...
+
+    # ... additional options
+    inline = kwargs.pop('inline', False)
+    # ...
+
     # ... get the function source code
-    code = get_source_function(func)
+    func_code = get_source_function(func)
     # ...
 
     # ...
@@ -79,7 +97,7 @@ def _lambdify_map(*args, **kwargs):
 
     # ...
     module_name = 'mod_{}'.format(tag)
-    fname       = '{}.py'.format(module_name)
+    filename    = '{}.py'.format(module_name)
     binary      = '{}.o'.format(module_name)
     # ...
 
@@ -94,7 +112,7 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ...
-    write_code(fname, code, folder=folder)
+    write_code(filename, func_code, folder=folder)
     # ...
 
     # ...
@@ -104,15 +122,15 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ...
-    fname, ast = execute_pyccel( fname,
-                                 compiler     = compiler,
-                                 fflags       = fflags,
-                                 debug        = debug,
-                                 verbose      = verbose,
-                                 accelerator  = accelerator,
-                                 modules      = modules,
-                                 convert_only = True,
-                                 return_ast   = True )
+    filename, ast = execute_pyccel( filename,
+                                    compiler     = compiler,
+                                    fflags       = fflags,
+                                    debug        = debug,
+                                    verbose      = verbose,
+                                    accelerator  = accelerator,
+                                    modules      = modules,
+                                    convert_only = True,
+                                    return_ast   = True )
     # ...
 
     # ... construct a f2py interface for the assembly
@@ -251,8 +269,33 @@ def _lambdify_map(*args, **kwargs):
 
         stmts = [Assign(x, IndexedBase(arr_x.name)[ix])] + stmts
         stmts = [For(ix, Range(0, nx), stmts, strict=False)]
+    # ...
 
+    # ...
+    if accelerator == 'openmp':
+        prelude = [AnnotatedComment(accel, 'do schedule(runtime)')]
+        epilog  = [AnnotatedComment(accel, 'end do nowait')]
+
+        stmts = prelude + stmts + epilog
+
+    elif not accelerator is None:
+        raise NotImplementedError('')
+    # ...
+
+    # ...
+    if parallel:
+        prelude = [AnnotatedComment(accel, 'parallel')]
+        epilog  = [AnnotatedComment(accel, 'end parallel')]
+
+        stmts = prelude + stmts + epilog
+    # ...
+
+    # ... update body
     body += stmts
+    # ...
+
+    # ... TODO TO BE REMOVED: problem with comments/pragmas
+    body += [Print(['Done'])]
     # ...
 
     # ... update arguments = args + results
@@ -260,20 +303,45 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ...
-    decorators = {'types': build_types_decorator(args)}
+    decorators = {'types':         build_types_decorator(args),
+                  'external_call': []}
 
     g_name = 'map_{}'.format(func_name)
     g = FunctionDef(g_name, args, [], body,
                     decorators=decorators)
     # ...
 
-
+    # ... print python code
     code = pycode(g)
-#    code = fcode(g, ast.parser)
-    print(code)
+
+    prelude  = ''
+    prelude += '\nfrom pyccel.decorators import types'
+    prelude += '\nfrom pyccel.decorators import external, external_call'
+
+    if not inline:
+        prelude = '{prelude}\n\n{func_code}'.format(prelude=prelude,
+                                                    func_code=func_code)
 
 
+    code = '{prelude}\n\n{code}'.format(prelude=prelude,
+                                        code=code)
+    # ...
 
+#    print(code)
+
+    # ...
+    write_code('{}.py'.format(module_name), code, folder=folder)
+    # ...
+
+    # ...
+    sys.path.append(folder)
+    package = importlib.import_module( module_name )
+    sys.path.remove(folder)
+    # ...
+
+    return package
+
+#    return getattr(package, g_name)
 
 #==============================================================================
 # TODO allow rank to be a dictionary
