@@ -946,7 +946,7 @@ class While(Basic):
     @property
     def body(self):
         return self._args[1]
-        
+
     @property
     def local_vars(self):
         return self._args[2]
@@ -1715,7 +1715,7 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
-        
+
     @property
     def local_vars(self):
         return self._args[3]
@@ -2000,7 +2000,7 @@ class Variable(Symbol):
         cls_base=None,
         cls_parameters=None,
         order='C',
-        precision=0
+        precision=None
         ):
 
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -2023,7 +2023,7 @@ class Variable(Symbol):
             is_target = False
         elif not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
-            
+
         if is_stack_array is None:
             is_stack_array = False
         elif not isinstance(is_stack_array, bool):
@@ -2042,7 +2042,10 @@ class Variable(Symbol):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
 
-        if not isinstance(precision,int):
+        if precision is None:
+            precision = 0
+
+        elif not isinstance(precision,int):
             raise TypeError('precision must be an integer.')
 
         # if class attribut
@@ -2160,7 +2163,7 @@ class Variable(Symbol):
     @property
     def precision(self):
         return self._args[12]
-        
+
     @property
     def is_stack_array(self):
         return self._args[13]
@@ -2800,7 +2803,7 @@ class FunctionDef(Basic):
 
         if not isinstance(is_private, bool):
             raise TypeError('Expecting a boolean for private')
-        
+
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for private')
 
@@ -2821,7 +2824,7 @@ class FunctionDef(Basic):
         else:
             # TODO shall we keep this?
             arguments_inout = [False for a in arguments]
-            
+
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2919,7 +2922,7 @@ class FunctionDef(Basic):
     @property
     def is_private(self):
         return self._args[16]
-        
+
     @property
     def is_header(self):
         return self._args[17]
@@ -2935,7 +2938,7 @@ class FunctionDef(Basic):
     @property
     def arguments_inout(self):
         return self._args[20]
-        
+
     @property
     def functions(self):
         return self._args[21]
