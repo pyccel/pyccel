@@ -73,7 +73,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         body = '\n'.join(self._print(i) for i in expr.body)
         body = self._indent_codestring(body)
         args = ', '.join(self._print(i) for i in expr.arguments)
-    
+
         imports = '\n'.join(self._print(i) for i in expr.imports)
         imports = self._indent_codestring(imports)
         code = ('def {name}({args}):\n'
@@ -98,7 +98,12 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_Return(self, expr):
-        return 'return {}'.format(self._print(expr.expr))
+        if isinstance(expr.expr, (tuple, list, Tuple)) and len(expr.expr) == 1:
+            results = expr.expr[0]
+        else:
+            results = expr.expr
+
+        return 'return {}'.format(self._print(results))
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -109,6 +114,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_NewLine(self, expr):
         return '\n'
+
+    def _print_AnnotatedComment(self, expr):
+        accel = self._print(expr.accel)
+        txt   = str(expr.txt)
+        return '#$ {0} {1}'.format(accel, txt)
 
     def _print_DottedName(self, expr):
         return '.'.join(self._print(n) for n in expr.name)
@@ -158,7 +168,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         stop  = self._print(expr.stop)
         step  = self._print(expr.step)
         return 'range({}, {}, {})'.format(start,stop,step)
-        
+
     def _print_Product(self, expr):
         args = ','.join(self._print(i) for i in expr.elements)
         return 'product({})'.format(args)
