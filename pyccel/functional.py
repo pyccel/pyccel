@@ -344,7 +344,7 @@ def _lambdify_map(*args, **kwargs):
                                         code=code)
     # ...
 
-#    print(code)
+    print(code)
 
     # ...
     write_code('{}.py'.format(module_name), code, folder=folder)
