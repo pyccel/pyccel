@@ -20,7 +20,7 @@ from pyccel.ast import Variable, Len, Assign
 from pyccel.ast import For, Range, FunctionDef
 from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
-from pyccel.ast import Print
+from pyccel.ast import Print, Pass
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
@@ -65,10 +65,13 @@ def _lambdify_map(*args, **kwargs):
     assert_contiguous = kwargs.pop('assert_contiguous', False)
 
     # TODO
-    accel = None
-#    if accelerator is None:
-#        accelerator = 'openmp'
-#        accel = 'omp'
+    accel    = None
+    schedule = None
+    if accelerator is None:
+        accelerator = 'openmp'
+        accel       = 'omp'
+        schedule    = 'static'
+#        schedule    = 'runtime'
 
     if fflags is None:
         fflags = construct_flags_pyccel( compiler,
@@ -272,9 +275,21 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ...
+    private = ''
+    if accelerator:
+        private = indices + extended_args
+        private = ','.join(i.name for i in private)
+        private = 'private({private})'.format(private=private)
+    # ...
+
+    # ...
     if accelerator == 'openmp':
-        prelude = [AnnotatedComment(accel, 'do schedule(runtime)')]
-        epilog  = [AnnotatedComment(accel, 'end do nowait')]
+        accel_stmt = 'do schedule({schedule}) {private}'.format(schedule=schedule,
+                                                                private=private)
+        prelude = [AnnotatedComment(accel, accel_stmt)]
+
+        accel_stmt = 'end do nowait'
+        epilog  = [AnnotatedComment(accel, accel_stmt)]
 
         stmts = prelude + stmts + epilog
 
@@ -295,7 +310,8 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ... TODO TO BE REMOVED: problem with comments/pragmas
-    body += [Print(['Done'])]
+#    body += [Print(['Done'])]
+    body += [Pass()]
     # ...
 
     # ... update arguments = args + results
