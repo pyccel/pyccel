@@ -332,6 +332,7 @@ def _lambdify_map(*args, **kwargs):
 
     prelude  = ''
     prelude += '\nfrom pyccel.decorators import types'
+    prelude += '\nfrom pyccel.decorators import pure'
     prelude += '\nfrom pyccel.decorators import external, external_call'
 
     if not inline:
