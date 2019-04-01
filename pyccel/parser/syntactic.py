@@ -238,7 +238,7 @@ class SyntaxParser(BasicParser):
 
     def parse(self, verbose=False):
         """converts redbaron fst to sympy ast."""
-        
+
         if self.syntax_done:
             print ('> syntax analysis already done')
             return self.ast
@@ -254,18 +254,22 @@ class SyntaxParser(BasicParser):
         # we add the try/except to allow the parser to find all possible errors
         try:
             ast = self._visit(self.fst)
+
         except Exception as e:
+#            print('DONE')
+#            print(e)
+#            print(type(e))
             errors.check()
             if self.show_traceback:
                 traceback.print_exc()
             raise SystemExit(0)
 
-            
+
         self._ast = ast
 
         errors.check()
         self._visit_done = True
-        
+
         return ast
 
     def _treat_iterable(self, stmt):
@@ -676,7 +680,7 @@ class SyntaxParser(BasicParser):
 
         if 'bypass' in decorators:
             return EmptyLine()
-            
+
         if 'stack_array' in decorators:
             args = decorators['stack_array']
             for i in range(len(args)):
@@ -1090,32 +1094,37 @@ class SyntaxParser(BasicParser):
         import numpy as np
         result = self._visit(stmt.result)
         generators = list(self._visit(stmt.generators))
-        lhs = self._visit(stmt.parent.target)
-        index = create_variable(lhs)
-        if isinstance(result, (Tuple, list, tuple)):
-            rank = len(np.shape(result))
-        else:
-            rank = 0
-        args = [Slice(None, None)] * rank
-        args.append(index)
-        target = IndexedBase(lhs)[args]
-        target = Assign(target, result)
-        assign1 = Assign(index, Integer(0))
-        assign1.set_fst(stmt)
-        target.set_fst(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, index + 1)
-        assign2.set_fst(stmt)
-        generators[-1].insert2body(assign2)
+        try:
+            # TODO this is not good!!
+            #      should be done inside (aug)assign
+            lhs = self._visit(stmt.parent.target)
+            index = create_variable(lhs)
+            if isinstance(result, (Tuple, list, tuple)):
+                rank = len(np.shape(result))
+            else:
+                rank = 0
+            args = [Slice(None, None)] * rank
+            args.append(index)
+            target = IndexedBase(lhs)[args]
+            target = Assign(target, result)
+            assign1 = Assign(index, Integer(0))
+            assign1.set_fst(stmt)
+            target.set_fst(stmt)
+            generators[-1].insert2body(target)
+            assign2 = Assign(index, index + 1)
+            assign2.set_fst(stmt)
+            generators[-1].insert2body(assign2)
 
-        indices = [generators[-1].target]
-        while len(generators) > 1:
-            F = generators.pop()
-            generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
+            indices = [generators[-1].target]
+            while len(generators) > 1:
+                F = generators.pop()
+                generators[-1].insert2body(F)
+                indices.append(generators[-1].target)
+            indices = indices[::-1]
+            return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
+                                 indices, index)
+        except:
+            raise NotImplementedError('TODO')
 
     def _visit_TryNode(self, stmt):
         # this is a blocking error, since we don't want to convert the try body

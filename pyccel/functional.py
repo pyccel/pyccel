@@ -31,6 +31,10 @@ _avail_patterns = ['map']
 #==============================================================================
 def lambdify(pattern, *args, **kwargs):
 
+    if isinstance(pattern, FunctionType):
+        assert(len(args) == 0)
+        return _lambdify_func(pattern, **kwargs)
+
     if not isinstance(pattern, str):
         raise TypeError('Expecting a string for pattern')
 
@@ -40,6 +44,113 @@ def lambdify(pattern, *args, **kwargs):
     _lambdify = eval('_lambdify_{}'.format(pattern))
 
     return _lambdify(*args, **kwargs)
+
+#==============================================================================
+def _lambdify_func(func, **kwargs):
+
+    # ... get optional arguments
+    namespace         = kwargs.pop('namespace'        , globals())
+    compiler          = kwargs.pop('compiler'         , 'gfortran')
+    fflags            = kwargs.pop('fflags'           , None)
+    accelerator       = kwargs.pop('accelerator'      , None)
+    verbose           = kwargs.pop('verbose'          , False)
+    debug             = kwargs.pop('debug'            , False)
+    include           = kwargs.pop('include'          , [])
+    libdir            = kwargs.pop('libdir'           , [])
+    modules           = kwargs.pop('modules'          , [])
+    libs              = kwargs.pop('libs'             , [])
+    extra_args        = kwargs.pop('extra_args'       , '')
+    folder            = kwargs.pop('folder'           , None)
+    mpi               = kwargs.pop('mpi'              , False)
+    assert_contiguous = kwargs.pop('assert_contiguous', False)
+
+    # TODO
+    accel    = None
+    schedule = None
+    if accelerator is None:
+        accelerator = 'openmp'
+        accel       = 'omp'
+        schedule    = 'static'
+#        schedule    = 'runtime'
+
+    if fflags is None:
+        fflags = construct_flags_pyccel( compiler,
+                                         fflags=None,
+                                         debug=debug,
+                                         accelerator=accelerator,
+                                         include=[],
+                                         libdir=[] )
+    # ...
+
+    # ... parallel options
+    parallel = kwargs.pop('parallel', True)
+    # ...
+
+    # ... additional options
+    inline = kwargs.pop('inline', False)
+    # ...
+
+    # ... get the function source code
+    func_code = get_source_function(func)
+    print(func_code)
+#    import sys; sys.exit(0)
+    # ...
+
+    # ...
+    tag = random_string( 6 )
+    # ...
+
+    # ...
+    module_name = 'mod_{}'.format(tag)
+    filename    = '{}.py'.format(module_name)
+    binary      = '{}.o'.format(module_name)
+    # ...
+
+    # ...
+    if folder is None:
+        basedir = os.getcwd()
+        folder = '__pycache__'
+        folder = os.path.join( basedir, folder )
+
+    folder = os.path.abspath( folder )
+    mkdir_p(folder)
+    # ...
+
+    # ...
+    write_code(filename, func_code, folder=folder)
+    # ...
+
+    # ...
+    basedir = os.getcwd()
+    os.chdir(folder)
+    curdir = os.getcwd()
+    # ...
+    print('ALLO')
+
+    # ...
+    filename, ast = execute_pyccel( filename,
+                                    compiler     = compiler,
+                                    fflags       = fflags,
+                                    debug        = debug,
+                                    verbose      = verbose,
+                                    accelerator  = accelerator,
+                                    modules      = modules,
+                                    convert_only = True,
+                                    return_ast   = True )
+    # ...
+    print(ast)
+
+    print('ALLO')
+
+    # ... construct a f2py interface for the assembly
+    # be careful: because of f2py we must use lower case
+    func_name = func.__name__
+    funcs     = ast.routines + ast.interfaces
+    func      = get_function_from_ast(funcs, func_name)
+    namespace = ast.parser.namespace.sons_scopes
+    # ...
+
+    print(namespace)
 
 #==============================================================================
 def _lambdify_map(*args, **kwargs):
