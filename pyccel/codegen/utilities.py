@@ -7,13 +7,69 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import subprocess
 
+from sympy import Lambda
+from sympy.core.function import AppliedUndef
+from sympy.core.function import UndefinedFunction
+
 from pyccel.parser.errors import Errors
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 
+
+#==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
 _avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort']
 
+
+#==============================================================================
+def get_callback_nodes(parser, **settings):
+    d = settings.copy()
+    namespace = d.pop('namespace', None)
+
+    if namespace is None:
+        raise ValueError('namespace must be given')
+
+    funcs = {}
+    for fname,func in parser.namespace.functions.items():
+
+        callback = func.decorators.pop('callback', None)
+        if callback is not None:
+            # ...
+            if not(len(callback) == 1):
+                raise ValueError('Cannot find callback for {}'.format(fname))
+
+            callback = callback[0]
+            if not isinstance(callback, Lambda):
+                msg = 'Expecting a lambda expr for callback decorator of {}'.format(fname)
+                raise ValueError(msg)
+            # ...
+
+            # ...
+            variables = callback.variables
+            expr      = callback.expr
+
+            if not(len(variables) == 1):
+                msg = 'lambda expression must have exactly one argument which is the function itself'
+                raise ValueError(msg)
+
+            if isinstance(expr, AppliedUndef):
+                args    = expr.args
+                print(args)
+
+                # rather than using expr.func, we will take the name of the
+                # class which defines its type and then the name of the function
+                functor = namespace[expr.__class__.__name__]
+                print(functor)
+
+            else:
+                raise NotImplementedError('TODO')
+            # ...
+
+            funcs[func.name] = (func, callback)
+
+    return funcs
+
+#==============================================================================
 # TODO add opt flags, etc... look at f2py interface in numpy
 def construct_flags(compiler,
                     fflags=None,
@@ -80,6 +136,7 @@ def construct_flags(compiler,
 
     return flags
 
+#==============================================================================
 def compile_fortran(filename, compiler, flags,
                     binary=None,
                     verbose=False,
@@ -155,6 +212,7 @@ def compile_fortran(filename, compiler, flags,
     # ...
 # ...
 
+#==============================================================================
 def execute_pyccel(filename,
                    compiler     = None,
                    fflags       = None,
@@ -168,7 +226,8 @@ def execute_pyccel(filename,
                    binary       = None,
                    output       = '',
                    convert_only = False,
-                   return_ast   = False):
+                   return_ast   = False,
+                   namespace    = None):
     """Executes the full process:
         - parsing the python code
         - annotating the python code
@@ -181,16 +240,29 @@ def execute_pyccel(filename,
 
     settings = {}
     ast = pyccel.annotate(**settings)
+    # TODO must rename ast to parser ? type(ast) is SemanticParser!
 
     name = os.path.basename(filename)
     name = os.path.splitext(name)[0]
 
+#    # ........................
+#    #  CUSTOM & POST TREATMENT
+#    # ........................
+#    # TODO improve
+#    settings['namespace'] = namespace
+#    d_callbacks = get_callback_nodes(ast, **settings)
+#    if d_callbacks:
+#        for fname, values in d_callbacks.items():
+#            func, callback = values
+##            print(fname, callback)
+#    # ........................
+
     codegen = Codegen(ast, name)
     code    = codegen.doprint()
-    
+
 
     #S.H we return the Codegen instance instead of the ast
-    
+
     if convert_only:
         if not return_ast:
             return code

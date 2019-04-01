@@ -47,6 +47,11 @@ def interface(*args,**kw):
         return f
     return id
 
+def callback(*args,**kw):
+    def id(f):
+        return f
+    return id
+
 
 
 # TODO documentation
