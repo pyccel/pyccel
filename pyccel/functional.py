@@ -18,7 +18,7 @@ from pyccel.epyccel import write_code
 from pyccel.epyccel import mkdir_p
 from pyccel.epyccel import get_function_from_ast
 from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
-from pyccel.ast import Variable, Len, Assign
+from pyccel.ast import Variable, Len, Assign, AugAssign
 from pyccel.ast import For, Range, FunctionDef
 from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
@@ -30,6 +30,326 @@ from pyccel.ast.utilities import build_types_decorator
 from pyccel.parser import Parser
 
 _avail_patterns = ['map']
+
+#==============================================================================
+_accelerator_registery = {'openmp': 'omp', 'openacc': 'acc', None: None}
+
+#==============================================================================
+def _extract_core_expr(expr):
+    """extract core expression from a lambda expression"""
+    if isinstance(expr, Lambda):
+        return _extract_core_expr(expr.expr)
+
+    elif isinstance(expr, ListComprehension):
+        return _extract_core_expr(expr.expr)
+
+    elif isinstance(expr, AppliedUndef):
+        return expr
+
+    else:
+        raise NotImplementedError('{} not implemented'.format(type(expr)))
+
+#==============================================================================
+class VisitorLambda(object):
+    """A visitor class to allow for manipulatin a lambda expression."""
+
+    def __init__(self, expr, **kwargs):
+        assert(isinstance(expr, Lambda))
+
+        self._expr = expr
+        self._core = _extract_core_expr(expr.expr)
+        self.rank = 0
+
+        self._namespace   = kwargs.pop('namespace', {})
+        self._accelerator = kwargs.pop('accelerator', None)
+        self._parallel    = kwargs.pop('parallel', None)
+        self._inline      = kwargs.pop('inline', False)
+        self._schedule    = kwargs.pop('schedule', None)
+
+        if self.accelerator == 'openmp':
+            if self.schedule is None:
+                self._schedule = 'static'
+
+            if self.parallel is None:
+                self._parallel = True
+
+    @property
+    def expr(self):
+        return self._expr
+
+    @property
+    def variables(self):
+        return self.expr.variables
+
+    @property
+    def core(self):
+        return self._core
+
+    @property
+    def namespace(self):
+        return self._namespace
+
+    @property
+    def accelerator(self):
+        return self._accelerator
+
+    @property
+    def parallel(self):
+        return self._parallel
+
+    @property
+    def inline(self):
+        return self._inline
+
+    @property
+    def schedule(self):
+        return self._schedule
+
+    def _visit(self, stmt):
+
+        cls = type(stmt)
+        syntax_method = '_visit_' + cls.__name__
+        if hasattr(self, syntax_method):
+            return getattr(self, syntax_method)(stmt)
+
+        # Unknown object, we raise an error.
+        raise TypeError('{node} not yet available'.format(node=type(stmt)))
+
+    def _visit_Lambda(self, stmt):
+        return self._visit(stmt.expr)
+
+    def _visit_ListComprehension(self, stmt):
+
+        iterator = stmt.iterator
+        iterable = stmt.iterable
+
+        if isinstance(stmt.expr, AppliedUndef):
+            self.rank += 1
+
+        else:
+            raise NotImplementedError()
+
+#        print('iterator = ', iterator)
+#        print('iterable = ', iterable)
+
+        # ... declare lengths and indices
+        lengths   = []
+        indices   = []
+        d_lengths = {}
+        d_indices = {}
+        for x,xs in zip(iterator, iterable):
+            nx   = Variable('int', 'len_'+x.name)
+            i_xs = Variable('int', 'i_'+xs.name)
+
+            lengths       += [nx]
+            indices       += [i_xs]
+
+            d_lengths[xs]  = nx
+            d_indices[xs]  = i_xs
+        # ...
+
+        # ...
+        expr = stmt.expr # TODO use _visit
+#        print('expr     = ', expr    )
+
+        func = self.namespace[self.core.__class__.__name__]
+        # ...
+
+        # ...
+        results = []
+        d_results = {}
+        for res in func.results:
+            name  = 'arr_{}'.format(res.name)
+            dtype = res.dtype
+
+            var = Variable( dtype,
+                            name,
+                            rank=self.rank,
+                            allocatable=res.allocatable,
+                            is_stack_array = res.is_stack_array,
+                            is_pointer=res.is_pointer,
+                            is_target=res.is_target,
+                            is_polymorphic=res.is_polymorphic,
+                            is_optional=res.is_optional,
+    #                            shape=None,
+    #                            cls_base=None,
+    #                            cls_parameters=None,
+                            order=res.order,
+                            precision=res.precision)
+
+            results += [var]
+            d_results[res] = var
+        # ...
+
+        # ... create a 1d index if needed
+        multi_indices = None
+        if self.rank == 1:
+            multi_indices = [Variable('int', 'i_'+r.name) for r in results]
+            if len(multi_indices) == 1:
+                multi_indices = multi_indices[0]
+
+#            print('> multi indices = ', multi_indices)
+        # ...
+
+        # ... assign lengths
+        decs = []
+        for xs in iterable:
+            nx    = d_lengths[xs]
+            decs += [Assign(nx, Len(xs))]
+        # ...
+
+        # ... create lhs for storing the result
+        lhs = []
+        for r in results:
+            if multi_indices:
+                lhs.append(IndexedBase(r.name)[multi_indices])
+
+            else:
+                lhs.append(IndexedBase(r.name)[indices])
+
+        lhs = Tuple(*lhs)
+        if len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... call to the function to be mapped
+        rhs = FunctionCall(func, func.arguments)
+        # ...
+
+        # ... create the core statement
+        core_stmt = Assign(lhs, rhs)
+        # ...
+
+        # ... create loop
+        stmts = []
+
+        # add core statement
+        stmts += [core_stmt]
+
+        if multi_indices:
+            stmts += [AugAssign(multi_indices, '+', 1)]
+
+        for (x, xs) in zip(iterator, iterable):
+            nx    = d_lengths[xs]
+            ix    = d_indices[xs]
+
+            stmts = [Assign(x, IndexedBase(xs.name)[ix])] + stmts
+            stmts = [For(ix, Range(0, nx), stmts, strict=False)]
+
+        if multi_indices:
+            stmts = [Assign(multi_indices, 0)] + stmts
+        # ...
+
+        # ...
+        accelerator = self.accelerator
+        parallel    = self.parallel
+        inline      = self.inline
+        schedule    = self.schedule
+        accel       = _accelerator_registery[accelerator]
+        # ...
+
+        # ...
+        private = ''
+        if accelerator:
+            private = indices + iterator
+            if multi_indices:
+                if not isinstance(multi_indices, list):
+                    multi_indices = [multi_indices]
+
+                private = private + multi_indices
+
+            private = ','.join(i.name for i in private)
+            private = 'private({private})'.format(private=private)
+        # ...
+
+        # ...
+        if accelerator == 'openmp':
+            accel_stmt = 'do schedule({schedule}) {private}'.format(schedule=schedule,
+                                                                    private=private)
+            prelude = [AnnotatedComment(accel, accel_stmt)]
+
+            accel_stmt = 'end do nowait'
+            epilog  = [AnnotatedComment(accel, accel_stmt)]
+
+            stmts = prelude + stmts + epilog
+
+        elif not accelerator is None:
+            raise NotImplementedError('')
+        # ...
+
+        # ...
+        if parallel:
+            prelude = [AnnotatedComment(accel, 'parallel')]
+            epilog  = [AnnotatedComment(accel, 'end parallel')]
+
+            stmts = prelude + stmts + epilog
+        # ...
+
+        # ... update body
+        body = decs + stmts
+        # ...
+
+        # ... TODO TO BE REMOVED: problem with comments/pragmas
+        if accelerator:
+            body += [Pass()]
+        # ...
+
+        # ... create arguments with appropriate types
+        variables = self.variables
+#        print('variables = ', variables)
+#        import sys; sys.exit(0)
+        arguments = variables # TODO
+        # ...
+
+        # ... update arguments = args + results
+        args = list(arguments) + results
+        # ...
+
+        # ...
+        decorators = {}
+#        decorators = {'types':         build_types_decorator(args),
+#                      'external_call': []}
+
+        g_name = 'lambda_{}'.format( random_string( 6 ) )
+        g = FunctionDef(g_name, args, [], body,
+                        decorators=decorators)
+        # ...
+
+        # ... print python code
+        code = pycode(g)
+
+        prelude  = ''
+        prelude += '\nfrom pyccel.decorators import types'
+        prelude += '\nfrom pyccel.decorators import pure'
+        prelude += '\nfrom pyccel.decorators import external, external_call'
+
+        # TODO add python imlpementation of the dependencies
+#        if not inline:
+#            prelude = '{prelude}\n\n{func_code}'.format(prelude=prelude,
+#                                                        func_code=func_code)
+
+
+        code = '{prelude}\n\n{code}'.format(prelude=prelude,
+                                            code=code)
+        # ...
+
+        print(code)
+
+        import sys; sys.exit(0)
+
+        # ...
+        write_code('{}.py'.format(module_name), code, folder=folder)
+        # ...
+
+        # ...
+        sys.path.append(folder)
+        package = importlib.import_module( module_name )
+        sys.path.remove(folder)
+        # ...
+
+        return package
+
+#    return getattr(package, g_name)
 
 
 #==============================================================================
@@ -144,6 +464,8 @@ def _lambdify_func(func, **kwargs):
 
     func_name = list(ns.keys())[0]
     func      = list(ns.values())[0]
+
+#    print(func)
     # ...
 
     # ...
@@ -151,25 +473,6 @@ def _lambdify_func(func, **kwargs):
         msg = 'Expecting a lambda expr'.format(func_name)
         raise TypeError(msg)
     # ...
-
-#    # ...
-#    variables = func.variables
-#    expr      = func.expr
-#    # ...
-
-#    # ...
-#    if isinstance(expr, AppliedUndef):
-#        args    = expr.args
-#        print(args)
-#
-#        # rather than using expr.func, we will take the name of the
-#        # class which defines its type and then the name of the function
-#        functor = namespace[expr.__class__.__name__]
-#        print(functor)
-#
-#    else:
-#        raise NotImplementedError('TODO')
-#    # ...
 
     # ... dependencies will contain all the user functions defined functions,
     #     that are needed to lambbdify our expression
@@ -208,29 +511,23 @@ def _lambdify_func(func, **kwargs):
     settings = {}
     ast = pyccel.annotate(**settings)
     dependencies = ast.namespace.functions
-    print('>>> dependencies = ', list(dependencies.keys()))
-    # ...
-
-    # ... extract core expression from a lambda expression
-    def _extract_core_expr(expr):
-        if isinstance(expr, Lambda):
-            return _extract_core_expr(expr.expr)
-
-        elif isinstance(expr, ListComprehension):
-            return _extract_core_expr(expr.expr)
-
-        elif isinstance(expr, AppliedUndef):
-            print('PAR ICI')
-            return expr
-
-        else:
-            raise NotImplementedError('{} not implemented'.format(type(expr)))
+#    print('>>> dependencies = ', list(dependencies.keys()))
     # ...
 
     # ...
-    expr = _extract_core_expr(func)
-    print(expr)
+    visitor = VisitorLambda(func, namespace=dependencies)
     # ...
+
+#    # ...
+#    print('variables = ', visitor.variables)
+#    print('expr      = ', visitor.expr)
+#    print('core expr = ', visitor.core)
+#    # ...
+
+    # ...
+    visitor._visit(visitor.expr)
+    # ...
+
 
 #==============================================================================
 def _lambdify_map(*args, **kwargs):

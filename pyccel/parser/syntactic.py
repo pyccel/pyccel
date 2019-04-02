@@ -1129,8 +1129,6 @@ class SyntaxParser(BasicParser):
             generators = list(self._visit(stmt.generators))
             expr       = self._visit(stmt.result)
 
-#            print('generators =', generators)
-
             iterator = []
             iterable = []
             for i in generators:
@@ -1138,11 +1136,6 @@ class SyntaxParser(BasicParser):
 
                 iterator.append(i.target)
                 iterable.append(i.iterable)
-
-#            print('iterator  =', iterator )
-#            print('iterable  =', iterable )
-#            print('expr      =', expr     )
-#            import sys; sys.exit(0)
 
             return ListComprehension( iterator, iterable, expr )
 
