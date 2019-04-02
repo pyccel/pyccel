@@ -166,12 +166,24 @@ def as_static_function_call(func):
 
     args = func.arguments
     args = sanitize_arguments(args)
-    functions = func.functions
-    body = [FunctionCall(func, args)]
 
-    func = FunctionDef(func.name, list(args), [], body,
+    results = func.results
+    # TODO use Tuple inside FunctionDef
+    results = sanitize_arguments(results)
+    results = Tuple(*results)
+
+    if not results:
+        body = [FunctionCall(func, args)]
+
+    else:
+        res = results
+        if len(results) == 1:
+            res = results[0]
+        body = [Assign(res, FunctionCall(func, args))]
+
+    func = FunctionDef(func.name, list(args), list(results), body,
                        arguments_inout = func.arguments_inout,
-                       functions=functions)
+                       functions=func.functions)
     static_func = as_static_function(func)
 
     return static_func
