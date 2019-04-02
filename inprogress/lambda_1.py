@@ -66,7 +66,23 @@ def test_2():
     print('> Elapsed time = ', te-tb)
     #print(arr_r)
 
+#=========================================================
+def test_comp_1():
+    g = lambda xs,y,z: sum([f(x,y,z) for x in xs])
+
+    g = lambdify(g)
+
+    nx = 5000
+    arr_x = range(0, nx)
+
+    tb = time.time()
+    g(arr_x, 3, 2)
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+    #print(arr_r)
+
 #########################################
 if __name__ == '__main__':
-    test_1()
-    test_2()
+#    test_1()
+#    test_2()
+    test_comp_1()

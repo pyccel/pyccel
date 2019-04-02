@@ -2150,7 +2150,6 @@ class SemanticParser(BasicParser):
             lhs = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
 
-
         if isinstance(expr, FunctionalSum):
             val = Integer(0)
             if str_dtype(dtype) in ['real', 'complex']:

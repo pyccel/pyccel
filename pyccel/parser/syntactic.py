@@ -1092,52 +1092,54 @@ class SyntaxParser(BasicParser):
 
     def _visit_ListComprehensionNode(self, stmt):
 
-        try:
-            import numpy as np
-            # TODO this is not good!!
-            #      should be done inside (aug)assign
+#        import numpy as np
+#        # TODO this is not good!!
+#        #      should be done inside (aug)assign
+#
+#        result = self._visit(stmt.result)
+#        generators = list(self._visit(stmt.generators))
+#        lhs = self._visit(stmt.parent.target)
+#        index = create_variable(lhs)
+#        if isinstance(result, (Tuple, list, tuple)):
+#            rank = len(np.shape(result))
+#        else:
+#            rank = 0
+#        args = [Slice(None, None)] * rank
+#        args.append(index)
+#        target = IndexedBase(lhs)[args]
+#        target = Assign(target, result)
+#        assign1 = Assign(index, Integer(0))
+#        assign1.set_fst(stmt)
+#        target.set_fst(stmt)
+#        generators[-1].insert2body(target)
+#        assign2 = Assign(index, index + 1)
+#        assign2.set_fst(stmt)
+#        generators[-1].insert2body(assign2)
+#
+#        indices = [generators[-1].target]
+#        while len(generators) > 1:
+#            F = generators.pop()
+#            generators[-1].insert2body(F)
+#            indices.append(generators[-1].target)
+#        indices = indices[::-1]
+#        print('XXXXXXXXXX')
+#
+#        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
+#                             indices, index)
 
-            result = self._visit(stmt.result)
-            generators = list(self._visit(stmt.generators))
-            lhs = self._visit(stmt.parent.target)
-            index = create_variable(lhs)
-            if isinstance(result, (Tuple, list, tuple)):
-                rank = len(np.shape(result))
-            else:
-                rank = 0
-            args = [Slice(None, None)] * rank
-            args.append(index)
-            target = IndexedBase(lhs)[args]
-            target = Assign(target, result)
-            assign1 = Assign(index, Integer(0))
-            assign1.set_fst(stmt)
-            target.set_fst(stmt)
-            generators[-1].insert2body(target)
-            assign2 = Assign(index, index + 1)
-            assign2.set_fst(stmt)
-            generators[-1].insert2body(assign2)
+        generators = list(self._visit(stmt.generators))
+        expr       = self._visit(stmt.result)
 
-            indices = [generators[-1].target]
-            while len(generators) > 1:
-                F = generators.pop()
-                generators[-1].insert2body(F)
-                indices.append(generators[-1].target)
-            indices = indices[::-1]
-            return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                                 indices, index)
-        except:
-            generators = list(self._visit(stmt.generators))
-            expr       = self._visit(stmt.result)
+        iterator = []
+        iterable = []
+        for i in generators:
+            assert(isinstance(i, For))
 
-            iterator = []
-            iterable = []
-            for i in generators:
-                assert(isinstance(i, For))
+            iterator.append(i.target)
+            iterable.append(i.iterable)
 
-                iterator.append(i.target)
-                iterable.append(i.iterable)
+        return ListComprehension( iterator, iterable, expr )
 
-            return ListComprehension( iterator, iterable, expr )
 
     def _visit_TryNode(self, stmt):
         # this is a blocking error, since we don't want to convert the try body

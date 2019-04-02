@@ -9,6 +9,7 @@ from types import FunctionType
 from sympy import Indexed, IndexedBase, Tuple, Lambda
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
+from sympy import Sum
 
 from pyccel.codegen.utilities       import construct_flags as construct_flags_pyccel
 from pyccel.codegen.utilities       import execute_pyccel
@@ -33,6 +34,7 @@ _avail_patterns = ['map']
 
 #==============================================================================
 _accelerator_registery = {'openmp': 'omp', 'openacc': 'acc', None: None}
+_known_functions_registery = {'sum': Sum}
 
 #==============================================================================
 def _extract_core_expr(expr):
@@ -44,7 +46,18 @@ def _extract_core_expr(expr):
         return _extract_core_expr(expr.expr)
 
     elif isinstance(expr, AppliedUndef):
-        return expr
+        name = expr.__class__.__name__
+        if name in _known_functions_registery.keys():
+            args = expr.args
+            args = [_extract_core_expr(i) for i in args]
+            if len(args) == 1:
+                return args[0]
+
+            else:
+                raise NotImplementedError('')
+
+        else:
+            return expr
 
     else:
         raise NotImplementedError('{} not implemented'.format(type(expr)))
@@ -78,6 +91,8 @@ class VisitorLambda(object):
 
         self._iterators = []
         self._iterables = []
+
+        self._op = None
 
     @property
     def expr(self):
@@ -123,6 +138,10 @@ class VisitorLambda(object):
     def iterables(self):
         return self._iterables
 
+    @property
+    def op(self):
+        return self._op
+
     def insert_iterator(self, x):
         if isinstance(x, (tuple, list, Tuple)):
             self._iterators += list([i for i in x])
@@ -137,12 +156,32 @@ class VisitorLambda(object):
         else:
             self._iterables.append(x)
 
+    def _set_op(self, op):
+        self._op = op
+
     def _visit(self, stmt):
 
         cls = type(stmt)
-        syntax_method = '_visit_' + cls.__name__
-        if hasattr(self, syntax_method):
-            return getattr(self, syntax_method)(stmt)
+        name = cls.__name__
+
+        method = '_visit_{}'.format(name)
+        if hasattr(self, method):
+            return getattr(self, method)(stmt)
+
+        elif name in _known_functions_registery.keys():
+            self._set_op(name)
+            # TODO must reset op
+            args = stmt.args
+            if name == 'sum':
+                assert(len(args) == 1)
+                args = args[0]
+
+            else:
+                raise NotImplementedError('')
+
+#            print('arg = ', args)
+#            import sys; sys.exit(0)
+            return self._visit(args)
 
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
@@ -275,8 +314,8 @@ class VisitorLambda(object):
         stmts = []
 
         if multi_indices:
-            if len(iterable) == 1:
-                stmts += [Assign(multi_indices, iterable[0])]
+            if len(indices) == 1:
+                stmts += [Assign(multi_indices, indices[0])]
 
             else:
                 if not( len(iterable) in [2] ):
@@ -556,9 +595,13 @@ def _lambdify_func(func, **kwargs):
         # rather than using call.func, we will take the name of the
         # class which defines its type and then the name of the function
         f_name = call.__class__.__name__
-        f = namespace[f_name]
 
-        dependencies[f_name] = f
+        if f_name in namespace.keys():
+            f = namespace[f_name]
+            dependencies[f_name] = f
+
+        elif not( f_name in _known_functions_registery.keys() ):
+            raise ValueError('Unkown function {}'.format(f_name))
     # ...
 
     # TODO be carefull with the order of dependecies.
