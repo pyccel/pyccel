@@ -60,7 +60,10 @@ class VisitorLambda(object):
         self._core = _extract_core_expr(expr.expr)
         self.rank = 0
 
-        self._namespace   = kwargs.pop('namespace', {})
+        self._dependencies   = kwargs.pop('dependencies', {})
+        self._dependencies_code = kwargs.pop('dependencies_code', None)
+        # TODO allow to reconstruct the dep code from namespace
+
         self._accelerator = kwargs.pop('accelerator', None)
         self._parallel    = kwargs.pop('parallel', None)
         self._inline      = kwargs.pop('inline', False)
@@ -86,8 +89,12 @@ class VisitorLambda(object):
         return self._core
 
     @property
-    def namespace(self):
-        return self._namespace
+    def dependencies(self):
+        return self._dependencies
+
+    @property
+    def dependencies_code(self):
+        return self._dependencies_code
 
     @property
     def accelerator(self):
@@ -152,7 +159,7 @@ class VisitorLambda(object):
         expr = stmt.expr # TODO use _visit
 #        print('expr     = ', expr    )
 
-        func = self.namespace[self.core.__class__.__name__]
+        func = self.dependencies[self.core.__class__.__name__]
         # ...
 
         # ...
@@ -295,22 +302,67 @@ class VisitorLambda(object):
         # ...
 
         # ... create arguments with appropriate types
-        variables = self.variables
-#        print('variables = ', variables)
-#        import sys; sys.exit(0)
-        arguments = variables # TODO
+        args = []
+        d_args = {}
+        for arg in self.variables:
+            # get the associated dtype
+            x = [x for x,xs in zip(iterator, iterable) if xs.name == arg.name ]
+
+            if len(x) == 1:
+                x = x[0]
+
+            else:
+                x = arg
+
+            # get the call
+            call = self.core
+
+            # compute the position in the call
+            i_arg = list(call.args).index(x)
+            # get the typed argument from the function def
+            fargs = self.dependencies[call.__class__.__name__].arguments
+            x = fargs[i_arg]
+
+            if not( arg in iterable ):
+                var = x
+
+            else:
+                if x.rank > 0:
+                    raise NotImplementedError('Expecting argument to be a scalar')
+
+                name  = arg.name
+
+                var = Variable( x.dtype,
+                                name,
+                                rank=self.rank + x.rank,
+                                allocatable=x.allocatable,
+                                is_stack_array = x.is_stack_array,
+                                is_pointer=x.is_pointer,
+                                is_target=x.is_target,
+                                is_polymorphic=x.is_polymorphic,
+                                is_optional=x.is_optional,
+#                                shape=None,
+#                                cls_base=None,
+#                                cls_parameters=None,
+                                order=x.order,
+                                precision=x.precision)
+
+            args += [var]
+            d_args[arg] = var
         # ...
 
         # ... update arguments = args + results
-        args = list(arguments) + results
+        args += results
         # ...
 
         # ...
-        decorators = {}
-#        decorators = {'types':         build_types_decorator(args),
-#                      'external_call': []}
+        decorators = {'types':         build_types_decorator(args),
+                      'external_call': []}
 
-        g_name = 'lambda_{}'.format( random_string( 6 ) )
+        tag         = random_string( 6 )
+        module_name = 'mod_{}'.format( tag)
+        g_name      = 'lambda_{}'.format( tag )
+
         g = FunctionDef(g_name, args, [], body,
                         decorators=decorators)
         # ...
@@ -319,25 +371,28 @@ class VisitorLambda(object):
         code = pycode(g)
 
         prelude  = ''
-        prelude += '\nfrom pyccel.decorators import types'
-        prelude += '\nfrom pyccel.decorators import pure'
-        prelude += '\nfrom pyccel.decorators import external, external_call'
-
-        # TODO add python imlpementation of the dependencies
-#        if not inline:
-#            prelude = '{prelude}\n\n{func_code}'.format(prelude=prelude,
-#                                                        func_code=func_code)
+        if not inline:
+            prelude = '{prelude}\n\n{code_dep}'.format(prelude=prelude,
+                                                       code_dep=self.dependencies_code)
 
 
         code = '{prelude}\n\n{code}'.format(prelude=prelude,
                                             code=code)
         # ...
 
-        print(code)
+        # ... TODO
+        folder = None
+        if folder is None:
+            basedir = os.getcwd()
+            folder = '__pycache__'
+            folder = os.path.join( basedir, folder )
 
-        import sys; sys.exit(0)
+        folder = os.path.abspath( folder )
+        mkdir_p(folder)
+        # ...
 
         # ...
+#        print(code)
         write_code('{}.py'.format(module_name), code, folder=folder)
         # ...
 
@@ -347,9 +402,7 @@ class VisitorLambda(object):
         sys.path.remove(folder)
         # ...
 
-        return package
-
-#    return getattr(package, g_name)
+        return getattr(package, g_name)
 
 
 #==============================================================================
@@ -373,45 +426,10 @@ def lambdify(pattern, *args, **kwargs):
 def _lambdify_func(func, **kwargs):
 
     # ... get optional arguments
-    namespace         = kwargs.pop('namespace'        , globals())
-    compiler          = kwargs.pop('compiler'         , 'gfortran')
-    fflags            = kwargs.pop('fflags'           , None)
-    accelerator       = kwargs.pop('accelerator'      , None)
-    verbose           = kwargs.pop('verbose'          , False)
-    debug             = kwargs.pop('debug'            , False)
-    include           = kwargs.pop('include'          , [])
-    libdir            = kwargs.pop('libdir'           , [])
-    modules           = kwargs.pop('modules'          , [])
-    libs              = kwargs.pop('libs'             , [])
-    extra_args        = kwargs.pop('extra_args'       , '')
-    folder            = kwargs.pop('folder'           , None)
-    mpi               = kwargs.pop('mpi'              , False)
-    assert_contiguous = kwargs.pop('assert_contiguous', False)
+    _kwargs = kwargs.copy()
 
-    # TODO
-    accel    = None
-    schedule = None
-    if accelerator is None:
-        accelerator = 'openmp'
-        accel       = 'omp'
-        schedule    = 'static'
-#        schedule    = 'runtime'
-
-    if fflags is None:
-        fflags = construct_flags_pyccel( compiler,
-                                         fflags=None,
-                                         debug=debug,
-                                         accelerator=accelerator,
-                                         include=[],
-                                         libdir=[] )
-    # ...
-
-    # ... parallel options
-    parallel = kwargs.pop('parallel', True)
-    # ...
-
-    # ... additional options
-    inline = kwargs.pop('inline', False)
+    namespace = _kwargs.pop('namespace', globals())
+    folder    = _kwargs.pop('folder', None)
     # ...
 
     # ... get the function source code
@@ -464,8 +482,6 @@ def _lambdify_func(func, **kwargs):
 
     func_name = list(ns.keys())[0]
     func      = list(ns.values())[0]
-
-#    print(func)
     # ...
 
     # ...
@@ -511,22 +527,16 @@ def _lambdify_func(func, **kwargs):
     settings = {}
     ast = pyccel.annotate(**settings)
     dependencies = ast.namespace.functions
-#    print('>>> dependencies = ', list(dependencies.keys()))
     # ...
 
     # ...
-    visitor = VisitorLambda(func, namespace=dependencies)
+    visitor = VisitorLambda( func,
+                             dependencies=dependencies,
+                             dependencies_code=code_dep,
+                             **kwargs)
     # ...
 
-#    # ...
-#    print('variables = ', visitor.variables)
-#    print('expr      = ', visitor.expr)
-#    print('core expr = ', visitor.core)
-#    # ...
-
-    # ...
-    visitor._visit(visitor.expr)
-    # ...
+    return visitor._visit(visitor.expr)
 
 
 #==============================================================================
