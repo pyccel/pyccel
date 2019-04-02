@@ -23,8 +23,9 @@ from pyccel.ast import Variable, Len, Assign, AugAssign
 from pyccel.ast import For, Range, FunctionDef
 from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
-from pyccel.ast import Print, Pass
+from pyccel.ast import Print, Pass, Return
 from pyccel.ast import ListComprehension
+from pyccel.ast.datatypes import NativeInteger
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
@@ -34,7 +35,7 @@ _avail_patterns = ['map']
 
 #==============================================================================
 _accelerator_registery = {'openmp': 'omp', 'openacc': 'acc', None: None}
-_known_functions_registery = {'sum': Sum}
+_known_functions_registery = {'sum': '+'}
 
 #==============================================================================
 def _extract_core_expr(expr):
@@ -157,7 +158,7 @@ class VisitorLambda(object):
             self._iterables.append(x)
 
     def _set_op(self, op):
-        self._op = op
+        self._op = _known_functions_registery[op]
 
     def _visit(self, stmt):
 
@@ -218,7 +219,13 @@ class VisitorLambda(object):
         iterator = self.iterators
         iterable = self.iterables
         expr     = self.core
+        rank     = self.rank
         # ...
+
+        # ... update rank if using reduction
+        if self.op:
+            rank -= 1
+        # ...
 
 #        print('iterator = ', iterator)
 #        print('iterable = ', iterable)
@@ -249,12 +256,17 @@ class VisitorLambda(object):
         d_results = {}
         for res in func.results:
             # TODO check if the name exist or use a random name
-            name  = '{}s'.format(res.name)
+            if rank == 0:
+                name = res.name
+
+            else:
+                name  = '{}s'.format(res.name)
+
             dtype = res.dtype
 
             var = Variable( dtype,
                             name,
-                            rank=self.rank,
+                            rank=rank,
                             allocatable=res.allocatable,
                             is_stack_array = res.is_stack_array,
                             is_pointer=res.is_pointer,
@@ -273,12 +285,33 @@ class VisitorLambda(object):
 
         # ... create a 1d index if needed
         multi_indices = None
-        if self.rank == 1:
+        if rank == 1:
             multi_indices = [Variable('int', 'i_'+r.name) for r in results]
             if len(multi_indices) == 1:
                 multi_indices = multi_indices[0]
 
 #            print('> multi indices = ', multi_indices)
+        # ...
+
+        # ... initiale value for results
+        inits = []
+        for r in results:
+            value = None
+            if isinstance(r.dtype, NativeInteger):
+                if self.op == '*':
+                    value = 1
+
+                else:
+                    value = 0
+
+            else:
+                raise NotImplementedError('')
+
+            lhs = r
+            if rank > 0:
+                raise NotImplementedError('')
+
+            inits += [Assign(lhs, value)]
         # ...
 
         # ... assign lengths
@@ -291,11 +324,15 @@ class VisitorLambda(object):
         # ... create lhs for storing the result
         lhs = []
         for r in results:
-            if multi_indices:
-                lhs.append(IndexedBase(r.name)[multi_indices])
+            if rank == 0:
+                lhs.append(r)
 
             else:
-                lhs.append(IndexedBase(r.name)[indices])
+                if multi_indices:
+                    lhs.append(IndexedBase(r.name)[multi_indices])
+
+                else:
+                    lhs.append(IndexedBase(r.name)[indices])
 
         lhs = Tuple(*lhs)
         if len(lhs) == 1:
@@ -307,7 +344,11 @@ class VisitorLambda(object):
         # ...
 
         # ... create the core statement
-        core_stmt = Assign(lhs, rhs)
+        if self.op is None:
+            core_stmt = Assign(lhs, rhs)
+
+        else:
+            core_stmt = AugAssign(lhs, self.op, rhs)
         # ...
 
         # ... create loop
@@ -352,14 +393,25 @@ class VisitorLambda(object):
                     private += [multi_indices]
 
             private = ','.join(i.name for i in private)
-            private = 'private({private})'.format(private=private)
+            private = ' private({private})'.format(private=private)
+        # ...
+
+        # ...
+        reduction = ''
+        if accelerator and self.op:
+            if rank > 0:
+                raise NotImplementedError('')
+
+            rs = ','.join(i.name for i in results)
+            reduction = ' reduction({op}:{args})'.format(op=self.op, args=rs)
         # ...
 
         # ...
         if accelerator == 'openmp':
-            pattern = 'do schedule({schedule}) {private}'
-            accel_stmt = pattern.format( schedule = schedule,
-                                         private = private )
+            pattern = 'do schedule({schedule}){private}{reduction}'
+            accel_stmt = pattern.format( schedule  = schedule,
+                                         private   = private,
+                                         reduction = reduction )
             prelude = [AnnotatedComment(accel, accel_stmt)]
 
             accel_stmt = 'end do nowait'
@@ -380,12 +432,17 @@ class VisitorLambda(object):
         # ...
 
         # ... update body
-        body = decs + stmts
+        body = inits + decs + stmts
         # ...
 
-        # ... TODO TO BE REMOVED: problem with comments/pragmas
-        if accelerator:
-            body += [Pass()]
+        # ...
+        if rank == 0:
+            body += [Return(results)]
+
+        else:
+            # TODO TO BE REMOVED: problem with comments/pragmas
+            if accelerator:
+                body += [Pass()]
         # ...
 
         # ... create arguments with appropriate types
@@ -439,7 +496,8 @@ class VisitorLambda(object):
         # ...
 
         # ... update arguments = args + results
-        args += results
+        if rank > 0:
+            args += results
         # ...
 
         # ...
