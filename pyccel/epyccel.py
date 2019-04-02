@@ -900,7 +900,12 @@ def epyccel_module(module,
 
     # ... we need to store the python file in the folder, so that execute_pyccel
     #     can run
-    copyfile(fname, os.path.basename(fname))
+    try:
+        copyfile(fname, os.path.basename(fname))
+
+    except:
+        print('> epyccel_module: TODO')
+
     fname = os.path.basename(fname)
     # ...
 
@@ -1022,6 +1027,31 @@ def epyccel_module(module,
     # ...
 
     return package
+
+#==============================================================================
+# TODO STILL EXPERIMENTAL
+#      add it to epyccel, when we find a simple way to
+#      distinguish between lambda and def functions
+from pyccel.functional import lambdify
+def epyccel_lambda( func, namespace   = globals(), accelerator = None,
+                   verbose=False):
+
+    res = lambdify( func,
+                    namespace   = namespace,
+                    accelerator = accelerator )
+
+    # module case
+    if isinstance(res, (tuple, list)):
+        mod, func_name = res
+
+        mod = epyccel (mod,
+                       namespace   = namespace,
+                       accelerator = accelerator, verbose=verbose )
+
+        return getattr(mod, func_name)
+
+    else:
+        raise NotImplementedError('TODO')
 
 #==============================================================================
 

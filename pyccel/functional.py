@@ -136,6 +136,14 @@ class VisitorLambda(object):
         else:
             raise NotImplementedError()
 
+        # ...
+        accelerator = self.accelerator
+        parallel    = self.parallel
+        inline      = self.inline
+        schedule    = self.schedule
+        accel       = _accelerator_registery[accelerator]
+        # ...
+
 #        print('iterator = ', iterator)
 #        print('iterable = ', iterable)
 
@@ -166,7 +174,8 @@ class VisitorLambda(object):
         results = []
         d_results = {}
         for res in func.results:
-            name  = 'arr_{}'.format(res.name)
+            # TODO check if the name exist or use a random name
+            name  = '{}s'.format(res.name)
             dtype = res.dtype
 
             var = Variable( dtype,
@@ -230,11 +239,23 @@ class VisitorLambda(object):
         # ... create loop
         stmts = []
 
+        if multi_indices:
+            if len(iterable) == 1:
+                stmts += [Assign(multi_indices, iterable[0])]
+
+            else:
+                if not( len(iterable) in [2] ):
+                    raise NotImplementedError('')
+
+                # TODO improve formula
+                value = indices[0]
+                for ix, nx in zip(indices[1:], lengths[::-1][:-1]):
+                    value = nx*value + ix
+
+                stmts += [Assign(multi_indices, value)]
+
         # add core statement
         stmts += [core_stmt]
-
-        if multi_indices:
-            stmts += [AugAssign(multi_indices, '+', 1)]
 
         for (x, xs) in zip(iterator, iterable):
             nx    = d_lengths[xs]
@@ -242,28 +263,19 @@ class VisitorLambda(object):
 
             stmts = [Assign(x, IndexedBase(xs.name)[ix])] + stmts
             stmts = [For(ix, Range(0, nx), stmts, strict=False)]
-
-        if multi_indices:
-            stmts = [Assign(multi_indices, 0)] + stmts
-        # ...
-
-        # ...
-        accelerator = self.accelerator
-        parallel    = self.parallel
-        inline      = self.inline
-        schedule    = self.schedule
-        accel       = _accelerator_registery[accelerator]
         # ...
 
         # ...
         private = ''
         if accelerator:
             private = indices + iterator
-            if multi_indices:
-                if not isinstance(multi_indices, list):
-                    multi_indices = [multi_indices]
 
-                private = private + multi_indices
+            if multi_indices:
+                if isinstance(multi_indices, list):
+                    private += multi_indices
+
+                else:
+                    private += [multi_indices]
 
             private = ','.join(i.name for i in private)
             private = 'private({private})'.format(private=private)
@@ -271,8 +283,9 @@ class VisitorLambda(object):
 
         # ...
         if accelerator == 'openmp':
-            accel_stmt = 'do schedule({schedule}) {private}'.format(schedule=schedule,
-                                                                    private=private)
+            pattern = 'do schedule({schedule}) {private}'
+            accel_stmt = pattern.format( schedule = schedule,
+                                         private = private )
             prelude = [AnnotatedComment(accel, accel_stmt)]
 
             accel_stmt = 'end do nowait'
@@ -393,6 +406,7 @@ class VisitorLambda(object):
 
         # ...
 #        print(code)
+#        import sys; sys.exit(0)
         write_code('{}.py'.format(module_name), code, folder=folder)
         # ...
 
@@ -402,7 +416,13 @@ class VisitorLambda(object):
         sys.path.remove(folder)
         # ...
 
-        return getattr(package, g_name)
+        is_module = len(self.dependencies) > 0
+        # we return a module, that will processed by epyccel
+        if self.dependencies:
+            return package, g_name
+
+        else:
+            return getattr(package, g_name)
 
 
 #==============================================================================
@@ -435,7 +455,6 @@ def _lambdify_func(func, **kwargs):
     # ... get the function source code
     func_code = get_source_function(func)
 #    print(func_code)
-#    import sys; sys.exit(0)
     # ...
 
     # ...
