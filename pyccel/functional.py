@@ -24,6 +24,7 @@ from pyccel.ast import Print, Pass
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
+from pyccel.parser import Parser
 
 _avail_patterns = ['map']
 
@@ -92,7 +93,7 @@ def _lambdify_func(func, **kwargs):
 
     # ... get the function source code
     func_code = get_source_function(func)
-    print(func_code)
+#    print(func_code)
 #    import sys; sys.exit(0)
     # ...
 
@@ -125,32 +126,23 @@ def _lambdify_func(func, **kwargs):
     os.chdir(folder)
     curdir = os.getcwd()
     # ...
-    print('ALLO')
 
     # ...
-    filename, ast = execute_pyccel( filename,
-                                    compiler     = compiler,
-                                    fflags       = fflags,
-                                    debug        = debug,
-                                    verbose      = verbose,
-                                    accelerator  = accelerator,
-                                    modules      = modules,
-                                    convert_only = True,
-                                    return_ast   = True )
-    # ...
-    print(ast)
+    pyccel = Parser(filename, output_folder=folder.replace('/','.'))
+    ast = pyccel.parse()
 
-    print('ALLO')
+    settings = {}
+    ast = pyccel.annotate(**settings)
 
-    # ... construct a f2py interface for the assembly
-    # be careful: because of f2py we must use lower case
-    func_name = func.__name__
-    funcs     = ast.routines + ast.interfaces
-    func      = get_function_from_ast(funcs, func_name)
-    namespace = ast.parser.namespace.sons_scopes
+    namespace = ast.namespace.symbolic_functions
+    if not( len(namespace.values()) == 1 ):
+        raise ValueError('Expecting one single lambda function')
+
+    func_name = list(namespace.keys())[0]
+    func      = list(namespace.values())[0]
     # ...
 
-    print(namespace)
+    print(func)
 
 #==============================================================================
 def _lambdify_map(*args, **kwargs):
@@ -160,20 +152,22 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ... get optional arguments
-    namespace         = kwargs.pop('namespace'        , globals())
-    compiler          = kwargs.pop('compiler'         , 'gfortran')
-    fflags            = kwargs.pop('fflags'           , None)
-    accelerator       = kwargs.pop('accelerator'      , None)
-    verbose           = kwargs.pop('verbose'          , False)
-    debug             = kwargs.pop('debug'            , False)
-    include           = kwargs.pop('include'          , [])
-    libdir            = kwargs.pop('libdir'           , [])
-    modules           = kwargs.pop('modules'          , [])
-    libs              = kwargs.pop('libs'             , [])
-    extra_args        = kwargs.pop('extra_args'       , '')
-    folder            = kwargs.pop('folder'           , None)
-    mpi               = kwargs.pop('mpi'              , False)
-    assert_contiguous = kwargs.pop('assert_contiguous', False)
+    _kwargs = kwargs.copy()
+
+    namespace         = _kwargs.pop('namespace'        , globals())
+    compiler          = _kwargs.pop('compiler'         , 'gfortran')
+    fflags            = _kwargs.pop('fflags'           , None)
+    accelerator       = _kwargs.pop('accelerator'      , None)
+    verbose           = _kwargs.pop('verbose'          , False)
+    debug             = _kwargs.pop('debug'            , False)
+    include           = _kwargs.pop('include'          , [])
+    libdir            = _kwargs.pop('libdir'           , [])
+    modules           = _kwargs.pop('modules'          , [])
+    libs              = _kwargs.pop('libs'             , [])
+    extra_args        = _kwargs.pop('extra_args'       , '')
+    folder            = _kwargs.pop('folder'           , None)
+    mpi               = _kwargs.pop('mpi'              , False)
+    assert_contiguous = _kwargs.pop('assert_contiguous', False)
 
     # TODO
     accel    = None
@@ -194,11 +188,11 @@ def _lambdify_map(*args, **kwargs):
     # ...
 
     # ... parallel options
-    parallel = kwargs.pop('parallel', True)
+    parallel = _kwargs.pop('parallel', True)
     # ...
 
     # ... additional options
-    inline = kwargs.pop('inline', False)
+    inline = _kwargs.pop('inline', False)
     # ...
 
     # ... get the function source code

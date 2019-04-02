@@ -8,6 +8,7 @@ from .headers        import *
 from .numpyext       import *
 from .f2py           import *
 from .fortran        import *
+from .functional     import *
 from .functionalexpr import *
 from .utilities      import *
 from .parallel       import *

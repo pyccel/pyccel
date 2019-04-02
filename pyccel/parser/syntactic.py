@@ -86,6 +86,7 @@ from pyccel.ast import PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
 from pyccel.ast import GetDefaultFunctionArg
 from pyccel.ast import For, FunctionalFor, ForIterator
+from pyccel.ast import ListComprehension
 from pyccel.ast import GeneratorComprehension as GC
 from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast import If, IfTernaryOperator
@@ -1091,12 +1092,13 @@ class SyntaxParser(BasicParser):
 
     def _visit_ListComprehensionNode(self, stmt):
 
-        import numpy as np
-        result = self._visit(stmt.result)
-        generators = list(self._visit(stmt.generators))
         try:
+            import numpy as np
             # TODO this is not good!!
             #      should be done inside (aug)assign
+
+            result = self._visit(stmt.result)
+            generators = list(self._visit(stmt.generators))
             lhs = self._visit(stmt.parent.target)
             index = create_variable(lhs)
             if isinstance(result, (Tuple, list, tuple)):
@@ -1124,7 +1126,25 @@ class SyntaxParser(BasicParser):
             return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
                                  indices, index)
         except:
-            raise NotImplementedError('TODO')
+            generators = list(self._visit(stmt.generators))
+            expr       = self._visit(stmt.result)
+
+#            print('generators =', generators)
+
+            iterator = []
+            iterable = []
+            for i in generators:
+                assert(isinstance(i, For))
+
+                iterator.append(i.target)
+                iterable.append(i.iterable)
+
+#            print('iterator  =', iterator )
+#            print('iterable  =', iterable )
+#            print('expr      =', expr     )
+#            import sys; sys.exit(0)
+
+            return ListComprehension( iterator, iterable, expr )
 
     def _visit_TryNode(self, stmt):
         # this is a blocking error, since we don't want to convert the try body

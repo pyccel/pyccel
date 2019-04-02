@@ -370,7 +370,7 @@ class BasicParser(object):
             prints Tracebacke exception if True
 
         """
-        print('> BasicParser: TODO show_traceback = False')
+#        print('> BasicParser: TODO show_traceback = False')
 
         self._fst = None
         self._ast = None

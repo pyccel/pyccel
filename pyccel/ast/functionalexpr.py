@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# TODO to be improved
+
 from .basic import Basic
 from sympy.core.expr  import Expr, AtomicExpr
 
