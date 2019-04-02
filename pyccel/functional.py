@@ -163,6 +163,10 @@ class VisitorLambda(object):
             return self._visit(stmt.expr)
         # ...
 
+        # treat the expression core
+        return self._doit()
+
+    def _doit(self):
         # ...
         accelerator = self.accelerator
         parallel    = self.parallel
@@ -171,11 +175,15 @@ class VisitorLambda(object):
         accel       = _accelerator_registery[accelerator]
         # ...
 
+        # ...
         iterator = self.iterators
         iterable = self.iterables
+        expr     = self.core
+        # ...
 
 #        print('iterator = ', iterator)
 #        print('iterable = ', iterable)
+#        print('expr     = ', expr    )
 
         # ... declare lengths and indices
         lengths   = []
@@ -194,9 +202,6 @@ class VisitorLambda(object):
         # ...
 
         # ...
-        expr = stmt.expr # TODO use _visit
-#        print('expr     = ', expr    )
-
         func = self.dependencies[self.core.__class__.__name__]
         # ...
 
@@ -446,7 +451,6 @@ class VisitorLambda(object):
         sys.path.remove(folder)
         # ...
 
-        is_module = len(self.dependencies) > 0
         # we return a module, that will processed by epyccel
         if self.dependencies:
             return package, g_name
@@ -545,6 +549,8 @@ def _lambdify_func(func, **kwargs):
     # ...
 
     # ... annotate functions appearing in the lambda expression
+#    print(func.expr)
+#    import sys; sys.exit(0)
     calls = func.expr.atoms(AppliedUndef)
     for call in calls:
         # rather than using call.func, we will take the name of the
