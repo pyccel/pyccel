@@ -83,6 +83,6 @@ def test_comp_1():
 
 #########################################
 if __name__ == '__main__':
-#    test_1()
-#    test_2()
+    test_1()
+    test_2()
     test_comp_1()

@@ -307,11 +307,19 @@ class VisitorLambda(object):
             else:
                 raise NotImplementedError('')
 
-            lhs = r
-            if rank > 0:
-                raise NotImplementedError('')
+            if rank == 0:
+                lhs = r
+                inits += [Assign(lhs, value)]
 
-            inits += [Assign(lhs, value)]
+#            else:
+#                if multi_indices:
+#                    lhs = IndexedBase(r.name)[:]
+#
+#                else:
+#                    shape = []
+#                    lhs = IndexedBase(r.name)[*shape]
+#
+#                inits += [Assign(lhs, value)]
         # ...
 
         # ... assign lengths
