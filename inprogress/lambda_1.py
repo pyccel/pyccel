@@ -1,3 +1,7 @@
+# TODO
+#g = lambda xs,ys,z: [[x + y*z for x in xs] for y in ys]
+#g = lambda xs,y,z: [x + y*z for x in xs]
+
 import numpy as np
 import time
 
@@ -25,13 +29,6 @@ lambdify = lambda g: epyccel_lambda( g,
 def f(x,y,z):
     r = x+y*z
     return r
-
-#g = lambda x,y,z: f(x,y,z)
-#g = lambda xs,ys,z: [[x + y*z for x in xs] for y in ys]
-#g = lambda xs,y,z: [x + y*z for x in xs]
-
-#g = lambda xs,y,z: [f(x,y,z) for x in xs]
-
 
 #=========================================================
 def test_1():
