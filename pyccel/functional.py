@@ -76,6 +76,9 @@ class VisitorLambda(object):
             if self.parallel is None:
                 self._parallel = True
 
+        self._iterators = []
+        self._iterables = []
+
     @property
     def expr(self):
         return self._expr
@@ -112,6 +115,28 @@ class VisitorLambda(object):
     def schedule(self):
         return self._schedule
 
+    @property
+    def iterators(self):
+        return self._iterators
+
+    @property
+    def iterables(self):
+        return self._iterables
+
+    def insert_iterator(self, x):
+        if isinstance(x, (tuple, list, Tuple)):
+            self._iterators += list([i for i in x])
+
+        else:
+            self._iterators.append(x)
+
+    def insert_iterable(self, x):
+        if isinstance(x, (tuple, list, Tuple)):
+            self._iterables += list([i for i in x])
+
+        else:
+            self._iterables.append(x)
+
     def _visit(self, stmt):
 
         cls = type(stmt)
@@ -127,14 +152,16 @@ class VisitorLambda(object):
 
     def _visit_ListComprehension(self, stmt):
 
-        iterator = stmt.iterator
-        iterable = stmt.iterable
+        # ...
+        self.insert_iterator(stmt.iterator)
+        self.insert_iterable(stmt.iterable)
+        self.rank += 1
+        # ...
 
-        if isinstance(stmt.expr, AppliedUndef):
-            self.rank += 1
-
-        else:
-            raise NotImplementedError()
+        # ...
+        if not isinstance(stmt.expr, AppliedUndef):
+            return self._visit(stmt.expr)
+        # ...
 
         # ...
         accelerator = self.accelerator
@@ -143,6 +170,9 @@ class VisitorLambda(object):
         schedule    = self.schedule
         accel       = _accelerator_registery[accelerator]
         # ...
+
+        iterator = self.iterators
+        iterable = self.iterables
 
 #        print('iterator = ', iterator)
 #        print('iterable = ', iterable)
@@ -347,7 +377,7 @@ class VisitorLambda(object):
 
                 var = Variable( x.dtype,
                                 name,
-                                rank=self.rank + x.rank,
+                                rank=1 + x.rank,
                                 allocatable=x.allocatable,
                                 is_stack_array = x.is_stack_array,
                                 is_pointer=x.is_pointer,
