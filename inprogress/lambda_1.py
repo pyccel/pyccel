@@ -13,9 +13,10 @@ def f(x,y,z):
 #g = lambda x,y,z: f(x,y,z)
 #g = lambda xs,ys,z: [[f(x,y,z) for x in xs] for y in ys]
 #g = lambda xs,ys,z: [[x + y*z for x in xs] for y in ys]
-g = lambda xs,y,z: [x + y*z for x in xs]
+#g = lambda xs,y,z: [x + y*z for x in xs]
+g = lambda xs,y,z: [f(x,y,z) for x in xs]
 
-g = lambdify(g)
+g = lambdify(g, namespace=globals())
 #
 #
 ##VERBOSE = True

@@ -6,7 +6,9 @@ import importlib
 import numpy as np
 from types import FunctionType
 
-from sympy import Indexed, IndexedBase, Tuple
+from sympy import Indexed, IndexedBase, Tuple, Lambda
+from sympy.core.function import AppliedUndef
+from sympy.core.function import UndefinedFunction
 
 from pyccel.codegen.utilities       import construct_flags as construct_flags_pyccel
 from pyccel.codegen.utilities       import execute_pyccel
@@ -21,6 +23,7 @@ from pyccel.ast import For, Range, FunctionDef
 from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
 from pyccel.ast import Print, Pass
+from pyccel.ast import ListComprehension
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
@@ -131,18 +134,103 @@ def _lambdify_func(func, **kwargs):
     pyccel = Parser(filename, output_folder=folder.replace('/','.'))
     ast = pyccel.parse()
 
+    # TODO shall we keep the annotation here?
     settings = {}
     ast = pyccel.annotate(**settings)
 
-    namespace = ast.namespace.symbolic_functions
-    if not( len(namespace.values()) == 1 ):
+    ns = ast.namespace.symbolic_functions
+    if not( len(ns.values()) == 1 ):
         raise ValueError('Expecting one single lambda function')
 
-    func_name = list(namespace.keys())[0]
-    func      = list(namespace.values())[0]
+    func_name = list(ns.keys())[0]
+    func      = list(ns.values())[0]
     # ...
 
-    print(func)
+    # ...
+    if not isinstance(func, Lambda):
+        msg = 'Expecting a lambda expr'.format(func_name)
+        raise TypeError(msg)
+    # ...
+
+#    # ...
+#    variables = func.variables
+#    expr      = func.expr
+#    # ...
+
+#    # ...
+#    if isinstance(expr, AppliedUndef):
+#        args    = expr.args
+#        print(args)
+#
+#        # rather than using expr.func, we will take the name of the
+#        # class which defines its type and then the name of the function
+#        functor = namespace[expr.__class__.__name__]
+#        print(functor)
+#
+#    else:
+#        raise NotImplementedError('TODO')
+#    # ...
+
+    # ... dependencies will contain all the user functions defined functions,
+    #     that are needed to lambbdify our expression
+    dependencies = {}
+    # ...
+
+    # ... annotate functions appearing in the lambda expression
+    calls = func.expr.atoms(AppliedUndef)
+    for call in calls:
+        # rather than using call.func, we will take the name of the
+        # class which defines its type and then the name of the function
+        f_name = call.__class__.__name__
+        f = namespace[f_name]
+
+        dependencies[f_name] = f
+    # ...
+
+    # TODO be carefull with the order of dependecies.
+    #      => must be corrected in the Parser
+
+    # ... generate ast for dependencies
+    code_dep = ''
+    code_dep += '\nfrom pyccel.decorators import types'
+    code_dep += '\nfrom pyccel.decorators import pure'
+    code_dep += '\nfrom pyccel.decorators import external, external_call'
+
+    for f in dependencies.values():
+        code_dep = '{code}\n\n{new}'.format( code = code_dep,
+                                             new  = get_source_function(f) )
+
+    write_code(filename, code_dep, folder=folder)
+
+    pyccel = Parser(filename, output_folder=folder.replace('/','.'))
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+    dependencies = ast.namespace.functions
+    print('>>> dependencies = ', list(dependencies.keys()))
+    # ...
+
+    # ... extract core expression from a lambda expression
+    def _extract_core_expr(expr):
+        if isinstance(expr, Lambda):
+            return _extract_core_expr(expr.expr)
+
+        elif isinstance(expr, ListComprehension):
+            return _extract_core_expr(expr.expr)
+
+        elif isinstance(expr, AppliedUndef):
+            print('PAR ICI')
+            return expr
+
+        else:
+            raise NotImplementedError('{} not implemented'.format(type(expr)))
+    # ...
+
+    # ...
+    expr = _extract_core_expr(func)
+    print(expr)
+    # ...
 
 #==============================================================================
 def _lambdify_map(*args, **kwargs):
