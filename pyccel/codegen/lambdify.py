@@ -25,10 +25,11 @@ from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
 from pyccel.ast import Print, Pass, Return
 from pyccel.ast import ListComprehension
-from pyccel.ast.datatypes import NativeInteger
+from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
+from pyccel.ast.datatypes import get_default_value
 from pyccel.parser import Parser
 
 #==============================================================================
@@ -44,6 +45,41 @@ _known_unary_functions = {'sum': '+',
 _known_binary_functions = {}
 
 _known_functions  = dict(_known_unary_functions, **_known_binary_functions)
+
+#==============================================================================
+def _get_default_value(var, op=None):
+    """Returns the default value of a variable depending on its datatype and the
+    used operation."""
+    dtype = var.dtype
+    if op is None:
+        return get_default_value(dtype)
+
+    if isinstance(dtype, NativeInteger):
+        if op == '*':
+            return 1
+
+        else:
+            return 0
+
+    elif isinstance(dtype, NativeReal):
+        if op == '*':
+            return 1.0
+
+        else:
+            return 0.0
+
+    elif isinstance(dtype, NativeComplex):
+        # TODO check if this fine with pyccel
+        if op == '*':
+            return 1.0
+
+        else:
+            return 0.0
+
+#    elif isinstance(dtype, NativeBool):
+
+    raise NotImplementedError('TODO')
+
 
 #==============================================================================
 def _extract_core_expr(expr):
@@ -304,16 +340,7 @@ class VisitorLambda(object):
         # ... initiale value for results
         inits = []
         for r in results:
-            value = None
-            if isinstance(r.dtype, NativeInteger):
-                if self.op == '*':
-                    value = 1
-
-                else:
-                    value = 0
-
-            else:
-                raise NotImplementedError('')
+            value = _get_default_value(r, op=self.op)
 
             if rank == 0:
                 lhs = r
