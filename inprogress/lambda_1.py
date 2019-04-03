@@ -30,58 +30,72 @@ def f(x,y,z):
     return r
 
 #=========================================================
-def test_1():
+def test_map_int_1():
     g = lambda xs,ys,z: [f(x,y,z) for x in xs for y in ys]
 
     g = _lambdify(g)
 
     nx = 5000
     ny = 4000
-    arr_x = range(0, nx)
-    arr_y = range(0, ny)
+    xs = range(0, nx)
+    ys = range(0, ny)
     arr_r = np.zeros(nx*ny, np.int32)
 
     tb = time.time()
-    g(arr_x, arr_y, 2, arr_r)
+    g(xs, ys, 2, arr_r)
     te = time.time()
     print('> Elapsed time = ', te-tb)
-    #print(arr_r)
 
 #=========================================================
-def test_2():
+def test_map_int_2():
     g = lambda xs,ys,z: [[f(x,y,z) for x in xs] for y in ys]
 
     g = _lambdify(g)
 
     nx = 5000
     ny = 4000
-    arr_x = range(0, nx)
-    arr_y = range(0, ny)
+    xs = range(0, nx)
+    ys = range(0, ny)
     arr_r = np.zeros((nx,ny), np.int32)
 
     tb = time.time()
-    g(arr_x, arr_y, 2, arr_r)
+    g(xs, ys, 2, arr_r)
     te = time.time()
     print('> Elapsed time = ', te-tb)
-    #print(arr_r)
 
 #=========================================================
-def test_comp_1():
+def test_sum_map_int_1():
     g = lambda xs,y,z: sum([f(x,y,z) for x in xs])
 
     g = _lambdify(g)
 
     nx = 5000
-    arr_x = range(0, nx)
+    xs = range(0, nx)
 
     tb = time.time()
-    g(arr_x, 3, 2)
+    g(xs, 3, 2)
     te = time.time()
     print('> Elapsed time = ', te-tb)
-    #print(arr_r)
+
+#=========================================================
+def test_sum_map_int_2():
+    g = lambda xs,ys,z: sum([[f(x,y,z) for x in xs] for y in ys])
+
+    g = _lambdify(g)
+
+    nx = 5000
+    ny = 4000
+    xs = range(0, nx)
+    ys = range(0, ny)
+
+    tb = time.time()
+    g(xs, ys, 2)
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
 
 #########################################
 if __name__ == '__main__':
-    test_1()
-    test_2()
-    test_comp_1()
+    test_map_int_1()
+    test_map_int_2()
+    test_sum_map_int_1()
+    test_sum_map_int_2()

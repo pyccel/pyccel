@@ -220,7 +220,7 @@ class VisitorLambda(object):
 
         # ... update rank if using reduction
         if self.op:
-            rank -= 1
+            rank = 0
         # ...
 
 #        print('iterator = ', iterator)
