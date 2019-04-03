@@ -541,6 +541,9 @@ class VisitorLambda(object):
                 else:
                     private += [multi_indices]
 
+            # add inout variables
+            private += inout
+
             private = ','.join(i.name for i in private)
             private = ' private({private})'.format(private=private)
         # ...

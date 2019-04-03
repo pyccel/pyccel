@@ -845,7 +845,8 @@ def epyccel_module(module,
         copyfile(fname, os.path.basename(fname))
 
     except:
-        print('> epyccel_module: TODO')
+        pass
+#        print('> epyccel_module: TODO')
 
     fname = os.path.basename(fname)
     # ...

@@ -12,8 +12,8 @@ from operator import add, mul
 #VERBOSE = True
 VERBOSE = False
 
-#ACCEL = 'openmp'
-ACCEL = None
+ACCEL = 'openmp'
+#ACCEL = None
 
 _lambdify = lambda g: lambdify( g,
                                 accelerator = ACCEL,
