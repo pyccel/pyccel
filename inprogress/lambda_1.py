@@ -10,7 +10,7 @@ from pyccel.epyccel import epyccel
 from pyccel.epyccel import lambdify
 
 # TODO must be known in pyccel
-from operator import mul
+from operator import add, mul
 
 #=========================================================
 #VERBOSE = True
@@ -67,8 +67,8 @@ def test_map_int_2():
     print('> Elapsed time = ', te-tb)
 
 #=========================================================
-def test_sum_map_int_1():
-    g = lambda xs,y,z: sum([f(x,y,z) for x in xs])
+def test_add_map_int_1():
+    g = lambda xs,y,z: add([f(x,y,z) for x in xs])
 
     g = _lambdify(g)
 
@@ -81,8 +81,8 @@ def test_sum_map_int_1():
     print('> Elapsed time = ', te-tb)
 
 #=========================================================
-def test_sum_map_int_2():
-    g = lambda xs,ys,z: sum([[f(x,y,z) for x in xs] for y in ys])
+def test_add_map_int_2():
+    g = lambda xs,ys,z: add([[f(x,y,z) for x in xs] for y in ys])
 
     g = _lambdify(g)
 
@@ -130,7 +130,7 @@ def test_mul_map_int_2():
 if __name__ == '__main__':
     test_map_int_1()
     test_map_int_2()
-    test_sum_map_int_1()
-    test_sum_map_int_2()
+    test_add_map_int_1()
+    test_add_map_int_2()
     test_mul_map_int_1()
     test_mul_map_int_2()

@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+# TODO use OrderedDict when possible
+
 import os
 import sys
 import importlib
@@ -34,8 +36,14 @@ _accelerator_registery = {'openmp':  'omp',
                           'openacc': 'acc',
                           None:      None}
 
-_known_functions_registery = {'sum': '+',
-                              'mul': '*'}
+_known_unary_functions = {'sum': '+',
+                          'add': '+',
+                          'mul': '*',
+                                   }
+
+_known_binary_functions = {}
+
+_known_functions  = dict(_known_unary_functions, **_known_binary_functions)
 
 #==============================================================================
 def _extract_core_expr(expr):
@@ -48,7 +56,7 @@ def _extract_core_expr(expr):
 
     elif isinstance(expr, AppliedUndef):
         name = expr.__class__.__name__
-        if name in _known_functions_registery.keys():
+        if name in _known_functions.keys():
             args = expr.args
             args = [_extract_core_expr(i) for i in args]
             if len(args) == 1:
@@ -158,7 +166,7 @@ class VisitorLambda(object):
             self._iterables.append(x)
 
     def _set_op(self, op):
-        self._op = _known_functions_registery[op]
+        self._op = _known_functions[op]
 
     def _visit(self, stmt):
 
@@ -169,11 +177,11 @@ class VisitorLambda(object):
         if hasattr(self, method):
             return getattr(self, method)(stmt)
 
-        elif name in _known_functions_registery.keys():
+        elif name in _known_functions.keys():
             self._set_op(name)
             # TODO must reset op
             args = stmt.args
-            if name in ['sum', 'mul']:
+            if name in _known_unary_functions.keys():
                 assert(len(args) == 1)
                 args = args[0]
 
@@ -642,7 +650,7 @@ def _lambdify(func, **kwargs):
 #    print(func.expr)
 #    import sys; sys.exit(0)
     calls = list(func.expr.atoms(AppliedUndef))
-    calls = [i for i in calls if not( i.__class__.__name__ in _known_functions_registery.keys() )]
+    calls = [i for i in calls if not( i.__class__.__name__ in _known_functions.keys() )]
     for call in calls:
         # rather than using call.func, we will take the name of the
         # class which defines its type and then the name of the function
@@ -652,7 +660,7 @@ def _lambdify(func, **kwargs):
             f = namespace[f_name]
             dependencies[f_name] = f
 
-        elif not( f_name in _known_functions_registery.keys() ):
+        elif not( f_name in _known_functions.keys() ):
             raise ValueError('Unkown function {}'.format(f_name))
     # ...
 
