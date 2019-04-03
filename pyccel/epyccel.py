@@ -24,7 +24,7 @@ from pyccel.codegen.utilities       import get_source_function
 from pyccel.codegen.utilities       import random_string
 from pyccel.codegen.utilities       import write_code
 from pyccel.codegen.utilities       import mkdir_p
-from pyccel.codegen.lambdify        import lambdify
+from pyccel.codegen.lambdify        import _lambdify
 
 from pyccel.ast                     import FunctionHeader
 from pyccel.ast.utilities           import build_types_decorator
@@ -971,14 +971,12 @@ def epyccel_module(module,
 
 #==============================================================================
 # TODO STILL EXPERIMENTAL
-#      add it to epyccel, when we find a simple way to
-#      distinguish between lambda and def functions
-def epyccel_lambda( func, namespace   = globals(), accelerator = None,
-                   verbose=False):
+def lambdify( func, namespace = globals(), accelerator = None,
+              verbose=False):
 
-    res = lambdify( func,
-                    namespace   = namespace,
-                    accelerator = accelerator )
+    res = _lambdify( func,
+                     namespace   = namespace,
+                     accelerator = accelerator )
 
     # module case
     if isinstance(res, (tuple, list)):

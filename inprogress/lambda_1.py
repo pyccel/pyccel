@@ -7,7 +7,7 @@ import time
 
 from pyccel.decorators import types, pure
 from pyccel.epyccel import epyccel
-from pyccel.epyccel import epyccel_lambda
+from pyccel.epyccel import lambdify
 
 #=========================================================
 #VERBOSE = True
@@ -16,11 +16,10 @@ VERBOSE = False
 ACCEL = 'openmp'
 #ACCEL = None
 
-
-lambdify = lambda g: epyccel_lambda( g,
-                                     accelerator = ACCEL,
-                                     verbose     = VERBOSE,
-                                     namespace   = globals() )
+_lambdify = lambda g: lambdify( g,
+                                accelerator = ACCEL,
+                                verbose     = VERBOSE,
+                                namespace   = globals() )
 #=========================================================
 
 #=========================================================
@@ -34,7 +33,7 @@ def f(x,y,z):
 def test_1():
     g = lambda xs,ys,z: [f(x,y,z) for x in xs for y in ys]
 
-    g = lambdify(g)
+    g = _lambdify(g)
 
     nx = 5000
     ny = 4000
@@ -52,7 +51,7 @@ def test_1():
 def test_2():
     g = lambda xs,ys,z: [[f(x,y,z) for x in xs] for y in ys]
 
-    g = lambdify(g)
+    g = _lambdify(g)
 
     nx = 5000
     ny = 4000
@@ -70,7 +69,7 @@ def test_2():
 def test_comp_1():
     g = lambda xs,y,z: sum([f(x,y,z) for x in xs])
 
-    g = lambdify(g)
+    g = _lambdify(g)
 
     nx = 5000
     arr_x = range(0, nx)
