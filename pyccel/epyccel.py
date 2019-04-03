@@ -20,6 +20,12 @@ from pyccel.parser.syntax.headers   import parse
 from pyccel.codegen                 import Codegen
 from pyccel.codegen.utilities       import execute_pyccel
 from pyccel.codegen.utilities       import construct_flags as construct_flags_pyccel
+from pyccel.codegen.utilities       import get_source_function
+from pyccel.codegen.utilities       import random_string
+from pyccel.codegen.utilities       import write_code
+from pyccel.codegen.utilities       import mkdir_p
+from pyccel.codegen.lambdify        import lambdify
+
 from pyccel.ast                     import FunctionHeader
 from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
@@ -36,71 +42,6 @@ from pyccel.codegen.printing.fcode  import fcode
 
 PY_VERSION = sys.version_info[0:2]
 
-#==============================================================================
-
-def random_string( n ):
-    # we remove uppercase letters because of f2py
-    chars    = string.ascii_lowercase + string.digits
-    selector = random.SystemRandom()
-    return ''.join( selector.choice( chars ) for _ in range( n ) )
-
-#==============================================================================
-
-def mkdir_p(folder):
-    if os.path.isdir(folder):
-        return
-    os.makedirs(folder)
-
-#==============================================================================
-def touch(path):
-    with open(path, 'a'):
-        os.utime(path, None)
-
-#==============================================================================
-
-def write_code(filename, code, folder=None):
-    if not folder:
-        folder = os.getcwd()
-
-    folder = os.path.abspath(folder)
-    if not os.path.isdir(folder):
-        raise ValueError('{} folder does not exist'.format(folder))
-
-    filename = os.path.basename( filename )
-    filename = os.path.join(folder, filename)
-
-    # TODO check if __init__.py exists
-    # add __init__.py for imports
-    init_fname = os.path.join(folder, '__init__.py')
-    touch(init_fname)
-
-    f = open(filename, 'w')
-    for line in code:
-        f.write(line)
-    f.close()
-
-    return filename
-
-#==============================================================================
-
-def get_source_function(func):
-    if not callable(func):
-        raise TypeError('Expecting a callable function')
-
-    lines = inspect.getsourcelines(func)
-    lines = lines[0]
-    # remove indentation if the first line is indented
-    a = lines[0]
-    leading_spaces = len(a) - len(a.lstrip())
-    code = ''
-    for a in lines:
-        if leading_spaces > 0:
-            line = a[leading_spaces:]
-        else:
-            line = a
-        code = '{code}{line}'.format(code=code, line=line)
-
-    return code
 
 #==============================================================================
 
@@ -1032,7 +973,6 @@ def epyccel_module(module,
 # TODO STILL EXPERIMENTAL
 #      add it to epyccel, when we find a simple way to
 #      distinguish between lambda and def functions
-from pyccel.functional import lambdify
 def epyccel_lambda( func, namespace   = globals(), accelerator = None,
                    verbose=False):
 

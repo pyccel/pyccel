@@ -9,15 +9,13 @@ from types import FunctionType
 from sympy import Indexed, IndexedBase, Tuple, Lambda
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
-from sympy import Sum
 
-from pyccel.codegen.utilities       import construct_flags as construct_flags_pyccel
-from pyccel.codegen.utilities       import execute_pyccel
-from pyccel.epyccel import get_source_function
-from pyccel.epyccel import random_string
-from pyccel.epyccel import write_code
-from pyccel.epyccel import mkdir_p
-from pyccel.epyccel import get_function_from_ast
+from pyccel.codegen.utilities import construct_flags as construct_flags_pyccel
+from pyccel.codegen.utilities import execute_pyccel
+from pyccel.codegen.utilities import get_source_function
+from pyccel.codegen.utilities import random_string
+from pyccel.codegen.utilities import write_code
+from pyccel.codegen.utilities import mkdir_p
 from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
 from pyccel.ast import Variable, Len, Assign, AugAssign
 from pyccel.ast import For, Range, FunctionDef
@@ -803,9 +801,7 @@ def _lambdify_map(*args, **kwargs):
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
     func_name = func.__name__
-    funcs     = ast.routines + ast.interfaces
-    func      = get_function_from_ast(funcs, func_name)
-    namespace = ast.parser.namespace.sons_scopes
+    func      = ast.namespace.functions[func_name]
     # ...
 
     # ...
