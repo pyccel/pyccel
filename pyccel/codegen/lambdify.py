@@ -25,6 +25,8 @@ from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
 from pyccel.ast import Print, Pass, Return
 from pyccel.ast import ListComprehension
+from pyccel.ast.core import Slice, String
+from pyccel.ast import Zeros
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
@@ -45,6 +47,70 @@ _known_unary_functions = {'sum': '+',
 _known_binary_functions = {}
 
 _known_functions  = dict(_known_unary_functions, **_known_binary_functions)
+
+#==============================================================================
+# TODO move as method of FunctionDef
+def get_results_shape(func):
+    """returns a dictionary that contains for each result, its shape. When using
+    the decorator @shapes, the shape value may be computed"""
+
+    # ...
+    arguments       = list(func.arguments)
+    arguments_inout = list(func.arguments_inout)
+    results         = list(func.results)
+
+    inout = [x for x,flag in zip(arguments, arguments_inout) if flag]
+    # ...
+
+    # ...
+    d_args = {}
+    for a in arguments:
+        d_args[a.name] = a
+    # ...
+
+#    print('results = ', results)
+#    print('inout   = ', inout)
+
+    d_shapes = {}
+    if 'shapes' in func.decorators.keys():
+        d = func.decorators['shapes']
+        for valued in d:
+            # ...
+            r = [r for r in results + inout if r.name == valued.name]
+            if not r:
+                raise ValueError('Could not find {}'.format(r))
+
+            assert(len(r) == 1)
+            r = r[0]
+            # ...
+
+            # ...
+            rhs = valued.value
+            if isinstance(rhs, String):
+                rhs = rhs.arg.replace("'",'')
+
+            else:
+                raise NotImplementedError('')
+            # ...
+
+            # ...
+            if rhs in d_args.keys():
+                rhs = d_args[str(rhs)]
+
+            else:
+                raise NotImplementedError('TODO {}'.format(type(rhs)))
+            # ...
+
+            # TODO improve
+            # this must always be a list of slices
+            d_shapes[r.name] = [Slice(None, rhs)]
+
+    # TODO treate the case when shapes is not given => add some checks
+#    else:
+#        raise NotImplementedError('')
+
+    return d_shapes
+
 
 #==============================================================================
 def _get_default_value(var, op=None):
@@ -327,6 +393,14 @@ class VisitorLambda(object):
             d_results[res] = var
         # ...
 
+        # ... TODO improve
+        #     define inout variables, that are local to the lambda expression
+        inout = [x for x,flag in zip(func.arguments, func.arguments_inout) if flag]
+
+        # get shape for results and inout variables
+        d_shapes = get_results_shape(func)
+        # ...
+
         # ... create a 1d index if needed
         multi_indices = None
         if rank == 1:
@@ -335,6 +409,34 @@ class VisitorLambda(object):
                 multi_indices = multi_indices[0]
 
 #            print('> multi indices = ', multi_indices)
+        # ...
+
+        # ... allocate inout/local variables
+        allocations = []
+        for x in inout:
+            shape = d_shapes[x.name]
+            ls = []
+            for _slice in shape:
+                start = _slice.start
+                end   = _slice.end
+                if start is None:
+                    ls.append(end)
+
+                else:
+                    raise NotImplementedError('')
+
+            if len(ls) == 1:
+                shape = ls[0]
+
+            else:
+                raise NotImplementedError('')
+
+
+            # TODO improve
+            dtype = str(x.dtype)
+            allocations += [Assign(x, Zeros(shape, dtype))]
+#            print(x, shape)
+#        import sys; sys.exit(0)
         # ...
 
         # ... initiale value for results
@@ -387,11 +489,15 @@ class VisitorLambda(object):
         # ...
 
         # ... create the core statement
-        if self.op is None:
-            core_stmt = Assign(lhs, rhs)
+        if len(results) == 0:
+            core_stmt = rhs
 
         else:
-            core_stmt = AugAssign(lhs, self.op, rhs)
+            if self.op is None:
+                core_stmt = Assign(lhs, rhs)
+
+            else:
+                core_stmt = AugAssign(lhs, self.op, rhs)
         # ...
 
         # ... create loop
@@ -475,7 +581,7 @@ class VisitorLambda(object):
         # ...
 
         # ... update body
-        body = inits + decs + stmts
+        body = allocations + inits + decs + stmts
         # ...
 
         # ...
@@ -695,10 +801,16 @@ def _lambdify(func, **kwargs):
     #      => must be corrected in the Parser
 
     # ... generate ast for dependencies
+    # TODO have a function for these imports
     code_dep = ''
     code_dep += '\nfrom pyccel.decorators import types'
     code_dep += '\nfrom pyccel.decorators import pure'
     code_dep += '\nfrom pyccel.decorators import external, external_call'
+    code_dep += '\nfrom pyccel.decorators import shapes'
+
+    # TODO improve
+    code_dep += '\nfrom numpy import zeros'
+    code_dep += '\nfrom numpy import float64'
 
     for f in dependencies.values():
         code_dep = '{code}\n\n{new}'.format( code = code_dep,

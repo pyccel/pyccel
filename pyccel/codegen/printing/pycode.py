@@ -188,7 +188,29 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Zeros(self, expr):
-        return 'zeros('+ self._print(expr.shape)+')'
+        pattern = 'zeros({shape},dtype={dtype})'
+
+        # ...
+        shape = expr.shape
+        if len(shape) == 1:
+            shape = shape[0]
+
+        shape = self._print(shape)
+        # ...
+
+        # ... TODO improve
+        dtype = None
+        if expr.dtype.name == 'real':
+            dtype = 'float64'
+
+        elif expr.dtype.name == 'int':
+            dtype = 'int'
+
+        else:
+            raise NotImplementedError('TODO')
+        # ...
+
+        return pattern.format(shape=shape, dtype=dtype)
 
     def _print_Slice(self, expr):
         return str(expr)

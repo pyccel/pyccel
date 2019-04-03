@@ -53,10 +53,10 @@ def test_map_int_1():
     ny = 4000
     xs = range(0, nx)
     ys = range(0, ny)
-    arr_r = np.zeros(nx*ny, np.int32)
+    rs = np.zeros(nx*ny, np.int32)
 
     tb = time.time()
-    g(xs, ys, 2, arr_r)
+    g(xs, ys, 2, rs)
     te = time.time()
     print('> Elapsed time = ', te-tb)
 
@@ -70,10 +70,10 @@ def test_map_int_2():
     ny = 4000
     xs = range(0, nx)
     ys = range(0, ny)
-    arr_r = np.zeros((nx,ny), np.int32)
+    rs = np.zeros((nx,ny), np.int32)
 
     tb = time.time()
-    g(xs, ys, 2, arr_r)
+    g(xs, ys, 2, rs)
     te = time.time()
     print('> Elapsed time = ', te-tb)
 
@@ -151,10 +151,10 @@ def test_map_real_1():
     ny = 4000
     xs = np.linspace(0., 1., nx)
     ys = np.linspace(0., 1., ny)
-    arr_r = np.zeros(nx*ny, np.float64)
+    rs = np.zeros(nx*ny, np.float64)
 
     tb = time.time()
-    g(xs, ys, 2., arr_r)
+    g(xs, ys, 2., rs)
     te = time.time()
     print('> Elapsed time = ', te-tb)
 
@@ -168,10 +168,10 @@ def test_map_real_2():
     ny = 4000
     xs = np.linspace(0., 1., nx)
     ys = np.linspace(0., 1., ny)
-    arr_r = np.zeros((nx,ny), np.float64)
+    rs = np.zeros((nx,ny), np.float64)
 
     tb = time.time()
-    g(xs, ys, 2., arr_r)
+    g(xs, ys, 2., rs)
     te = time.time()
     print('> Elapsed time = ', te-tb)
 

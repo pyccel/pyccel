@@ -42,12 +42,19 @@ def external(f):
 def external_call(f):
     return f
 
+# TODO not used => to be removed
 def interface(*args,**kw):
     def id(f):
         return f
     return id
 
+# TODO not used for the moment
 def callback(*args,**kw):
+    def id(f):
+        return f
+    return id
+
+def shapes(**kw):
     def id(f):
         return f
     return id
