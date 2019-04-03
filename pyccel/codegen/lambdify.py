@@ -30,8 +30,12 @@ from pyccel.ast.utilities import build_types_decorator
 from pyccel.parser import Parser
 
 #==============================================================================
-_accelerator_registery = {'openmp': 'omp', 'openacc': 'acc', None: None}
-_known_functions_registery = {'sum': '+'}
+_accelerator_registery = {'openmp':  'omp',
+                          'openacc': 'acc',
+                          None:      None}
+
+_known_functions_registery = {'sum': '+',
+                              'mul': '*'}
 
 #==============================================================================
 def _extract_core_expr(expr):
@@ -169,7 +173,7 @@ class VisitorLambda(object):
             self._set_op(name)
             # TODO must reset op
             args = stmt.args
-            if name == 'sum':
+            if name in ['sum', 'mul']:
                 assert(len(args) == 1)
                 args = args[0]
 
@@ -637,7 +641,8 @@ def _lambdify(func, **kwargs):
     # ... annotate functions appearing in the lambda expression
 #    print(func.expr)
 #    import sys; sys.exit(0)
-    calls = func.expr.atoms(AppliedUndef)
+    calls = list(func.expr.atoms(AppliedUndef))
+    calls = [i for i in calls if not( i.__class__.__name__ in _known_functions_registery.keys() )]
     for call in calls:
         # rather than using call.func, we will take the name of the
         # class which defines its type and then the name of the function
