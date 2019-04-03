@@ -22,35 +22,134 @@ _lambdify = lambda g: lambdify( g,
 #=========================================================
 
 #=========================================================
-@pure
-@shapes(r='n')
-@types('int', 'real', 'real[:]')
-def f(n, x, r):
+#@pure
+@shapes(rs='n')
+@types('int', 'real', 'real', 'real[:]')
+def f(n, x, y, rs):
     for i in range(0, n):
-        r[i] = i*x
+        rs[i] = i*x + y
+
+    z = 0.
+    for i in range(0, n):
+        z += rs[i]
+
+    z = z/n
+    return z
+
 
 #=========================================================
-def test_map_1():
-    g = lambda n, xs: [f(n, x, r) for x in xs]
+def test_map_real_1():
+    g = lambda n, xs, y: [f(n, x, y, rs) for x in xs]
 
     g = _lambdify(g)
 
-    n = 500
-    rs = np.zeros(n, np.float64)
-
-    nx = 5000
+    nx = 10
     xs = np.linspace(0., 1., nx)
 
     tb = time.time()
-    g(xs, n, rs)
+
+    zs = np.zeros(nx, dtype=np.float64)
+    g(5, xs, 1., zs)
+
     te = time.time()
     print('> Elapsed time = ', te-tb)
 
+#=========================================================
+def test_map_real_2():
+    g = lambda n, xs, ys: [f(n, x, y, rs) for x in xs for y in ys]
+
+    g = _lambdify(g)
+
+    nx = 5000
+    ny = 4000
+    xs = np.linspace(0., 1., nx)
+    ys = np.linspace(0., 1., ny)
+
+    tb = time.time()
+
+    zs = np.zeros(nx*ny, dtype=np.float64)
+    g(5, xs, ys, zs)
+
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+
+#=========================================================
+def test_map_real_3():
+    g = lambda n, xs, ys: [[f(n, x, y, rs) for x in xs] for y in ys]
+
+    g = _lambdify(g)
+
+    nx = 5000
+    ny = 4000
+    xs = np.linspace(0., 1., nx)
+    ys = np.linspace(0., 1., ny)
+
+    tb = time.time()
+
+    zs = np.zeros((nx,ny), dtype=np.float64)
+    g(5, xs, ys, zs)
+
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+
+#=========================================================
+def test_add_map_real_1():
+    g = lambda n, xs, y: sum([f(n, x, y, rs) for x in xs])
+
+    g = _lambdify(g)
+
+    nx = 10
+    xs = np.linspace(0., 1., nx)
+
+    tb = time.time()
+
+    g(5, xs, 1.)
+
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+
+#=========================================================
+def test_add_map_real_2():
+    g = lambda n, xs, ys: sum([f(n, x, y, rs) for x in xs for y in ys])
+
+    g = _lambdify(g)
+
+    nx = 5000
+    ny = 4000
+    xs = np.linspace(0., 1., nx)
+    ys = np.linspace(0., 1., ny)
+
+    tb = time.time()
+
+    g(5, xs, ys)
+
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+
+#=========================================================
+def test_add_map_real_3():
+    g = lambda n, xs, ys: sum([[f(n, x, y, rs) for x in xs] for y in ys])
+
+    g = _lambdify(g)
+
+    nx = 5000
+    ny = 4000
+    xs = np.linspace(0., 1., nx)
+    ys = np.linspace(0., 1., ny)
+
+    tb = time.time()
+
+    g(5, xs, ys)
+
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+
+
 #########################################
 if __name__ == '__main__':
-#    _f = epyccel(f)
-#    n = 500
-#    rs = np.zeros(n, np.float64)
-#    _f(1.,n,rs)
-
-    test_map_1()
+    test_map_real_1()
+    test_map_real_2()
+    test_map_real_3()
+    test_add_map_real_1()
+    test_add_map_real_2()
+    test_add_map_real_3()
