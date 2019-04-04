@@ -361,10 +361,34 @@ class VisitorLambda(object):
         func = self.dependencies[self.core.__class__.__name__]
         # ...
 
+        # ... TODO improve
+        #     define inouts variables, that are local to the lambda expression
+        inouts = [x for x,flag in zip(func.arguments, func.arguments_inout) if flag]
+        # ...
+
+        # ... workplace contains variables that are defined localy in the lambda
+        #     expression
+        local_names = [x.arg.replace("'","") for x in func.decorators['workplace']]
+        local_vars  = [x     for x in func.arguments if x.name in local_names]
+        # ...
+
+        # ...
+        out_vars  = [r for r in inouts+list(func.results) if not( r.name in local_names )]
+        out_names = [r.name for r in out_vars]
+        # ...
+
+#        print('>>> out_vars   = ', out_vars)
+#        print('>>> local_vars = ', local_vars)
+#        import sys; sys.exit(0)
+
+        # ... get shape for results and local variables
+        d_shapes = get_results_shape(func)
+        # ...
+
         # ...
         results = []
         d_results = {}
-        for res in func.results:
+        for res in out_vars:
             # TODO check if the name exist or use a random name
             if rank == 0:
                 name = res.name
@@ -376,7 +400,7 @@ class VisitorLambda(object):
 
             var = Variable( dtype,
                             name,
-                            rank=rank,
+                            rank=res.rank+rank,
                             allocatable=res.allocatable,
                             is_stack_array = res.is_stack_array,
                             is_pointer=res.is_pointer,
@@ -393,20 +417,6 @@ class VisitorLambda(object):
             d_results[res] = var
         # ...
 
-        # ... TODO improve
-        #     define inouts variables, that are local to the lambda expression
-        inouts = [x for x,flag in zip(func.arguments, func.arguments_inout) if flag]
-
-        # ... workplace contains variables that are defined localy in the lambda
-        #     expression
-        workplace = [x.arg.replace("'","") for x in func.decorators['workplace']]
-        workplace = [x     for x in func.arguments if x.name in workplace]
-        # ...
-
-        # get shape for results and inouts variables
-        d_shapes = get_results_shape(func)
-        # ...
-
         # ... create a 1d index if needed
         multi_indices = None
         if rank == 1:
@@ -417,9 +427,9 @@ class VisitorLambda(object):
 #            print('> multi indices = ', multi_indices)
         # ...
 
-        # ... allocate inouts/local variables
+        # ... allocate local variables
         allocations = []
-        for x in inouts:
+        for x in local_vars:
             shape = d_shapes[x.name]
             ls = []
             for _slice in shape:
@@ -437,12 +447,9 @@ class VisitorLambda(object):
             else:
                 raise NotImplementedError('')
 
-
             # TODO improve
             dtype = str(x.dtype)
             allocations += [Assign(x, Zeros(shape, dtype))]
-#            print(x, shape)
-#        import sys; sys.exit(0)
         # ...
 
         # ... initiale value for results
@@ -454,15 +461,11 @@ class VisitorLambda(object):
                 lhs = r
                 inits += [Assign(lhs, value)]
 
-#            else:
-#                if multi_indices:
-#                    lhs = IndexedBase(r.name)[:]
-#
-#                else:
-#                    shape = []
-#                    lhs = IndexedBase(r.name)[*shape]
-#
-#                inits += [Assign(lhs, value)]
+            else:
+                ls = [Slice(None, None) for i in range(0, r.rank)]
+                lhs = IndexedBase(r.name)[ls]
+
+                inits += [Assign(lhs, value)]
         # ...
 
         # ... assign lengths
@@ -472,6 +475,12 @@ class VisitorLambda(object):
             decs += [Assign(nx, Len(xs))]
         # ...
 
+        # ...
+        ind = indices
+        if multi_indices:
+            ind = multi_indices
+        # ...
+
         # ... create lhs for storing the result
         lhs = []
         for r in results:
@@ -479,23 +488,43 @@ class VisitorLambda(object):
                 lhs.append(r)
 
             else:
-                if multi_indices:
-                    lhs.append(IndexedBase(r.name)[multi_indices])
-
-                else:
-                    lhs.append(IndexedBase(r.name)[indices])
+                lhs.append(IndexedBase(r.name)[ind])
 
         lhs = Tuple(*lhs)
         if len(lhs) == 1:
             lhs = lhs[0]
         # ...
 
+        # ... build call arguments
+        arguments = []
+        for x in func.arguments:
+            arg = x
+            if x.name in out_names:
+                xs = d_results[x]
+
+                ls = []
+                # add ':' depending on the rank of the result
+                for i in range(0, x.rank):
+                    ls += [Slice(None, None)]
+
+                # TODO WHICH ORDER TO CHOOSE?
+                if isinstance(ind, Variable):
+                    ls = [ind] + ls
+
+                else:
+                    ls = ind + ls
+
+                arg = IndexedBase(xs.name)[ls]
+
+            arguments += [arg]
+        # ...
+
         # ... call to the function to be mapped
-        rhs = FunctionCall(func, func.arguments)
+        rhs = FunctionCall(func, arguments)
         # ...
 
         # ... create the core statement
-        if len(results) == 0:
+        if len(func.results) == 0:
             core_stmt = rhs
 
         else:
@@ -547,8 +576,8 @@ class VisitorLambda(object):
                 else:
                     private += [multi_indices]
 
-            # add inouts variables
-            private += inouts
+            # add local variables
+            private += local_vars
 
             private = ','.join(i.name for i in private)
             private = ' private({private})'.format(private=private)
@@ -695,8 +724,8 @@ class VisitorLambda(object):
         # ...
 
         # ...
-        print(code)
-        import sys; sys.exit(0)
+#        print(code)
+#        import sys; sys.exit(0)
         write_code('{}.py'.format(module_name), code, folder=folder)
         # ...
 
