@@ -33,6 +33,7 @@ from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.datatypes import get_default_value
 from pyccel.parser import Parser
+from pyccel.functional import Where
 
 #==============================================================================
 _accelerator_registery = {'openmp':  'omp',
@@ -184,6 +185,17 @@ class VisitorLambda(object):
         self._core = _extract_core_expr(expr.expr)
         self.rank = 0
 
+        # ... where is a dictionary
+        functional_args = kwargs.pop('functional_args', None)
+
+        self._where = [i for i in functional_args if isinstance(i, Where)]
+        if len(self.where) == 1:
+            self._where = self.where[0]
+
+        elif len(self.where) == 0:
+            self._where = {}
+        # ...
+
         self._dependencies   = kwargs.pop('dependencies', {})
         self._dependencies_code = kwargs.pop('dependencies_code', None)
         # TODO allow to reconstruct the dep code from namespace
@@ -252,6 +264,10 @@ class VisitorLambda(object):
     @property
     def op(self):
         return self._op
+
+    @property
+    def where(self):
+        return self._where
 
     def insert_iterator(self, x):
         if isinstance(x, (tuple, list, Tuple)):
@@ -532,7 +548,6 @@ class VisitorLambda(object):
             nx    = d_lengths[xs]
             decs += [Assign(nx, Len(xs))]
         # ...
-
         # ...
         ind = indices
         if multi_indices:
@@ -557,7 +572,15 @@ class VisitorLambda(object):
         arguments = []
         for x in func.arguments:
             arg = x
-            if x.name in out_names:
+            # argument given through the 'where' statement
+            # TODO improve
+            if x.name in self.where.keys():
+                value = self.where[x.name]
+
+                # TODO improve => must use the Parser!!
+                arg = value
+
+            elif x.name in out_names:
                 xs = d_results[x]
 
                 ls = []
@@ -835,7 +858,6 @@ def _lambdify(func, **kwargs):
 
     namespace       = _kwargs.pop('namespace', globals())
     folder          = _kwargs.pop('folder', None)
-    functional_args = _kwargs.pop('functional_args', None)
     # ...
 
     # ... get the function source code
