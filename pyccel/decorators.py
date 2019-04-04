@@ -59,6 +59,11 @@ def shapes(**kw):
         return f
     return id
 
+def workplace(*args,**kw):
+    def id(f):
+        return f
+    return id
+
 
 
 # TODO documentation

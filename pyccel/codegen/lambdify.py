@@ -59,7 +59,7 @@ def get_results_shape(func):
     arguments_inout = list(func.arguments_inout)
     results         = list(func.results)
 
-    inout = [x for x,flag in zip(arguments, arguments_inout) if flag]
+    inouts = [x for x,flag in zip(arguments, arguments_inout) if flag]
     # ...
 
     # ...
@@ -69,14 +69,14 @@ def get_results_shape(func):
     # ...
 
 #    print('results = ', results)
-#    print('inout   = ', inout)
+#    print('inouts   = ', inouts)
 
     d_shapes = {}
     if 'shapes' in func.decorators.keys():
         d = func.decorators['shapes']
         for valued in d:
             # ...
-            r = [r for r in results + inout if r.name == valued.name]
+            r = [r for r in results + inouts if r.name == valued.name]
             if not r:
                 raise ValueError('Could not find {}'.format(r))
 
@@ -394,10 +394,16 @@ class VisitorLambda(object):
         # ...
 
         # ... TODO improve
-        #     define inout variables, that are local to the lambda expression
-        inout = [x for x,flag in zip(func.arguments, func.arguments_inout) if flag]
+        #     define inouts variables, that are local to the lambda expression
+        inouts = [x for x,flag in zip(func.arguments, func.arguments_inout) if flag]
 
-        # get shape for results and inout variables
+        # ... workplace contains variables that are defined localy in the lambda
+        #     expression
+        workplace = [x.arg.replace("'","") for x in func.decorators['workplace']]
+        workplace = [x     for x in func.arguments if x.name in workplace]
+        # ...
+
+        # get shape for results and inouts variables
         d_shapes = get_results_shape(func)
         # ...
 
@@ -411,9 +417,9 @@ class VisitorLambda(object):
 #            print('> multi indices = ', multi_indices)
         # ...
 
-        # ... allocate inout/local variables
+        # ... allocate inouts/local variables
         allocations = []
-        for x in inout:
+        for x in inouts:
             shape = d_shapes[x.name]
             ls = []
             for _slice in shape:
@@ -541,8 +547,8 @@ class VisitorLambda(object):
                 else:
                     private += [multi_indices]
 
-            # add inout variables
-            private += inout
+            # add inouts variables
+            private += inouts
 
             private = ','.join(i.name for i in private)
             private = ' private({private})'.format(private=private)
@@ -689,8 +695,8 @@ class VisitorLambda(object):
         # ...
 
         # ...
-#        print(code)
-#        import sys; sys.exit(0)
+        print(code)
+        import sys; sys.exit(0)
         write_code('{}.py'.format(module_name), code, folder=folder)
         # ...
 
@@ -810,6 +816,7 @@ def _lambdify(func, **kwargs):
     code_dep += '\nfrom pyccel.decorators import pure'
     code_dep += '\nfrom pyccel.decorators import external, external_call'
     code_dep += '\nfrom pyccel.decorators import shapes'
+    code_dep += '\nfrom pyccel.decorators import workplace'
 
     # TODO improve
     code_dep += '\nfrom numpy import zeros'
