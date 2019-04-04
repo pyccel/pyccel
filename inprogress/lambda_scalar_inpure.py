@@ -3,7 +3,7 @@
 import numpy as np
 import time
 
-from pyccel.decorators import types, pure, shapes
+from pyccel.decorators import types, pure, shapes, workplace
 from pyccel.epyccel import epyccel
 from pyccel.epyccel import lambdify
 
@@ -26,6 +26,7 @@ _lambdify = lambda g: lambdify( g,
 #=========================================================
 #@pure
 @shapes(rs='n')
+@workplace('rs')
 @types('int', 'real', 'real', 'real[:]')
 def f(n, x, y, rs):
     for i in range(0, n):

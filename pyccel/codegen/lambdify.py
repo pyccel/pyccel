@@ -368,17 +368,63 @@ class VisitorLambda(object):
 
         # ... workplace contains variables that are defined localy in the lambda
         #     expression
-        local_names = [x.arg.replace("'","") for x in func.decorators['workplace']]
-        local_vars  = [x     for x in func.arguments if x.name in local_names]
+        local_names = []
+        local_vars  = []
+        if 'workplace' in func.decorators.keys():
+            local_names = [x.arg.replace("'","") for x in func.decorators['workplace']]
+            local_vars  = [x     for x in func.arguments if x.name in local_names]
         # ...
 
-        # ...
+        # ... construct out variables
+        #     when using a reduction operator and having results of rank > 0,
+        #     then we must add new variables for the reduced value,
+        #     in this case, out_var will be defined by the reduced variables,
+        #     while the previous out_vars will be appended to the list of
+        #     local_vars
         out_vars  = [r for r in inouts+list(func.results) if not( r.name in local_names )]
+
+        d_local_reduced = {}
+        if self.op:
+            local_vars  += [i      for i in out_vars if i.rank > 0]
+            local_names += [i.name for i in out_vars if i.rank > 0]
+
+            _out_vars = []
+            for res in out_vars:
+
+                if rank == 0:
+                    name = 'reduced_{}'.format(res.name)
+
+                else:
+                    raise NotImplementedError('')
+
+                dtype = res.dtype
+
+                var = Variable( dtype,
+                                name,
+                                rank=res.rank,
+                                allocatable=res.allocatable,
+                                is_stack_array = res.is_stack_array,
+                                is_pointer=res.is_pointer,
+                                is_target=res.is_target,
+                                is_polymorphic=res.is_polymorphic,
+                                is_optional=res.is_optional,
+        #                            shape=None,
+        #                            cls_base=None,
+        #                            cls_parameters=None,
+                                order=res.order,
+                                precision=res.precision)
+
+                _out_vars += [var]
+                d_local_reduced[res] = var
+
+            out_vars = _out_vars
+
         out_names = [r.name for r in out_vars]
         # ...
 
 #        print('>>> out_vars   = ', out_vars)
 #        print('>>> local_vars = ', local_vars)
+#        print('>>> d_local_reduced = ', d_local_reduced)
 #        import sys; sys.exit(0)
 
         # ... get shape for results and local variables
@@ -427,22 +473,34 @@ class VisitorLambda(object):
 #            print('> multi indices = ', multi_indices)
         # ...
 
+        # ... create indices for local reduced variables
+        d_reduced_indices = {}
+        for var, reduced_var in d_local_reduced.items():
+            names = ['i{d}_{name}'.format(d=d, name=reduced_var.name) for d in range(var.rank)]
+            _indices = [Variable('int', name) for name in names]
+
+            d_reduced_indices[var] = _indices
+        # ...
+
         # ... allocate local variables
         allocations = []
+        d_shapes_values = {}
         for x in local_vars:
-            shape = d_shapes[x.name]
-            ls = []
-            for _slice in shape:
+            shape = []
+            for _slice in d_shapes[x.name]:
                 start = _slice.start
                 end   = _slice.end
                 if start is None:
-                    ls.append(end)
+                    shape.append(end)
 
                 else:
                     raise NotImplementedError('')
 
-            if len(ls) == 1:
-                shape = ls[0]
+            # must be done here, since we need it as a list later
+            d_shapes_values[x.name] = shape
+
+            if len(shape) == 1:
+                shape = shape[0]
 
             else:
                 raise NotImplementedError('')
@@ -507,12 +565,13 @@ class VisitorLambda(object):
                 for i in range(0, x.rank):
                     ls += [Slice(None, None)]
 
-                # TODO WHICH ORDER TO CHOOSE?
-                if isinstance(ind, Variable):
-                    ls = [ind] + ls
+                if rank > 0:
+                    # TODO WHICH ORDER TO CHOOSE?
+                    if isinstance(ind, Variable):
+                        ls = [ind] + ls
 
-                else:
-                    ls = ind + ls
+                    else:
+                        ls = ind + ls
 
                 arg = IndexedBase(xs.name)[ls]
 
@@ -533,6 +592,29 @@ class VisitorLambda(object):
 
             else:
                 core_stmt = AugAssign(lhs, self.op, rhs)
+
+        core_stmts = [core_stmt]
+        # ...
+
+        # ... when using a reduction operator on a local variable,
+        #     we add the local reduction to the core stmt
+        reduction_stmts = []
+        for var, reduced_var in d_local_reduced.items():
+            if var.rank > 0:
+                _indices = d_reduced_indices[var]
+                _stmts = [AugAssign(reduced_var, self.op, IndexedBase(var.name)[_indices])]
+
+                shape = d_shapes_values[var.name]
+                if not isinstance(shape, (list, tuple, Tuple)):
+                    shape = [shape]
+
+                # TODO improve
+                for i, n in zip(_indices, shape):
+                    _stmts = [For(i, Range(0, n), _stmts, strict=False)]
+
+                reduction_stmts += _stmts
+
+        core_stmts += reduction_stmts
         # ...
 
         # ... create loop
@@ -554,7 +636,7 @@ class VisitorLambda(object):
                 stmts += [Assign(multi_indices, value)]
 
         # add core statement
-        stmts += [core_stmt]
+        stmts += core_stmts
 
         for (x, xs) in zip(iterator, iterable):
             nx    = d_lengths[xs]
