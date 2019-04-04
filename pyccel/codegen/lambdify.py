@@ -11,6 +11,7 @@ from types import FunctionType
 from sympy import Indexed, IndexedBase, Tuple, Lambda
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
+from sympy import sympify
 
 from pyccel.codegen.utilities import construct_flags as construct_flags_pyccel
 from pyccel.codegen.utilities import execute_pyccel
@@ -48,6 +49,33 @@ _known_unary_functions = {'sum': '+',
 _known_binary_functions = {}
 
 _known_functions  = dict(_known_unary_functions, **_known_binary_functions)
+
+#==============================================================================
+# TODO should use something else
+# TODO to be moved from here
+import ast
+import astunparse
+import re
+
+def get_lambda_source_code(expr):
+    # ...
+    def _get_lambda_ast_node(expr):
+        source_text = get_source_function(expr)
+        if source_text:
+            source_ast = ast.parse(source_text)
+            return next((node for node in ast.walk(source_ast)
+                         if isinstance(node, ast.Lambda)), None)
+    # ...
+
+    node = _get_lambda_ast_node(expr)
+    code = astunparse.unparse(node)
+    code = re.findall('^\((.*)\)', code)
+    if not( len(code) == 1 ):
+        raise ValueError('Cannot find lambda')
+
+    code = code[0]
+
+    return code
 
 #==============================================================================
 # TODO move as method of FunctionDef
@@ -570,17 +598,29 @@ class VisitorLambda(object):
 
         # ... build call arguments
         arguments = []
-        for x in func.arguments:
+        for x,x_core in zip(func.arguments, self.core.args):
             arg = x
+            name = x.name
+            if isinstance(x_core, AppliedUndef):
+                name = x_core.__class__.__name__
+
             # argument given through the 'where' statement
             # TODO improve
-            if x.name in self.where.keys():
-                value = self.where[x.name]
+            if name in self.where.keys():
+                value = self.where[name]
 
-                # TODO improve => must use the Parser!!
-                arg = value
+                if isinstance(value, FunctionType):
+                    value = get_lambda_source_code(value)
 
-            elif x.name in out_names:
+                arg = sympify(value)
+
+                # TODO improve
+                #      we must also check the expression, if it contains a call
+                #      to a function, and its arguments
+                if isinstance(arg, Lambda):
+                    arg = arg.expr
+
+            elif name in out_names:
                 xs = d_results[x]
 
                 ls = []
@@ -858,6 +898,16 @@ def _lambdify(func, **kwargs):
 
     namespace       = _kwargs.pop('namespace', globals())
     folder          = _kwargs.pop('folder', None)
+    functional_args = _kwargs.pop('functional_args', None)
+    # ...
+
+    # ... where is a dictionary
+    where_stmt = [i for i in functional_args if isinstance(i, Where)]
+    if len(where_stmt) == 1:
+        where_stmt = where_stmt[0]
+
+    elif len(where_stmt) == 0:
+        where_stmt = {}
     # ...
 
     # ... get the function source code
@@ -936,7 +986,9 @@ def _lambdify(func, **kwargs):
             f = namespace[f_name]
             dependencies[f_name] = f
 
-        elif not( f_name in _known_functions.keys() ):
+        elif (not( f_name in _known_functions.keys() ) and
+              not( f_name in  where_stmt.keys()) ):
+
             raise ValueError('Unkown function {}'.format(f_name))
     # ...
 
