@@ -833,8 +833,9 @@ def _lambdify(func, **kwargs):
     # ... get optional arguments
     _kwargs = kwargs.copy()
 
-    namespace = _kwargs.pop('namespace', globals())
-    folder    = _kwargs.pop('folder', None)
+    namespace       = _kwargs.pop('namespace', globals())
+    folder          = _kwargs.pop('folder', None)
+    functional_args = _kwargs.pop('functional_args', None)
     # ...
 
     # ... get the function source code

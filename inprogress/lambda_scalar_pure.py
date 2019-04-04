@@ -8,9 +8,7 @@ import time
 from pyccel.decorators import types, pure
 from pyccel.epyccel import epyccel
 from pyccel.epyccel import lambdify
-
-# TODO must be known in pyccel
-from operator import add, mul
+from pyccel.functional import add, mul
 
 #=========================================================
 #VERBOSE = True

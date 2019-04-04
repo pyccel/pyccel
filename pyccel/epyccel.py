@@ -972,10 +972,10 @@ def epyccel_module(module,
 
 #==============================================================================
 # TODO STILL EXPERIMENTAL
-def lambdify( func, namespace = globals(), accelerator = None,
-              verbose=False):
+def lambdify( func, *args, namespace = globals(), accelerator = None, verbose=False):
 
     res = _lambdify( func,
+                     functional_args = args,
                      namespace   = namespace,
                      accelerator = accelerator )
 
