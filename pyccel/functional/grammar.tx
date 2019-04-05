@@ -1,0 +1,76 @@
+Functional:
+    LambdaDef | Lambda
+;
+
+LambdaDef: 
+    ID '=' Lambda
+;
+
+Lambda: 
+    'lambda' args+=ID[','] ':' expr=LambdaExpr
+;
+
+LambdaExpr:
+      List
+    | ReductionStmt
+;
+
+List: 
+    '[' Stmt ('for' iterator=ID 'in' iterable=ID)* ']'
+;
+
+Stmt: 
+      List 
+    | Call
+;
+
+// TODO exclude reduction op
+Call:
+    ID '(' args+=CallArg[','] ')'
+;
+
+CallArg:
+    Call | ID
+;
+
+ReductionStmt:
+    op=ReductionOp '(' expr=List ')' 
+;
+
+ReductionOp: 'add' | 'mul';
+
+//Functional:
+//    LambdaDef | Lambda
+//;
+//
+//LambdaDef: 
+//    ID '=' Lambda
+//;
+//
+//Lambda: 
+//    'lambda' args+=ID[','] ':' expr=List
+//;
+//
+//List: 
+//    '[' Stmt ('for' iterator=ID 'in' iterable=ID)* ']'
+//;
+//
+//Stmt: 
+//      List 
+//    | Call
+//;
+//
+//Call:
+//    ID '(' args+=CallArg[','] ')'
+//;
+//
+//CallArg:
+//    Call | ID
+//;
+//
+//ReductionStmt:
+//    op=ReductionOp '(' expr=List ')' 
+//;
+//
+//ReductionOp: 'add' | 'mul';
+//

@@ -24,7 +24,7 @@ from pyccel.codegen.utilities       import get_source_function
 from pyccel.codegen.utilities       import random_string
 from pyccel.codegen.utilities       import write_code
 from pyccel.codegen.utilities       import mkdir_p
-from pyccel.codegen.lambdify        import _lambdify
+from pyccel.functional.lambdify     import _lambdify
 
 from pyccel.ast                     import FunctionHeader
 from pyccel.ast.utilities           import build_types_decorator

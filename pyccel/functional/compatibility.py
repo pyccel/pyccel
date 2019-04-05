@@ -3,7 +3,7 @@ This file contains functions and classes needed for the functional programing
 feature of Pyccel.
 """
 
-# TODO: THIS IS STILL EXPERIMENTAL
+__all__ = ['add', 'mul', 'where', 'Where', '_']
 
 import operator
 
