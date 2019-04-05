@@ -4648,6 +4648,7 @@ def get_assigned_symbols(expr):
     expr: Expression
         any AST valid expression
     """
+#    print('>>> stmt = ', expr)
 
     if isinstance(expr, (FunctionDef, For, While)):
         return get_assigned_symbols(expr.body)
@@ -4680,8 +4681,13 @@ def get_assigned_symbols(expr):
                     var = var.lhs
             elif isinstance(var, IndexedElement):
                 var = var.base
-            free_symbols = var.free_symbols
-            symbols = list(free_symbols)
+
+            # TODO case of multi assignement
+            symbols = [var]
+
+#            # TODO why are we using free_symbols here?
+#            free_symbols = var.free_symbols
+#            symbols = list(free_symbols)
         except:
 
             # TODO must raise an Exception here
