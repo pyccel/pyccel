@@ -36,6 +36,8 @@ def f_real(x,y,z):
     r = x+y*z
     return r
 
+lam_1 = lambda x:x**2
+
 
 #==============================================================================
 #      INTEGER CASE
@@ -43,9 +45,9 @@ def f_real(x,y,z):
 
 #=========================================================
 def test_map_int_1():
-    g = lambda xs,ys,z: [f_int(x,y,z) for x in xs for y in ys]
+    L = lambda xs,ys,z: [f_int(lam_1(x),y,z) for x in xs for y in ys]
 
-    g = _lambdify(g)
+    L = _lambdify(L)
 
     nx = 5000
     ny = 4000
@@ -54,182 +56,7 @@ def test_map_int_1():
     rs = np.zeros(nx*ny, np.int32)
 
     tb = time.time()
-    g(xs, ys, 2, rs)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_map_int_2():
-    g = lambda xs,ys,z: [[f_int(x,y,z) for x in xs] for y in ys]
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = range(0, nx)
-    ys = range(0, ny)
-    rs = np.zeros((nx,ny), np.int32)
-
-    tb = time.time()
-    g(xs, ys, 2, rs)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_add_map_int_1():
-    g = lambda xs,y,z: add([f_int(x,y,z) for x in xs])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    xs = range(0, nx)
-
-    tb = time.time()
-    g(xs, 3, 2)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_add_map_int_2():
-    g = lambda xs,ys,z: add([[f_int(x,y,z) for x in xs] for y in ys])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = range(0, nx)
-    ys = range(0, ny)
-
-    tb = time.time()
-    g(xs, ys, 2)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_mul_map_int_1():
-    g = lambda xs,y,z: mul([f_int(x,y,z) for x in xs])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    xs = range(0, nx)
-
-    tb = time.time()
-    g(xs, 3, 2)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_mul_map_int_2():
-    g = lambda xs,ys,z: mul([[f_int(x,y,z) for x in xs] for y in ys])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = range(0, nx)
-    ys = range(0, ny)
-
-    tb = time.time()
-    g(xs, ys, 2)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#==============================================================================
-#      REAL CASE
-#==============================================================================
-
-#=========================================================
-def test_map_real_1():
-    g = lambda xs,ys,z: [f_real(x,y,z) for x in xs for y in ys]
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = np.linspace(0., 1., nx)
-    ys = np.linspace(0., 1., ny)
-    rs = np.zeros(nx*ny, np.float64)
-
-    tb = time.time()
-    g(xs, ys, 2., rs)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_map_real_2():
-    g = lambda xs,ys,z: [[f_real(x,y,z) for x in xs] for y in ys]
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = np.linspace(0., 1., nx)
-    ys = np.linspace(0., 1., ny)
-    rs = np.zeros((nx,ny), np.float64)
-
-    tb = time.time()
-    g(xs, ys, 2., rs)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_add_map_real_1():
-    g = lambda xs,y,z: add([f_real(x,y,z) for x in xs])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    xs = np.linspace(0., 1., nx)
-
-    tb = time.time()
-    g(xs, 3., 2.)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_add_map_real_2():
-    g = lambda xs,ys,z: add([[f_real(x,y,z) for x in xs] for y in ys])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = np.linspace(0., 1., nx)
-    ys = np.linspace(0., 1., ny)
-
-    tb = time.time()
-    g(xs, ys, 2.)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_mul_map_real_1():
-    g = lambda xs,y,z: mul([f_real(x,y,z) for x in xs])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    xs = np.linspace(0., 1., nx)
-
-    tb = time.time()
-    g(xs, 3., 2.)
-    te = time.time()
-    print('> Elapsed time = ', te-tb)
-
-#=========================================================
-def test_mul_map_real_2():
-    g = lambda xs,ys,z: mul([[f_real(x,y,z) for x in xs] for y in ys])
-
-    g = _lambdify(g)
-
-    nx = 5000
-    ny = 4000
-    xs = np.linspace(0., 1., nx)
-    ys = np.linspace(0., 1., ny)
-
-    tb = time.time()
-    g(xs, ys, 2.)
+    L(xs, ys, 2, rs)
     te = time.time()
     print('> Elapsed time = ', te-tb)
 
@@ -238,18 +65,3 @@ def test_mul_map_real_2():
 if __name__ == '__main__':
     # ... int examples
     test_map_int_1()
-    test_map_int_2()
-    test_add_map_int_1()
-    test_add_map_int_2()
-    test_mul_map_int_1()
-    test_mul_map_int_2()
-    # ...
-
-    # ... real examples
-    test_map_real_1()
-    test_map_real_2()
-    test_add_map_real_1()
-    test_add_map_real_2()
-    test_mul_map_real_1()
-    test_mul_map_real_2()
-    # ...

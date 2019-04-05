@@ -1033,8 +1033,9 @@ def _lambdify(func, **kwargs):
 
     # TODO DO WE NEED TO KEEP THIS FILTER?
     calls = [i for i in calls if not( i.__class__.__name__ in _known_functions.keys() )]
-#    print('>>> calls = ', calls)
-#    import sys; sys.exit(0)
+    print('>>> calls = ', calls)
+    print(namespace['lam_1'])
+    import sys; sys.exit(0)
     # ...
 
     # ...
