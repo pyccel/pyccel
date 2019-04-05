@@ -78,6 +78,63 @@ def get_lambda_source_code(expr):
     return code
 
 #==============================================================================
+# TODO do we need to keep folder here?
+#def parse(txt, target, folder=None):
+#    pyccel = Parser(txt, output_folder=folder.replace('/','.'))
+#    ast = pyccel.parse()
+#
+#    # TODO shall we keep the annotation here?
+#    settings = {}
+#    ast = pyccel.annotate(**settings)
+#
+#    ns = ast.namespace.symbolic_functions
+#    if not( len(ns.values()) == 1 ):
+#        raise ValueError('Expecting one single lambda function')
+#
+#    func_name = list(ns.keys())[0]
+#    func      = list(ns.values())[0]
+#
+#    return ns[target]
+
+
+# TODO explain what's happening here, because of locals & lambda
+# this only does a syntactic parse of the where statement
+def parse_where_stmt(where_stmt, folder=None):
+
+    L = [l for l in where_stmt.values() if isinstance(l, FunctionType)]
+    # we take only one of the lambda function
+    # when we get the source code, we will have the whole call to lambdify, with
+    # the where statement where all the lambdas are defined
+    # then we parse the where statement to get the lambdas
+    if len(L) > 0:
+        L = L[0]
+
+        code = get_source_function(L)
+        pyccel = Parser(code, output_folder=folder.replace('/','.'))
+        ast = pyccel.parse()
+        calls = ast.atoms(AppliedUndef)
+        where = [call for call in calls if call.__class__.__name__ == 'where']
+        if not( len(where) == 1 ):
+            raise ValueError('')
+
+        where = where[0]
+
+        # ...
+        d = {}
+        for arg in where.args:
+            name = arg.name
+            value = arg.value
+            d[name] = value
+        # ...
+
+        return d
+
+    else:
+        # there is no lambda
+        return where_stmt
+
+
+#==============================================================================
 # TODO move as method of FunctionDef
 def get_results_shape(func):
     """returns a dictionary that contains for each result, its shape. When using
@@ -214,14 +271,7 @@ class VisitorLambda(object):
         self.rank = 0
 
         # ... where is a dictionary
-        functional_args = kwargs.pop('functional_args', None)
-
-        self._where = [i for i in functional_args if isinstance(i, Where)]
-        if len(self.where) == 1:
-            self._where = self.where[0]
-
-        elif len(self.where) == 0:
-            self._where = {}
+        self._where = kwargs.pop('where', {})
         # ...
 
         self._dependencies   = kwargs.pop('dependencies', {})
@@ -599,26 +649,21 @@ class VisitorLambda(object):
         # ... build call arguments
         arguments = []
         for x,x_core in zip(func.arguments, self.core.args):
-            arg = x
+            # ...
             name = x.name
             if isinstance(x_core, AppliedUndef):
                 name = x_core.__class__.__name__
+            # ...
 
-            # argument given through the 'where' statement
-            # TODO improve
             if name in self.where.keys():
                 value = self.where[name]
 
-                if isinstance(value, FunctionType):
-                    value = get_lambda_source_code(value)
+                if isinstance(value, Lambda):
+                    arg = value.expr
+                    # TODO proceed to more verifications
 
-                arg = sympify(value)
-
-                # TODO improve
-                #      we must also check the expression, if it contains a call
-                #      to a function, and its arguments
-                if isinstance(arg, Lambda):
-                    arg = arg.expr
+                else:
+                    arg = value
 
             elif name in out_names:
                 xs = d_results[x]
@@ -637,6 +682,9 @@ class VisitorLambda(object):
                         ls = ind + ls
 
                 arg = IndexedBase(xs.name)[ls]
+
+            else:
+                arg = x
 
             arguments += [arg]
         # ...
@@ -901,6 +949,16 @@ def _lambdify(func, **kwargs):
     functional_args = _kwargs.pop('functional_args', None)
     # ...
 
+    # ...
+    if folder is None:
+        basedir = os.getcwd()
+        folder = '__pycache__'
+        folder = os.path.join( basedir, folder )
+
+    folder = os.path.abspath( folder )
+    mkdir_p(folder)
+    # ...
+
     # ... where is a dictionary
     where_stmt = [i for i in functional_args if isinstance(i, Where)]
     if len(where_stmt) == 1:
@@ -908,6 +966,9 @@ def _lambdify(func, **kwargs):
 
     elif len(where_stmt) == 0:
         where_stmt = {}
+
+    if where_stmt:
+        where_stmt = parse_where_stmt(where_stmt, folder=folder)
     # ...
 
     # ... get the function source code
@@ -923,16 +984,6 @@ def _lambdify(func, **kwargs):
     module_name = 'mod_{}'.format(tag)
     filename    = '{}.py'.format(module_name)
     binary      = '{}.o'.format(module_name)
-    # ...
-
-    # ...
-    if folder is None:
-        basedir = os.getcwd()
-        folder = '__pycache__'
-        folder = os.path.join( basedir, folder )
-
-    folder = os.path.abspath( folder )
-    mkdir_p(folder)
     # ...
 
     # ...
@@ -1024,6 +1075,7 @@ def _lambdify(func, **kwargs):
 
     # ...
     visitor = VisitorLambda( func,
+                             where=where_stmt,
                              dependencies=dependencies,
                              dependencies_code=code_dep,
                              **kwargs)

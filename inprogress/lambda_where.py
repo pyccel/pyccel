@@ -53,7 +53,8 @@ def test_where_1():
 def test_where_2():
     g = lambda xs: [f(x,h(x)) for x in xs]
 
-    g = lambdify(g, where(h=lambda x: x**2, k=lambda x: x**3),
+    g = lambdify(g, where(h=lambda x: x**2,
+                          k=lambda x: x**3),
                  accelerator=ACCEL,
                  verbose=VERBOSE,
                  namespace=globals())
@@ -69,5 +70,5 @@ def test_where_2():
 
 #########################################
 if __name__ == '__main__':
-    test_where_1()
+#    test_where_1()
     test_where_2()
