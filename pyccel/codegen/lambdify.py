@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 # TODO use OrderedDict when possible
+#      right now namespace used only globals, => needs to look in locals too
 
 import os
 import sys
@@ -12,6 +13,7 @@ from sympy import Indexed, IndexedBase, Tuple, Lambda
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
 from sympy import sympify
+from sympy import Dummy
 
 from pyccel.codegen.utilities import construct_flags as construct_flags_pyccel
 from pyccel.codegen.utilities import execute_pyccel
@@ -277,9 +279,8 @@ class TransformerLambda(object):
         self._where = kwargs.pop('where', {})
         # ...
 
-        # ... user functions as sympy functions with _imp_ attribut
-        calls = list(expr.expr.atoms(AppliedUndef))
-        self._user_functions = [call.func for call in calls if hasattr(call.func, '_imp_')]
+        # ...
+        self._user_functions = kwargs.pop('user_functions', [])
         # ...
 
         # ... user function as FunctionDef, stored as a dictionary
@@ -389,6 +390,53 @@ class TransformerLambda(object):
         settings = {}
         ast = pyccel.annotate(**settings)
         return ast.namespace.functions
+
+    def _infere_type(self, x, stmt=None):
+        """x is suppose to be an argument."""
+        if stmt is None:
+            raise NotImplementedError('')
+
+        if isinstance(stmt, (tuple, list, Tuple)):
+            found = False
+            i = 0
+            while(not( found ) and (i < len(stmt))):
+                d = self._infere_type(x, stmt=stmt[i])
+                if d: found = True
+
+                i += 1
+
+            return d
+
+        elif isinstance(stmt, AppliedUndef):
+            func = self.dependencies[stmt.__class__.__name__]
+            return self._infere_type(x, stmt=func.arguments)
+
+        elif isinstance(stmt, Variable):
+            if not stmt.name == x.name:
+                return {}
+
+            # TODO the following options are not taken into account
+            #      shape
+            #      cls_base
+            #      cls_parameters
+
+            d = {}
+            d['dtype']          = stmt.dtype
+            d['rank']           = stmt.rank
+            d['allocatable']    = stmt.allocatable
+            d['is_stack_array'] = stmt.is_stack_array
+            d['is_pointer']     = stmt.is_pointer
+            d['is_target']      = stmt.is_target
+            d['is_polymorphic'] = stmt.is_polymorphic
+            d['is_optional']    = stmt.is_optional
+            d['order']          = stmt.order
+            d['precision']      = stmt.precision
+
+            return d
+
+        else:
+            raise NotImplementedError('')
+
 
     def _visit(self, stmt):
 
@@ -672,6 +720,11 @@ class TransformerLambda(object):
             lhs = lhs[0]
         # ...
 
+        # ... dictionary to store local declarations, to store results of some
+        #     locally used functions
+        d_dummies = {}
+        # ...
+
         # ... build call arguments
         arguments = []
         for x,x_core in zip(func.arguments, self.core.args):
@@ -685,8 +738,16 @@ class TransformerLambda(object):
                 value = self.where[name]
 
                 if isinstance(value, Lambda):
-                    arg = value.expr
-                    # TODO proceed to more verifications
+                    # TODO improve
+                    is_pure_lambda = len(list(value.expr.atoms(AppliedUndef))) == 0
+
+                    if is_pure_lambda:
+                        arg = value.expr
+
+                    else:
+                        # create a dummy variable
+                        arg = Dummy('dummy')
+                        d_dummies[arg] = value.expr
 
                 else:
                     arg = value
@@ -715,6 +776,16 @@ class TransformerLambda(object):
             arguments += [arg]
         # ...
 
+        # ... list for all core statements
+        core_stmts = []
+        # ...
+
+        # ... add all dummy variables
+        for k,v in d_dummies.items():
+            # TODO improve when v is not a scalar function
+            core_stmts += [Assign(k, v)]
+        # ...
+
         # ... call to the function to be mapped
         rhs = FunctionCall(func, arguments)
         # ...
@@ -730,7 +801,7 @@ class TransformerLambda(object):
             else:
                 core_stmt = AugAssign(lhs, self.op, rhs)
 
-        core_stmts = [core_stmt]
+        core_stmts += [core_stmt]
         # ...
 
         # ... when using a reduction operator on a local variable,
@@ -864,42 +935,29 @@ class TransformerLambda(object):
             else:
                 x = arg
 
-            # get the call
-            call = self.core
+            # ...
+            d_var = self._infere_type(x, stmt=self.core)
 
-            # compute the position in the call
-            i_arg = list(call.args).index(x)
-            # get the typed argument from the function def
-            fargs = self.dependencies[call.__class__.__name__].arguments
-            x = fargs[i_arg]
+            var_dtype = d_var.pop('dtype')
+            var_rank  = d_var.pop('rank')
+            # ...
 
-            if not( arg in iterable ):
-                var = x
+            # TODO improve when iterable has more than 1 rank
+            if arg in iterable:
+                var_rank += 1
 
-            else:
-                if x.rank > 0:
-                    raise NotImplementedError('Expecting argument to be a scalar')
-
-                name  = arg.name
-
-                var = Variable( x.dtype,
-                                name,
-                                rank=1 + x.rank,
-                                allocatable=x.allocatable,
-                                is_stack_array = x.is_stack_array,
-                                is_pointer=x.is_pointer,
-                                is_target=x.is_target,
-                                is_polymorphic=x.is_polymorphic,
-                                is_optional=x.is_optional,
-#                                shape=None,
-#                                cls_base=None,
-#                                cls_parameters=None,
-                                order=x.order,
-                                precision=x.precision)
+            # ... create a typed variable
+            var = Variable( var_dtype,
+                            arg.name,
+                            rank=var_rank,
+                            **d_var)
+            # ...
 
             args += [var]
             d_args[arg] = var
         # ...
+#        print(d_args)
+#        import sys; sys.exit(0)
 
         # ... update arguments = args + results
         if rank > 0:
@@ -970,7 +1028,19 @@ def _lambdify(func, **kwargs):
 #    print(func.expr)
 #    import sys; sys.exit(0)
     calls = list(func.expr.atoms(AppliedUndef))
+
+    # add calls from where statement
+    where_lambdas = [i for i in where_stmt.values() if isinstance(i, Lambda)]
+    for L in where_lambdas:
+        calls += list(L.expr.atoms(AppliedUndef))
+
+    # TODO DO WE NEED TO KEEP THIS FILTER?
     calls = [i for i in calls if not( i.__class__.__name__ in _known_functions.keys() )]
+#    print('>>> calls = ', calls)
+#    import sys; sys.exit(0)
+    # ...
+
+    # ...
     user_functions = []
     for call in calls:
         # rather than using call.func, we will take the name of the
@@ -992,11 +1062,15 @@ def _lambdify(func, **kwargs):
               not( f_name in  where_stmt.keys()) ):
 
             raise ValueError('Unkown function {}'.format(f_name))
+#    print('>>> user_functions = ', user_functions)
 #    import sys; sys.exit(0)
     # ...
 
     # ...
-    transformer = TransformerLambda( func, where=where_stmt, **kwargs )
+    transformer = TransformerLambda( func,
+                                     where=where_stmt,
+                                     user_functions=user_functions,
+                                     **kwargs )
     func        = transformer._visit(transformer.expr)
     # ...
 
@@ -1027,6 +1101,8 @@ def _lambdify(func, **kwargs):
 
     write_code('{}.py'.format(module_name), code, folder=folder)
     # ...
+#    print(code)
+#    import sys; sys.exit(0)
 
     # ...
     sys.path.append(folder)

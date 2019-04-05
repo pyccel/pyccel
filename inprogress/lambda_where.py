@@ -31,6 +31,14 @@ def f(x,y):
     r = x+y
     return r
 
+# ...
+@pure
+@types('int')
+def incr(x):
+    r = x+1
+    return r
+# ...
+
 #=========================================================
 def test_where_1():
     g = lambda xs: [f(x,y) for x in xs]
@@ -68,7 +76,28 @@ def test_where_2():
     te = time.time()
     print('> Elapsed time = ', te-tb)
 
+#=========================================================
+def test_where_3():
+
+    g = lambda xs: [f(k(x),h(x)) for x in xs]
+
+    g = lambdify(g, where(h=lambda x: x**2,
+                          k=lambda x: incr(x)),
+                 accelerator=ACCEL,
+                 verbose=VERBOSE,
+                 namespace=globals())
+
+    nx = 500
+    xs = range(0, nx)
+    rs = np.zeros(nx, np.int32)
+
+    tb = time.time()
+    g(xs, rs)
+    te = time.time()
+    print('> Elapsed time = ', te-tb)
+
 #########################################
 if __name__ == '__main__':
-    test_where_1()
-    test_where_2()
+#    test_where_1()
+#    test_where_2()
+    test_where_3()
