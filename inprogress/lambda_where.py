@@ -70,5 +70,5 @@ def test_where_2():
 
 #########################################
 if __name__ == '__main__':
-#    test_where_1()
+    test_where_1()
     test_where_2()

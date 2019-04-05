@@ -51,55 +51,59 @@ _known_binary_functions = {}
 _known_functions  = dict(_known_unary_functions, **_known_binary_functions)
 
 #==============================================================================
-# TODO should use something else
-# TODO to be moved from here
+# TODO to be moved to a utilities file. (which one?)
 import ast
-import astunparse
-import re
+import inspect
 
-def get_lambda_source_code(expr):
-    # ...
-    def _get_lambda_ast_node(expr):
-        source_text = get_source_function(expr)
-        if source_text:
-            source_ast = ast.parse(source_text)
-            return next((node for node in ast.walk(source_ast)
-                         if isinstance(node, ast.Lambda)), None)
-    # ...
+def get_decorators(cls):
+    target = cls
+    decorators = {}
 
-    node = _get_lambda_ast_node(expr)
-    code = astunparse.unparse(node)
-    code = re.findall('^\((.*)\)', code)
-    if not( len(code) == 1 ):
-        raise ValueError('Cannot find lambda')
+    def visit_FunctionDef(node):
+        decorators[node.name] = []
+        for n in node.decorator_list:
+            name = ''
+            if isinstance(n, ast.Call):
+                name = n.func.attr if isinstance(n.func, ast.Attribute) else n.func.id
+            else:
+                name = n.attr if isinstance(n, ast.Attribute) else n.id
 
-    code = code[0]
+            decorators[node.name].append(name)
+
+    node_iter = ast.NodeVisitor()
+    node_iter.visit_FunctionDef = visit_FunctionDef
+    node_iter.visit(ast.parse(inspect.getsource(target)))
+    return decorators
+
+#==============================================================================
+# TODO to move
+def get_pyccel_imports_code():
+    code = ''
+    code += '\nfrom pyccel.decorators import types'
+    code += '\nfrom pyccel.decorators import pure'
+    code += '\nfrom pyccel.decorators import external, external_call'
+    code += '\nfrom pyccel.decorators import shapes'
+    code += '\nfrom pyccel.decorators import workplace'
+
+    # TODO improve
+    code += '\nfrom numpy import zeros'
+    code += '\nfrom numpy import float64'
 
     return code
 
 #==============================================================================
-# TODO do we need to keep folder here?
-#def parse(txt, target, folder=None):
-#    pyccel = Parser(txt, output_folder=folder.replace('/','.'))
-#    ast = pyccel.parse()
-#
-#    # TODO shall we keep the annotation here?
-#    settings = {}
-#    ast = pyccel.annotate(**settings)
-#
-#    ns = ast.namespace.symbolic_functions
-#    if not( len(ns.values()) == 1 ):
-#        raise ValueError('Expecting one single lambda function')
-#
-#    func_name = list(ns.keys())[0]
-#    func      = list(ns.values())[0]
-#
-#    return ns[target]
+def get_dependencies_code(user_functions):
+    code = ''
+    for f in user_functions:
+        code = '{code}\n\n{new}'.format( code = code,
+                                         new  = get_source_function(f._imp_) )
+
+    return code
 
 
-# TODO explain what's happening here, because of locals & lambda
-# this only does a syntactic parse of the where statement
-def parse_where_stmt(where_stmt, folder=None):
+#==============================================================================
+def parse_where_stmt(where_stmt):
+    """syntactic parsing of the where statement."""
 
     L = [l for l in where_stmt.values() if isinstance(l, FunctionType)]
     # we take only one of the lambda function
@@ -110,7 +114,7 @@ def parse_where_stmt(where_stmt, folder=None):
         L = L[0]
 
         code = get_source_function(L)
-        pyccel = Parser(code, output_folder=folder.replace('/','.'))
+        pyccel = Parser(code)
         ast = pyccel.parse()
         calls = ast.atoms(AppliedUndef)
         where = [call for call in calls if call.__class__.__name__ == 'where']
@@ -232,7 +236,6 @@ def _get_default_value(var, op=None):
 
     raise NotImplementedError('TODO')
 
-
 #==============================================================================
 def _extract_core_expr(expr):
     """extract core expression from a lambda expression"""
@@ -260,7 +263,7 @@ def _extract_core_expr(expr):
         raise NotImplementedError('{} not implemented'.format(type(expr)))
 
 #==============================================================================
-class VisitorLambda(object):
+class TransformerLambda(object):
     """A visitor class to allow for manipulatin a lambda expression."""
 
     def __init__(self, expr, **kwargs):
@@ -274,10 +277,16 @@ class VisitorLambda(object):
         self._where = kwargs.pop('where', {})
         # ...
 
-        self._dependencies   = kwargs.pop('dependencies', {})
-        self._dependencies_code = kwargs.pop('dependencies_code', None)
-        # TODO allow to reconstruct the dep code from namespace
+        # ... user functions as sympy functions with _imp_ attribut
+        calls = list(expr.expr.atoms(AppliedUndef))
+        self._user_functions = [call.func for call in calls if hasattr(call.func, '_imp_')]
+        # ...
 
+        # ... user function as FunctionDef, stored as a dictionary
+        self._dependencies = self._parse_user_functions()
+        # ...
+
+        # ...
         self._accelerator = kwargs.pop('accelerator', None)
         self._parallel    = kwargs.pop('parallel', None)
         self._inline      = kwargs.pop('inline', False)
@@ -289,11 +298,16 @@ class VisitorLambda(object):
 
             if self.parallel is None:
                 self._parallel = True
+        # ...
 
+        # ...
         self._iterators = []
         self._iterables = []
+        # ...
 
+        # ...
         self._op = None
+        # ...
 
     @property
     def expr(self):
@@ -310,10 +324,6 @@ class VisitorLambda(object):
     @property
     def dependencies(self):
         return self._dependencies
-
-    @property
-    def dependencies_code(self):
-        return self._dependencies_code
 
     @property
     def accelerator(self):
@@ -347,6 +357,10 @@ class VisitorLambda(object):
     def where(self):
         return self._where
 
+    @property
+    def user_functions(self):
+        return self._user_functions
+
     def insert_iterator(self, x):
         if isinstance(x, (tuple, list, Tuple)):
             self._iterators += list([i for i in x])
@@ -363,6 +377,18 @@ class VisitorLambda(object):
 
     def _set_op(self, op):
         self._op = _known_functions[op]
+
+    def _parse_user_functions(self):
+        """generate ast for dependencies."""
+        code  = get_pyccel_imports_code()
+        code += get_dependencies_code(self.user_functions)
+
+        pyccel = Parser(code)
+        ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
+        return ast.namespace.functions
 
     def _visit(self, stmt):
 
@@ -451,7 +477,7 @@ class VisitorLambda(object):
             d_indices[xs]  = i_xs
         # ...
 
-        # ...
+        # ... TODO improve
         func = self.dependencies[self.core.__class__.__name__]
         # ...
 
@@ -885,55 +911,11 @@ class VisitorLambda(object):
                       'external_call': []}
 
         tag         = random_string( 6 )
-        module_name = 'mod_{}'.format( tag)
         g_name      = 'lambda_{}'.format( tag )
-
-        g = FunctionDef(g_name, args, [], body,
-                        decorators=decorators)
         # ...
 
-        # ... print python code
-        code = pycode(g)
-
-        prelude  = ''
-        if not inline:
-            prelude = '{prelude}\n\n{code_dep}'.format(prelude=prelude,
-                                                       code_dep=self.dependencies_code)
-
-
-        code = '{prelude}\n\n{code}'.format(prelude=prelude,
-                                            code=code)
-        # ...
-
-        # ... TODO
-        folder = None
-        if folder is None:
-            basedir = os.getcwd()
-            folder = '__pycache__'
-            folder = os.path.join( basedir, folder )
-
-        folder = os.path.abspath( folder )
-        mkdir_p(folder)
-        # ...
-
-        # ...
-#        print(code)
-#        import sys; sys.exit(0)
-        write_code('{}.py'.format(module_name), code, folder=folder)
-        # ...
-
-        # ...
-        sys.path.append(folder)
-        package = importlib.import_module( module_name )
-        sys.path.remove(folder)
-        # ...
-
-        # we return a module, that will processed by epyccel
-        if self.dependencies:
-            return package, g_name
-
-        else:
-            return getattr(package, g_name)
+        return FunctionDef(g_name, args, [], body,
+                           decorators=decorators)
 
 #==============================================================================
 def _lambdify(func, **kwargs):
@@ -945,18 +927,7 @@ def _lambdify(func, **kwargs):
     _kwargs = kwargs.copy()
 
     namespace       = _kwargs.pop('namespace', globals())
-    folder          = _kwargs.pop('folder', None)
     functional_args = _kwargs.pop('functional_args', None)
-    # ...
-
-    # ...
-    if folder is None:
-        basedir = os.getcwd()
-        folder = '__pycache__'
-        folder = os.path.join( basedir, folder )
-
-    folder = os.path.abspath( folder )
-    mkdir_p(folder)
     # ...
 
     # ... where is a dictionary
@@ -968,39 +939,18 @@ def _lambdify(func, **kwargs):
         where_stmt = {}
 
     if where_stmt:
-        where_stmt = parse_where_stmt(where_stmt, folder=folder)
+        where_stmt = parse_where_stmt(where_stmt)
     # ...
 
     # ... get the function source code
     func_code = get_source_function(func)
-#    print(func_code)
     # ...
 
-    # ...
-    tag = random_string( 6 )
-    # ...
-
-    # ...
-    module_name = 'mod_{}'.format(tag)
-    filename    = '{}.py'.format(module_name)
-    binary      = '{}.o'.format(module_name)
-    # ...
-
-    # ...
-    write_code(filename, func_code, folder=folder)
-    # ...
-
-    # ...
-    basedir = os.getcwd()
-    os.chdir(folder)
-    curdir = os.getcwd()
-    # ...
-
-    # ...
-    pyccel = Parser(filename, output_folder=folder.replace('/','.'))
+    # ... parse the lambda expression
+    #     this must be done using pyccel to get our functional AST nodes
+    pyccel = Parser(func_code)
     ast = pyccel.parse()
 
-    # TODO shall we keep the annotation here?
     settings = {}
     ast = pyccel.annotate(**settings)
 
@@ -1010,17 +960,10 @@ def _lambdify(func, **kwargs):
 
     func_name = list(ns.keys())[0]
     func      = list(ns.values())[0]
-    # ...
 
-    # ...
     if not isinstance(func, Lambda):
         msg = 'Expecting a lambda expr'.format(func_name)
         raise TypeError(msg)
-    # ...
-
-    # ... dependencies will contain all the user functions defined functions,
-    #     that are needed to lambbdify our expression
-    dependencies = {}
     # ...
 
     # ... annotate functions appearing in the lambda expression
@@ -1028,57 +971,72 @@ def _lambdify(func, **kwargs):
 #    import sys; sys.exit(0)
     calls = list(func.expr.atoms(AppliedUndef))
     calls = [i for i in calls if not( i.__class__.__name__ in _known_functions.keys() )]
+    user_functions = []
     for call in calls:
         # rather than using call.func, we will take the name of the
         # class which defines its type and then the name of the function
         f_name = call.__class__.__name__
+        f_symbolic = call.func
 
         if f_name in namespace.keys():
             f = namespace[f_name]
-            dependencies[f_name] = f
+            decorators = get_decorators(f)
+            if f_name in decorators.keys():
+                decorators = decorators[f_name]
+                if 'types' in decorators:
+                    setattr(f_symbolic, '_imp_', f)
+                    user_functions += [f_symbolic]
 
+        # TODO this part is to be removed
         elif (not( f_name in _known_functions.keys() ) and
               not( f_name in  where_stmt.keys()) ):
 
             raise ValueError('Unkown function {}'.format(f_name))
-    # ...
-
-    # TODO be carefull with the order of dependecies.
-    #      => must be corrected in the Parser
-
-    # ... generate ast for dependencies
-    # TODO have a function for these imports
-    code_dep = ''
-    code_dep += '\nfrom pyccel.decorators import types'
-    code_dep += '\nfrom pyccel.decorators import pure'
-    code_dep += '\nfrom pyccel.decorators import external, external_call'
-    code_dep += '\nfrom pyccel.decorators import shapes'
-    code_dep += '\nfrom pyccel.decorators import workplace'
-
-    # TODO improve
-    code_dep += '\nfrom numpy import zeros'
-    code_dep += '\nfrom numpy import float64'
-
-    for f in dependencies.values():
-        code_dep = '{code}\n\n{new}'.format( code = code_dep,
-                                             new  = get_source_function(f) )
-
-    write_code(filename, code_dep, folder=folder)
-
-    pyccel = Parser(filename, output_folder=folder.replace('/','.'))
-    ast = pyccel.parse()
-
-    settings = {}
-    ast = pyccel.annotate(**settings)
-    dependencies = ast.namespace.functions
+#    import sys; sys.exit(0)
     # ...
 
     # ...
-    visitor = VisitorLambda( func,
-                             where=where_stmt,
-                             dependencies=dependencies,
-                             dependencies_code=code_dep,
-                             **kwargs)
+    transformer = TransformerLambda( func, where=where_stmt, **kwargs )
+    func        = transformer._visit(transformer.expr)
     # ...
 
-    return visitor._visit(visitor.expr)
+    # TODO to be moved to Python printer
+    #      so that we can call pycode on this class
+
+    # ... print python code
+    code  = get_pyccel_imports_code()
+    code += get_dependencies_code(user_functions)
+    code += '\n\n'
+    code += pycode(func)
+    # ...
+
+    # ...
+    folder = _kwargs.pop('folder', None)
+    if folder is None:
+        basedir = os.getcwd()
+        folder = '__pycache__'
+        folder = os.path.join( basedir, folder )
+
+    folder = os.path.abspath( folder )
+    mkdir_p(folder)
+    # ...
+
+    # ...
+    func_name   = str(func.name)
+    module_name = 'mod_{}'.format(func_name)
+
+    write_code('{}.py'.format(module_name), code, folder=folder)
+    # ...
+
+    # ...
+    sys.path.append(folder)
+    package = importlib.import_module( module_name )
+    sys.path.remove(folder)
+    # ...
+
+    # we return a module, that will processed by epyccel
+    if user_functions:
+        return package, func_name
+
+    else:
+        return getattr(package, func.name)
