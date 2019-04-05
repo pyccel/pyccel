@@ -56,5 +56,5 @@ def test_basis_funs( lims, nc, p, tol=1e-14 ):
 if __name__ == '__main__':
 
     lims=[0,1] ;  nc=10 ; p=2
-    test_find_span( lims, nc, p, eps=1e-12 )
+#    test_find_span( lims, nc, p, eps=1e-12 )
     test_basis_funs( lims, nc, p, tol=1e-14 )

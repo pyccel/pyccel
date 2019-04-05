@@ -1,5 +1,6 @@
 from pyccel.decorators  import types
 from pyccel.decorators  import external_call
+from pyccel.decorators  import stack_array
 
 #==============================================================================
 @external_call
@@ -54,6 +55,7 @@ def find_span( knots, degree, x ):
 
 #==============================================================================
 @external_call
+@stack_array('left', 'right')
 @types('double[:]','int','double','int','double[:]')
 def basis_funs( knots, degree, x, span, values ):
     """
