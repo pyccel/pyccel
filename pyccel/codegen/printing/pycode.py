@@ -123,6 +123,15 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_DottedName(self, expr):
         return '.'.join(self._print(n) for n in expr.name)
 
+    def _print_AppliedUndef(self, expr):
+        if hasattr(expr, '_imp_'):
+            func = self._print(expr.func)
+            args = ','.join(self._print(i) for i in expr.args)
+            return'{func}({args})'.format(func=func, args=args)
+
+        else:
+            super(PythonCodePrinter, self)._print_AppliedUndef(expr)
+
     def _print_FunctionCall(self, expr):
         func = self._print(expr.func)
         args = ','.join(self._print(i) for i in expr.arguments)
