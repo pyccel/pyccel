@@ -187,11 +187,7 @@ def get_results_shape(func):
             # ...
 
             # ...
-            if rhs in d_args.keys():
-                rhs = d_args[str(rhs)]
-
-            else:
-                raise NotImplementedError('TODO {}'.format(type(rhs)))
+            rhs = sympify(rhs, locals=d_args)
             # ...
 
             # TODO improve

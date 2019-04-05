@@ -21,7 +21,7 @@ ACCEL = None
 #=========================================================
 
 #==============================================================================
-@shapes(values='degree')
+@shapes(values='degree+1')
 @stack_array('left', 'right')
 @types('double[:]','int','double','int','double[:]')
 def basis_funs( knots, degree, x, span, values ):
