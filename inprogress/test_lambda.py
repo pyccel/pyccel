@@ -34,18 +34,39 @@ def f2(x,y):
     return r
 
 #=========================================================
-def test_1():
+def test_map_list():
     L = lambda xs: map(f1, xs)
 
     L = lambdify( L, namespace = {'f1': f1}, **settings )
 
 #=========================================================
-def test_2():
+def test_map_zip():
+    L = lambda xs,ys:  map(f2, zip(xs,ys))
+
+    L = lambdify( L, namespace = {'f2': f2}, **settings )
+
+#=========================================================
+def test_map_product():
     L = lambda xs,ys:  map(f2, product(xs,ys))
+
+    L = lambdify( L, namespace = {'f2': f2}, **settings )
+
+#=========================================================
+def test_tmap_zip():
+    L = lambda xs,ys:  tmap(f2, zip(xs,ys))
+
+    L = lambdify( L, namespace = {'f2': f2}, **settings )
+
+#=========================================================
+def test_tmap_product():
+    L = lambda xs,ys:  tmap(f2, product(xs,ys))
 
     L = lambdify( L, namespace = {'f2': f2}, **settings )
 
 #########################################
 if __name__ == '__main__':
-#    test_1()
-    test_2()
+#    test_map_list()
+    test_map_zip()
+#    test_map_product()
+#    test_tmap_zip()
+#    test_tmap_product()

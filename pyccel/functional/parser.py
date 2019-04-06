@@ -34,6 +34,18 @@ _known_functions = {'map':      SeqMap,
 
 _functors_registery = ['map', 'pmap', 'tmap', 'ptmap', 'reduce']
 
+_one   = lambda x: 1
+_count = lambda x: len(x)
+_base_rank_registery = {'map':      _one,
+                        'pmap':     1,
+                        'tmap':     _count,
+                        'ptmap':    _count,
+                        'zip':      _one,
+                        'pzip':     _one,
+                        'product':  _one,
+                        'pproduct': _one,
+                       }
+
 #==============================================================================
 # TODO to be moved in a class
 # utilities for semantic analysis
@@ -221,17 +233,23 @@ def _compute_types(expr, value=None):
 
         key = None
         type_out = None
-        if name == 'map':
+        if name in _base_rank_registery.keys():
+            base_rank = _base_rank_registery[name](arguments)
+
+        else:
+            base_rank = None
+
+        if name in ['map', 'pmap', 'tmap', 'ptmap']:
             assert( len(arguments) == 2 )
             func   = arguments[0]
             target = arguments[1]
 
             key_out = _get_key(func)
             key_in  = str(func) + '_args' # TODO improve
-            rank = 1
+
             if key_out in d_types.keys():
-                type_in  = assign_type(d_types[key_in], rank=rank)
-                type_out = assign_type(d_types[key_out], rank=rank)
+                type_in  = assign_type(d_types[key_in], rank=base_rank)
+                type_out = assign_type(d_types[key_out], rank=base_rank)
 
                 # no return here
                 _compute_types(target, value=type_in)
@@ -239,16 +257,14 @@ def _compute_types(expr, value=None):
             else:
                 print('> Unable to compute type for {} '.format(expr))
 
-        elif name == 'product':
+        elif name in ['product', 'pproduct', 'zip', 'pzip']:
             assert(not( value is None ))
 
             assert(isinstance(value, TypeTuple))
             assert(len(value) == len(arguments))
 
-            rank = 1
-
             for a,t in zip(arguments, value.types):
-                type_in  = assign_type(t, rank=rank)
+                type_in  = assign_type(t, rank=base_rank)
                 _compute_types(a, value=type_in)
 
             type_out = value
