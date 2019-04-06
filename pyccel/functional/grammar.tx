@@ -1,5 +1,5 @@
 Lambda: NamedAbstraction | Abstraction;
-NamedAbstraction: name=ID '=' Abstraction; 
+NamedAbstraction: name=ID '=' abstraction=Abstraction; 
 
 Abstraction:   'lambda' args+=ID[','] ':' expr=Expression;
 Expression:  Abstraction | Application | Item;
