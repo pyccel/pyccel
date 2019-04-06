@@ -1,0 +1,8 @@
+Lambda: NamedAbstraction | Abstraction;
+NamedAbstraction: name=ID '=' Abstraction; 
+
+Abstraction:   'lambda' args+=ID[','] ':' expr=Expression;
+Expression:  Abstraction | Application | Item;
+Application:   name=ID '(' args+=Expression[','] ')';
+Item: NUMBER | ID | AnyItem;
+AnyItem: '_';
