@@ -200,6 +200,7 @@ def compute_types(L, typed_functions):
         print('>>> after', main_expr)
         i_count += 1
 
+    print(main_expr.view())
     import sys; sys.exit(0)
 
 def _get_key(expr):
@@ -238,8 +239,8 @@ def _compute_types(expr):
                 if isinstance(target, Symbol):
 #                    print('> target = ', target)
 
-                    # TODO increment rank
-                    d_types[_get_key(target)] = d_types[key]
+                    # increment rank
+                    d_types[_get_key(target)] = assign_type(d_types[key], rank=1)
 
                 else:
                     raise NotImplementedError('')
@@ -251,11 +252,14 @@ def _compute_types(expr):
                 print('--------')
                 print('> Unable to compute type for {} '.format(expr))
 
-            untyped = [i for i in arguments if not(_get_key(i) in d_types.keys())]
-#            print('> untyped = ', untyped)
-            if not untyped:
-                # TODO increment rank
-                return main_expr.xreplace({expr: d_types[key]})
+        untyped = [i for i in arguments if not(_get_key(i) in d_types.keys())]
+#        print('> untyped = ', untyped)
+        if not untyped:
+            # TODO increment rank
+            return main_expr.xreplace({expr: d_types[key]})
+
+        else:
+            return main_expr
 
     else:
         raise TypeError('Not implemented for {}'.format(type(expr)))

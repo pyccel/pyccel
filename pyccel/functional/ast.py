@@ -85,11 +85,11 @@ class BasicTypeVariable(Basic):
 #==============================================================================
 class TypeVariable(BasicTypeVariable):
     _name = None
-    def __new__( cls, var ):
-        assert(isinstance(var, Variable))
+    def __new__( cls, var, rank=0 ):
+        assert(isinstance(var, (Variable, TypeVariable)))
 
         dtype          = var.dtype
-        rank           = var.rank
+        rank           = var.rank + rank
         is_stack_array = var.is_stack_array
         order          = var.order
         precision      = var.precision
@@ -124,14 +124,23 @@ class TypeVariable(BasicTypeVariable):
     def name(self):
         return self._name
 
+    def incr_rank(self, value):
+        return TypeVariable( self, rank=value+self.rank )
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         return sstr(self.name)
 
+    def view(self):
+        """inspects the variable."""
+        attributs = self._args[:]
+        attributs = ','.join(str(i) for i in attributs)
+        return 'TypeVariable({})'.format(attributs)
+
 #==============================================================================
 class TypeTuple(BasicTypeVariable):
     _name = None
-    def __new__( cls, var ):
+    def __new__( cls, var, rank=0 ):
         assert(isinstance(var, (tuple, list, Tuple)))
         assert(len(var) > 1)
 
@@ -140,7 +149,7 @@ class TypeTuple(BasicTypeVariable):
 
         t_vars = []
         for i in var:
-            t_var = TypeVariable( i )
+            t_var = TypeVariable( i, rank=rank )
             t_vars.append(t_var)
 
         t_vars = Tuple(*t_vars)
@@ -164,18 +173,23 @@ class TypeTuple(BasicTypeVariable):
         sstr = printer.doprint
         return sstr(self.name)
 
+    def view(self):
+        """inspects the variable."""
+        attributs = ','.join(str(i) for i in self.types)
+        return 'TypeTuple({})'.format(attributs)
+
 #==============================================================================
 # user friendly function
-def assign_type(expr):
-    if isinstance(expr, Variable):
-        return TypeVariable(expr)
+def assign_type(expr, rank=0):
+    if isinstance(expr, (Variable, TypeVariable)):
+        return TypeVariable(expr, rank=rank)
 
     elif isinstance(expr, (tuple, list, Tuple)):
         if len(expr) == 1:
-            return assign_type(expr[0])
+            return assign_type(expr[0], rank=rank)
 
         else:
-            return TypeTuple(expr)
+            return TypeTuple(expr, rank=rank)
 
     else:
         raise TypeError('> wrong argument, given {}'.format(type(expr)))
