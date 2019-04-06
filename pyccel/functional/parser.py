@@ -19,7 +19,7 @@ from .ast import SeqMap, ParMap, BasicMap
 from .ast import SeqTensorMap, ParTensorMap, BasicTensorMap
 from .ast import SeqZip, SeqProduct
 from .ast import ParZip, ParProduct
-from .ast import assign_type, BasicTypeVariable
+from .ast import assign_type, BasicTypeVariable, TypeVariable, TypeTuple
 
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,
@@ -220,16 +220,18 @@ def _compute_types(expr, value=None):
         arguments = expr.args
 
         key = None
+        type_out = None
         if name == 'map':
             assert( len(arguments) == 2 )
             func   = arguments[0]
             target = arguments[1]
 
-            key = _get_key(func)
+            key_out = _get_key(func)
+            key_in  = str(func) + '_args' # TODO improve
             rank = 1
-            if key in d_types.keys():
-                type_in  = assign_type(d_types[key], rank=rank)
-                type_out = assign_type(d_types[key], rank=rank)
+            if key_out in d_types.keys():
+                type_in  = assign_type(d_types[key_in], rank=rank)
+                type_out = assign_type(d_types[key_out], rank=rank)
 
                 # no return here
                 _compute_types(target, value=type_in)
@@ -237,12 +239,24 @@ def _compute_types(expr, value=None):
             else:
                 print('> Unable to compute type for {} '.format(expr))
 
+        elif name == 'product':
+            assert(not( value is None ))
+
+            assert(isinstance(value, TypeTuple))
+            assert(len(value) == len(arguments))
+
+            rank = 1
+
+            for a,t in zip(arguments, value.types):
+                type_in  = assign_type(t, rank=rank)
+                _compute_types(a, value=type_in)
+
+            type_out = value
+
         else:
             raise NotImplementedError('{} not available'.format(name))
 
-        untyped = [i for i in arguments if not(_get_key(i) in d_types.keys())]
-#        print('> untyped = ', untyped)
-        if not untyped:
+        if not( type_out is None ):
             return main_expr.xreplace({expr: type_out})
 
         else:
@@ -251,7 +265,6 @@ def _compute_types(expr, value=None):
     elif isinstance(expr, Symbol):
         assert(not( value is None ))
 
-        # increment rank
         d_types[_get_key(expr)] = value
 
     else:

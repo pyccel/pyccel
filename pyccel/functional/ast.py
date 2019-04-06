@@ -141,18 +141,22 @@ class TypeVariable(BasicTypeVariable):
 class TypeTuple(BasicTypeVariable):
     _name = None
     def __new__( cls, var, rank=0 ):
-        assert(isinstance(var, (tuple, list, Tuple)))
+        assert(isinstance(var, (tuple, list, Tuple, TypeTuple)))
         assert(len(var) > 1)
 
-        for i in var:
-            assert( isinstance(i, Variable) )
+        if isinstance(var, (tuple, list, Tuple)):
+            for i in var:
+                assert( isinstance(i, Variable) )
 
-        t_vars = []
-        for i in var:
-            t_var = TypeVariable( i, rank=rank )
-            t_vars.append(t_var)
+            t_vars = []
+            for i in var:
+                t_var = TypeVariable( i, rank=rank )
+                t_vars.append(t_var)
 
-        t_vars = Tuple(*t_vars)
+            t_vars = Tuple(*t_vars)
+
+        else:
+            t_vars = var.types
 
         obj = Basic.__new__(cls, t_vars)
 
@@ -168,13 +172,16 @@ class TypeTuple(BasicTypeVariable):
     def name(self):
         return self._name
 
+    def __len__(self):
+        return len(self.types)
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         return sstr(self.name)
 
     def view(self):
         """inspects the variable."""
-        attributs = ','.join(str(i) for i in self.types)
+        attributs = ','.join(i.view() for i in self.types)
         return 'TypeTuple({})'.format(attributs)
 
 #==============================================================================
@@ -189,6 +196,9 @@ def assign_type(expr, rank=0):
 
         else:
             return TypeTuple(expr, rank=rank)
+
+    elif isinstance(expr, TypeTuple):
+        return TypeTuple(expr, rank=rank)
 
     else:
         raise TypeError('> wrong argument, given {}'.format(type(expr)))
