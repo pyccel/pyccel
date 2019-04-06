@@ -35,22 +35,32 @@ from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.datatypes import get_default_value
 from pyccel.functional import Where
+from pyccel.parser import Parser
 
-from .parser import parse as parse_lambda
+from .parser import parse    as parse_lambda
+from .parser import annotate as annotate_lambda
+from .utilities import get_decorators
+from .utilities import get_pyccel_imports_code
+from .utilities import get_dependencies_code
+
 
 #==============================================================================
 _accelerator_registery = {'openmp':  'omp',
                           'openacc': 'acc',
                           None:      None}
 
-_known_unary_functions = {'sum': '+',
-                          'add': '+',
-                          'mul': '*',
-                                   }
+#==============================================================================
+def _parse_typed_functions(user_functions):
+    """generate ast for dependencies."""
+    code  = get_pyccel_imports_code()
+    code += get_dependencies_code(user_functions)
 
-_known_binary_functions = {}
+    pyccel = Parser(code)
+    ast = pyccel.parse()
 
-_known_functions  = dict(_known_unary_functions, **_known_binary_functions)
+    settings = {}
+    ast = pyccel.annotate(**settings)
+    return ast.namespace.functions
 
 #==============================================================================
 def _lambdify(func, **kwargs):
@@ -72,55 +82,39 @@ def _lambdify(func, **kwargs):
     # ...
 
     # ...
-    ast = parse_lambda(func_code)
-    print(func_code)
-    print(ast)
-    print(ast.name)
-    print(ast.body)
-    print(ast.body.args)
-    print(ast.body.expr)
-
-    import sys; sys.exit(0)
+    L = parse_lambda(func_code)
+#    print(L)
+#    import sys; sys.exit(0)
     # ...
 
     # ...
-    calls = list(func.expr.atoms(AppliedUndef))
-
     typed_functions = {}
-    lambdas = {}
-    for call in calls:
-        # rather than using call.func, we will take the name of the
-        # class which defines its type and then the name of the function
-        f_name = call.__class__.__name__
-        f_symbolic = call.func
+    for f_name, f in namespace.items():
 
-        if f_name in namespace.keys():
-            f = namespace[f_name]
-            decorators = get_decorators(f)
-            if f_name in decorators.keys():
-                decorators = decorators[f_name]
-                if 'types' in decorators:
-                    setattr(f_symbolic, '_imp_', f)
-                    typed_functions[f_name] = f_symbolic
+        # ... check if a typed function
+        decorators = get_decorators(f)
+        if f_name in decorators.keys():
+            decorators = decorators[f_name]
+            if 'types' in decorators:
+                # TODO
+                f_symbolic = f
+                typed_functions[f_name] = f_symbolic
+                setattr(f_symbolic, '_imp_', f)
 
             else:
-                # check if it is a lambda functions
-                f_code = get_source_function(f)
-                pyccel = Parser(f_code)
-                ast = pyccel.parse()
-                ls = list(ast.atoms(Lambda))
-                if not( len(ls) == 1 ):
-                    msg = 'Something wrong happened when parsing {}'.format(f_name)
-                    raise ValueError(msg)
-                lambdas[f_name] = ls[0]
+                raise ValueError('{} given without a type'.format(f_name))
 
+        else:
+            raise NotImplementedError('')
 
-        # TODO this part is to be removed
-        elif (not( f_name in _known_functions.keys() ) and
-              not( f_name in  where_stmt.keys()) ):
-
-            raise ValueError('Unkown function {}'.format(f_name))
-    print('>>> typed_functions = ', typed_functions)
-    print('>>> lambdas         = ', lambdas)
-    import sys; sys.exit(0)
+    typed_functions = _parse_typed_functions(list(typed_functions.values()))
     # ...
+
+    # ... TODO add some verifications before starting annotating L
+    # ...
+
+    # ... TODO add lambda expressions too
+    L = annotate_lambda(L, typed_functions=typed_functions)
+    # ...
+
+    import sys; sys.exit(0)

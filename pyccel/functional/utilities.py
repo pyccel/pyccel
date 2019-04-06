@@ -6,6 +6,8 @@
 import os
 import sys
 import importlib
+import ast
+import inspect
 import numpy as np
 from types import FunctionType
 
@@ -15,34 +17,15 @@ from sympy.core.function import UndefinedFunction
 from sympy import sympify
 from sympy import Dummy
 
-from pyccel.codegen.utilities import construct_flags as construct_flags_pyccel
-from pyccel.codegen.utilities import execute_pyccel
 from pyccel.codegen.utilities import get_source_function
-from pyccel.codegen.utilities import random_string
-from pyccel.codegen.utilities import write_code
-from pyccel.codegen.utilities import mkdir_p
 from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
-from pyccel.ast import Variable, Len, Assign, AugAssign
-from pyccel.ast import For, Range, FunctionDef
-from pyccel.ast import FunctionCall
-from pyccel.ast import Comment, AnnotatedComment
-from pyccel.ast import Print, Pass, Return
-from pyccel.ast import ListComprehension
 from pyccel.ast.core import Slice, String
-from pyccel.ast import Zeros
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
-from pyccel.codegen.printing.pycode import pycode
-from pyccel.codegen.printing.fcode  import fcode
-from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.datatypes import get_default_value
 from pyccel.parser import Parser
 from pyccel.functional import Where
 
 #==============================================================================
-# TODO to be moved to a utilities file. (which one?)
-import ast
-import inspect
-
 def get_decorators(cls):
     target = cls
     decorators = {}
@@ -64,7 +47,6 @@ def get_decorators(cls):
     return decorators
 
 #==============================================================================
-# TODO to move
 def get_pyccel_imports_code():
     code = ''
     code += '\nfrom pyccel.decorators import types'
