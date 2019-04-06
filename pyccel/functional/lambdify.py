@@ -38,6 +38,8 @@ from pyccel.ast.datatypes import get_default_value
 from pyccel.parser import Parser
 from pyccel.functional import Where
 
+from .parser import parse as parse_lambda
+
 #==============================================================================
 _accelerator_registery = {'openmp':  'omp',
                           'openacc': 'acc',
@@ -981,65 +983,42 @@ def _lambdify(func, **kwargs):
     # ... get optional arguments
     _kwargs = kwargs.copy()
 
-    namespace       = _kwargs.pop('namespace', globals())
-    functional_args = _kwargs.pop('functional_args', None)
-    # ...
-
-    # ... where is a dictionary
-    where_stmt = [i for i in functional_args if isinstance(i, Where)]
-    if len(where_stmt) == 1:
-        where_stmt = where_stmt[0]
-
-    elif len(where_stmt) == 0:
-        where_stmt = {}
-
-    if where_stmt:
-        where_stmt = parse_where_stmt(where_stmt)
+    namespace = _kwargs.pop('namespace', None)
+    # TODO improve using the same way as Equation in sympde
+    if namespace is None:
+        raise ValueError('namespace must be given')
     # ...
 
     # ... get the function source code
     func_code = get_source_function(func)
     # ...
 
+#    # ...
+#    ast = parse_lambda(func_code)
+#    print(ast)
+#
+#    import sys; sys.exit(0)
+#    # ...
+
     # ... parse the lambda expression
     #     this must be done using pyccel to get our functional AST nodes
     pyccel = Parser(func_code)
     ast = pyccel.parse()
 
-    settings = {}
-    ast = pyccel.annotate(**settings)
+    lambdas = list(ast.atoms(Lambda))
+    if not len(lambdas) == 1:
+        raise ValueError('Expecting one lambda function')
 
-    ns = ast.namespace.symbolic_functions
-    if not( len(ns.values()) == 1 ):
-        raise ValueError('Expecting one single lambda function')
-
-    func_name = list(ns.keys())[0]
-    func      = list(ns.values())[0]
-
-    if not isinstance(func, Lambda):
-        msg = 'Expecting a lambda expr'.format(func_name)
-        raise TypeError(msg)
+    func = lambdas[0]
+#    print(func)
+#    import sys; sys.exit(0)
     # ...
 
-    # ... annotate functions appearing in the lambda expression
-#    print(func.expr)
-#    import sys; sys.exit(0)
+    # ...
     calls = list(func.expr.atoms(AppliedUndef))
 
-    # add calls from where statement
-    where_lambdas = [i for i in where_stmt.values() if isinstance(i, Lambda)]
-    for L in where_lambdas:
-        calls += list(L.expr.atoms(AppliedUndef))
-
-    # TODO DO WE NEED TO KEEP THIS FILTER?
-    calls = [i for i in calls if not( i.__class__.__name__ in _known_functions.keys() )]
-    print('>>> calls = ', calls)
-    print(namespace['lam_1'])
-    import sys; sys.exit(0)
-    # ...
-
-    # ...
-    user_functions = []
+    typed_functions = {}
+    lambdas = {}
     for call in calls:
         # rather than using call.func, we will take the name of the
         # class which defines its type and then the name of the function
@@ -1053,15 +1032,28 @@ def _lambdify(func, **kwargs):
                 decorators = decorators[f_name]
                 if 'types' in decorators:
                     setattr(f_symbolic, '_imp_', f)
-                    user_functions += [f_symbolic]
+                    typed_functions[f_name] = f_symbolic
+
+            else:
+                # check if it is a lambda functions
+                f_code = get_source_function(f)
+                pyccel = Parser(f_code)
+                ast = pyccel.parse()
+                ls = list(ast.atoms(Lambda))
+                if not( len(ls) == 1 ):
+                    msg = 'Something wrong happened when parsing {}'.format(f_name)
+                    raise ValueError(msg)
+                lambdas[f_name] = ls[0]
+
 
         # TODO this part is to be removed
         elif (not( f_name in _known_functions.keys() ) and
               not( f_name in  where_stmt.keys()) ):
 
             raise ValueError('Unkown function {}'.format(f_name))
-#    print('>>> user_functions = ', user_functions)
-#    import sys; sys.exit(0)
+    print('>>> typed_functions = ', typed_functions)
+    print('>>> lambdas         = ', lambdas)
+    import sys; sys.exit(0)
     # ...
 
     # ...

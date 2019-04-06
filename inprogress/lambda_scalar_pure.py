@@ -36,7 +36,14 @@ def f_real(x,y,z):
     r = x+y*z
     return r
 
-lam_1 = lambda x:x**2
+@pure
+@types('int')
+def square(x):
+    r = x**2
+    return r
+
+lam_1 = lambda xs: [square(x) for x in xs]
+lam_2 = lambda x: x**2 + 3*x
 
 
 #==============================================================================
@@ -45,9 +52,15 @@ lam_1 = lambda x:x**2
 
 #=========================================================
 def test_map_int_1():
-    L = lambda xs,ys,z: [f_int(lam_1(x),y,z) for x in xs for y in ys]
+    L = lambda xs,ys,z: [f_int(lam_1(x),lam_2(y),z) for x in xs for y in ys]
 
-    L = _lambdify(L)
+    L = lambdify( L,
+                  namespace   = {'f_int': f_int,
+                                 'lam_2': lam_2,
+                                 'lam_1': lam_1,
+                                 'square': square},
+                  accelerator = ACCEL,
+                  verbose     = VERBOSE )
 
     nx = 5000
     ny = 4000
