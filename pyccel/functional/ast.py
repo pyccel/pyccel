@@ -157,7 +157,6 @@ class TypeTuple(BasicTypeVariable):
         obj = Basic.__new__(cls, t_vars)
 
         obj._name = 'tt_{}'.format( random_string( 4 ) )
-        obj._name = name
 
         return obj
 

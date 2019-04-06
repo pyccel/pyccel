@@ -207,7 +207,7 @@ def _get_key(expr):
         raise NotImplementedError('for {}'.format(type(expr)))
 
 #==============================================================================
-def _compute_types(expr):
+def _compute_types(expr, value=None):
     if isinstance(expr, Lambda):
         args = expr.variables
         return _compute_types(expr.expr)
@@ -218,37 +218,41 @@ def _compute_types(expr):
     elif isinstance(expr, AppliedUndef):
         name = expr.__class__.__name__
         arguments = expr.args
+
+        key = None
         if name == 'map':
             assert( len(arguments) == 2 )
             func   = arguments[0]
             target = arguments[1]
 
             key = _get_key(func)
+            rank = 1
             if key in d_types.keys():
-                if isinstance(target, Symbol):
-#                    print('> target = ', target)
+                type_in  = assign_type(d_types[key], rank=rank)
+                type_out = assign_type(d_types[key], rank=rank)
 
-                    # increment rank
-                    d_types[_get_key(target)] = assign_type(d_types[key], rank=1)
-
-                else:
-                    raise NotImplementedError('')
+                # no return here
+                _compute_types(target, value=type_in)
 
             else:
-                print('--------')
-                print(key)
-                print(d_types)
-                print('--------')
                 print('> Unable to compute type for {} '.format(expr))
+
+        else:
+            raise NotImplementedError('{} not available'.format(name))
 
         untyped = [i for i in arguments if not(_get_key(i) in d_types.keys())]
 #        print('> untyped = ', untyped)
         if not untyped:
-            # TODO increment rank
-            return main_expr.xreplace({expr: d_types[key]})
+            return main_expr.xreplace({expr: type_out})
 
         else:
             return main_expr
+
+    elif isinstance(expr, Symbol):
+        assert(not( value is None ))
+
+        # increment rank
+        d_types[_get_key(expr)] = value
 
     else:
         raise TypeError('Not implemented for {}'.format(type(expr)))
