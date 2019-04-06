@@ -39,13 +39,8 @@ _functors_registery = ['map', 'pmap', 'tmap', 'ptmap', 'reduce']
 # utilities for semantic analysis
 namespace  = {}
 
-# keys = arguments            ||  values = ?
-signatures = {}
 # keys = global arguments and functions    ||  values = dictionary for d_var
 d_types    = {}
-# keys = arguments     ||  values = FunctionDef or Lambda
-signatures_parent = {}
-
 main_expr = None
 #==============================================================================
 
@@ -78,8 +73,6 @@ def to_sympy(stmt):
     if isinstance(stmt, NamedAbstraction):
         name = stmt.name
         expr = to_sympy(stmt.abstraction)
-        # TODO add it to the namespace
-#        namespace[name] = expr
         return expr
 
     elif isinstance(stmt, Abstraction):
@@ -178,11 +171,6 @@ def parse(inputs, debug=False, verbose=False):
 
 #==============================================================================
 def annotate(L, typed_functions):
-    compute_types(L, typed_functions)
-    compute_shapes(L, typed_functions)
-
-#==============================================================================
-def compute_types(L, typed_functions):
     # ... add types for arguments and results
     for f in typed_functions.values():
         d_types[_get_key(f)] = assign_type(f.arguments)
@@ -203,6 +191,7 @@ def compute_types(L, typed_functions):
     print(main_expr.view())
     import sys; sys.exit(0)
 
+#==============================================================================
 def _get_key(expr):
     # TODO to be replaced by domain
     if isinstance(expr, FunctionDef):
@@ -263,7 +252,3 @@ def _compute_types(expr):
 
     else:
         raise TypeError('Not implemented for {}'.format(type(expr)))
-
-#==============================================================================
-def compute_shapes(expr, namespace):
-    pass
