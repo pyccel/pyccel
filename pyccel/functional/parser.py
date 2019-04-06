@@ -4,6 +4,8 @@ import os
 from os.path import join, dirname
 
 from sympy import Symbol, Lambda, Function, Dummy
+from sympy.core.function import AppliedUndef
+from sympy import Integer, Float
 from sympy import sympify
 
 from textx.metamodel import metamodel_from_str
@@ -66,8 +68,47 @@ def to_sympy(stmt):
             return sympify(stmt)
 
     else:
-        print(stmt)
         raise TypeError('Not implemented for {}'.format(type(stmt)))
+
+#==============================================================================
+from .ast import Reduce
+from .ast import SeqMap, ParMap
+from .ast import SeqTensorMap, ParTensorMap
+from .ast import SeqZip, SeqProduct
+from .ast import ParZip, ParProduct
+_known_functions = {'map':      SeqMap,
+                    'pmap':     ParMap,
+                    'tmap':     SeqTensorMap,
+                    'ptmap':    ParTensorMap,
+                    'zip':      SeqZip,
+                    'pzip':     ParZip,
+                    'product':  SeqProduct,
+                    'pproduct': ParProduct,
+                    'reduce':   Reduce,
+                   }
+
+def sanitize(expr):
+    if isinstance(expr, Lambda):
+        args = expr.variables
+        expr = sanitize(expr.expr)
+
+        return Lambda(args, expr)
+
+    elif isinstance(expr, AppliedUndef):
+        name = expr.__class__.__name__
+        args = [sanitize(i) for i in expr.args]
+
+        if name in _known_functions.keys():
+            return _known_functions[name](*args)
+
+        else:
+            return Function(name)(*args)
+
+    elif isinstance(expr, (int, float, Integer, Float, Symbol)):
+        return expr
+
+    else:
+        raise TypeError('Not implemented for {}'.format(type(expr)))
 
 #==============================================================================
 def parse(inputs, debug=False):
@@ -89,6 +130,11 @@ def parse(inputs, debug=False):
         ast = meta.model_from_str(inputs)
 
     expr = to_sympy(ast)
-    print(expr)
+    print('>>> stage 0 = ', expr)
+    expr = sanitize(expr)
+    print('>>> stage 1 = ', expr)
+    print('')
+
+#    import sys; sys.exit(0)
 
     return expr
