@@ -105,7 +105,7 @@ def _lambdify(func, namespace={}, **kwargs):
     type_only = kwargs.pop('type_only', False)
     parser = SemanticParser(L, typed_functions=typed_functions)
 
-    dtype = parser.compute_type()
+    dtype = parser.to_type()
     if type_only:
         return dtype
 

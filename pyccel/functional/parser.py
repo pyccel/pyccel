@@ -405,7 +405,7 @@ class SemanticParser(object):
         """builds the namespace from types."""
         raise NotImplementedError('')
 
-    def compute_type(self, verbose=False):
+    def to_type(self, verbose=False):
 
         # ... compute type
         i_count = 0
@@ -414,7 +414,7 @@ class SemanticParser(object):
             if verbose:
                 print('----> BEFORE ', self.main)
 
-            self.main = self._compute_type(self.main)
+            self.main = self._to_type(self.main)
 
             if verbose:
                 print('<---- AFTER', self.main)
@@ -424,12 +424,12 @@ class SemanticParser(object):
 
         return self.main
 
-    def _compute_type(self, stmt, value=None):
+    def _to_type(self, stmt, value=None):
 
         cls = type(stmt)
         name = cls.__name__
 
-        method = '_compute_type_{}'.format(name)
+        method = '_to_type_{}'.format(name)
         if hasattr(self, method):
             return getattr(self, method)(stmt, value=value)
 
@@ -458,7 +458,7 @@ class SemanticParser(object):
             else:
                 raise NotImplementedError('{}'.format(name))
 
-            pattern = '_compute_type_{kind}_{name}'
+            pattern = '_to_type_{kind}_{name}'
             method  = pattern.format(kind=kind, name=name)
             method = getattr(self, method)
 
@@ -467,25 +467,25 @@ class SemanticParser(object):
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
 
-    def _compute_type_Lambda(self, stmt, value=None):
+    def _to_type_Lambda(self, stmt, value=None):
         # TODO treat args
-        self.main = self._compute_type(stmt.expr)
+        self.main = self._to_type(stmt.expr)
         return self.main
 
-    def _compute_type_TypeVariable(self, stmt, value=None):
+    def _to_type_TypeVariable(self, stmt, value=None):
         return stmt
 
-    def _compute_type_TypeTuple(self, stmt, value=None):
+    def _to_type_TypeTuple(self, stmt, value=None):
         return stmt
 
-    def _compute_type_TypeList(self, stmt, value=None):
+    def _to_type_TypeList(self, stmt, value=None):
         return stmt
 
-    def _compute_type_Symbol(self, stmt, value=None):
+    def _to_type_Symbol(self, stmt, value=None):
         assert(not( value is None ))
         self._set_type(stmt, value)
 
-    def _compute_type_functor_map(self, stmt, value=None):
+    def _to_type_functor_map(self, stmt, value=None):
         arguments = stmt.args
 
         assert( len(arguments) == 2 )
@@ -514,11 +514,11 @@ class SemanticParser(object):
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
 
-        self._compute_type(target, value=type_domain)
+        self._to_type(target, value=type_domain)
 
         return type_codomain
 
-    def _compute_type_function_zip(self, stmt, value=None):
+    def _to_type_function_zip(self, stmt, value=None):
         arguments = stmt.args
 
         assert(not( value is None ))
@@ -533,7 +533,7 @@ class SemanticParser(object):
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
-            self._compute_type(a, value=type_domain)
+            self._to_type(a, value=type_domain)
 
         type_codomain = value
 
@@ -542,7 +542,7 @@ class SemanticParser(object):
 
         return type_codomain
 
-    def _compute_type_function_product(self, stmt, value=None):
+    def _to_type_function_product(self, stmt, value=None):
         arguments = stmt.args
 
         assert(not( value is None ))
@@ -557,7 +557,7 @@ class SemanticParser(object):
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
-            self._compute_type(a, value=type_domain)
+            self._to_type(a, value=type_domain)
 
         type_codomain = value
 
@@ -566,7 +566,7 @@ class SemanticParser(object):
 
         return type_codomain
 
-    def _compute_type_functor_reduce(self, stmt, value=None):
+    def _to_type_functor_reduce(self, stmt, value=None):
         arguments = stmt.args
 
         assert( len(arguments) == 2 )
@@ -605,12 +605,14 @@ class SemanticParser(object):
             if name == 'map':
                 func, target = stmt.args
                 target = self.annotate(target)
-                return SeqFunctionalMap(func, target)
+                results = None
+                return SeqFunctionalMap(func, target, results)
 
             elif name == 'pmap':
                 func, target = stmt.args
+                results = None
                 target = self.annotate(target)
-                return ParFunctionalMap(func, target)
+                return ParFunctionalMap(func, target, results)
 
             raise NotImplementedError('')
 

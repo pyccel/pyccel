@@ -44,7 +44,7 @@ class FunctionalBasic(Basic):
 #==============================================================================
 class FunctionalMap(FunctionalBasic):
     """."""
-    def __new__( cls, func, target ):
+    def __new__( cls, func, target, results ):
         allocations = []
         inits       = []
         decs        = []
