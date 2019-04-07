@@ -419,12 +419,17 @@ class SemanticParser(object):
 
     def _compute_type_function_zip(self, arguments, value=None, base_rank=None):
         assert(not( value is None ))
+        assert(isinstance(value, TypeList))
+        assert(len(value.parent) == len(arguments))
 
-        assert(isinstance(value, TypeTuple))
-        assert(len(value) == len(arguments))
+        if not isinstance(value.parent, TypeTuple):
+            msg = '{} not available yet'.format(type(value.parent))
+            raise NotImplementedError(msg)
 
-        for a,t in zip(arguments, value.types):
-            type_domain  = assign_type(t, rank=base_rank)
+        values = value.parent.types
+
+        for a,t in zip(arguments, values):
+            type_domain  = TypeList(t)
             self._compute_type(a, value=type_domain)
 
         type_codomain = value
