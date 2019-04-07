@@ -71,14 +71,23 @@ def test_map_list():
     assert( parent.precision == 8 )
     assert( not parent.is_stack_array )
 
-    print('OK')
+    print('DONE.')
 
 #=========================================================
 def test_map_zip():
     L = lambda xs,ys:  map(f2, zip(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(type_L)
+
+    assert( isinstance( type_L, TypeList ) )
+
+    parent = type_L.parent
+    assert( isinstance( parent.dtype, NativeReal ) )
+    assert( parent.rank == 0 )
+    assert( parent.precision == 8 )
+    assert( not parent.is_stack_array )
+
+    print('DONE.')
 
 #=========================================================
 def test_map_product():
@@ -86,6 +95,9 @@ def test_map_product():
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
     print(type_L)
+    print(type_L.view())
+
+    print('DONE.')
 
 #=========================================================
 def test_tmap_zip():
@@ -93,6 +105,9 @@ def test_tmap_zip():
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
     print(type_L)
+    print(type_L.view())
+
+    print('DONE.')
 
 #=========================================================
 def test_tmap_product():
@@ -100,6 +115,9 @@ def test_tmap_product():
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
     print(type_L)
+    print(type_L.view())
+
+    print('DONE.')
 
 #=========================================================
 def test_reduce_add_product():
@@ -107,10 +125,13 @@ def test_reduce_add_product():
 
     type_L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
     print(type_L)
+    print(type_L.view())
+
+    print('DONE.')
 
 #########################################
 if __name__ == '__main__':
-#    test_map_list()
+    test_map_list()
     test_map_zip()
 #    test_map_product()
 #    test_tmap_zip()

@@ -170,9 +170,6 @@ class TypeTuple(BasicTypeVariable):
     def name(self):
         return self._name
 
-    def __len__(self):
-        return len(self.types)
-
     def _sympystr(self, printer):
         sstr = printer.doprint
         return sstr(self.name)
@@ -201,9 +198,6 @@ class TypeList(BasicTypeVariable):
     @property
     def name(self):
         return self._name
-
-#    def __len__(self):
-#        return len(self.types)
 
     def _sympystr(self, printer):
         sstr = printer.doprint

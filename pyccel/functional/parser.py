@@ -291,19 +291,19 @@ class SemanticParser(object):
         """builds the namespace from types."""
         raise NotImplementedError('')
 
-    def compute_type(self, verbose=True):
+    def compute_type(self, verbose=False):
 
         # ... compute type
         i_count = 0
         max_count = 2
         while(i_count < max_count and not isinstance(self.main, BasicTypeVariable)):
             if verbose:
-                print('>>> before ', self.main)
+                print('----> BEFORE ', self.main)
 
             self.main = self._compute_type(self.main)
 
             if verbose:
-                print('>>> after', self.main)
+                print('<---- AFTER', self.main)
 
             i_count += 1
         # ...
@@ -320,28 +320,35 @@ class SemanticParser(object):
             return getattr(self, method)(stmt, value=value)
 
         elif name in _known_functions.keys():
-            base_rank = self._preprocess_function(stmt)
+#            print('[{}]'.format(name))
+
+            FUNCTION = 'function'
+            FUNCTOR  = 'functor'
 
             if name in ['map', 'pmap', 'tmap', 'ptmap']:
                 name = 'map'
-
-            elif name in ['zip', 'pzip']:
-                name = 'zip'
-
-            elif name in ['product', 'pproduct']:
-                name = 'product'
+                kind = FUNCTOR
 
             elif name in ['reduce']:
                 name = 'reduce'
+                kind = FUNCTOR
+
+            elif name in ['zip', 'pzip']:
+                name = 'zip'
+                kind = FUNCTION
+
+            elif name in ['product', 'pproduct']:
+                name = 'product'
+                kind = FUNCTION
 
             else:
                 raise NotImplementedError('{}'.format(name))
 
-            method = getattr(self, '_compute_type_function_{}'.format(name))
-            arguments = stmt.args
-            type_codomain = method(arguments, value=value, base_rank=base_rank)
+            pattern = '_compute_type_{kind}_{name}'
+            method  = pattern.format(kind=kind, name=name)
+            method = getattr(self, method)
 
-            return self._postprocess_function(stmt, type_codomain=type_codomain)
+            return method(stmt, value=value)
 
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
@@ -364,40 +371,9 @@ class SemanticParser(object):
         assert(not( value is None ))
         self._set_type(stmt, value)
 
-    def _preprocess_function(self, stmt):
-        name      = stmt.__class__.__name__
+    def _compute_type_functor_map(self, stmt, value=None):
         arguments = stmt.args
 
-        if name in _base_rank_registery.keys():
-            base_rank = _base_rank_registery[name](arguments)
-
-        else:
-            base_rank = None
-
-        return base_rank
-
-    def _postprocess_function(self, stmt, type_codomain=None):
-        if type_codomain is None:
-            return self.main
-
-#        print('------')
-#        print('> main = ', self.main)
-#        print('> stmt = ', stmt)
-#        print('> type = ', type_codomain)
-#        main = self.main.xreplace({stmt: type_codomain})
-
-        try:
-            self.main = self.main.xreplace({stmt: type_codomain})
-
-        except:
-            self.inspect()
-
-            print('>>> Something wrong happend')
-#            import sys; sys.exit(0)
-
-        return self.main
-
-    def _compute_type_function_map(self, arguments, value=None, base_rank=None):
         assert( len(arguments) == 2 )
         func   = arguments[0]
         target = arguments[1]
@@ -407,20 +383,21 @@ class SemanticParser(object):
 
         if not type_codomain:
             print('> Unable to compute type for {} '.format(stmt))
+            raise NotImplementedError('')
 
-        # TODO may be we should split it here
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
 
-        # no return here
         self._compute_type(target, value=type_domain)
 
         return type_codomain
 
-    def _compute_type_function_zip(self, arguments, value=None, base_rank=None):
+    def _compute_type_function_zip(self, stmt, value=None):
+        arguments = stmt.args
+
         assert(not( value is None ))
         assert(isinstance(value, TypeList))
-        assert(len(value.parent) == len(arguments))
+        assert(len(value.parent.types) == len(arguments))
 
         if not isinstance(value.parent, TypeTuple):
             msg = '{} not available yet'.format(type(value.parent))
@@ -433,11 +410,16 @@ class SemanticParser(object):
             self._compute_type(a, value=type_domain)
 
         type_codomain = value
+
+        # update main expression
+        self.main = self.main.xreplace({stmt: type_codomain})
+
         return type_codomain
 
-    def _compute_type_function_product(self, arguments, value=None, base_rank=None):
-        assert(not( value is None ))
+    def _compute_type_function_product(self, stmt, value=None):
+        arguments = stmt.args
 
+        assert(not( value is None ))
         assert(isinstance(value, TypeTuple))
         assert(len(value) == len(arguments))
 
@@ -448,7 +430,9 @@ class SemanticParser(object):
         type_codomain = value
         return type_codomain
 
-    def _compute_type_function_reduce(self, arguments, value=None, base_rank=None):
+    def _compute_type_functor_reduce(self, stmt, value=None):
+        arguments = stmt.args
+
         assert( len(arguments) == 2 )
         op     = arguments[0]
         target = arguments[1]
