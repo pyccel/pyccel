@@ -275,11 +275,10 @@ class SemanticParser(object):
         # ... get all functions
         calls = list(expr.atoms(AppliedUndef))
         map_funcs = [i.args[0] for i in calls if i.__class__.__name__ in _functors_map_registery]
-        callables = [i.funcs for i in calls  if not i.__class__.__name__ in _functors_registery]
-        functions = map_funcs + callables
+        callables = [i.func for i in calls  if not i.__class__.__name__ in _functors_registery]
+        functions = list(set(map_funcs + callables))
 
         for f in functions:
-            # TODO add assert if not
             if str(f) in _elemental_math_functions:
                 type_domain   = self.default_type
                 type_codomain = self.default_type
@@ -287,7 +286,8 @@ class SemanticParser(object):
                 self._set_type(f, value=type_domain, domain=True)
                 self._set_type(f, value=type_codomain, codomain=True)
 
-#        import sys; sys.exit(0)
+            elif not str(f) in list(_known_functions.keys()) + list(self.typed_functions.keys()):
+                raise NotImplementedError('{} not available'.format(str(f)))
         # ...
 
     @property
