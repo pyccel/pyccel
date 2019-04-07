@@ -19,7 +19,8 @@ from .ast import SeqMap, ParMap, BasicMap
 from .ast import SeqTensorMap, ParTensorMap, BasicTensorMap
 from .ast import SeqZip, SeqProduct
 from .ast import ParZip, ParProduct
-from .ast import assign_type, BasicTypeVariable, TypeVariable, TypeTuple
+from .ast import assign_type, BasicTypeVariable
+from .ast import TypeVariable, TypeTuple, TypeList
 
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,
@@ -356,6 +357,9 @@ class SemanticParser(object):
     def _compute_type_TypeTuple(self, stmt, value=None):
         return stmt
 
+    def _compute_type_TypeList(self, stmt, value=None):
+        return stmt
+
     def _compute_type_Symbol(self, stmt, value=None):
         assert(not( value is None ))
         self._set_type(stmt, value)
@@ -405,10 +409,8 @@ class SemanticParser(object):
             print('> Unable to compute type for {} '.format(stmt))
 
         # TODO may be we should split it here
-#        print(type(type_domain))
-#        import sys; sys.exit(0)
-        type_domain   = assign_type(type_domain, rank=base_rank)
-        type_codomain = assign_type(type_codomain, rank=base_rank)
+        type_domain   = TypeList(type_domain)
+        type_codomain = TypeList(type_codomain)
 
         # no return here
         self._compute_type(target, value=type_domain)

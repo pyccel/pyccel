@@ -185,11 +185,9 @@ class TypeTuple(BasicTypeVariable):
 #==============================================================================
 class TypeList(BasicTypeVariable):
     _name = None
-    def __new__( cls, var, rank=0 ):
-        assert(isinstance(var, (tuple, list, Tuple)))
-        assert(all(isinstance(i, (TypeVariable, TypeTuple)) for i in var))
+    def __new__( cls, var ):
+        assert(isinstance(var, (TypeVariable, TypeTuple)))
 
-        var = Tuple(*var)
         obj = Basic.__new__(cls, var)
 
         obj._name = 'tl_{}'.format( random_string( 4 ) )
@@ -197,15 +195,15 @@ class TypeList(BasicTypeVariable):
         return obj
 
     @property
-    def types(self):
+    def parent(self):
         return self._args[0]
 
     @property
     def name(self):
         return self._name
 
-    def __len__(self):
-        return len(self.types)
+#    def __len__(self):
+#        return len(self.types)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -213,8 +211,7 @@ class TypeList(BasicTypeVariable):
 
     def view(self):
         """inspects the variable."""
-        attributs = ','.join(i.view() for i in self.types)
-        return 'TypeList({})'.format(attributs)
+        return 'TypeList({})'.format(self.parent.view())
 
 #==============================================================================
 # user friendly function
@@ -228,24 +225,20 @@ def assign_type(expr, rank=None):
     if isinstance(expr, (Variable, TypeVariable)):
         return TypeVariable(expr, rank=rank)
 
-    elif isinstance(expr, (tuple, list, Tuple, TypeTuple)):
+    elif isinstance(expr, (tuple, list, Tuple)):
         if len(expr) == 1:
             return assign_type(expr[0], rank=rank)
 
-        elif isinstance(expr, TypeTuple):
-            ls = [assign_type( i, rank=rank ) for i in expr.types]
-            return assign_type( ls )
-
-        elif isinstance(expr, (tuple, list, Tuple)):
+        else:
             return TypeTuple(expr)
 
-        else:
-            return TypeTuple(expr, rank=rank)
-
-#        return TypeTuple(expr, rank=rank)
-
     elif isinstance(expr, TypeTuple):
-        return TypeTuple(expr, rank=rank)
+#        ls = [assign_type( i, rank=rank ) for i in expr.types]
+#        return assign_type( ls )
+        raise NotImplementedError('')
+
+#    elif isinstance(expr, TypeTuple):
+#        return TypeTuple(expr, rank=rank)
 
     else:
         raise TypeError('> wrong argument, given {}'.format(type(expr)))
