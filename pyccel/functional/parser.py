@@ -8,12 +8,14 @@ from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
 from sympy import Integer, Float
 from sympy import sympify
+from sympy import FunctionClass
 
 from textx.metamodel import metamodel_from_str
 
 
 from pyccel.codegen.utilities import random_string
 from pyccel.ast.core import Variable, FunctionDef
+from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from .ast import Reduce
 from .ast import SeqMap, ParMap, BasicMap
 from .ast import SeqTensorMap, ParTensorMap, BasicTensorMap
@@ -33,22 +35,32 @@ _known_functions = {'map':      SeqMap,
                     'reduce':   Reduce,
                    }
 
-_functors_registery = ['map', 'pmap', 'tmap', 'ptmap', 'reduce']
+_functors_map_registery = ['map', 'pmap', 'tmap', 'ptmap']
+_functors_registery = _functors_map_registery + ['reduce']
 
-_zero  = lambda x: 0
-_one   = lambda x: 1
-_count = lambda x: len(x)
-_base_rank_registery = {'map':      _one,
-                        'pmap':     _one,
-                        'tmap':     _count,
-                        'ptmap':    _count,
-                        'zip':      _one,
-                        'pzip':     _one,
-                        'product':  _one,
-                        'pproduct': _one,
-                        'reduce':   _zero,
-                       }
+# TODO atan2, pow
+_elemental_math_functions = ['acos',
+                             'asin',
+                             'atan',
+                             'cos',
+                             'cosh',
+                             'exp',
+                             'log',
+                             'log10',
+                             'sin',
+                             'sinh',
+                             'sqrt',
+                             'tan',
+                             'tanh',
+                            ]
 
+# TODO add cross, etc
+_math_vector_functions = ['dot']
+
+# TODO
+_math_matrix_functions = ['matmul']
+
+_math_functions = _elemental_math_functions + _math_vector_functions + _math_matrix_functions
 #==============================================================================
 # TODO to be moved in a class
 # utilities for semantic analysis
@@ -229,9 +241,54 @@ class SemanticParser(object):
             self._set_type(f, value=type_codomain, codomain=True)
         # ...
 
-#        # ...
-#        self.inspect()
-#        # ...
+        # ... default Type
+        prefix = kwargs.pop('prefix', 'd') # doubles as default
+        dtype     = None
+        precision = None
+        if prefix == 'i':
+            dtype     = Int
+            precision = 4
+
+        elif prefix == 's':
+            dtype     = Real
+            precision = 4
+
+        elif prefix == 'd':
+            dtype     = Real
+            precision = 8
+
+        elif prefix == 'c':
+            dtype     = Complex
+            precision = 8
+
+        elif prefix == 'z':
+            dtype     = Complex
+            precision = 16
+
+        else:
+            raise ValueError('Wrong prefix. Available: i, s, d, c, z')
+
+        var = Variable(dtype, 'dummy_' + self.tag, precision=precision)
+        self._default_type = TypeVariable(var)
+        # ...
+
+        # ... get all functions
+        calls = list(expr.atoms(AppliedUndef))
+        map_funcs = [i.args[0] for i in calls if i.__class__.__name__ in _functors_map_registery]
+        callables = [i.funcs for i in calls  if not i.__class__.__name__ in _functors_registery]
+        functions = map_funcs + callables
+
+        for f in functions:
+            # TODO add assert if not
+            if str(f) in _elemental_math_functions:
+                type_domain   = self.default_type
+                type_codomain = self.default_type
+
+                self._set_type(f, value=type_domain, domain=True)
+                self._set_type(f, value=type_codomain, codomain=True)
+
+#        import sys; sys.exit(0)
+        # ...
 
     @property
     def expr(self):
@@ -240,6 +297,10 @@ class SemanticParser(object):
     @property
     def typed_functions(self):
         return self._typed_functions
+
+    @property
+    def default_type(self):
+        return self._default_type
 
     @property
     def namespace(self):
@@ -264,12 +325,24 @@ class SemanticParser(object):
         # TODO improve
         if codomain:
             assert(not domain)
-            return str(target.name)
+            if (isinstance(target, FunctionClass)):
+                name = str(target)
+
+            else:
+                name = str(target.name)
+
+            return name
 
         if domain:
             assert(not codomain)
-            name = str(target.name)
-            if name in self.typed_functions.keys():
+            if (isinstance(target, FunctionClass)):
+                name = str(target)
+
+            else:
+                name = str(target.name)
+
+            _avail_funcs = list(self.typed_functions.keys()) + _math_functions
+            if name in _avail_funcs:
                 return name + '_args'
 
         return _get_key(target)
