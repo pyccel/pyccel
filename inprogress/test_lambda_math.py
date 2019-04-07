@@ -12,7 +12,7 @@ from pyccel.functional.ast      import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
 # define settings for _lambdify
-settings = {'type_only' :True}
+settings = {'type_only' : True}
 
 #=========================================================
 def test_map_list():
@@ -30,6 +30,18 @@ def test_map_list():
 
     print('DONE.')
 
+#=========================================================
+def test_annotate_map_list():
+    L = lambda xs: map(sin, xs)
+
+    L = _lambdify( L, **settings )
+    print(L)
+
+    print('DONE.')
+
 #########################################
 if __name__ == '__main__':
-    test_map_list()
+#    test_map_list()
+
+    settings = {'type_only' : False}
+    test_annotate_map_list()

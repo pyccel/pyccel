@@ -23,6 +23,7 @@ from .ast import SeqZip, SeqProduct
 from .ast import ParZip, ParProduct
 from .ast import assign_type, BasicTypeVariable
 from .ast import TypeVariable, TypeTuple, TypeList
+from .ast import SeqFunctionalMap, ParFunctionalMap
 
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,
@@ -548,17 +549,91 @@ class SemanticParser(object):
 
         import sys; sys.exit(0)
 
-#    def _annotate(self, stmt):
-#
-#        cls = type(stmt)
-#        name = cls.__name__
-#
-#        method = '_annotate_{}'.format(name)
-#        if hasattr(self, method):
-#            return getattr(self, method)(stmt)
-#
-#        # Unknown object, we raise an error.
-#        raise TypeError('{node} not yet available'.format(node=type(stmt)))
-#
-#    def _annotate_Lambda(self, stmt):
-#        return self._annotate(stmt.expr)
+    def annotate(self, stmt=None):
+
+        if stmt is None:
+            stmt = self.expr
+
+        cls = type(stmt)
+        name = cls.__name__
+
+        method = '_annotate_{}'.format(name)
+        if hasattr(self, method):
+            return getattr(self, method)(stmt)
+
+        elif name in _known_functions.keys():
+            if name == 'map':
+                func, target = stmt.args
+                target = self.annotate(target)
+                return SeqFunctionalMap(func, target)
+
+            elif name == 'pmap':
+                func, target = stmt.args
+                target = self.annotate(target)
+                return ParFunctionalMap(func, target)
+
+            raise NotImplementedError('')
+
+        # Unknown object, we raise an error.
+        raise TypeError('{node} not yet available'.format(node=type(stmt)))
+
+    def _annotate_Lambda(self, stmt):
+        args = [self.annotate(i) for i in stmt.variables]
+        expr = self.annotate(stmt.expr)
+#        expr = Lambda(args, expr)
+
+        return expr
+
+    def _annotate_Symbol(self, stmt):
+
+        # ...
+        def _attributs_from_type(t, d_var):
+            if isinstance(t, TypeList):
+                t = _attributs_from_type(t.parent, d_var)
+                d_var['rank'] = d_var['rank'] + 1
+                return t, d_var
+
+            elif isinstance(t, TypeTuple):
+                raise NotImplementedError()
+
+            elif isinstance(t, TypeVariable):
+                d_var['dtype']          = t.dtype
+                d_var['rank']           = t.rank
+                d_var['is_stack_array'] = t.is_stack_array
+                d_var['order']          = t.order
+                d_var['precision']      = t.precision
+
+                return t, d_var
+        # ...
+
+        # ... default values
+        def _attributs_default():
+            d_var = {}
+
+            d_var['dtype']          = None
+            d_var['rank']           = 0
+            d_var['allocatable']    = False
+            d_var['is_stack_array'] = False
+            d_var['is_pointer']     = False
+            d_var['is_target']      = False
+            d_var['shape']          = None
+            d_var['order']          = 'C'
+            d_var['precision']      = None
+
+            return d_var
+        # ...
+
+        t_var = self.d_types[stmt.name]
+        d_var = _attributs_default()
+        t_var, d_var = _attributs_from_type(t_var, d_var)
+
+        dtype = d_var.pop('dtype')
+        var = Variable( dtype, stmt.name, **d_var )
+
+        return var
+
+    def _annotate_Integer(self, stmt):
+        return stmt
+
+    def _annotate_Float(self, stmt):
+        return stmt

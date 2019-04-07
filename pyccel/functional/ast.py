@@ -8,6 +8,57 @@ from pyccel.ast.core  import Variable
 from pyccel.codegen.utilities import random_string
 
 #==============================================================================
+#        body = allocations + inits + decs + stmts
+class FunctionalBasic(Basic):
+    """."""
+
+    def __new__( cls, allocations, inits, decs, stmts ):
+        assert(isinstance(allocations, (tuple, list, Tuple)))
+        assert(isinstance(inits,       (tuple, list, Tuple)))
+        assert(isinstance(decs,        (tuple, list, Tuple)))
+        assert(isinstance(stmts,       (tuple, list, Tuple)))
+
+        allocations = Tuple(*allocations)
+        inits       = Tuple(*inits)
+        decs        = Tuple(*decs)
+        stmts       = Tuple(*stmts)
+
+        return Basic.__new__(cls, allocations, stmts, decs, stmts)
+
+    @property
+    def allocations(self):
+        return self._args[0]
+
+    @property
+    def inits(self):
+        return self._args[1]
+
+    @property
+    def decs(self):
+        return self._args[2]
+
+    @property
+    def stmts(self):
+        return self._args[3]
+
+#==============================================================================
+class FunctionalMap(FunctionalBasic):
+    """."""
+    def __new__( cls, func, target ):
+        allocations = []
+        inits       = []
+        decs        = []
+        stmts       = []
+
+        return FunctionalBasic.__new__(cls, allocations, stmts, decs, stmts)
+
+class SeqFunctionalMap(FunctionalMap):
+    pass
+
+class ParFunctionalMap(FunctionalMap):
+    pass
+
+#==============================================================================
 class BasicMap(Basic):
     """."""
 

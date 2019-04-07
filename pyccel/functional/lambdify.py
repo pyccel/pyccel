@@ -108,3 +108,6 @@ def _lambdify(func, namespace={}, **kwargs):
     dtype = parser.compute_type()
     if type_only:
         return dtype
+
+    func = parser.annotate()
+    return func
