@@ -662,9 +662,8 @@ class SemanticParser(object):
     def _annotate_Float(self, stmt):
         return stmt
 
-    def _annotate_TypeVariable(self, stmt, value=None):
-        # TODO add tag
-        name  = 'dummy_{}'.format(random_string( 4 ))
+    def _annotate_TypeVariable(self, stmt):
+        name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
         d_var = _attributs_default()
@@ -675,9 +674,9 @@ class SemanticParser(object):
 
         return var
 
-    def _annotate_TypeTuple(self, stmt, value=None):
-        # TODO add tag
-        name  = 'dummy_{}'.format(random_string( 4 ))
+    def _annotate_TypeTuple(self, stmt):
+        # TODO
+        name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
         d_var = _attributs_default()
@@ -688,9 +687,9 @@ class SemanticParser(object):
 
         return var
 
-    def _annotate_TypeList(self, stmt, value=None):
-        # TODO add tag
-        name  = 'dummy_{}'.format(random_string( 4 ))
+    def _annotate_TypeList(self, stmt):
+        # TODO
+        name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
         d_var = _attributs_default()

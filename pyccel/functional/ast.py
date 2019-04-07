@@ -147,11 +147,14 @@ class ParProduct(BasicGenerator):
 
 #==============================================================================
 class BasicTypeVariable(Basic):
-    pass
+    _tag  = None
+
+    @property
+    def tag(self):
+        return self._tag
 
 #==============================================================================
 class TypeVariable(BasicTypeVariable):
-    _name = None
     def __new__( cls, var, rank=0 ):
         assert(isinstance(var, (Variable, TypeVariable)))
 
@@ -162,8 +165,7 @@ class TypeVariable(BasicTypeVariable):
         precision      = var.precision
 
         obj = Basic.__new__(cls, dtype, rank, is_stack_array, order, precision)
-
-        obj._name = 'tv_{}'.format( random_string( 4 ) )
+        obj._tag = random_string( 4 )
 
         return obj
 
@@ -189,7 +191,7 @@ class TypeVariable(BasicTypeVariable):
 
     @property
     def name(self):
-        return self._name
+        return 'tv_{}'.format(self.tag)
 
     def incr_rank(self, value):
         return TypeVariable( self, rank=value+self.rank )
@@ -206,7 +208,6 @@ class TypeVariable(BasicTypeVariable):
 
 #==============================================================================
 class TypeTuple(BasicTypeVariable):
-    _name = None
     def __new__( cls, var, rank=0 ):
         assert(isinstance(var, (tuple, list, Tuple)))
 
@@ -221,8 +222,7 @@ class TypeTuple(BasicTypeVariable):
         t_vars = Tuple(*t_vars)
 
         obj = Basic.__new__(cls, t_vars)
-
-        obj._name = 'tt_{}'.format( random_string( 4 ) )
+        obj._tag = random_string( 4 )
 
         return obj
 
@@ -232,7 +232,7 @@ class TypeTuple(BasicTypeVariable):
 
     @property
     def name(self):
-        return self._name
+        return 'tt_{}'.format(self.tag)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -245,13 +245,11 @@ class TypeTuple(BasicTypeVariable):
 
 #==============================================================================
 class TypeList(BasicTypeVariable):
-    _name = None
     def __new__( cls, var ):
         assert(isinstance(var, (TypeVariable, TypeTuple, TypeList)))
 
         obj = Basic.__new__(cls, var)
-
-        obj._name = 'tl_{}'.format( random_string( 4 ) )
+        obj._tag = random_string( 4 )
 
         return obj
 
@@ -261,7 +259,7 @@ class TypeList(BasicTypeVariable):
 
     @property
     def name(self):
-        return self._name
+        return 'tl_{}'.format(self.tag)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
