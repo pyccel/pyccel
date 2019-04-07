@@ -164,9 +164,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
                                     extra_args = extra_args,
                                     includes   = includes,
                                     only       = only )
-        
+
         cmd = """python{}.{} -m numpy.f2py {}"""
-        
+
         cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
@@ -566,7 +566,7 @@ def compile_f2py( filename,
 
     compilers  = ''
     f90flags   = ''
-    
+
 
     if compiler == 'gfortran':
         _compiler = 'gnu95'
@@ -576,7 +576,7 @@ def compile_f2py( filename,
 
     elif compiler == 'pgfortran':
        _compiler = 'pg'
-    
+
     else:
         raise NotImplementedError('Only gfortran ifort and pgi are available for the moment')
 
@@ -589,7 +589,7 @@ def compile_f2py( filename,
     extra_args, f90flags, opt = construct_flags( compiler,
                                                  extra_args = extra_args,
                                                  accelerator = accelerator )
-                                                 
+
     opt = "--opt='-O3'"
 
     if only:
@@ -714,7 +714,7 @@ def epyccel_function(func,
 
     # ... convert python to fortran using pyccel
     #     we ask for the ast so that we can get the FunctionDef node
-   
+
     fname, ast = execute_pyccel( fname,
                                  compiler     = compiler,
                                  fflags       = fflags,
@@ -738,7 +738,7 @@ def epyccel_function(func,
 
     static_func  = as_static_function(func)
     namespace['f2py_'+func_name.lower()] = namespace[func_name]
-    
+
     f2py_module = Module( f2py_module_name,
                           variables = [],
                           funcs = [static_func],
@@ -892,7 +892,7 @@ def epyccel_module(module,
 
     funcs = ast.routines + ast.interfaces
     namespace = ast.parser.namespace.sons_scopes
-    
+
     funcs, others = get_external_function_from_ast(funcs)
     static_funcs = []
     imports = []
@@ -900,9 +900,9 @@ def epyccel_module(module,
     for f in funcs:
         if f.is_external:
             static_func = as_static_function(f)
-            
+
             namespace['f2py_'+str(f.name).lower()] = namespace[str(f.name)]
-            # S.H we set the new scope name 
+            # S.H we set the new scope name
 
         elif f.is_external_call:
             static_func = as_static_function_call(f)
@@ -972,16 +972,16 @@ def lambdify( func, *args, namespace = {}, accelerator = None, verbose=False):
                      namespace   = namespace,
                      accelerator = accelerator )
 
-    # module case
-    if isinstance(res, (tuple, list)):
-        mod, func_name = res
-
-        mod = epyccel (mod, accelerator = accelerator, verbose=verbose )
-
-        return getattr(mod, func_name)
-
-    else:
-        raise NotImplementedError('TODO')
+#    # module case
+#    if isinstance(res, (tuple, list)):
+#        mod, func_name = res
+#
+#        mod = epyccel (mod, accelerator = accelerator, verbose=verbose )
+#
+#        return getattr(mod, func_name)
+#
+#    else:
+#        raise NotImplementedError('TODO')
 
 #==============================================================================
 

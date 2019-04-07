@@ -103,7 +103,9 @@ def test_reduce_add_product():
 if __name__ == '__main__':
 #    test_map_list()
 #    test_map_zip()
-#    test_map_product()
+    test_map_product()
 #    test_tmap_zip()
 #    test_tmap_product()
-    test_reduce_add_product()
+
+    # TODO
+#    test_reduce_add_product()

@@ -145,7 +145,6 @@ class TypeTuple(BasicTypeVariable):
     _name = None
     def __new__( cls, var, rank=0 ):
         assert(isinstance(var, (tuple, list, Tuple, TypeTuple)))
-        assert(len(var) > 1)
 
         if isinstance(var, (tuple, list, Tuple)):
             for i in var:
@@ -189,16 +188,24 @@ class TypeTuple(BasicTypeVariable):
 
 #==============================================================================
 # user friendly function
-def assign_type(expr, rank=0):
+def assign_type(expr, rank=None):
+    if ( rank is None ) and isinstance(expr, BasicTypeVariable):
+        return expr
+
+    if rank is None:
+        rank = 0
+
     if isinstance(expr, (Variable, TypeVariable)):
         return TypeVariable(expr, rank=rank)
 
     elif isinstance(expr, (tuple, list, Tuple)):
-        if len(expr) == 1:
-            return assign_type(expr[0], rank=rank)
+#        if len(expr) == 1:
+#            return assign_type(expr[0], rank=rank)
+#
+#        else:
+#            return TypeTuple(expr, rank=rank)
 
-        else:
-            return TypeTuple(expr, rank=rank)
+        return TypeTuple(expr, rank=rank)
 
     elif isinstance(expr, TypeTuple):
         return TypeTuple(expr, rank=rank)

@@ -38,7 +38,7 @@ from pyccel.functional import Where
 from pyccel.parser import Parser
 
 from .parser import parse    as parse_lambda
-from .parser import annotate as annotate_lambda
+from .parser import SemanticParser
 from .utilities import get_decorators
 from .utilities import get_pyccel_imports_code
 from .utilities import get_dependencies_code
@@ -63,19 +63,10 @@ def _parse_typed_functions(user_functions):
     return ast.namespace.functions
 
 #==============================================================================
-def _lambdify(func, **kwargs):
+def _lambdify(func, namespace={}, **kwargs):
 
     if not isinstance(func, FunctionType):
         raise TypeError('Expecting a lambda function')
-
-    # ... get optional arguments
-    _kwargs = kwargs.copy()
-
-    namespace = _kwargs.pop('namespace', None)
-    # TODO improve using the same way as Equation in sympde
-    if namespace is None:
-        raise ValueError('namespace must be given')
-    # ...
 
     # ... get the function source code
     func_code = get_source_function(func)
@@ -110,11 +101,7 @@ def _lambdify(func, **kwargs):
     typed_functions = _parse_typed_functions(list(typed_functions.values()))
     # ...
 
-    # ... TODO add some verifications before starting annotating L
+    # ... create semantic parser
+    parser = SemanticParser(L, typed_functions=typed_functions)
+    L = parser.doit()
     # ...
-
-    # ... TODO add lambda expressions too
-    L = annotate_lambda(L, typed_functions=typed_functions)
-    # ...
-
-    import sys; sys.exit(0)
