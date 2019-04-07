@@ -207,10 +207,14 @@ class SemanticParser(object):
         self._expr = expr
 
         # ...
-#        self._namespace = {}
+        self._namespace = {}
         self._d_types   = {}
-        self._main      = expr # to store current typed expr
         self._tag       = random_string( 8 )
+
+        # to store current typed expr
+        # this must not be a private variable,
+        # in order to modify it on the fly
+        self.main = expr
         # ...
 
         # ... add types for arguments and results
@@ -237,16 +241,16 @@ class SemanticParser(object):
         return self._typed_functions
 
     @property
+    def namespace(self):
+        return self._namespace
+
+    @property
     def d_types(self):
         return self._d_types
 
     @property
     def tag(self):
         return self._tag
-
-    @property
-    def main(self):
-        return self._main
 
     def inspect(self):
         print('============ types =============')
@@ -255,13 +259,17 @@ class SemanticParser(object):
             print('  {k} = {v}'.format(k=k, v=v.view()))
         print('================================')
 
-    def set_main(self, main):
-        self._main = main
-
     def _get_label(self, target, domain=False, codomain=False):
-        # TODO domain case
+        # TODO improve
         if codomain:
+            assert(not domain)
             return str(target.name)
+
+        if domain:
+            assert(not codomain)
+            name = str(target.name)
+            if name in self.typed_functions.keys():
+                return name + '_args'
 
         return _get_key(target)
 
@@ -278,21 +286,23 @@ class SemanticParser(object):
 
         self.d_types[label] = value
 
-    def compute_type(self, verbose=False):
+    def build_namespace(self):
+        """builds the namespace from types."""
+        raise NotImplementedError('')
+
+    def compute_type(self, verbose=True):
 
         # ... compute type
         i_count = 0
         max_count = 2
-        main = self.main
-        while(i_count < max_count and not isinstance(main, Variable)):
+        while(i_count < max_count and not isinstance(self.main, BasicTypeVariable)):
             if verbose:
-                print('>>> before ', main)
+                print('>>> before ', self.main)
 
-            main = self._compute_type(main)
-            self.set_main(main)
+            self.main = self._compute_type(self.main)
 
             if verbose:
-                print('>>> after', main)
+                print('>>> after', self.main)
 
             i_count += 1
         # ...
@@ -337,7 +347,8 @@ class SemanticParser(object):
 
     def _compute_type_Lambda(self, stmt, value=None):
         # TODO treat args
-        return self._compute_type(stmt.expr)
+        self.main = self._compute_type(stmt.expr)
+        return self.main
 
     def _compute_type_TypeVariable(self, stmt, value=None):
         return stmt
@@ -365,9 +376,22 @@ class SemanticParser(object):
         if type_codomain is None:
             return self.main
 
-        main = self.main.xreplace({stmt: type_codomain})
-        self.set_main(main)
-        return main
+#        print('------')
+#        print('> main = ', self.main)
+#        print('> stmt = ', stmt)
+#        print('> type = ', type_codomain)
+#        main = self.main.xreplace({stmt: type_codomain})
+
+        try:
+            self.main = self.main.xreplace({stmt: type_codomain})
+
+        except:
+            self.inspect()
+
+            print('>>> Something wrong happend')
+#            import sys; sys.exit(0)
+
+        return self.main
 
     def _compute_type_function_map(self, arguments, value=None, base_rank=None):
         assert( len(arguments) == 2 )
@@ -377,16 +401,17 @@ class SemanticParser(object):
         type_codomain = self._get_type(func, codomain=True)
         type_domain   = self._get_type(func, domain=True)
 
-        if type_codomain:
-            # TODO may be we should split it here
-            type_domain   = assign_type(type_domain, rank=base_rank)
-            type_codomain = assign_type(type_codomain, rank=base_rank)
-
-            # no return here
-            self._compute_type(target, value=type_domain)
-
-        else:
+        if not type_codomain:
             print('> Unable to compute type for {} '.format(stmt))
+
+        # TODO may be we should split it here
+#        print(type(type_domain))
+#        import sys; sys.exit(0)
+        type_domain   = assign_type(type_domain, rank=base_rank)
+        type_codomain = assign_type(type_codomain, rank=base_rank)
+
+        # no return here
+        self._compute_type(target, value=type_domain)
 
         return type_codomain
 

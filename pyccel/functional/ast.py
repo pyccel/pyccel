@@ -144,21 +144,17 @@ class TypeVariable(BasicTypeVariable):
 class TypeTuple(BasicTypeVariable):
     _name = None
     def __new__( cls, var, rank=0 ):
-        assert(isinstance(var, (tuple, list, Tuple, TypeTuple)))
+        assert(isinstance(var, (tuple, list, Tuple)))
 
-        if isinstance(var, (tuple, list, Tuple)):
-            for i in var:
-                assert( isinstance(i, Variable) )
+        for i in var:
+            assert( isinstance(i, (Variable, TypeVariable)) )
 
-            t_vars = []
-            for i in var:
-                t_var = TypeVariable( i, rank=rank )
-                t_vars.append(t_var)
+        t_vars = []
+        for i in var:
+            t_var = TypeVariable( i, rank=rank )
+            t_vars.append(t_var)
 
-            t_vars = Tuple(*t_vars)
-
-        else:
-            t_vars = var.types
+        t_vars = Tuple(*t_vars)
 
         obj = Basic.__new__(cls, t_vars)
 
@@ -187,6 +183,40 @@ class TypeTuple(BasicTypeVariable):
         return 'TypeTuple({})'.format(attributs)
 
 #==============================================================================
+class TypeList(BasicTypeVariable):
+    _name = None
+    def __new__( cls, var, rank=0 ):
+        assert(isinstance(var, (tuple, list, Tuple)))
+        assert(all(isinstance(i, (TypeVariable, TypeTuple)) for i in var))
+
+        var = Tuple(*var)
+        obj = Basic.__new__(cls, var)
+
+        obj._name = 'tl_{}'.format( random_string( 4 ) )
+
+        return obj
+
+    @property
+    def types(self):
+        return self._args[0]
+
+    @property
+    def name(self):
+        return self._name
+
+    def __len__(self):
+        return len(self.types)
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return sstr(self.name)
+
+    def view(self):
+        """inspects the variable."""
+        attributs = ','.join(i.view() for i in self.types)
+        return 'TypeList({})'.format(attributs)
+
+#==============================================================================
 # user friendly function
 def assign_type(expr, rank=None):
     if ( rank is None ) and isinstance(expr, BasicTypeVariable):
@@ -198,9 +228,16 @@ def assign_type(expr, rank=None):
     if isinstance(expr, (Variable, TypeVariable)):
         return TypeVariable(expr, rank=rank)
 
-    elif isinstance(expr, (tuple, list, Tuple)):
+    elif isinstance(expr, (tuple, list, Tuple, TypeTuple)):
         if len(expr) == 1:
             return assign_type(expr[0], rank=rank)
+
+        elif isinstance(expr, TypeTuple):
+            ls = [assign_type( i, rank=rank ) for i in expr.types]
+            return assign_type( ls )
+
+        elif isinstance(expr, (tuple, list, Tuple)):
+            return TypeTuple(expr)
 
         else:
             return TypeTuple(expr, rank=rank)

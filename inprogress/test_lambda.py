@@ -11,6 +11,9 @@ from pyccel.functional.lambdify import _lambdify
 from pyccel.functional.ast      import TypeVariable, TypeTuple
 from pyccel.functional import add, mul
 
+# define settings for _lambdify
+settings = {'type_only' :True}
+
 #=========================================================
 #         TODO TO BE MOVED TO COMPATIBILITY
 #=========================================================
@@ -58,48 +61,54 @@ def f2(x,y):
 def test_map_list():
     L = lambda xs: map(f1, xs)
 
-    type_L = _lambdify( L, namespace = {'f1': f1}, type_only=True )
+    type_L = _lambdify( L, namespace = {'f1': f1}, **settings )
 
     assert( isinstance( type_L, TypeVariable ) )
     assert( isinstance( type_L.dtype, NativeReal ) )
     assert( type_L.rank == 1 )
     assert( type_L.precision == 8 )
     assert( not type_L.is_stack_array )
+    print('OK')
 
 #=========================================================
 def test_map_zip():
     L = lambda xs,ys:  map(f2, zip(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2} )
+    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    print(type_L)
 
 #=========================================================
 def test_map_product():
     L = lambda xs,ys:  map(f2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2} )
+    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    print(type_L)
 
 #=========================================================
 def test_tmap_zip():
     L = lambda xs,ys:  tmap(f2, zip(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2} )
+    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    print(type_L)
 
 #=========================================================
 def test_tmap_product():
     L = lambda xs,ys:  tmap(f2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2} )
+    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    print(type_L)
 
 #=========================================================
 def test_reduce_add_product():
     L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'dadd_2': dadd_2} )
+    type_L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
+    print(type_L)
 
 #########################################
 if __name__ == '__main__':
-    test_map_list()
-#    test_map_zip()
+#    test_map_list()
+    test_map_zip()
 #    test_map_product()
 #    test_tmap_zip()
 #    test_tmap_product()
