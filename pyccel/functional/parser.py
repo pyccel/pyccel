@@ -14,6 +14,7 @@ from textx.metamodel import metamodel_from_str
 
 
 from pyccel.codegen.utilities import random_string
+from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.core import Variable, FunctionDef
 from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from .ast import Reduce
@@ -619,7 +620,20 @@ class SemanticParser(object):
     def _annotate_Lambda(self, stmt):
         args = [self.annotate(i) for i in stmt.variables]
         expr = self.annotate(stmt.expr)
-#        expr = Lambda(args, expr)
+        # TODO improve
+        results = self.annotate(self.main)
+
+        # TODO to be moved to a method .to_funcdef
+#        # ...
+#        decorators = {'types':         build_types_decorator(args),
+#                      'external_call': []}
+#
+#        tag         = random_string( 6 )
+#        g_name      = 'lambda_{}'.format( tag )
+#        # ...
+#
+#        return FunctionDef(g_name, args, results, body,
+#                           decorators=decorators)
 
         return expr
 
@@ -641,7 +655,7 @@ class SemanticParser(object):
 
     def _annotate_TypeVariable(self, stmt, value=None):
         # TODO add tag
-        name  = 'dummy_{}'.random_string( 4 )
+        name  = 'dummy_{}'.format(random_string( 4 ))
         t_var = stmt
 
         d_var = _attributs_default()
@@ -654,7 +668,7 @@ class SemanticParser(object):
 
     def _annotate_TypeTuple(self, stmt, value=None):
         # TODO add tag
-        name  = 'dummy_{}'.random_string( 4 )
+        name  = 'dummy_{}'.format(random_string( 4 ))
         t_var = stmt
 
         d_var = _attributs_default()
@@ -667,7 +681,7 @@ class SemanticParser(object):
 
     def _annotate_TypeList(self, stmt, value=None):
         # TODO add tag
-        name  = 'dummy_{}'.random_string( 4 )
+        name  = 'dummy_{}'.format(random_string( 4 ))
         t_var = stmt
 
         d_var = _attributs_default()
