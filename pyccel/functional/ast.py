@@ -11,6 +11,7 @@ from pyccel.codegen.utilities import random_string
 #        body = allocations + inits + decs + stmts
 class FunctionalBasic(Basic):
     """."""
+    _parallel = False
 
     def __new__( cls, allocations, inits, decs, stmts, results ):
         assert(isinstance(allocations, (tuple, list, Tuple)))
@@ -53,22 +54,22 @@ class FunctionalBasic(Basic):
     def results(self):
         return self._args[4]
 
+    @property
+    def parallel(self):
+        return self._parallel
+
 #==============================================================================
 class FunctionalMap(FunctionalBasic):
     """."""
-    def __new__( cls, func, target, results ):
+    def __new__( cls, func, target, results, parallel=False ):
         allocations = []
         inits       = []
         decs        = []
         stmts       = []
 
-        return FunctionalBasic.__new__(cls, allocations, stmts, decs, stmts, results)
-
-class SeqFunctionalMap(FunctionalMap):
-    pass
-
-class ParFunctionalMap(FunctionalMap):
-    pass
+        obj = FunctionalBasic.__new__(cls, allocations, stmts, decs, stmts, results)
+        obj._parallel = parallel
+        return obj
 
 #==============================================================================
 class BasicMap(Basic):

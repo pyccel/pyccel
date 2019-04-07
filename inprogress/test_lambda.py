@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     # ... annotation
     # define settings for _lambdify
-    settings = {'type_only' : False}
+    settings = {'annotation_only' : True}
 
     test_annotate_map_zip(**settings)
     # ...

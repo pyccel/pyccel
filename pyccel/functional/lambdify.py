@@ -42,6 +42,7 @@ from .parser import SemanticParser
 from .utilities import get_decorators
 from .utilities import get_pyccel_imports_code
 from .utilities import get_dependencies_code
+from .printing import pycode
 
 
 #==============================================================================
@@ -102,17 +103,33 @@ def _lambdify(func, namespace={}, **kwargs):
     # ...
 
     # semantic analysis
-    type_only = kwargs.pop('type_only', False)
     parser = SemanticParser(L, typed_functions=typed_functions)
 
+    # typing
+    type_only = kwargs.pop('type_only', False)
     dtype = parser.to_type()
-    print('=========== types ===========')
-    print(parser.d_types)
-    print('=========== expr  ===========')
-    print(parser.d_expr)
-    print('=============================')
+
+#    print('=========== types ===========')
+#    print(parser.d_types)
+#    print('=========== expr  ===========')
+#    print(parser.d_expr)
+#    print('=============================')
+
     if type_only:
         return dtype
 
+    # annotation
+    annotation_only = kwargs.pop('annotation_only', False)
     func = parser.annotate()
+    if annotation_only:
+        return func
+
+    # printing
+    printing_only = kwargs.pop('printing_only', False)
+    code = pycode(func)
+    if printing_only:
+        return code
+
+    raise NotImplementedError()
+
     return func

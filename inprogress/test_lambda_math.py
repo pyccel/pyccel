@@ -45,8 +45,14 @@ if __name__ == '__main__':
 #    test_map_list(**settings)
 #    # ...
 
-    # ... annotation
+#    # ... annotation
+#    # define settings for _lambdify
+#    settings = {'annotation_only' : True}
+#    test_annotate_map_list(**settings)
+#    # ...
+
+    # ... printing
     # define settings for _lambdify
-    settings = {'type_only' : False}
+    settings = {'printing_only' : True}
     test_annotate_map_list(**settings)
     # ...

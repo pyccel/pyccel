@@ -24,7 +24,7 @@ from .ast import SeqZip, SeqProduct
 from .ast import ParZip, ParProduct
 from .ast import assign_type, BasicTypeVariable
 from .ast import TypeVariable, TypeTuple, TypeList
-from .ast import SeqFunctionalMap, ParFunctionalMap
+from .ast import FunctionalMap
 
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,
@@ -618,7 +618,7 @@ class SemanticParser(object):
                 results = self.annotate(type_codomain)
 
                 expr = self.get_expr_from_type()
-                return SeqFunctionalMap(func, target, results)
+                return FunctionalMap(func, target, results, parallel=False)
 
             else:
                 raise NotImplementedError('')
