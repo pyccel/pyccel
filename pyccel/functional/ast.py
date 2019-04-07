@@ -199,13 +199,13 @@ def assign_type(expr, rank=None):
         return TypeVariable(expr, rank=rank)
 
     elif isinstance(expr, (tuple, list, Tuple)):
-#        if len(expr) == 1:
-#            return assign_type(expr[0], rank=rank)
-#
-#        else:
-#            return TypeTuple(expr, rank=rank)
+        if len(expr) == 1:
+            return assign_type(expr[0], rank=rank)
 
-        return TypeTuple(expr, rank=rank)
+        else:
+            return TypeTuple(expr, rank=rank)
+
+#        return TypeTuple(expr, rank=rank)
 
     elif isinstance(expr, TypeTuple):
         return TypeTuple(expr, rank=rank)

@@ -182,29 +182,6 @@ def parse(inputs, debug=False, verbose=False):
 
     return expr
 
-
-#==============================================================================
-def annotate(L, typed_functions):
-    # ... add types for arguments and results
-    for f in typed_functions.values():
-        d_types[_get_key(f)] = assign_type(f.arguments)
-        d_types[str(f.name)] = assign_type(f.results)
-    # ...
-
-    global main_expr
-
-    i_count = 0
-    max_count = 2
-    main_expr = L
-    while(i_count < max_count and not isinstance(main_expr, Variable)):
-        print('>>> before ', main_expr)
-        main_expr = _compute_types(main_expr)
-        print('>>> after', main_expr)
-        i_count += 1
-
-    print(main_expr.view())
-    import sys; sys.exit(0)
-
 #==============================================================================
 def _get_key(expr):
     # TODO to be replaced by domain
@@ -219,96 +196,6 @@ def _get_key(expr):
 
     else:
         raise NotImplementedError('for {}'.format(type(expr)))
-
-##==============================================================================
-#def _compute_types(expr, value=None):
-#    if isinstance(expr, Lambda):
-#        args = expr.variables
-#        return _compute_types(expr.expr)
-#
-#    elif isinstance(expr, BasicTypeVariable):
-#        return expr
-#
-#    elif isinstance(expr, AppliedUndef):
-#        name = expr.__class__.__name__
-#        arguments = expr.args
-#
-#        key = None
-#        type_out = None
-#        if name in _base_rank_registery.keys():
-#            base_rank = _base_rank_registery[name](arguments)
-#
-#        else:
-#            base_rank = None
-#
-#        if name in ['map', 'pmap', 'tmap', 'ptmap']:
-#            assert( len(arguments) == 2 )
-#            func   = arguments[0]
-#            target = arguments[1]
-#
-#            key_out = _get_key(func)
-#            key_in  = str(func) + '_args' # TODO improve
-#
-#            if key_out in d_types.keys():
-#                type_in  = assign_type(d_types[key_in], rank=base_rank)
-#                type_out = assign_type(d_types[key_out], rank=base_rank)
-#
-#                # no return here
-#                _compute_types(target, value=type_in)
-#
-#            else:
-#                print('> Unable to compute type for {} '.format(expr))
-#
-#        elif name in ['product', 'pproduct', 'zip', 'pzip']:
-#            assert(not( value is None ))
-#
-#            assert(isinstance(value, TypeTuple))
-#            assert(len(value) == len(arguments))
-#
-#            for a,t in zip(arguments, value.types):
-#                type_in  = assign_type(t, rank=base_rank)
-#                _compute_types(a, value=type_in)
-#
-#            type_out = value
-#
-#        elif name == 'reduce':
-#            assert( len(arguments) == 2 )
-#            op     = arguments[0]
-#            target = arguments[1]
-#
-#            # we must first determine the number of arguments
-#            # TODO must be done in main lambdify:
-#            #      - we use atoms on AppliedUndef
-#            #      - then we take those for which we provide python implementations
-#            #      - then we subtitute the function call by the appropriate one
-#            #      - and we append its implementation to user_functions
-#            nargs = len(sanitize(target))
-#            precision = str(op)[0]
-#            # TODO check this as in BLAS
-#            assert( precision in ['i', 's', 'd', 'z', 'c'] )
-#            print(nargs)
-#
-#            print('> ', op, type(op))
-#
-#            import sys; sys.exit(0)
-#
-#        else:
-#            raise NotImplementedError('{} not available'.format(name))
-#
-#        if not( type_out is None ):
-#            return main_expr.xreplace({expr: type_out})
-#
-#        else:
-#            return main_expr
-#
-#    elif isinstance(expr, Symbol):
-#        assert(not( value is None ))
-#
-#        d_types[_get_key(expr)] = value
-#
-#    else:
-#        raise TypeError('Not implemented for {}'.format(type(expr)))
-#
 
 #==============================================================================
 # TODO add some verifications before starting annotating L
@@ -417,7 +304,28 @@ class SemanticParser(object):
             return getattr(self, method)(stmt, value=value)
 
         elif name in _known_functions.keys():
-            return self._compute_type_AppliedUndef(stmt, value=value)
+            base_rank = self._preprocess_function(stmt)
+
+            if name in ['map', 'pmap', 'tmap', 'ptmap']:
+                name = 'map'
+
+            elif name in ['zip', 'pzip']:
+                name = 'zip'
+
+            elif name in ['product', 'pproduct']:
+                name = 'product'
+
+            elif name in ['reduce']:
+                name = 'reduce'
+
+            else:
+                raise NotImplementedError('{}'.format(name))
+
+            method = getattr(self, '_compute_type_function_{}'.format(name))
+            arguments = stmt.args
+            type_codomain = method(arguments, value=value, base_rank=base_rank)
+
+            return self._postprocess_function(stmt, type_codomain=type_codomain)
 
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
@@ -436,81 +344,93 @@ class SemanticParser(object):
         assert(not( value is None ))
         self._set_type(stmt, value)
 
-    def _compute_type_AppliedUndef(self, stmt, value=None):
+    def _preprocess_function(self, stmt):
         name      = stmt.__class__.__name__
         arguments = stmt.args
 
-        key = None
-        type_codomain = None
         if name in _base_rank_registery.keys():
             base_rank = _base_rank_registery[name](arguments)
 
         else:
             base_rank = None
 
-        if name in ['map', 'pmap', 'tmap', 'ptmap']:
-            assert( len(arguments) == 2 )
-            func   = arguments[0]
-            target = arguments[1]
+        return base_rank
 
-            type_codomain = self._get_type(func, codomain=True)
-            type_domain   = self._get_type(func, domain=True)
-
-            if type_codomain:
-                # TODO may be we should split it here
-                type_domain   = assign_type(type_domain, rank=base_rank)
-                type_codomain = assign_type(type_codomain, rank=base_rank)
-
-                # no return here
-                self._compute_type(target, value=type_domain)
-
-            else:
-                print('> Unable to compute type for {} '.format(stmt))
-
-        elif name in ['product', 'pproduct', 'zip', 'pzip']:
-            assert(not( value is None ))
-
-            assert(isinstance(value, TypeTuple))
-            assert(len(value) == len(arguments))
-
-            for a,t in zip(arguments, value.types):
-                type_domain  = assign_type(t, rank=base_rank)
-                self._compute_type(a, value=type_domain)
-
-            type_codomain = value
-
-        elif name == 'reduce':
-            assert( len(arguments) == 2 )
-            op     = arguments[0]
-            target = arguments[1]
-
-            # we must first determine the number of arguments
-            # TODO must be done in main lambdify:
-            #      - we use atoms on AppliedUndef
-            #      - then we take those for which we provide python implementations
-            #      - then we subtitute the function call by the appropriate one
-            #      - and we append its implementation to user_functions
-            nargs = len(sanitize(target))
-            precision = str(op)[0]
-            # TODO check this as in BLAS
-            assert( precision in ['i', 's', 'd', 'z', 'c'] )
-            print(nargs)
-
-            print('> ', op, type(op))
-
-            import sys; sys.exit(0)
-
-        else:
-            raise NotImplementedError('{} not available'.format(name))
-
-        if not( type_codomain is None ):
-            main = self.main.xreplace({stmt: type_codomain})
-            self.set_main(main)
-            return main
-
-        else:
+    def _postprocess_function(self, stmt, type_codomain=None):
+        if type_codomain is None:
             return self.main
 
+        main = self.main.xreplace({stmt: type_codomain})
+        self.set_main(main)
+        return main
+
+    def _compute_type_function_map(self, arguments, value=None, base_rank=None):
+        assert( len(arguments) == 2 )
+        func   = arguments[0]
+        target = arguments[1]
+
+        type_codomain = self._get_type(func, codomain=True)
+        type_domain   = self._get_type(func, domain=True)
+
+        if type_codomain:
+            # TODO may be we should split it here
+            type_domain   = assign_type(type_domain, rank=base_rank)
+            type_codomain = assign_type(type_codomain, rank=base_rank)
+
+            # no return here
+            self._compute_type(target, value=type_domain)
+
+        else:
+            print('> Unable to compute type for {} '.format(stmt))
+
+        return type_codomain
+
+    def _compute_type_function_zip(self, arguments, value=None, base_rank=None):
+        assert(not( value is None ))
+
+        assert(isinstance(value, TypeTuple))
+        assert(len(value) == len(arguments))
+
+        for a,t in zip(arguments, value.types):
+            type_domain  = assign_type(t, rank=base_rank)
+            self._compute_type(a, value=type_domain)
+
+        type_codomain = value
+        return type_codomain
+
+    def _compute_type_function_product(self, arguments, value=None, base_rank=None):
+        assert(not( value is None ))
+
+        assert(isinstance(value, TypeTuple))
+        assert(len(value) == len(arguments))
+
+        for a,t in zip(arguments, value.types):
+            type_domain  = assign_type(t, rank=base_rank)
+            self._compute_type(a, value=type_domain)
+
+        type_codomain = value
+        return type_codomain
+
+    def _compute_type_function_reduce(self, arguments, value=None, base_rank=None):
+        assert( len(arguments) == 2 )
+        op     = arguments[0]
+        target = arguments[1]
+
+        # we must first determine the number of arguments
+        # TODO must be done in main lambdify:
+        #      - we use atoms on AppliedUndef
+        #      - then we take those for which we provide python implementations
+        #      - then we subtitute the function call by the appropriate one
+        #      - and we append its implementation to user_functions
+        nargs = len(sanitize(target))
+        precision = str(op)[0]
+        # TODO check this as in BLAS
+        assert( precision in ['i', 's', 'd', 'z', 'c'] )
+        print(nargs)
+
+        print('> ', op, type(op))
+
+        import sys; sys.exit(0)
 
 #    def _annotate(self, stmt):
 #
