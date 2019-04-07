@@ -6,19 +6,10 @@ import numpy as np
 import time
 
 from pyccel.decorators import types, pure
-from pyccel.epyccel import epyccel
-from pyccel.epyccel import lambdify
+from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
+from pyccel.functional.lambdify import _lambdify
+from pyccel.functional.ast      import TypeVariable, TypeTuple
 from pyccel.functional import add, mul
-
-#=========================================================
-#VERBOSE = True
-VERBOSE = False
-
-ACCEL = 'openmp'
-#ACCEL = None
-
-settings = {'accelerator': ACCEL, 'verbose': VERBOSE}
-#=========================================================
 
 #=========================================================
 #         TODO TO BE MOVED TO COMPATIBILITY
@@ -67,37 +58,43 @@ def f2(x,y):
 def test_map_list():
     L = lambda xs: map(f1, xs)
 
-    L = lambdify( L, namespace = {'f1': f1}, **settings )
+    type_L = _lambdify( L, namespace = {'f1': f1}, type_only=True )
+
+    assert( isinstance( type_L, TypeVariable ) )
+    assert( isinstance( type_L.dtype, NativeReal ) )
+    assert( type_L.rank == 1 )
+    assert( type_L.precision == 8 )
+    assert( not type_L.is_stack_array )
 
 #=========================================================
 def test_map_zip():
     L = lambda xs,ys:  map(f2, zip(xs,ys))
 
-    L = lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( L, namespace = {'f2': f2} )
 
 #=========================================================
 def test_map_product():
     L = lambda xs,ys:  map(f2, product(xs,ys))
 
-    L = lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( L, namespace = {'f2': f2} )
 
 #=========================================================
 def test_tmap_zip():
     L = lambda xs,ys:  tmap(f2, zip(xs,ys))
 
-    L = lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( L, namespace = {'f2': f2} )
 
 #=========================================================
 def test_tmap_product():
     L = lambda xs,ys:  tmap(f2, product(xs,ys))
 
-    L = lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( L, namespace = {'f2': f2} )
 
 #=========================================================
 def test_reduce_add_product():
     L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
 
-    L = lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
+    L = _lambdify( L, namespace = {'dadd_2': dadd_2} )
 
 #########################################
 if __name__ == '__main__':

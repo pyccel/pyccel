@@ -224,9 +224,9 @@ class SemanticParser(object):
             self._set_type(f, value=type_codomain, codomain=True)
         # ...
 
-        # ...
-        self.inspect()
-        # ...
+#        # ...
+#        self.inspect()
+#        # ...
 
     @property
     def expr(self):
@@ -278,21 +278,26 @@ class SemanticParser(object):
 
         self.d_types[label] = value
 
-    def doit(self):
+    def compute_type(self, verbose=False):
 
         # ... compute type
         i_count = 0
         max_count = 2
         main = self.main
         while(i_count < max_count and not isinstance(main, Variable)):
-            print('>>> before ', main)
+            if verbose:
+                print('>>> before ', main)
+
             main = self._compute_type(main)
             self.set_main(main)
-            print('>>> after', main)
-            i_count += 1
 
-        print(main.view())
+            if verbose:
+                print('>>> after', main)
+
+            i_count += 1
         # ...
+
+        return self.main
 
     def _compute_type(self, stmt, value=None):
 

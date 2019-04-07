@@ -972,16 +972,16 @@ def lambdify( func, *args, namespace = {}, accelerator = None, verbose=False):
                      namespace   = namespace,
                      accelerator = accelerator )
 
-#    # module case
-#    if isinstance(res, (tuple, list)):
-#        mod, func_name = res
-#
-#        mod = epyccel (mod, accelerator = accelerator, verbose=verbose )
-#
-#        return getattr(mod, func_name)
-#
-#    else:
-#        raise NotImplementedError('TODO')
+    # module case
+    if isinstance(res, (tuple, list)):
+        mod, func_name = res
+
+        mod = epyccel (mod, accelerator = accelerator, verbose=verbose )
+
+        return getattr(mod, func_name)
+
+    else:
+        raise NotImplementedError('TODO')
 
 #==============================================================================
 

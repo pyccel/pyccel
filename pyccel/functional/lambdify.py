@@ -101,7 +101,10 @@ def _lambdify(func, namespace={}, **kwargs):
     typed_functions = _parse_typed_functions(list(typed_functions.values()))
     # ...
 
-    # ... create semantic parser
+    # semantic analysis
+    type_only = kwargs.pop('type_only', False)
     parser = SemanticParser(L, typed_functions=typed_functions)
-    L = parser.doit()
-    # ...
+
+    dtype = parser.compute_type()
+    if type_only:
+        return dtype
