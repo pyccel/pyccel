@@ -106,6 +106,11 @@ def _lambdify(func, namespace={}, **kwargs):
     parser = SemanticParser(L, typed_functions=typed_functions)
 
     dtype = parser.to_type()
+    print('=========== types ===========')
+    print(parser.d_types)
+    print('=========== expr  ===========')
+    print(parser.d_expr)
+    print('=============================')
     if type_only:
         return dtype
 

@@ -64,14 +64,6 @@ _math_matrix_functions = ['matmul']
 
 _math_functions = _elemental_math_functions + _math_vector_functions + _math_matrix_functions
 #==============================================================================
-# TODO to be moved in a class
-# utilities for semantic analysis
-namespace  = {}
-
-# keys = global arguments and functions    ||  values = dictionary for d_var
-d_types    = {}
-main_expr = None
-#==============================================================================
 
 #==============================================================================
 # ...
@@ -263,12 +255,14 @@ class SemanticParser(object):
         # ...
         self._namespace = {}
         self._d_types   = {}
+        self._d_expr    = {}
         self._tag       = random_string( 8 )
 
         # to store current typed expr
         # this must not be a private variable,
         # in order to modify it on the fly
         self.main = expr
+        self.main_type = None
         # ...
 
         # ... add types for arguments and results
@@ -352,6 +346,10 @@ class SemanticParser(object):
         return self._d_types
 
     @property
+    def d_expr(self):
+        return self._d_expr
+
+    @property
     def tag(self):
         return self._tag
 
@@ -400,6 +398,10 @@ class SemanticParser(object):
         label = self._get_label(target, domain=domain, codomain=codomain)
 
         self.d_types[label] = value
+        self._set_expr(value, target)
+
+    def _set_expr(self, t_var, expr):
+        self._d_expr[t_var.name] = expr
 
     def build_namespace(self):
         """builds the namespace from types."""
@@ -470,6 +472,9 @@ class SemanticParser(object):
     def _to_type_Lambda(self, stmt, value=None):
         # TODO treat args
         self.main = self._to_type(stmt.expr)
+        if isinstance(self.main, BasicTypeVariable):
+            self.main_type = self.main
+
         return self.main
 
     def _to_type_TypeVariable(self, stmt, value=None):
@@ -515,6 +520,7 @@ class SemanticParser(object):
         type_codomain = TypeList(type_codomain)
 
         self._to_type(target, value=type_domain)
+        self._set_expr(type_codomain, stmt)
 
         return type_codomain
 
@@ -539,6 +545,7 @@ class SemanticParser(object):
 
         # update main expression
         self.main = self.main.xreplace({stmt: type_codomain})
+        self._set_expr(type_codomain, stmt)
 
         return type_codomain
 
@@ -563,6 +570,7 @@ class SemanticParser(object):
 
         # update main expression
         self.main = self.main.xreplace({stmt: type_codomain})
+        self._set_expr(type_codomain, stmt)
 
         return type_codomain
 
@@ -605,16 +613,15 @@ class SemanticParser(object):
             if name == 'map':
                 func, target = stmt.args
                 target = self.annotate(target)
-                results = None
+
+                type_codomain = self.main_type
+                results = self.annotate(type_codomain)
+
+                expr = self.get_expr_from_type()
                 return SeqFunctionalMap(func, target, results)
 
-            elif name == 'pmap':
-                func, target = stmt.args
-                results = None
-                target = self.annotate(target)
-                return ParFunctionalMap(func, target, results)
-
-            raise NotImplementedError('')
+            else:
+                raise NotImplementedError('')
 
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
@@ -693,3 +700,9 @@ class SemanticParser(object):
         var = Variable( dtype, name, **d_var )
 
         return var
+
+    def get_expr_from_type(self, t_var=None):
+        if t_var is None:
+            t_var = self.main_type
+
+        return self.d_expr[t_var.name]

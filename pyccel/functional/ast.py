@@ -12,18 +12,22 @@ from pyccel.codegen.utilities import random_string
 class FunctionalBasic(Basic):
     """."""
 
-    def __new__( cls, allocations, inits, decs, stmts ):
+    def __new__( cls, allocations, inits, decs, stmts, results ):
         assert(isinstance(allocations, (tuple, list, Tuple)))
         assert(isinstance(inits,       (tuple, list, Tuple)))
         assert(isinstance(decs,        (tuple, list, Tuple)))
         assert(isinstance(stmts,       (tuple, list, Tuple)))
+        assert(isinstance(results,     (tuple, list, Tuple, Variable)))
 
         allocations = Tuple(*allocations)
         inits       = Tuple(*inits)
         decs        = Tuple(*decs)
         stmts       = Tuple(*stmts)
+        if isinstance(results, Variable):
+            results = [results]
+        results     = Tuple(*results)
 
-        return Basic.__new__(cls, allocations, stmts, decs, stmts)
+        return Basic.__new__(cls, allocations, stmts, decs, stmts, results)
 
     @property
     def allocations(self):
@@ -41,6 +45,10 @@ class FunctionalBasic(Basic):
     def stmts(self):
         return self._args[3]
 
+    @property
+    def results(self):
+        return self._args[4]
+
 #==============================================================================
 class FunctionalMap(FunctionalBasic):
     """."""
@@ -50,7 +58,7 @@ class FunctionalMap(FunctionalBasic):
         decs        = []
         stmts       = []
 
-        return FunctionalBasic.__new__(cls, allocations, stmts, decs, stmts)
+        return FunctionalBasic.__new__(cls, allocations, stmts, decs, stmts, results)
 
 class SeqFunctionalMap(FunctionalMap):
     pass
