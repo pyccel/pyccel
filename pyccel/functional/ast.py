@@ -19,12 +19,16 @@ class FunctionalBasic(Basic):
         assert(isinstance(stmts,       (tuple, list, Tuple)))
         assert(isinstance(results,     (tuple, list, Tuple, Variable)))
 
+        if isinstance(results, Variable):
+            results = [results]
+
+#            for r in results:
+#                r.inspect()
+
         allocations = Tuple(*allocations)
         inits       = Tuple(*inits)
         decs        = Tuple(*decs)
         stmts       = Tuple(*stmts)
-        if isinstance(results, Variable):
-            results = [results]
         results     = Tuple(*results)
 
         return Basic.__new__(cls, allocations, stmts, decs, stmts, results)

@@ -11,9 +11,6 @@ from pyccel.functional.lambdify import _lambdify
 from pyccel.functional.ast      import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
-# define settings for _lambdify
-settings = {'type_only' :True}
-
 #=========================================================
 #         TODO TO BE MOVED TO COMPATIBILITY
 #=========================================================
@@ -58,7 +55,7 @@ def f2(x,y):
     return r
 
 #=========================================================
-def test_map_list():
+def test_map_list(**settings):
     L = lambda xs: map(f1, xs)
 
     type_L = _lambdify( L, namespace = {'f1': f1}, **settings )
@@ -74,7 +71,7 @@ def test_map_list():
     print('DONE.')
 
 #=========================================================
-def test_map_zip():
+def test_map_zip(**settings):
     L = lambda xs,ys:  map(f2, zip(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
@@ -90,7 +87,7 @@ def test_map_zip():
     print('DONE.')
 
 #=========================================================
-def test_map_product():
+def test_map_product(**settings):
     L = lambda xs,ys:  map(f2, product(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
@@ -105,19 +102,19 @@ def test_map_product():
 
     print('DONE.')
 
+##=========================================================
+## this test will raise an error, which is what we expect
+## TODO add error exception and use pytest here
+#def test_tmap_zip(**settings):
+#    L = lambda xs,ys:  tmap(f2, zip(xs,ys))
+#
+#    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+#    print(type_L.view())
+#
+#    print('DONE.')
+
 #=========================================================
-# this test will raise an error, which is what we expect
-# TODO add error exception and use pytest here
-def test_tmap_zip():
-    L = lambda xs,ys:  tmap(f2, zip(xs,ys))
-
-    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(type_L.view())
-
-    print('DONE.')
-
-#=========================================================
-def test_tmap_product():
+def test_tmap_product(**settings):
     L = lambda xs,ys:  tmap(f2, product(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
@@ -132,22 +129,43 @@ def test_tmap_product():
 
     print('DONE.')
 
-#=========================================================
-def test_reduce_add_product():
-    L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
+##=========================================================
+#def test_reduce_add_product(**settings):
+#    L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
+#
+#    type_L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
+#    print(type_L.view())
+#
+#    print('DONE.')
 
-    type_L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
-    print(type_L.view())
+#=========================================================
+def test_annotate_map_zip(**settings):
+    L = lambda xs,ys:  map(f2, zip(xs,ys))
+
+    L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    print(L)
 
     print('DONE.')
 
 #########################################
 if __name__ == '__main__':
-    test_map_list()
-    test_map_zip()
-    test_map_product()
-#    test_tmap_zip()
-    test_tmap_product()
+#    # ... typing
+#    # define settings for _lambdify
+#    settings = {'type_only' : True}
+#
+#    test_map_list(**settings)
+#    test_map_zip(**settings)
+#    test_map_product(**settings)
+##    test_tmap_zip(**settings)
+#    test_tmap_product(**settings)
+#
+#    # TODO
+##    test_reduce_add_product(**settings)
+#    # ...
 
-    # TODO
-#    test_reduce_add_product()
+    # ... annotation
+    # define settings for _lambdify
+    settings = {'type_only' : False}
+
+    test_annotate_map_zip(**settings)
+    # ...
