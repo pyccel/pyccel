@@ -385,6 +385,18 @@ class SemanticParser(object):
             print('> Unable to compute type for {} '.format(stmt))
             raise NotImplementedError('')
 
+        # TODO improve
+        if stmt.__class__.__name__ in ['tmap', 'ptmap']:
+            # TODO check that rank is the same for all domain
+            assert(isinstance(target, AppliedUndef))
+            assert(target.__class__.__name__ in ['product', 'pproduct'])
+
+            # we substruct 1 since we use a TypeList
+            base_rank = len(target.args) - 1
+
+            type_domain   = assign_type(type_domain, rank=base_rank)
+            type_codomain = assign_type(type_codomain, rank=base_rank)
+
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
 
@@ -420,14 +432,24 @@ class SemanticParser(object):
         arguments = stmt.args
 
         assert(not( value is None ))
-        assert(isinstance(value, TypeTuple))
-        assert(len(value) == len(arguments))
+        assert(isinstance(value, TypeList))
+        assert(len(value.parent.types) == len(arguments))
 
-        for a,t in zip(arguments, value.types):
-            type_domain  = assign_type(t, rank=base_rank)
+        if not isinstance(value.parent, TypeTuple):
+            msg = '{} not available yet'.format(type(value.parent))
+            raise NotImplementedError(msg)
+
+        values = value.parent.types
+
+        for a,t in zip(arguments, values):
+            type_domain  = TypeList(t)
             self._compute_type(a, value=type_domain)
 
         type_codomain = value
+
+        # update main expression
+        self.main = self.main.xreplace({stmt: type_codomain})
+
         return type_codomain
 
     def _compute_type_functor_reduce(self, stmt, value=None):

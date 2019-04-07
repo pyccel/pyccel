@@ -183,7 +183,7 @@ class TypeTuple(BasicTypeVariable):
 class TypeList(BasicTypeVariable):
     _name = None
     def __new__( cls, var ):
-        assert(isinstance(var, (TypeVariable, TypeTuple)))
+        assert(isinstance(var, (TypeVariable, TypeTuple, TypeList)))
 
         obj = Basic.__new__(cls, var)
 
@@ -227,12 +227,8 @@ def assign_type(expr, rank=None):
             return TypeTuple(expr)
 
     elif isinstance(expr, TypeTuple):
-#        ls = [assign_type( i, rank=rank ) for i in expr.types]
-#        return assign_type( ls )
-        raise NotImplementedError('')
-
-#    elif isinstance(expr, TypeTuple):
-#        return TypeTuple(expr, rank=rank)
+        ls = [assign_type( i, rank=rank ) for i in expr.types]
+        return assign_type( ls )
 
     else:
         raise TypeError('> wrong argument, given {}'.format(type(expr)))

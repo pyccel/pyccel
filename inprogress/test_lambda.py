@@ -94,17 +94,24 @@ def test_map_product():
     L = lambda xs,ys:  map(f2, product(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(type_L)
-    print(type_L.view())
+
+    assert( isinstance( type_L, TypeList ) )
+
+    parent = type_L.parent
+    assert( isinstance( parent.dtype, NativeReal ) )
+    assert( parent.rank == 0 )
+    assert( parent.precision == 8 )
+    assert( not parent.is_stack_array )
 
     print('DONE.')
 
 #=========================================================
+# this test will raise an error, which is what we expect
+# TODO add error exception and use pytest here
 def test_tmap_zip():
     L = lambda xs,ys:  tmap(f2, zip(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(type_L)
     print(type_L.view())
 
     print('DONE.')
@@ -114,8 +121,14 @@ def test_tmap_product():
     L = lambda xs,ys:  tmap(f2, product(xs,ys))
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(type_L)
-    print(type_L.view())
+
+    assert( isinstance( type_L, TypeList ) )
+
+    parent = type_L.parent
+    assert( isinstance( parent.dtype, NativeReal ) )
+    assert( parent.rank == 1 )
+    assert( parent.precision == 8 )
+    assert( not parent.is_stack_array )
 
     print('DONE.')
 
@@ -124,7 +137,6 @@ def test_reduce_add_product():
     L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
 
     type_L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
-    print(type_L)
     print(type_L.view())
 
     print('DONE.')
@@ -133,9 +145,9 @@ def test_reduce_add_product():
 if __name__ == '__main__':
     test_map_list()
     test_map_zip()
-#    test_map_product()
+    test_map_product()
 #    test_tmap_zip()
-#    test_tmap_product()
+    test_tmap_product()
 
     # TODO
 #    test_reduce_add_product()
