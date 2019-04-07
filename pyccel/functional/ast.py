@@ -51,6 +51,9 @@ class BasicGenerator(Basic):
     def arguments(self):
         return self._args[0]
 
+    def __len__(self):
+        return len(self.arguments)
+
 
 #==============================================================================
 # serial and parallel nodes

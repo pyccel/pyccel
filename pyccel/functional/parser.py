@@ -34,16 +34,18 @@ _known_functions = {'map':      SeqMap,
 
 _functors_registery = ['map', 'pmap', 'tmap', 'ptmap', 'reduce']
 
+_zero  = lambda x: 0
 _one   = lambda x: 1
 _count = lambda x: len(x)
 _base_rank_registery = {'map':      _one,
-                        'pmap':     1,
+                        'pmap':     _one,
                         'tmap':     _count,
                         'ptmap':    _count,
                         'zip':      _one,
                         'pzip':     _one,
                         'product':  _one,
                         'pproduct': _one,
+                        'reduce':   _zero,
                        }
 
 #==============================================================================
@@ -268,6 +270,27 @@ def _compute_types(expr, value=None):
                 _compute_types(a, value=type_in)
 
             type_out = value
+
+        elif name == 'reduce':
+            assert( len(arguments) == 2 )
+            op     = arguments[0]
+            target = arguments[1]
+
+            # we must first determine the number of arguments
+            # TODO must be done in main lambdify:
+            #      - we use atoms on AppliedUndef
+            #      - then we take those for which we provide python implementations
+            #      - then we subtitute the function call by the appropriate one
+            #      - and we append its implementation to user_functions
+            nargs = len(sanitize(target))
+            precision = str(op)[0]
+            # TODO check this as in BLAS
+            assert( precision in ['i', 's', 'd', 'z', 'c'] )
+            print(nargs)
+
+            print('> ', op, type(op))
+
+            import sys; sys.exit(0)
 
         else:
             raise NotImplementedError('{} not available'.format(name))
