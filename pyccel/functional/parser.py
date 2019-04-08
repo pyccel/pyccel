@@ -3,7 +3,8 @@
 import os
 from os.path import join, dirname
 
-from sympy import Symbol, Lambda, Function, Dummy, Tuple
+from sympy import Symbol, Lambda, Function, Dummy
+from sympy import Tuple, IndexedBase
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
 from sympy import Integer, Float
@@ -15,6 +16,7 @@ from textx.metamodel import metamodel_from_str
 
 from pyccel.codegen.utilities import random_string
 from pyccel.ast.utilities import build_types_decorator
+from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
 from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from .ast import Reduce
@@ -615,6 +617,9 @@ class SemanticParser(object):
                 func, target = stmt.args
 
                 # ... construct the generator
+                # TODO compute its depth from type of target
+                depth     = None
+
                 generator = self.annotate(target)
                 if isinstance(generator, Variable):
                     generator = VariableGenerator(generator)
@@ -623,27 +628,66 @@ class SemanticParser(object):
                 # ... construct the results
                 type_codomain = self.main_type
                 results = self.annotate(type_codomain)
+
+                # compute depth of the type list
+                depth_out = len(list(type_codomain.atoms(TypeList)))
                 # ...
 
                 # ... apply the function to arguments
-                args = generator.iterator
+                index    = generator.index
+                iterator = generator.iterator
 
-                if isinstance(args, Tuple):
-                    call = func( *args )
+                if isinstance(iterator, Tuple):
+                    rhs = func( *iterator )
 
                 else:
-                    call = func( args )
+                    rhs = func( iterator )
+                # ...
+
+                # ... create lhs
+                lhs = generator.iterator
+                # TODO check this
+                if isinstance(lhs, Tuple) and len(lhs) == 1:
+                    lhs = lhs[0]
+                # ...
+
+                # ... create lhs for storing the result
+                if isinstance(results, Variable):
+                    results = [results]
+
+                else:
+                    raise NotImplementedError()
+
+                if not isinstance(index, Tuple):
+                    index = [index]
+
+                else:
+                    index = list([i for i in index])
+
+                lhs = []
+                for r in results:
+                    m = r.rank - depth_out
+                    ind = index + [Slice(None, None)] * m
+                    if len(ind) == 1:
+                        ind = ind[0]
+
+                    lhs.append(IndexedBase(r.name)[ind])
+
+                lhs = Tuple(*lhs)
+                if len(lhs) == 1:
+                    lhs = lhs[0]
                 # ...
 
                 # ... create core statement
-                stmts = [Assign(results, call)]
+                stmts = [Assign(lhs, rhs)]
                 # ...
 
                 # TODO USE THIS
 #                expr = self.get_expr_from_type()
 
                 # return the associated for loops
-                return generator_as_block(generator, stmts, parallel=False)
+                return generator_as_block( generator, stmts,
+                                           parallel      = False )
 
             else:
                 raise NotImplementedError('')
