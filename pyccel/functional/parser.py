@@ -20,15 +20,15 @@ from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
 from pyccel.ast.core import Return
-from .ast import Reduce
-from .ast import SeqMap, ParMap, BasicMap
-from .ast import SeqTensorMap, ParTensorMap, BasicTensorMap
-from .ast import SeqZip, SeqProduct
-from .ast import ParZip, ParProduct
-from .ast import assign_type, BasicTypeVariable
-from .ast import TypeVariable, TypeTuple, TypeList
-from .ast import VariableGenerator
-from .ast import generator_as_block
+from .core import Reduce
+from .core import SeqMap, ParMap, BasicMap
+from .core import SeqTensorMap, ParTensorMap, BasicTensorMap
+from .core import SeqZip, SeqProduct
+from .core import ParZip, ParProduct
+from .core import assign_type, BasicTypeVariable
+from .core import TypeVariable, TypeTuple, TypeList
+from .core import VariableGenerator
+from .core import generator_as_block
 
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,

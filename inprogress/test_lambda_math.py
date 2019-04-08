@@ -8,7 +8,7 @@ import time
 from pyccel.decorators import types, pure
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from pyccel.functional.lambdify import _lambdify
-from pyccel.functional.ast      import TypeVariable, TypeTuple, TypeList
+from pyccel.functional import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
 #=========================================================
@@ -38,18 +38,18 @@ def test_annotate_map_list(**settings):
 
 #########################################
 if __name__ == '__main__':
-#    # ... typing
-#    # define settings for _lambdify
-#    settings = {'type_only' : True}
-#
-#    test_map_list(**settings)
-#    # ...
+    # ... typing
+    # define settings for _lambdify
+    settings = {'type_only' : True}
 
-#    # ... annotation
-#    # define settings for _lambdify
-#    settings = {'annotation_only' : True}
-#    test_annotate_map_list(**settings)
-#    # ...
+    test_map_list(**settings)
+    # ...
+
+    # ... annotation
+    # define settings for _lambdify
+    settings = {'annotation_only' : True}
+    test_annotate_map_list(**settings)
+    # ...
 
     # ... printing
     # define settings for _lambdify

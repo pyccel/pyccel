@@ -8,7 +8,7 @@ import time
 from pyccel.decorators import types, pure
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from pyccel.functional.lambdify import _lambdify
-from pyccel.functional.ast      import TypeVariable, TypeTuple, TypeList
+from pyccel.functional import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
 #=========================================================
@@ -149,23 +149,23 @@ def test_annotate_map_zip(**settings):
 
 #########################################
 if __name__ == '__main__':
-#    # ... typing
-#    # define settings for _lambdify
-#    settings = {'type_only' : True}
-#
-#    test_map_list(**settings)
-#    test_map_zip(**settings)
-#    test_map_product(**settings)
-##    test_tmap_zip(**settings)
-#    test_tmap_product(**settings)
-#
-#    # TODO
-##    test_reduce_add_product(**settings)
-#    # ...
-
-    # ... annotation
+    # ... typing
     # define settings for _lambdify
-    settings = {'annotation_only' : True}
+    settings = {'type_only' : True}
 
-    test_annotate_map_zip(**settings)
+    test_map_list(**settings)
+    test_map_zip(**settings)
+    test_map_product(**settings)
+#    test_tmap_zip(**settings)
+    test_tmap_product(**settings)
+
+    # TODO
+#    test_reduce_add_product(**settings)
     # ...
+
+#    # ... annotation
+#    # define settings for _lambdify
+#    settings = {'annotation_only' : True}
+#
+#    test_annotate_map_zip(**settings)
+#    # ...

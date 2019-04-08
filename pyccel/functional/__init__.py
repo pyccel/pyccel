@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from .ast           import *
+from .core          import *
 from .compatibility import *
 from .parser        import *
 from .lambdify      import *
