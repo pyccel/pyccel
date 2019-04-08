@@ -125,7 +125,6 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ... printing
     printing_only = kwargs.pop('printing_only', False)
-    print(func, type(func))
     code = pycode(func)
     if printing_only:
         return code
