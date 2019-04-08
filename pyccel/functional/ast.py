@@ -323,22 +323,18 @@ def generator_as_block(generator, stmts, **kwargs):
 #==============================================================================
 # ...
 def _attributs_from_type(t, d_var):
-    if isinstance(t, TypeList):
-        t = _attributs_from_type(t.parent, d_var)
-        d_var['rank'] = d_var['rank'] + 1
-        return t, d_var
 
-    elif isinstance(t, TypeTuple):
-        raise NotImplementedError()
+    if not isinstance(t, (TypeVariable, Variable)):
+        msg = '> Expecting TypeVariable or Variable, but {} was given'.format(type(t))
+        raise TypeError(msg)
 
-    elif isinstance(t, TypeVariable):
-        d_var['dtype']          = t.dtype
-        d_var['rank']           = t.rank
-        d_var['is_stack_array'] = t.is_stack_array
-        d_var['order']          = t.order
-        d_var['precision']      = t.precision
+    d_var['dtype']          = t.dtype
+    d_var['rank']           = t.rank
+    d_var['is_stack_array'] = t.is_stack_array
+    d_var['order']          = t.order
+    d_var['precision']      = t.precision
 
-        return t, d_var
+    return d_var
 # ...
 
 # ... default values
@@ -499,9 +495,8 @@ class AST(object):
                 results = self._visit(type_codomain)
 
                 # compute depth of the type list
+                # TODO do we still need this?
                 depth_out = len(list(type_codomain.atoms(TypeList)))
-                print('>>> type  = ', type_codomain, type_codomain.view())
-                print('>>> depth = ', depth_out)
                 # ...
 
                 # ...
@@ -635,7 +630,7 @@ class AST(object):
     def _visit_Symbol(self, stmt):
         t_var = self.d_types[stmt.name]
         d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
+        d_var = _attributs_from_type(t_var, d_var)
 
         dtype = d_var.pop('dtype')
         var = Variable( dtype, stmt.name, **d_var )
@@ -653,7 +648,7 @@ class AST(object):
         t_var = stmt
 
         d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
+        d_var = _attributs_from_type(t_var, d_var)
 
         dtype = d_var.pop('dtype')
         var = Variable( dtype, name, **d_var )
@@ -661,25 +656,26 @@ class AST(object):
         return var
 
     def _visit_TypeTuple(self, stmt):
-        # TODO
-        name  = 'dummy_{}'.format(stmt.tag)
-        t_var = stmt
+        ls = []
+        for e,t_var in enumerate(stmt.types):
+            d_var = _attributs_default()
+            d_var = _attributs_from_type(t_var, d_var)
 
-        d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
+            dtype = d_var.pop('dtype')
+            name  = 'dummy_{}_{}'.format(e, stmt.tag)
 
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, name, **d_var )
+            var = Variable( dtype, name, **d_var )
 
-        return var
+            ls.append(var)
+
+        return Tuple(*ls)
 
     def _visit_TypeList(self, stmt):
-        # TODO
         name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
         d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
+        d_var = _attributs_from_type(t_var, d_var)
 
         dtype = d_var.pop('dtype')
         var = Variable( dtype, name, **d_var )

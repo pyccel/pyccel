@@ -87,9 +87,9 @@ if __name__ == '__main__':
     settings = {'printing_only' : True}
 
 #    test_map_list(**settings)
-#    test_map_zip(**settings)
-    test_map_product(**settings)
+    test_map_zip(**settings)
+#    test_map_product(**settings)
 #    test_tmap_product(**settings)
-#
+
 #    # TODO
 ##    test_reduce_add_product(**settings)
