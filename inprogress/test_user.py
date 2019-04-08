@@ -89,7 +89,6 @@ if __name__ == '__main__':
 #    test_map_list(**settings)
 #    test_map_zip(**settings)
     test_map_product(**settings)
-##    test_tmap_zip(**settings)
 #    test_tmap_product(**settings)
 #
 #    # TODO

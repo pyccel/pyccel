@@ -24,27 +24,33 @@ from .datatypes import TypeVariable, TypeTuple, TypeList
 from .semantic import Parser as SemanticParser
 from .glossary import _internal_applications
 from .glossary import _math_functions
+from .glossary import _internal_map_functors
 
 #=========================================================================
 # some useful functions
 # TODO add another argument to distinguish between len and other ints
-def new_variable( dtype, var, tag = None, prefix=None ):
+def new_variable( dtype, var, tag = None, prefix=None, kind=None ):
 
     # ...
     if prefix is None:
         prefix = ''
+
+    _prefix = '{}'.format(prefix)
     # ...
 
     # ...
     if dtype == 'int':
-        if prefix == 'len':
-            prefix = 'n'
+        if kind == 'len':
+            _prefix = 'n{}'.format(_prefix)
+
+        elif kind == 'multi':
+            _prefix = 'im{}'.format(_prefix)
 
         else:
-            prefix = 'i{}'.format(prefix)
+            _prefix = 'i{}'.format(_prefix)
 
     elif dtype == 'real':
-        prefix = 'r{}'.format(prefix)
+        _prefix = 'r{}'.format(_prefix)
 
     else:
         raise NotImplementedError()
@@ -56,7 +62,7 @@ def new_variable( dtype, var, tag = None, prefix=None ):
     # ...
 
     pattern = '{prefix}{dim}_{tag}'
-    _print = lambda d,t: pattern.format(prefix=prefix, dim=d, tag=t)
+    _print = lambda d,t: pattern.format(prefix=_prefix, dim=d, tag=t)
 
     if isinstance( var, Variable ):
         assert( var.rank > 0 )
@@ -74,7 +80,11 @@ def new_variable( dtype, var, tag = None, prefix=None ):
             return Tuple(*indices)
 
     elif isinstance(var, (list, tuple, Tuple)):
-        ls = [new_variable( dtype, x, tag = tag, prefix = i ) for i,x in enumerate(var)]
+        ls = [new_variable( dtype, x,
+                            tag = tag,
+                            prefix = str(i),
+                            kind = kind )
+              for i,x in enumerate(var)]
         return Tuple(*ls)
 
     else:
@@ -124,7 +134,7 @@ class VariableGenerator(BasicGenerator):
 
         index    = new_variable('int',  target, tag = tag)
         iterator = new_variable('real', target, tag = tag)
-        length   = new_variable('int',  target, tag = tag, prefix='len')
+        length   = new_variable('int',  target, tag = tag, kind='len')
         # ...
 
         return Basic.__new__(cls, args, index, iterator, length)
@@ -156,7 +166,7 @@ class ZipGenerator(BasicGenerator):
 
         tag = random_string( 4 )
 
-        length      = new_variable('int',  target[0], tag = tag, prefix='len')
+        length      = new_variable('int',  target[0], tag = tag, kind='len')
         index       = new_variable('int',  target[0], tag = tag)
         iterator    = new_variable('real', target, tag = tag)
         # ...
@@ -188,10 +198,10 @@ class ProductGenerator(BasicGenerator):
 
         tag = random_string( 4 )
 
-        length      = new_variable('int',  target, tag = tag, prefix='len')
+        length      = new_variable('int',  target, tag = tag, kind='len')
         index       = new_variable('int',  target, tag = tag)
         iterator    = new_variable('real', target, tag = tag)
-        multi_index = new_variable('int',  target[0], tag = tag, prefix='m')
+        multi_index = new_variable('int',  target[0], tag = tag, kind='multi')
         # ...
 
         return Basic.__new__(cls, args, index, iterator, length, multi_index)
@@ -475,7 +485,7 @@ class AST(object):
             return getattr(self, method)(stmt)
 
         elif name in _internal_applications:
-            if name == 'map':
+            if name in _internal_map_functors:
                 func, target = stmt.args
 
                 # ... construct the generator
@@ -507,7 +517,7 @@ class AST(object):
                     assert(isinstance(index, (list, tuple, Tuple)))
 
                     length = generator.length
-                    if depth_out == 1:
+                    if name == 'map':
                         multi_index = generator.multi_index
 
                         # TODO check formula
@@ -519,9 +529,6 @@ class AST(object):
 
                         # update index to use multi index
                         index = multi_index
-
-                    else:
-                        raise NotImplementedError('')
                 # ...
 
                 # ... apply the function to arguments
