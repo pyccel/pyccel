@@ -154,6 +154,38 @@ class ZipGenerator(BasicGenerator):
 
         tag = random_string( 4 )
 
+        length      = new_variable('int',  target[0], tag = tag, prefix='len')
+        index       = new_variable('int',  target[0], tag = tag)
+
+        iterator    = new_variable('real', target, tag = tag)
+        # ...
+
+        return Basic.__new__(cls, args, index, iterator, length)
+
+    @property
+    def arguments(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
+
+    @property
+    def iterator(self):
+        return self._args[2]
+
+    @property
+    def length(self):
+        return self._args[3]
+
+class ProductGenerator(BasicGenerator):
+    def __new__( cls, *args ):
+        # ... create iterator and index variables
+        target = args
+        assert(len(args) > 1)
+
+        tag = random_string( 4 )
+
         # multi index
         multi_index = new_variable('int',  target[0], tag = tag, prefix='m')
         length      = new_variable('int',  target[0], tag = tag, prefix='len')
@@ -183,9 +215,6 @@ class ZipGenerator(BasicGenerator):
     @property
     def multi_index(self):
         return self._args[4]
-
-class ProductGenerator(BasicGenerator):
-    pass
 
 def generator_as_block(generator, stmts, **kwargs):
     # ...
@@ -231,8 +260,8 @@ def generator_as_block(generator, stmts, **kwargs):
         decs += [Assign(n, Len(xs))]
     # ...
 
-    # ... append the same length for zip
-    if isinstance(generator, ZipGenerator):
+    # ... append the same length for product
+    if isinstance(generator, ProductGenerator):
         length = length*len(generator)
     # ...
 
@@ -244,16 +273,33 @@ def generator_as_block(generator, stmts, **kwargs):
 
     # ...
     body += list(stmts)
-    for i,n,x,xs in zip(index, length, iterator, iterable):
+    # ...
 
-        if not isinstance(xs, (list, tuple, Tuple)):
-            body = [Assign(x, IndexedBase(xs.name)[i])] + body
+    # ...
+    if isinstance(generator, ZipGenerator):
+        for i,n in zip(index, length):
+            for x,xs in zip(iterator, iterable):
 
-        else:
-            for v in xs:
-                body = [Assign(x, IndexedBase(v.name)[i])] + body
+                if not isinstance(xs, (list, tuple, Tuple)):
+                    body = [Assign(x, IndexedBase(xs.name)[i])] + body
 
-        body = [For(i, Range(0, n), body, strict=False)]
+                else:
+                    for v in xs:
+                        body = [Assign(x, IndexedBase(v.name)[i])] + body
+
+            body = [For(i, Range(0, n), body, strict=False)]
+
+    else:
+        for i,n,x,xs in zip(index, length, iterator, iterable):
+
+            if not isinstance(xs, (list, tuple, Tuple)):
+                body = [Assign(x, IndexedBase(xs.name)[i])] + body
+
+            else:
+                for v in xs:
+                    body = [Assign(x, IndexedBase(v.name)[i])] + body
+
+            body = [For(i, Range(0, n), body, strict=False)]
     # ...
 
     if parallel:
@@ -456,7 +502,7 @@ class AST(object):
                 # ...
 
                 # ... use a multi index in the case of zip
-                if isinstance(generator, ZipGenerator):
+                if isinstance(generator, ProductGenerator):
 
                     assert(isinstance(index, (list, tuple, Tuple)))
 
@@ -531,6 +577,11 @@ class AST(object):
                 arguments = [self._visit(i) for i in stmt.args]
 
                 return ZipGenerator(*arguments)
+
+            elif name == 'product':
+                arguments = [self._visit(i) for i in stmt.args]
+
+                return ProductGenerator(*arguments)
 
             else:
                 raise NotImplementedError('')
