@@ -16,9 +16,10 @@ from textx.metamodel import metamodel_from_str
 
 from pyccel.codegen.utilities import random_string
 from pyccel.ast.utilities import build_types_decorator
+from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
-from pyccel.ast.datatypes import Int, Real, Complex, Bool
+from pyccel.ast.core import Return
 from .ast import Reduce
 from .ast import SeqMap, ParMap, BasicMap
 from .ast import SeqTensorMap, ParTensorMap, BasicTensorMap
@@ -700,18 +701,28 @@ class SemanticParser(object):
         expr = self.annotate(stmt.expr)
         # TODO improve
         results = self.annotate(self.main)
+        if not isinstance(results, (list, tuple, Tuple)):
+            results = [results]
 
-        # TODO to be moved to a method .to_funcdef
-#        # ...
-#        decorators = {'types':         build_types_decorator(args),
-#                      'external_call': []}
-#
-#        tag         = random_string( 6 )
-#        g_name      = 'lambda_{}'.format( tag )
-#        # ...
-#
-#        return FunctionDef(g_name, args, results, body,
-#                           decorators=decorators)
+        # TODO improve
+        body = [expr]
+
+        if len(results) == 1:
+            body += [Return(results[0])]
+
+        else:
+            body += [Return(results)]
+
+        # ...
+        decorators = {'types':         build_types_decorator(args),
+                      'external_call': []}
+
+        tag         = random_string( 6 )
+        name      = 'lambda_{}'.format( tag )
+        # ...
+
+        return FunctionDef(name, args, results, body,
+                           decorators=decorators)
 
         return expr
 
