@@ -10,7 +10,7 @@ from pyccel.codegen.utilities import random_string
 #=========================================================================
 # some useful functions
 # TODO add another argument to distinguish between len and other ints
-def new_variable( dtype, var ):
+def new_variable( dtype, var, tag = None ):
 
     # ...
     if dtype == 'int':
@@ -28,7 +28,8 @@ def new_variable( dtype, var ):
     # ...
 
     # ...
-    tag = random_string( 4 )
+    if tag is None:
+        tag = random_string( 4 )
     # ...
 
     pattern = '{prefix}{dim}_{tag}'
@@ -102,9 +103,11 @@ class BasicGenerator(Basic):
         if len(args) == 1:
             target = args[0]
 
-        index    = new_variable('int',  target)
-        iterator = new_variable('real', target)
-        length   = new_variable('len',  target)
+        tag = random_string( 4 )
+
+        index    = new_variable('int',  target, tag = tag)
+        iterator = new_variable('real', target, tag = tag)
+        length   = new_variable('len',  target, tag = tag)
         # ...
 
         return Basic.__new__(cls, args, index, iterator, length)
