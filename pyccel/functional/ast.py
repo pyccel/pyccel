@@ -28,18 +28,23 @@ from .glossary import _math_functions
 #=========================================================================
 # some useful functions
 # TODO add another argument to distinguish between len and other ints
-def new_variable( dtype, var, tag = None ):
+def new_variable( dtype, var, tag = None, prefix=None ):
+
+    # ...
+    if prefix is None:
+        prefix = ''
+    # ...
 
     # ...
     if dtype == 'int':
-        prefix = 'i'
+        if prefix == 'len':
+            prefix = 'n'
+
+        else:
+            prefix = 'i{}'.format(prefix)
 
     elif dtype == 'real':
-        prefix = 'x'
-
-    elif dtype == 'len': # for length
-        prefix = 'n'
-        dtype  = 'int'
+        prefix = 'r{}'.format(prefix)
 
     else:
         raise NotImplementedError()
@@ -67,6 +72,10 @@ def new_variable( dtype, var, tag = None ):
                 indices.append( Variable( dtype, name ) )
 
             return Tuple(*indices)
+
+    elif isinstance(var, (list, tuple, Tuple)):
+        ls = [new_variable( dtype, x, tag = tag, prefix = i ) for i,x in enumerate(var)]
+        return Tuple(*ls)
 
     else:
         raise NotImplementedError('{} not available'.format(type(var)))
@@ -99,6 +108,11 @@ class ParallelBlock(BasicBlock):
 
 #=========================================================================
 class BasicGenerator(Basic):
+
+    def __len__(self):
+        return len(self.arguments)
+
+class VariableGenerator(BasicGenerator):
     def __new__( cls, *args ):
         # ... create iterator and index variables
         target = args
@@ -109,7 +123,7 @@ class BasicGenerator(Basic):
 
         index    = new_variable('int',  target, tag = tag)
         iterator = new_variable('real', target, tag = tag)
-        length   = new_variable('len',  target, tag = tag)
+        length   = new_variable('int',  target, tag = tag, prefix='len')
         # ...
 
         return Basic.__new__(cls, args, index, iterator, length)
@@ -130,14 +144,45 @@ class BasicGenerator(Basic):
     def length(self):
         return self._args[3]
 
-    def __len__(self):
-        return len(self.arguments)
-
-class VariableGenerator(BasicGenerator):
-    pass
-
 class ZipGenerator(BasicGenerator):
-    pass
+    def __new__( cls, *args ):
+        # ... create iterator and index variables
+        target = args
+        if len(args) == 1:
+            print(args)
+            raise NotImplementedError('')
+
+        tag = random_string( 4 )
+
+        # multi index
+        multi_index = new_variable('int',  target[0], tag = tag, prefix='m')
+        length      = new_variable('int',  target[0], tag = tag, prefix='len')
+
+        index       = new_variable('int',  target, tag = tag)
+        iterator    = new_variable('real', target, tag = tag)
+        # ...
+
+        return Basic.__new__(cls, args, index, iterator, length, multi_index)
+
+    @property
+    def arguments(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
+
+    @property
+    def iterator(self):
+        return self._args[2]
+
+    @property
+    def length(self):
+        return self._args[3]
+
+    @property
+    def multi_index(self):
+        return self._args[4]
 
 class ProductGenerator(BasicGenerator):
     pass
@@ -175,16 +220,39 @@ def generator_as_block(generator, stmts, **kwargs):
         length = [length]
     # ...
 
+#    print('------------- BEFORE')
+#    print(' iterable = ', iterable)
+#    print(' index    = ', index   )
+#    print(' iterator = ', iterator)
+#    print(' length   = ', length  )
+
     # ...
     for n,xs in zip(length, iterable):
         decs += [Assign(n, Len(xs))]
     # ...
 
+    # ... append the same length for zip
+    if isinstance(generator, ZipGenerator):
+        length = length*len(generator)
+    # ...
+
+#    print('------------- AFTER')
+#    print(' iterable = ', iterable)
+#    print(' index    = ', index   )
+#    print(' iterator = ', iterator)
+#    print(' length   = ', length  )
+
     # ...
     body += list(stmts)
     for i,n,x,xs in zip(index, length, iterator, iterable):
 
-        body = [Assign(x, IndexedBase(xs.name)[i])] + body
+        if not isinstance(xs, (list, tuple, Tuple)):
+            body = [Assign(x, IndexedBase(xs.name)[i])] + body
+
+        else:
+            for v in xs:
+                body = [Assign(x, IndexedBase(v.name)[i])] + body
+
         body = [For(i, Range(0, n), body, strict=False)]
     # ...
 
@@ -365,9 +433,6 @@ class AST(object):
                 func, target = stmt.args
 
                 # ... construct the generator
-                # TODO compute its depth from type of target
-                depth     = None
-
                 generator = self._visit(target)
                 if isinstance(generator, Variable):
                     generator = VariableGenerator(generator)
@@ -381,10 +446,35 @@ class AST(object):
                 depth_out = len(list(type_codomain.atoms(TypeList)))
                 # ...
 
-                # ... apply the function to arguments
+                # ...
                 index    = generator.index
                 iterator = generator.iterator
+                # ...
 
+                # ... list of all statements
+                stmts = []
+                # ...
+
+                # ... use a multi index in the case of zip
+                if isinstance(generator, ZipGenerator):
+
+                    assert(isinstance(index, (list, tuple, Tuple)))
+
+                    length = generator.length
+                    multi_index = generator.multi_index
+
+                    # TODO check formula
+                    value = index[0]
+                    for ix in index[1:]:
+                        value = length*value + ix
+
+                    stmts += [Assign(multi_index, value)]
+
+                    # update index to use multi index
+                    index = multi_index
+                # ...
+
+                # ... apply the function to arguments
                 if isinstance(iterator, Tuple):
                     rhs = func( *iterator )
 
@@ -427,7 +517,7 @@ class AST(object):
                 # ...
 
                 # ... create core statement
-                stmts = [Assign(lhs, rhs)]
+                stmts += [Assign(lhs, rhs)]
                 # ...
 
                 # TODO USE THIS
@@ -436,6 +526,11 @@ class AST(object):
                 # return the associated for loops
                 return generator_as_block( generator, stmts,
                                            parallel      = False )
+
+            elif name == 'zip':
+                arguments = [self._visit(i) for i in stmt.args]
+
+                return ZipGenerator(*arguments)
 
             else:
                 raise NotImplementedError('')
