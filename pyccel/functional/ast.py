@@ -345,7 +345,10 @@ class AST(object):
         """builds the namespace from types."""
         raise NotImplementedError('')
 
-    def annotate(self, stmt=None):
+    def doit(self):
+        return self._visit(self.expr)
+
+    def _visit(self, stmt=None):
 
         if stmt is None:
             stmt = self.expr
@@ -353,7 +356,7 @@ class AST(object):
         cls = type(stmt)
         name = cls.__name__
 
-        method = '_annotate_{}'.format(name)
+        method = '_visit_{}'.format(name)
         if hasattr(self, method):
             return getattr(self, method)(stmt)
 
@@ -365,14 +368,14 @@ class AST(object):
                 # TODO compute its depth from type of target
                 depth     = None
 
-                generator = self.annotate(target)
+                generator = self._visit(target)
                 if isinstance(generator, Variable):
                     generator = VariableGenerator(generator)
                 # ...
 
                 # ... construct the results
                 type_codomain = self.main_type
-                results = self.annotate(type_codomain)
+                results = self._visit(type_codomain)
 
                 # compute depth of the type list
                 depth_out = len(list(type_codomain.atoms(TypeList)))
@@ -440,11 +443,11 @@ class AST(object):
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
 
-    def _annotate_Lambda(self, stmt):
-        args = [self.annotate(i) for i in stmt.variables]
-        expr = self.annotate(stmt.expr)
+    def _visit_Lambda(self, stmt):
+        args = [self._visit(i) for i in stmt.variables]
+        expr = self._visit(stmt.expr)
         # TODO improve
-        results = self.annotate(self.main)
+        results = self._visit(self.main)
         if not isinstance(results, (list, tuple, Tuple)):
             results = [results]
 
@@ -470,7 +473,7 @@ class AST(object):
 
         return expr
 
-    def _annotate_Symbol(self, stmt):
+    def _visit_Symbol(self, stmt):
         t_var = self.d_types[stmt.name]
         d_var = _attributs_default()
         t_var, d_var = _attributs_from_type(t_var, d_var)
@@ -480,13 +483,13 @@ class AST(object):
 
         return var
 
-    def _annotate_Integer(self, stmt):
+    def _visit_Integer(self, stmt):
         return stmt
 
-    def _annotate_Float(self, stmt):
+    def _visit_Float(self, stmt):
         return stmt
 
-    def _annotate_TypeVariable(self, stmt):
+    def _visit_TypeVariable(self, stmt):
         name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
@@ -498,7 +501,7 @@ class AST(object):
 
         return var
 
-    def _annotate_TypeTuple(self, stmt):
+    def _visit_TypeTuple(self, stmt):
         # TODO
         name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
@@ -511,7 +514,7 @@ class AST(object):
 
         return var
 
-    def _annotate_TypeList(self, stmt):
+    def _visit_TypeList(self, stmt):
         # TODO
         name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt

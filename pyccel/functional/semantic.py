@@ -306,7 +306,7 @@ class Parser(object):
         """builds the namespace from types."""
         raise NotImplementedError('')
 
-    def to_type(self, verbose=False):
+    def doit(self, verbose=False):
 
         # ... compute type
         i_count = 0
@@ -315,7 +315,7 @@ class Parser(object):
             if verbose:
                 print('----> BEFORE ', self.main)
 
-            self.main = self._to_type(self.main)
+            self.main = self._visit(self.main)
 
             if verbose:
                 print('<---- AFTER', self.main)
@@ -325,12 +325,12 @@ class Parser(object):
 
         return self.main
 
-    def _to_type(self, stmt, value=None):
+    def _visit(self, stmt, value=None):
 
         cls = type(stmt)
         name = cls.__name__
 
-        method = '_to_type_{}'.format(name)
+        method = '_visit_{}'.format(name)
         if hasattr(self, method):
             return getattr(self, method)(stmt, value=value)
 
@@ -359,7 +359,7 @@ class Parser(object):
             else:
                 raise NotImplementedError('{}'.format(name))
 
-            pattern = '_to_type_{kind}_{name}'
+            pattern = '_visit_{kind}_{name}'
             method  = pattern.format(kind=kind, name=name)
             method = getattr(self, method)
 
@@ -368,28 +368,28 @@ class Parser(object):
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
 
-    def _to_type_Lambda(self, stmt, value=None):
+    def _visit_Lambda(self, stmt, value=None):
         # TODO treat args
-        self.main = self._to_type(stmt.expr)
+        self.main = self._visit(stmt.expr)
         if isinstance(self.main, BasicTypeVariable):
             self.main_type = self.main
 
         return self.main
 
-    def _to_type_TypeVariable(self, stmt, value=None):
+    def _visit_TypeVariable(self, stmt, value=None):
         return stmt
 
-    def _to_type_TypeTuple(self, stmt, value=None):
+    def _visit_TypeTuple(self, stmt, value=None):
         return stmt
 
-    def _to_type_TypeList(self, stmt, value=None):
+    def _visit_TypeList(self, stmt, value=None):
         return stmt
 
-    def _to_type_Symbol(self, stmt, value=None):
+    def _visit_Symbol(self, stmt, value=None):
         assert(not( value is None ))
         self._set_type(stmt, value)
 
-    def _to_type_functor_map(self, stmt, value=None):
+    def _visit_functor_map(self, stmt, value=None):
         arguments = stmt.args
 
         assert( len(arguments) == 2 )
@@ -418,12 +418,12 @@ class Parser(object):
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
 
-        self._to_type(target, value=type_domain)
+        self._visit(target, value=type_domain)
         self._set_expr(type_codomain, stmt)
 
         return type_codomain
 
-    def _to_type_function_zip(self, stmt, value=None):
+    def _visit_function_zip(self, stmt, value=None):
         arguments = stmt.args
 
         assert(not( value is None ))
@@ -438,7 +438,7 @@ class Parser(object):
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
-            self._to_type(a, value=type_domain)
+            self._visit(a, value=type_domain)
 
         type_codomain = value
 
@@ -448,7 +448,7 @@ class Parser(object):
 
         return type_codomain
 
-    def _to_type_function_product(self, stmt, value=None):
+    def _visit_function_product(self, stmt, value=None):
         arguments = stmt.args
 
         assert(not( value is None ))
@@ -463,7 +463,7 @@ class Parser(object):
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
-            self._to_type(a, value=type_domain)
+            self._visit(a, value=type_domain)
 
         type_codomain = value
 
@@ -473,7 +473,7 @@ class Parser(object):
 
         return type_codomain
 
-    def _to_type_functor_reduce(self, stmt, value=None):
+    def _visit_functor_reduce(self, stmt, value=None):
         arguments = stmt.args
 
         assert( len(arguments) == 2 )

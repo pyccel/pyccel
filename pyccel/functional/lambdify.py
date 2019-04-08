@@ -108,7 +108,7 @@ def _lambdify(func, namespace={}, **kwargs):
     # ... semantic analysis
     semantic_only = kwargs.pop('semantic_only', False)
     parser = SemanticParser(L, typed_functions=typed_functions)
-    dtype = parser.to_type()
+    dtype = parser.doit()
 
     if semantic_only:
         return dtype
@@ -116,8 +116,8 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ... ast
     ast_only = kwargs.pop('ast_only', False)
-    parser = AST(parser)
-    func = parser.annotate()
+    ast = AST(parser)
+    func = ast.doit()
 
     if ast_only:
         return func
