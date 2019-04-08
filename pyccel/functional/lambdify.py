@@ -35,10 +35,11 @@ from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.datatypes import get_default_value
 from pyccel.functional import Where
-from pyccel.parser import Parser
+from pyccel.parser import Parser as PyccelParser
 
-from .syntax import parse as parse_lambda
-from .parser import SemanticParser
+from .syntax   import parse as parse_lambda
+from .semantic import Parser as SemanticParser
+from .ast      import AST
 from .utilities import get_decorators
 from .utilities import get_pyccel_imports_code
 from .utilities import get_dependencies_code
@@ -56,7 +57,7 @@ def _parse_typed_functions(user_functions):
     code  = get_pyccel_imports_code()
     code += get_dependencies_code(user_functions)
 
-    pyccel = Parser(code)
+    pyccel = PyccelParser(code)
     ast = pyccel.parse()
 
     settings = {}
@@ -74,12 +75,14 @@ def _lambdify(func, namespace={}, **kwargs):
     # ...
 
     # ...
+    syntax_only = kwargs.pop('syntax_only', False)
     L = parse_lambda(func_code)
-#    print(L)
-#    import sys; sys.exit(0)
+
+    if syntax_only:
+        return L
     # ...
 
-    # ...
+    # ... TODO move this to semantic parser
     typed_functions = {}
     for f_name, f in namespace.items():
 
@@ -102,34 +105,31 @@ def _lambdify(func, namespace={}, **kwargs):
     typed_functions = _parse_typed_functions(list(typed_functions.values()))
     # ...
 
-    # semantic analysis
+    # ... semantic analysis
+    semantic_only = kwargs.pop('semantic_only', False)
     parser = SemanticParser(L, typed_functions=typed_functions)
-
-    # typing
-    type_only = kwargs.pop('type_only', False)
     dtype = parser.to_type()
 
-#    print('=========== types ===========')
-#    print(parser.d_types)
-#    print('=========== expr  ===========')
-#    print(parser.d_expr)
-#    print('=============================')
-
-    if type_only:
+    if semantic_only:
         return dtype
+    # ...
 
-    # annotation
-    annotation_only = kwargs.pop('annotation_only', False)
+    # ... ast
+    ast_only = kwargs.pop('ast_only', False)
+    parser = AST(parser)
     func = parser.annotate()
-    if annotation_only:
-        return func
 
-    # printing
+    if ast_only:
+        return func
+    # ...
+
+    # ... printing
     printing_only = kwargs.pop('printing_only', False)
     print(func, type(func))
     code = pycode(func)
     if printing_only:
         return code
+    # ...
 
     raise NotImplementedError()
 

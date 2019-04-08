@@ -28,6 +28,7 @@ from .core import TypeVariable, TypeTuple, TypeList
 from .core import VariableGenerator
 from .core import generator_as_block
 
+#==============================================================================
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,
                     'tmap':     SeqTensorMap,
@@ -68,46 +69,6 @@ _math_functions = _elemental_math_functions + _math_vector_functions + _math_mat
 #==============================================================================
 
 #==============================================================================
-# ...
-def _attributs_from_type(t, d_var):
-    if isinstance(t, TypeList):
-        t = _attributs_from_type(t.parent, d_var)
-        d_var['rank'] = d_var['rank'] + 1
-        return t, d_var
-
-    elif isinstance(t, TypeTuple):
-        raise NotImplementedError()
-
-    elif isinstance(t, TypeVariable):
-        d_var['dtype']          = t.dtype
-        d_var['rank']           = t.rank
-        d_var['is_stack_array'] = t.is_stack_array
-        d_var['order']          = t.order
-        d_var['precision']      = t.precision
-
-        return t, d_var
-# ...
-
-# ... default values
-def _attributs_default():
-    d_var = {}
-
-    d_var['dtype']          = None
-    d_var['rank']           = 0
-    d_var['allocatable']    = False
-    d_var['is_stack_array'] = False
-    d_var['is_pointer']     = False
-    d_var['is_target']      = False
-    d_var['shape']          = None
-    d_var['order']          = 'C'
-    d_var['precision']      = None
-
-    return d_var
-# ...
-#==============================================================================
-
-
-#==============================================================================
 def sanitize(expr):
     if isinstance(expr, Lambda):
         args = expr.variables
@@ -140,7 +101,7 @@ def sanitize(expr):
 
 #==============================================================================
 # TODO add some verifications before starting annotating L
-class SemanticParser(object):
+class Parser(object):
 
     def __init__(self, expr, **kwargs):
         assert(isinstance(expr, Lambda))
@@ -501,188 +462,3 @@ class SemanticParser(object):
         print('> ', op, type(op))
 
         import sys; sys.exit(0)
-
-    def annotate(self, stmt=None):
-
-        if stmt is None:
-            stmt = self.expr
-
-        cls = type(stmt)
-        name = cls.__name__
-
-        method = '_annotate_{}'.format(name)
-        if hasattr(self, method):
-            return getattr(self, method)(stmt)
-
-        elif name in _known_functions.keys():
-            if name == 'map':
-                func, target = stmt.args
-
-                # ... construct the generator
-                # TODO compute its depth from type of target
-                depth     = None
-
-                generator = self.annotate(target)
-                if isinstance(generator, Variable):
-                    generator = VariableGenerator(generator)
-                # ...
-
-                # ... construct the results
-                type_codomain = self.main_type
-                results = self.annotate(type_codomain)
-
-                # compute depth of the type list
-                depth_out = len(list(type_codomain.atoms(TypeList)))
-                # ...
-
-                # ... apply the function to arguments
-                index    = generator.index
-                iterator = generator.iterator
-
-                if isinstance(iterator, Tuple):
-                    rhs = func( *iterator )
-
-                else:
-                    rhs = func( iterator )
-                # ...
-
-                # ... create lhs
-                lhs = generator.iterator
-                # TODO check this
-                if isinstance(lhs, Tuple) and len(lhs) == 1:
-                    lhs = lhs[0]
-                # ...
-
-                # ... create lhs for storing the result
-                if isinstance(results, Variable):
-                    results = [results]
-
-                else:
-                    raise NotImplementedError()
-
-                if not isinstance(index, Tuple):
-                    index = [index]
-
-                else:
-                    index = list([i for i in index])
-
-                lhs = []
-                for r in results:
-                    m = r.rank - depth_out
-                    ind = index + [Slice(None, None)] * m
-                    if len(ind) == 1:
-                        ind = ind[0]
-
-                    lhs.append(IndexedBase(r.name)[ind])
-
-                lhs = Tuple(*lhs)
-                if len(lhs) == 1:
-                    lhs = lhs[0]
-                # ...
-
-                # ... create core statement
-                stmts = [Assign(lhs, rhs)]
-                # ...
-
-                # TODO USE THIS
-#                expr = self.get_expr_from_type()
-
-                # return the associated for loops
-                return generator_as_block( generator, stmts,
-                                           parallel      = False )
-
-            else:
-                raise NotImplementedError('')
-
-        # Unknown object, we raise an error.
-        raise TypeError('{node} not yet available'.format(node=type(stmt)))
-
-    def _annotate_Lambda(self, stmt):
-        args = [self.annotate(i) for i in stmt.variables]
-        expr = self.annotate(stmt.expr)
-        # TODO improve
-        results = self.annotate(self.main)
-        if not isinstance(results, (list, tuple, Tuple)):
-            results = [results]
-
-        # TODO improve
-        body = [expr]
-
-        if len(results) == 1:
-            body += [Return(results[0])]
-
-        else:
-            body += [Return(results)]
-
-        # ...
-        decorators = {'types':         build_types_decorator(args),
-                      'external_call': []}
-
-        tag         = random_string( 6 )
-        name      = 'lambda_{}'.format( tag )
-        # ...
-
-        return FunctionDef(name, args, results, body,
-                           decorators=decorators)
-
-        return expr
-
-    def _annotate_Symbol(self, stmt):
-        t_var = self.d_types[stmt.name]
-        d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
-
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, stmt.name, **d_var )
-
-        return var
-
-    def _annotate_Integer(self, stmt):
-        return stmt
-
-    def _annotate_Float(self, stmt):
-        return stmt
-
-    def _annotate_TypeVariable(self, stmt):
-        name  = 'dummy_{}'.format(stmt.tag)
-        t_var = stmt
-
-        d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
-
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, name, **d_var )
-
-        return var
-
-    def _annotate_TypeTuple(self, stmt):
-        # TODO
-        name  = 'dummy_{}'.format(stmt.tag)
-        t_var = stmt
-
-        d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
-
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, name, **d_var )
-
-        return var
-
-    def _annotate_TypeList(self, stmt):
-        # TODO
-        name  = 'dummy_{}'.format(stmt.tag)
-        t_var = stmt
-
-        d_var = _attributs_default()
-        t_var, d_var = _attributs_from_type(t_var, d_var)
-
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, name, **d_var )
-
-        return var
-
-    def get_expr_from_type(self, t_var=None):
-        if t_var is None:
-            t_var = self.main_type
-
-        return self.d_expr[t_var.name]
