@@ -8,19 +8,24 @@ class PythonCodePrinter(PyccelPythonCodePrinter):
     def __init__(self, settings=None):
         PyccelPythonCodePrinter.__init__(self, settings=settings)
 
-    def _print_FunctionalMap(self, expr):
-        allocations = '\n'.join(self._print(i) for i in expr.allocations)
-        inits       = '\n'.join(self._print(i) for i in expr.inits)
-        decs        = '\n'.join(self._print(i) for i in expr.decs)
-        stmts       = '\n'.join(self._print(i) for i in expr.stmts)
-        results     = '\n'.join(self._print(i) for i in expr.results)
+    def _print_SequentialBlock(self, expr):
+        code = ''
 
-        code = '{allocations}\n{inits}\n{decs}\n{stmts}\n{results}'
-        code = code.format( allocations = allocations,
-                            inits       = inits,
-                            decs        = decs,
-                            stmts       = stmts,
-                            results     = results )
+        # ...
+        if expr.decs:
+            decs = '\n'.join(self._print(i) for i in expr.decs)
+
+            code = '{code}\n{new}'.format( code = code,
+                                           new  = decs )
+        # ...
+
+        # ...
+        if expr.body:
+            body = '\n'.join(self._print(i) for i in expr.body)
+
+            code = '{code}\n{new}'.format( code = code,
+                                           new  = body )
+        # ...
 
         return code
 

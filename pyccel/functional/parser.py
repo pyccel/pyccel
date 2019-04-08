@@ -3,7 +3,7 @@
 import os
 from os.path import join, dirname
 
-from sympy import Symbol, Lambda, Function, Dummy
+from sympy import Symbol, Lambda, Function, Dummy, Tuple
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
 from sympy import Integer, Float
@@ -15,7 +15,7 @@ from textx.metamodel import metamodel_from_str
 
 from pyccel.codegen.utilities import random_string
 from pyccel.ast.utilities import build_types_decorator
-from pyccel.ast.core import Variable, FunctionDef
+from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
 from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from .ast import Reduce
 from .ast import SeqMap, ParMap, BasicMap
@@ -24,7 +24,8 @@ from .ast import SeqZip, SeqProduct
 from .ast import ParZip, ParProduct
 from .ast import assign_type, BasicTypeVariable
 from .ast import TypeVariable, TypeTuple, TypeList
-from .ast import FunctionalMap
+from .ast import VariableGenerator
+from .ast import generator_as_block
 
 _known_functions = {'map':      SeqMap,
                     'pmap':     ParMap,
@@ -612,13 +613,37 @@ class SemanticParser(object):
         elif name in _known_functions.keys():
             if name == 'map':
                 func, target = stmt.args
-                target = self.annotate(target)
 
+                # ... construct the generator
+                generator = self.annotate(target)
+                if isinstance(generator, Variable):
+                    generator = VariableGenerator(generator)
+                # ...
+
+                # ... construct the results
                 type_codomain = self.main_type
                 results = self.annotate(type_codomain)
+                # ...
 
-                expr = self.get_expr_from_type()
-                return FunctionalMap(func, target, results, parallel=False)
+                # ... apply the function to arguments
+                args = generator.iterator
+
+                if isinstance(args, Tuple):
+                    call = func( *args )
+
+                else:
+                    call = func( args )
+                # ...
+
+                # ... create core statement
+                stmts = [Assign(results, call)]
+                # ...
+
+                # TODO USE THIS
+#                expr = self.get_expr_from_type()
+
+                # return the associated for loops
+                return generator_as_block(generator, stmts, parallel=False)
 
             else:
                 raise NotImplementedError('')

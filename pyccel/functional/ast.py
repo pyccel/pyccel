@@ -1,77 +1,195 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from sympy import Tuple
+from sympy import Tuple, IndexedBase
 
 from pyccel.ast.basic import Basic
-from pyccel.ast.core  import Variable
+from pyccel.ast.core  import Variable, For, Range, Assign, Len
 from pyccel.codegen.utilities import random_string
 
-#==============================================================================
-#        body = allocations + inits + decs + stmts
-class FunctionalBasic(Basic):
+#=========================================================================
+# some useful functions
+# TODO add another argument to distinguish between len and other ints
+def new_variable( dtype, var ):
+
+    # ...
+    if dtype == 'int':
+        prefix = 'i'
+
+    elif dtype == 'real':
+        prefix = 'x'
+
+    elif dtype == 'len': # for length
+        prefix = 'n'
+        dtype  = 'int'
+
+    else:
+        raise NotImplementedError()
+    # ...
+
+    # ...
+    tag = random_string( 4 )
+    # ...
+
+    pattern = '{prefix}{dim}_{tag}'
+    _print = lambda d,t: pattern.format(prefix=prefix, dim=d, tag=t)
+
+    if isinstance( var, Variable ):
+        assert( var.rank > 0 )
+
+        if var.rank == 1:
+            name  =  _print('', tag)
+            return Variable( dtype, name )
+
+        else:
+            indices = []
+            for d in range(0, var.rank):
+                name  =  _print(d, tag)
+                indices.append( Variable( dtype, name ) )
+
+            return Tuple(*indices)
+
+    else:
+        raise NotImplementedError('{} not available'.format(type(var)))
+
+#=========================================================================
+class BasicBlock(Basic):
     """."""
-    _parallel = False
+    def __new__( cls, decs, body ):
+        assert(isinstance(decs, (tuple, list, Tuple)))
+        assert(isinstance(body, (tuple, list, Tuple)))
 
-    def __new__( cls, allocations, inits, decs, stmts, results ):
-        assert(isinstance(allocations, (tuple, list, Tuple)))
-        assert(isinstance(inits,       (tuple, list, Tuple)))
-        assert(isinstance(decs,        (tuple, list, Tuple)))
-        assert(isinstance(stmts,       (tuple, list, Tuple)))
-        assert(isinstance(results,     (tuple, list, Tuple, Variable)))
+        decs = Tuple(*decs)
+        body = Tuple(*body)
 
-        if isinstance(results, Variable):
-            results = [results]
-
-#            for r in results:
-#                r.inspect()
-
-        allocations = Tuple(*allocations)
-        inits       = Tuple(*inits)
-        decs        = Tuple(*decs)
-        stmts       = Tuple(*stmts)
-        results     = Tuple(*results)
-
-        return Basic.__new__(cls, allocations, stmts, decs, stmts, results)
-
-    @property
-    def allocations(self):
-        return self._args[0]
-
-    @property
-    def inits(self):
-        return self._args[1]
+        return Basic.__new__(cls, decs, body)
 
     @property
     def decs(self):
+        return self._args[0]
+
+    @property
+    def body(self):
+        return self._args[1]
+
+class SequentialBlock(BasicBlock):
+    pass
+
+class ParallelBlock(BasicBlock):
+    pass
+
+#=========================================================================
+class Reduce(Basic):
+    """."""
+
+    def __new__( cls, func, target ):
+
+        return Basic.__new__(cls, func, target)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def target(self):
+        return self._args[1]
+
+#=========================================================================
+class BasicGenerator(Basic):
+    def __new__( cls, *args ):
+        # ... create iterator and index variables
+        target = args
+        if len(args) == 1:
+            target = args[0]
+
+        index    = new_variable('int',  target)
+        iterator = new_variable('real', target)
+        length   = new_variable('len',  target)
+        # ...
+
+        return Basic.__new__(cls, args, index, iterator, length)
+
+    @property
+    def arguments(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
+
+    @property
+    def iterator(self):
         return self._args[2]
 
     @property
-    def stmts(self):
+    def length(self):
         return self._args[3]
 
-    @property
-    def results(self):
-        return self._args[4]
+    def __len__(self):
+        return len(self.arguments)
 
-    @property
-    def parallel(self):
-        return self._parallel
+class VariableGenerator(BasicGenerator):
+    pass
 
-#==============================================================================
-class FunctionalMap(FunctionalBasic):
-    """."""
-    def __new__( cls, func, target, results, parallel=False ):
-        allocations = []
-        inits       = []
-        decs        = []
-        stmts       = []
+class ZipGenerator(BasicGenerator):
+    pass
 
-        obj = FunctionalBasic.__new__(cls, allocations, stmts, decs, stmts, results)
-        obj._parallel = parallel
-        return obj
+class ProductGenerator(BasicGenerator):
+    pass
 
-#==============================================================================
+def generator_as_block(generator, stmts, **kwargs):
+    # ...
+    settings = kwargs.copy()
+
+    parallel = settings.pop('parallel', False)
+    # ...
+
+    # ...
+    decs = []
+    body = []
+    # ...
+
+    # TODO USE stmts
+
+    # ...
+    iterable = generator.arguments
+    index    = generator.index
+    iterator = generator.iterator
+    length   = generator.length
+
+    if not isinstance(iterable, (list, tuple, Tuple)):
+        iterable = [iterable]
+
+    if not isinstance(index, (list, tuple, Tuple)):
+        index = [index]
+
+    if not isinstance(iterator, (list, tuple, Tuple)):
+        iterator = [iterator]
+
+    if not isinstance(length, (list, tuple, Tuple)):
+        length = [length]
+    # ...
+
+    # ...
+    for n,xs in zip(length, iterable):
+        decs += [Assign(n, Len(xs))]
+    # ...
+
+    # ...
+    body += list(stmts)
+    for i,n,x,xs in zip(index, length, iterator, iterable):
+
+        body = [Assign(x, IndexedBase(xs.name)[i])] + body
+        body = [For(i, Range(0, n), body, strict=False)]
+    # ...
+
+    if parallel:
+        return ParallelBlock( decs, body )
+
+    else:
+        return SequentialBlock( decs, body )
+
+#=========================================================================
 class BasicMap(Basic):
     """."""
 
@@ -90,36 +208,7 @@ class BasicMap(Basic):
 class BasicTensorMap(BasicMap):
     pass
 
-#==============================================================================
-class Reduce(Basic):
-    """."""
-
-    def __new__( cls, func, target ):
-
-        return Basic.__new__(cls, func, target)
-
-    @property
-    def func(self):
-        return self._args[0]
-
-    @property
-    def target(self):
-        return self._args[1]
-
-#==============================================================================
-class BasicGenerator(Basic):
-    def __new__( cls, *args ):
-        return Basic.__new__(cls, args)
-
-    @property
-    def arguments(self):
-        return self._args[0]
-
-    def __len__(self):
-        return len(self.arguments)
-
-
-#==============================================================================
+#=========================================================================
 # serial and parallel nodes
 class SeqMap(BasicMap):
     pass
@@ -145,7 +234,7 @@ class SeqProduct(BasicGenerator):
 class ParProduct(BasicGenerator):
     pass
 
-#==============================================================================
+#=========================================================================
 class BasicTypeVariable(Basic):
     _tag  = None
 
@@ -153,7 +242,7 @@ class BasicTypeVariable(Basic):
     def tag(self):
         return self._tag
 
-#==============================================================================
+#=========================================================================
 class TypeVariable(BasicTypeVariable):
     def __new__( cls, var, rank=0 ):
         assert(isinstance(var, (Variable, TypeVariable)))
@@ -206,7 +295,7 @@ class TypeVariable(BasicTypeVariable):
         attributs = ','.join(str(i) for i in attributs)
         return 'TypeVariable({})'.format(attributs)
 
-#==============================================================================
+#=========================================================================
 class TypeTuple(BasicTypeVariable):
     def __new__( cls, var, rank=0 ):
         assert(isinstance(var, (tuple, list, Tuple)))
@@ -243,7 +332,7 @@ class TypeTuple(BasicTypeVariable):
         attributs = ','.join(i.view() for i in self.types)
         return 'TypeTuple({})'.format(attributs)
 
-#==============================================================================
+#=========================================================================
 class TypeList(BasicTypeVariable):
     def __new__( cls, var ):
         assert(isinstance(var, (TypeVariable, TypeTuple, TypeList)))
@@ -269,7 +358,7 @@ class TypeList(BasicTypeVariable):
         """inspects the variable."""
         return 'TypeList({})'.format(self.parent.view())
 
-#==============================================================================
+#=========================================================================
 # user friendly function
 def assign_type(expr, rank=None):
     if ( rank is None ) and isinstance(expr, BasicTypeVariable):
