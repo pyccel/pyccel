@@ -27,32 +27,8 @@ def test_map_list(**settings):
 
     print('DONE.')
 
-#=========================================================
-def test_annotate_map_list(**settings):
-    L = lambda xs: map(sin, xs)
-
-    L = _lambdify( L, **settings )
-    print(L)
-
-    print('DONE.')
-
 #########################################
 if __name__ == '__main__':
-    # ... typing
-    # define settings for _lambdify
     settings = {'semantic_only' : True}
 
     test_map_list(**settings)
-    # ...
-
-    # ... annotation
-    # define settings for _lambdify
-    settings = {'ast_only' : True}
-    test_annotate_map_list(**settings)
-    # ...
-
-    # ... printing
-    # define settings for _lambdify
-    settings = {'printing_only' : True}
-    test_annotate_map_list(**settings)
-    # ...

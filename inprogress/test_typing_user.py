@@ -11,35 +11,6 @@ from pyccel.functional.lambdify import _lambdify
 from pyccel.functional import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
-#=========================================================
-#         TODO TO BE MOVED TO COMPATIBILITY
-#=========================================================
-# must have different implementations depending on
-#    - type
-#    - number of arguments
-# same thing must be done for mul
-# then in lambdifywe replace 'add' by the right one
-# depending on the number of arguments
-# then the only thing the user must specify is the dtype
-# for this reason, we will have iadd, sadd, dadd, zadd etc
-@pure
-@types('double', 'double')
-def dadd_2(x1,x2):
-    r = x1+x2
-    return r
-
-@pure
-@types('double', 'double', 'double')
-def dadd_3(x1,x2,x3):
-    r = x1+x2+x3
-    return r
-
-@pure
-@types('double', 'double', 'double', 'double')
-def dadd_4(x1,x2,x3,x4):
-    r = x1+x2+x3+x4
-    return r
-#=========================================================
 
 #=========================================================
 @pure
@@ -138,19 +109,8 @@ def test_tmap_product(**settings):
 #
 #    print('DONE.')
 
-#=========================================================
-def test_annotate_map_zip(**settings):
-    L = lambda xs,ys:  map(f2, zip(xs,ys))
-
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(L)
-
-    print('DONE.')
-
 #########################################
 if __name__ == '__main__':
-    # ... typing
-    # define settings for _lambdify
     settings = {'semantic_only' : True}
 
     test_map_list(**settings)
@@ -161,11 +121,3 @@ if __name__ == '__main__':
 
     # TODO
 #    test_reduce_add_product(**settings)
-    # ...
-
-#    # ... annotation
-#    # define settings for _lambdify
-#    settings = {'ast_only' : True}
-#
-#    test_annotate_map_zip(**settings)
-#    # ...
