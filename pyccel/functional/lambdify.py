@@ -37,7 +37,7 @@ from pyccel.ast.datatypes import get_default_value
 from pyccel.functional import Where
 from pyccel.parser import Parser
 
-from .parser import parse    as parse_lambda
+from .syntax import parse as parse_lambda
 from .parser import SemanticParser
 from .utilities import get_decorators
 from .utilities import get_pyccel_imports_code
