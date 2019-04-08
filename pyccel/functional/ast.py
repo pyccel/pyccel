@@ -112,6 +112,7 @@ class BasicGenerator(Basic):
     def __len__(self):
         return len(self.arguments)
 
+#==============================================================================
 class VariableGenerator(BasicGenerator):
     def __new__( cls, *args ):
         # ... create iterator and index variables
@@ -144,6 +145,7 @@ class VariableGenerator(BasicGenerator):
     def length(self):
         return self._args[3]
 
+#==============================================================================
 class ZipGenerator(BasicGenerator):
     def __new__( cls, *args ):
         # ... create iterator and index variables
@@ -156,7 +158,6 @@ class ZipGenerator(BasicGenerator):
 
         length      = new_variable('int',  target[0], tag = tag, prefix='len')
         index       = new_variable('int',  target[0], tag = tag)
-
         iterator    = new_variable('real', target, tag = tag)
         # ...
 
@@ -178,6 +179,7 @@ class ZipGenerator(BasicGenerator):
     def length(self):
         return self._args[3]
 
+#==============================================================================
 class ProductGenerator(BasicGenerator):
     def __new__( cls, *args ):
         # ... create iterator and index variables
@@ -186,12 +188,10 @@ class ProductGenerator(BasicGenerator):
 
         tag = random_string( 4 )
 
-        # multi index
-        multi_index = new_variable('int',  target[0], tag = tag, prefix='m')
-        length      = new_variable('int',  target[0], tag = tag, prefix='len')
-
+        length      = new_variable('int',  target, tag = tag, prefix='len')
         index       = new_variable('int',  target, tag = tag)
         iterator    = new_variable('real', target, tag = tag)
+        multi_index = new_variable('int',  target[0], tag = tag, prefix='m')
         # ...
 
         return Basic.__new__(cls, args, index, iterator, length, multi_index)
@@ -216,6 +216,7 @@ class ProductGenerator(BasicGenerator):
     def multi_index(self):
         return self._args[4]
 
+#==============================================================================
 def generator_as_block(generator, stmts, **kwargs):
     # ...
     settings = kwargs.copy()
@@ -307,7 +308,6 @@ def generator_as_block(generator, stmts, **kwargs):
 
     else:
         return SequentialBlock( decs, body )
-
 
 
 #==============================================================================
@@ -507,17 +507,21 @@ class AST(object):
                     assert(isinstance(index, (list, tuple, Tuple)))
 
                     length = generator.length
-                    multi_index = generator.multi_index
+                    if depth_out == 1:
+                        multi_index = generator.multi_index
 
-                    # TODO check formula
-                    value = index[0]
-                    for ix in index[1:]:
-                        value = length*value + ix
+                        # TODO check formula
+                        value = index[0]
+                        for ix, nx in zip(index[1:], length[::-1][:-1]):
+                            value = nx*value + ix
 
-                    stmts += [Assign(multi_index, value)]
+                        stmts += [Assign(multi_index, value)]
 
-                    # update index to use multi index
-                    index = multi_index
+                        # update index to use multi index
+                        index = multi_index
+
+                    else:
+                        raise NotImplementedError('')
                 # ...
 
                 # ... apply the function to arguments
