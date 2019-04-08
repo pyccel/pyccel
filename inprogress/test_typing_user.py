@@ -93,8 +93,11 @@ def test_tmap_product(**settings):
     assert( isinstance( type_L, TypeList ) )
 
     parent = type_L.parent
+    assert( isinstance( parent, TypeList ) )
+    parent = parent.parent
+
     assert( isinstance( parent.dtype, NativeReal ) )
-    assert( parent.rank == 1 )
+    assert( parent.rank == 0 )
     assert( parent.precision == 8 )
     assert( not parent.is_stack_array )
 
@@ -116,7 +119,6 @@ if __name__ == '__main__':
     test_map_list(**settings)
     test_map_zip(**settings)
     test_map_product(**settings)
-#    test_tmap_zip(**settings)
     test_tmap_product(**settings)
 
     # TODO

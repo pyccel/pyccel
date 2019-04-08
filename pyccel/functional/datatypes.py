@@ -97,6 +97,9 @@ class TypeTuple(BasicTypeVariable):
     def name(self):
         return 'tt_{}'.format(self.tag)
 
+    def __len__(self):
+        return len(self.types)
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         return sstr(self.name)
@@ -114,6 +117,17 @@ class TypeList(BasicTypeVariable):
         obj = Basic.__new__(cls, var)
         obj._tag = random_string( 4 )
 
+        # ...
+        def _get_core_type(expr):
+            if isinstance(expr, TypeList):
+                return _get_core_type(expr.parent)
+
+            else:
+                return expr
+        # ...
+
+        obj._types = _get_core_type(var)
+
         return obj
 
     @property
@@ -123,6 +137,17 @@ class TypeList(BasicTypeVariable):
     @property
     def name(self):
         return 'tl_{}'.format(self.tag)
+
+    @property
+    def types(self):
+        return self._types
+
+    def __len__(self):
+        n = 1
+        if isinstance(self.parent, TypeList):
+            n += len(self.parent)
+
+        return n
 
     def _sympystr(self, printer):
         sstr = printer.doprint

@@ -409,11 +409,15 @@ class Parser(object):
             assert(isinstance(target, AppliedUndef))
             assert(target.__class__.__name__ in ['product', 'pproduct'])
 
-            # we substruct 1 since we use a TypeList
-            base_rank = len(target.args) - 1
+            for i in range(0, len(target.args) - 1):
+                type_domain   = TypeList(type_domain)
+                type_codomain = TypeList(type_codomain)
 
-            type_domain   = assign_type(type_domain, rank=base_rank)
-            type_codomain = assign_type(type_codomain, rank=base_rank)
+#            # we substruct 1 since we use a TypeList
+#            base_rank = len(target.args) - 1
+#
+#            type_domain   = assign_type(type_domain, rank=base_rank)
+#            type_codomain = assign_type(type_codomain, rank=base_rank)
 
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
@@ -428,13 +432,12 @@ class Parser(object):
 
         assert(not( value is None ))
         assert(isinstance(value, TypeList))
-        assert(len(value.parent.types) == len(arguments))
 
         if not isinstance(value.parent, TypeTuple):
             msg = '{} not available yet'.format(type(value.parent))
             raise NotImplementedError(msg)
 
-        values = value.parent.types
+        values = [value.types]*len(arguments)
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
@@ -453,13 +456,11 @@ class Parser(object):
 
         assert(not( value is None ))
         assert(isinstance(value, TypeList))
-        assert(len(value.parent.types) == len(arguments))
 
-        if not isinstance(value.parent, TypeTuple):
-            msg = '{} not available yet'.format(type(value.parent))
-            raise NotImplementedError(msg)
+#        # TODO add this check only when using tmap
+#        assert(len(value) == len(arguments))
 
-        values = value.parent.types
+        values = [value.types]*len(arguments)
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)

@@ -500,6 +500,8 @@ class AST(object):
 
                 # compute depth of the type list
                 depth_out = len(list(type_codomain.atoms(TypeList)))
+                print('>>> type  = ', type_codomain, type_codomain.view())
+                print('>>> depth = ', depth_out)
                 # ...
 
                 # ...
