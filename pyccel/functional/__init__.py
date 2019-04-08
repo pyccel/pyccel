@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
-from .core          import *
+from .glossary      import *
+from .datatypes     import *
 from .syntax        import *
 from .compatibility import *
 from .semantic      import *

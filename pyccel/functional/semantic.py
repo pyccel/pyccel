@@ -18,57 +18,76 @@ from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
 from pyccel.ast.core import Return
-from .core import Reduce
-from .core import SeqMap, ParMap, BasicMap
-from .core import SeqTensorMap, ParTensorMap, BasicTensorMap
-from .core import SeqZip, SeqProduct
-from .core import ParZip, ParProduct
-from .core import assign_type, BasicTypeVariable
-from .core import TypeVariable, TypeTuple, TypeList
-from .core import VariableGenerator
-from .core import generator_as_block
+from pyccel.ast.basic import Basic
 
-#==============================================================================
-_known_functions = {'map':      SeqMap,
-                    'pmap':     ParMap,
-                    'tmap':     SeqTensorMap,
-                    'ptmap':    ParTensorMap,
-                    'zip':      SeqZip,
-                    'pzip':     ParZip,
-                    'product':  SeqProduct,
-                    'pproduct': ParProduct,
-                    'reduce':   Reduce,
-                   }
+from .datatypes import assign_type, BasicTypeVariable
+from .datatypes import TypeVariable, TypeTuple, TypeList
+from .glossary import _internal_map_functors
+from .glossary import _internal_functors
+from .glossary import _internal_zip_functions
+from .glossary import _internal_product_functions
+from .glossary import _internal_applications
+from .glossary import _elemental_math_functions
+from .glossary import _math_vector_functions
+from .glossary import _math_matrix_functions
+from .glossary import _math_functions
 
-_functors_map_registery = ['map', 'pmap', 'tmap', 'ptmap']
-_functors_registery = _functors_map_registery + ['reduce']
+#=========================================================================
+class Map(Basic):
+    """."""
 
-# TODO atan2, pow
-_elemental_math_functions = ['acos',
-                             'asin',
-                             'atan',
-                             'cos',
-                             'cosh',
-                             'exp',
-                             'log',
-                             'log10',
-                             'sin',
-                             'sinh',
-                             'sqrt',
-                             'tan',
-                             'tanh',
-                            ]
+    def __new__( cls, func, target ):
 
-# TODO add cross, etc
-_math_vector_functions = ['dot']
+        return Basic.__new__(cls, func, target)
 
-# TODO
-_math_matrix_functions = ['matmul']
+    @property
+    def func(self):
+        return self._args[0]
 
-_math_functions = _elemental_math_functions + _math_vector_functions + _math_matrix_functions
-#==============================================================================
+    @property
+    def target(self):
+        return self._args[1]
 
-#==============================================================================
+#=========================================================================
+class Zip(Basic):
+    def __new__( cls, *args ):
+        return Basic.__new__(cls, args)
+
+    @property
+    def arguments(self):
+        return self._args[0]
+
+    def __len__(self):
+        return len(self.arguments)
+
+class Product(Basic):
+    def __new__( cls, *args ):
+        return Basic.__new__(cls, args)
+
+    @property
+    def arguments(self):
+        return self._args[0]
+
+    def __len__(self):
+        return len(self.arguments)
+
+#=========================================================================
+class Reduce(Basic):
+    """."""
+
+    def __new__( cls, func, target ):
+
+        return Basic.__new__(cls, func, target)
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    @property
+    def target(self):
+        return self._args[1]
+
+#=========================================================================
 def sanitize(expr):
     if isinstance(expr, Lambda):
         args = expr.variables
@@ -81,13 +100,27 @@ def sanitize(expr):
 
         args = [sanitize(i) for i in expr.args]
         # first argument of Map & Reduce are functions
-        if name in _functors_registery:
+        if name in _internal_functors:
             first = args[0]
             if isinstance(first, Symbol):
                 args[0] = Function(first.name)
 
-        if name in _known_functions.keys():
-            return _known_functions[name](*args)
+        if name in _internal_applications:
+            if name in _internal_map_functors:
+                return Map(*args)
+
+            elif name == 'reduce':
+                return Reduce(*args)
+
+            elif name in _internal_zip_functions:
+                return Zip(*args)
+
+            elif name in _internal_product_functions:
+                return Product(*args)
+
+            else:
+                msg = '{} not available'.format(name)
+                raise NotImplementedError(msg)
 
         else:
             return Function(name)(*args)
@@ -99,7 +132,7 @@ def sanitize(expr):
         raise TypeError('Not implemented for {}'.format(type(expr)))
 
 
-#==============================================================================
+#=========================================================================
 # TODO add some verifications before starting annotating L
 class Parser(object):
 
@@ -165,8 +198,8 @@ class Parser(object):
 
         # ... get all functions
         calls = list(expr.atoms(AppliedUndef))
-        map_funcs = [i.args[0] for i in calls if i.__class__.__name__ in _functors_map_registery]
-        callables = [i.func for i in calls  if not i.__class__.__name__ in _functors_registery]
+        map_funcs = [i.args[0] for i in calls if i.__class__.__name__ in _internal_map_functors]
+        callables = [i.func for i in calls  if not i.__class__.__name__ in _internal_functors]
         functions = list(set(map_funcs + callables))
 
         for f in functions:
@@ -177,7 +210,7 @@ class Parser(object):
                 self._set_type(f, value=type_domain, domain=True)
                 self._set_type(f, value=type_codomain, codomain=True)
 
-            elif not str(f) in list(_known_functions.keys()) + list(self.typed_functions.keys()):
+            elif not str(f) in list(_internal_applications) + list(self.typed_functions.keys()):
                 raise NotImplementedError('{} not available'.format(str(f)))
         # ...
 
@@ -301,7 +334,7 @@ class Parser(object):
         if hasattr(self, method):
             return getattr(self, method)(stmt, value=value)
 
-        elif name in _known_functions.keys():
+        elif name in _internal_applications:
 #            print('[{}]'.format(name))
 
             FUNCTION = 'function'

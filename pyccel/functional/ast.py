@@ -14,31 +14,185 @@ from sympy import FunctionClass
 
 from pyccel.codegen.utilities import random_string
 from pyccel.ast.utilities import build_types_decorator
-from pyccel.ast.datatypes import Int, Real, Complex, Bool
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
 from pyccel.ast.core import Return
-from .core import Reduce
-from .core import SeqMap, ParMap, BasicMap
-from .core import SeqTensorMap, ParTensorMap, BasicTensorMap
-from .core import SeqZip, SeqProduct
-from .core import ParZip, ParProduct
-from .core import assign_type, BasicTypeVariable
-from .core import TypeVariable, TypeTuple, TypeList
-from .core import VariableGenerator
-from .core import generator_as_block
-from .semantic import Parser as SemanticParser
+from pyccel.ast.core  import For, Range, Len
+from pyccel.ast.basic import Basic
 
-from .semantic import _known_functions
-from .semantic import _functors_map_registery
-from .semantic import _functors_registery
-from .semantic import _elemental_math_functions
-from .semantic import _math_vector_functions
-from .semantic import _math_matrix_functions
-from .semantic import _math_functions
-from .semantic import _known_functions
-from .semantic import _known_functions
-from .semantic import _known_functions
+from .datatypes import TypeVariable, TypeTuple, TypeList
+from .semantic import Parser as SemanticParser
+from .glossary import _internal_applications
+from .glossary import _math_functions
+
+#=========================================================================
+# some useful functions
+# TODO add another argument to distinguish between len and other ints
+def new_variable( dtype, var, tag = None ):
+
+    # ...
+    if dtype == 'int':
+        prefix = 'i'
+
+    elif dtype == 'real':
+        prefix = 'x'
+
+    elif dtype == 'len': # for length
+        prefix = 'n'
+        dtype  = 'int'
+
+    else:
+        raise NotImplementedError()
+    # ...
+
+    # ...
+    if tag is None:
+        tag = random_string( 4 )
+    # ...
+
+    pattern = '{prefix}{dim}_{tag}'
+    _print = lambda d,t: pattern.format(prefix=prefix, dim=d, tag=t)
+
+    if isinstance( var, Variable ):
+        assert( var.rank > 0 )
+
+        if var.rank == 1:
+            name  =  _print('', tag)
+            return Variable( dtype, name )
+
+        else:
+            indices = []
+            for d in range(0, var.rank):
+                name  =  _print(d, tag)
+                indices.append( Variable( dtype, name ) )
+
+            return Tuple(*indices)
+
+    else:
+        raise NotImplementedError('{} not available'.format(type(var)))
+
+#=========================================================================
+class BasicBlock(Basic):
+    """."""
+    def __new__( cls, decs, body ):
+        assert(isinstance(decs, (tuple, list, Tuple)))
+        assert(isinstance(body, (tuple, list, Tuple)))
+
+        decs = Tuple(*decs)
+        body = Tuple(*body)
+
+        return Basic.__new__(cls, decs, body)
+
+    @property
+    def decs(self):
+        return self._args[0]
+
+    @property
+    def body(self):
+        return self._args[1]
+
+class SequentialBlock(BasicBlock):
+    pass
+
+class ParallelBlock(BasicBlock):
+    pass
+
+#=========================================================================
+class BasicGenerator(Basic):
+    def __new__( cls, *args ):
+        # ... create iterator and index variables
+        target = args
+        if len(args) == 1:
+            target = args[0]
+
+        tag = random_string( 4 )
+
+        index    = new_variable('int',  target, tag = tag)
+        iterator = new_variable('real', target, tag = tag)
+        length   = new_variable('len',  target, tag = tag)
+        # ...
+
+        return Basic.__new__(cls, args, index, iterator, length)
+
+    @property
+    def arguments(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
+
+    @property
+    def iterator(self):
+        return self._args[2]
+
+    @property
+    def length(self):
+        return self._args[3]
+
+    def __len__(self):
+        return len(self.arguments)
+
+class VariableGenerator(BasicGenerator):
+    pass
+
+class ZipGenerator(BasicGenerator):
+    pass
+
+class ProductGenerator(BasicGenerator):
+    pass
+
+def generator_as_block(generator, stmts, **kwargs):
+    # ...
+    settings = kwargs.copy()
+
+    parallel = settings.pop('parallel', False)
+    # ...
+
+    # ...
+    decs = []
+    body = []
+    # ...
+
+    # TODO USE stmts
+
+    # ...
+    iterable = generator.arguments
+    index    = generator.index
+    iterator = generator.iterator
+    length   = generator.length
+
+    if not isinstance(iterable, (list, tuple, Tuple)):
+        iterable = [iterable]
+
+    if not isinstance(index, (list, tuple, Tuple)):
+        index = [index]
+
+    if not isinstance(iterator, (list, tuple, Tuple)):
+        iterator = [iterator]
+
+    if not isinstance(length, (list, tuple, Tuple)):
+        length = [length]
+    # ...
+
+    # ...
+    for n,xs in zip(length, iterable):
+        decs += [Assign(n, Len(xs))]
+    # ...
+
+    # ...
+    body += list(stmts)
+    for i,n,x,xs in zip(index, length, iterator, iterable):
+
+        body = [Assign(x, IndexedBase(xs.name)[i])] + body
+        body = [For(i, Range(0, n), body, strict=False)]
+    # ...
+
+    if parallel:
+        return ParallelBlock( decs, body )
+
+    else:
+        return SequentialBlock( decs, body )
 
 
 
@@ -203,7 +357,7 @@ class AST(object):
         if hasattr(self, method):
             return getattr(self, method)(stmt)
 
-        elif name in _known_functions.keys():
+        elif name in _internal_applications:
             if name == 'map':
                 func, target = stmt.args
 
