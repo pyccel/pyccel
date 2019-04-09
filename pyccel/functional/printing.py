@@ -8,9 +8,6 @@ class PythonCodePrinter(PyccelPythonCodePrinter):
     def __init__(self, settings=None):
         PyccelPythonCodePrinter.__init__(self, settings=settings)
 
-    def _print_PY_FunctionDef(self, expr):
-        return self._print(expr.func)
-
     def _print_AppliedUndef(self, expr):
         args = ','.join(self._print(i) for i in expr.args)
         fname = self._print(expr.func.__name__)
