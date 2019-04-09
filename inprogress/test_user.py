@@ -86,10 +86,10 @@ if __name__ == '__main__':
 #    settings = {'ast_only' : True}
     settings = {'printing_only' : True}
 
-#    test_map_list(**settings)
-#    test_map_zip(**settings)
+    test_map_list(**settings)
+    test_map_zip(**settings)
     test_map_product(**settings)
-#    test_tmap_product(**settings)
+    test_tmap_product(**settings)
 
 #    # TODO
 ##    test_reduce_add_product(**settings)
