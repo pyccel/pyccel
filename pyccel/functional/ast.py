@@ -151,6 +151,10 @@ class Shaping(Basic):
             var   = generator.length
             stmts = [Assign(generator.length, Len(generator.arguments))]
 
+        elif isinstance(generator, ZipGenerator):
+            var   = generator.length
+            stmts = [Assign(generator.length, Len(generator.arguments[0]))]
+
         else:
             msg = 'not available for {}'.format(type(generator))
             raise NotImplementedError(msg)
@@ -206,7 +210,7 @@ class VariableGenerator(BasicGenerator):
     def length(self):
         return self._args[3]
 
-#==============================================================================
+#=========================================================================
 class ZipGenerator(BasicGenerator):
     def __new__( cls, *args ):
         # ... create iterator and index variables

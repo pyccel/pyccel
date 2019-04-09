@@ -29,7 +29,6 @@ def test_map_list(**settings):
     L = lambda xs: map(f1, xs)
 
     L = _lambdify( L, namespace = {'f1': f1}, **settings )
-#    print(L)
 
     xs = range(0, 5)
     out = L(xs)
@@ -41,9 +40,12 @@ def test_map_zip(**settings):
     L = lambda xs,ys:  map(f2, zip(xs,ys))
 
     L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(L)
 
-    print('DONE.')
+    xs = range(0, 5)
+    ys = range(0, 5)
+    out = L(xs, ys)
+    expected = [0., 1, 4., 9., 16.]
+    assert(np.allclose( out, expected ))
 
 #=========================================================
 def test_map_product(**settings):
@@ -90,8 +92,8 @@ if __name__ == '__main__':
 #    settings = {'ast_only' : True}
 #    settings = {'printing_only' : True}
 
-    test_map_list(**settings)
-#    test_map_zip(**settings)
+#    test_map_list(**settings)
+    test_map_zip(**settings)
 #    test_map_product(**settings)
 #    test_tmap_product(**settings)
 
