@@ -133,18 +133,16 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ... printing of a python function without interface
     printing_only = kwargs.pop('printing_only', False)
-    code = pycode(func)
     if printing_only:
-        return code
+        return pycode(func)
     # ...
 
     # ... create a python interface with an optional 'out' argument
     #     à la numpy
     interface = LambdaInterface(func)
-    interface_code = pycode(interface)
-    print(code)
+    print(pycode(func))
     print('-------------------------------------------')
-    print(interface_code)
+    print(pycode(interface))
     # ...
 
 #    raise NotImplementedError()
