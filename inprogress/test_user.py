@@ -52,9 +52,11 @@ def test_map_product(**settings):
     L = lambda xs,ys:  map(f2, product(xs,ys))
 
     L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(L)
-
-    print('DONE.')
+    xs = range(1, 4)
+    ys = range(10, 14)
+    out = L(xs, ys)
+    expected = [10.,  11.,  12.,  13.,  20.,  22.,  24.,  26.,  30.,  33.,  36.,  39.]
+    assert(np.allclose( out, expected ))
 
 ##=========================================================
 ## this test will raise an error, which is what we expect
@@ -92,9 +94,9 @@ if __name__ == '__main__':
 #    settings = {'ast_only' : True}
 #    settings = {'printing_only' : True}
 
-#    test_map_list(**settings)
+    test_map_list(**settings)
     test_map_zip(**settings)
-#    test_map_product(**settings)
+    test_map_product(**settings)
 #    test_tmap_product(**settings)
 
 #    # TODO
