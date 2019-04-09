@@ -52,11 +52,18 @@ def get_pyccel_imports_code():
     code += '\nfrom pyccel.decorators import types'
     code += '\nfrom pyccel.decorators import pure'
     code += '\nfrom pyccel.decorators import external, external_call'
-    code += '\nfrom pyccel.decorators import shapes'
-    code += '\nfrom pyccel.decorators import workplace'
-    code += '\nfrom pyccel.decorators import stack_array'
+#    code += '\nfrom pyccel.decorators import shapes'
+#    code += '\nfrom pyccel.decorators import workplace'
+#    code += '\nfrom pyccel.decorators import stack_array'
 
     # TODO improve
+    code += get_numpy_imports_code()
+
+    return code
+
+#==============================================================================
+def get_numpy_imports_code():
+    code = ''
     code += '\nfrom numpy import zeros'
     code += '\nfrom numpy import float64'
 

@@ -84,17 +84,17 @@ def _lambdify(func, namespace={}, **kwargs):
     # ...
 
     # ... TODO move this to semantic parser
-    typed_functions = {}
+    user_functions = {}
     for f_name, f in namespace.items():
 
-        # ... check if a typed function
+        # ... check if a user function
         decorators = get_decorators(f)
         if f_name in decorators.keys():
             decorators = decorators[f_name]
             if 'types' in decorators:
                 # TODO
                 f_symbolic = f
-                typed_functions[f_name] = f_symbolic
+                user_functions[f_name] = f_symbolic
                 setattr(f_symbolic, '_imp_', f)
 
             else:
@@ -103,7 +103,7 @@ def _lambdify(func, namespace={}, **kwargs):
         else:
             raise NotImplementedError('')
 
-    typed_functions = _parse_typed_functions(list(typed_functions.values()))
+    typed_functions = _parse_typed_functions(list(user_functions.values()))
     # ...
 
     # ... semantic analysis
@@ -140,9 +140,93 @@ def _lambdify(func, namespace={}, **kwargs):
     # ... create a python interface with an optional 'out' argument
     #     à la numpy
     interface = LambdaInterface(func)
-    print(pycode(func))
-    print('-------------------------------------------')
-    print(pycode(interface))
+#    print(pycode(func))
+#    print('-------------------------------------------')
+#    print(pycode(interface))
     # ...
 
-#    raise NotImplementedError()
+    # ... print python code
+    code  = get_pyccel_imports_code()
+    code += get_dependencies_code(list(user_functions.values()))
+    code += '\n\n'
+    code += pycode(func)
+    # ...
+
+    # ...
+    folder = kwargs.pop('folder', None)
+    if folder is None:
+        basedir = os.getcwd()
+        folder = '__pycache__'
+        folder = os.path.join( basedir, folder )
+
+    folder = os.path.abspath( folder )
+    mkdir_p(folder)
+    # ...
+
+    # ...
+    func_name   = str(func.name)
+    module_name = 'mod_{}'.format(func_name)
+
+    write_code('{}.py'.format(module_name), code, folder=folder)
+    # ...
+
+    # ...
+    sys.path.append(folder)
+    package = importlib.import_module( module_name )
+    sys.path.remove(folder)
+    # ...
+
+    # we return a module, that will processed by epyccel
+    if not typed_functions:
+        raise NotImplementedError('TODO')
+
+    # ... module case
+    from pyccel.epyccel import epyccel
+    accelerator = kwargs.pop('accelerator', None)
+    verbose     = kwargs.pop('verbose', False)
+
+    res = package, func_name
+
+    package = epyccel ( package, accelerator = accelerator, verbose = verbose )
+
+    func = getattr(package, func_name)
+    # ...
+
+    # ..............................................
+    #     generate a python interface
+    # ..............................................
+    # ... TODO imports
+    module_name = os.path.basename(package.__file__)
+    module_name = os.path.splitext(module_name)[0]
+    print('>>>>>>>>>>>>>>>>>>> ', module_name)
+
+    stmt = 'from {module} import {func}'.format( module = module_name,
+                                                 func   = func_name )
+
+    imports  = [stmt]
+    imports  = '\n'.join(imports)
+#    imports += get_numpy_imports_code()
+    # ...
+
+    # ...
+    code = '{imports}\n{code}'.format(imports=imports, code=pycode(interface))
+    # ...
+
+#    print(code)
+#    print('=============')
+
+    # ...
+    func_name = str(interface.name)
+    module_name = 'mod_{}'.format(func_name)
+
+    write_code('{}.py'.format(module_name), code, folder=folder)
+    # ...
+
+    # ...
+    sys.path.append(folder)
+    package = importlib.import_module( module_name )
+    sys.path.remove(folder)
+    # ...
+    # ..............................................
+
+    return getattr(package, func_name)

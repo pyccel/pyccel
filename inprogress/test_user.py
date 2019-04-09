@@ -30,6 +30,7 @@ def test_map_list(**settings):
 
     L = _lambdify( L, namespace = {'f1': f1}, **settings )
     print(L)
+    print(L(range(0, 5)))
 
     print('DONE.')
 

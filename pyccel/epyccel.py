@@ -840,7 +840,13 @@ def epyccel_module(module,
 
     # ... we need to store the python file in the folder, so that execute_pyccel
     #     can run
-    copyfile(fname, os.path.basename(fname))
+    try:
+        copyfile(fname, os.path.basename(fname))
+
+    except:
+        pass
+#        print('> epyccel_module: TODO')
+
     fname = os.path.basename(fname)
     # ...
 

@@ -82,6 +82,11 @@ class LambdaInterface(Basic):
         if_cond = Is(Symbol('out'), Nil())
 
         if_body = []
+
+        # TODO add imports from numpy
+        if_body += [Import('zeros', 'numpy')]
+        if_body += [Import('float64', 'numpy')]
+
         for i, var in enumerate(results):
             if var in m_results:
                 shaping = d_shapes[var]
