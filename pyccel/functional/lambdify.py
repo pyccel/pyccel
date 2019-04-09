@@ -124,6 +124,11 @@ def _lambdify(func, namespace={}, **kwargs):
     ast_only = kwargs.pop('ast_only', False)
     ast = AST(parser)
     func = ast.doit()
+
+    # _m_results has been added dynamically
+    if hasattr(func, '_m_results'):
+        func = PY_FunctionDef(func, func._m_results)
+
     with_interface = isinstance(func, PY_FunctionDef)
 
     if ast_only:
@@ -133,7 +138,7 @@ def _lambdify(func, namespace={}, **kwargs):
     # ... printing of a python function without interface
     printing_only = kwargs.pop('printing_only', False)
     code = pycode(func)
-    if printing_only and not with_interface:
+    if printing_only:
         return code
     # ...
 
@@ -144,8 +149,6 @@ def _lambdify(func, namespace={}, **kwargs):
     print(code)
     print('-------------------------------------------')
     print(interface_code)
-    if printing_only and with_interface:
-        return code, interface_code
     # ...
 
 #    raise NotImplementedError()

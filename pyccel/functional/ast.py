@@ -25,12 +25,11 @@ from .semantic import Parser as SemanticParser
 from .glossary import _internal_applications
 from .glossary import _math_functions
 from .glossary import _internal_map_functors
-from .interface import PY_FunctionDef
 
 #=========================================================================
 # some useful functions
 # TODO add another argument to distinguish between len and other ints
-def new_variable( dtype, var, tag = None, prefix=None, kind=None ):
+def new_variable( dtype, var, tag = None, prefix = None, kind = None ):
 
     # ...
     if prefix is None:
@@ -118,6 +117,34 @@ class ParallelBlock(BasicBlock):
     pass
 
 #=========================================================================
+class Shaping(Basic):
+
+    def __new__( cls, generator ):
+
+        # ... define the name for the shape and the statements to be able to
+        #     compute it inside the python interface
+
+        if isinstance(generator, VariableGenerator):
+            var   = generator.length
+            stmts = [Assign(generator.length, Len(generator.arguments))]
+
+        else:
+            msg = 'not available for {}'.format(type(generator))
+            raise NotImplementedError(msg)
+
+        stmts = Tuple(*stmts)
+
+        return Basic.__new__(cls, var, stmts)
+
+    @property
+    def var(self):
+        return self._args[0]
+
+    @property
+    def stmts(self):
+        return self._args[1]
+
+#=========================================================================
 class BasicGenerator(Basic):
 
     def __len__(self):
@@ -127,18 +154,18 @@ class BasicGenerator(Basic):
 class VariableGenerator(BasicGenerator):
     def __new__( cls, *args ):
         # ... create iterator and index variables
-        target = args
+        iterable = args
         if len(args) == 1:
-            target = args[0]
+            iterable = args[0]
 
         tag = random_string( 4 )
 
-        index    = new_variable('int',  target, tag = tag)
-        iterator = new_variable('real', target, tag = tag)
-        length   = new_variable('int',  target, tag = tag, kind='len')
+        index    = new_variable('int',  iterable, tag = tag)
+        iterator = new_variable('real', iterable, tag = tag)
+        length   = new_variable('int',  iterable, tag = tag, kind='len')
         # ...
 
-        return Basic.__new__(cls, args, index, iterator, length)
+        return Basic.__new__(cls, iterable, index, iterator, length)
 
     @property
     def arguments(self):
@@ -267,7 +294,7 @@ def generator_as_block(generator, stmts, **kwargs):
 #    print(' iterator = ', iterator)
 #    print(' length   = ', length  )
 
-    # ...
+    # ... TODO  use shape_stmts
     for n,xs in zip(length, iterable):
         decs += [Assign(n, Len(xs))]
     # ...
@@ -373,6 +400,7 @@ class AST(object):
         self.main_type        = parser.main_type
         self._typed_functions = parser.typed_functions
         self._default_type    = parser.default_type
+        self._generators      = {}
         # ...
 
 #        print('------------------')
@@ -409,10 +437,17 @@ class AST(object):
     def tag(self):
         return self._tag
 
+    @property
+    def generators(self):
+        return self._generators
+
     def inspect(self):
         print(self.d_types)
         for k,v in self.d_types.items():
             print('  {k} = {v}'.format(k=k, v=v.view()))
+
+    def set_generator(self, results, generator):
+        self._generators[results] = generator
 
     def doit(self):
         return self._visit(self.expr)
@@ -459,6 +494,10 @@ class AST(object):
                 # compute depth of the type list
                 # TODO do we still need this?
                 depth_out = len(list(type_codomain.atoms(TypeList)))
+                # ...
+
+                # ...
+                self.set_generator(results, generator)
                 # ...
 
                 # ...
@@ -611,11 +650,11 @@ class AST(object):
                             arguments_inout = inout,
                             decorators      = decorators )
 
-        if m_results:
-            return PY_FunctionDef(func, m_results)
+        # TODO can we avoid using set attribut?
+        setattr(func, '_m_results', m_results)
+        setattr(func, '_generators', self.generators)
 
-        else:
-            return func
+        return func
 
     def _visit_Integer(self, stmt):
         return stmt

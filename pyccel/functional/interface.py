@@ -28,6 +28,15 @@ from .semantic import Parser as SemanticParser
 from .glossary import _internal_applications
 from .glossary import _math_functions
 from .glossary import _internal_map_functors
+from .ast import BasicGenerator, Shaping
+
+#=======================================================================================
+def compute_shape( arg, generators ):
+    if not( arg in generators.keys() ):
+        raise ValueError('Could not find {}'.format( arg ))
+
+    generator = generators[arg]
+    return Shaping( generator )
 
 #=======================================================================================
 class PY_FunctionDef(Basic):
@@ -66,11 +75,6 @@ class PY_FunctionInterface(Basic):
         results = list(s_results) + list(m_results)
         # ...
 
-        print('------------')
-        print(' results   = ', results)
-        print(' m_results = ', m_results)
-        print('------------')
-
         # ...
         imports = []
         stmts   = []
@@ -88,14 +92,23 @@ class PY_FunctionInterface(Basic):
 #        imports += [Import('something', 'from here')]
         # ...
 
+        # ...
+        generators = func._generators
+        d_shapes = {}
+        for i in m_results:
+            d_shapes[i] = compute_shape( i, generators )
+        # ...
+
         # ... TODO build statements
         if_cond = Is(Symbol('out'), Nil())
 
         if_body = []
         for i, var in enumerate(results):
-            print('================== ', var)
             if var in m_results:
-                if_body += [Assign(outs[i], Zeros(var.shape, var.dtype))]
+                shaping = d_shapes[var]
+
+                if_body += shaping.stmts
+                if_body += [Assign(outs[i], Zeros(shaping.var, var.dtype))]
 
         # update statements
         stmts = [If((if_cond, if_body))]

@@ -83,9 +83,9 @@ def test_tmap_product(**settings):
 
 #########################################
 if __name__ == '__main__':
-    settings = {}
+#    settings = {}
 #    settings = {'ast_only' : True}
-#    settings = {'printing_only' : True}
+    settings = {'printing_only' : True}
 
     test_map_list(**settings)
 #    test_map_zip(**settings)
