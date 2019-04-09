@@ -42,7 +42,7 @@ def compute_shape( arg, generators ):
 #=======================================================================================
 class LambdaInterface(Basic):
 
-    def __new__(cls, func):
+    def __new__(cls, func, import_lambda):
 
         # ...
         m_results = func.m_results
@@ -55,7 +55,7 @@ class LambdaInterface(Basic):
         # ...
 
         # ...
-        imports = []
+        imports = [import_lambda]
         stmts   = []
         # ...
 
@@ -65,10 +65,6 @@ class LambdaInterface(Basic):
 
         else:
             outs = [Symbol('out_{}'.format(i)) for i in range(0, len(results))]
-        # ...
-
-        # ... TODO build imports
-#        imports += [Import('something', 'from here')]
         # ...
 
         # ...

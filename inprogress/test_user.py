@@ -29,10 +29,11 @@ def test_map_list(**settings):
     L = lambda xs: map(f1, xs)
 
     L = _lambdify( L, namespace = {'f1': f1}, **settings )
-    print(L)
-    print(L(range(0, 5)))
+#    print(L)
 
-    print('DONE.')
+    out = L(range(0, 5))
+    expected = [0., 1, 4., 9., 16.]
+    assert(np.allclose( out, expected ))
 
 #=========================================================
 def test_map_zip(**settings):

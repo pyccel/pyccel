@@ -26,7 +26,7 @@ from pyccel.ast import Variable, Len, Assign, AugAssign
 from pyccel.ast import For, Range, FunctionDef
 from pyccel.ast import FunctionCall
 from pyccel.ast import Comment, AnnotatedComment
-from pyccel.ast import Print, Pass, Return
+from pyccel.ast import Print, Pass, Return, Import
 from pyccel.ast.core import Slice, String
 from pyccel.ast import Zeros
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
@@ -137,14 +137,6 @@ def _lambdify(func, namespace={}, **kwargs):
         return pycode(func)
     # ...
 
-    # ... create a python interface with an optional 'out' argument
-    #     à la numpy
-    interface = LambdaInterface(func)
-#    print(pycode(func))
-#    print('-------------------------------------------')
-#    print(pycode(interface))
-    # ...
-
     # ... print python code
     code  = get_pyccel_imports_code()
     code += get_dependencies_code(list(user_functions.values()))
@@ -165,12 +157,10 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ...
     func_name   = str(func.name)
+
     module_name = 'mod_{}'.format(func_name)
-
     write_code('{}.py'.format(module_name), code, folder=folder)
-    # ...
 
-    # ...
     sys.path.append(folder)
     package = importlib.import_module( module_name )
     sys.path.remove(folder)
@@ -185,11 +175,10 @@ def _lambdify(func, namespace={}, **kwargs):
     accelerator = kwargs.pop('accelerator', None)
     verbose     = kwargs.pop('verbose', False)
 
-    res = package, func_name
-
     package = epyccel ( package, accelerator = accelerator, verbose = verbose )
 
-    func = getattr(package, func_name)
+    if not typed_functions:
+        return getattr(package, func_name)
     # ...
 
     # ..............................................
@@ -198,35 +187,34 @@ def _lambdify(func, namespace={}, **kwargs):
     # ... TODO imports
     module_name = os.path.basename(package.__file__)
     module_name = os.path.splitext(module_name)[0]
-    print('>>>>>>>>>>>>>>>>>>> ', module_name)
-
-    stmt = 'from {module} import {func}'.format( module = module_name,
-                                                 func   = func_name )
-
-    imports  = [stmt]
-    imports  = '\n'.join(imports)
-#    imports += get_numpy_imports_code()
+#    print('>>>>>>>>>>>>>>>>>>> ', module_name)
     # ...
 
-    # ...
-    code = '{imports}\n{code}'.format(imports=imports, code=pycode(interface))
-    # ...
+    # ... create a python interface with an optional 'out' argument
+    #     à la numpy
+    interface = LambdaInterface(func, Import(func_name, module_name))
+    # ...
 
+    # ...
+    code = pycode(interface)
 #    print(code)
-#    print('=============')
+    # ...
 
     # ...
     func_name = str(interface.name)
-    module_name = 'mod_{}'.format(func_name)
 
-    write_code('{}.py'.format(module_name), code, folder=folder)
+    # TODO FOR AN UNKOWN REASON, THIS CRASHES RANDOMLY
+#    module_name = 'mod_{}'.format(func_name)
+#    write_code('{}.py'.format(module_name), code, folder=folder)
+#
+#    sys.path.append(folder)
+#    package = importlib.import_module( module_name )
+#    sys.path.remove(folder)
+#    return getattr(package, func_name)
     # ...
 
-    # ...
-    sys.path.append(folder)
-    package = importlib.import_module( module_name )
-    sys.path.remove(folder)
-    # ...
-    # ..............................................
-
-    return getattr(package, func_name)
+    # TODO this is a temporary fix
+    g = {}
+    exec(code, g)
+    f = g[func_name]
+    return f
