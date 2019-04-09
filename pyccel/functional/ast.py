@@ -363,8 +363,8 @@ class AST(object):
 
         # ...
         self._expr            = parser.expr
-        self._namespace       = parser.namespace
         self._d_types         = parser.d_types
+        self._d_domain_types  = parser.d_domain_types
         self._d_expr          = parser.d_expr
         self._tag             = parser.tag
         self.main             = parser.main
@@ -372,6 +372,12 @@ class AST(object):
         self._typed_functions = parser.typed_functions
         self._default_type    = parser.default_type
         # ...
+
+#        print('------------------')
+#        print('> d_types ')
+#        self.inspect()
+#        print('INITIAL TYPE = ', self.main_type)
+#        print('')
 
     @property
     def expr(self):
@@ -386,12 +392,12 @@ class AST(object):
         return self._default_type
 
     @property
-    def namespace(self):
-        return self._namespace
-
-    @property
     def d_types(self):
         return self._d_types
+
+    @property
+    def d_domain_types(self):
+        return self._d_domain_types
 
     @property
     def d_expr(self):
@@ -402,68 +408,9 @@ class AST(object):
         return self._tag
 
     def inspect(self):
-        print('============ types =============')
         print(self.d_types)
         for k,v in self.d_types.items():
             print('  {k} = {v}'.format(k=k, v=v.view()))
-        print('================================')
-
-    def _get_label(self, target, domain=False, codomain=False):
-        # TODO improve
-        if codomain:
-            assert(not domain)
-            if (isinstance(target, FunctionClass)):
-                name = str(target)
-
-            else:
-                name = str(target.name)
-
-            return name
-
-        if domain:
-            assert(not codomain)
-            if (isinstance(target, FunctionClass)):
-                name = str(target)
-
-            else:
-                name = str(target.name)
-
-            _avail_funcs = list(self.typed_functions.keys()) + _math_functions
-            if name in _avail_funcs:
-                return name + '_args'
-
-        if isinstance(target, FunctionDef):
-            return str(target.name) + '_args'
-
-        elif isinstance(target, UndefinedFunction):
-            return str(target)
-
-        elif isinstance(target, Symbol):
-            return target.name
-
-        else:
-            raise NotImplementedError('for {}'.format(type(target)))
-
-    def _get_type(self, target, domain=False, codomain=False):
-        label = self._get_label(target, domain=domain, codomain=codomain)
-
-        if label in self.d_types.keys():
-            return self.d_types[label]
-
-        return None
-
-    def _set_type(self, target, value, domain=False, codomain=False):
-        label = self._get_label(target, domain=domain, codomain=codomain)
-
-        self.d_types[label] = value
-        self._set_expr(value, target)
-
-    def _set_expr(self, t_var, expr):
-        self._d_expr[t_var.name] = expr
-
-    def build_namespace(self):
-        """builds the namespace from types."""
-        raise NotImplementedError('')
 
     def doit(self):
         return self._visit(self.expr)
@@ -481,8 +428,22 @@ class AST(object):
             return getattr(self, method)(stmt)
 
         elif name in _internal_applications:
+
+            # ... get the codomain type
+            type_codomain  = self.main_type
+            type_domain    = self.d_domain_types[type_codomain]
+            # ...
+
+#            print('>>>>>>> {}'.format(name))
+#            print('> codomain :: ', type_codomain)
+#            print('              ', type_codomain.view())
+#            print('> domain   :: ', type_domain)
+#            print('              ', type_domain.view())
+#            print('')
+
             if name in _internal_map_functors:
                 func, target = stmt.args
+#                print('> target   :: ', target)
 
                 # ... construct the generator
                 generator = self._visit(target)
@@ -491,7 +452,6 @@ class AST(object):
                 # ...
 
                 # ... construct the results
-                type_codomain = self.main_type
                 results = self._visit(type_codomain)
 
                 # compute depth of the type list
@@ -548,7 +508,8 @@ class AST(object):
                     results = [results]
 
                 else:
-                    raise NotImplementedError()
+                    msg = '{} not available'.format(type(results))
+                    raise NotImplementedError(msg)
 
                 if not isinstance(index, Tuple):
                     index = [index]
@@ -582,11 +543,14 @@ class AST(object):
                                            parallel      = False )
 
             elif name == 'zip':
+                self.main_type = type_domain
                 arguments = [self._visit(i) for i in stmt.args]
 
                 return ZipGenerator(*arguments)
 
             elif name == 'product':
+                # TODO fix bug
+#                self.main_type = type_domain
                 arguments = [self._visit(i) for i in stmt.args]
 
                 return ProductGenerator(*arguments)
@@ -600,6 +564,7 @@ class AST(object):
     def _visit_Lambda(self, stmt):
         args = [self._visit(i) for i in stmt.variables]
         expr = self._visit(stmt.expr)
+
         # TODO improve
         results = self._visit(self.main)
         if not isinstance(results, (list, tuple, Tuple)):
@@ -625,33 +590,25 @@ class AST(object):
         return FunctionDef(name, args, results, body,
                            decorators=decorators)
 
-        return expr
-
-    def _visit_Symbol(self, stmt):
-        t_var = self.d_types[stmt.name]
-        d_var = _attributs_default()
-        d_var = _attributs_from_type(t_var, d_var)
-
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, stmt.name, **d_var )
-
-        return var
-
     def _visit_Integer(self, stmt):
         return stmt
 
     def _visit_Float(self, stmt):
         return stmt
 
+    def _visit_Symbol(self, stmt):
+        t_var = self.d_types[stmt.name]
+        return self._visit(t_var)
+
     def _visit_TypeVariable(self, stmt):
-        name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
         d_var = _attributs_default()
         d_var = _attributs_from_type(t_var, d_var)
 
         dtype = d_var.pop('dtype')
-        var = Variable( dtype, name, **d_var )
+        name  = 'dummy_{}'.format(stmt.tag)
+        var   = Variable( dtype, name, **d_var )
 
         return var
 
@@ -663,24 +620,53 @@ class AST(object):
 
             dtype = d_var.pop('dtype')
             name  = 'dummy_{}_{}'.format(e, stmt.tag)
-
-            var = Variable( dtype, name, **d_var )
+            var   = Variable( dtype, name, **d_var )
 
             ls.append(var)
 
-        return Tuple(*ls)
+        var = Tuple(*ls)
+        if len(var) == 1:
+            return var[0]
+
+        else:
+            return var
 
     def _visit_TypeList(self, stmt):
-        name  = 'dummy_{}'.format(stmt.tag)
         t_var = stmt
 
-        d_var = _attributs_default()
-        d_var = _attributs_from_type(t_var, d_var)
+        rank = len(stmt)
+        var = self._visit(stmt.types)
 
-        dtype = d_var.pop('dtype')
-        var = Variable( dtype, name, **d_var )
+        if isinstance(var, Tuple):
+            ls = []
+            for e,v in enumerate(var):
+                d_var = _attributs_default()
+                d_var = _attributs_from_type(v, d_var)
+                d_var['rank'] += rank
 
-        return var
+                dtype = d_var.pop('dtype')
+                name  = 'dummy_{}_{}'.format(e, stmt.tag)
+                var   = Variable( dtype, name, **d_var )
+
+                ls.append(var)
+
+            return Tuple(*ls)
+
+        elif isinstance(var, Variable):
+            d_var = _attributs_default()
+            d_var = _attributs_from_type(var, d_var)
+            d_var['rank'] += rank
+
+            dtype = d_var.pop('dtype')
+            name  = 'dummy_{}'.format(stmt.tag)
+            var = Variable( dtype, name, **d_var )
+
+            return var
+
+        else:
+            msg = 'Expecting a Tuple or Variable, but {} was given'
+            msg = msg.format(type(var))
+            raise TypeError(msg)
 
     def get_expr_from_type(self, t_var=None):
         if t_var is None:

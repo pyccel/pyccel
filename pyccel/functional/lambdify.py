@@ -110,6 +110,11 @@ def _lambdify(func, namespace={}, **kwargs):
     parser = SemanticParser(L, typed_functions=typed_functions)
     dtype = parser.doit()
 
+#    ######### DEBUG
+#    print('=======================')
+#    parser.inspect()
+#    print('=======================')
+
     if semantic_only:
         return dtype
     # ...

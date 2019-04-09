@@ -142,8 +142,8 @@ class Parser(object):
         self._expr = expr
 
         # ...
-        self._namespace = {}
         self._d_types   = {}
+        self._d_domain_types   = {} # for each codomain we store its associated domain type
         self._d_expr    = {}
         self._tag       = random_string( 8 )
 
@@ -163,6 +163,7 @@ class Parser(object):
 
             self._set_type(f, value=type_domain, domain=True)
             self._set_type(f, value=type_codomain, codomain=True)
+            self._set_domain_type(type_domain, type_codomain)
         # ...
 
         # ... default Type
@@ -209,6 +210,7 @@ class Parser(object):
 
                 self._set_type(f, value=type_domain, domain=True)
                 self._set_type(f, value=type_codomain, codomain=True)
+                self._set_domain_type(type_domain, type_codomain)
 
             elif not str(f) in list(_internal_applications) + list(self.typed_functions.keys()):
                 raise NotImplementedError('{} not available'.format(str(f)))
@@ -227,12 +229,12 @@ class Parser(object):
         return self._default_type
 
     @property
-    def namespace(self):
-        return self._namespace
-
-    @property
     def d_types(self):
         return self._d_types
+
+    @property
+    def d_domain_types(self):
+        return self._d_domain_types
 
     @property
     def d_expr(self):
@@ -243,11 +245,9 @@ class Parser(object):
         return self._tag
 
     def inspect(self):
-        print('============ types =============')
         print(self.d_types)
         for k,v in self.d_types.items():
             print('  {k} = {v}'.format(k=k, v=v.view()))
-        print('================================')
 
     def _get_label(self, target, domain=False, codomain=False):
         # TODO improve
@@ -296,15 +296,15 @@ class Parser(object):
     def _set_type(self, target, value, domain=False, codomain=False):
         label = self._get_label(target, domain=domain, codomain=codomain)
 
-        self.d_types[label] = value
+        self._d_types[label] = value
         self._set_expr(value, target)
 
     def _set_expr(self, t_var, expr):
         self._d_expr[t_var.name] = expr
 
-    def build_namespace(self):
-        """builds the namespace from types."""
-        raise NotImplementedError('')
+    def _set_domain_type(self, type_domain, type_codomain):
+#        print('[set_domain_type] {}  --->   {}'.format(type_domain, type_codomain))
+        self._d_domain_types[type_codomain] = type_domain
 
     def doit(self, verbose=False):
 
@@ -421,6 +421,7 @@ class Parser(object):
 
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
+        self._set_domain_type(type_domain, type_codomain)
 
         self._visit(target, value=type_domain)
         self._set_expr(type_codomain, stmt)
@@ -430,6 +431,9 @@ class Parser(object):
     def _visit_function_zip(self, stmt, value=None):
         arguments = stmt.args
 
+        # we know here that len(arguments) > 1
+        # and value.types is a TypeTuple
+
         assert(not( value is None ))
         assert(isinstance(value, TypeList))
 
@@ -437,13 +441,16 @@ class Parser(object):
             msg = '{} not available yet'.format(type(value.parent))
             raise NotImplementedError(msg)
 
-        values = [value.types]*len(arguments)
+        values = value.types.types
+        # TODO can we use len(value.typs) and avoid calling visit?
+        n = len(value.types)
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
             self._visit(a, value=type_domain)
 
         type_codomain = value
+        self._set_domain_type(value, type_codomain)
 
         # update main expression
         self.main = self.main.xreplace({stmt: type_codomain})
@@ -467,6 +474,7 @@ class Parser(object):
             self._visit(a, value=type_domain)
 
         type_codomain = value
+        self._set_domain_type(value, type_codomain)
 
         # update main expression
         self.main = self.main.xreplace({stmt: type_codomain})

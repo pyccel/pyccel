@@ -102,7 +102,8 @@ class TypeTuple(BasicTypeVariable):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return sstr(self.name)
+        types = ','.join(sstr(i) for i in self.types)
+        return '({})'.format(types)
 
     def view(self):
         """inspects the variable."""
@@ -151,7 +152,10 @@ class TypeList(BasicTypeVariable):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        return sstr(self.name)
+        types = sstr(self.types)
+        for i in range(0, len(self)):
+            types = '[{}]'.format(types)
+        return types
 
     def view(self):
         """inspects the variable."""
