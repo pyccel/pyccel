@@ -156,11 +156,16 @@ class Shaping(Basic):
             stmts = [Assign(var, Len(generator.arguments[0]))]
 
         elif isinstance(generator, ProductGenerator):
-            var = Dummy()
+            arguments = generator.arguments
+            length    = generator.length
+
+            stmts = [Assign(l, Len(a)) for l,a in zip(length, arguments)]
             n = 1
-            for i in generator.arguments:
-                n *= Len(i)
-            stmts = [Assign(var, n)]
+            for i in length:
+                n *= i
+
+            var = Dummy()
+            stmts += [Assign(var, n)]
 
         else:
             msg = 'not available for {}'.format(type(generator))
