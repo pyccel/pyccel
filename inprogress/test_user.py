@@ -31,7 +31,8 @@ def test_map_list(**settings):
     L = _lambdify( L, namespace = {'f1': f1}, **settings )
 #    print(L)
 
-    out = L(range(0, 5))
+    xs = range(0, 5)
+    out = L(xs)
     expected = [0., 1, 4., 9., 16.]
     assert(np.allclose( out, expected ))
 
