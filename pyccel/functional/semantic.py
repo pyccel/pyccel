@@ -467,7 +467,7 @@ class Parser(object):
 #        # TODO add this check only when using tmap
 #        assert(len(value) == len(arguments))
 
-        values = [value.types]*len(arguments)
+        values = value.types.types
 
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
