@@ -91,6 +91,29 @@ def new_variable( dtype, var, tag = None, prefix = None, kind = None ):
         raise NotImplementedError('{} not available'.format(type(var)))
 
 #=========================================================================
+class LambdaFunctionDef(FunctionDef):
+
+    """."""
+    def __new__( cls, name, arguments, results, body, **kwargs ):
+        generators = kwargs.pop('generators', {})
+        m_results  = kwargs.pop('m_results',   [])
+
+        obj = FunctionDef.__new__(cls, name, arguments, results, body, **kwargs)
+        obj._generators = generators
+        obj._m_results  = m_results
+
+        return obj
+
+    @property
+    def generators(self):
+        return self._generators
+
+    @property
+    def m_results(self):
+        return self._m_results
+
+
+#=========================================================================
 class BasicBlock(Basic):
     """."""
     def __new__( cls, decs, body ):
@@ -646,15 +669,11 @@ class AST(object):
         name      = 'lambda_{}'.format( tag )
         # ...
 
-        func = FunctionDef( name, args, s_results, body,
-                            arguments_inout = inout,
-                            decorators      = decorators )
-
-        # TODO can we avoid using set attribut?
-        setattr(func, '_m_results', m_results)
-        setattr(func, '_generators', self.generators)
-
-        return func
+        return LambdaFunctionDef( name, args, s_results, body,
+                                  arguments_inout = inout,
+                                  decorators      = decorators,
+                                  generators      = self.generators,
+                                  m_results       = m_results )
 
     def _visit_Integer(self, stmt):
         return stmt

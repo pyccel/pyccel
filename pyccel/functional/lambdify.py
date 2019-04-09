@@ -44,7 +44,7 @@ from .utilities import get_decorators
 from .utilities import get_pyccel_imports_code
 from .utilities import get_dependencies_code
 from .printing import pycode
-from .interface import PY_FunctionDef, PY_FunctionInterface
+from .interface import LambdaInterface
 
 
 #==============================================================================
@@ -125,11 +125,7 @@ def _lambdify(func, namespace={}, **kwargs):
     ast = AST(parser)
     func = ast.doit()
 
-    # _m_results has been added dynamically
-    if hasattr(func, '_m_results'):
-        func = PY_FunctionDef(func, func._m_results)
-
-    with_interface = isinstance(func, PY_FunctionDef)
+    with_interface = len(func.m_results) > 0
 
     if ast_only:
         return func
@@ -144,7 +140,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ... create a python interface with an optional 'out' argument
     #     à la numpy
-    interface = PY_FunctionInterface(func)
+    interface = LambdaInterface(func)
     interface_code = pycode(interface)
     print(code)
     print('-------------------------------------------')

@@ -28,7 +28,7 @@ from .semantic import Parser as SemanticParser
 from .glossary import _internal_applications
 from .glossary import _math_functions
 from .glossary import _internal_map_functors
-from .ast import BasicGenerator, Shaping
+from .ast import BasicGenerator, Shaping, LambdaFunctionDef
 
 #=======================================================================================
 def compute_shape( arg, generators ):
@@ -38,35 +38,14 @@ def compute_shape( arg, generators ):
     generator = generators[arg]
     return Shaping( generator )
 
-#=======================================================================================
-class PY_FunctionDef(Basic):
-
-    def __new__(cls, func, m_results):
-        assert(isinstance(func, FunctionDef))
-#        assert(any([i for i in func.arguments_inout]))
-
-        assert(isinstance(m_results, (list, tuple, Tuple)))
-        m_results = Tuple(*m_results)
-
-        return Basic.__new__(cls, func, m_results)
-
-    @property
-    def func(self):
-        return self.args[0]
-
-    @property
-    def m_results(self):
-        return self.args[1]
 
 #=======================================================================================
-class PY_FunctionInterface(Basic):
+class LambdaInterface(Basic):
 
-    def __new__(cls, py_func):
-        assert(isinstance(py_func, PY_FunctionDef))
+    def __new__(cls, func):
 
-        # ... TODO
-        m_results = py_func.m_results
-        func      = py_func.func
+        # ...
+        m_results = func.m_results
 
         name    = 'interface_{}'.format(func.name )
         args    = [i for i in func.arguments if not i in m_results]
@@ -93,7 +72,7 @@ class PY_FunctionInterface(Basic):
         # ...
 
         # ...
-        generators = func._generators
+        generators = func.generators
         d_shapes = {}
         for i in m_results:
             d_shapes[i] = compute_shape( i, generators )
