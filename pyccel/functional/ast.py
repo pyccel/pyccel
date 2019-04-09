@@ -25,6 +25,7 @@ from .semantic import Parser as SemanticParser
 from .glossary import _internal_applications
 from .glossary import _math_functions
 from .glossary import _internal_map_functors
+from .interface import PY_FunctionDef
 
 #=========================================================================
 # some useful functions
@@ -333,6 +334,7 @@ def _attributs_from_type(t, d_var):
     d_var['is_stack_array'] = t.is_stack_array
     d_var['order']          = t.order
     d_var['precision']      = t.precision
+    d_var['shape']          = t.shape
 
     return d_var
 # ...
@@ -562,22 +564,40 @@ class AST(object):
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
 
     def _visit_Lambda(self, stmt):
+        # ...
         args = [self._visit(i) for i in stmt.variables]
-        expr = self._visit(stmt.expr)
+        body = [self._visit(stmt.expr)]
 
-        # TODO improve
         results = self._visit(self.main)
         if not isinstance(results, (list, tuple, Tuple)):
             results = [results]
+        # ...
 
-        # TODO improve
-        body = [expr]
+        # ... scalar results
+        s_results = [r for r in results if r.rank == 0]
+        # ...
 
-        if len(results) == 1:
-            body += [Return(results[0])]
+        # ... vector/matrix results as inout arguments
+        m_results = [r for r in results if not r in s_results]
+        # ...
 
-        else:
-            body += [Return(results)]
+        # ... return a function def where
+        #     we append m_results to the arguments as inout
+        #     and we return all results.
+        #     first, we initialize arguments_inout to False for all args
+        inout  = [False for i in args]
+        inout += [True for i in m_results]
+
+        args = args + m_results
+        # ...
+
+        # ...
+        if len(s_results) == 1:
+            body += [Return(s_results[0])]
+
+        elif len(results) > 1:
+            body += [Return(s_results)]
+        # ...
 
         # ...
         decorators = {'types':         build_types_decorator(args),
@@ -587,8 +607,15 @@ class AST(object):
         name      = 'lambda_{}'.format( tag )
         # ...
 
-        return FunctionDef(name, args, results, body,
-                           decorators=decorators)
+        func = FunctionDef( name, args, s_results, body,
+                            arguments_inout = inout,
+                            decorators      = decorators )
+
+        if m_results:
+            return PY_FunctionDef(func, m_results)
+
+        else:
+            return func
 
     def _visit_Integer(self, stmt):
         return stmt

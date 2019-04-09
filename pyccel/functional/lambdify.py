@@ -44,6 +44,7 @@ from .utilities import get_decorators
 from .utilities import get_pyccel_imports_code
 from .utilities import get_dependencies_code
 from .printing import pycode
+from .interface import PY_FunctionDef, PY_FunctionInterface
 
 
 #==============================================================================
@@ -123,18 +124,28 @@ def _lambdify(func, namespace={}, **kwargs):
     ast_only = kwargs.pop('ast_only', False)
     ast = AST(parser)
     func = ast.doit()
+    with_interface = isinstance(func, PY_FunctionDef)
 
     if ast_only:
         return func
     # ...
 
-    # ... printing
+    # ... printing of a python function without interface
     printing_only = kwargs.pop('printing_only', False)
     code = pycode(func)
-    if printing_only:
+    if printing_only and not with_interface:
         return code
     # ...
 
-    raise NotImplementedError()
+    # ... create a python interface with an optional 'out' argument
+    #     à la numpy
+    interface = PY_FunctionInterface(func)
+    interface_code = pycode(interface)
+    print(code)
+    print('-------------------------------------------')
+    print(interface_code)
+    if printing_only and with_interface:
+        return code, interface_code
+    # ...
 
-    return func
+#    raise NotImplementedError()

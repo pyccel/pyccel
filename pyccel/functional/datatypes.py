@@ -26,8 +26,9 @@ class TypeVariable(BasicTypeVariable):
         is_stack_array = var.is_stack_array
         order          = var.order
         precision      = var.precision
+        shape          = var.shape
 
-        obj = Basic.__new__(cls, dtype, rank, is_stack_array, order, precision)
+        obj = Basic.__new__( cls, dtype, rank, is_stack_array, order, precision, shape )
         obj._tag = random_string( 4 )
 
         return obj
@@ -51,6 +52,10 @@ class TypeVariable(BasicTypeVariable):
     @property
     def precision(self):
         return self._args[4]
+
+    @property
+    def shape(self):
+        return self._args[5]
 
     @property
     def name(self):
@@ -163,6 +168,7 @@ class TypeList(BasicTypeVariable):
 
 #=========================================================================
 # user friendly function
+# TODO DO WE KEEP IT?
 def assign_type(expr, rank=None):
     if ( rank is None ) and isinstance(expr, BasicTypeVariable):
         return expr

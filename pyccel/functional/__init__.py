@@ -9,3 +9,4 @@ from .ast           import *
 from .lambdify      import *
 from .utilities     import *
 from .printing      import *
+from .interface     import *

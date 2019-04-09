@@ -1,0 +1,131 @@
+# coding: utf-8
+
+import os
+from os.path import join, dirname
+
+from sympy import Symbol, Lambda, Function, Dummy
+from sympy import Tuple, IndexedBase
+from sympy.core.function import AppliedUndef
+from sympy.core.function import UndefinedFunction
+from sympy import Integer, Float
+from sympy import sympify
+from sympy import FunctionClass
+
+
+from pyccel.codegen.utilities import random_string
+from pyccel.ast.utilities import build_types_decorator
+from pyccel.ast.core import Slice
+from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
+from pyccel.ast.core import Return
+from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import Import, Nil, If, Is
+from pyccel.ast.core  import For, Range, Len
+from pyccel.ast.numpyext  import Zeros
+from pyccel.ast.basic import Basic
+
+from .datatypes import TypeVariable, TypeTuple, TypeList
+from .semantic import Parser as SemanticParser
+from .glossary import _internal_applications
+from .glossary import _math_functions
+from .glossary import _internal_map_functors
+
+#=======================================================================================
+class PY_FunctionDef(Basic):
+
+    def __new__(cls, func, m_results):
+        assert(isinstance(func, FunctionDef))
+#        assert(any([i for i in func.arguments_inout]))
+
+        assert(isinstance(m_results, (list, tuple, Tuple)))
+        m_results = Tuple(*m_results)
+
+        return Basic.__new__(cls, func, m_results)
+
+    @property
+    def func(self):
+        return self.args[0]
+
+    @property
+    def m_results(self):
+        return self.args[1]
+
+#=======================================================================================
+class PY_FunctionInterface(Basic):
+
+    def __new__(cls, py_func):
+        assert(isinstance(py_func, PY_FunctionDef))
+
+        # ... TODO
+        m_results = py_func.m_results
+        func      = py_func.func
+
+        name    = 'interface_{}'.format(func.name )
+        args    = [i for i in func.arguments if not i in m_results]
+        s_results = func.results
+
+        results = list(s_results) + list(m_results)
+        # ...
+
+        print('------------')
+        print(' results   = ', results)
+        print(' m_results = ', m_results)
+        print('------------')
+
+        # ...
+        imports = []
+        stmts   = []
+        # ...
+
+        # ... out argument
+        if len(results) == 1:
+            outs = [Symbol('out')]
+
+        else:
+            outs = [Symbol('out_{}'.format(i)) for i in range(0, len(results))]
+        # ...
+
+        # ... TODO build imports
+#        imports += [Import('something', 'from here')]
+        # ...
+
+        # ... TODO build statements
+        if_cond = Is(Symbol('out'), Nil())
+
+        if_body = []
+        for i, var in enumerate(results):
+            print('================== ', var)
+            if var in m_results:
+                if_body += [Assign(outs[i], Zeros(var.shape, var.dtype))]
+
+        # update statements
+        stmts = [If((if_cond, if_body))]
+        # ...
+
+        # ... add call to the python or pyccelized function
+        stmts += [FunctionCall(func, args + outs)]
+        # ...
+
+        # ... add return out
+        if len(outs) == 1:
+            stmts += [Return(outs[0])]
+
+        else:
+            stmts += [Return(outs)]
+        # ...
+
+        # ...
+        body = imports + stmts
+        # ...
+
+        # update arguments with optional
+        args += [Assign(Symbol('out'), Nil())]
+
+        return FunctionDef( name, args, results, body )
+
+    @property
+    def func(self):
+        return self.args[0]
+
+    @property
+    def out(self):
+        return self.args[1]
