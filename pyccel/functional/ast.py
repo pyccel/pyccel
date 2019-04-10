@@ -379,6 +379,7 @@ class GeneratorBlock(BasicBlock):
         accelerator = settings.pop('accelerator')
         nowait      = settings.pop('nowait')
         schedule    = settings.pop('schedule')
+        chunk       = settings.pop('chunk')
         # ...
 
         # ...
@@ -408,7 +409,13 @@ class GeneratorBlock(BasicBlock):
 
             # ... create clauses
             clauses = []
-            clauses += [OMP_Schedule(schedule)]
+
+            # TODO move this treatment to OMP_Schedule
+            if chunk is None:
+                clauses += [OMP_Schedule(schedule)]
+
+            else:
+                clauses += [OMP_Schedule(schedule, chunk)]
 
             if private_vars:
                 clauses += [OMP_Private(*private_vars)]
@@ -608,6 +615,7 @@ class AST(object):
         # ...
         self._nowait   = settings.pop('nowait', True)
         self._schedule = settings.pop('schedule', 'static')
+        self._chunk    = settings.pop('chunk', None)
         # ...
 
 #        print('------------------')
@@ -655,6 +663,10 @@ class AST(object):
     @property
     def schedule(self):
         return self._schedule
+
+    @property
+    def chunk(self):
+        return self._chunk
 
     @property
     def nowait(self):
@@ -803,7 +815,8 @@ class AST(object):
                 return GeneratorBlock ( generator, stmts,
                                         accelerator = self.accelerator,
                                         nowait      = self.nowait,
-                                        schedule    = self.schedule)
+                                        schedule    = self.schedule,
+                                        chunk       = self.chunk )
 
             elif name == 'zip':
                 self.main_type = type_domain
