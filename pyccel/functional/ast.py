@@ -20,7 +20,7 @@ from pyccel.ast.core import Return, Pass
 from pyccel.ast.core  import For, Range, Len
 from pyccel.ast.basic import Basic
 
-from pyccel.ast.parallel.openmp import OMP_For
+from pyccel.ast.parallel.openmp import OMP_For, OMP_Private
 
 from .datatypes import TypeVariable, TypeTuple, TypeList
 from .semantic import Parser as SemanticParser
@@ -185,10 +185,11 @@ class VariableGenerator(BasicGenerator):
         length   = new_variable('int',  iterable, tag = tag, kind='len')
         # ...
 
-        return Basic.__new__(cls, iterable, index, iterator, length)
+        return Basic.__new__( cls, iterable, index, iterator, length )
 
     @property
     def arguments(self):
+        # TODO change name to iterable
         return self._args[0]
 
     @property
@@ -202,6 +203,12 @@ class VariableGenerator(BasicGenerator):
     @property
     def length(self):
         return self._args[3]
+
+    @property
+    def private(self):
+        # TODO add iterable?
+        args = [self.index, self.iterator]
+        return Tuple(*args)
 
 #=========================================================================
 class ZipGenerator(BasicGenerator):
@@ -236,6 +243,12 @@ class ZipGenerator(BasicGenerator):
     @property
     def length(self):
         return self._args[3]
+
+    @property
+    def private(self):
+        # TODO add iterable?
+        args = [self.index] + list(self.iterator)
+        return Tuple(*args)
 
 #==============================================================================
 class ProductGenerator(BasicGenerator):
@@ -279,6 +292,12 @@ class ProductGenerator(BasicGenerator):
         return self._args[4]
 
     @property
+    def private(self):
+        # TODO add iterable?
+        args = list(self.index) + list(self.iterator)
+        return Tuple(*args)
+
+    @property
     def is_list(self):
         return self._is_list
 
@@ -315,10 +334,7 @@ class GeneratorBlock(Basic):
         # ...
         assert(isinstance(generator, BasicGenerator))
 
-        decs, body = _build_block( generator, stmts,
-                                   parallel = parallel,
-                                   accelerator = accelerator,
-                                   nowait = nowait )
+        decs, body = _build_block( generator, stmts )
         # ...
 
         # ...
@@ -329,7 +345,36 @@ class GeneratorBlock(Basic):
         body = Tuple(*body)
         # ...
 
-        return Basic.__new__( cls, generator, decs, body )
+        # ... define private variables of the current block
+        private_vars = generator.private
+        # TODO add private vars from internal blocks
+        private_vars = Tuple(*private_vars)
+        # ...
+
+        # ... add parallel loop
+        if parallel:
+            if not( accelerator == 'omp' ):
+                raise NotImplementedError('Only OpenMP is available')
+
+            # ... create clauses
+            clauses = []
+
+            if private_vars:
+                clauses += [OMP_Private(*private_vars)]
+            # ...
+
+            # ...
+            assert(len(body) == 1)
+            loop = body[0]
+            body = [OMP_For(loop, clauses, nowait)]
+            # ...
+
+            # TODO this is a hack to handle the last comment after a loop, so that
+            #      it can be parsed and added to the For
+            body += [Pass()]
+        # ...
+
+        return Basic.__new__( cls, generator, decs, body, private_vars )
 
     @property
     def generator(self):
@@ -343,8 +388,12 @@ class GeneratorBlock(Basic):
     def body(self):
         return self._args[2]
 
+    @property
+    def private(self):
+        return self._args[3]
+
 #==========================================================================
-def _build_block( generator, stmts, parallel, accelerator, nowait ):
+def _build_block( generator, stmts ):
 
     # ...
     decs = []
@@ -423,20 +472,6 @@ def _build_block( generator, stmts, parallel, accelerator, nowait ):
                     body = [Assign(x, IndexedBase(v.name)[i])] + body
 
             body = [For(i, Range(0, n), body, strict=False)]
-    # ...
-
-    # ... add parallel loop
-    if parallel:
-        # TODO
-        clauses = []
-
-        assert(len(body) == 1)
-        loop = body[0]
-        body = [OMP_For(loop, clauses, nowait)]
-
-        # TODO this is a hack to handle the last comment after a loop, so that
-        #      it can be parsed and added to the For
-        body += [Pass()]
     # ...
 
     return decs, body
