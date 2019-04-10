@@ -297,6 +297,8 @@ class ProductGenerator(BasicGenerator):
     def private(self):
         # TODO add iterable?
         args = list(self.index) + list(self.iterator)
+        if self.is_list:
+            args += [self.multi_index]
         return Tuple(*args)
 
     @property

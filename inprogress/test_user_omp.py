@@ -11,9 +11,6 @@ from pyccel.functional.lambdify import _lambdify
 from pyccel.functional import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
-# TODO for compatibility
-pmap = map
-
 #=========================================================
 @pure
 @types('double')
@@ -28,79 +25,101 @@ def f2(x,y):
     return r
 
 #=========================================================
-def test_pmap_list(**settings):
-    l = lambda xs: pmap(f1, xs)
-
-    # TODO
-    settings['accelerator'] = 'openmp'
-#    settings['verbose'] = True
+def test_map_list(**settings):
+    l = lambda xs: map(f1, xs)
 
     L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
-#    nx = 50000000
     nx = 5000000
     xs = range(0, nx)
-
-#    rs = np.zeros(nx, np.float64)
-#    tb = time.time()
-#    L(xs, rs)
-#    te = time.time()
-#    print('[pyccel]  elapsed time = ', te-tb)
 
     tb = time.time()
     out = L(xs)
     te = time.time()
     print('[pyccel]  elapsed time = ', te-tb)
 
+#    tb = time.time()
+#    out = L(xs, out=out)
+#    te = time.time()
+#    print('[pyccel]  elapsed time = ', te-tb)
 
     tb = time.time()
-    out = L(xs, out=out)
+    expected = list(l(xs)) # add list because the result of l is an iterator
+    te = time.time()
+    print('[python]  elapsed time = ', te-tb)
+    assert(np.allclose( out, expected ))
+
+#=========================================================
+def test_map_zip(**settings):
+    l = lambda xs,ys:  map(f2, zip(xs,ys))
+
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    nx = 500000
+    xs = range(0, nx)
+
+    ny = 500000
+    ys = range(0, ny)
+
+    tb = time.time()
+    out = L(xs, ys)
     te = time.time()
     print('[pyccel]  elapsed time = ', te-tb)
 
+    # TODO not working yet
 #    tb = time.time()
-#    expected = list(l(xs)) # add list because the result of l is an iterator
+#    expected = list(l(xs, ys)) # add list because the result of l is an iterator
 #    te = time.time()
 #    print('[python]  elapsed time = ', te-tb)
 #    assert(np.allclose( out, expected ))
 
 #=========================================================
-def test_pmap_zip(**settings):
-    L = lambda xs,ys:  pmap(f2, zip(xs,ys))
+def test_map_product(**settings):
+    l = lambda xs,ys:  map(f2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
 
-    xs = range(0, 5)
-    ys = range(0, 5)
+    nx = 5000
+    xs = range(0, nx)
+
+    ny = 5000
+    ys = range(0, ny)
+
+    tb = time.time()
     out = L(xs, ys)
-    expected = [0., 1, 4., 9., 16.]
-    assert(np.allclose( out, expected ))
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
+
+    # TODO not working yet
+#    tb = time.time()
+#    expected = list(l(xs, ys)) # add list because the result of l is an iterator
+#    te = time.time()
+#    print('[python]  elapsed time = ', te-tb)
+#    assert(np.allclose( out, expected ))
 
 #=========================================================
-def test_pmap_product(**settings):
-    L = lambda xs,ys:  pmap(f2, product(xs,ys))
+def test_tmap_product(**settings):
+    l = lambda xs,ys:  tmap(f2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    xs = range(1, 4)
-    ys = range(10, 14)
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    nx = 5000
+    xs = range(0, nx)
+
+    ny = 5000
+    ys = range(0, ny)
+
+    tb = time.time()
     out = L(xs, ys)
-    expected = [10., 11., 12., 13.,
-                20., 22., 24., 26.,
-                30., 33., 36., 39.]
-    assert(np.allclose( out, expected ))
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
 
-#=========================================================
-def test_tpmap_product(**settings):
-    L = lambda xs,ys:  tpmap(f2, product(xs,ys))
-
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    xs = range(1, 4)
-    ys = range(10, 14)
-    out = L(xs, ys)
-    expected = [[10., 11., 12., 13.],
-                [20., 22., 24., 26.],
-                [30., 33., 36., 39.]]
-    assert(np.allclose( out, expected ))
+    # TODO not working yet
+#    tb = time.time()
+#    expected = list(l(xs, ys)) # add list because the result of l is an iterator
+#    te = time.time()
+#    print('[python]  elapsed time = ', te-tb)
+#    assert(np.allclose( out, expected ))
 
 ##=========================================================
 #def test_reduce_add_product(**settings):
@@ -114,14 +133,12 @@ def test_tpmap_product(**settings):
 
 #########################################
 if __name__ == '__main__':
-    settings = {}
-#    settings = {'ast_only' : True}
-#    settings = {'printing_only' : True}
+    settings = {'accelerator': 'openmp'}
 
-    test_pmap_list(**settings)
-#    test_pmap_zip(**settings)
-#    test_pmap_product(**settings)
-#    test_tpmap_product(**settings)
+    test_map_list(**settings)
+    test_map_zip(**settings)
+    test_map_product(**settings)
+    test_tmap_product(**settings)
 
 #    # TODO
 ##    test_reduce_add_product(**settings)
