@@ -37,7 +37,8 @@ def test_pmap_list(**settings):
 
     L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
-    nx = 10000000
+#    nx = 50000000
+    nx = 5000000
     xs = range(0, nx)
 
 #    rs = np.zeros(nx, np.float64)
@@ -48,6 +49,12 @@ def test_pmap_list(**settings):
 
     tb = time.time()
     out = L(xs)
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
+
+
+    tb = time.time()
+    out = L(xs, out=out)
     te = time.time()
     print('[pyccel]  elapsed time = ', te-tb)
 

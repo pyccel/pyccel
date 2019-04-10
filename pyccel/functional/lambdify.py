@@ -160,7 +160,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     module_name = 'mod_{}'.format(func_name)
     write_code('{}.py'.format(module_name), code, folder=folder)
-#    print(code)
+    print(code)
 
     sys.path.append(folder)
     package = importlib.import_module( module_name )
@@ -175,10 +175,11 @@ def _lambdify(func, namespace={}, **kwargs):
     from pyccel.epyccel import epyccel
     accelerator = kwargs.pop('accelerator', None)
     verbose     = kwargs.pop('verbose', False)
+#    verbose     = kwargs.pop('verbose', True)
 
-    package = epyccel ( package, accelerator = accelerator, verbose = verbose )
-    f2py_func = getattr(package, func_name)
+    f2py_package = epyccel ( package, accelerator = accelerator, verbose = verbose )
     f2py_func_name = func_name
+    f2py_func = getattr(f2py_package, f2py_func_name)
 
 #    ####### DEBUG
 #    return f2py_func
@@ -190,12 +191,12 @@ def _lambdify(func, namespace={}, **kwargs):
     # ..............................................
     #     generate a python interface
     # ..............................................
-    module_name = os.path.basename(package.__file__)
-    module_name = os.path.splitext(module_name)[0]
+    f2py_module_name = os.path.basename(f2py_package.__file__)
+    f2py_module_name = os.path.splitext(f2py_module_name)[0]
 
     # ... create a python interface with an optional 'out' argument
     #     à la numpy
-    interface = LambdaInterface(func, Import(func_name, module_name))
+    interface = LambdaInterface(func, Import(f2py_func_name, f2py_module_name))
     # ...
 
     # ...
@@ -205,20 +206,10 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ...
     func_name = str(interface.name)
-
-    # TODO FOR AN UNKOWN REASON, THIS CRASHES RANDOMLY
-#    module_name = 'mod_{}'.format(func_name)
-#    write_code('{}.py'.format(module_name), code, folder=folder)
-#
-#    sys.path.append(folder)
-#    package = importlib.import_module( module_name )
-#    sys.path.remove(folder)
-#    return getattr(package, func_name)
     # ...
 
     # TODO this is a temporary fix
     g = {}
-#    g = {f2py_func_name: f2py_func}
     exec(code, g)
     f = g[func_name]
     return f

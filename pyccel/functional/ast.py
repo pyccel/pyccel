@@ -16,12 +16,13 @@ from pyccel.codegen.utilities import random_string
 from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
-from pyccel.ast.core import Return, Pass
-from pyccel.ast.core  import For, Range, Len
+from pyccel.ast.core import Return, Pass, Import, String, FunctionCall
+from pyccel.ast.core  import For, Range, Len, Print
 from pyccel.ast.basic import Basic
 
 from pyccel.ast.parallel.openmp import OMP_For, OMP_Private, OMP_Parallel
 from pyccel.ast.parallel.openmp import OMP_Schedule
+from pyccel.ast.parallel.openmp import OMP_NumThread
 
 from .datatypes import TypeVariable, TypeTuple, TypeList
 from .semantic import Parser as SemanticParser
@@ -336,6 +337,9 @@ class MainBlock(BasicBlock):
 
             # ... create clauses
             clauses = []
+
+#            ##### DEBUG
+#            clauses += [OMP_NumThread(4)]
             # ...
 
             # ... create variables
@@ -829,6 +833,14 @@ class AST(object):
                           accelerator = self.accelerator )
         body = [body]
         # ...
+
+#        # ... DEBUG
+#        body += [Import('omp_get_max_threads', 'pyccel.stdlib.internal.openmp')]
+#
+#        msg = lambda x: (String('> maximum available threads = '), x)
+#        x = FunctionCall('omp_get_max_threads', ())
+#        body += [Print(msg(x))]
+#        # ...
 
         # ...
         results = self._visit(self.main)
