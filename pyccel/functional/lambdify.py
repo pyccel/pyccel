@@ -160,7 +160,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     module_name = 'mod_{}'.format(func_name)
     write_code('{}.py'.format(module_name), code, folder=folder)
-#    print(code)
+    print(code)
 
     sys.path.append(folder)
     package = importlib.import_module( module_name )

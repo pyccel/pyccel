@@ -16,9 +16,11 @@ from pyccel.codegen.utilities import random_string
 from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
-from pyccel.ast.core import Return
+from pyccel.ast.core import Return, Pass
 from pyccel.ast.core  import For, Range, Len
 from pyccel.ast.basic import Basic
+
+from pyccel.ast.parallel.openmp import OMP_For
 
 from .datatypes import TypeVariable, TypeTuple, TypeList
 from .semantic import Parser as SemanticParser
@@ -112,32 +114,6 @@ class LambdaFunctionDef(FunctionDef):
     def m_results(self):
         return self._m_results
 
-
-#=========================================================================
-class BasicBlock(Basic):
-    """."""
-    def __new__( cls, decs, body ):
-        assert(isinstance(decs, (tuple, list, Tuple)))
-        assert(isinstance(body, (tuple, list, Tuple)))
-
-        decs = Tuple(*decs)
-        body = Tuple(*body)
-
-        return Basic.__new__(cls, decs, body)
-
-    @property
-    def decs(self):
-        return self._args[0]
-
-    @property
-    def body(self):
-        return self._args[1]
-
-class SequentialBlock(BasicBlock):
-    pass
-
-class ParallelBlock(BasicBlock):
-    pass
 
 #=========================================================================
 class Shaping(Basic):
@@ -309,13 +285,66 @@ class ProductGenerator(BasicGenerator):
     def set_as_list(self):
         self._is_list = True
 
-#==============================================================================
-def generator_as_block(generator, stmts, **kwargs):
-    # ...
-    settings = kwargs.copy()
+#=========================================================================
+class GeneratorBlock(Basic):
+    """."""
+    def __new__( cls, generator, stmts, **kwargs ):
 
-    parallel = settings.pop('parallel', False)
-    # ...
+        # ...
+        settings = kwargs.copy()
+
+        parallel    = settings.pop('parallel', False)
+        accelerator = settings.pop('accelerator', None)
+        nowait      = settings.pop('nowait', False)
+        # ...
+
+        # ...
+        if accelerator is None:
+            accelerator = 'omp'
+
+        assert(isinstance(accelerator, str))
+        assert(accelerator in ['openmp', 'openacc', 'omp', 'acc'])
+
+        if accelerator == 'openmp':
+            accelerator = 'omp'
+
+        elif accelerator == 'openacc':
+            accelerator = 'acc'
+        # ...
+
+        # ...
+        assert(isinstance(generator, BasicGenerator))
+
+        decs, body = _build_block( generator, stmts,
+                                   parallel = parallel,
+                                   accelerator = accelerator,
+                                   nowait = nowait )
+        # ...
+
+        # ...
+        assert(isinstance(decs, (tuple, list, Tuple)))
+        assert(isinstance(body, (tuple, list, Tuple)))
+
+        decs = Tuple(*decs)
+        body = Tuple(*body)
+        # ...
+
+        return Basic.__new__( cls, generator, decs, body )
+
+    @property
+    def generator(self):
+        return self._args[0]
+
+    @property
+    def decs(self):
+        return self._args[1]
+
+    @property
+    def body(self):
+        return self._args[2]
+
+#==========================================================================
+def _build_block( generator, stmts, parallel, accelerator, nowait ):
 
     # ...
     decs = []
@@ -396,14 +425,24 @@ def generator_as_block(generator, stmts, **kwargs):
             body = [For(i, Range(0, n), body, strict=False)]
     # ...
 
+    # ... add parallel loop
     if parallel:
-        return ParallelBlock( decs, body )
+        # TODO
+        clauses = []
 
-    else:
-        return SequentialBlock( decs, body )
+        assert(len(body) == 1)
+        loop = body[0]
+        body = [OMP_For(loop, clauses, nowait)]
+
+        # TODO this is a hack to handle the last comment after a loop, so that
+        #      it can be parsed and added to the For
+        body += [Pass()]
+    # ...
+
+    return decs, body
 
 
-#==============================================================================
+#==========================================================================
 # ...
 def _attributs_from_type(t, d_var):
 
@@ -437,9 +476,9 @@ def _attributs_default():
 
     return d_var
 # ...
-#==============================================================================
+#==========================================================================
 
-#==============================================================================
+#==========================================================================
 class AST(object):
 
     def __init__(self, parser, **kwargs):
@@ -636,8 +675,14 @@ class AST(object):
 #                expr = self.get_expr_from_type()
 
                 # return the associated for loops
-                return generator_as_block( generator, stmts,
-                                           parallel      = False )
+                # TODO improve
+                if name in ['map', 'tmap']:
+                    return GeneratorBlock ( generator, stmts,
+                                            parallel = False )
+
+                else:
+                    return GeneratorBlock ( generator, stmts,
+                                            parallel = True )
 
             elif name == 'zip':
                 self.main_type = type_domain
