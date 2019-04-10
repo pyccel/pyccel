@@ -160,6 +160,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     module_name = 'mod_{}'.format(func_name)
     write_code('{}.py'.format(module_name), code, folder=folder)
+#    print(code)
 
     sys.path.append(folder)
     package = importlib.import_module( module_name )
@@ -184,11 +185,8 @@ def _lambdify(func, namespace={}, **kwargs):
     # ..............................................
     #     generate a python interface
     # ..............................................
-    # ... TODO imports
     module_name = os.path.basename(package.__file__)
     module_name = os.path.splitext(module_name)[0]
-#    print('>>>>>>>>>>>>>>>>>>> ', module_name)
-    # ...
 
     # ... create a python interface with an optional 'out' argument
     #     à la numpy

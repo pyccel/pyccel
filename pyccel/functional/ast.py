@@ -160,9 +160,14 @@ class Shaping(Basic):
             length    = generator.length
 
             stmts = [Assign(l, Len(a)) for l,a in zip(length, arguments)]
-            n = 1
-            for i in length:
-                n *= i
+
+            if generator.is_list:
+                n = 1
+                for i in length:
+                    n *= i
+
+            else:
+                n = length
 
             var = Dummy()
             stmts += [Assign(var, n)]
@@ -258,6 +263,7 @@ class ZipGenerator(BasicGenerator):
 
 #==============================================================================
 class ProductGenerator(BasicGenerator):
+
     def __new__( cls, *args ):
         # ... create iterator and index variables
         target = args
@@ -271,7 +277,10 @@ class ProductGenerator(BasicGenerator):
         multi_index = new_variable('int',  target[0], tag = tag, kind='multi')
         # ...
 
-        return Basic.__new__(cls, args, index, iterator, length, multi_index)
+        obj = Basic.__new__(cls, args, index, iterator, length, multi_index)
+        obj._is_list = False
+
+        return obj
 
     @property
     def arguments(self):
@@ -292,6 +301,13 @@ class ProductGenerator(BasicGenerator):
     @property
     def multi_index(self):
         return self._args[4]
+
+    @property
+    def is_list(self):
+        return self._is_list
+
+    def set_as_list(self):
+        self._is_list = True
 
 #==============================================================================
 def generator_as_block(generator, stmts, **kwargs):
@@ -536,10 +552,6 @@ class AST(object):
                 # ...
 
                 # ...
-                self.set_generator(results, generator)
-                # ...
-
-                # ...
                 index    = generator.index
                 iterator = generator.iterator
                 # ...
@@ -556,6 +568,7 @@ class AST(object):
                     length = generator.length
                     if name == 'map':
                         multi_index = generator.multi_index
+                        generator.set_as_list()
 
                         # TODO check formula
                         value = index[0]
@@ -566,6 +579,10 @@ class AST(object):
 
                         # update index to use multi index
                         index = multi_index
+                # ...
+
+                # ... we set the generator after we treat map/tmap
+                self.set_generator(results, generator)
                 # ...
 
                 # ... apply the function to arguments

@@ -55,28 +55,23 @@ def test_map_product(**settings):
     xs = range(1, 4)
     ys = range(10, 14)
     out = L(xs, ys)
-    expected = [10.,  11.,  12.,  13.,  20.,  22.,  24.,  26.,  30.,  33.,  36.,  39.]
+    expected = [10., 11., 12., 13.,
+                20., 22., 24., 26.,
+                30., 33., 36., 39.]
     assert(np.allclose( out, expected ))
-
-##=========================================================
-## this test will raise an error, which is what we expect
-## TODO add error exception and use pytest here
-#def test_tmap_zip(**settings):
-#    L = lambda xs,ys:  tmap(f2, zip(xs,ys))
-#
-#    L = _lambdify( L, namespace = {'f2': f2}, **settings )
-#    print(type_L.view())
-#
-#    print('DONE.')
 
 #=========================================================
 def test_tmap_product(**settings):
     L = lambda xs,ys:  tmap(f2, product(xs,ys))
 
     L = _lambdify( L, namespace = {'f2': f2}, **settings )
-    print(L)
-
-    print('DONE.')
+    xs = range(1, 4)
+    ys = range(10, 14)
+    out = L(xs, ys)
+    expected = [[10., 11., 12., 13.],
+                [20., 22., 24., 26.],
+                [30., 33., 36., 39.]]
+    assert(np.allclose( out, expected ))
 
 ##=========================================================
 #def test_reduce_add_product(**settings):
@@ -94,10 +89,10 @@ if __name__ == '__main__':
 #    settings = {'ast_only' : True}
 #    settings = {'printing_only' : True}
 
-#    test_map_list(**settings)
-#    test_map_zip(**settings)
+    test_map_list(**settings)
+    test_map_zip(**settings)
     test_map_product(**settings)
-#    test_tmap_product(**settings)
+    test_tmap_product(**settings)
 
 #    # TODO
 ##    test_reduce_add_product(**settings)
