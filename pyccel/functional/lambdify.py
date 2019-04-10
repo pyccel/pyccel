@@ -122,7 +122,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # ... ast
     ast_only = kwargs.pop('ast_only', False)
-    ast = AST(parser)
+    ast = AST(parser, **kwargs)
     func = ast.doit()
 
     with_interface = len(func.m_results) > 0
@@ -160,7 +160,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     module_name = 'mod_{}'.format(func_name)
     write_code('{}.py'.format(module_name), code, folder=folder)
-    print(code)
+#    print(code)
 
     sys.path.append(folder)
     package = importlib.import_module( module_name )
@@ -177,9 +177,14 @@ def _lambdify(func, namespace={}, **kwargs):
     verbose     = kwargs.pop('verbose', False)
 
     package = epyccel ( package, accelerator = accelerator, verbose = verbose )
+    f2py_func = getattr(package, func_name)
+    f2py_func_name = func_name
+
+#    ####### DEBUG
+#    return f2py_func
 
     if not typed_functions:
-        return getattr(package, func_name)
+        return f2py_func
     # ...
 
     # ..............................................
@@ -213,6 +218,7 @@ def _lambdify(func, namespace={}, **kwargs):
 
     # TODO this is a temporary fix
     g = {}
+#    g = {f2py_func_name: f2py_func}
     exec(code, g)
     f = g[func_name]
     return f

@@ -20,7 +20,8 @@ from pyccel.ast.core import Return, Pass
 from pyccel.ast.core  import For, Range, Len
 from pyccel.ast.basic import Basic
 
-from pyccel.ast.parallel.openmp import OMP_For, OMP_Private
+from pyccel.ast.parallel.openmp import OMP_For, OMP_Private, OMP_Parallel
+from pyccel.ast.parallel.openmp import OMP_Schedule
 
 from .datatypes import TypeVariable, TypeTuple, TypeList
 from .semantic import Parser as SemanticParser
@@ -305,30 +306,73 @@ class ProductGenerator(BasicGenerator):
         self._is_list = True
 
 #=========================================================================
-class GeneratorBlock(Basic):
+class BasicBlock(Basic):
+    pass
+
+#=========================================================================
+class MainBlock(BasicBlock):
+    """."""
+    def __new__( cls, block, **kwargs ):
+
+        # ...
+        settings = kwargs.copy()
+
+        accelerator = settings.pop('accelerator', None)
+        # ...
+
+        # ...
+        assert( isinstance( block, GeneratorBlock ) )
+        # ...
+
+        # ...
+        decs = block.decs
+        body = block.body
+        # ...
+
+        # ... add parallel loop
+        if accelerator:
+            if not( accelerator == 'omp' ):
+                raise NotImplementedError('Only OpenMP is available')
+
+            # ... create clauses
+            clauses = []
+            # ...
+
+            # ... create variables
+            variables = []
+            # ...
+
+            # ...
+            body = [OMP_Parallel( clauses, variables, body )]
+            # ...
+
+            # TODO this is a hack to handle the last comment after a loop, so that
+            #      it can be parsed and added to the For
+            body += [Pass()]
+        # ...
+
+        return Basic.__new__( cls, decs, body )
+
+    @property
+    def decs(self):
+        return self._args[0]
+
+    @property
+    def body(self):
+        return self._args[1]
+
+
+#=========================================================================
+class GeneratorBlock(BasicBlock):
     """."""
     def __new__( cls, generator, stmts, **kwargs ):
 
         # ...
         settings = kwargs.copy()
 
-        parallel    = settings.pop('parallel', False)
-        accelerator = settings.pop('accelerator', None)
-        nowait      = settings.pop('nowait', False)
-        # ...
-
-        # ...
-        if accelerator is None:
-            accelerator = 'omp'
-
-        assert(isinstance(accelerator, str))
-        assert(accelerator in ['openmp', 'openacc', 'omp', 'acc'])
-
-        if accelerator == 'openmp':
-            accelerator = 'omp'
-
-        elif accelerator == 'openacc':
-            accelerator = 'acc'
+        accelerator = settings.pop('accelerator')
+        nowait      = settings.pop('nowait')
+        schedule    = settings.pop('schedule')
         # ...
 
         # ...
@@ -352,12 +396,13 @@ class GeneratorBlock(Basic):
         # ...
 
         # ... add parallel loop
-        if parallel:
+        if accelerator:
             if not( accelerator == 'omp' ):
                 raise NotImplementedError('Only OpenMP is available')
 
             # ... create clauses
             clauses = []
+            clauses += [OMP_Schedule(schedule)]
 
             if private_vars:
                 clauses += [OMP_Private(*private_vars)]
@@ -369,9 +414,9 @@ class GeneratorBlock(Basic):
             body = [OMP_For(loop, clauses, nowait)]
             # ...
 
-            # TODO this is a hack to handle the last comment after a loop, so that
-            #      it can be parsed and added to the For
-            body += [Pass()]
+#            # TODO this is a hack to handle the last comment after a loop, so that
+#            #      it can be parsed and added to the For
+#            body += [Pass()]
         # ...
 
         return Basic.__new__( cls, generator, decs, body, private_vars )
@@ -532,6 +577,33 @@ class AST(object):
         self._generators      = {}
         # ...
 
+        # ...
+        settings = kwargs.copy()
+
+        accelerator = settings.pop('accelerator', None)
+        # ...
+
+        # ...
+        if accelerator is None:
+            accelerator = 'omp'
+
+        assert(isinstance(accelerator, str))
+        assert(accelerator in ['openmp', 'openacc', 'omp', 'acc'])
+
+        if accelerator == 'openmp':
+            accelerator = 'omp'
+
+        elif accelerator == 'openacc':
+            accelerator = 'acc'
+
+        self._accelerator = accelerator
+        # ...
+
+        # ...
+        self._nowait   = settings.pop('nowait', True)
+        self._schedule = settings.pop('schedule', 'static')
+        # ...
+
 #        print('------------------')
 #        print('> d_types ')
 #        self.inspect()
@@ -569,6 +641,18 @@ class AST(object):
     @property
     def generators(self):
         return self._generators
+
+    @property
+    def accelerator(self):
+        return self._accelerator
+
+    @property
+    def schedule(self):
+        return self._schedule
+
+    @property
+    def nowait(self):
+        return self._nowait
 
     def inspect(self):
         print(self.d_types)
@@ -710,14 +794,10 @@ class AST(object):
 #                expr = self.get_expr_from_type()
 
                 # return the associated for loops
-                # TODO improve
-                if name in ['map', 'tmap']:
-                    return GeneratorBlock ( generator, stmts,
-                                            parallel = False )
-
-                else:
-                    return GeneratorBlock ( generator, stmts,
-                                            parallel = True )
+                return GeneratorBlock ( generator, stmts,
+                                        accelerator = self.accelerator,
+                                        nowait      = self.nowait,
+                                        schedule    = self.schedule)
 
             elif name == 'zip':
                 self.main_type = type_domain
@@ -741,8 +821,16 @@ class AST(object):
     def _visit_Lambda(self, stmt):
         # ...
         args = [self._visit(i) for i in stmt.variables]
-        body = [self._visit(stmt.expr)]
+        # ...
 
+        # ...
+        body = self._visit(stmt.expr)
+        body = MainBlock( body,
+                          accelerator = self.accelerator )
+        body = [body]
+        # ...
+
+        # ...
         results = self._visit(self.main)
         if not isinstance(results, (list, tuple, Tuple)):
             results = [results]

@@ -31,12 +31,31 @@ def f2(x,y):
 def test_pmap_list(**settings):
     l = lambda xs: pmap(f1, xs)
 
+    # TODO
+    settings['accelerator'] = 'openmp'
+#    settings['verbose'] = True
+
     L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
-    xs = range(0, 1000)
+    nx = 10000000
+    xs = range(0, nx)
+
+#    rs = np.zeros(nx, np.float64)
+#    tb = time.time()
+#    L(xs, rs)
+#    te = time.time()
+#    print('[pyccel]  elapsed time = ', te-tb)
+
+    tb = time.time()
     out = L(xs)
-    expected = list(l(xs)) # add list because the result of l is an iterator
-    assert(np.allclose( out, expected ))
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
+
+#    tb = time.time()
+#    expected = list(l(xs)) # add list because the result of l is an iterator
+#    te = time.time()
+#    print('[python]  elapsed time = ', te-tb)
+#    assert(np.allclose( out, expected ))
 
 #=========================================================
 def test_pmap_zip(**settings):

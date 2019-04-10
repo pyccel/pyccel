@@ -13,7 +13,7 @@ class PythonCodePrinter(PyccelPythonCodePrinter):
         fname = self._print(expr.func.__name__)
         return '{fname}({args})'.format(fname=fname, args=args)
 
-    def _print_GeneratorBlock(self, expr):
+    def _print_BasicBlock(self, expr):
         code = ''
 
         # ...
