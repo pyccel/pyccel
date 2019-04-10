@@ -413,12 +413,6 @@ class Parser(object):
                 type_domain   = TypeList(type_domain)
                 type_codomain = TypeList(type_codomain)
 
-#            # we substruct 1 since we use a TypeList
-#            base_rank = len(target.args) - 1
-#
-#            type_domain   = assign_type(type_domain, rank=base_rank)
-#            type_codomain = assign_type(type_codomain, rank=base_rank)
-
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
         self._set_domain_type(type_domain, type_codomain)
@@ -486,21 +480,21 @@ class Parser(object):
         arguments = stmt.args
 
         assert( len(arguments) == 2 )
-        op     = arguments[0]
+        func   = arguments[0]
         target = arguments[1]
 
-        # we must first determine the number of arguments
-        # TODO must be done in main lambdify:
-        #      - we use atoms on AppliedUndef
-        #      - then we take those for which we provide python implementations
-        #      - then we subtitute the function call by the appropriate one
-        #      - and we append its implementation to user_functions
-        nargs = len(sanitize(target))
-        precision = str(op)[0]
-        # TODO check this as in BLAS
-        assert( precision in ['i', 's', 'd', 'z', 'c'] )
-        print(nargs)
+        type_codomain = self._get_type(func, codomain=True)
+        type_domain   = self._get_type(func, domain=True)
 
-        print('> ', op, type(op))
+        if not type_codomain:
+            print('> Unable to compute type for {} '.format(stmt))
+            raise NotImplementedError('')
 
-        import sys; sys.exit(0)
+        type_domain   = TypeList(type_domain)
+        type_codomain = TypeVariable(type_codomain)
+        self._set_domain_type(type_domain, type_codomain)
+
+        self._visit(target, value=type_domain)
+        self._set_expr(type_codomain, stmt)
+
+        return type_codomain

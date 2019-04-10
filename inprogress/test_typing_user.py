@@ -103,23 +103,27 @@ def test_tmap_product(**settings):
 
     print('DONE.')
 
-##=========================================================
-#def test_reduce_add_product(**settings):
-#    L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
-#
-#    type_L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
-#    print(type_L.view())
-#
-#    print('DONE.')
+#=========================================================
+def test_reduce_function_list(**settings):
+    L = lambda xs: reduce(f2, xs)
+
+    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+
+    assert( isinstance( type_L, TypeVariable ) )
+
+    assert( isinstance( type_L.dtype, NativeReal ) )
+    assert( type_L.rank == 0 )
+    assert( type_L.precision == 8 )
+    assert( not type_L.is_stack_array )
 
 #########################################
 if __name__ == '__main__':
     settings = {'semantic_only' : True}
 
-    test_map_list(**settings)
-    test_map_zip(**settings)
-    test_map_product(**settings)
-    test_tmap_product(**settings)
+#    test_map_list(**settings)
+#    test_map_zip(**settings)
+#    test_map_product(**settings)
+#    test_tmap_product(**settings)
 
     # TODO
-#    test_reduce_add_product(**settings)
+    test_reduce_function_list(**settings)
