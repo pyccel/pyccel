@@ -11,6 +11,9 @@ from pyccel.functional.lambdify import _lambdify
 from pyccel.functional import TypeVariable, TypeTuple, TypeList
 from pyccel.functional import add, mul
 
+# TODO for compatibility
+pmap = map
+
 #=========================================================
 @pure
 @types('double')
@@ -26,14 +29,14 @@ def f2(x,y):
 
 #=========================================================
 def test_pmap_list(**settings):
-    L = lambda xs: pmap(f1, xs)
+    l = lambda xs: pmap(f1, xs)
 
-    L = _lambdify( L, namespace = {'f1': f1}, **settings )
+    L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
     xs = range(0, 1000)
     out = L(xs)
-#    expected = [0., 1, 4., 9., 16.]
-#    assert(np.allclose( out, expected ))
+    expected = list(l(xs)) # add list because the result of l is an iterator
+    assert(np.allclose( out, expected ))
 
 #=========================================================
 def test_pmap_zip(**settings):
