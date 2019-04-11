@@ -1703,6 +1703,10 @@ class For(Basic):
 
             body = Tuple(*(sympify(i, locals=local_sympify) for i in
                          body), sympify=False)
+
+        body = Tuple(*body)
+        local_vars = Tuple(*local_vars)
+
         return Basic.__new__(cls, target, iter, body, local_vars)
 
     @property

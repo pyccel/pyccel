@@ -27,9 +27,9 @@ def f2(x,y):
 
 #=========================================================
 def test_map_list(**settings):
-    L = lambda xs: map(f1, xs)
+    l = lambda xs: map(f1, xs)
 
-    type_L = _lambdify( L, namespace = {'f1': f1}, **settings )
+    type_L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
     assert( isinstance( type_L, TypeList ) )
 
@@ -43,9 +43,9 @@ def test_map_list(**settings):
 
 #=========================================================
 def test_map_zip(**settings):
-    L = lambda xs,ys:  map(f2, xs, ys)
+    l = lambda xs,ys:  map(f2, xs, ys)
 
-    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    type_L = _lambdify( l, namespace = {'f2': f2}, **settings )
 
     assert( isinstance( type_L, TypeList ) )
 
@@ -59,9 +59,9 @@ def test_map_zip(**settings):
 
 #=========================================================
 def test_map_product(**settings):
-    L = lambda xs,ys:  xmap(f2, xs, ys)
+    l = lambda xs,ys:  xmap(f2, xs, ys)
 
-    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    type_L = _lambdify( l, namespace = {'f2': f2}, **settings )
 
     assert( isinstance( type_L, TypeList ) )
 
@@ -77,18 +77,18 @@ def test_map_product(**settings):
 ## this test will raise an error, which is what we expect
 ## TODO add error exception and use pytest here
 #def test_tmap_zip(**settings):
-#    L = lambda xs,ys:  tmap(f2, zip(xs,ys))
+#    l = lambda xs,ys:  tmap(f2, zip(xs,ys))
 #
-#    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+#    type_L = _lambdify( l, namespace = {'f2': f2}, **settings )
 #    print(type_L.view())
 #
 #    print('DONE.')
 
 #=========================================================
 def test_tmap_product(**settings):
-    L = lambda xs,ys:  tmap(f2, xs, ys)
+    l = lambda xs,ys:  tmap(f2, xs, ys)
 
-    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    type_L = _lambdify( l, namespace = {'f2': f2}, **settings )
 
     assert( isinstance( type_L, TypeList ) )
 
@@ -105,9 +105,9 @@ def test_tmap_product(**settings):
 
 #=========================================================
 def test_reduce_function_list(**settings):
-    L = lambda xs: reduce(add, map(f1, xs))
+    l = lambda xs: reduce(add, map(f1, xs))
 
-    type_L = _lambdify( L, namespace = {'f1': f1}, **settings )
+    type_L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
     assert( isinstance( type_L, TypeVariable ) )
 

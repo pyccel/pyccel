@@ -4,7 +4,7 @@ import os
 from os.path import join, dirname
 
 from sympy import Symbol, Lambda, Function, Dummy
-from sympy import Tuple, IndexedBase
+from sympy import Tuple, IndexedBase, Indexed
 from sympy.core.function import AppliedUndef
 from sympy.core.function import UndefinedFunction
 from sympy import Integer, Float
@@ -413,6 +413,9 @@ class MainBlock(BasicBlock):
             body += [Pass()]
         # ...
 
+        decs = Tuple(*decs)
+        body = Tuple(*body)
+
         return Basic.__new__( cls, decs, body )
 
     @property
@@ -436,8 +439,6 @@ class GeneratorBlock(BasicBlock):
         nowait      = settings.pop('nowait')
         schedule    = settings.pop('schedule')
         chunk       = settings.pop('chunk')
-
-        reduction   = settings.pop('reduction', None)
         # ...
 
         # ...
@@ -452,16 +453,6 @@ class GeneratorBlock(BasicBlock):
 
         decs = Tuple(*decs)
         body = Tuple(*body)
-        # ...
-
-        # ... add initial values for reduced variables
-        if reduction:
-            _reduction_init = lambda i: _get_default_value( i, op=reduction.op )
-            reduction_stmts = [Assign(r, _reduction_init(r)) for r in reduction.arguments]
-
-            # update declarations
-            decs = list(decs) + reduction_stmts
-            decs = Tuple(*decs)
         # ...
 
         # ... define private variables of the current block
@@ -490,23 +481,94 @@ class GeneratorBlock(BasicBlock):
             # ...
 
             # ...
-            if reduction:
-                assert( isinstance( reduction, Reduction ) )
-
-                reduction_args = [reduction.op] + list(reduction.arguments)
-                clauses += [OMP_Reduction( *reduction_args ) ]
-            # ...
-
-            # ...
             assert(len(body) == 1)
             loop = body[0]
-            body = [OMP_For(loop, clauses, nowait)]
+            body = [OMP_For(loop, Tuple(*clauses), nowait)]
+            # ...
+        # ...
+
+        decs = Tuple(*decs)
+        body = Tuple(*body)
+
+        return Basic.__new__( cls, generator, decs, body, private_vars )
+
+    @property
+    def generator(self):
+        return self._args[0]
+
+    @property
+    def decs(self):
+        return self._args[1]
+
+    @property
+    def body(self):
+        return self._args[2]
+
+    @property
+    def private(self):
+        return self._args[3]
+
+
+#=========================================================================
+class ReductionGeneratorBlock(GeneratorBlock):
+    """."""
+#    def __new__( cls, block, reduction, **kwargs ):
+    def __new__( cls, generator, decs, body, private_vars, reduction, **kwargs ):
+
+        # ...
+        settings = kwargs.copy()
+
+        accelerator = settings.pop('accelerator')
+        # ...
+
+#        # ...
+#        decs = block.decs
+#        body = block.decs
+#        # ...
+
+        assert( isinstance( reduction, Reduction ) )
+
+        # ... add initial values for reduced variables
+        _reduction_init = lambda i: _get_default_value( i, op=reduction.op )
+        reduction_stmts = [Assign(r, _reduction_init(r)) for r in reduction.arguments]
+
+        # update declarations
+        decs = list(decs) + reduction_stmts
+        decs = Tuple(*decs)
+        # ...
+
+        # ... define private variables of the current block
+        # TODO add private vars from internal blocks
+        private_vars = Tuple(*private_vars)
+        # ...
+
+        # ... add parallel loop
+        if accelerator:
+            if not( accelerator == 'omp' ):
+                raise NotImplementedError('Only OpenMP is available')
+
+            # ...
+            omp_fors = list(body.atoms(OMP_For))
+            omp_for = [i for i in body if isinstance(i, OMP_For)]
+            assert(len(omp_for) == 1)
+            omp_for = omp_for[0]
+
+            loop    = omp_for.loop
+            clauses = list(omp_for.clauses)
+            nowait  = omp_for.nowait
+
+            # ...
+            reduction_args = [reduction.op] + list(reduction.arguments)
+            clauses += [OMP_Reduction( *reduction_args ) ]
+            clauses = Tuple(*clauses)
             # ...
 
-#            # TODO this is a hack to handle the last comment after a loop, so that
-#            #      it can be parsed and added to the For
-#            body += [Pass()]
+            new = OMP_For(loop, clauses, nowait)
+            body = body.subs(omp_for, new)
         # ...
+
+        decs = Tuple(*decs)
+        body = Tuple(*body)
 
         return Basic.__new__( cls, generator, decs, body, private_vars )
 
@@ -593,7 +655,7 @@ def _build_block( generator, stmts ):
                     for v in xs:
                         body = [Assign(x, IndexedBase(v.name)[i])] + body
 
-            body = [For(i, Range(0, n), body, strict=False)]
+            body = [For(i, Range(0, n), Tuple(*body), strict=False)]
 
     else:
         for i,n,x,xs in zip(index, length, iterator, iterable):
@@ -605,7 +667,7 @@ def _build_block( generator, stmts ):
                 for v in xs:
                     body = [Assign(x, IndexedBase(v.name)[i])] + body
 
-            body = [For(i, Range(0, n), body, strict=False)]
+            body = [For(i, Range(0, n), Tuple(*body), strict=False)]
     # ...
 
     return decs, body
@@ -795,110 +857,7 @@ class AST(object):
                 return self._visit_functor_tmap(stmt)
 
             elif name == 'reduce':
-                func, target = stmt.args
-                # TODO
-                op = '+'
-#                print('> target   :: ', target)
-
-                # ... get the codomain type
-                type_codomain  = self.main_type
-                type_domain    = self.d_domain_types[type_codomain]
-                # ...
-
-                # ... construct the generator
-                generator = self._visit(target)
-                if isinstance(generator, Variable):
-                    generator = VariableGenerator(generator)
-
-                assert( isinstance( generator, BasicGenerator ) )
-                # ...
-
-                # ... construct the results
-                results = self._visit(type_codomain)
-
-                # compute depth of the type list
-                # TODO do we still need this?
-                depth_out = 0
-                # ...
-
-                # ...
-                index    = generator.index
-                iterator = generator.iterator
-                # ...
-
-                # ... list of all statements
-                stmts = []
-                # ...
-
-                # ... we set the generator after we treat map/tmap
-                self.set_generator(results, generator)
-                # ...
-
-                # ... apply the function to arguments
-                if isinstance(iterator, Tuple):
-                    rhs = func( *iterator )
-
-                else:
-                    rhs = func( iterator )
-                # ...
-
-                # ... create lhs
-                lhs = generator.iterator
-                # TODO check this
-                if isinstance(lhs, Tuple) and len(lhs) == 1:
-                    lhs = lhs[0]
-                # ...
-
-                # ... create lhs for storing the result
-                if isinstance(results, Variable):
-                    results = [results]
-
-                else:
-                    msg = '{} not available'.format(type(results))
-                    raise NotImplementedError(msg)
-
-                if not isinstance(index, Tuple):
-                    index = [index]
-
-                else:
-                    index = list([i for i in index])
-
-                lhs = []
-                for r in results:
-                    m = r.rank - depth_out
-                    ind = [Slice(None, None)] * m
-                    if ind:
-                        if len(ind) == 1:
-                            ind = ind[0]
-
-                        lhs.append(IndexedBase(r.name)[ind])
-
-                    else:
-                        lhs.append(Symbol(r.name))
-
-                lhs = Tuple(*lhs)
-                if len(lhs) == 1:
-                    lhs = lhs[0]
-                # ...
-
-                # ... create core statement
-                stmts += [AugAssign(lhs, op, rhs)]
-                # ...
-
-                # ... add reduction
-                reduction = Reduction( op, results )
-                # ...
-
-                # TODO USE THIS
-#                expr = self.get_expr_from_type()
-
-                # return the associated for loops
-                return GeneratorBlock ( generator, stmts,
-                                        reduction   = reduction,
-                                        accelerator = self.accelerator,
-                                        nowait      = self.nowait,
-                                        schedule    = self.schedule,
-                                        chunk       = self.chunk )
+                return self._visit_functor_reduce(stmt)
 
             elif name == 'zip':
                 self.main_type = type_domain
@@ -1225,6 +1184,139 @@ class AST(object):
                                 schedule    = self.schedule,
                                 chunk       = self.chunk )
 
+    def _visit_functor_reduce(self, stmt):
+        arguments = stmt.args
+
+        assert( len(arguments) == 2 )
+        op     = arguments[0]
+        target = arguments[1]
+
+        # TODO
+        op = '+'
+
+        # ... get the codomain type
+        type_codomain  = self.main_type
+        type_domain    = self.d_domain_types[type_codomain]
+        # ...
+
+        # ... construct the results
+        results = self._visit(type_codomain)
+
+        # compute depth of the type list
+        # TODO do we still need this?
+        depth_out = 0
+        # ...
+
+        # ... construct the generator
+        block = self._visit(target)
+        assert( isinstance( block, GeneratorBlock ) )
+
+        generator = block.generator
+        if isinstance(generator, Variable):
+            generator = VariableGenerator(generator)
+
+        assert( isinstance( generator, BasicGenerator ) )
+        # ...
+
+        # ...
+        index    = generator.index
+        iterator = generator.iterator
+        # ...
+
+        # ... list of all statements
+        stmts = []
+        # ...
+
+        # ... we set the generator after we treat map/tmap
+        self.set_generator(results, generator)
+        # ...
+
+        # ... create lhs
+        lhs = generator.iterator
+        # TODO check this
+        if isinstance(lhs, Tuple) and len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create lhs for storing the result
+        if isinstance(results, Variable):
+            results = [results]
+
+        else:
+            msg = '{} not available'.format(type(results))
+            raise NotImplementedError(msg)
+
+        if not isinstance(index, Tuple):
+            index = [index]
+
+        else:
+            index = list([i for i in index])
+
+        lhs = []
+        for r in results:
+            m = r.rank - depth_out
+            ind = [Slice(None, None)] * m
+            if ind:
+                if len(ind) == 1:
+                    ind = ind[0]
+
+                lhs.append(IndexedBase(r.name)[ind])
+
+            else:
+                lhs.append(Symbol(r.name))
+
+        lhs = Tuple(*lhs)
+        if len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ...
+        if isinstance(lhs, (list, tuple, Tuple)):
+            raise NotImplementedError()
+        # ...
+
+        assign_stmts = list(block.body.atoms(Assign))
+
+        # ...
+        lhs_name = lhs.name
+        def _get_name(i):
+            if isinstance(i, Symbol):
+                return i.name
+
+            elif isinstance(i, IndexedBase):
+                return str(i)
+
+            elif isinstance(i, Indexed):
+                return _get_name(i.base)
+
+            else:
+                raise NotImplementedError()
+
+        ls = [i for i in assign_stmts if _get_name(i.lhs) == lhs_name]
+        if len(ls) > 1:
+            raise NotImplementedError()
+
+        assign_iterable = ls[0]
+        rhs = assign_iterable.rhs
+        new_stmt = AugAssign(lhs, op, rhs)
+
+        body = block.body.subs(assign_iterable, new_stmt)
+
+        decs = block.decs
+        private_vars = block.generator.private
+        # ...
+
+        # ... add reduction
+        reduction = Reduction( op, results )
+        # ...
+
+        # TODO USE THIS
+#                expr = self.get_expr_from_type()
+
+        # return the associated for loops
+        return ReductionGeneratorBlock ( generator, decs, body, private_vars, reduction,
+                                         accelerator = self.accelerator )
+
 
     def _visit_Lambda(self, stmt):
         # ...
@@ -1372,6 +1464,9 @@ class AST(object):
             msg = 'Expecting a Tuple or Variable, but {} was given'
             msg = msg.format(type(var))
             raise TypeError(msg)
+
+    def _visit_GeneratorBlock(self, stmt):
+        return stmt
 
     def get_expr_from_type(self, t_var=None):
         if t_var is None:
