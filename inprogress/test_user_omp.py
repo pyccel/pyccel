@@ -134,13 +134,53 @@ def test_reduce_function_list(**settings):
     te = time.time()
     print('[pyccel]  elapsed time = ', te-tb)
 
+#=========================================================
+def test_reduce_function_zip(**settings):
+    l = lambda xs,ys:  reduce(f2, zip(xs,ys))
+
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    nx = 5000
+    xs = range(0, nx)
+
+    ny = 5000
+    ys = range(0, ny)
+
+    tb = time.time()
+    out = L(xs, ys)
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
+
+#=========================================================
+def test_reduce_function_product(**settings):
+    l = lambda xs,ys:  reduce(f2, product(xs,ys))
+
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    nx = 5000
+    xs = range(0, nx)
+
+    ny = 5000
+    ys = range(0, ny)
+
+    tb = time.time()
+    out = L(xs, ys)
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
+
 
 #########################################
 if __name__ == '__main__':
     settings = {'accelerator': 'openmp'}
 
+    print('======== map    ========')
     test_map_list(**settings)
     test_map_zip(**settings)
     test_map_product(**settings)
     test_tmap_product(**settings)
+
+    print('======== reduce ========')
     test_reduce_function_list(**settings)
+    test_reduce_function_zip(**settings)
+    test_reduce_function_product(**settings)
+##    test_treduce_function_product(**settings)

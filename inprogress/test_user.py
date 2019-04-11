@@ -81,7 +81,44 @@ def test_reduce_function_list(**settings):
 
     xs = range(1, 4)
     out = L(xs)
-    assert( out == 14.0 )
+    expected = 14.0
+    assert( out == expected )
+
+#=========================================================
+def test_reduce_function_zip(**settings):
+    l = lambda xs,ys:  reduce(f2, zip(xs,ys))
+
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    xs = range(0, 5)
+    ys = range(0, 5)
+    out = L(xs, ys)
+    expected = 30.0
+    assert( out == expected )
+
+#=========================================================
+def test_reduce_function_product(**settings):
+    l = lambda xs,ys:  reduce(f2, product(xs,ys))
+
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+    xs = range(1, 4)
+    ys = range(10, 14)
+    out = L(xs, ys)
+    expected = 276.0
+    assert( out == expected )
+
+##=========================================================
+#def test_treduce_function_product(**settings):
+#    l = lambda xs,ys:  treduce(f2, product(xs,ys))
+#
+#    L = _lambdify( l, namespace = {'f2': f2}, **settings )
+#    xs = range(1, 4)
+#    ys = range(10, 14)
+#    out = L(xs, ys)
+#    expected = [[10., 11., 12., 13.],
+#                [20., 22., 24., 26.],
+#                [30., 33., 36., 39.]]
+#    assert(np.allclose( out, expected ))
 
 
 #########################################
@@ -90,8 +127,14 @@ if __name__ == '__main__':
 #    settings = {'ast_only' : True}
 #    settings = {'printing_only' : True}
 
+    print('======== map    ========')
     test_map_list(**settings)
     test_map_zip(**settings)
     test_map_product(**settings)
     test_tmap_product(**settings)
+
+    print('======== reduce ========')
     test_reduce_function_list(**settings)
+    test_reduce_function_zip(**settings)
+    test_reduce_function_product(**settings)
+##    test_treduce_function_product(**settings)
