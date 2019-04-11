@@ -120,10 +120,8 @@ def test_reduce_function_list(**settings):
 if __name__ == '__main__':
     settings = {'semantic_only' : True}
 
-#    test_map_list(**settings)
-#    test_map_zip(**settings)
-#    test_map_product(**settings)
-#    test_tmap_product(**settings)
-
-    # TODO
+    test_map_list(**settings)
+    test_map_zip(**settings)
+    test_map_product(**settings)
+    test_tmap_product(**settings)
     test_reduce_function_list(**settings)
