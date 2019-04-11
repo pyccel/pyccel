@@ -23,7 +23,6 @@ from pyccel.ast.core import Slice, String
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from pyccel.ast.datatypes import get_default_value
 from pyccel.parser import Parser
-from pyccel.functional import Where
 
 #==============================================================================
 def get_decorators(cls):

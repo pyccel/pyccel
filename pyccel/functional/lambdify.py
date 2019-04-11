@@ -34,7 +34,6 @@ from pyccel.codegen.printing.pycode import pycode
 from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.utilities import build_types_decorator
 from pyccel.ast.datatypes import get_default_value
-from pyccel.functional import Where
 from pyccel.parser import Parser as PyccelParser
 
 from .syntax   import parse as parse_lambda
