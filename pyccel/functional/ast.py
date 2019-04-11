@@ -18,11 +18,14 @@ from pyccel.ast.core import Slice
 from pyccel.ast.core import Variable, FunctionDef, Assign, AugAssign
 from pyccel.ast.core import Return, Pass, Import, String, FunctionCall
 from pyccel.ast.core  import For, Range, Len, Print
+from pyccel.ast.datatypes import get_default_value
+from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from pyccel.ast.basic import Basic
 
 from pyccel.ast.parallel.openmp import OMP_For, OMP_Private, OMP_Parallel
 from pyccel.ast.parallel.openmp import OMP_Schedule
 from pyccel.ast.parallel.openmp import OMP_NumThread
+from pyccel.ast.parallel.openmp import OMP_Reduction
 
 from .datatypes import TypeVariable, TypeTuple, TypeList
 from .semantic import Parser as SemanticParser
@@ -93,6 +96,41 @@ def new_variable( dtype, var, tag = None, prefix = None, kind = None ):
 
     else:
         raise NotImplementedError('{} not available'.format(type(var)))
+
+
+#==============================================================================
+def _get_default_value(var, op=None):
+    """Returns the default value of a variable depending on its datatype and the
+    used operation."""
+    dtype = var.dtype
+    if op is None:
+        return get_default_value(dtype)
+
+    if isinstance(dtype, NativeInteger):
+        if op == '*':
+            return 1
+
+        else:
+            return 0
+
+    elif isinstance(dtype, NativeReal):
+        if op == '*':
+            return 1.0
+
+        else:
+            return 0.0
+
+    elif isinstance(dtype, NativeComplex):
+        # TODO check if this fine with pyccel
+        if op == '*':
+            return 1.0
+
+        else:
+            return 0.0
+
+#    elif isinstance(dtype, NativeBool):
+
+    raise NotImplementedError('TODO')
 
 #=========================================================================
 class LambdaFunctionDef(FunctionDef):
@@ -309,6 +347,24 @@ class ProductGenerator(BasicGenerator):
         self._is_list = True
 
 #=========================================================================
+class Reduction(Basic):
+    def __new__( cls, op, arguments ):
+#        assert( isinstance( generator, BasicGenerator ) )
+        assert( isinstance( op, str ) )
+        assert( op in ['+', '-'] )
+
+        return Basic.__new__( cls, op, arguments )
+
+    @property
+    def op(self):
+        return self._args[0]
+
+    @property
+    def arguments(self):
+        return self._args[1]
+
+
+#=========================================================================
 class BasicBlock(Basic):
     pass
 
@@ -380,6 +436,8 @@ class GeneratorBlock(BasicBlock):
         nowait      = settings.pop('nowait')
         schedule    = settings.pop('schedule')
         chunk       = settings.pop('chunk')
+
+        reduction   = settings.pop('reduction', None)
         # ...
 
         # ...
@@ -394,6 +452,16 @@ class GeneratorBlock(BasicBlock):
 
         decs = Tuple(*decs)
         body = Tuple(*body)
+        # ...
+
+        # ... add initial values for reduced variables
+        if reduction:
+            _reduction_init = lambda i: _get_default_value( i, op=reduction.op )
+            reduction_stmts = [Assign(r, _reduction_init(r)) for r in reduction.arguments]
+
+            # update declarations
+            decs = list(decs) + reduction_stmts
+            decs = Tuple(*decs)
         # ...
 
         # ... define private variables of the current block
@@ -419,6 +487,14 @@ class GeneratorBlock(BasicBlock):
 
             if private_vars:
                 clauses += [OMP_Private(*private_vars)]
+            # ...
+
+            # ...
+            if reduction:
+                assert( isinstance( reduction, Reduction ) )
+
+                reduction_args = [reduction.op] + list(reduction.arguments)
+                clauses += [OMP_Reduction( *reduction_args ) ]
             # ...
 
             # ...
@@ -702,6 +778,11 @@ class AST(object):
             type_domain    = self.d_domain_types[type_codomain]
             # ...
 
+#            print('----- types ')
+#            print(self.d_types)
+#            print('----- associations ')
+#            print(self.d_domain_types)
+
 #            print('>>>>>>> {}'.format(name))
 #            print('> codomain :: ', type_codomain)
 #            print('              ', type_codomain.view())
@@ -717,6 +798,8 @@ class AST(object):
                 generator = self._visit(target)
                 if isinstance(generator, Variable):
                     generator = VariableGenerator(generator)
+
+                assert( isinstance( generator, BasicGenerator ) )
                 # ...
 
                 # ... construct the results
@@ -820,14 +903,16 @@ class AST(object):
 
             elif name == 'reduce':
                 func, target = stmt.args
-                print('> target   :: ', target)
+                # TODO
+                op = '+'
+#                print('> target   :: ', target)
 
                 # ... construct the generator
                 generator = self._visit(target)
-                print(generator)
-                import sys; sys.exit(0)
                 if isinstance(generator, Variable):
                     generator = VariableGenerator(generator)
+
+                assert( isinstance( generator, BasicGenerator ) )
                 # ...
 
                 # ... construct the results
@@ -845,27 +930,6 @@ class AST(object):
 
                 # ... list of all statements
                 stmts = []
-                # ...
-
-                # ... use a multi index in the case of zip
-                if isinstance(generator, ProductGenerator):
-
-                    assert(isinstance(index, (list, tuple, Tuple)))
-
-                    length = generator.length
-                    if name == 'map':
-                        multi_index = generator.multi_index
-                        generator.set_as_list()
-
-                        # TODO check formula
-                        value = index[0]
-                        for ix, nx in zip(index[1:], length[::-1][:-1]):
-                            value = nx*value + ix
-
-                        stmts += [Assign(multi_index, value)]
-
-                        # update index to use multi index
-                        index = multi_index
                 # ...
 
                 # ... we set the generator after we treat map/tmap
@@ -904,11 +968,15 @@ class AST(object):
                 lhs = []
                 for r in results:
                     m = r.rank - depth_out
-                    ind = index + [Slice(None, None)] * m
-                    if len(ind) == 1:
-                        ind = ind[0]
+                    ind = [Slice(None, None)] * m
+                    if ind:
+                        if len(ind) == 1:
+                            ind = ind[0]
 
-                    lhs.append(IndexedBase(r.name)[ind])
+                        lhs.append(IndexedBase(r.name)[ind])
+
+                    else:
+                        lhs.append(Symbol(r.name))
 
                 lhs = Tuple(*lhs)
                 if len(lhs) == 1:
@@ -916,7 +984,11 @@ class AST(object):
                 # ...
 
                 # ... create core statement
-                stmts += [Assign(lhs, rhs)]
+                stmts += [AugAssign(lhs, op, rhs)]
+                # ...
+
+                # ... add reduction
+                reduction = Reduction( op, results )
                 # ...
 
                 # TODO USE THIS
@@ -924,6 +996,7 @@ class AST(object):
 
                 # return the associated for loops
                 return GeneratorBlock ( generator, stmts,
+                                        reduction   = reduction,
                                         accelerator = self.accelerator,
                                         nowait      = self.nowait,
                                         schedule    = self.schedule,
@@ -1001,8 +1074,11 @@ class AST(object):
         # ...
 
         # ...
+#        decorators = {'types':         build_types_decorator(args),
+#                      'external_call': []}
+
         decorators = {'types':         build_types_decorator(args),
-                      'external_call': []}
+                      'external': []}
 
         tag         = random_string( 6 )
         name      = 'lambda_{}'.format( tag )

@@ -74,6 +74,9 @@ class TypeVariable(BasicTypeVariable):
         attributs = ','.join(str(i) for i in attributs)
         return 'TypeVariable({})'.format(attributs)
 
+    def duplicate(self):
+        return TypeVariable( self )
+
 #=========================================================================
 class TypeTuple(BasicTypeVariable):
     def __new__( cls, var, rank=0 ):
@@ -114,6 +117,9 @@ class TypeTuple(BasicTypeVariable):
         """inspects the variable."""
         attributs = ','.join(i.view() for i in self.types)
         return 'TypeTuple({})'.format(attributs)
+
+    def duplicate(self):
+        raise NotImplementedError('')
 
 #=========================================================================
 class TypeList(BasicTypeVariable):
@@ -165,6 +171,9 @@ class TypeList(BasicTypeVariable):
     def view(self):
         """inspects the variable."""
         return 'TypeList({})'.format(self.parent.view())
+
+    def duplicate(self):
+        raise NotImplementedError('')
 
 #=========================================================================
 # user friendly function

@@ -26,9 +26,9 @@ def f2(x,y):
 
 #=========================================================
 def test_map_list(**settings):
-    L = lambda xs: map(f1, xs)
+    l = lambda xs: map(f1, xs)
 
-    L = _lambdify( L, namespace = {'f1': f1}, **settings )
+    L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
     xs = range(0, 5)
     out = L(xs)
@@ -37,9 +37,9 @@ def test_map_list(**settings):
 
 #=========================================================
 def test_map_zip(**settings):
-    L = lambda xs,ys:  map(f2, zip(xs,ys))
+    l = lambda xs,ys:  map(f2, zip(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
 
     xs = range(0, 5)
     ys = range(0, 5)
@@ -49,9 +49,9 @@ def test_map_zip(**settings):
 
 #=========================================================
 def test_map_product(**settings):
-    L = lambda xs,ys:  map(f2, product(xs,ys))
+    l = lambda xs,ys:  map(f2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
     xs = range(1, 4)
     ys = range(10, 14)
     out = L(xs, ys)
@@ -62,9 +62,9 @@ def test_map_product(**settings):
 
 #=========================================================
 def test_tmap_product(**settings):
-    L = lambda xs,ys:  tmap(f2, product(xs,ys))
+    l = lambda xs,ys:  tmap(f2, product(xs,ys))
 
-    L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( l, namespace = {'f2': f2}, **settings )
     xs = range(1, 4)
     ys = range(10, 14)
     out = L(xs, ys)
@@ -75,24 +75,23 @@ def test_tmap_product(**settings):
 
 #=========================================================
 def test_reduce_function_list(**settings):
-    L = lambda xs: reduce(f2, xs)
+    l = lambda xs: reduce(f1, xs)
 
-    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    L = _lambdify( l, namespace = {'f1': f1}, **settings )
 
     xs = range(1, 4)
-    ys = range(10, 14)
-    out = L(xs, ys)
-
+    out = L(xs)
+    assert( out == 14.0 )
 
 
 #########################################
 if __name__ == '__main__':
     settings = {}
-    settings = {'ast_only' : True}
+#    settings = {'ast_only' : True}
 #    settings = {'printing_only' : True}
 
-#    test_map_list(**settings)
-#    test_map_zip(**settings)
-#    test_map_product(**settings)
-#    test_tmap_product(**settings)
+    test_map_list(**settings)
+    test_map_zip(**settings)
+    test_map_product(**settings)
+    test_tmap_product(**settings)
     test_reduce_function_list(**settings)

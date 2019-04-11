@@ -160,8 +160,8 @@ def _lambdify(func, namespace={}, **kwargs):
 
     module_name = 'mod_{}'.format(func_name)
     write_code('{}.py'.format(module_name), code, folder=folder)
-    print(code)
-    sys.exit(0)
+#    print(code)
+#    sys.exit(0)
 
     sys.path.append(folder)
     package = importlib.import_module( module_name )
@@ -185,7 +185,7 @@ def _lambdify(func, namespace={}, **kwargs):
 #    ####### DEBUG
 #    return f2py_func
 
-    if not typed_functions:
+    if not typed_functions or not func.is_procedure:
         return f2py_func
     # ...
 

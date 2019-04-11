@@ -121,14 +121,18 @@ def test_tmap_product(**settings):
 #    print('[python]  elapsed time = ', te-tb)
 #    assert(np.allclose( out, expected ))
 
-##=========================================================
-#def test_reduce_add_product(**settings):
-#    L = lambda xs,ys: reduce(dadd_2, product(xs,ys))
-#
-#    L = _lambdify( L, namespace = {'dadd_2': dadd_2}, **settings )
-#    print(type_L.view())
-#
-#    print('DONE.')
+#=========================================================
+def test_reduce_function_list(**settings):
+    l = lambda xs: reduce(f1, xs)
+
+    L = _lambdify( l, namespace = {'f1': f1}, **settings )
+
+    nx = 5000000
+    xs = range(1, nx)
+    tb = time.time()
+    out = L(xs)
+    te = time.time()
+    print('[pyccel]  elapsed time = ', te-tb)
 
 
 #########################################
@@ -139,6 +143,4 @@ if __name__ == '__main__':
     test_map_zip(**settings)
     test_map_product(**settings)
     test_tmap_product(**settings)
-
-#    # TODO
-##    test_reduce_add_product(**settings)
+    test_reduce_function_list(**settings)

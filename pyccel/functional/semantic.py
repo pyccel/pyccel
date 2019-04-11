@@ -491,7 +491,7 @@ class Parser(object):
             raise NotImplementedError('')
 
         type_domain   = TypeList(type_domain)
-        type_codomain = TypeVariable(type_codomain)
+        type_codomain = type_codomain.duplicate()
         self._set_domain_type(type_domain, type_codomain)
 
         self._visit(target, value=type_domain)
