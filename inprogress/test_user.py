@@ -37,7 +37,7 @@ def test_map_list(**settings):
 
 #=========================================================
 def test_map_zip(**settings):
-    l = lambda xs,ys:  map(f2, zip(xs,ys))
+    l = lambda xs,ys:  map(f2, xs, ys)
 
     L = _lambdify( l, namespace = {'f2': f2}, **settings )
 
@@ -49,7 +49,7 @@ def test_map_zip(**settings):
 
 #=========================================================
 def test_map_product(**settings):
-    l = lambda xs,ys:  map(f2, product(xs,ys))
+    l = lambda xs,ys:  xmap(f2, xs, ys)
 
     L = _lambdify( l, namespace = {'f2': f2}, **settings )
     xs = range(1, 4)
@@ -62,7 +62,7 @@ def test_map_product(**settings):
 
 #=========================================================
 def test_tmap_product(**settings):
-    l = lambda xs,ys:  tmap(f2, product(xs,ys))
+    l = lambda xs,ys:  tmap(f2, xs, ys)
 
     L = _lambdify( l, namespace = {'f2': f2}, **settings )
     xs = range(1, 4)
@@ -127,14 +127,14 @@ if __name__ == '__main__':
 #    settings = {'ast_only' : True}
 #    settings = {'printing_only' : True}
 
-    print('======== map    ========')
+#    print('======== map    ========')
     test_map_list(**settings)
     test_map_zip(**settings)
     test_map_product(**settings)
     test_tmap_product(**settings)
 
-    print('======== reduce ========')
-    test_reduce_function_list(**settings)
-    test_reduce_function_zip(**settings)
-    test_reduce_function_product(**settings)
-##    test_treduce_function_product(**settings)
+#    print('======== reduce ========')
+#    test_reduce_function_list(**settings)
+#    test_reduce_function_zip(**settings)
+#    test_reduce_function_product(**settings)
+###    test_treduce_function_product(**settings)

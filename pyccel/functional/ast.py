@@ -773,11 +773,6 @@ class AST(object):
 
         elif name in _internal_applications:
 
-            # ... get the codomain type
-            type_codomain  = self.main_type
-            type_domain    = self.d_domain_types[type_codomain]
-            # ...
-
 #            print('----- types ')
 #            print(self.d_types)
 #            print('----- associations ')
@@ -790,122 +785,25 @@ class AST(object):
 #            print('              ', type_domain.view())
 #            print('')
 
-            if name in _internal_map_functors:
-                func, target = stmt.args
-#                print('> target   :: ', target)
+            if name == 'map':
+                return self._visit_functor_map(stmt)
 
-                # ... construct the generator
-                generator = self._visit(target)
-                if isinstance(generator, Variable):
-                    generator = VariableGenerator(generator)
+            elif name == 'xmap':
+                return self._visit_functor_xmap(stmt)
 
-                assert( isinstance( generator, BasicGenerator ) )
-                # ...
-
-                # ... construct the results
-                results = self._visit(type_codomain)
-
-                # compute depth of the type list
-                # TODO do we still need this?
-                depth_out = len(list(type_codomain.atoms(TypeList)))
-                # ...
-
-                # ...
-                index    = generator.index
-                iterator = generator.iterator
-                # ...
-
-                # ... list of all statements
-                stmts = []
-                # ...
-
-                # ... use a multi index in the case of zip
-                if isinstance(generator, ProductGenerator):
-
-                    assert(isinstance(index, (list, tuple, Tuple)))
-
-                    length = generator.length
-                    if name == 'map':
-                        multi_index = generator.multi_index
-                        generator.set_as_list()
-
-                        # TODO check formula
-                        value = index[0]
-                        for ix, nx in zip(index[1:], length[::-1][:-1]):
-                            value = nx*value + ix
-
-                        stmts += [Assign(multi_index, value)]
-
-                        # update index to use multi index
-                        index = multi_index
-                # ...
-
-                # ... we set the generator after we treat map/tmap
-                self.set_generator(results, generator)
-                # ...
-
-                # ... apply the function to arguments
-                if isinstance(iterator, Tuple):
-                    rhs = func( *iterator )
-
-                else:
-                    rhs = func( iterator )
-                # ...
-
-                # ... create lhs
-                lhs = generator.iterator
-                # TODO check this
-                if isinstance(lhs, Tuple) and len(lhs) == 1:
-                    lhs = lhs[0]
-                # ...
-
-                # ... create lhs for storing the result
-                if isinstance(results, Variable):
-                    results = [results]
-
-                else:
-                    msg = '{} not available'.format(type(results))
-                    raise NotImplementedError(msg)
-
-                if not isinstance(index, Tuple):
-                    index = [index]
-
-                else:
-                    index = list([i for i in index])
-
-                lhs = []
-                for r in results:
-                    m = r.rank - depth_out
-                    ind = index + [Slice(None, None)] * m
-                    if len(ind) == 1:
-                        ind = ind[0]
-
-                    lhs.append(IndexedBase(r.name)[ind])
-
-                lhs = Tuple(*lhs)
-                if len(lhs) == 1:
-                    lhs = lhs[0]
-                # ...
-
-                # ... create core statement
-                stmts += [Assign(lhs, rhs)]
-                # ...
-
-                # TODO USE THIS
-#                expr = self.get_expr_from_type()
-
-                # return the associated for loops
-                return GeneratorBlock ( generator, stmts,
-                                        accelerator = self.accelerator,
-                                        nowait      = self.nowait,
-                                        schedule    = self.schedule,
-                                        chunk       = self.chunk )
+            elif name == 'tmap':
+                return self._visit_functor_tmap(stmt)
 
             elif name == 'reduce':
                 func, target = stmt.args
                 # TODO
                 op = '+'
 #                print('> target   :: ', target)
+
+                # ... get the codomain type
+                type_codomain  = self.main_type
+                type_domain    = self.d_domain_types[type_codomain]
+                # ...
 
                 # ... construct the generator
                 generator = self._visit(target)
@@ -1020,6 +918,313 @@ class AST(object):
 
         # Unknown object, we raise an error.
         raise TypeError('{node} not yet available'.format(node=type(stmt)))
+
+    def _visit_functor_map(self, stmt):
+        func   = stmt.args[0]
+        args   = stmt.args[1:]
+
+        # ... get the codomain type
+        type_codomain  = self.main_type
+        type_domain    = self.d_domain_types[type_codomain]
+        # ...
+
+        # ... construct the generator
+        target = [self._visit(i) for i in args]
+
+        if len(target) == 1:
+            target = target[0]
+            assert( isinstance(target, Variable) )
+
+            generator = VariableGenerator(target)
+
+        else:
+            generator = ZipGenerator(*target)
+        # ...
+
+        # ... construct the results
+        results = self._visit(type_codomain)
+
+        # compute depth of the type list
+        # TODO do we still need this?
+        depth_out = len(list(type_codomain.atoms(TypeList)))
+        # ...
+
+        # ...
+        index    = generator.index
+        iterator = generator.iterator
+        # ...
+
+        # ... list of all statements
+        stmts = []
+        # ...
+
+        # ... we set the generator after we treat map/tmap
+        self.set_generator(results, generator)
+        # ...
+
+        # ... apply the function to arguments
+        if isinstance(iterator, Tuple):
+            rhs = func( *iterator )
+
+        else:
+            rhs = func( iterator )
+        # ...
+
+        # ... create lhs
+        lhs = generator.iterator
+        # TODO check this
+        if isinstance(lhs, Tuple) and len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create lhs for storing the result
+        if isinstance(results, Variable):
+            results = [results]
+
+        else:
+            msg = '{} not available'.format(type(results))
+            raise NotImplementedError(msg)
+
+        if not isinstance(index, Tuple):
+            index = [index]
+
+        else:
+            index = list([i for i in index])
+
+        lhs = []
+        for r in results:
+            m = r.rank - depth_out
+            ind = index + [Slice(None, None)] * m
+            if len(ind) == 1:
+                ind = ind[0]
+
+            lhs.append(IndexedBase(r.name)[ind])
+
+        lhs = Tuple(*lhs)
+        if len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create core statement
+        stmts += [Assign(lhs, rhs)]
+        # ...
+
+        # TODO USE THIS
+#                expr = self.get_expr_from_type()
+
+        # return the associated for loops
+        return GeneratorBlock ( generator, stmts,
+                                accelerator = self.accelerator,
+                                nowait      = self.nowait,
+                                schedule    = self.schedule,
+                                chunk       = self.chunk )
+
+    def _visit_functor_xmap(self, stmt):
+        func   = stmt.args[0]
+        args   = stmt.args[1:]
+
+        assert(len(args) > 1)
+
+        # ... get the codomain type
+        type_codomain  = self.main_type
+        type_domain    = self.d_domain_types[type_codomain]
+        # ...
+
+        # ... construct the generator
+        target = [self._visit(i) for i in args]
+
+        generator = ProductGenerator(*target)
+        # ...
+
+        # ... construct the results
+        results = self._visit(type_codomain)
+
+        # compute depth of the type list
+        # TODO do we still need this?
+        depth_out = len(list(type_codomain.atoms(TypeList)))
+        # ...
+
+        # ...
+        index    = generator.index
+        iterator = generator.iterator
+        # ...
+
+        # ... list of all statements
+        stmts = []
+        # ...
+
+        # ... use a multi index in the case of zip
+        length      = generator.length
+        multi_index = generator.multi_index
+        generator.set_as_list()
+
+        # TODO check formula
+        value = index[0]
+        for ix, nx in zip(index[1:], length[::-1][:-1]):
+            value = nx*value + ix
+
+        stmts += [Assign(multi_index, value)]
+
+        # update index to use multi index
+        index = multi_index
+        # ...
+
+        # ... we set the generator after we treat map/tmap
+        self.set_generator(results, generator)
+        # ...
+
+        # ... apply the function to arguments
+        if isinstance(iterator, Tuple):
+            rhs = func( *iterator )
+
+        else:
+            rhs = func( iterator )
+        # ...
+
+        # ... create lhs
+        lhs = generator.iterator
+        # TODO check this
+        if isinstance(lhs, Tuple) and len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create lhs for storing the result
+        if isinstance(results, Variable):
+            results = [results]
+
+        else:
+            msg = '{} not available'.format(type(results))
+            raise NotImplementedError(msg)
+
+        if not isinstance(index, Tuple):
+            index = [index]
+
+        else:
+            index = list([i for i in index])
+
+        lhs = []
+        for r in results:
+            m = r.rank - depth_out
+            ind = index + [Slice(None, None)] * m
+            if len(ind) == 1:
+                ind = ind[0]
+
+            lhs.append(IndexedBase(r.name)[ind])
+
+        lhs = Tuple(*lhs)
+        if len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create core statement
+        stmts += [Assign(lhs, rhs)]
+        # ...
+
+        # TODO USE THIS
+#                expr = self.get_expr_from_type()
+
+        # return the associated for loops
+        return GeneratorBlock ( generator, stmts,
+                                accelerator = self.accelerator,
+                                nowait      = self.nowait,
+                                schedule    = self.schedule,
+                                chunk       = self.chunk )
+
+    def _visit_functor_tmap(self, stmt):
+        func   = stmt.args[0]
+        args   = stmt.args[1:]
+
+        assert(len(args) > 1)
+
+        # ... get the codomain type
+        type_codomain  = self.main_type
+        type_domain    = self.d_domain_types[type_codomain]
+        # ...
+
+        # ... construct the generator
+        target = [self._visit(i) for i in args]
+
+        generator = ProductGenerator(*target)
+        # ...
+
+        # ... construct the results
+        results = self._visit(type_codomain)
+
+        # compute depth of the type list
+        # TODO do we still need this?
+        depth_out = len(list(type_codomain.atoms(TypeList)))
+        # ...
+
+        # ...
+        index    = generator.index
+        iterator = generator.iterator
+        # ...
+
+        # ... list of all statements
+        stmts = []
+        # ...
+
+        # ... we set the generator after we treat map/tmap
+        self.set_generator(results, generator)
+        # ...
+
+        # ... apply the function to arguments
+        if isinstance(iterator, Tuple):
+            rhs = func( *iterator )
+
+        else:
+            rhs = func( iterator )
+        # ...
+
+        # ... create lhs
+        lhs = generator.iterator
+        # TODO check this
+        if isinstance(lhs, Tuple) and len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create lhs for storing the result
+        if isinstance(results, Variable):
+            results = [results]
+
+        else:
+            msg = '{} not available'.format(type(results))
+            raise NotImplementedError(msg)
+
+        if not isinstance(index, Tuple):
+            index = [index]
+
+        else:
+            index = list([i for i in index])
+
+        lhs = []
+        for r in results:
+            m = r.rank - depth_out
+            ind = index + [Slice(None, None)] * m
+            if len(ind) == 1:
+                ind = ind[0]
+
+            lhs.append(IndexedBase(r.name)[ind])
+
+        lhs = Tuple(*lhs)
+        if len(lhs) == 1:
+            lhs = lhs[0]
+        # ...
+
+        # ... create core statement
+        stmts += [Assign(lhs, rhs)]
+        # ...
+
+        # TODO USE THIS
+#                expr = self.get_expr_from_type()
+
+        # return the associated for loops
+        return GeneratorBlock ( generator, stmts,
+                                accelerator = self.accelerator,
+                                nowait      = self.nowait,
+                                schedule    = self.schedule,
+                                chunk       = self.chunk )
+
 
     def _visit_Lambda(self, stmt):
         # ...
