@@ -340,15 +340,14 @@ class Parser(object):
             FUNCTION = 'function'
             FUNCTOR  = 'functor'
 
-            if name in ['map', 'pmap', 'tmap', 'ptmap']:
-                name = 'map'
+            if name in ['map', 'xmap', 'tmap']:
                 kind = FUNCTOR
 
             elif name in ['reduce']:
                 name = 'reduce'
                 kind = FUNCTOR
 
-            elif name in ['zip', 'pzip']:
+            elif name in ['zip']:
                 name = 'zip'
                 kind = FUNCTION
 
@@ -392,9 +391,9 @@ class Parser(object):
     def _visit_functor_map(self, stmt, value=None):
         arguments = stmt.args
 
-        assert( len(arguments) == 2 )
+        assert( len(arguments) > 1 )
         func   = arguments[0]
-        target = arguments[1]
+        target = Zip(*arguments[1:])
 
         type_codomain = self._get_type(func, codomain=True)
         type_domain   = self._get_type(func, domain=True)
@@ -403,15 +402,15 @@ class Parser(object):
             print('> Unable to compute type for {} '.format(stmt))
             raise NotImplementedError('')
 
-        # TODO improve
-        if stmt.__class__.__name__ in ['tmap', 'ptmap']:
-            # TODO check that rank is the same for all domain
-            assert(isinstance(target, AppliedUndef))
-            assert(target.__class__.__name__ in ['product', 'pproduct'])
-
-            for i in range(0, len(target.args) - 1):
-                type_domain   = TypeList(type_domain)
-                type_codomain = TypeList(type_codomain)
+#        # TODO improve
+#        if stmt.__class__.__name__ in ['tmap', 'ptmap']:
+#            # TODO check that rank is the same for all domain
+#            assert(isinstance(target, AppliedUndef))
+#            assert(target.__class__.__name__ in ['product', 'pproduct'])
+#
+#            for i in range(0, len(target.args) - 1):
+#                type_domain   = TypeList(type_domain)
+#                type_codomain = TypeList(type_codomain)
 
         type_domain   = TypeList(type_domain)
         type_codomain = TypeList(type_codomain)
@@ -422,26 +421,78 @@ class Parser(object):
 
         return type_codomain
 
-    def _visit_function_zip(self, stmt, value=None):
+    def _visit_functor_xmap(self, stmt, value=None):
         arguments = stmt.args
 
-        # we know here that len(arguments) > 1
-        # and value.types is a TypeTuple
+        assert( len(arguments) > 1 )
+        func   = arguments[0]
+        target = Product(*arguments[1:])
+
+        type_codomain = self._get_type(func, codomain=True)
+        type_domain   = self._get_type(func, domain=True)
+
+        if not type_codomain:
+            print('> Unable to compute type for {} '.format(stmt))
+            raise NotImplementedError('')
+
+        type_domain   = TypeList(type_domain)
+        type_codomain = TypeList(type_codomain)
+        self._set_domain_type(type_domain, type_codomain)
+
+        self._visit(target, value=type_domain)
+        self._set_expr(type_codomain, stmt)
+
+        return type_codomain
+
+    def _visit_functor_tmap(self, stmt, value=None):
+        arguments = stmt.args
+
+        assert( len(arguments) > 1 )
+        func   = arguments[0]
+        target = Product(*arguments[1:])
+
+        type_codomain = self._get_type(func, codomain=True)
+        type_domain   = self._get_type(func, domain=True)
+
+        if not type_codomain:
+            print('> Unable to compute type for {} '.format(stmt))
+            raise NotImplementedError('')
+
+        # TODO check that rank is the same for all domain
+        for i in range(0, len(target.arguments)):
+            type_domain   = TypeList(type_domain)
+            type_codomain = TypeList(type_codomain)
+
+        self._set_domain_type(type_domain, type_codomain)
+
+        self._visit(target, value=type_domain)
+        self._set_expr(type_codomain, stmt)
+
+        return type_codomain
+
+    def _visit_Zip(self, stmt, value=None):
+        arguments = stmt.arguments
 
         assert(not( value is None ))
         assert(isinstance(value, TypeList))
 
-        if not isinstance(value.parent, TypeTuple):
+        # ...
+        if isinstance(value.parent, TypeVariable):
+            values = [value.parent]
+
+        elif isinstance(value.parent, TypeTuple):
+            values = value.types.types
+
+        else:
             msg = '{} not available yet'.format(type(value.parent))
             raise NotImplementedError(msg)
+        # ...
 
-        values = value.types.types
-        # TODO can we use len(value.typs) and avoid calling visit?
-        n = len(value.types)
-
+        # ...
         for a,t in zip(arguments, values):
             type_domain  = TypeList(t)
             self._visit(a, value=type_domain)
+        # ...
 
         type_codomain = value
         self._set_domain_type(value, type_codomain)
@@ -452,8 +503,8 @@ class Parser(object):
 
         return type_codomain
 
-    def _visit_function_product(self, stmt, value=None):
-        arguments = stmt.args
+    def _visit_Product(self, stmt, value=None):
+        arguments = stmt.arguments
 
         assert(not( value is None ))
         assert(isinstance(value, TypeList))
@@ -475,6 +526,61 @@ class Parser(object):
         self._set_expr(type_codomain, stmt)
 
         return type_codomain
+
+
+#    def _visit_function_zip(self, stmt, value=None):
+#        arguments = stmt.args
+#
+#        # we know here that len(arguments) > 1
+#        # and value.types is a TypeTuple
+#
+#        assert(not( value is None ))
+#        assert(isinstance(value, TypeList))
+#
+#        if not isinstance(value.parent, TypeTuple):
+#            msg = '{} not available yet'.format(type(value.parent))
+#            raise NotImplementedError(msg)
+#
+#        values = value.types.types
+#        # TODO can we use len(value.typs) and avoid calling visit?
+#        n = len(value.types)
+#
+#        for a,t in zip(arguments, values):
+#            type_domain  = TypeList(t)
+#            self._visit(a, value=type_domain)
+#
+#        type_codomain = value
+#        self._set_domain_type(value, type_codomain)
+#
+#        # update main expression
+#        self.main = self.main.xreplace({stmt: type_codomain})
+#        self._set_expr(type_codomain, stmt)
+#
+#        return type_codomain
+
+#    def _visit_function_product(self, stmt, value=None):
+#        arguments = stmt.args
+#
+#        assert(not( value is None ))
+#        assert(isinstance(value, TypeList))
+#
+##        # TODO add this check only when using tmap
+##        assert(len(value) == len(arguments))
+#
+#        values = value.types.types
+#
+#        for a,t in zip(arguments, values):
+#            type_domain  = TypeList(t)
+#            self._visit(a, value=type_domain)
+#
+#        type_codomain = value
+#        self._set_domain_type(value, type_codomain)
+#
+#        # update main expression
+#        self.main = self.main.xreplace({stmt: type_codomain})
+#        self._set_expr(type_codomain, stmt)
+#
+#        return type_codomain
 
     def _visit_functor_reduce(self, stmt, value=None):
         arguments = stmt.args

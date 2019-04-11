@@ -43,7 +43,7 @@ def test_map_list(**settings):
 
 #=========================================================
 def test_map_zip(**settings):
-    L = lambda xs,ys:  map(f2, zip(xs,ys))
+    L = lambda xs,ys:  map(f2, xs, ys)
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
 
@@ -59,7 +59,7 @@ def test_map_zip(**settings):
 
 #=========================================================
 def test_map_product(**settings):
-    L = lambda xs,ys:  map(f2, product(xs,ys))
+    L = lambda xs,ys:  xmap(f2, xs, ys)
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
 
@@ -86,7 +86,7 @@ def test_map_product(**settings):
 
 #=========================================================
 def test_tmap_product(**settings):
-    L = lambda xs,ys:  tmap(f2, product(xs,ys))
+    L = lambda xs,ys:  tmap(f2, xs, ys)
 
     type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
 
@@ -124,4 +124,5 @@ if __name__ == '__main__':
     test_map_zip(**settings)
     test_map_product(**settings)
     test_tmap_product(**settings)
-    test_reduce_function_list(**settings)
+
+#    test_reduce_function_list(**settings)

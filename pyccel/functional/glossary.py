@@ -2,11 +2,11 @@
 
 # ... internal applications
 # functors
-_internal_map_functors = ['map', 'pmap', 'tmap', 'ptmap']
+_internal_map_functors = ['map', 'xmap', 'tmap']
 _internal_functors = _internal_map_functors + ['reduce']
 
-_internal_zip_functions = ['zip', 'pzip']
-_internal_product_functions = ['product', 'pproduct']
+_internal_zip_functions = ['zip']
+_internal_product_functions = ['product']
 _internal_functions = _internal_zip_functions + _internal_product_functions
 
 _internal_applications = _internal_functions + _internal_functors
