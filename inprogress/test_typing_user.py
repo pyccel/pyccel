@@ -105,9 +105,9 @@ def test_tmap_product(**settings):
 
 #=========================================================
 def test_reduce_function_list(**settings):
-    L = lambda xs: reduce(f2, xs)
+    L = lambda xs: reduce(add, map(f1, xs))
 
-    type_L = _lambdify( L, namespace = {'f2': f2}, **settings )
+    type_L = _lambdify( L, namespace = {'f1': f1}, **settings )
 
     assert( isinstance( type_L, TypeVariable ) )
 
@@ -115,6 +115,8 @@ def test_reduce_function_list(**settings):
     assert( type_L.rank == 0 )
     assert( type_L.precision == 8 )
     assert( not type_L.is_stack_array )
+
+    print('DONE.')
 
 #########################################
 if __name__ == '__main__':
@@ -125,4 +127,4 @@ if __name__ == '__main__':
     test_map_product(**settings)
     test_tmap_product(**settings)
 
-#    test_reduce_function_list(**settings)
+    test_reduce_function_list(**settings)

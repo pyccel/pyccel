@@ -249,6 +249,12 @@ class Parser(object):
         for k,v in self.d_types.items():
             print('  {k} = {v}'.format(k=k, v=v.view()))
 
+        print('')
+
+        print(self.d_domain_types)
+        for k,v in self.d_domain_types.items():
+            print('  {v} --> {k}'.format(k=k, v=v))
+
     def _get_label(self, target, domain=False, codomain=False):
         # TODO improve
         if codomain:
@@ -586,15 +592,14 @@ class Parser(object):
         arguments = stmt.args
 
         assert( len(arguments) == 2 )
-        func   = arguments[0]
+        op     = arguments[0]
         target = arguments[1]
 
-        type_codomain = self._get_type(func, codomain=True)
-        type_domain   = self._get_type(func, domain=True)
+        type_codomain = self._visit(target)
+        assert( isinstance( type_codomain, TypeList ) )
+        type_codomain = type_codomain.types
 
-        if not type_codomain:
-            print('> Unable to compute type for {} '.format(stmt))
-            raise NotImplementedError('')
+        type_domain   = self.d_domain_types[type_codomain]
 
         type_domain   = TypeList(type_domain)
         type_codomain = type_codomain.duplicate()
