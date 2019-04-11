@@ -33,7 +33,22 @@ from .glossary import _internal_applications
 from .glossary import _math_functions
 from .glossary import _internal_map_functors
 
-#=========================================================================
+#========================================================================
+# TODO improve or copy from pyccel.parser
+def _get_name(i):
+    if isinstance(i, Symbol):
+        return i.name
+
+    elif isinstance(i, IndexedBase):
+        return str(i)
+
+    elif isinstance(i, Indexed):
+        return _get_name(i.base)
+
+    else:
+        raise NotImplementedError()
+
+#========================================================================
 # some useful functions
 # TODO add another argument to distinguish between len and other ints
 def new_variable( dtype, var, tag = None, prefix = None, kind = None ):
@@ -512,8 +527,7 @@ class GeneratorBlock(BasicBlock):
 #=========================================================================
 class ReductionGeneratorBlock(GeneratorBlock):
     """."""
-#    def __new__( cls, block, reduction, **kwargs ):
-    def __new__( cls, generator, decs, body, private_vars, reduction, **kwargs ):
+    def __new__( cls, block, reduction, lhs, **kwargs ):
 
         # ...
         settings = kwargs.copy()
@@ -521,12 +535,39 @@ class ReductionGeneratorBlock(GeneratorBlock):
         accelerator = settings.pop('accelerator')
         # ...
 
-#        # ...
-#        decs = block.decs
-#        body = block.decs
-#        # ...
-
         assert( isinstance( reduction, Reduction ) )
+
+        # ...
+        if isinstance(lhs, (list, tuple, Tuple)):
+            raise NotImplementedError()
+        # ...
+
+        # ...
+        generator    = block.generator
+        decs         = block.decs
+        body         = block.body
+        private_vars = generator.private
+        # ...
+
+        # ...
+        lhs_name = lhs.name
+
+        assign_stmts = list(block.body.atoms(Assign))
+        # ...
+
+        # ...
+        ls = [i for i in assign_stmts if _get_name(i.lhs) == lhs_name]
+        if len(ls) > 1:
+            raise NotImplementedError()
+
+        assign_iterable = ls[0]
+        rhs = assign_iterable.rhs
+        new_stmt = AugAssign(lhs, reduction.op, rhs)
+
+        body = block.body.subs(assign_iterable, new_stmt)
+
+        decs = block.decs
+        # ...
 
         # ... add initial values for reduced variables
         _reduction_init = lambda i: _get_default_value( i, op=reduction.op )
@@ -1270,42 +1311,6 @@ class AST(object):
             lhs = lhs[0]
         # ...
 
-        # ...
-        if isinstance(lhs, (list, tuple, Tuple)):
-            raise NotImplementedError()
-        # ...
-
-        assign_stmts = list(block.body.atoms(Assign))
-
-        # ...
-        lhs_name = lhs.name
-        def _get_name(i):
-            if isinstance(i, Symbol):
-                return i.name
-
-            elif isinstance(i, IndexedBase):
-                return str(i)
-
-            elif isinstance(i, Indexed):
-                return _get_name(i.base)
-
-            else:
-                raise NotImplementedError()
-
-        ls = [i for i in assign_stmts if _get_name(i.lhs) == lhs_name]
-        if len(ls) > 1:
-            raise NotImplementedError()
-
-        assign_iterable = ls[0]
-        rhs = assign_iterable.rhs
-        new_stmt = AugAssign(lhs, op, rhs)
-
-        body = block.body.subs(assign_iterable, new_stmt)
-
-        decs = block.decs
-        private_vars = block.generator.private
-        # ...
-
         # ... add reduction
         reduction = Reduction( op, results )
         # ...
@@ -1314,7 +1319,7 @@ class AST(object):
 #                expr = self.get_expr_from_type()
 
         # return the associated for loops
-        return ReductionGeneratorBlock ( generator, decs, body, private_vars, reduction,
+        return ReductionGeneratorBlock ( block, reduction, lhs,
                                          accelerator = self.accelerator )
 
 
