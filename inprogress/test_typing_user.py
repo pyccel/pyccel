@@ -118,13 +118,48 @@ def test_reduce_function_list(**settings):
 
     print('DONE.')
 
+#=========================================================
+def test_reduce_function_zip(**settings):
+    l = lambda xs,ys:  reduce(add, map(f2, xs, ys))
+
+    type_L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    assert( isinstance( type_L, TypeVariable ) )
+
+    assert( isinstance( type_L.dtype, NativeReal ) )
+    assert( type_L.rank == 0 )
+    assert( type_L.precision == 8 )
+    assert( not type_L.is_stack_array )
+
+    print('DONE.')
+
+#=========================================================
+def test_reduce_function_product(**settings):
+    l = lambda xs,ys:  reduce(add, xmap(f2, xs, ys))
+
+    type_L = _lambdify( l, namespace = {'f2': f2}, **settings )
+
+    assert( isinstance( type_L, TypeVariable ) )
+
+    assert( isinstance( type_L.dtype, NativeReal ) )
+    assert( type_L.rank == 0 )
+    assert( type_L.precision == 8 )
+    assert( not type_L.is_stack_array )
+
+    print('DONE.')
+
 #########################################
 if __name__ == '__main__':
     settings = {'semantic_only' : True}
 
+    print('======== map    ========')
     test_map_list(**settings)
     test_map_zip(**settings)
     test_map_product(**settings)
     test_tmap_product(**settings)
 
+    print('======== reduce ========')
     test_reduce_function_list(**settings)
+    test_reduce_function_zip(**settings)
+    test_reduce_function_product(**settings)
+###    test_treduce_function_product(**settings)
