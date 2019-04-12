@@ -2,7 +2,7 @@
 
 # TODO use pytest
 
-from pyccel.functional.parser import parse
+from pyccel.functional.syntax import parse
 
 L = parse('lambda x: 1')
 L = parse('lambda xs: map(g, xs)')
