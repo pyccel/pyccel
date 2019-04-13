@@ -6,11 +6,18 @@ This file contains some useful functions to compile the generated fortran code
 
 import os
 import subprocess
+import inspect
+import importlib
+import os
+import string
+import random
 
 from pyccel.parser.errors import Errors
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 
+
+#==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
 _avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort']
 
@@ -80,6 +87,7 @@ def construct_flags(compiler,
 
     return flags
 
+#==============================================================================
 def compile_fortran(filename, compiler, flags,
                     binary=None,
                     verbose=False,
@@ -155,6 +163,7 @@ def compile_fortran(filename, compiler, flags,
     # ...
 # ...
 
+#==============================================================================
 def execute_pyccel(filename,
                    compiler     = None,
                    fflags       = None,
@@ -236,12 +245,64 @@ def execute_pyccel(filename,
             return output, cmd, codegen
 
 
-if __name__ == '__main__':
-    import sys
+#==============================================================================
+def random_string( n ):
+    # we remove uppercase letters because of f2py
+    chars    = string.ascii_lowercase + string.digits
+    selector = random.SystemRandom()
+    return ''.join( selector.choice( chars ) for _ in range( n ) )
 
-    try:
-        filename = sys.argv[1]
-    except:
-        raise ValueError('Expecting an argument for filename')
+#==============================================================================
+def mkdir_p(folder):
+    if os.path.isdir(folder):
+        return
+    os.makedirs(folder)
 
-    execute_pyccel(filename)
+#==============================================================================
+def touch(path):
+    with open(path, 'a'):
+        os.utime(path, None)
+
+#==============================================================================
+def write_code(filename, code, folder=None):
+    if not folder:
+        folder = os.getcwd()
+
+    folder = os.path.abspath(folder)
+    if not os.path.isdir(folder):
+        raise ValueError('{} folder does not exist'.format(folder))
+
+    filename = os.path.basename( filename )
+    filename = os.path.join(folder, filename)
+
+    # TODO check if __init__.py exists
+    # add __init__.py for imports
+    init_fname = os.path.join(folder, '__init__.py')
+    touch(init_fname)
+
+    f = open(filename, 'w')
+    for line in code:
+        f.write(line)
+    f.close()
+
+    return filename
+
+#==============================================================================
+def get_source_function(func):
+    if not callable(func):
+        raise TypeError('Expecting a callable function')
+
+    lines = inspect.getsourcelines(func)
+    lines = lines[0]
+    # remove indentation if the first line is indented
+    a = lines[0]
+    leading_spaces = len(a) - len(a.lstrip())
+    code = ''
+    for a in lines:
+        if leading_spaces > 0:
+            line = a[leading_spaces:]
+        else:
+            line = a
+        code = '{code}{line}'.format(code=code, line=line)
+
+    return code
