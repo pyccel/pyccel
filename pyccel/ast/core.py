@@ -1682,7 +1682,7 @@ class For(Basic):
         target,
         iter,
         body,
-        local_vars = [],
+        local_vars = None,
         strict=True,
         ):
         if strict:
@@ -1706,7 +1706,13 @@ class For(Basic):
 
         # TODO uncomment this => improve insert2body
 #        body = Tuple(*body)
+
+        # ...
+        if local_vars is None:
+            local_vars = []
+
         local_vars = Tuple(*local_vars)
+        # ...
 
         return Basic.__new__(cls, target, iter, body, local_vars)
 
