@@ -26,6 +26,11 @@ def types(*args,**kw):
         return f
     return id
 
+def stack_array(*args):
+    def id(f):
+        return f
+    return id
+
 
 def pure(f):
     return f
