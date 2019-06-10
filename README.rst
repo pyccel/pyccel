@@ -3,15 +3,13 @@ Welcome to Pyccel
 
 |build-status| |docs|
 
->>>>> **Note: refactoring Pyccel in progress** <<<<<<
-
 **Pyccel** stands for Python extension language using accelerators.
 
 The aim of **Pyccel** is to provide a simple way to generate automatically, parallel low level code. The main uses would be:
 
 1. Convert a *Python* code (or project) into a Fortran
 
-2. Accelerate *Python* functions by converting them to *Fortran* then calling *f2py*.
+2. Accelerate *Python* functions by converting them to *Fortran* then calling *f2py*. For the moment, only *f2py* is available, but we are working on other solutions too (*f2x* and *fffi*)
 
 **Pyccel** can be viewed as:
 
@@ -27,7 +25,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 
 - mpi4py
 
-- h5py
+- h5py (not available yet)
 
 Install
 *******
