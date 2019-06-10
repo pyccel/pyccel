@@ -30,6 +30,22 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 Install
 *******
 
+From PyPi
+^^^^^^^^^
+
+Simply run, for a local installation::
+
+  pip3 install --user pyccel 
+
+or::
+
+  pip3 install pyccel 
+
+for a global installation.
+
+From sources
+^^^^^^^^^^^^
+
 all Python dependencies can be installed using (here given for *python3*, use **pip** for *python2*)::
 
   sudo -H pip3 install -r requirements.txt
