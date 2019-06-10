@@ -226,7 +226,9 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
         
         cmd = """python{}.{} -m numpy.f2py {}"""
         
+        
         cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
+
         output = subprocess.check_output(cmd, shell=True)
         return output, cmd
 
@@ -668,7 +670,7 @@ def compile_f2py( filename,
     modulename = filename.split('.')[0]
 
     libs = ' '.join('-l'+i.lower() for i in libs)
-    libdirs = ' '.join('-L'+i.lower() for i in libdirs)
+    libdirs = ' '.join('-L'+i for i in libdirs)
 
     args = args_pattern.format( compilers  = compilers,
                                 f90flags   = f90flags,
@@ -684,6 +686,7 @@ def compile_f2py( filename,
 
     cmd = """python{}.{} -m numpy.f2py {}"""
     cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
+
     output = subprocess.check_output(cmd, shell=True)
 
 #    # .... TODO: TO REMOVE
@@ -808,7 +811,7 @@ def epyccel_function(func,
     code = fcode(f2py_module, ast.parser)
     filename = '{}.f90'.format(f2py_module_name)
     fname = write_code(filename, code, folder=folder)
-
+    
     output, cmd = compile_f2py( filename,
                                 extra_args  = extra_args,
                                 compiler    = compiler,
@@ -940,6 +943,7 @@ def epyccel_module(module,
 
     # ... add -c to not warn if the library had to be created
     cmd = 'ar -rc lib{libname}.a {binary} '.format(binary=binary, libname=libname)
+    
     output = subprocess.check_output(cmd, shell=True)
 
     if verbose:
@@ -999,7 +1003,6 @@ def epyccel_module(module,
     if verbose:
         print(cmd)
     # ...
-
     # ...
     # update module name for dependencies
     # needed for interface when importing assembly

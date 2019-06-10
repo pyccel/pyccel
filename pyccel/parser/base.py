@@ -258,8 +258,8 @@ class Scope(object):
     
     def __init__(self):
     
-        self._imports   = OrderedDict()
-        
+        self._imports = OrderedDict()
+            
         self._imports['functions'] = OrderedDict()
         self._imports['variables'] = OrderedDict()
         self._imports['classes'  ] = OrderedDict()
@@ -282,6 +282,10 @@ class Scope(object):
         self._cls_constructs     = OrderedDict()
         self._symbolic_functions = OrderedDict()
         self._python_functions   = OrderedDict()
+        
+        self._is_loop = False
+        # scoping for loops
+        self._loops = []
         
     @property
     def imports(self):
@@ -327,6 +331,13 @@ class Scope(object):
     def python_functions(self):
         return self._python_functions
         
+    @property
+    def is_loop(self):
+        return self._is_loop
+        
+    @property
+    def loops(self):
+        return self._loops
 
 
         

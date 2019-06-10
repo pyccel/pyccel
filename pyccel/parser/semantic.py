@@ -271,16 +271,25 @@ class SemanticParser(BasicParser):
     def get_variable_from_scope(self, name):
         """."""
         container = self.namespace
-        imports   = container.imports
-        
+        while container.is_loop:
+            container = container.parent_scope
+            
+        var = self._get_variable_from_scope(name, container)
+
+        return var
+
+    def _get_variable_from_scope(self, name, container):
+    
         if name in container.variables:
             return container.variables[name]
-        elif name in container.imports['variables']:
-            return container.imports['variables'][name]
-
-
+            
+        for container in container.loops:
+            var = self._get_variable_from_scope(name, container)
+            if var:
+                return var
+             
         return None
-
+        
     def get_variable(self, name):
         """."""
 
@@ -291,10 +300,15 @@ class SemanticParser(BasicParser):
                     return var
                     
         container = self.namespace
+        while container.is_loop:
+            container = container.parent_scope
+            
+        
         imports   = container.imports
         while container:
-            if name in container.variables:
-                return container.variables[name]
+            var = self._get_variable_from_scope(name, container)
+            if var:
+                return var
             elif name in container.imports['variables']:
                 return container.imports['variables'][name]
             container = container.parent_scope
@@ -302,11 +316,15 @@ class SemanticParser(BasicParser):
 
         return None
 
-    def get_variables(self, source=None):
-        if source == 'parent':
-            return self.namespace.parent_scope.variables.values()
-        else:
-            return self.namespace.variables.values()
+    def get_variables(self, container):
+        # this only works one called the function scope
+        # TODO needs more tests when we have nested functions
+        variables = []
+        variables.extend(container.variables.values())
+        for container in container.loops:
+            variables.extend(self.get_variables(container))
+        return variables
+            
 
     def get_parent_functions(self):
         container = self.namespace
@@ -528,29 +546,40 @@ class SemanticParser(BasicParser):
 
         self.namespace.cls_constructs[name] = value
 
-    def set_current_function(self, name):
+    def create_new_function_scope(self, name):
         """."""
-
-        if name:
-            self.namespace.sons_scopes[name] = Scope()
-            self.namespace.sons_scopes[name].parent_scope = self.namespace
-            self._namespace = self.namespace.sons_scopes[name]
-            if self._current_function:
-                name = DottedName(self._current_function, name)
-        else:
-            self._namespace = self.namespace.parent_scope
-            if isinstance(self._current_function, DottedName):
-
-                # case of a function inside a function
-
-                name = self._current_function.name[:-1]
-                if len(name)>1:
-                    name = DottedName(*name)
-                else:
-                    name = name[0]
+        
+        self.namespace._sons_scopes[name] = Scope()
+        self.namespace._sons_scopes[name].parent_scope = self.namespace
+        self._namespace = self._namespace._sons_scopes[name]
+        if self._current_function:
+            name = DottedName(self._current_function, name)
         self._current_function = name
+        
+    def exit_function_scope(self):
+    
+        self._namespace = self._namespace.parent_scope
+        if isinstance(self._current_function, DottedName):
 
-
+            name = self._current_function.name[:-1]
+            if len(name)>1:
+                name = DottedName(*name)
+            else:
+                name = name[0]
+        else:
+            name = None
+        self._current_function = name
+     
+    def create_new_loop_scope(self):
+        new_scope = Scope()
+        new_scope._is_loop = True
+        new_scope.parent_scope = self._namespace
+        self._namespace._loops.append(new_scope)
+        self._namespace = new_scope
+        
+    def exit_loop_scope(self):
+        self._namespace = self._namespace.parent_scope
+        
     def _collect_returns_stmt(self, ast):
         vars_ = []
         for stmt in ast:
@@ -1154,8 +1183,9 @@ class SemanticParser(BasicParser):
             var = self.get_function(name)
         if var is None:
             var = self.get_symbolic_function(name)
-
+        
         if var is None:
+             
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=self._current_fst_node.absolute_bounding_box,
             severity='error', blocker=self.blocking)
@@ -1853,27 +1883,21 @@ class SemanticParser(BasicParser):
 
             lhs = Variable(dtype, name, **d_lhs)
             var = self.get_variable_from_scope(name)
+            
             if var is None:
                 self.insert_variable(lhs, name=lhs.name)
 
             else:
-
+            
                 # TODO improve check type compatibility
                 if str(lhs.dtype) != str(var.dtype):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
+                 
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=False)
 
-                    # case where the rhs is of native type
-                    # TODO add other native types
-                    if isinstance(rhs, (Integer, Float)):
-                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                        symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='error', blocker=False)
-
-                    else:
-                        errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                        symbol=txt, bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='internal', blocker=False)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -2013,8 +2037,10 @@ class SemanticParser(BasicParser):
 
     def _visit_For(self, expr, **settings):
 
-        # treatment of the index/indices
 
+        self.create_new_loop_scope()
+        
+        # treatment of the index/indices
         iterable = self._visit(expr.iterable, **settings)
         body     = list(expr.body)
         iterator = expr.target
@@ -2089,11 +2115,14 @@ class SemanticParser(BasicParser):
                    severity='error', blocker=self.blocking)
 
         body = [self._visit(i, **settings) for i in body]
-
+        
+        local_vars = list(self.namespace.variables.values())
+        self.exit_loop_scope()
+        
         if isinstance(iterable, Variable):
             return ForIterator(target, iterable, body)
 
-        return For(target, iterable, body)
+        return For(target, iterable, body, local_vars=local_vars)
 
 
     def _visit_GeneratorComprehension(self, expr, **settings):
@@ -2240,9 +2269,15 @@ class SemanticParser(BasicParser):
         return FunctionalFor(loops, lhs=lhs, indices=indices, index=index)
 
     def _visit_While(self, expr, **settings):
+       
+        self.create_new_loop_scope()
+        
         test = self._visit(expr.test, **settings)
         body = [self._visit(i, **settings) for i in expr.body]
-        return While(test, body)
+        local_vars = list(self.namespace.variables.values())
+        self.exit_loop_scope()
+        
+        return While(test, body, local_vars)
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.args]
@@ -2394,7 +2429,7 @@ class SemanticParser(BasicParser):
             arg         = None
             arguments = expr.arguments
             
-            self.set_current_function(name)
+            self.create_new_function_scope(name)
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
@@ -2468,7 +2503,7 @@ class SemanticParser(BasicParser):
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [var] + args
 
-            for var in self.get_variables():
+            for var in self.get_variables(self._namespace):
                 if not var in args + results:
                     local_vars += [var]
                     
@@ -2488,8 +2523,8 @@ class SemanticParser(BasicParser):
                         local_vars[i] = var
                 
             # TODO should we add all the variables or only the ones used in the function
-
-            for var in self.get_variables('parent'):
+            container = self._namespace.parent_scope
+            for var in self.get_variables(container):
                 if not var in args + results + local_vars:
                     global_vars += [var]
 
@@ -2510,7 +2545,7 @@ class SemanticParser(BasicParser):
             
             
                 
-            self.set_current_function(None)
+            self.exit_function_scope()
             # ... computing inout arguments
             args_inout = []
             for a in args:
@@ -2623,7 +2658,6 @@ class SemanticParser(BasicParser):
 
            funcs = Interface(name, funcs)
            self.insert_function(funcs)
-
 
         return EmptyLine()
 

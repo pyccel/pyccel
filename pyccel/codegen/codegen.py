@@ -28,17 +28,17 @@ class Codegen(object):
 
     """Abstract class for code generator."""
 
-    def __init__(self, expr, name):
+    def __init__(self, parser, name):
         """Constructor for Codegen.
 
-        expr: sympy expression
-            expression representing the AST as a sympy object
+        parser: pyccel parser
+            
 
         name: str
             name of the generated module or program.
         """
-        self._parser   = expr
-        self._ast      = expr.ast
+        self._parser   = parser
+        self._ast      = parser.ast
         self._name     = name
         self._kind     = None
         self._code     = None
@@ -162,6 +162,7 @@ class Codegen(object):
         """Collects statments and split them into routines, classes, etc."""
          
         namespace  = self.parser.namespace
+
         funcs      = []
         interfaces = []
         body = []
@@ -174,13 +175,12 @@ class Codegen(object):
                 interfaces.append(i)
             
         self._stmts['imports'   ] = list(namespace.imports['imports'].values())
-        self._stmts['variables' ] = list(namespace.variables.values())
+        self._stmts['variables' ] = list(set(self.parser.get_variables(namespace)))
         self._stmts['routines'  ] = funcs
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
         
-
 
 
 
