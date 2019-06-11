@@ -519,6 +519,16 @@ class FCodePrinter(CodePrinter):
     def _print_AnnotatedComment(self, expr):
         accel = self._print(expr.accel)
         txt   = str(expr.txt)
+        if len(txt)>72:
+            txts = []
+            while len(txt)>72:
+                txts.append(txt[:72])
+                txt  = txt[72:]
+            if txt:
+                txts.append(txt)
+            
+            txt = '&\n!${} &'.format(accel).join(txt for txt in txts)
+            
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
