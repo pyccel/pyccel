@@ -9,12 +9,8 @@ language: python
 
 # Existing Python versions
 python:
-  - "3.4"
   - "3.5"
   - "3.6"
-#  - "3.7"
-#  - "3.7-dev" # 3.7 development branch
-#  - "nightly"
 
 # Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
 matrix:
