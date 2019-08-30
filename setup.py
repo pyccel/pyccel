@@ -1,12 +1,17 @@
 # -*- coding: UTF-8 -*-
 #! /usr/bin/python
 
-import sys
+from pathlib import Path
 from setuptools import setup, find_packages
-import pyccel
+
+# ...
+# Read library version into '__version__' variable
+path = Path(__file__).parent / 'pyccel' / 'version.py'
+exec(path.read_text())
+# ...
 
 NAME    = 'pyccel'
-VERSION = pyccel.__version__
+VERSION = __version__
 AUTHOR  = 'Ahmed Ratnani'
 EMAIL   = 'ahmed.ratnani@ipp.mpg.de'
 URL     = 'https://github.com/ratnania/pyccel'
