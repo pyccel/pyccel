@@ -62,4 +62,4 @@ class f2py_compatible(object):
             else:
                 newargs.append(a)
 
-        self.f(*newargs)
+        return self.f(*newargs)
