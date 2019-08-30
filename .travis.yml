@@ -30,9 +30,8 @@ before_install:
 #  - sudo apt-get install mpich libmpich-dev # libhdf5-mpich-dev
   - sudo apt-get install libopenmpi-dev openmpi-bin # libhdf5-openmpi-dev
 
-# command to install dependencies
+# command to install Python library and dependencies
 install:
-  - pip install -r requirements.txt
   - pip install .
 
 before_script:

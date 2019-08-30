@@ -30,8 +30,21 @@ setup_args = dict(
 packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # ...
 
-# Requirements from local "requirements.txt" file
-install_requires = []
+# Dependencies
+install_requires = [
+    'numpy',
+    'scipy',
+    'sympy>=1.2',
+    'textx>=1.6',
+    'pylint>=1.8',
+    'parse>=1.8',
+    'redbaron>=0.7',
+    'pytest',
+    'tabulate',
+    'mpi4py',
+    'termcolor',
+    'fastcache',
+]
 
 def setup_package():
     setup(packages=packages, \
