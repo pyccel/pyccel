@@ -3,7 +3,6 @@
 
 import importlib
 
-from collections     import OrderedDict
 from collections.abc import Iterable
 
 from sympy import cache
