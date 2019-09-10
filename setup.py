@@ -40,7 +40,7 @@ install_requires = [
     'numpy',
     'scipy',
     'sympy>=1.2',
-    'textx==1.6.1',
+    'textx>=1.6',
     'pylint>=1.8',
     'parse>=1.8',
     'redbaron>=0.7',
