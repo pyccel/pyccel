@@ -794,13 +794,13 @@ def epyccel_function(func,
     funcs     = ast.routines + ast.interfaces
     func      = get_function_from_ast(funcs, func_name)
     namespace = ast.parser.namespace.sons_scopes
+    parent_sc = ast.parser.namespace.functions
     # ...
-
     f2py_module_name = 'f2py_{}'.format(module_name)
-
     static_func  = as_static_function(func)
     namespace['f2py_'+func_name.lower()] = namespace[func_name]
-    
+    namespace['f2py_'+func_name.lower()] = namespace[func_name]
+    parent_sc['f2py_'+func_name.lower()] = parent_sc[func_name]
     f2py_module = Module( f2py_module_name,
                           variables = [],
                           funcs = [static_func],
