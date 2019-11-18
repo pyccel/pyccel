@@ -876,6 +876,9 @@ class SemanticParser(BasicParser):
                     'asec',
                     'atan',
                     'acot',
+                    'sinh',
+                    'cosh',
+                    'tanh',
                     'atan2',
                     ]:
                 d_var = self._infere_type(expr.args[0], **settings)
