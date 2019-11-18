@@ -43,7 +43,7 @@ math_functions = {
     'sinh'   : Sinh,
     'cosh'   : Cosh,
     'tanh'   : Tanh,
-    'atan2'  : atan2
+    'atan2'  : atan2,
     'arctan2': atan2
     }
 
