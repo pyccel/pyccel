@@ -1604,7 +1604,9 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is None:
+                rhs = self._visit_Application(rhs, **settings)
+            else:
 
                 # TODO check types from FunctionDef
 
@@ -1638,14 +1640,14 @@ class SemanticParser(BasicParser):
                 else:
                     msg = 'TODO treate interface case'
                     raise NotImplementedError(msg)
-            else:
-                rhs = self._visit_Application(rhs, **settings)
-                
+
         elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
             name = _get_name(var)
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is None:
+                rhs = self._visit_DottedVariable(rhs, **settings)
+            else:
                 master = macro.master
                 if isinstance(macro, MacroVariable):
                     rhs = master
@@ -1679,8 +1681,6 @@ class SemanticParser(BasicParser):
                         return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO')
-            else:
-                rhs = self._visit_DottedVariable(rhs, **settings)
         else:
             rhs = self._visit(rhs, **settings)
 
