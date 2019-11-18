@@ -20,52 +20,121 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran. The following packages will be covered (partially):
 
 - numpy
-
 - scipy
-
 - mpi4py
-
 - h5py (not available yet)
 
-Install
+Requirements
+============
+
+First of all, Pyccel requires a working Fortran compiler; it supports
+
+- GFortran <https://gcc.gnu.org/fortran/>
+- Intel® Fortran Compiler <https://software.intel.com/en-us/fortran-compilers>
+- PGI Fortran <https://www.pgroup.com/index.htm>
+
+In order to perform fast linear algebra calculations, Pyccel uses the following libraries:
+
+- BLAS (Basic Linear Algebra Subprograms) <http://www.netlib.org/blas/>
+- LAPACK (Linear Algebra PACKage) <http://www.netlib.org/lapack/>
+
+Finally, Pyccel supports distributed-memory parallel programming through the Message Passing Interface (MPI) standard; hence it requires an MPI library like
+
+- Open-MPI <https://www.open-mpi.org/>
+- MPICH <https://www.mpich.org/>
+- Intel® MPI Library <https://software.intel.com/en-us/mpi-library>
+
+We recommend using GFortran and Open-MPI.
+
+Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
+
+Linux Debian/Ubuntu/Mint
+************************
+
+To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool::
+
+  sudo apt update
+  sudo apt install gfortran
+  sudo apt install libblas-dev liblapack-dev
+  sudo apt install libopenmpi-dev openmpi-bin
+
+Linux Fedora/CentOS/RHEL
+************************
+
+Install all requirements using the DNF software package manager::
+
+  su
+  dnf check-update
+  dnf install gfortran
+  dnf install blas-devel lapack-devel
+  dnf install openmpi-devel
+  exit
+
+Similar commands work on Linux openSUSE, just replace ``dnf`` with ``zypper``.
+
+Mac OS X
+********
+
+On an Apple Macintosh machine we recommend using Homebrew <https://brew.sh/>::
+
+  brew update
+  brew install gcc
+  brew install openblas
+  brew install lapack
+  brew install open-mpi
+
+This requires that the Command Line Tools (CLT) for Xcode are installed.
+
+Windows
 *******
 
+Support for Windows is experimental: <https://github.com/pyccel/pyccel/issues/194>.
+
+
+Installation
+============
+
 From PyPi
-^^^^^^^^^
+*********
 
-Simply run, for a local installation::
+Simply run, for a user-specific installation::
 
-  pip3 install --user pyccel 
+  pip3 install --user pyccel
 
 or::
 
-  pip3 install pyccel 
+  sudo pip3 install pyccel
 
-for a global installation.
+for a system-wide installation.
 
 From sources
-^^^^^^^^^^^^
-
-all Python dependencies can be installed using (here given for *python3*, use **pip** for *python2*)::
-
-  sudo -H pip3 install -r requirements.txt
+************
 
 * **Standard mode**::
 
-    python3 -m pip install .
+    pip3 install --user .
 
 * **Development mode**::
 
-    python3 -m pip install --user -e .
+    pip3 install --user -e .
 
 this will install a *python* library **pyccel** and a *binary* called **pyccel**.
+Any required Python packages will be installed automatically from PyPI.
+
 
 Reading the docs
 ================
 
 You can read them online at <http://pyccel.readthedocs.io/>.
 
-Or, after installing::
+Alternatively, the documentation can be built automatically using Sphinx.
+First you will need to install a few additional Python packages::
+
+   pip3 install --user sphinx
+   pip3 install --user sphinxcontrib.bibtex
+   pip3 install --user git+git://github.com/saidctb/sphinx-execute-code
+
+Then build the documentation with::
 
    cd doc
    make html
