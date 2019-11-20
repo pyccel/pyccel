@@ -17,4 +17,4 @@ python3 -m pytest tests/epyccel/test_epyccel_functions.py
 python3 -m pytest tests/epyccel/test_epyccel_modules.py
 python3 -m pytest tests/epyccel/test_arrays.py
 python3 -m pytest tests/epyccel/test_loops.py
-
+python3 -m pytest tests/pyccel/test_pyccel.py
