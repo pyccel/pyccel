@@ -1,23 +1,22 @@
 import subprocess
 import os
-import shutil
-import numpy as np
 import pytest
+import shutil
 
 def get_python_output(path_dir,test_file):
-    p = subprocess.Popen(["python3" , "%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
-    out, error = p.communicate()
+    p = subprocess.Popen([shutil.which("python3") , "%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
+    out, err = p.communicate()
     assert(p.returncode==0)
     return out
 
 def compile_pyccel(path_dir,test_file):
-    p = subprocess.Popen(["pyccel", "%s" % test_file], universal_newlines=True, cwd=path_dir)
+    p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
 
 def get_fortran_output(path_dir,test_file):
     p = subprocess.Popen(["%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
-    out, error = p.communicate()
+    out, err = p.communicate()
     assert(p.returncode==0)
     return out
 
