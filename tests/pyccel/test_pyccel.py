@@ -1,39 +1,39 @@
 import subprocess
 import os
+import shutil
 import numpy as np
 import pytest
 
+def get_python_output(path_dir,test_file):
+    p = subprocess.Popen(["python3" , "%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
+    out, error = p.communicate()
+    assert(p.returncode==0)
+    return out
+
+def compile_pyccel(path_dir,test_file):
+    p = subprocess.Popen(["pyccel", "%s" % test_file], universal_newlines=True, cwd=path_dir)
+    p.wait()
+    assert(p.returncode==0)
+
+def get_fortran_output(path_dir,test_file):
+    p = subprocess.Popen(["%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
+    out, error = p.communicate()
+    assert(p.returncode==0)
+    return out
+
+def pyccel_test(test_file):
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, 'scripts')
+
+    pyth_out = get_python_output(path_dir,test_file)
+    compile_pyccel(path_dir,test_file)
+    fort_out = get_fortran_output(path_dir,test_file[:-3])
+
+    assert(pyth_out.strip()==fort_out.strip())
+
 @pytest.mark.xfail
 def test_imports():
-    init_dir = os.getcwd()
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, 'scripts')
-
-    os.chdir(path_dir)
-
-    test_file = "test_imports.py"
-
-    filename = test_file[:-3]
-    subprocess.check_call("python3 '%s' > test.ref" % test_file, shell=True)
-    subprocess.check_call("pyccel '%s'" % test_file, shell=True)
-    subprocess.check_call("./%s > test.out" % filename, shell=True)
-    assert(np.loadtxt("test.out") == np.loadtxt("test.ref"))
-
-    os.chdir(init_dir)
+    pyccel_test("test_imports.py")
 
 def test_funcs():
-    init_dir = os.getcwd()
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, 'scripts')
-
-    os.chdir(path_dir)
-
-    test_file = "test_funcs.py"
-
-    filename = test_file[:-3]
-    subprocess.check_call("python3 '%s' > test.ref" % test_file, shell=True)
-    subprocess.check_call("pyccel '%s'" % test_file, shell=True)
-    subprocess.check_call("./%s > test.out" % filename, shell=True)
-    assert(np.loadtxt("test.out") == np.loadtxt("test.ref"))
-
-    os.chdir(init_dir)
+    pyccel_test("test_funcs.py")
