@@ -4,3 +4,4 @@
 # NOTE: ideally, we would like to only skip this check in our unit tests, but
 #       we do not know if this is possible.
 skips: ['B101']
+skips: ['B603']
