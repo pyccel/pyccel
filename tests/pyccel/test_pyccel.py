@@ -19,6 +19,8 @@ def test_imports():
     subprocess.check_call("./%s > test.out" % filename, shell=True)
     assert(np.loadtxt("test.out") == np.loadtxt("test.ref"))
 
+    os.chdir(init_dir)
+
 def test_funcs():
     init_dir = os.getcwd()
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -34,3 +36,4 @@ def test_funcs():
     subprocess.check_call("./%s > test.out" % filename, shell=True)
     assert(np.loadtxt("test.out") == np.loadtxt("test.ref"))
 
+    os.chdir(init_dir)
