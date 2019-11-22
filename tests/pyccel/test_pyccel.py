@@ -5,7 +5,7 @@ import shutil
 
 def get_python_output(path_dir,test_file):
     p = subprocess.Popen([shutil.which("python3") , "%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
-    out, err = p.communicate()
+    out, _ = p.communicate()
     assert(p.returncode==0)
     return out
 
@@ -16,7 +16,7 @@ def compile_pyccel(path_dir,test_file):
 
 def get_fortran_output(path_dir,test_file):
     p = subprocess.Popen(["%s/%s" % (path_dir , test_file)], stdout=subprocess.PIPE, universal_newlines=True)
-    out, err = p.communicate()
+    out, _ = p.communicate()
     assert(p.returncode==0)
     return out
 
