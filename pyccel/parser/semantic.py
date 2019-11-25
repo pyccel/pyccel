@@ -2857,9 +2857,8 @@ class SemanticParser(BasicParser):
                 else:
                     container['imports'][source] = expr
 
-                return EmptyLine()
-        else:   
-            return EmptyLine()
+        return EmptyLine()
+
 
 
     def _visit_With(self, expr, **settings):
