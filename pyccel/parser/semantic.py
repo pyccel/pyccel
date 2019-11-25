@@ -2847,7 +2847,6 @@ class SemanticParser(BasicParser):
                 elif __module_name__:
                     expr = Import(expr.target, __module_name__)
                     container['imports'][__module_name__] = expr
-                    return EmptyLine()
 
                 # ...
                 elif __print__ in p.metavars.keys():
@@ -2857,6 +2856,8 @@ class SemanticParser(BasicParser):
                     container['imports'][source] = expr
                 else:
                     container['imports'][source] = expr
+
+                return EmptyLine()
         else:   
             return EmptyLine()
 
