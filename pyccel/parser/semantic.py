@@ -2855,11 +2855,8 @@ class SemanticParser(BasicParser):
                     source = 'mod_' + source
                     expr   = Import(expr.target, source=source)
                     container['imports'][source] = expr
-
-                
-
-                    
-            return EmptyLine()
+                else:
+                    container['imports'][source] = expr
         else:   
             return EmptyLine()
 

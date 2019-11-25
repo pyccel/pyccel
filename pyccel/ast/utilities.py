@@ -196,6 +196,35 @@ def builtin_import(expr):
 
     return imports
 
+def get_function_from_ast(ast, func_name):
+    node = None
+    n_stmt = len(ast)
+    i_stmt = 0
+    while ( node is None ) and ( i_stmt < n_stmt ):
+        stmt = ast[i_stmt]
+        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
+            node = stmt
+
+        i_stmt += 1
+
+    if node is None:
+        print('> could not find {}'.format(func_name))
+
+    return node
+
+def get_external_function_from_ast(ast):
+    nodes   = []
+    others  = []
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef):
+            if stmt.is_external or stmt.is_external_call:
+                nodes += [stmt]
+
+            else:
+                others += [stmt]
+
+    return nodes, others
+
 # TODO: must add a Node Decorator in core
 def build_types_decorator(args, order=None):
     """
