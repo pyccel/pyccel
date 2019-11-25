@@ -78,7 +78,7 @@ class F2PY_ModuleInterface(Basic):
 
 #=======================================================================================
 
-def as_static_function(func):
+def as_static_function(func, name=None):
     assert(isinstance(func, FunctionDef))
 
     args    = func.arguments
@@ -100,7 +100,8 @@ def as_static_function(func):
         else:
             raise NotImplementedError('when len(results) > 1')
 
-    name = 'f2py_{}'.format(func.name).lower()
+    if name is None:
+        name = 'f2py_{}'.format(func.name).lower()
 
     # ...
     results_names = [i.name for i in results]
@@ -161,7 +162,7 @@ def as_static_function(func):
 
 
 #=======================================================================================
-def as_static_function_call(func):
+def as_static_function_call(func, name=None):
     assert(isinstance(func, FunctionDef))
 
     args = func.arguments
@@ -172,6 +173,6 @@ def as_static_function_call(func):
     func = FunctionDef(func.name, list(args), [], body,
                        arguments_inout = func.arguments_inout,
                        functions=functions)
-    static_func = as_static_function(func)
+    static_func = as_static_function(func, name)
 
     return static_func
