@@ -203,7 +203,7 @@ class Codegen(object):
         #  ...
 
         expr = None
-        print(self._kind, '###########')
+
         if self.is_module:
             expr = Module(
                 self.name,
