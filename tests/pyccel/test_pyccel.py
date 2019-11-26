@@ -10,7 +10,7 @@ def get_python_output(path_dir,test_file):
     return out
 
 def compile_pyccel(path_dir,test_file):
-    p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
+    p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file, "--include=."], universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
 
@@ -20,11 +20,13 @@ def get_fortran_output(path_dir,test_file):
     assert(p.returncode==0)
     return out
 
-def pyccel_test(test_file):
+def pyccel_test(test_file, dependencies):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, 'scripts')
 
     pyth_out = get_python_output(path_dir,test_file)
+    for d in dependencies:
+        compile_pyccel(path_dir, d)
     compile_pyccel(path_dir,test_file)
     fort_out = get_fortran_output(path_dir,test_file[:-3])
 
@@ -32,7 +34,7 @@ def pyccel_test(test_file):
 
 @pytest.mark.xfail
 def test_imports():
-    pyccel_test("test_imports.py")
+    pyccel_test("test_imports.py",["funcs.py"])
 
 def test_funcs():
     pyccel_test("test_funcs.py")
