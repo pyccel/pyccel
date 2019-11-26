@@ -62,6 +62,25 @@ def pyccel_test(test_file, dependencies = None):
 def test_imports():
     pyccel_test("test_imports.py","funcs.py")
 
+@pytest.mark.xfail
+def test_folder_imports():
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    from scripts.folder2.test_imports2 import testing
+    pyth_out = testing()
+
+    base_dir = os.path.join(base_dir, 'scripts')
+    path_dir = os.path.join(base_dir, 'folder1')
+    compile_pyccel(path_dir, "funcs.py")
+
+    path_dir = os.path.join(base_dir, 'folder2')
+    compile_pyccel(path_dir,"test_imports2.py")
+
+    #compile_f2py(path_dir, "test_imports2.py")
+    #fort_out = get_fortran_output(path_dir,test_file[:-3])
+
+    #assert(pyth_out.strip()==fort_out.strip())
+
 def test_funcs():
     pyccel_test("test_funcs.py")
 
