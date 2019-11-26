@@ -198,14 +198,10 @@ def builtin_import(expr):
 
 def get_function_from_ast(ast, func_name):
     node = None
-    n_stmt = len(ast)
-    i_stmt = 0
-    while ( node is None ) and ( i_stmt < n_stmt ):
-        stmt = ast[i_stmt]
+    for stmt in ast:
         if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
             node = stmt
-
-        i_stmt += 1
+            break
 
     if node is None:
         print('> could not find {}'.format(func_name))
