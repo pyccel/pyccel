@@ -34,10 +34,10 @@ def pyccel_test(test_file, dependencies = None):
     path_dir = os.path.join(base_dir, 'scripts')
 
     pyth_out = get_python_output(path_dir,test_file)
-    if (type(dependencies) is list):
+    if (isinstance(dependencies, list)):
         for d in dependencies:
             compile_pyccel(path_dir, d)
-    elif (type(dependencies) is str):
+    elif (isinstance(dependencies, str)):
         compile_pyccel(path_dir, dependencies)
     compile_pyccel(path_dir,test_file)
     fort_out = get_fortran_output(path_dir,test_file[:-3])

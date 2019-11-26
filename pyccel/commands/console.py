@@ -19,11 +19,10 @@ from pyccel.codegen.utilities import compile_fortran
 from pyccel.codegen.utilities import execute_pyccel
 from pyccel.ast.core          import Import
 from pyccel.ast.core          import Module
-from pyccel.ast.f2py          import F2PY_FunctionInterface, F2PY_ModuleInterface
+from pyccel.ast.f2py          import F2PY_FunctionInterface
 from pyccel.ast.f2py          import as_static_function
 from pyccel.ast.f2py          import as_static_function_call
 from pyccel.ast.utilities     import get_external_function_from_ast
-from pyccel.ast.utilities     import get_function_from_ast
 
 class MyParser(argparse.ArgumentParser):
     """
@@ -301,7 +300,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         codegen = Codegen(ast, name)
 
         settings['prefix_module'] = prefix_module
-        code = codegen.doprint(**settings)
+        codegen.doprint(**settings)
         if prefix:
             name = '{prefix}{name}'.format(prefix=prefix, name=name)
 
