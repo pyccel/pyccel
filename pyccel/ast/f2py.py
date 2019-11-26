@@ -96,7 +96,6 @@ def as_static_function(func, name=None):
                 arguments_inout += [False]
             else:
                 _results = results
-
         else:
             raise NotImplementedError('when len(results) > 1')
 

@@ -266,7 +266,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         name = os.path.splitext(name)[0]
 
         funcs     = ast.namespace.functions.values()
-        namespace = ast.namespace.sons_scopes
+        namespace = ast.namespace.functions
 
         funcs, others = get_external_function_from_ast(funcs)
         static_funcs  = []
@@ -276,16 +276,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         for f in funcs:
             if f.is_external:
                 static_func = as_static_function(f, str(f.name))
-
-                namespace[str(f.name)] = namespace[str(f.name)]
+                namespace[str(f.name)] = static_func
 
             elif f.is_external_call:
                 static_func = as_static_function_call(f, str(f.name))
-                namespace[str(static_func.name).lower()] = namespace[str(f.name)]
+                namespace[str(f.name)] = static_func
                 imports += [Import(f.name, name)]
 
             static_funcs.append(static_func)
-            parents[static_func.name] = f.name
+            parents[f.name] = f.name
 
         for f in others:
             imports += [Import(f.name, name)]
