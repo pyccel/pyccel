@@ -19,7 +19,6 @@ from pyccel.codegen.utilities import compile_fortran
 from pyccel.codegen.utilities import execute_pyccel
 from pyccel.ast.core          import Import
 from pyccel.ast.core          import Module
-from pyccel.ast.f2py          import F2PY_FunctionInterface
 from pyccel.ast.f2py          import as_static_function
 from pyccel.ast.f2py          import as_static_function_call
 from pyccel.ast.utilities     import get_external_function_from_ast
