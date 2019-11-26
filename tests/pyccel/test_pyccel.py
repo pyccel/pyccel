@@ -19,7 +19,7 @@ def compile_pyccel(path_dir,test_file, options = ""):
 
 def compile_f2py(path_dir,test_file):
     root = test_file[:-3]
-    p = subprocess.Popen([shutil.which("f2py"), "-c", "%s.f90" % root, "-o", "%s" % root], universal_newlines=True, cwd=path_dir)
+    p = subprocess.Popen([shutil.which("f2py"), "-c", "%s.f90" % root, "-m", "%s" % root], universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
 
