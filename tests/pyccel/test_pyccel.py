@@ -29,9 +29,22 @@ def get_fortran_output(path_dir,test_file):
     assert(p.returncode==0)
     return out
 
+def teardown(path_dir = None):
+    if path_dir == None:
+        path_dir = os.path.dirname(os.path.realpath(__file__))
+    files = os.listdir(path_dir)
+    for f in files:
+        file_name = os.path.join(path_dir,f)
+        if not os.path.isfile(file_name):
+            teardown(file_name)
+        elif not f.endswith(".py"):
+            os.remove(file_name)
+
 def pyccel_test(test_file, dependencies = None):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, 'scripts')
+
+    teardown(path_dir)
 
     pyth_out = get_python_output(path_dir,test_file)
     if (isinstance(dependencies, list)):
@@ -43,6 +56,8 @@ def pyccel_test(test_file, dependencies = None):
     fort_out = get_fortran_output(path_dir,test_file[:-3])
 
     assert(pyth_out.strip()==fort_out.strip())
+
+    teardown(path_dir)
 
 @pytest.mark.xfail
 def test_imports():
@@ -66,3 +81,5 @@ def test_f2py_compat():
     fort_out = mod.return_one()
 
     assert(pyth_out==fort_out)
+
+    teardown(path_dir)
