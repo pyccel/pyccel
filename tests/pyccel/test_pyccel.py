@@ -113,7 +113,7 @@ def test_imports():
 @pytest.mark.xfail
 def test_folder_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
-    # From this folder python understands relative imports 
+    # From this folder python understands relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.test_imports2 import testing
@@ -136,7 +136,7 @@ def test_folder_imports_python_accessible_folder():
 def test_folder_imports():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
-    # From this folder python doesn't understand relative imports 
+    # From this folder python doesn't understand relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.test_imports2 import testing
@@ -146,7 +146,6 @@ def test_folder_imports():
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/funcs.py"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"), "-f")
     compile_f2py(os.path.join(path_dir,"folder2"), "test_imports2.py", "../folder1/funcs.py")
-    p.wait()
 
     import scripts.folder2.test_imports2 as mod
     fort_out = mod.testing()
