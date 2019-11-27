@@ -58,7 +58,6 @@ def pyccel_test(test_file, dependencies = None):
 
     assert(pyth_out.strip()==fort_out.strip())
 
-@pytest.mark.xfail
 def test_imports():
     pyccel_test("test_imports.py","funcs.py")
 
@@ -99,3 +98,13 @@ def test_f2py_compat():
     fort_out = mod.return_one()
 
     assert(pyth_out==fort_out)
+
+def test_pyccel_calling_directory():
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, 'scripts')
+
+    pyth_out = get_python_output(path_dir,"test_funcs.py")
+    compile_pyccel(base_dir,"scripts/test_funcs.py")
+    fort_out = get_fortran_output(path_dir,"test_funcs")
+
+    assert(pyth_out.strip()==fort_out.strip())
