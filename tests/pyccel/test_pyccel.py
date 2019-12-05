@@ -105,7 +105,6 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
 
     assert(pyth_out.strip()==fort_out.strip())
 
-@pytest.mark.xfail
 def test_rel_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
     # From this folder python understands relative imports
@@ -130,7 +129,6 @@ def test_rel_imports_python_accessible_folder():
 def test_imports_compile():
     pyccel_test("scripts/test_imports.py","scripts/funcs.py", compile_with_pyccel = False)
 
-@pytest.mark.xfail
 def test_imports_in_folder():
     # Fails as imports are wrongly defined
     pyccel_test("scripts/test_folder_imports.py","scripts/folder1/funcs.py", compile_with_pyccel = False)
@@ -140,7 +138,6 @@ def test_imports():
     # Fails as pyccel cannot compile the resulting files
     pyccel_test("scripts/test_imports.py","scripts/funcs.py")
 
-@pytest.mark.xfail
 def test_folder_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
     # From this folder python understands relative imports
