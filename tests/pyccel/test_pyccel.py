@@ -107,6 +107,11 @@ def test_imports_compile():
 
 @pytest.mark.xfail
 def test_imports():
+    # Fails as imports are wrongly defined
+    pyccel_test("scripts/test_folder_imports.py","scripts/folder1/funcs.py")
+
+@pytest.mark.xfail
+def test_imports():
     # Fails as pyccel cannot compile the resulting files
     pyccel_test("scripts/test_imports.py","scripts/funcs.py")
 
