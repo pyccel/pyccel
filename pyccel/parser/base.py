@@ -195,7 +195,7 @@ def is_ignored_module(name):
     return False
 
 
-def get_filename_from_import(module,output_folder=''):
+def get_filename_from_import(module,input_folder=''):
     """Returns a valid filename with absolute path, that corresponds to the
     definition of module.
     The priority order is:
@@ -211,7 +211,7 @@ def get_filename_from_import(module,output_folder=''):
     if is_valid_filename_py(filename_py):
         return os.path.abspath(filename_py)
 
-    folders = output_folder.split(""".""")
+    folders = input_folder.split(""".""")
     for i in range(len(folders)):
         poss_dirname      = os.path.join( *folders[:i+1] )
         poss_filename_pyh = os.path.join( poss_dirname, filename_pyh )
