@@ -114,9 +114,9 @@ def test_rel_imports_python_accessible_folder():
 
     pyth_out = testing()
 
-    compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/funcs.py"))
+    compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"), "-f --output=folder2")
-    p = subprocess.Popen([shutil.which("f2py"), "-c", "funcs.o", "test_rel_imports.f90", "-m", "test_rel_imports_call"],
+    p = subprocess.Popen([shutil.which("f2py"), "-c", "folder2_funcs.o", "test_rel_imports.f90", "-m", "test_rel_imports_call"],
             universal_newlines=True, cwd=os.path.join(path_dir,"folder2"))
     p.wait()
     assert(p.returncode==0)
@@ -131,7 +131,7 @@ def test_imports_compile():
 
 def test_imports_in_folder():
     # Fails as imports are wrongly defined
-    pyccel_test("scripts/test_folder_imports.py","scripts/folder1/funcs.py", compile_with_pyccel = False)
+    pyccel_test("scripts/test_folder_imports.py","scripts/folder1/folder1_funcs.py", compile_with_pyccel = False)
 
 @pytest.mark.xfail
 def test_imports():
@@ -147,9 +147,9 @@ def test_folder_imports_python_accessible_folder():
 
     pyth_out = testing()
 
-    compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/funcs.py"))
+    compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_imports2.py"), "-f")
-    p = subprocess.Popen([shutil.which("f2py"), "-c", "../folder1/funcs.o", "../test_imports2.f90", "-m", "test_imports2_call", "-I../folder1"],
+    p = subprocess.Popen([shutil.which("f2py"), "-c", "../folder1/folder1_funcs.o", "../test_imports2.f90", "-m", "test_imports2_call", "-I../folder1"],
             universal_newlines=True, cwd=os.path.join(path_dir,"folder2"))
     p.wait()
     assert(p.returncode==0)
@@ -170,9 +170,9 @@ def test_folder_imports():
 
     pyth_out = testing()
 
-    compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/funcs.py"))
+    compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"), "-f")
-    compile_f2py(os.path.join(path_dir,"folder2"), "test_imports2.py", "../folder1/funcs.py")
+    compile_f2py(os.path.join(path_dir,"folder2"), "test_imports2.py", "../folder1/folder1_funcs.py")
 
     import scripts.folder2.test_imports2 as mod
     fort_out = mod.test_imports2.testing()
