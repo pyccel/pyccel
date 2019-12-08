@@ -477,7 +477,7 @@ class SyntaxParser(BasicParser):
         if isinstance(source, DottedVariable):
             source = DottedName(*source.names)
 
-        if dots:
+        if len(dots)>1:
             if isinstance(source, DottedName):
                 source = DottedName(dots[:-1], *source.name)
             else:
