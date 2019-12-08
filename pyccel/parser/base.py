@@ -206,6 +206,10 @@ def get_filename_from_import(module,input_folder=''):
     filename_pyh = '{}.pyh'.format(module.replace('.','/'))
     filename_py = '{}.py'.format(module.replace('.','/'))
 
+    # relative imports
+    filename_pyh = filename_py.replace('//','../')
+    filename_py  = filename_pyh.replace('//','../')
+
     if is_valid_filename_pyh(filename_pyh):
         return os.path.abspath(filename_pyh)
     if is_valid_filename_py(filename_py):

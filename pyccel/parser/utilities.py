@@ -32,12 +32,14 @@ def read_file(filename):
 #  ... checking the validity of the filenames, using absolute paths
 def _is_valid_filename(filename, ext):
     """Returns True if filename has the extension ext and exists."""
+
     if not isinstance(filename, str):
         return False
 
     if not(ext == filename.split('.')[-1]):
         return False
     fname = os.path.abspath(filename)
+
     return os.path.isfile(fname)
 
 def is_valid_filename_py(filename):
