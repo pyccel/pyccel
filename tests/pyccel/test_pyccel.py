@@ -31,11 +31,13 @@ def compile_f2py(path_dir,test_file, dependencies = None):
     if isinstance(dependencies, list):
         for d in dependencies:
             command.append(d[:-3]+".o")
+            command.append("-I"+os.path.dirname(d))
     elif isinstance(dependencies, str):
         command.append(dependencies[:-3]+".o")
+        command.append("-I"+os.path.dirname(dependencies))
 
     command.append("-m")
-    command.append("%s" % root)
+    command.append("%s_call" % root)
 
     p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
     p.wait()
@@ -159,7 +161,6 @@ def test_folder_imports_python_accessible_folder():
 
     assert(pyth_out==fort_out)
 
-@pytest.mark.xfail
 def test_folder_imports():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
@@ -174,7 +175,7 @@ def test_folder_imports():
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"), "-f")
     compile_f2py(os.path.join(path_dir,"folder2"), "test_imports2.py", "../folder1/folder1_funcs.py")
 
-    import scripts.folder2.test_imports2 as mod
+    import scripts.folder2.test_imports2_call as mod
     fort_out = mod.test_imports2.testing()
 
     assert(pyth_out==fort_out)
@@ -192,8 +193,8 @@ def test_f2py_compat():
     compile_pyccel(path_dir, "test_f2py_compat.py", "-f")
     compile_f2py(path_dir, "test_f2py_compat.py")
 
-    import scripts.test_f2py_compat as mod
-    fort_out = mod.return_one()
+    import scripts.test_f2py_compat_call as mod
+    fort_out = mod.test_f2py_compat.return_one()
 
     assert(pyth_out==fort_out)
 
