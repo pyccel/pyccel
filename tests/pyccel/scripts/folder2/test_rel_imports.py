@@ -1,5 +1,5 @@
 from pyccel.decorators import external, pure
-from ..folder1.folder1_funcs import sum_to_n
+from .folder2_funcs import sum_to_n
 
 @external
 @pure
