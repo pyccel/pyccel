@@ -8,7 +8,7 @@ def test_degree(degree):
     from numpy import empty
 
     tmp = empty(degree+1, dtype=float)
-    for i in range(5):
+    for i in range(degree+1):
         tmp[i]=0.
     return 1
 
