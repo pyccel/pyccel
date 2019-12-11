@@ -4680,12 +4680,11 @@ def get_assigned_symbols(expr):
                 symbols.append(var)
             return symbols
         except:
+            #TODO should we keep the try/except clause ?
 
             # TODO must raise an Exception here
             #      this occurs only when parsing lapack.pyh
-
-            
-            pass
+            raise ValueError('Unable to extract assigned variable')
 #            print(type(expr.lhs), expr.lhs)
 #            print(expr)
 #            raise SystemExit('ERROR')
