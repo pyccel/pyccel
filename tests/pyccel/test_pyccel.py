@@ -209,3 +209,6 @@ def test_pyccel_calling_directory():
     fort_out = get_fortran_output(get_abs_path("test_funcs"))
 
     assert(pyth_out.strip()==fort_out.strip())
+
+def test_in_specified():
+    pyccel_test("scripts/test_degree_in.py")
