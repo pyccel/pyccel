@@ -11,3 +11,5 @@ def test_degree(degree):
     for i in range(5):
         tmp[i]=0.
     return 1
+
+print(test_degree(3))
