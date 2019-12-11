@@ -4669,28 +4669,25 @@ def get_assigned_symbols(expr):
 
         try:
             var = expr.lhs
-
+            symbols = []
             if isinstance(var, DottedVariable):
                 var = expr.lhs.lhs
                 while isinstance(var, DottedVariable):
                     var = var.lhs
+                symbols.append(var)
             elif isinstance(var, IndexedElement):
                 var = var.base
-            free_symbols = var.free_symbols
-            symbols = list(free_symbols)
+                symbols.append(var)
         except:
 
             # TODO must raise an Exception here
             #      this occurs only when parsing lapack.pyh
 
-            symbols = []
-
+            
+            pass
 #            print(type(expr.lhs), expr.lhs)
 #            print(expr)
 #            raise SystemExit('ERROR')
-
-        return symbols
-
 
     return []
 
