@@ -4678,6 +4678,7 @@ def get_assigned_symbols(expr):
             elif isinstance(var, IndexedElement):
                 var = var.base
                 symbols.append(var)
+            return symbols
         except:
 
             # TODO must raise an Exception here
