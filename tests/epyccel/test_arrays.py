@@ -711,6 +711,15 @@ def test_array_real_sum_stack_array():
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
+
+def test_array_real_div_stack_array():
+
+    f1 = arrays.array_real_1d_div_stack_array
+    f2 = epyccel( f1 )
+    x1 = f1()
+    x2 = f2()
+    assert np.equal( x1, x2 )
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
