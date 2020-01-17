@@ -2,13 +2,13 @@ from pyccel.decorators import types
 
 @types('double[:,:]','int','int','double','double','double[:,:]','double','double','double')
 def pdf ( density , x_range , y_range , x_center , y_center , w2D, r50 , b , a) :
-    from numpy import sqrt, pi, sum
+    from numpy import sqrt, pi, sum as np_sum
     for x in range ( x_range ) :
         for y in range ( y_range ) :
             dr = sqrt ( ( x - x_center ) ** 2 + ( y - y_center ) ** 2)
             tmp = 2 * (b - 1) / (2 * pi * ( r50 * a ) **2) * (1 + ( dr / ( r50 * a ) ) **2)**(-b)
             tmp2 = w2D * tmp
-            density [ x , y ] = sum(tmp2 )
+            density [ x , y ] = np_sum(tmp2 )
 
 from numpy import zeros
 
