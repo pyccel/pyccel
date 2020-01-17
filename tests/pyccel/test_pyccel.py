@@ -47,7 +47,7 @@ def compile_f2py(path_dir,test_file, dependencies = None):
 def compile_fortran(path_dir,test_file,dependencies):
     root = test_file[:-3]
 
-    assert(os.path.isfile(path_dir+root+".f90"))
+    assert(os.path.isfile(root+".f90"))
 
     command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
     if isinstance(dependencies, list):
