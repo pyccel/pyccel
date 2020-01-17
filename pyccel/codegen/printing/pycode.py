@@ -129,6 +129,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             source = self._print(expr.source)
             return 'from {source} import {target}'.format(source=source, target=target)
 
+    def _print_CodeBlock(self, expr):
+        code = '\n'.join(self._print(c) for c in expr.body)
+        return code
+
     def _print_For(self, expr):
         iter   = self._print(expr.iterable)
         target = expr.target
