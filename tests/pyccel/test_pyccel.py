@@ -2,6 +2,7 @@ import subprocess
 import os
 import pytest
 import shutil
+import numpy as np
 
 def get_abs_path(relative_path):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -46,6 +47,8 @@ def compile_f2py(path_dir,test_file, dependencies = None):
 def compile_fortran(path_dir,test_file,dependencies):
     root = test_file[:-3]
 
+    assert(os.path.isfile(root+".f90"))
+
     command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
     if isinstance(dependencies, list):
         for d in dependencies:
@@ -62,6 +65,7 @@ def compile_fortran(path_dir,test_file,dependencies):
     p.wait()
 
 def get_fortran_output(abs_path):
+    assert(os.path.isfile(abs_path))
     p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
@@ -80,6 +84,16 @@ def teardown(path_dir = None):
             teardown(file_name)
         elif not f.endswith(".py"):
             os.remove(file_name)
+
+def compare_pyth_fort_output( p_output, f_output ):
+    p_output = p_output.strip().split()
+    f_output = f_output.strip().split()
+
+    assert(len(p_output) == len(f_output))
+    for p, f in zip(p_output, f_output):
+        p = float(p)
+        f = float(f)
+        assert(np.isclose(p,f))
 
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = ""):
     if (cwd is None):
@@ -105,7 +119,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
 
     fort_out = get_fortran_output(test_file[:-3])
 
-    assert(pyth_out.strip()==fort_out.strip())
+    compare_pyth_fort_output(pyth_out, fort_out)
 
 def test_rel_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
@@ -208,7 +222,25 @@ def test_pyccel_calling_directory():
 
     fort_out = get_fortran_output(get_abs_path("test_funcs"))
 
-    assert(pyth_out.strip()==fort_out.strip())
+    compare_pyth_fort_output( pyth_out, fort_out )
 
 def test_in_specified():
     pyccel_test("scripts/test_degree_in.py")
+
+@pytest.mark.xfail
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
+                                        "scripts/hope_benchmarks/pisum.py",
+                                        "scripts/hope_benchmarks/quicksort.py",
+                                        "scripts/hope_benchmarks/ln_python.py",
+                                        "scripts/hope_benchmarks/pairwise_python.py",
+                                        "scripts/hope_benchmarks/point_spread_func.py",
+                                        "scripts/hope_benchmarks/simplify.py",
+                                        "scripts/hope_benchmarks_decorators/fib.py",
+                                        "scripts/hope_benchmarks_decorators/quicksort.py",
+                                        "scripts/hope_benchmarks_decorators/ln_python.py",
+                                        "scripts/hope_benchmarks_decorators/pairwise_python.py",
+                                        "scripts/hope_benchmarks_decorators/point_spread_func.py",
+                                        "scripts/hope_benchmarks_decorators/simplify.py"
+                                        ] )
+def test_hope_benchmarks( test_file ):
+    pyccel_test(test_file)
