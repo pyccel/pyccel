@@ -1273,7 +1273,7 @@ class FCodePrinter(CodePrinter):
         is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        is_procedure = expr.is_procedure or is_static
+        is_procedure = expr.is_procedure
 
         if expr.cls_name:
             for k, m in list(_default_methods.items()):
