@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from .core import DottedName
+from .core import DottedName, AsName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
@@ -160,37 +160,38 @@ def builtin_import(expr):
 
         # TODO imrove
     imports = []
-    for i in range(len(expr.target)):
+    for i, target in enumerate(expr.target):
+        if isinstance(target, AsName):
+            import_name = target.target
+            code_name = target.name
+        else:
+            import_name = str(target)
+            code_name = import_name
         if source == 'numpy':
 
-            target = str(expr.target[i])
-            if target in numpy_functions.keys():
-                imports.append((target, numpy_functions[target]))
+            if import_name in numpy_functions.keys():
+                imports.append((code_name, numpy_functions[import_name]))
 
-            elif target in math_functions.keys():
-                imports.append((target, math_functions[target]))
+            elif import_name in math_functions.keys():
+                imports.append((code_name, math_functions[import_name]))
 
-            elif target in numpy_constants.keys():
-                imports.append((target, numpy_constants[target]))
+            elif import_name in numpy_constants.keys():
+                imports.append((code_name, numpy_constants[import_name]))
 
         elif source == 'math':
 
-            target = str(expr.target[i])
-
-            if target in math_functions.keys():
-                imports.append((target, math_functions[target]))
+            if import_name in math_functions.keys():
+                imports.append((code_name, math_functions[import_name]))
 
         elif source == 'scipy':
             # TODO improve: source must be scipy.constants
             #      - use dynamic import?
-            target = str(expr.target[i])
-            if target in scipy_constants.keys():
-                imports.append((target, scipy_constants[target]))
+            if import_name in scipy_constants.keys():
+                imports.append((code_name, scipy_constants[import_name]))
         elif source == 'itertools':
-            target = str(expr.target[i])
 
-            if target == 'product':
-                imports.append((target, Product))
+            if import_name == 'product':
+                imports.append((code_name, Product))
 
 
 
