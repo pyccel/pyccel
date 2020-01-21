@@ -9,6 +9,8 @@ from pyccel.ast.core import Variable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Return
 from pyccel.ast.core import Module
+from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
 
 #=======================================================================================
 def sanitize_arguments(args):
@@ -157,21 +159,40 @@ def as_static_function(func, name=None):
     return FunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
-                        arguments_inout = arguments_inout,functions=functions )
+                        arguments_inout = arguments_inout,
+                        functions = functions,
+                        imports = func.imports
+                        )
 
 
 #=======================================================================================
-def as_static_function_call(func, name=None):
-    assert(isinstance(func, FunctionDef))
+def as_static_function_call(func, mod_name, name=None):
 
-    args = func.arguments
-    args = sanitize_arguments(args)
-    functions = func.functions
-    body = [FunctionCall(func, args)]
+    assert isinstance(func, FunctionDef)
+    assert isinstance(mod_name, str)
 
-    func = FunctionDef(func.name, list(args), [], body,
+    # create function alias by prepending 'mod_' to its name
+    func_alias = func.rename('mod_' + str(func.name))
+
+    # from module import func as func_alias
+    imports = [Import(target=AsName(func_alias.name, func.name), source=mod_name)]
+
+    # function arguments
+    args = sanitize_arguments(func.arguments)
+
+    # function body
+    call = FunctionCall(func_alias, args)
+    stmt = call if func.is_procedure else Assign(func.results[0], call)
+    body = [stmt]
+
+    # new function declaration
+    new_func = FunctionDef(func.name, list(args), func.results, body,
                        arguments_inout = func.arguments_inout,
-                       functions=functions)
-    static_func = as_static_function(func, name)
+                       functions = func.functions,
+                       imports = imports,
+                       )
+
+    # make it compatible with f2py
+    static_func = as_static_function(new_func, name)
 
     return static_func

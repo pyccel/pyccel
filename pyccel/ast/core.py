@@ -3031,7 +3031,7 @@ class FunctionDef(Basic):
                 and self.results[0].rank > 0
         flag = flag or len(self.results) > 1
         flag = flag or len(self.results) == 0
-        flag = flag or self.kind == 'procedure' or self.is_static
+        flag = flag or self.kind == 'procedure'
         flag = flag \
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
