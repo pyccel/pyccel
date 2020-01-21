@@ -451,13 +451,48 @@ class SyntaxParser(BasicParser):
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
 
+        scope = stmt
+        while scope.parent != None and not isinstance(scope, (RedBaron, DefNode)):
+            scope = scope.parent
+
         # in an import statement, we can have seperate target by commas
         ls = self._visit(stmt.value)
         ls = get_default_path(ls)
-        expr = Import(ls)
-        expr.set_fst(stmt)
-        self.insert_import(expr)
-        return expr
+
+        expr = []
+
+        for l in ls:
+            usage = scope.find_all('NameNode',value=l)
+            targets = set()
+
+            for u in usage:
+                phrase = u.parent
+                pos_in_phrase = u.index_on_parent
+
+                if isinstance(phrase, DottedAsNameNode):
+                    continue
+                elif isinstance(phrase, AtomtrailersNode):
+                    if (pos_in_phrase + 1 >= len(phrase.value)):
+                        errors.report(INVALID_PYTHON_SYNTAX,
+                                bounding_box=u.parent.absolute_bounding_box,
+                                severity='error')
+
+                    func_name = phrase.value[pos_in_phrase+1].dumps()
+                    targets.add(func_name+" as "+l+"_"+func_name)
+
+                    line = phrase.dumps()
+                    new_line = line.replace(l+'.',l+'_')
+                    phrase.replace(RedBaron(new_line)[0])
+                else:
+                    raise NotImplementedError(phrase)
+
+            replacement_line="from "+l+" import "+", ".join(targets)
+            expr.append(self._visit(RedBaron(replacement_line)[0]))
+
+        if (len(expr)==1):
+            return expr[0]
+        else:
+            return Tuple(expr, sympify=False)
 
     def _visit_FromImportNode(self, stmt):
 
