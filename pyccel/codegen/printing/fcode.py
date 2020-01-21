@@ -391,7 +391,6 @@ class FCodePrinter(CodePrinter):
             else:
                 source = self._print(expr.source)
             prefix = 'use {}, only:'.format(source)
-            prefix_as = 'use {},'.format(source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
@@ -404,7 +403,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(i, AsName):
                 target = '{name} => {target}'.format(name=self._print(i.name),
                                                      target=self._print(i.target))
-                line = '{prefix} {target}'.format(prefix=prefix_as,
+                line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
             elif isinstance(i, DottedName):
