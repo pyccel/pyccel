@@ -1311,21 +1311,17 @@ class FCodePrinter(CodePrinter):
             ret_type += '(kind={0})'.format(str(result.precision))
 
             func_type = 'function'
-            rec = ''
-            if expr.is_recursive:
-                rec = 'recursive '
-            if result.allocatable or (result.rank > 0):
-                sig = '{0}function {1}'.format(rec, name)
-                var = Variable(result.dtype, result.name, \
-                             rank=result.rank, \
-                             allocatable=True, \
-                             shape=result.shape)
+            rec = 'recursive ' if expr.is_recursive else ''
+            sig = '{0}function {1}'.format(rec, name)
+            func_end = 'result({0})'.format(result.name)
 
-                dec = Declare(result.dtype, var)
-                args_decs[str(var)] = dec
-            else:
-                sig = '{0} {1}function {2}'.format(ret_type, rec, name)
-                func_end  = ' result({0})'.format(result.name)
+            var = Variable(result.dtype, result.name, \
+                         rank=result.rank, \
+                         allocatable=result.allocatable, \
+                         shape=result.shape)
+            dec = Declare(result.dtype, var)
+            args_decs[str(var)] = dec
+
         else:
             # TODO compute intent
             # a static function is always treated as a procedure
