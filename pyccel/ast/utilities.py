@@ -160,7 +160,7 @@ def builtin_import(expr):
 
         # TODO imrove
     imports = []
-    for i, target in enumerate(expr.target):
+    for target in expr.target:
         if isinstance(target, AsName):
             import_name = target.target
             code_name = target.name
