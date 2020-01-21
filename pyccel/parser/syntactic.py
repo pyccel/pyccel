@@ -332,10 +332,24 @@ class SyntaxParser(BasicParser):
             names.append(strip_ansi_escape.sub('', a.value))
 
         if len(names) == 1:
-            return names[0]
+            value = names[0]
         else:
+            value = DottedName(*names)
 
-            return DottedName(*names)
+        if not stmt.target:
+            return value
+
+        old = value
+        new = self._visit(stmt.target)
+
+        # TODO improve
+
+        if isinstance(old, str):
+            old = old.replace("'", '')
+        if isinstance(new, str):
+            new = new.replace("'", '')
+
+        return AsName(new, old)
 
     def _visit_NameAsNameNode(self, stmt):
 
@@ -462,7 +476,14 @@ class SyntaxParser(BasicParser):
         expr = []
 
         for l in ls:
-            usage = scope.find_all('NameNode',value=l)
+            if isinstance(l, AsName):
+                import_name = l.target
+                code_name = l.name
+            else:
+                import_name = l
+                code_name = import_name
+
+            usage = scope.find_all('NameNode',value=code_name)
             targets = set()
 
             for u in usage:
@@ -478,15 +499,15 @@ class SyntaxParser(BasicParser):
                                 severity='error')
 
                     func_name = phrase.value[pos_in_phrase+1].dumps()
-                    targets.add(func_name+" as "+l+"_"+func_name)
+                    targets.add(func_name+" as "+code_name+"_"+func_name)
 
                     line = phrase.dumps()
-                    new_line = line.replace(l+'.',l+'_')
+                    new_line = line.replace(code_name+'.',code_name+'_')
                     phrase.replace(RedBaron(new_line)[0])
                 else:
                     raise NotImplementedError(phrase)
 
-            replacement_line="from "+l+" import "+", ".join(targets)
+            replacement_line="from "+import_name+" import "+", ".join(targets)
             expr.append(self._visit(RedBaron(replacement_line)[0]))
 
         if (len(expr)==1):
