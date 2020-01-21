@@ -507,8 +507,9 @@ class SyntaxParser(BasicParser):
                 else:
                     raise NotImplementedError(phrase)
 
-            replacement_line="from "+import_name+" import "+", ".join(targets)
-            expr.append(self._visit(RedBaron(replacement_line)[0]))
+            if (len(targets)!=0):
+                replacement_line="from "+import_name+" import "+", ".join(targets)
+                expr.append(self._visit(RedBaron(replacement_line)[0]))
 
         if (len(expr)==1):
             return expr[0]
