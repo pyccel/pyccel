@@ -8,6 +8,8 @@ import pickle
 import os
 import sys
 import re
+import string
+import random
 
 #==============================================================================
 
@@ -189,6 +191,14 @@ redbaron.ipython_behavior = False
 
 from pyccel.parser.base import BasicParser
 from pyccel.parser.base import is_ignored_module
+
+#==============================================================================
+def random_string( n ):
+    # we remove uppercase letters because of f2py
+    chars    = string.ascii_lowercase + string.digits
+    selector = random.SystemRandom()
+    return ''.join( selector.choice( chars ) for _ in range( n ) )
+#==============================================================================
 
 class SyntaxParser(BasicParser):
 
@@ -480,6 +490,7 @@ class SyntaxParser(BasicParser):
             else:
                 import_name = l
                 code_name = import_name
+            code_replacement = code_name + "_" + random_string(6)
 
             usage = scope.find_all('NameNode',value=code_name)
             targets = set()
@@ -497,10 +508,10 @@ class SyntaxParser(BasicParser):
                                 severity='error')
 
                     func_name = phrase.value[pos_in_phrase+1].dumps()
-                    targets.add(func_name+" as "+code_name+"_"+func_name)
+                    targets.add(func_name+" as "+code_replacement+"_"+func_name)
 
                     line = phrase.dumps()
-                    new_line = line.replace(code_name+'.',code_name+'_')
+                    new_line = line.replace(code_name+'.',code_replacement+'_')
                     phrase.replace(RedBaron(new_line)[0])
                 else:
                     raise NotImplementedError(phrase)
