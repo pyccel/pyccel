@@ -465,9 +465,7 @@ class SyntaxParser(BasicParser):
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
 
-        scope = stmt
-        while scope.parent != None and not isinstance(scope, (RedBaron, DefNode)):
-            scope = scope.parent
+        scope = stmt.root
 
         # in an import statement, we can have seperate target by commas
         ls = self._visit(stmt.value)
