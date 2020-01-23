@@ -53,6 +53,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_Idx(self, expr):
+        return self._print(expr.name)
+
     def _print_IndexedElement(self, expr):
         indices = expr.indices
         if isinstance(indices, (tuple, list, Tuple)):
