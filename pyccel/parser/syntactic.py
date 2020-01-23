@@ -464,18 +464,107 @@ class SyntaxParser(BasicParser):
             val = strip_ansi_escape.sub('', stmt.value)
             return Symbol(val)
 
+    def _find_import_usage(self, import_phrase, stmt, scope, usage = None):
+        if isinstance(import_phrase, AsName):
+            import_name = import_phrase.target
+            code_name = import_phrase.name
+            if (import_name == ""):
+                import_name = code_name
+            my_node = stmt.find("dotted_as_name")
+        else:
+            import_name = import_phrase
+            code_name = import_name
+            my_node = stmt.find("name")
+        code_replacement = code_name + "_" + random_string(6)
+
+        if (usage is None):
+            usage = scope.find_all(["dotted_as_name","name"],
+                                   lambda occ: (isinstance(occ,DottedAsNameNode) and occ.target == code_name)
+                                                     or (isinstance(occ,NameNode) and occ.value == code_name))
+
+        i = 0
+
+        # ignore occurences before import
+        while (usage[i] != my_node):
+            i+=1
+        i+=1
+
+        if (i>=len(usage)):
+           return None 
+
+        targets = set()
+
+        while (i < len(usage)):
+            imp_node = usage[i].parent_find("import")
+
+            # If occurs in an import node
+            if (imp_node is not None):
+                occ_scope = usage[i].parent
+                while occ_scope.parent != None and not isinstance(occ_scope, (RedBaron, DefNode)):
+                    occ_scope = occ_scope.parent
+
+                # if in the same scope then break
+                if (occ_scope == scope):
+                    # if only one object is imported then replace the line now to avoid looping over the usage again
+                    if (len(imp_node.value) == 1):
+                        new_phrase = self._visit(imp_node.value)[0]
+                        replacement_line = self._find_import_usage(new_phrase, imp_node, occ_scope, usage[i:])
+                        if (replacement_line is None):
+                            imp_node.replace(RedBaron("\n")[0])
+                        else:
+                            imp_node.replace(RedBaron(replacement_line)[0])
+                    break
+                else:
+                    # if in a function then skip over the rest of the function
+                    occ_usage = occ_scope.find_all(["dotted_as_name","name"],
+                                                    lambda occ: (isinstance(occ,DottedAsNameNode) and occ.target == code_name)
+                                                                      or (isinstance(occ,NameNode) and occ.value == code_name))
+                    i+=len(occ_usage)
+
+                    # if only one object is imported then replace the line now to avoid collecting the usage again
+                    if (len(imp_node.value) == 1):
+                        new_phrase = self._visit(imp_node.value)[0]
+                        replacement_line = self._find_import_usage(new_phrase, imp_node, occ_scope, occ_usage)
+                        if (replacement_line is None):
+                            imp_node.replace(RedBaron("\n")[0])
+                        else:
+                            imp_node.replace(RedBaron(replacement_line)[0])
+            else:
+                phrase = usage[i].parent
+                pos_in_phrase = usage[i].index_on_parent
+
+                # Collect the object called from the import module
+                if isinstance(phrase, AtomtrailersNode):
+                    if (pos_in_phrase + 1 >= len(phrase.value)):
+                        errors.report(INVALID_PYTHON_SYNTAX,
+                                bounding_box=u.parent.absolute_bounding_box,
+                                severity='error')
+
+                    func = phrase.value[pos_in_phrase+1]
+                    if isinstance(func, NameNode):
+                        func_name = func.dumps()
+                        targets.add(func_name+" as "+code_replacement+"_"+func_name)
+
+                        line = phrase.dumps()
+                        new_line = line.replace(code_name+'.',code_replacement+'_')
+                        phrase.replace(RedBaron(new_line)[0])
+
+                i+=1
+
+        if (len(targets)!=0):
+            return "from "+import_name+" import "+", ".join(targets)
+        else:
+            return None
+
     def _visit_ImportNode(self, stmt):
         if not isinstance(stmt.parent, (RedBaron, DefNode)):
             errors.report(PYCCEL_RESTRICTION_IMPORT,
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
 
-        if isinstance(stmt.parent, DefNode):
-            errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
-        scope = stmt.root
+        scope = stmt
+        while scope.parent != None and not isinstance(scope, (RedBaron, DefNode)):
+            scope = scope.parent
 
         # in an import statement, we can have seperate target by commas
         ls = self._visit(stmt.value)
@@ -484,40 +573,9 @@ class SyntaxParser(BasicParser):
         expr = []
 
         for l in ls:
-            if isinstance(l, AsName):
-                import_name = l.target
-                code_name = l.name
-            else:
-                import_name = l
-                code_name = import_name
-            code_replacement = code_name + "_" + random_string(6)
+            replacement_line = self._find_import_usage(l, stmt, scope)
 
-            usage = scope.find_all('NameNode',value=code_name)
-            targets = set()
-
-            for u in usage:
-                phrase = u.parent
-                pos_in_phrase = u.index_on_parent
-
-                if isinstance(phrase, DottedAsNameNode):
-                    continue
-                elif isinstance(phrase, AtomtrailersNode):
-                    if (pos_in_phrase + 1 >= len(phrase.value)):
-                        errors.report(INVALID_PYTHON_SYNTAX,
-                                bounding_box=u.parent.absolute_bounding_box,
-                                severity='error')
-
-                    func_name = phrase.value[pos_in_phrase+1].dumps()
-                    targets.add(func_name+" as "+code_replacement+"_"+func_name)
-
-                    line = phrase.dumps()
-                    new_line = line.replace(code_name+'.',code_replacement+'_')
-                    phrase.replace(RedBaron(new_line)[0])
-                else:
-                    raise NotImplementedError(phrase)
-
-            if (len(targets)!=0):
-                replacement_line="from "+import_name+" import "+", ".join(targets)
+            if (replacement_line is not None):
                 expr.append(self._visit(RedBaron(replacement_line)[0]))
 
         if (len(expr)==1):

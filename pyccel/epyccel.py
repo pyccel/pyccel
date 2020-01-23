@@ -9,12 +9,10 @@ import subprocess
 import importlib
 import sys
 import os
-import string
-import random
 from shutil import copyfile
 
 
-from pyccel.parser                  import Parser
+from pyccel.parser                  import Parser, random_string
 from pyccel.parser.errors           import Errors, PyccelError
 from pyccel.parser.syntax.headers   import parse
 from pyccel.codegen                 import Codegen
@@ -37,14 +35,6 @@ from pyccel.ast.utilities           import get_function_from_ast
 #==============================================================================
 
 PY_VERSION = sys.version_info[0:2]
-
-#==============================================================================
-
-def random_string( n ):
-    # we remove uppercase letters because of f2py
-    chars    = string.ascii_lowercase + string.digits
-    selector = random.SystemRandom()
-    return ''.join( selector.choice( chars ) for _ in range( n ) )
 
 #==============================================================================
 
