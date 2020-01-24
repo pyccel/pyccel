@@ -11,8 +11,8 @@ import sys
 import os
 import string
 import random
-from shutil import copyfile
-
+import shutil
+import glob
 
 from pyccel.parser                  import Parser
 from pyccel.parser.errors           import Errors, PyccelError
@@ -25,7 +25,7 @@ from pyccel.ast.utilities           import build_types_decorator
 from pyccel.ast.core                import FunctionDef
 from pyccel.ast.core                import Import
 from pyccel.ast.core                import Module
-from pyccel.ast.f2py                import F2PY_FunctionInterface, F2PY_ModuleInterface
+from pyccel.ast.f2py                import F2PY_FunctionInterface
 from pyccel.ast.f2py                import as_static_function
 from pyccel.ast.f2py                import as_static_function_call
 from pyccel.codegen.printing.pycode import pycode
@@ -579,6 +579,7 @@ def clean_extension_module( ext_mod, py_mod_name ):
 # assumes relative path
 # TODO add openacc
 def compile_f2py( filename,
+                  modulename=None,
                   extra_args='',
                   libs=[],
                   libdirs=[],
@@ -633,7 +634,8 @@ def compile_f2py( filename,
     if not includes:
         includes = ''
 
-    modulename = filename.split('.')[0]
+    if not modulename:
+        modulename = filename.split('.')[0]
 
     libs = ' '.join('-l'+i.lower() for i in libs)
     libdirs = ' '.join('-L'+i for i in libdirs)
@@ -814,7 +816,7 @@ def epyccel_function(func,
     return func
 
 #==============================================================================
-
+# TODO: extract epyccel-specific code from this function
 def epyccel_module(module,
                    namespace   = globals(),
                    compiler    = None,
@@ -831,43 +833,55 @@ def epyccel_module(module,
                    folder      = None):
 
     # ... get the module source code
-    if not isinstance(module, ModuleType):
-        raise TypeError('> Expecting a module')
+    if isinstance(module, str):
+        fname = module
+        module_name = os.path.splitext(os.path.basename(fname))[0]
+        binary = '{}.o'.format(module_name)
 
-    lines = inspect.getsourcelines(module)[0]
-    code = ''.join(lines)
+    elif isinstance(module, ModuleType):
+        lines = inspect.getsourcelines(module)[0]
+        code = ''.join(lines)
+
+        module_name = module.__name__.split('.')[-1]
+        fname       = module.__file__
+        binary      = '{}.o'.format(module_name)
+
+    else:
+        raise TypeError('> Expecting a module path or ModuleType')
     # ...
 
-    # ...
-    tag = random_string( 6 )
-    # ...
+    #------------------------------------------------------
+    # NOTE:
+    # [..]_dirname is the name of a directory
+    # [..]_dirpath is the full (absolute) path of a directory
+    #------------------------------------------------------
 
-    # ...
-    module_name = module.__name__.split('.')[-1]
-    fname       = module.__file__
-    binary      = '{}.o'.format(module_name)
-    libname     = tag
-    # ...
+    # Define directory names
+    epyccel_dirname = '__epyccel__'
+    pyccel_dirname = '__pyccel__'
 
-    # ...
+    # Define working directory 'folder'
+    base_dirpath = os.getcwd()
     if folder is None:
-        basedir = os.getcwd()
-        folder = '__pycache__'
-        folder = os.path.join( basedir, folder )
+        folder = base_dirpath
 
-    folder = os.path.abspath( folder )
+    # Absolute paths
+    epyccel_dirpath = os.path.join(folder, epyccel_dirname)
+    pyccel_dirpath = os.path.join(epyccel_dirpath, pyccel_dirname)
+
+    # Create new directories if not existing
     mkdir_p(folder)
-    # ...
+    mkdir_p(epyccel_dirpath)
+    mkdir_p(pyccel_dirpath)
 
-    # ...
-    basedir = os.getcwd()
-    os.chdir(folder)
-    curdir = os.getcwd()
-    # ...
+    # Move to epyccel directory
+    os.chdir(epyccel_dirpath)
+
+    #------------------------------------------------------
 
     # ... we need to store the python file in the folder, so that execute_pyccel
     #     can run
-    copyfile(fname, os.path.basename(fname))
+    shutil.copyfile(fname, os.path.basename(fname))
     fname = os.path.basename(fname)
     # ...
 
@@ -902,93 +916,74 @@ def epyccel_module(module,
                                        modules     = modules,
                                        libs        = libs,
                                        binary      = None,
-                                       output      = '',
+                                       output      = pyccel_dirpath,
                                        return_ast  = True )
     # ...
 
-    # ... add -c to not warn if the library had to be created
-    cmd = 'ar -rc lib{libname}.a {binary} '.format(binary=binary, libname=libname)
-    
-    output = subprocess.check_output(cmd, shell=True)
-
-    if verbose:
-        print(cmd)
-    # ...
+    # Move to pyccel directory
+    os.chdir(pyccel_dirpath)
 
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
 
     funcs = ast.routines + ast.interfaces
     namespace = ast.parser.namespace.sons_scopes
-    
-    funcs, others = get_external_function_from_ast(funcs)
-    static_funcs = []
-    imports = []
-    parents = OrderedDict()
+
+    # NOTE: we create an f2py interface for ALL functions
+    f2py_filename = 'f2py_{}.f90'.format(module_name.lower())
+
+    sharedlib_modname = module_name.lower()
+
+    f2py_funcs = []
     for f in funcs:
-        if f.is_external:
-            static_func = as_static_function(f)
-            
-            namespace['f2py_'+str(f.name).lower()] = namespace[str(f.name)]
-            # S.H we set the new scope name 
+        static_func = as_static_function_call(f, module_name, name=f.name)
+        namespace[str(static_func.name).lower()] = namespace[str(f.name)]
+        f2py_funcs.append(static_func)
 
-        elif f.is_external_call:
-            static_func = as_static_function_call(f)
-            namespace[str(static_func.name).lower()] = namespace[str(f.name)]
-            imports += [Import(f.name, module_name.lower())]
+    f2py_code = '\n\n'.join([fcode(f, ast.parser) for f in f2py_funcs])
 
-        static_funcs.append(static_func)
-        parents[static_func.name] = f.name
+    # Write file f2py_MOD.f90
+    write_code(f2py_filename, f2py_code, folder=pyccel_dirpath)
 
-    for f in others:
-        imports += [Import(f.name, module_name.lower())]
-
-    f2py_module_name = 'f2py_{}'.format(module_name)
-    f2py_module_name = f2py_module_name.lower()
-    f2py_module = Module( f2py_module_name,
-                          variables = [],
-                          funcs = static_funcs,
-                          interfaces = [],
-                          classes = [],
-                          imports = imports )
-
-    code = fcode(f2py_module, ast.parser)
-
-    filename = '{}.f90'.format(f2py_module_name)
-    write_code(filename, code, folder=folder)
-
-    output, cmd = compile_f2py( filename,
-                                extra_args  = extra_args,
-                                libs        = [libname],
-                                libdirs     = [curdir],
+    # Create file __epyccel_module__MOD.so
+    output, cmd = compile_f2py( f2py_filename,
+                                modulename  = sharedlib_modname,
+                                libs        = [],
+                                libdirs     = [],
+                                includes    = binary,  # TODO: this is not an include...
+                                extra_args  = '--no-wrap-functions --build-dir f2py_build',
                                 compiler    = compiler,
                                 accelerator = accelerator,
                                 mpi         = mpi )
 
+    #++++++++++++++++++++++++++++ START: epyccel specific ++++++++++++++++++++++++++++++++++
+
+    # Obtain full name of shared library
+    pattern = '{}*.so'.format(sharedlib_modname)
+    sharedlib_filename = glob.glob(pattern)[0]
+
     if verbose:
         print(cmd)
-    # ...
-    # ...
-    # update module name for dependencies
-    # needed for interface when importing assembly
-    # name.name is needed for f2py
-    code = pycode(F2PY_ModuleInterface(f2py_module, parents))
+        print( '> epyccel shared library has been created: {}'.format(sharedlib_filename))
 
-    _module_name = '__epyccel__{}'.format(module_name)
-    filename = '{}.py'.format(_module_name)
-    fname = write_code(filename, code, folder=folder)
+    # Move shared library and __init__.py file to epyccel directory
+    shutil.move(sharedlib_filename, os.path.join(epyccel_dirpath, sharedlib_filename))
+    shutil.move('__init__.py', os.path.join(epyccel_dirpath, '__init__.py'))
 
-    sys.path.append(folder)
-    package = importlib.import_module( _module_name )
-    sys.path.remove(folder)
+    # Move to working directory
+    os.chdir(folder)
 
-    os.chdir(basedir)
+    # Import shared library
+    sys.path.append(epyccel_dirpath)
+    package = importlib.import_module(epyccel_dirname + '.' + sharedlib_modname)
+    sys.path.remove(epyccel_dirpath)
 
-    if verbose:
-        print('> epyccel interface has been stored in {}'.format(fname))
-    # ...
+    # Change directory back to starting point
+    os.chdir(base_dirpath)
 
     return package
+
+    #++++++++++++++++++++++++++++ END: epyccel specific ++++++++++++++++++++++++++++++++++
 
 #==============================================================================
 

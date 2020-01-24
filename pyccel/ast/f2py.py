@@ -11,6 +11,7 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import Module
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
+from pyccel.ast.core import Comment
 
 #=======================================================================================
 def sanitize_arguments(args):
@@ -57,29 +58,6 @@ class F2PY_FunctionInterface(Basic):
 
 #=======================================================================================
 
-class F2PY_ModuleInterface(Basic):
-
-    def __new__(cls, module, parents):
-        if not isinstance(module, Module):
-            raise TypeError('Expecting a Module')
-
-        if not isinstance(parents, dict):
-            raise TypeError('Expecting a dict')
-
-        obj = Basic.__new__(cls, module)
-        obj._parents = parents
-        return obj
-
-    @property
-    def module(self):
-        return self.args[0]
-
-    @property
-    def parents(self):
-        return self._parents
-
-#=======================================================================================
-
 def as_static_function(func, name=None):
     assert(isinstance(func, FunctionDef))
 
@@ -104,19 +82,21 @@ def as_static_function(func, name=None):
     if name is None:
         name = 'f2py_{}'.format(func.name).lower()
 
+
     # ...
     results_names = [i.name for i in results]
     _args = []
     _arguments_inout = []
-    for i_a,a in enumerate(args):
-        if not isinstance( a, Variable ):
+
+    for i_a, a in enumerate(args):
+        if not isinstance(a, Variable):
             raise TypeError('Expecting a Variable type for {}'.format(a))
 
         rank = a.rank
         if rank > 0:
             # ...
             additional_args = []
-            for i in range(0, rank):
+            for i in range(rank):
                 n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
                 n_arg  = Variable('int', n_name)
 
@@ -154,6 +134,31 @@ def as_static_function(func, name=None):
     args = _args
     results = _results
     arguments_inout = _arguments_inout
+    # ...
+
+    # ... If needed, add !f2py instructions at beginning of function body
+    f2py_template = 'f2py integer(kind={kind}) :: n{index}_{name}=shape({name},{index_t})'
+    f2py_instructions = []
+    int_kind = Variable('int', 'f2py_array_dimension').precision
+
+    for a in args:
+        if a.rank > 1 and a.order == 'C':
+
+            # Reverse shape of array
+            transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
+                                                            index   = i,
+                                                            name    = a.name,
+                                                            index_t = str(a.rank - i - 1)))
+                               for i in range(a.rank)]
+
+            # Tell f2py that array has C ordering
+            c_intent_stmt = Comment('f2py intent(c) {}'.format(a.name))
+
+            # Update f2py directives
+            f2py_instructions += [*transpose_stmts, c_intent_stmt]
+
+    if f2py_instructions:
+        body = f2py_instructions + body
     # ...
 
     return FunctionDef( name, list(args), results, body,
