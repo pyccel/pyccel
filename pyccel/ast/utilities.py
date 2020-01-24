@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from .core import DottedName, AsName
+from .core import AsName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
