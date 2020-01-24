@@ -54,7 +54,7 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode, ContinueNode
 from redbaron import GetitemNode, SliceNode
-from redbaron import ImportNode, FromImportNode
+from redbaron import FromImportNode
 from redbaron import DottedAsNameNode, DecoratorNode
 from redbaron import NameAsNameNode
 from redbaron import LambdaNode
@@ -440,25 +440,6 @@ class SyntaxParser(BasicParser):
         else:
             val = strip_ansi_escape.sub('', stmt.value)
             return Symbol(val)
-
-    def _visit_ImportNode(self, stmt):
-        if not isinstance(stmt.parent, (RedBaron, DefNode)):
-            errors.report(PYCCEL_RESTRICTION_IMPORT,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
-        if isinstance(stmt.parent, DefNode):
-            errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
-        # in an import statement, we can have seperate target by commas
-        ls = self._visit(stmt.value)
-        ls = get_default_path(ls)
-        expr = Import(ls)
-        expr.set_fst(stmt)
-        self.insert_import(expr)
-        return expr
 
     def _visit_FromImportNode(self, stmt):
 
