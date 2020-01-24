@@ -441,6 +441,11 @@ class SyntaxParser(BasicParser):
             val = strip_ansi_escape.sub('', stmt.value)
             return Symbol(val)
 
+    def _visit_ImportNode(self, stmt):
+        errors.report(PYCCEL_UNEXPECTED_IMPORT,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='error')
+
     def _visit_FromImportNode(self, stmt):
 
         if not isinstance(stmt.parent, (RedBaron, DefNode)):
