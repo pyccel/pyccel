@@ -141,7 +141,7 @@ def builtin_function(expr, args=None):
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'scipy', 'itertools', 'math')
+builtin_import_registery = ('numpy', 'scipy.constants', 'itertools', 'math')
 
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
@@ -152,11 +152,7 @@ def builtin_import(expr):
     if expr.source is None:
         return []
 
-    source = expr.source
-    if isinstance(source, DottedName):
-        source = source.name[0]
-    else:
-        source = str(source)
+    source = str(expr.source)
 
         # TODO imrove
     imports = []
@@ -183,9 +179,7 @@ def builtin_import(expr):
             if import_name in math_functions.keys():
                 imports.append((code_name, math_functions[import_name]))
 
-        elif source == 'scipy':
-            # TODO improve: source must be scipy.constants
-            #      - use dynamic import?
+        elif source == 'scipy.constants':
             if import_name in scipy_constants.keys():
                 imports.append((code_name, scipy_constants[import_name]))
         elif source == 'itertools':
