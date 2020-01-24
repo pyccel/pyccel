@@ -14,6 +14,11 @@ print(np)
 
 f()
 
+# pylint: disable=reimported
 import math as np
 x = np.sqrt(3)
 print(x)
+
+import scipy.constants
+
+print(scipy.constants.pi)
