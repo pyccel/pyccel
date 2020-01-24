@@ -1,3 +1,4 @@
+# pylint: disable=reimported
 import numpy as np
 a = np.ones(3)
 
@@ -14,7 +15,6 @@ print(np)
 
 f()
 
-# pylint: disable=reimported
 import math as np
 x = np.sqrt(3)
 print(x)
