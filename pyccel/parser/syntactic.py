@@ -446,6 +446,13 @@ class SyntaxParser(BasicParser):
                       bounding_box=stmt.absolute_bounding_box,
                       severity='error')
 
+        ls = self._visit(stmt.value)
+        ls = get_default_path(ls)
+        expr = Import(ls)
+        expr.set_fst(stmt)
+        self.insert_import(expr)
+        return expr
+
     def _visit_FromImportNode(self, stmt):
 
         if not isinstance(stmt.parent, (RedBaron, DefNode)):
