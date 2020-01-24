@@ -126,7 +126,7 @@ from pyccel.ast.datatypes import sp_dtype, str_dtype
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
-from pyccel.parser.utilities import fst_move_directives
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
@@ -231,6 +231,7 @@ class SyntaxParser(BasicParser):
             errors.check()
             raise SystemExit(0)
 
+        preprocess_imports(red)
         red = fst_move_directives(red)
         self._fst = red
 
