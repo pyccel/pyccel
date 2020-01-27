@@ -203,379 +203,6 @@ def compile_fortran(source, modulename, extra_args='',libs=[], compiler=None ,
 
 #==============================================================================
 
-def epyccel_old(func, inputs = None, verbose = False, modules = [], libs = [], libdirs = [], name = None,
-            compiler = None , mpi = False, static = None, only = None,
-            openmp = False):
-    """Pyccelize a python function and wrap it using f2py.
-
-    func: function, str
-        a Python function or source code defining the function
-
-    inputs: str, list, tuple, dict
-        inputs can be the function header as a string, or a list/tuple of
-        strings or the globals() dictionary
-
-    verbose: bool
-        talk more
-
-    modules: list, tuple
-        list of dependencies
-
-    libs: list, tuple
-        list of libraries
-
-    libdirs: list, tuple
-        list of paths for libraries
-
-    name: str
-        name of the function, if it is given as a string
-
-    static: list/tuple
-        a list of 'static' functions as strings
-
-    only: list/tuple
-        a list of what should be exposed by f2py as strings
-
-    openmp: bool
-        True if openmp is used. Note that in this case, one need to use nogil
-        from cython
-
-    Examples
-
-    The following example shows how to use Pyccel within an IPython session
-
-    >>> #$ header procedure static f_static(int [:]) results(int)
-    >>> def f_static(x):
-    >>>     y = x[0] - 1
-    >>>     return y
-
-    >>> from test_epyccel import epyccel
-    >>> f = epyccel(f_static, globals()) # appending IPython history
-
-    >>> header = '#$ header procedure static f_static(int [:]) results(int)'
-    >>> f = epyccel(f_static, header) # giving the header explicitly
-
-    Now, **f** is a Fortran function that has been wrapped. It is compatible
-    with numpy and you can call it
-
-    >>> import numpy as np
-    >>> x = np.array([3, 4, 5, 6], dtype=int)
-    >>> y = f(x)
-
-    You can also call it with a list instead of numpy arrays
-
-    >>> f([3, 4, 5])
-    2
-    """
-    if compiler is None:
-        compiler = 'gfortran'
-
-    is_module = False
-    is_function = False
-
-    if isinstance(func, ModuleType):
-        is_module = True
-
-    if callable(func):
-        is_function = True
-
-    assert(callable(func) or isinstance(func, str) or isinstance(func, ModuleType))
-
-    # ...
-    if callable(func) or isinstance(func, ModuleType):
-        name = func.__name__
-
-    elif name is None:
-        # case of func as a string
-        raise ValueError('function name must be provided, in the case of func string')
-    # ...
-
-    output_folder = name.rsplit('.',1)[0] if '.' in name else ''
-
-    # fortran module name
-    modname = 'epyccel__' + name
-
-
-
-    # ...
-    if is_module:
-        mod = func
-        is_sharedlib = isinstance(getattr(mod, '__loader__', None), ExtensionFileLoader)
-
-        if is_sharedlib:
-            module_filename = inspect.getfile(mod)
-
-            # clean
-            cmd = 'rm -f {}'.format(module_filename)
-            output = subprocess.check_output(cmd, shell=True)
-
-            # then re-run again
-            mod = importlib.import_module(name)
-            # we must reload the module, otherwise it is still the .so one
-            importlib.reload(mod)
-            epyccel_old(mod, inputs=inputs, verbose=verbose, modules=modules,
-                    libs=libs, name=name, compiler=compiler,
-                    mpi=mpi, static=static, only=only, openmp=openmp)
-    # ...
-
-    # ...
-    ignored_funcs = None
-    if not static:
-        if isinstance(func, ModuleType):
-            mod = func
-            funcs = [i for i in dir(mod) if isinstance(getattr(mod, i), FunctionType)]
-
-            # remove pyccel.decorators
-            ignored_funcs = [i for i in funcs if getattr(mod, i).__module__ == 'pyccel.decorators']
-            static = [i for i in funcs if not(i in ignored_funcs)]
-
-        else:
-            static = [name]
-    # ...
-
-    # ...
-    headers = None
-    if inputs:
-        if isinstance(inputs, str):
-            headers = inputs
-
-        elif isinstance(inputs, (tuple, list)):
-            # find all possible headers
-            lines = [str(i) for i in inputs if (isinstance(i, str) and
-                                                i.lstrip().startswith('#$ header'))]
-            # TODO take the last occurence for f => use zip
-            headers = "\n".join([str(i) for i in lines])
-
-        elif isinstance(inputs, dict):
-            # case of globals() history from ipython
-            if not 'In' in inputs.keys():
-                raise ValueError('Expecting `In` key in the inputs dictionary')
-
-            inputs = inputs['In']
-
-            # TODO shall we reverse the list
-
-            # find all possible headers
-            lines = [str(i) for i in inputs if i.lstrip().startswith('#$ header')]
-            # TODO take the last occurence for f => use zip
-            headers = "\n".join([str(i) for i in lines])
-
-    # we parse all headers then convert them to static function
-    d_headers = {}
-    if headers:
-        hdr = parse(stmts=headers)
-        if isinstance(hdr, FunctionHeader):
-            header = hdr.to_static()
-            d_headers = {str(name): header}
-
-        elif isinstance(hdr, (tuple, list)):
-            hs = [h.to_static() for h in hdr]
-            hs = [h for h in hs if hs.func == name]
-            # TODO improve
-            header = hs[0]
-            raise NotImplementedError('TODO')
-
-        else:
-            raise NotImplementedError('TODO')
-    # ...
-
-    # ...
-    if not static:
-        raise NotImplementedError('TODO')
-    # ...
-
-    # ... get the function source code
-    if callable(func):
-        code = get_source_function(func)
-
-    elif isinstance(func, ModuleType):
-        lines = inspect.getsourcelines(func)[0]
-        code = ''.join(lines)
-
-    else:
-        code = func
-    # ...
-
-    if verbose:
-        print ('------')
-        print (code)
-        print ('------')
-
-    extra_args = ''
-    include_args = ''
-
-    if libdirs:
-        libdirs = ['-L{}'.format(i) for i in libdirs]
-        extra_args += ' '.join(i for i in libdirs)
-
-    try:
-        # ...
-        pyccel = Parser(code, headers=d_headers, static=static, output_folder = output_folder)
-        ast = pyccel.parse()
-
-        settings = {}
-        ast = pyccel.annotate(**settings)
-
-        codegen = Codegen(ast, modname)
-        code = codegen.doprint()
-        # ...
-
-        # reset Errors singleton
-        errors = Errors()
-        errors.reset()
-
-    except:
-        # reset Errors singleton
-        errors = Errors()
-        errors.reset()
-
-        raise PyccelError('Could not convert to Fortran')
-
-       # Change module name to avoid name clashes: Python cannot import two modules with the same name
-    if is_module:
-        head, sep, tail = name.rpartition('.')
-        name = sep.join( [head, '__epyccel__'+ tail] )
-    else:
-        name = '__epyccel__'+ name
-
-
-    # Find directory where Fortran extension module should be created
-    if is_module:
-        dirname = os.path.dirname(os.path.abspath( mod.__file__ ))
-    else:
-        dirname = os.path.dirname(os.path.abspath(sys.modules[func.__module__].__file__ ))
-
-    # Move into working directory, create extension module, then move back to original directory
-    origin = os.path.abspath( os.curdir )
-    os.chdir( dirname )
-    output, cmd = compile_fortran( code, name,
-        extra_args= extra_args,
-        libs      = libs,
-        compiler  = compiler,
-        mpi       = mpi,
-        openmp    = openmp,
-        includes  = include_args,
-        only      = only)
-    os.chdir( origin )
-
-    if verbose:
-        print(cmd)
-
-    if verbose:
-        print(code)
-    # ...
-
-    # ...
-    try:
-        if PY_VERSION == (3, 7):
-            dirname = os.path.relpath(dirname).replace('/','.')
-            package = dirname + '.' + name
-            package = importlib.import_module( '..'+name, package=package )
-            clean_extension_module( package, modname )
-        else:
-            os.chdir( dirname )
-            package = importlib.import_module( name )
-            clean_extension_module( package, modname )
-            os.chdir( origin )
-
-    except:
-        raise ImportError('could not import {0}'.format( name ))
-    # ...
-
-    if is_module:
-        return package
-    else:
-        return getattr( package, func.__name__.lower() )
-
-#==============================================================================
-
-# TODO: write similar version for single functions
-def epyccel_mpi( mod, comm, root=0 ):
-    """
-    Collective version of epyccel for modules: root process generates Fortran
-    code, compiles it and creates a shared library (extension module), which
-    is then loaded by all processes in the communicator.
-
-    Parameters
-    ----------
-    mod : types.ModuleType
-        Python module to be pyccelized.
-
-    comm: mpi4py.MPI.Comm
-        MPI communicator where extension module will be made available.
-
-    root: int
-        Rank of process responsible for code generation.
-
-    Results
-    -------
-    fmod : types.ModuleType
-        Python extension module.
-
-    """
-    from mpi4py import MPI
-
-    assert isinstance(  mod, ModuleType )
-    assert isinstance( comm, MPI.Comm   )
-    assert isinstance( root, int        )
-
-    # Master process calls epyccel
-    if comm.rank == root:
-        fmod      = epyccel_old( mod, mpi=True )
-        fmod_path = fmod.__file__
-        fmod_name = fmod.__name__
-    else:
-        fmod_path = None
-        fmod_name = None
-
-    # Broadcast Fortran module path/name to all processes
-    fmod_path = comm.bcast( fmod_path, root=root )
-    fmod_name = comm.bcast( fmod_name, root=root )
-
-    # Non-master processes import Fortran module directly from its path
-    if comm.rank != root:
-        spec = importlib.util.spec_from_file_location( fmod_name, fmod_path )
-        fmod = importlib.util.module_from_spec( spec )
-        spec.loader.exec_module( fmod )
-        clean_extension_module( fmod, mod.__name__ )
-
-    # Return Fortran module
-    return fmod
-
-#==============================================================================
-
-def clean_extension_module( ext_mod, py_mod_name ):
-    """
-    Clean Python extension module by moving functions contained in f2py's
-    "mod_[py_mod_name]" automatic attribute to one level up (module level).
-    "mod_[py_mod_name]" attribute is then completely removed from the module.
-
-    Parameters
-    ----------
-    ext_mod : types.ModuleType
-        Python extension module created by f2py from pyccel-generated Fortran.
-
-    py_mod_name : str
-        Name of the original (pure Python) module.
-
-    """
-    # Get name of f2py automatic attribute
-    n = py_mod_name.lower().replace('.','_')
-
-    # Move all functions to module level
-    m = getattr( ext_mod, n )
-    for a in type( m ).__dir__( m ):
-        if a.startswith( '__' ) and a.endswith( '__' ):
-            pass
-        else:
-            setattr( ext_mod, a, getattr( m, a ) )
-
-    # Remove f2py automatic attribute
-    delattr( ext_mod, n )
-
-
-#==============================================================================
-
 # assumes relative path
 # TODO add openacc
 def compile_f2py( filename,
@@ -673,182 +300,20 @@ def compile_f2py( filename,
     return output, cmd
 
 #==============================================================================
-
-def epyccel_function(func,
-                     namespace   = globals(),
+# TODO: move to 'pyccel.codegen.utilities', and use also in 'pyccel' command
+def pyccelize_module(fname, *,
                      compiler    = None,
                      fflags      = None,
-                     accelerator = None,
-                     verbose     = False,
-                     debug       = False,
                      include     = [],
                      libdir      = [],
                      modules     = [],
                      libs        = [],
+                     debug       = False,
+                     verbose     = False,
                      extra_args  = '',
-                     folder      = None,
+                     accelerator = None,
                      mpi         = False,
-                     assert_contiguous = False):
-
-    # ... get the function source code
-    if not isinstance(func, FunctionType):
-        raise TypeError('> Expecting a function')
-
-    code = get_source_function(func)
-    # ...
-
-    # ...
-    tag = random_string( 6 )
-    # ...
-
-    # ...
-    module_name = 'mod_{}'.format(tag)
-    fname       = '{}.py'.format(module_name)
-    binary      = '{}.o'.format(module_name)
-    # ...
-
-    # ...
-    if folder is None:
-        basedir = os.getcwd()
-        folder = '__pycache__'
-        folder = os.path.join( basedir, folder )
-
-    folder = os.path.abspath( folder )
-    mkdir_p(folder)
-    # ...
-
-    # ...
-    write_code(fname, code, folder=folder)
-    # ...
-
-    # ...
-    basedir = os.getcwd()
-    os.chdir(folder)
-    curdir = os.getcwd()
-    # ...
-
-    # ...
-    if compiler is None:
-        compiler = 'gfortran'
-    # ...
-
-    # ...
-    if fflags is None:
-        fflags = construct_flags_pyccel( compiler,
-                                         fflags=None,
-                                         debug=debug,
-                                         accelerator=accelerator,
-                                         include=[],
-                                         libdir=[] )
-    # ...
-
-    # ... convert python to fortran using pyccel
-    #     we ask for the ast so that we can get the FunctionDef node
-   
-    fname, ast = execute_pyccel( fname,
-                                 compiler     = compiler,
-                                 fflags       = fflags,
-                                 debug        = debug,
-                                 verbose      = verbose,
-                                 accelerator  = accelerator,
-                                 modules      = modules,
-                                 convert_only = True,
-                                 return_ast   = True )
-    # ...
-
-    # ... construct a f2py interface for the assembly
-    # be careful: because of f2py we must use lower case
-    func_name = func.__name__
-    funcs     = ast.routines + ast.interfaces
-    func      = get_function_from_ast(funcs, func_name)
-    namespace = ast.parser.namespace.sons_scopes
-    parent_sc = ast.parser.namespace.functions
-    # ...
-    f2py_module_name = 'f2py_{}'.format(module_name)
-    static_func  = as_static_function(func)
-    namespace['f2py_'+func_name.lower()] = namespace[func_name]
-    parent_sc['f2py_'+func_name.lower()] = parent_sc[func_name]
-    f2py_module = Module( f2py_module_name,
-                          variables = [],
-                          funcs = [static_func],
-                          interfaces = [],
-                          classes = [],
-                          imports = [] )
-
-    code = fcode(f2py_module, ast.parser)
-    filename = '{}.f90'.format(f2py_module_name)
-    fname = write_code(filename, code, folder=folder)
-    
-    output, cmd = compile_f2py( filename,
-                                extra_args  = extra_args,
-                                compiler    = compiler,
-                                mpi         = mpi,
-                                accelerator = accelerator )
-
-    if verbose:
-        print(cmd)
-    # ...
-
-    # ...
-    # update module name for dependencies
-    # needed for interface when importing assembly
-    # name.name is needed for f2py
-    settings = {'assert_contiguous': assert_contiguous}
-    code = pycode(F2PY_FunctionInterface(static_func, f2py_module_name, func),
-                  **settings)
-
-    _module_name = '__epyccel__{}'.format(module_name)
-    filename = '{}.py'.format(_module_name)
-    fname = write_code(filename, code, folder=folder)
-
-    sys.path.append(folder)
-    package = importlib.import_module( _module_name )
-    sys.path.remove(folder)
-
-    func = getattr(package, func_name)
-
-    os.chdir(basedir)
-
-    if verbose:
-        print('> epyccel interface has been stored in {}'.format(fname))
-    # ...
-
-    return func
-
-#==============================================================================
-# TODO: extract epyccel-specific code from this function
-def epyccel_module(module,
-                   namespace   = globals(),
-                   compiler    = None,
-                   fflags      = None,
-                   accelerator = None,
-                   verbose     = False,
-                   debug       = False,
-                   include     = [],
-                   libdir      = [],
-                   modules     = [],
-                   libs        = [],
-                   extra_args  = '',
-                   mpi         = False,
-                   folder      = None):
-
-    # ... get the module source code
-    if isinstance(module, str):
-        fname = module
-        module_name = os.path.splitext(os.path.basename(fname))[0]
-        binary = '{}.o'.format(module_name)
-
-    elif isinstance(module, ModuleType):
-        lines = inspect.getsourcelines(module)[0]
-        code = ''.join(lines)
-
-        module_name = module.__name__.split('.')[-1]
-        fname       = module.__file__
-        binary      = '{}.o'.format(module_name)
-
-    else:
-        raise TypeError('> Expecting a module path or ModuleType')
-    # ...
+                     folder      = None):
 
     #------------------------------------------------------
     # NOTE:
@@ -856,41 +321,40 @@ def epyccel_module(module,
     # [..]_dirpath is the full (absolute) path of a directory
     #------------------------------------------------------
 
-    # Define directory names
-    epyccel_dirname = '__epyccel__'
-    pyccel_dirname = '__pyccel__'
+    # Store current directory
+    base_dirpath = os.getcwd()
+
+    pymod_filepath = os.path.abspath(fname)
+    pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
+
+    # Extract module name
+    module_name = os.path.splitext(pymod_filename)[0]
+    binary = '{}.o'.format(module_name)
 
     # Define working directory 'folder'
-    base_dirpath = os.getcwd()
     if folder is None:
-        folder = base_dirpath
+        folder = pymod_dirpath
 
-    # Absolute paths
-    epyccel_dirpath = os.path.join(folder, epyccel_dirname)
-    pyccel_dirpath = os.path.join(epyccel_dirpath, pyccel_dirname)
+    # Define directory name and path for pyccel & f2py build
+    pyccel_dirname = '__pyccel__'
+    pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
     # Create new directories if not existing
     mkdir_p(folder)
-    mkdir_p(epyccel_dirpath)
     mkdir_p(pyccel_dirpath)
 
-    # Move to epyccel directory
-    os.chdir(epyccel_dirpath)
+    # Change working directory to 'folder'
+    os.chdir(folder)
 
-    #------------------------------------------------------
-
-    # ... we need to store the python file in the folder, so that execute_pyccel
-    #     can run
-    shutil.copyfile(fname, os.path.basename(fname))
-    fname = os.path.basename(fname)
-    # ...
-
-    # ...
+    # Choose Fortran compiler
     if compiler is None:
-        compiler = 'gfortran'
-    # ...
+        if mpi == True:
+            compiler = 'mpif90'
+        else:
+            compiler = 'gfortran'
 
     # ...
+    # Construct flags for the Fortran compiler
     if fflags is None:
         fflags = construct_flags_pyccel( compiler,
                                          fflags=None,
@@ -898,14 +362,14 @@ def epyccel_module(module,
                                          accelerator=accelerator,
                                          include=[],
                                          libdir=[] )
+
+    # Build position-independent code, suited for use in shared library
+    fflags = ' {} -fPIC '.format(fflags)
     # ...
 
-    # add -fPIC
-    fflags = ' {} -fPIC '.format(fflags)
-
-    # ... convert python to fortran using pyccel
-    #     we ask for the ast so that we can get the FunctionDef node
-    output, cmd, ast = execute_pyccel( fname,
+    # Convert python to fortran using pyccel;
+    # we ask for the AST so that we can get the FunctionDef node
+    output, cmd, ast = execute_pyccel( pymod_filepath,
                                        compiler    = compiler,
                                        fflags      = fflags,
                                        debug       = debug,
@@ -920,14 +384,12 @@ def epyccel_module(module,
                                        return_ast  = True )
     # ...
 
-    # Move to pyccel directory
+    # Change working directory to '__pyccel__'
     os.chdir(pyccel_dirpath)
 
     # ... construct a f2py interface for the assembly
     # be careful: because of f2py we must use lower case
-
     funcs = ast.routines + ast.interfaces
-    namespace = ast.parser.namespace.sons_scopes
 
     # NOTE: we create an f2py interface for ALL functions
     f2py_filename = 'f2py_{}.f90'.format(module_name.lower())
@@ -937,75 +399,148 @@ def epyccel_module(module,
     f2py_funcs = []
     for f in funcs:
         static_func = as_static_function_call(f, module_name, name=f.name)
-        namespace[str(static_func.name).lower()] = namespace[str(f.name)]
         f2py_funcs.append(static_func)
 
     f2py_code = '\n\n'.join([fcode(f, ast.parser) for f in f2py_funcs])
 
     # Write file f2py_MOD.f90
     write_code(f2py_filename, f2py_code, folder=pyccel_dirpath)
+    # ...
 
-    # Create file __epyccel_module__MOD.so
+    # Create MOD.so shared library
+    extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
     output, cmd = compile_f2py( f2py_filename,
                                 modulename  = sharedlib_modname,
                                 libs        = [],
                                 libdirs     = [],
                                 includes    = binary,  # TODO: this is not an include...
-                                extra_args  = '--no-wrap-functions --build-dir f2py_build',
+                                extra_args  = extra_args,
                                 compiler    = compiler,
                                 accelerator = accelerator,
                                 mpi         = mpi )
-
-    #++++++++++++++++++++++++++++ START: epyccel specific ++++++++++++++++++++++++++++++++++
 
     # Obtain full name of shared library
     pattern = '{}*.so'.format(sharedlib_modname)
     sharedlib_filename = glob.glob(pattern)[0]
 
+    # Move shared library to folder directory
+    # (First construct absolute path of target location)
+    sharedlib_filepath = os.path.join(folder, sharedlib_filename)
+    shutil.move(sharedlib_filename, sharedlib_filepath)
+
+    # Change working directory back to starting point
+    os.chdir(base_dirpath)
+
+    # Return absolute path of newly created shared library
+    return sharedlib_filepath
+
+#==============================================================================
+def epyccel_seq(function_or_module,
+                compiler    = None,
+                fflags      = None,
+                accelerator = None,
+                verbose     = False,
+                debug       = False,
+                include     = [],
+                libdir      = [],
+                modules     = [],
+                libs        = [],
+                extra_args  = '',
+                mpi         = False,
+                folder      = None):
+
+    # ... get the module source code
+    if isinstance(function_or_module, FunctionType):
+        func = function_or_module
+        code = get_source_function(func)
+        tag = random_string(8)
+        module_name = 'mod_{}'.format(tag)
+        fname       = '{}.py'.format(module_name)
+
+    elif isinstance(function_or_module, ModuleType):
+        module = function_or_module
+        lines = inspect.getsourcelines(module)[0]
+        code = ''.join(lines)
+        module_name = module.__name__.split('.')[-1]
+        fname       = module.__file__
+
+    else:
+        raise TypeError('> Expecting a FunctionType or a ModuleType')
+    # ...
+
+    pymod_filepath = os.path.abspath(fname)
+    pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
+
+    # Store current directory
+    base_dirpath = os.getcwd()
+
+    # Define working directory 'folder'
+    if folder is None:
+        folder = pymod_dirpath
+
+    # Define directory name and path for epyccel files
+    epyccel_dirname = '__epyccel__'
+    epyccel_dirpath = os.path.join(folder, epyccel_dirname)
+
+    # Create new directories if not existing
+    mkdir_p(folder)
+    mkdir_p(epyccel_dirpath)
+
+    # Change working directory to '__epyccel__'
+    os.chdir(epyccel_dirpath)
+
+    # Store python file in '__epyccel__' folder, so that execute_pyccel can run
+    fname = os.path.basename(fname)
+    write_code(fname, code)
+
+    # Generate shared library
+    sharedlib_filepath = pyccelize_module(fname,
+                                          compiler    = compiler,
+                                          fflags      = fflags,
+                                          include     = include,
+                                          libdir      = libdir,
+                                          modules     = modules,
+                                          libs        = libs,
+                                          debug       = debug,
+                                          verbose     = verbose,
+                                          extra_args  = extra_args,
+                                          accelerator = accelerator,
+                                          mpi         = mpi)
+
     if verbose:
-        print(cmd)
-        print( '> epyccel shared library has been created: {}'.format(sharedlib_filename))
+        print( '> epyccel shared library has been created: {}'.format(sharedlib_filepath))
 
-    # Move shared library and __init__.py file to epyccel directory
-    shutil.move(sharedlib_filename, os.path.join(epyccel_dirpath, sharedlib_filename))
-    shutil.move('__init__.py', os.path.join(epyccel_dirpath, '__init__.py'))
+    # Create __init__.py file in epyccel directory
+    with open('__init__.py', 'a') as f:
+        pass
 
-    # Move to working directory
+    # Change working directory to 'folder'
     os.chdir(folder)
 
     # Import shared library
     sys.path.append(epyccel_dirpath)
-    package = importlib.import_module(epyccel_dirname + '.' + sharedlib_modname)
+    package = importlib.import_module(epyccel_dirname + '.' + module_name)
     sys.path.remove(epyccel_dirpath)
 
-    # Change directory back to starting point
+    # Change working directory back to starting point
     os.chdir(base_dirpath)
 
-    return package
+    # Function case:
+    if isinstance(function_or_module, FunctionType):
+        return getattr(package, func.__name__.lower())
 
-    #++++++++++++++++++++++++++++ END: epyccel specific ++++++++++++++++++++++++++++++++++
+    # Module case:
+    return package
 
 #==============================================================================
 
 def epyccel( inputs, **kwargs ):
 
-    # ...
-    def _epyccel_seq(inputs, **kwargs):
-        if isinstance( inputs, FunctionType ):
-            return epyccel_function( inputs, **kwargs )
-
-        elif isinstance( inputs, ModuleType ):
-            return epyccel_module( inputs, **kwargs )
-
-        else:
-            raise TypeError('> Expecting a function or a module')
-    # ...
-
     comm = kwargs.pop('comm', None)
     root = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
 
-    if not(comm is None):
+    if comm is not None:
         # TODO not tested for a function
         from mpi4py import MPI
 
@@ -1015,11 +550,10 @@ def epyccel( inputs, **kwargs ):
         # Master process calls epyccel
         if comm.rank == root:
             kwargs['mpi'] = True
-            fmod      = _epyccel_seq( inputs, **kwargs )
-            fmod_path = fmod.__file__
-            fmod_name = fmod.__name__
 
-            fmod_path = os.path.abspath( fmod_path )
+            fmod      = epyccel_seq( inputs, **kwargs )
+            fmod_path = os.path.abspath(fmod.__file__)
+            fmod_name = fmod.__name__
 
         else:
             fmod_path = None
@@ -1044,4 +578,4 @@ def epyccel( inputs, **kwargs ):
         return fmod
 
     else:
-        return _epyccel_seq( inputs, **kwargs )
+        return epyccel_seq( inputs, **kwargs )
