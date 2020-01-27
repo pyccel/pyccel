@@ -187,6 +187,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Zeros(self, expr):
         return 'zeros('+ self._print(expr.shape)+')'
 
+    def _print_ZerosLike(self, expr):
+        return 'zeros_like('+ self._print(expr.rhs)+')'
+
     def _print_Slice(self, expr):
         return str(expr)
 
