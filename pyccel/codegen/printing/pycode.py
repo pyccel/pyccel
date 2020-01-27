@@ -53,6 +53,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_Idx(self, expr):
+        return self._print(expr.name)
+
     def _print_IndexedElement(self, expr):
         indices = expr.indices
         if isinstance(indices, (tuple, list, Tuple)):
@@ -183,6 +186,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_Zeros(self, expr):
         return 'zeros('+ self._print(expr.shape)+')'
+
+    def _print_ZerosLike(self, expr):
+        return 'zeros_like('+ self._print(expr.rhs)+')'
 
     def _print_Slice(self, expr):
         return str(expr)
