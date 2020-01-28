@@ -13,9 +13,6 @@ from collections  import OrderedDict
 from pyccel.parser.errors     import Errors
 from pyccel.parser.errors     import ErrorsMode
 from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
-from pyccel.parser.utilities  import is_valid_filename_pyh, is_valid_filename_py
-from pyccel.codegen.utilities import construct_flags
-from pyccel.codegen.utilities import compile_fortran
 from pyccel.codegen.utilities import execute_pyccel
 from pyccel.ast.core          import Import
 from pyccel.ast.core          import Module

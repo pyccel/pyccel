@@ -60,7 +60,7 @@ def construct_flags(compiler,
         if debug:
             flags += " -fbounds-check "
 
-    if not (accelerator is None):
+    if accelerator is not None:
         if accelerator == "openmp":
             flags += " -fopenmp "
         elif accelerator == "openacc":
@@ -167,73 +167,68 @@ def execute_pyccel(filename,
                    libs         = [],
                    binary       = None,
                    output       = '',
-                   convert_only = False,
-                   return_ast   = False):
+                   convert_only = False):
+
     """Executes the full process:
         - parsing the python code
         - annotating the python code
         - converting from python to fortran
         - compiling the fortran code.
 
+    Returns
+    -------
+    parser: pyccel.parser.Parser
+        Pyccel python parser.
+
+    codegen: pyccel.codegen.Codegen
+        Fortran code printer.
+
     """
-    pyccel = Parser(filename, output_folder=output.replace('/','.'))
-    ast = pyccel.parse()
+    parser = Parser(filename, output_folder=output.replace('/','.'))
+    ast = parser.parse()
 
     settings = {}
-    ast = pyccel.annotate(**settings)
+    ast = parser.annotate(**settings)
 
     name = os.path.basename(filename)
     name = os.path.splitext(name)[0]
 
+    # Generate .f90 file
     codegen = Codegen(ast, name)
-    code    = codegen.doprint()
-    
+    fname = os.path.join(output, name)
+    fname = codegen.export(fname)
 
-    #S.H we return the Codegen instance instead of the ast
-    
+    # Stop before compilation?
     if convert_only:
-        if not return_ast:
-            return code
+        return parser, codegen
 
-        else:
-            return code, codegen
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
 
-    else:
+    # ... constructs the compiler flags
+    if compiler is None:
+        compiler='gfortran'
 
-        fname = os.path.join(output, name)
-        fname = codegen.export(fname)
+    flags = construct_flags(compiler,
+                            fflags=fflags,
+                            debug=debug,
+                            accelerator=accelerator,
+                            include=include,
+                            libdir=libdir)
+    # ...
 
-        # reset Errors singleton
-        errors = Errors()
-        errors.reset()
+    # ... compile fortran code
+    output, cmd = compile_fortran(fname, compiler, flags,
+                                  binary=binary,
+                                  verbose=verbose,
+                                  modules=modules,
+                                  is_module=codegen.is_module,
+                                  output=output,
+                                  libs=libs)
+    # ...
 
-        # ... constructs the compiler flags
-        if compiler is None:
-            compiler='gfortran'
-
-        flags = construct_flags(compiler,
-                                fflags=fflags,
-                                debug=debug,
-                                accelerator=accelerator,
-                                include=include,
-                                libdir=libdir)
-        # ...
-
-        # ... compile fortran code
-        output, cmd = compile_fortran(fname, compiler, flags,
-                                      binary=binary,
-                                      verbose=verbose,
-                                      modules=modules,
-                                      is_module=codegen.is_module,
-                                      output=output,
-                                      libs=libs)
-        # ...
-
-        if not return_ast:
-            return output, cmd
-
-        else:
-            return output, cmd, codegen
+    return parser, codegen
 
 
 if __name__ == '__main__':
