@@ -8,18 +8,9 @@ import sys
 import os
 import argparse
 
-from collections  import OrderedDict
+__all__ = ['MyParser', 'pyccel']
 
-from pyccel.parser.errors     import Errors
-from pyccel.parser.errors     import ErrorsMode
-from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
-from pyccel.codegen.utilities import execute_pyccel
-from pyccel.ast.core          import Import
-from pyccel.ast.core          import Module
-from pyccel.ast.f2py          import as_static_function
-from pyccel.ast.f2py          import as_static_function_call
-from pyccel.ast.utilities     import get_external_function_from_ast
-
+#==============================================================================
 class MyParser(argparse.ArgumentParser):
     """
     Custom argument parser for printing help message in case of an error.
@@ -30,6 +21,7 @@ class MyParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
+#==============================================================================
 def _which(program):
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -47,6 +39,7 @@ def _which(program):
 
     return None
 
+#==============================================================================
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
@@ -67,8 +60,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='Using pyccel for Semantic Checking')
     group.add_argument('-t', '--convert-only', action='store_true',
                        help='Converts pyccel files only without build')
-    group.add_argument('-f', '--f2py-compatible', action='store_true',
-                        help='Converts pyccel files to be compiled by f2py')
+#    group.add_argument('-f', '--f2py-compatible', action='store_true',
+#                        help='Converts pyccel files to be compiled by f2py')
 
     # ...
 
@@ -121,6 +114,12 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     # ...
     args = parser.parse_args()
     # ...
+
+    # Imports
+    from pyccel.parser.errors     import Errors
+    from pyccel.parser.errors     import ErrorsMode
+    from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
+    from pyccel.codegen.pipeline  import execute_pyccel
 
     # ...
     if not files:
@@ -181,10 +180,10 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if openacc:
         accelerator = "openacc"
 
-    debug   = args.debug
-    verbose = args.verbose
+#    debug   = args.debug
+#    verbose = args.verbose
     include = args.include
-    fflags  = args.fflags
+#    fflags  = args.fflags
     libdir  = args.libdir
     libs    = args.libs
     output_folder = args.output
@@ -211,120 +210,50 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         err_mode.set_mode('developer')
     # ...
 
-    # ...
-    from pyccel.parser import Parser
-    from pyccel.codegen import Codegen
+    # TODO: prune options
+    execute_pyccel(filename,
+                   syntax_only   = args.syntax_only,
+                   semantic_only = args.semantic_only,
+                   convert_only  = args.convert_only,
+                   verbose       = args.verbose,
+                   compiler    = compiler,
+                   fflags      = args.fflags,
+                   include     = include,
+                   libdir      = libdir,
+                   modules     = [],
+                   libs        = libs,
+                   debug       = args.debug,
+                   extra_args  = '',
+                   accelerator = accelerator,
+                   mpi         = False,
+                   folder      = args.output)
 
-    if args.syntax_only:
-        pyccel = Parser(filename)
-        ast = pyccel.parse()
+    return
 
-    elif args.semantic_only:
-        pyccel = Parser(filename)
-        ast = pyccel.parse()
-
-        settings = {}
-        ast = pyccel.annotate(**settings)
-
-    elif args.convert_only:
-        pyccel = Parser(filename)
-        ast = pyccel.parse()
-        settings = {}
-        if args.language:
-            settings['language'] = args.language
-        ast = pyccel.annotate(**settings)
-        name = os.path.basename(filename)
-        name = os.path.splitext(name)[0]
-        codegen = Codegen(ast, name)
-        settings['prefix_module'] = prefix_module
-        code = codegen.doprint(**settings)
-        if prefix:
-            name = '{prefix}{name}'.format(prefix=prefix, name=name)
-
-        codegen.export(output_folder+name)
-
-        for son in pyccel.sons:
-            if 'print' in son.metavars.keys():
-                name = son.filename.split('/')[-1].strip('.py')
-                name = 'mod_'+name
-                codegen = Codegen(son.ast, name)
-                code = codegen.doprint()
-                codegen.export()
-
-    elif args.f2py_compatible:
-        pyccel   = Parser(filename)
-        ast      = pyccel.parse()
-        settings = {}
-
-        ast  = pyccel.annotate(**settings)
-        name = os.path.basename(filename)
-        name = os.path.splitext(name)[0]
-
-        funcs     = ast.namespace.functions.values()
-        namespace = ast.namespace.functions
-
-        funcs, others = get_external_function_from_ast(funcs)
-        static_funcs  = []
-        imports       = []
-        parents       = OrderedDict()
-
-        for f in funcs:
-            if f.is_external:
-                static_func = as_static_function(f, str(f.name))
-                namespace[str(f.name)] = static_func
-
-            elif f.is_external_call:
-                static_func = as_static_function_call(f, str(f.name))
-                namespace[str(f.name)] = static_func
-                imports += [Import(f.name, name)]
-
-            static_funcs.append(static_func)
-            parents[f.name] = f.name
-
-        for f in others:
-            imports += [Import(f.name, name)]
-
-        imports += list(ast.namespace.imports['functions'])
-
-        ast._ast = [Module( name,
-                      variables = [],
-                      funcs = static_funcs,
-                      interfaces = [],
-                      classes = [],
-                      imports = imports )]
-
-        codegen = Codegen(ast, name)
-
-        settings['prefix_module'] = prefix_module
-        codegen.doprint(**settings)
-        if prefix:
-            name = '{prefix}{name}'.format(prefix=prefix, name=name)
-
-        codegen.export(output_folder+name)
-
-    elif args.analysis:
-        # TODO move to another cmd line
-        from pyccel.complexity.arithmetic import OpComplexity
-        complexity = OpComplexity(filename)
-        print(" arithmetic cost         ~ " + str(complexity.cost()))
-
-    else:
-        # TODO shall we add them in the cmd line?
-        modules = []
-        binary = None
-
-        execute_pyccel(filename,
-                       compiler=compiler,
-                       fflags=fflags,
-                       debug=False,
-                       verbose=verbose,
-                       accelerator=accelerator,
-                       include=include,
-                       libdir=libdir,
-                       modules=modules,
-                       libs=libs,
-                       binary=binary,
-                       output=output_folder)
-
-
-
+#==============================================================================
+# NOTE: left here for later reference
+#
+#    elif args.convert_only:
+#        pyccel = Parser(filename)
+#        ast = pyccel.parse()
+#        settings = {}
+#        if args.language:
+#            settings['language'] = args.language
+#        ast = pyccel.annotate(**settings)
+#        name = os.path.basename(filename)
+#        name = os.path.splitext(name)[0]
+#        codegen = Codegen(ast, name)
+#        settings['prefix_module'] = prefix_module
+#        code = codegen.doprint(**settings)
+#        if prefix:
+#            name = '{prefix}{name}'.format(prefix=prefix, name=name)
+#
+#        codegen.export(output_folder+name)
+#
+#        for son in pyccel.sons:
+#            if 'print' in son.metavars.keys():
+#                name = son.filename.split('/')[-1].strip('.py')
+#                name = 'mod_'+name
+#                codegen = Codegen(son.ast, name)
+#                code = codegen.doprint()
+#                codegen.export()

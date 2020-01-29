@@ -9,11 +9,11 @@ import random
 
 from types import ModuleType, FunctionType
 
-from pyccel.ast          import FunctionHeader
-from pyccel.ast.core     import FunctionDef
-from pyccel.ast.core     import Import
-from pyccel.ast.core     import Module
-from pyccel.codegen.f2py import pyccelize_module
+from pyccel.ast              import FunctionHeader
+from pyccel.ast.core         import FunctionDef
+from pyccel.ast.core         import Import
+from pyccel.ast.core         import Module
+from pyccel.codegen.pipeline import execute_pyccel
 
 __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 
@@ -105,21 +105,18 @@ def epyccel_seq(function_or_module,
         f.writelines(code)
 
     # Generate shared library
-    sharedlib_filepath = pyccelize_module(fname,
-                                          compiler    = compiler,
-                                          fflags      = fflags,
-                                          include     = include,
-                                          libdir      = libdir,
-                                          modules     = modules,
-                                          libs        = libs,
-                                          debug       = debug,
-                                          verbose     = verbose,
-                                          extra_args  = extra_args,
-                                          accelerator = accelerator,
-                                          mpi         = mpi)
-
-    if verbose:
-        print( '> epyccel shared library has been created: {}'.format(sharedlib_filepath))
+    execute_pyccel(fname,
+                   verbose     = verbose,
+                   compiler    = compiler,
+                   fflags      = fflags,
+                   include     = include,
+                   libdir      = libdir,
+                   modules     = modules,
+                   libs        = libs,
+                   debug       = debug,
+                   extra_args  = extra_args,
+                   accelerator = accelerator,
+                   mpi         = mpi)
 
     # Create __init__.py file in epyccel directory
     with open('__init__.py', 'a') as f:

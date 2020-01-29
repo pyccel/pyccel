@@ -4,14 +4,13 @@ import sys
 import subprocess
 import os
 import glob
-import shutil
 
-from pyccel.codegen.utilities       import construct_flags
-from pyccel.codegen.utilities       import execute_pyccel
-from pyccel.codegen.printing.fcode  import fcode
 from pyccel.ast.f2py                import as_static_function_call
+from pyccel.codegen.utilities       import construct_flags
+from pyccel.codegen.utilities       import compile_fortran
+from pyccel.codegen.printing.fcode  import fcode
 
-__all__ = ['compile_f2py', 'pyccelize_module']
+__all__ = ['compile_f2py', 'create_shared_library']
 
 #==============================================================================
 
@@ -123,85 +122,29 @@ def compile_f2py( filename,
     return output, cmd
 
 #==============================================================================
-# TODO: move to 'pyccel.codegen.utilities', and use also in 'pyccel' command
-def pyccelize_module(fname, *,
-                     compiler    = None,
-                     fflags      = None,
-                     include     = [],
-                     libdir      = [],
-                     modules     = [],
-                     libs        = [],
-                     debug       = False,
-                     verbose     = False,
-                     extra_args  = '',
-                     accelerator = None,
-                     mpi         = False,
-                     folder      = None):
+def create_shared_library(parser, codegen, pyccel_dirpath,
+                          compiler, accelerator, mpi, extra_args=''):
 
-    #------------------------------------------------------
-    # NOTE:
-    # [..]_dirname is the name of a directory
-    # [..]_dirpath is the full (absolute) path of a directory
-    #------------------------------------------------------
+    # Consistency checks
+    if not codegen.is_module:
+        raise TypeError('Expected Module')
 
-    # Store current directory
+    # Get module name
+    module_name = codegen.name
+
+    # Change working directory to '__pyccel__'
     base_dirpath = os.getcwd()
+    os.chdir(pyccel_dirpath)
 
-    pymod_filepath = os.path.abspath(fname)
-    pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
+    # Construct f2py interface for assembly and write it to file f2py_MOD.f90
+    # be careful: because of f2py we must use lower case
+    funcs = codegen.routines + codegen.interfaces
+    f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
+    f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
+    f2py_filename = 'f2py_{}.f90'.format(module_name.lower())
+    with open(f2py_filename, 'w') as f:
+        f.writelines(f2py_code)
 
-    # Extract module name
-    module_name = os.path.splitext(pymod_filename)[0]
-
-    # Define working directory 'folder'
-    if folder is None:
-        folder = pymod_dirpath
-
-    # Define directory name and path for pyccel & f2py build
-    pyccel_dirname = '__pyccel__'
-    pyccel_dirpath = os.path.join(folder, pyccel_dirname)
-
-    # Create new directories if not existing
-    os.makedirs(folder, exist_ok=True)
-    os.makedirs(pyccel_dirpath, exist_ok=True)
-
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
-    # Choose Fortran compiler
-    if compiler is None:
-        if mpi == True:
-            compiler = 'mpif90'
-        else:
-            compiler = 'gfortran'
-
-    # ...
-    # Construct flags for the Fortran compiler
-    if fflags is None:
-        fflags = construct_flags(compiler,
-                                 fflags=None,
-                                 debug=debug,
-                                 accelerator=accelerator,
-                                 include=[],
-                                 libdir=[])
-
-    # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
-    # ...
-
-    # Convert python to fortran using pyccel
-    parser, codegen = execute_pyccel( pymod_filepath,
-                                       compiler    = compiler,
-                                       fflags      = fflags,
-                                       debug       = debug,
-                                       verbose     = verbose,
-                                       accelerator = accelerator,
-                                       include     = include,
-                                       libdir      = libdir,
-                                       modules     = modules,
-                                       libs        = libs,
-                                       binary      = None,
-                                       output      = pyccel_dirpath)
     # ...
     # Determine all .o files needed by shared library
     def get_module_dependencies(parser, mods=[]):
@@ -211,56 +154,29 @@ def pyccelize_module(fname, *,
         return mods
 
     dep_mods = get_module_dependencies(parser)
-    binary = ' '.join(['{}.o'.format(m) for m in dep_mods])
-    # ...
-
-    # Change working directory to '__pyccel__'
-    os.chdir(pyccel_dirpath)
-
-    # ... construct a f2py interface for the assembly
-    # be careful: because of f2py we must use lower case
-    funcs = codegen.routines + codegen.interfaces
-
-    # NOTE: we create an f2py interface for ALL functions
-    f2py_filename = 'f2py_{}.f90'.format(module_name.lower())
-
-    sharedlib_modname = module_name.lower()
-
-    f2py_funcs = []
-    for f in funcs:
-        static_func = as_static_function_call(f, module_name, name=f.name)
-        f2py_funcs.append(static_func)
-
-    f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
-
-    # Write file f2py_MOD.f90
-    with open(f2py_filename, 'w') as f:
-        f.writelines(f2py_code)
+    object_files = ' '.join(['{}.o'.format(m) for m in dep_mods])
     # ...
 
     # Create MOD.so shared library
+    sharedlib_modname = module_name.lower()
     extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
-    output, cmd = compile_f2py( f2py_filename,
-                                modulename  = sharedlib_modname,
-                                libs        = [],
-                                libdirs     = [],
-                                includes    = binary,  # TODO: this is not an include...
-                                extra_args  = extra_args,
-                                compiler    = compiler,
-                                accelerator = accelerator,
-                                mpi         = mpi )
+    output, cmd = compile_f2py(f2py_filename,
+                               modulename  = sharedlib_modname,
+                               libs        = [],
+                               libdirs     = [],
+                               includes    = object_files,  # TODO: this is not an include...
+                               extra_args  = extra_args,
+                               compiler    = compiler,
+                               accelerator = accelerator,
+                               mpi         = mpi)
 
-    # Obtain full name of shared library
+    # Obtain absolute path of newly created shared library
     pattern = '{}*.so'.format(sharedlib_modname)
     sharedlib_filename = glob.glob(pattern)[0]
-
-    # Move shared library to folder directory
-    # (First construct absolute path of target location)
-    sharedlib_filepath = os.path.join(folder, sharedlib_filename)
-    shutil.move(sharedlib_filename, sharedlib_filepath)
+    sharedlib_filepath = os.path.abspath(sharedlib_filename)
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
 
-    # Return absolute path of newly created shared library
+    # Return absolute path of shared library
     return sharedlib_filepath

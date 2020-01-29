@@ -7,13 +7,13 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import subprocess
 
-from pyccel.parser.errors import Errors
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
+__all__ = ['construct_flags', 'compile_fortran']
 
+#==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
 _avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort']
 
+#==============================================================================
 # TODO add opt flags, etc... look at f2py interface in numpy
 def construct_flags(compiler,
                     fflags=None,
@@ -80,6 +80,7 @@ def construct_flags(compiler,
 
     return flags
 
+#==============================================================================
 def compile_fortran(filename, compiler, flags,
                     binary=None,
                     verbose=False,
@@ -152,91 +153,3 @@ def compile_fortran(filename, compiler, flags,
 #        f.close()
 
     return output, cmd
-    # ...
-# ...
-
-def execute_pyccel(filename,
-                   compiler     = None,
-                   fflags       = None,
-                   debug        = False,
-                   verbose      = False,
-                   accelerator  = None,
-                   include      = [],
-                   libdir       = [],
-                   modules      = [],
-                   libs         = [],
-                   binary       = None,
-                   output       = '',
-                   convert_only = False):
-
-    """Executes the full process:
-        - parsing the python code
-        - annotating the python code
-        - converting from python to fortran
-        - compiling the fortran code.
-
-    Returns
-    -------
-    parser: pyccel.parser.Parser
-        Pyccel python parser.
-
-    codegen: pyccel.codegen.Codegen
-        Fortran code printer.
-
-    """
-    parser = Parser(filename, output_folder=output.replace('/','.'))
-    ast = parser.parse()
-
-    settings = {}
-    ast = parser.annotate(**settings)
-
-    name = os.path.basename(filename)
-    name = os.path.splitext(name)[0]
-
-    # Generate .f90 file
-    codegen = Codegen(ast, name)
-    fname = os.path.join(output, name)
-    fname = codegen.export(fname)
-
-    # Stop before compilation?
-    if convert_only:
-        return parser, codegen
-
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
-
-    # ... constructs the compiler flags
-    if compiler is None:
-        compiler='gfortran'
-
-    flags = construct_flags(compiler,
-                            fflags=fflags,
-                            debug=debug,
-                            accelerator=accelerator,
-                            include=include,
-                            libdir=libdir)
-    # ...
-
-    # ... compile fortran code
-    output, cmd = compile_fortran(fname, compiler, flags,
-                                  binary=binary,
-                                  verbose=verbose,
-                                  modules=modules,
-                                  is_module=codegen.is_module,
-                                  output=output,
-                                  libs=libs)
-    # ...
-
-    return parser, codegen
-
-
-if __name__ == '__main__':
-    import sys
-
-    try:
-        filename = sys.argv[1]
-    except:
-        raise ValueError('Expecting an argument for filename')
-
-    execute_pyccel(filename)
