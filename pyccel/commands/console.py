@@ -210,23 +210,29 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         err_mode.set_mode('developer')
     # ...
 
-    # TODO: prune options
-    execute_pyccel(filename,
-                   syntax_only   = args.syntax_only,
-                   semantic_only = args.semantic_only,
-                   convert_only  = args.convert_only,
-                   verbose       = args.verbose,
-                   compiler    = compiler,
-                   fflags      = args.fflags,
-                   include     = include,
-                   libdir      = libdir,
-                   modules     = [],
-                   libs        = libs,
-                   debug       = args.debug,
-                   extra_args  = '',
-                   accelerator = accelerator,
-                   mpi         = False,
-                   folder      = args.output)
+    base_dirpath = os.getcwd()
+
+    try:
+        # TODO: prune options
+        execute_pyccel(filename,
+                       syntax_only   = args.syntax_only,
+                       semantic_only = args.semantic_only,
+                       convert_only  = args.convert_only,
+                       verbose       = args.verbose,
+                       compiler    = compiler,
+                       fflags      = args.fflags,
+                       include     = include,
+                       libdir      = libdir,
+                       modules     = [],
+                       libs        = libs,
+                       debug       = args.debug,
+                       extra_args  = '',
+                       accelerator = accelerator,
+                       mpi         = False,
+                       folder      = args.output)
+    except:
+        os.chdir(base_dirpath)
+        raise
 
     return
 

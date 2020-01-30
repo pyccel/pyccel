@@ -105,18 +105,22 @@ def epyccel_seq(function_or_module,
         f.writelines(code)
 
     # Generate shared library
-    execute_pyccel(fname,
-                   verbose     = verbose,
-                   compiler    = compiler,
-                   fflags      = fflags,
-                   include     = include,
-                   libdir      = libdir,
-                   modules     = modules,
-                   libs        = libs,
-                   debug       = debug,
-                   extra_args  = extra_args,
-                   accelerator = accelerator,
-                   mpi         = mpi)
+    try:
+        execute_pyccel(fname,
+                       verbose     = verbose,
+                       compiler    = compiler,
+                       fflags      = fflags,
+                       include     = include,
+                       libdir      = libdir,
+                       modules     = modules,
+                       libs        = libs,
+                       debug       = debug,
+                       extra_args  = extra_args,
+                       accelerator = accelerator,
+                       mpi         = mpi)
+    except:
+        os.chdir(base_dirpath)
+        raise
 
     # Create __init__.py file in epyccel directory
     with open('__init__.py', 'a') as f:
