@@ -12,7 +12,12 @@ from pyccel.codegen.f2py      import create_shared_library
 __all__ = ['execute_pyccel']
 
 #==============================================================================
+# NOTE:
+# [..]_dirname is the name of a directory
+# [..]_dirpath is the full (absolute) path of a directory
+
 # TODO: prune options
+# TODO: change name of variable 'module_name', as it could be a program
 def execute_pyccel(fname, *,
                    syntax_only   = False,
                    semantic_only = False,
@@ -31,15 +36,17 @@ def execute_pyccel(fname, *,
                    accelerator = None,
                    mpi         = False):
 
-    #------------------------------------------------------
-    # NOTE:
-    # [..]_dirname is the name of a directory
-    # [..]_dirpath is the full (absolute) path of a directory
-    #------------------------------------------------------
-
     # Store current directory
     base_dirpath = os.getcwd()
 
+    # Handle any exception by printing error message, moving to original
+    # working directory, and then raising the exception to the caller:
+    def raise_error(stage):
+        print('\nERROR at {} stage'.format(stage))
+        os.chdir(base_dirpath)
+        raise
+
+    # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
     pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
 
@@ -85,29 +92,40 @@ def execute_pyccel(fname, *,
     # ...
 
     # Parse Python file
-    parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'))
-    ast = parser.parse()
+    try:
+        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'))
+        ast = parser.parse()
+    except:
+        raise_error('parsing (syntax)')
 
     if syntax_only:
         return
 
     # Annotate abstract syntax Tree
-    settings = {}
-    ast = parser.annotate(**settings)
+    try:
+        settings = {}
+        ast = parser.annotate(**settings)
+    except:
+        raise_error('annotation (semantic)')
 
     if semantic_only:
         return
 
     # Generate .f90 file
-    codegen = Codegen(ast, module_name)
-    fname = os.path.join(pyccel_dirpath, module_name)
-    fname = codegen.export(fname)
+    try:
+        codegen = Codegen(ast, module_name)
+        fname = os.path.join(pyccel_dirpath, module_name)
+        fname = codegen.export(fname)
+    except:
+        raise_error('code generation')
 
+    #------------------------------------------------------
     # TODO: collect dependencies and proceed recursively
     if recursive:
         for dep in parser.sons:
             # Call same function on 'dep'
             pass
+    #------------------------------------------------------
 
     if convert_only:
         return
@@ -132,26 +150,32 @@ def execute_pyccel(fname, *,
     # TODO: stop at object files, do not compile executable
     #       This allows for properly linking program to modules
     #
-    output, cmd = compile_fortran(fname, compiler, flags,
-                                  binary=None,
-                                  verbose=verbose,
-                                  modules=modules,
-                                  is_module=codegen.is_module,
-                                  output=pyccel_dirpath,
-                                  libs=libs)
+    try:
+        output, cmd = compile_fortran(fname, compiler, flags,
+                                      binary=None,
+                                      verbose=verbose,
+                                      modules=modules,
+                                      is_module=codegen.is_module,
+                                      output=pyccel_dirpath,
+                                      libs=libs)
+    except:
+        raise_error('Fortran compilation')
 
     # For a program stop here
     if codegen.is_program:
         return
 
     # Create shared library
-    sharedlib_filepath = create_shared_library(parser,
-                                               codegen,
-                                               pyccel_dirpath,
-                                               compiler,
-                                               accelerator,
-                                               mpi,
-                                               extra_args)
+    try:
+        sharedlib_filepath = create_shared_library(parser,
+                                                   codegen,
+                                                   pyccel_dirpath,
+                                                   compiler,
+                                                   accelerator,
+                                                   mpi,
+                                                   extra_args)
+    except:
+        raise_error('shared library generation')
 
     # Move shared library to folder directory
     # (First construct absolute path of target location)
