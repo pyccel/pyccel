@@ -35,30 +35,8 @@ def sanitize_arguments(args):
     return _args
 
 #=======================================================================================
-
-class F2PY_FunctionInterface(Basic):
-
-    def __new__(cls, func, f2py_module_name, parent):
-        if not(isinstance(func, FunctionDef) and func.is_static):
-            raise TypeError('Wrong arguments')
-
-        return Basic.__new__(cls, func, f2py_module_name, parent)
-
-    @property
-    def f2py_function(self):
-        return self.args[0]
-
-    @property
-    def f2py_module_name(self):
-        return self.args[1]
-
-    @property
-    def parent(self):
-        return self.args[2]
-
-#=======================================================================================
-
 def as_static_function(func, name=None):
+
     assert(isinstance(func, FunctionDef))
 
     args    = func.arguments
@@ -81,7 +59,6 @@ def as_static_function(func, name=None):
 
     if name is None:
         name = 'f2py_{}'.format(func.name).lower()
-
 
     # ...
     results_names = [i.name for i in results]
@@ -168,7 +145,6 @@ def as_static_function(func, name=None):
                         functions = functions,
                         imports = func.imports
                         )
-
 
 #=======================================================================================
 def as_static_function_call(func, mod_name, name=None):
