@@ -3086,30 +3086,6 @@ class FunctionDef(Basic):
     def check_elemental(self):
         raise NotImplementedError('')
 
-    # looking for arrays of rank > 1
-    # this function is only called for static FunctionDef => when using f2py
-    def has_multiarray(self):
-        if not self.is_static:
-            raise ValueError('> Expecting a static FunctionDef')
-
-        # ... chack sanity
-        arg_names = [str(a.name) for a in self.arguments]
-        allocatables = [r for r in self.results if not( str(r.name) in arg_names ) and r.allocatable ]
-        if allocatables:
-            raise AstFunctionResultError(allocatables)
-        # ...
-
-        found = False
-        for a in list(self.arguments) + list(self.results):
-            if isinstance(a, (Variable, IndexedVariable)):
-                if a.rank > 1:
-                    found = True
-
-            if found:
-                break
-
-        return found
-
 
 class SympyFunction(FunctionDef):
 
