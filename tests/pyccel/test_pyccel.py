@@ -131,7 +131,7 @@ def test_rel_imports_python_accessible_folder():
     pyth_out = testing()
 
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"), "-f --output=folder2")
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"), "--output=folder2")
     p = subprocess.Popen([shutil.which("f2py"), "-c", "folder2_funcs.o", "test_rel_imports.f90", "-m", "test_rel_imports_call"],
             universal_newlines=True, cwd=os.path.join(path_dir,"folder2"))
     p.wait()
@@ -164,7 +164,7 @@ def test_folder_imports_python_accessible_folder():
     pyth_out = testing()
 
     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_imports2.py"), "-f")
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_imports2.py"))
     p = subprocess.Popen([shutil.which("f2py"), "-c", "../folder1/folder1_funcs.o", "../test_imports2.f90", "-m", "test_imports2_call", "-I../folder1"],
             universal_newlines=True, cwd=os.path.join(path_dir,"folder2"))
     p.wait()
@@ -186,7 +186,7 @@ def test_folder_imports():
     pyth_out = testing()
 
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
-    compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"), "-f")
+    compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"))
     compile_f2py(os.path.join(path_dir,"folder2"), "test_imports2.py", "../folder1/folder1_funcs.py")
 
     import scripts.folder2.test_imports2_call as mod
@@ -204,7 +204,7 @@ def test_f2py_compat():
 
     pyth_out = return_one()
 
-    compile_pyccel(path_dir, "test_f2py_compat.py", "-f")
+    compile_pyccel(path_dir, "test_f2py_compat.py")
     compile_f2py(path_dir, "test_f2py_compat.py")
 
     import scripts.test_f2py_compat_call as mod
