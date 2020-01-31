@@ -8,6 +8,7 @@ import string
 import random
 
 from types import ModuleType, FunctionType
+from importlib.machinery import ExtensionFileLoader
 
 from pyccel.ast              import FunctionHeader
 from pyccel.ast.core         import FunctionDef
@@ -87,6 +88,8 @@ def epyccel_seq(function_or_module,
     # Define working directory 'folder'
     if folder is None:
         folder = pymod_dirpath
+    else:
+        folder = os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
     epyccel_dirname = '__epyccel__'
@@ -104,8 +107,8 @@ def epyccel_seq(function_or_module,
     with open(fname, 'w') as f:
         f.writelines(code)
 
-    # Generate shared library
     try:
+        # Generate shared library
         execute_pyccel(fname,
                        verbose     = verbose,
                        compiler    = compiler,
@@ -118,24 +121,19 @@ def epyccel_seq(function_or_module,
                        extra_args  = extra_args,
                        accelerator = accelerator,
                        mpi         = mpi)
-    except:
+    finally:
+        # Change working directory back to starting point
         os.chdir(base_dirpath)
-        raise
-
-    # Create __init__.py file in epyccel directory
-    with open('__init__.py', 'a') as f:
-        pass
-
-    # Change working directory to 'folder'
-    os.chdir(folder)
 
     # Import shared library
-    sys.path.append(epyccel_dirpath)
-    package = importlib.import_module(epyccel_dirname + '.' + module_name)
+    sys.path.insert(0, epyccel_dirpath)
+    package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 
-    # Change working directory back to starting point
-    os.chdir(base_dirpath)
+    # Verify that we have imported the shared library, not the Python one
+    loader = getattr(package, '__loader__', None)
+    if not isinstance(loader, ExtensionFileLoader):
+        raise ImportError('Could not load shared library')
 
     # Function case:
     if isinstance(function_or_module, FunctionType):
@@ -179,10 +177,9 @@ def epyccel( inputs, **kwargs ):
 
             # Non-master processes import Fortran module directly from its path
             if comm.rank != root:
-                folder = os.path.abspath(os.path.join(fmod_path, os.pardir))
-
-                sys.path.append(folder)
-                fmod = importlib.import_module( fmod_name )
+                folder = os.path.split(fmod_path)[0]
+                sys.path.insert(0, folder)
+                fmod = importlib.import_module(fmod_name)
                 sys.path.remove(folder)
 
         # Return Fortran module
