@@ -159,6 +159,10 @@ def execute_pyccel(fname, *,
 
     # For a program stop here
     if codegen.is_program:
+        if verbose:
+            exec_filepath = os.path.join(folder, module_name)
+            print( '> Executable has been created: {}'.format(exec_filepath))
+        os.chdir(base_dirpath)
         return
 
     # Create shared library
@@ -176,8 +180,9 @@ def execute_pyccel(fname, *,
     # Move shared library to folder directory
     # (First construct absolute path of target location)
     sharedlib_filename = os.path.basename(sharedlib_filepath)
-    new_sharedlib_filepath = os.path.join(folder, sharedlib_filename)
-    shutil.move(sharedlib_filepath, new_sharedlib_filepath)
+    target = os.path.join(folder, sharedlib_filename)
+    shutil.move(sharedlib_filepath, target)
+    sharedlib_filepath = target
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
