@@ -86,7 +86,7 @@ def compile_f2py( filename,
     if not modulename:
         modulename = filename.split('.')[0]
 
-    libs = ' '.join('-l'+i.lower() for i in libs)
+    libs = ' '.join('-l'+i.lower() for i in libs) # because of f2py we must use lower case
     libdirs = ' '.join('-L'+i for i in libdirs)
 
     args = args_pattern.format( compilers  = compilers,
@@ -141,7 +141,7 @@ def create_shared_library(parser, codegen, pyccel_dirpath,
     funcs = codegen.routines + codegen.interfaces
     f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
     f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
-    f2py_filename = 'f2py_{}.f90'.format(module_name.lower())
+    f2py_filename = 'f2py_{}.f90'.format(module_name)
     with open(f2py_filename, 'w') as f:
         f.writelines(f2py_code)
 
@@ -158,7 +158,7 @@ def create_shared_library(parser, codegen, pyccel_dirpath,
     # ...
 
     # Create MOD.so shared library
-    sharedlib_modname = module_name.lower()
+    sharedlib_modname = module_name
     extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
     output, cmd = compile_f2py(f2py_filename,
                                modulename  = sharedlib_modname,
