@@ -149,9 +149,7 @@ def test_imports_in_folder():
     # Fails as imports are wrongly defined
     pyccel_test("scripts/test_folder_imports.py","scripts/folder1/folder1_funcs.py", compile_with_pyccel = False)
 
-@pytest.mark.xfail
 def test_imports():
-    # Fails as pyccel cannot compile the resulting files
     pyccel_test("scripts/test_imports.py","scripts/funcs.py")
 
 def test_folder_imports_python_accessible_folder():

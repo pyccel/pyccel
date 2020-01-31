@@ -147,6 +147,17 @@ def execute_pyccel(fname, *,
     #       This allows for properly linking program to modules
     #
     try:
+
+        # Determine all .o files needed by executable
+        if codegen.is_program:
+            def get_module_dependencies(parser, mods=[]):
+                mods = mods + [os.path.splitext(os.path.basename(parser.filename))[0]]
+                for son in parser.sons:
+                    mods = get_module_dependencies(son, mods)
+                return mods
+            dep_mods = get_module_dependencies(parser)[1:] # NOTE: avoid parent
+            modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods]
+
         output, cmd = compile_fortran(fname, f90exec, flags,
                                       binary=None,
                                       verbose=verbose,
