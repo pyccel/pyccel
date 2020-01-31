@@ -8,6 +8,11 @@ def get_abs_path(relative_path):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(base_dir, relative_path)
 
+def insert_pyccel_folder(abs_path):
+    base_dir = os.path.dirname(abs_path)
+    base_name = os.path.basename(abs_path)
+    return os.path.join(base_dir, "__pyccel__", base_name)
+
 def get_python_output(abs_path, cwd = None):
     if cwd is None:
         p = subprocess.Popen([shutil.which("python3") , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
@@ -20,28 +25,30 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
         options = options.split(' ')
-        p = subprocess.Popen([shutil.which("pyccel")] + options + ["%s" % test_file, "--include=%s/__pyccel__" % path_dir], universal_newlines=True, cwd=path_dir)
+        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
     else:
-        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file, "--include=%s/__pyccel__" % path_dir], universal_newlines=True, cwd=path_dir)
+        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
 
 def compile_fortran(path_dir,test_file,dependencies):
-    root = test_file[:-3]
+    root = insert_pyccel_folder(test_file)[:-3]
 
     assert(os.path.isfile(root+".f90"))
 
     command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
     if isinstance(dependencies, list):
         for d in dependencies:
+            d = insert_pyccel_folder(d)
             command.append(d[:-3]+".o")
             command.append("-I"+os.path.dirname(d))
     elif isinstance(dependencies, str):
+        dependencies = insert_pyccel_folder(dependencies)
         command.append(dependencies[:-3]+".o")
         command.append("-I"+os.path.dirname(dependencies))
 
     command.append("-o")
-    command.append("%s" % root)
+    command.append("%s" % test_file[:-3])
 
     p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
     p.wait()
@@ -110,17 +117,19 @@ def test_rel_imports_python_accessible_folder():
     # From this folder python understands relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.test_rel_imports import testing
+    from scripts.folder2.test_rel_imports import test_func
 
-    pyth_out = testing()
+    pyth_out = str(test_func())
 
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"), "--output=folder2")
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"))
 
-    import scripts.folder2.test_rel_imports_call as mod
-    fort_out = mod.test_rel_imports.testing()
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.test_rel_imports"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
+    assert(p.returncode==0)
 
-    assert(pyth_out==fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
 def test_imports_compile():
     pyccel_test("scripts/test_imports.py","scripts/funcs.py", compile_with_pyccel = False)
@@ -139,13 +148,12 @@ def test_folder_imports_python_accessible_folder():
     path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.test_imports2 import test_func
 
-    pyth_out = test_func()
+    pyth_out = str(test_func())
 
     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_imports2.py"))
 
-    print([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"])
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.test_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -160,12 +168,12 @@ def test_folder_imports():
     path_dir = os.path.join(base_dir, "scripts")
     from scripts.folder2.test_imports2 import test_func
 
-    pyth_out = test_func()
+    pyth_out = str(test_func())
 
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.test_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -184,7 +192,6 @@ def test_f2py_compat():
 
     compile_pyccel(path_dir, "test_f2py_compat.py")
 
-    print([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"])
     p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
@@ -200,7 +207,7 @@ def test_pyccel_calling_directory():
 
     compile_pyccel(cwd, test_file)
 
-    fort_out = get_fortran_output(get_abs_path("test_funcs"))
+    fort_out = get_fortran_output(get_abs_path("scripts/test_funcs"))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
