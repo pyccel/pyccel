@@ -20,9 +20,9 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
         options = options.split(' ')
-        p = subprocess.Popen([shutil.which("pyccel")] + options + ["%s" % test_file, "--include=."], universal_newlines=True, cwd=path_dir)
+        p = subprocess.Popen([shutil.which("pyccel")] + options + ["%s" % test_file, "--include=%s/__pyccel__" % path_dir], universal_newlines=True, cwd=path_dir)
     else:
-        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file, "--include=."], universal_newlines=True, cwd=path_dir)
+        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file, "--include=%s/__pyccel__" % path_dir], universal_newlines=True, cwd=path_dir)
     p.wait()
     assert(p.returncode==0)
 
@@ -116,10 +116,6 @@ def test_rel_imports_python_accessible_folder():
 
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"), "--output=folder2")
-    p = subprocess.Popen([shutil.which("f2py"), "-c", "folder2_funcs.o", "test_rel_imports.f90", "-m", "test_rel_imports_call"],
-            universal_newlines=True, cwd=os.path.join(path_dir,"folder2"))
-    p.wait()
-    assert(p.returncode==0)
 
     import scripts.folder2.test_rel_imports_call as mod
     fort_out = mod.test_rel_imports.testing()
@@ -141,21 +137,20 @@ def test_folder_imports_python_accessible_folder():
     # From this folder python understands relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.test_imports2 import testing
+    from scripts.folder2.test_imports2 import test_func
 
-    pyth_out = testing()
+    pyth_out = test_func()
 
     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_imports2.py"))
-    p = subprocess.Popen([shutil.which("f2py"), "-c", "../folder1/folder1_funcs.o", "../test_imports2.f90", "-m", "test_imports2_call", "-I../folder1"],
-            universal_newlines=True, cwd=os.path.join(path_dir,"folder2"))
-    p.wait()
+
+    print([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"])
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
     assert(p.returncode==0)
 
-    import scripts.folder2.test_imports2_call as mod
-    fort_out = mod.test_imports2.testing()
-
-    assert(pyth_out==fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
 def test_folder_imports():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts/folder2 folder
@@ -163,18 +158,19 @@ def test_folder_imports():
     # From this folder python doesn't understand relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.test_imports2 import testing
+    from scripts.folder2.test_imports2 import test_func
 
-    pyth_out = testing()
+    pyth_out = test_func()
 
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"))
-    compile_f2py(os.path.join(path_dir,"folder2"), "test_imports2.py", "../folder1/folder1_funcs.py")
 
-    import scripts.folder2.test_imports2_call as mod
-    fort_out = mod.test_imports2.testing()
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
+    assert(p.returncode==0)
 
-    assert(pyth_out==fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
 def test_funcs():
     pyccel_test("scripts/test_funcs.py")
