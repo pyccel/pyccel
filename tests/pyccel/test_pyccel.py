@@ -26,24 +26,6 @@ def compile_pyccel(path_dir,test_file, options = ""):
     p.wait()
     assert(p.returncode==0)
 
-def compile_f2py(path_dir,test_file, dependencies = None):
-    root = test_file[:-3]
-    command = [shutil.which("f2py"), "-c", "%s.f90" % root]
-    if isinstance(dependencies, list):
-        for d in dependencies:
-            command.append(d[:-3]+".o")
-            command.append("-I"+os.path.dirname(d))
-    elif isinstance(dependencies, str):
-        command.append(dependencies[:-3]+".o")
-        command.append("-I"+os.path.dirname(dependencies))
-
-    command.append("-m")
-    command.append("%s_call" % root)
-
-    p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
-    p.wait()
-    assert(p.returncode==0)
-
 def compile_fortran(path_dir,test_file,dependencies):
     root = test_file[:-3]
 
@@ -80,7 +62,9 @@ def teardown(path_dir = None):
     files = os.listdir(path_dir)
     for f in files:
         file_name = os.path.join(path_dir,f)
-        if not os.path.isfile(file_name):
+        if f == "__pyccel__":
+            shutil.rmtree( file_name )
+        elif not os.path.isfile(file_name):
             teardown(file_name)
         elif not f.endswith(".py"):
             os.remove(file_name)
@@ -198,17 +182,19 @@ def test_funcs():
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.test_f2py_compat import return_one
+    from scripts.test_f2py_compat import test_func
 
-    pyth_out = return_one()
+    pyth_out = str(test_func())
 
     compile_pyccel(path_dir, "test_f2py_compat.py")
-    compile_f2py(path_dir, "test_f2py_compat.py")
 
-    import scripts.test_f2py_compat_call as mod
-    fort_out = mod.test_f2py_compat.return_one()
+    print([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"])
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
+    assert(p.returncode==0)
 
-    assert(pyth_out==fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
 def test_pyccel_calling_directory():
     cwd = get_abs_path(".")

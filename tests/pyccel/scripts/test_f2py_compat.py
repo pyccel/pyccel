@@ -2,5 +2,5 @@ from pyccel.decorators import pure, external
 
 @pure
 @external
-def return_one():
+def test_func():
     return 1
