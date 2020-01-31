@@ -54,7 +54,7 @@ def execute_pyccel(fname, *,
     module_name = os.path.splitext(pymod_filename)[0]
 
     # Define working directory 'folder'
-    if folder is None:
+    if folder is None or folder == "":
         folder = pymod_dirpath
     else:
         folder = os.path.abspath(folder)
@@ -133,6 +133,26 @@ def execute_pyccel(fname, *,
     errors = Errors()
     errors.reset()
 
+    # Determine all .o files and all folders needed by executable
+    def get_module_dependencies(parser, mods=[], folders=[]):
+        mod_folder = os.path.dirname(parser.filename) + "/__pyccel__/"
+        mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
+
+        mods = mods + [ mod_folder + mod_base ]
+        folders = folders + [ mod_folder ]
+
+        for son in parser.sons:
+            mods, folders = get_module_dependencies(son, mods,folders)
+
+        return mods, folders
+
+    dep_mods, inc_folders = get_module_dependencies(parser)
+    include += inc_folders
+
+    if codegen.is_program:
+        modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
+
+
     # Construct compiler flags
     flags = construct_flags(f90exec,
                             fflags=fflags,
@@ -147,17 +167,6 @@ def execute_pyccel(fname, *,
     #       This allows for properly linking program to modules
     #
     try:
-
-        # Determine all .o files needed by executable
-        if codegen.is_program:
-            def get_module_dependencies(parser, mods=[]):
-                mods = mods + [os.path.splitext(os.path.basename(parser.filename))[0]]
-                for son in parser.sons:
-                    mods = get_module_dependencies(son, mods)
-                return mods
-            dep_mods = get_module_dependencies(parser)[1:] # NOTE: avoid parent
-            modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods]
-
         output, cmd = compile_fortran(fname, f90exec, flags,
                                       binary=None,
                                       verbose=verbose,
@@ -184,6 +193,7 @@ def execute_pyccel(fname, *,
                                                    compiler,
                                                    accelerator,
                                                    mpi,
+                                                   dep_mods,
                                                    extra_args)
     except:
         raise_error('shared library generation')

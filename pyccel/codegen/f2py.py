@@ -123,7 +123,7 @@ def compile_f2py( filename,
 
 #==============================================================================
 def create_shared_library(parser, codegen, pyccel_dirpath,
-                          compiler, accelerator, mpi, extra_args=''):
+                          compiler, accelerator, mpi, dep_mods, extra_args=''):
 
     # Consistency checks
     if not codegen.is_module:
@@ -145,15 +145,6 @@ def create_shared_library(parser, codegen, pyccel_dirpath,
     with open(f2py_filename, 'w') as f:
         f.writelines(f2py_code)
 
-    # ...
-    # Determine all .o files needed by shared library
-    def get_module_dependencies(parser, mods=[]):
-        mods = mods + [os.path.splitext(os.path.basename(parser.filename))[0]]
-        for son in parser.sons:
-            mods = get_module_dependencies(son, mods)
-        return mods
-
-    dep_mods = get_module_dependencies(parser)
     object_files = ' '.join(['{}.o'.format(m) for m in dep_mods])
     # ...
 
