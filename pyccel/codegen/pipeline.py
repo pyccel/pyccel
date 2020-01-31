@@ -72,15 +72,14 @@ def execute_pyccel(fname, *,
 
     # Choose Fortran compiler
     if compiler is None:
-        if mpi == True:
-            compiler = 'mpif90'
-        else:
-            compiler = 'gfortran'
+        compiler = 'gfortran'
+
+    f90exec = 'mpif90' if mpi else compiler
 
     # ...
     # Construct flags for the Fortran compiler
     if fflags is None:
-        fflags = construct_flags(compiler,
+        fflags = construct_flags(f90exec,
                                  fflags=None,
                                  debug=debug,
                                  accelerator=accelerator,
@@ -135,10 +134,7 @@ def execute_pyccel(fname, *,
     errors.reset()
 
     # Construct compiler flags
-    if compiler is None:
-        compiler = 'gfortran'
-
-    flags = construct_flags(compiler,
+    flags = construct_flags(f90exec,
                             fflags=fflags,
                             debug=debug,
                             accelerator=accelerator,
@@ -151,7 +147,7 @@ def execute_pyccel(fname, *,
     #       This allows for properly linking program to modules
     #
     try:
-        output, cmd = compile_fortran(fname, compiler, flags,
+        output, cmd = compile_fortran(fname, f90exec, flags,
                                       binary=None,
                                       verbose=verbose,
                                       modules=modules,
