@@ -635,7 +635,7 @@ class CodeBlock(Basic):
             if isinstance(i, CodeBlock):
                 ls += i.body
             elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application, Expr, IfTernaryOperator)):
+                            Application, Expr, IfTernaryOperator, EmptyLine)):
                 ls.append(i)
             else:
 
