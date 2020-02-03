@@ -73,20 +73,30 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        help='Fortran compiler flags.')
     group.add_argument('--debug', action='store_true', \
                        help='compiles the code in a debug mode.')
-    group.add_argument('--include', type=str, \
-                       help='path to include directory.')
-    group.add_argument('--libdir', type=str, \
-                       help='path to lib directory.')
-    group.add_argument('--libs', type=str, \
-                       help='list of libraries to link with.')
+
+    group.add_argument('--include',
+                        type=str,
+                        nargs='*',
+                        dest='includes',
+                        default=(),
+                        help='list of include directories.')
+
+    group.add_argument('--libdir',
+                        type=str,
+                        nargs='*',
+                        dest='libdirs',
+                        default=(),
+                        help='list of library directories.')
+
+    group.add_argument('--libs',
+                        type=str,
+                        nargs='*',
+                        dest='libs',
+                        default=(),
+                        help='list of libraries to link with.')
+
     group.add_argument('--output', type=str, default = '',\
                        help='folder in which the output is stored.')
-    group.add_argument('--prefix', type=str, default = '',\
-                       help='add prefix to the generated file.')
-    group.add_argument('--prefix-module', type=str, default = '',\
-                       help='add prefix module name.')
-
-    group.add_argument('--language', type=str, help='target language')
 
     # ...
 
@@ -180,26 +190,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
     if openacc:
         accelerator = "openacc"
 
-#    debug   = args.debug
-#    verbose = args.verbose
-    include = args.include
-#    fflags  = args.fflags
-    libdir  = args.libdir
-    libs    = args.libs
-    output_folder = args.output
-    prefix = args.prefix
-    prefix_module = args.prefix_module
-    language = args.language
-
-    if (len(output_folder)>0 and output_folder[-1]!='/'):
-        output_folder+='/'
-
-    if not include:
-        include = []
-    if not libdir:
-        libdir = []
-    if not libs:
-        libs = []
     # ...
 
     # ...
@@ -219,25 +209,43 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        semantic_only = args.semantic_only,
                        convert_only  = args.convert_only,
                        verbose       = args.verbose,
-                       compiler    = compiler,
-                       fflags      = args.fflags,
-                       include     = include,
-                       libdir      = libdir,
-                       modules     = [],
-                       libs        = libs,
-                       debug       = args.debug,
-                       extra_args  = '',
-                       accelerator = accelerator,
-                       mpi         = False,
-                       folder      = args.output)
-    except:
+                       compiler      = compiler,
+                       fflags        = args.fflags,
+                       includes      = args.includes,
+                       libdirs       = args.libdirs,
+                       modules       = (),
+                       libs          = args.libs,
+                       debug         = args.debug,
+                       extra_args    = '',
+                       accelerator   = accelerator,
+                       mpi           = False,
+                       folder        = args.output)
+    finally:
         os.chdir(base_dirpath)
-        raise
 
     return
 
 #==============================================================================
 # NOTE: left here for later reference
+#
+#    group.add_argument('--prefix', type=str, default = '',\
+#                       help='add prefix to the generated file.')
+#    group.add_argument('--prefix-module', type=str, default = '',\
+#                       help='add prefix module name.')
+#    group.add_argument('--language', type=str, help='target language')
+#
+#    ...
+#
+#    prefix = args.prefix
+#    prefix_module = args.prefix_module
+#    language = args.language
+#
+#    output_folder = args.output
+#
+#    if (len(output_folder)>0 and output_folder[-1]!='/'):
+#        output_folder+='/'
+#
+#    ...
 #
 #    elif args.convert_only:
 #        pyccel = Parser(filename)

@@ -27,14 +27,22 @@ def execute_pyccel(fname, *,
                    folder        = None,
                    compiler    = None,
                    fflags      = None,
-                   include     = [],
-                   libdir      = [],
-                   modules     = [],
-                   libs        = [],
+                   includes    = (),
+                   libdirs     = (),
+                   modules     = (),
+                   libs        = (),
                    debug       = False,
                    extra_args  = '',
                    accelerator = None,
                    mpi         = False):
+
+    # TODO [YG, 03.02.2020]: test validity of function arguments
+
+    # Copy list arguments to local lists to avoid unexpected behavior
+    includes = [*includes]
+    libdirs  = [*libdirs]
+    modules  = [*modules]
+    libs     = [*libs]
 
     # Store current directory
     base_dirpath = os.getcwd()
@@ -83,8 +91,8 @@ def execute_pyccel(fname, *,
                                  fflags=None,
                                  debug=debug,
                                  accelerator=accelerator,
-                                 include=[],
-                                 libdir=[])
+                                 includes=(),
+                                 libdirs=())
 
     # Build position-independent code, suited for use in shared library
     fflags = ' {} -fPIC '.format(fflags)
@@ -154,7 +162,7 @@ def execute_pyccel(fname, *,
         return mods, folders
 
     dep_mods, inc_folders = get_module_dependencies(parser)
-    include += inc_folders
+    includes += inc_folders
 
     if codegen.is_program:
         modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
@@ -165,8 +173,8 @@ def execute_pyccel(fname, *,
                             fflags=fflags,
                             debug=debug,
                             accelerator=accelerator,
-                            include=include,
-                            libdir=libdir)
+                            includes=includes,
+                            libdirs=libdirs)
 
     # Compile Fortran code
     #

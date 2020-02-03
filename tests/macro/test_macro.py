@@ -30,7 +30,7 @@ def test_blas():
     print('***                           ***')
     print('*********************************')
 
-    run('blas', libs='blas')
+    run('blas', libs=['blas'])
 
 def test_lapack():
     print('*********************************')

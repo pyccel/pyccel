@@ -19,8 +19,8 @@ def construct_flags(compiler,
                     fflags=None,
                     debug=False,
                     accelerator=None,
-                    include=[],
-                    libdir=[]):
+                    includes=(),
+                    libdirs=()):
     """
     Constructs compiling flags for a given compiler.
 
@@ -37,10 +37,10 @@ def construct_flags(compiler,
     debug: bool
         add some useful prints that may help for debugging.
 
-    include: list
+    includes: list
         list of include directories paths
 
-    libdir: list
+    libdirs: list
         list of lib directories paths
     """
 
@@ -51,32 +51,26 @@ def construct_flags(compiler,
         fflags = '-O3'
 
     # make sure there are spaces
-    flags = " {} ".format(fflags)
+    flags = str(fflags)
     if compiler == "gfortran":
         if debug:
-            flags += " -fbounds-check "
+            flags += " -fbounds-check"
 
     if compiler == "mpif90":
         if debug:
-            flags += " -fbounds-check "
+            flags += " -fbounds-check"
 
     if accelerator is not None:
         if accelerator == "openmp":
-            flags += " -fopenmp "
+            flags += " -fopenmp"
         elif accelerator == "openacc":
-            flags += " -ta=multicore -Minfo=accel "
+            flags += " -ta=multicore -Minfo=accel"
         else:
             raise ValueError("Only openmp and openacc are available")
 
-    if isinstance(include, str):
-        include = [include]
-    if len(include) > 0:
-        flags += ' '.join(' -I{0}'.format(i) for i in include)
-
-    if isinstance(libdir, str):
-        libdir = [libdir]
-    if len(libdir) > 0:
-        flags += ' '.join(' -L{0}'.format(i) for i in libdir)
+    # Construct flags
+    flags += ''.join(' -I{0}'.format(i) for i in includes)
+    flags += ''.join(' -L{0}'.format(i) for i in libdirs)
 
     return flags
 
@@ -86,7 +80,7 @@ def compile_fortran(filename, compiler, flags,
                     verbose=False,
                     modules=[],
                     is_module=False,
-                    libs=[],
+                    libs=(),
                     output=''):
     """
     Compiles the generated file.
@@ -94,6 +88,7 @@ def compile_fortran(filename, compiler, flags,
     verbose: bool
         talk more
     """
+
     if binary is None:
         if not is_module:
             binary = os.path.splitext(os.path.basename(filename))[0]
@@ -112,19 +107,11 @@ def compile_fortran(filename, compiler, flags,
         if (len(output)>0):
             j_code = '-J'
 
-    m_code = ' '.join('{}.o '.format(m) for m in modules)
-
-    if isinstance(libs, str):
-        libs = libs.split(',')
-        if len(libs) == 1:
-            libs = libs[0].split(' ')
-    if len(libs) > 0:
-        libs = ' '.join(' -l{0}'.format(i) for i in libs)
-    else:
-        libs = ''
+    m_code = ' '.join('{}.o'.format(m) for m in modules)
+    libs_flags = ' '.join('-l{}'.format(i) for i in libs)
 
     cmd = '{0} {1} {2} {3} {4} {5} {6} {7} {8}'.format( \
-        compiler, flags, m_code, filename, o_code, binary, libs, j_code, mod_file)
+        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code, mod_file)
 
     if verbose:
         print(cmd)
