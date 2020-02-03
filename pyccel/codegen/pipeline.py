@@ -138,11 +138,18 @@ def execute_pyccel(fname, *,
         mod_folder = os.path.dirname(parser.filename) + "/__pyccel__/"
         mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
 
-        mods = mods + [ mod_folder + mod_base ]
-        folders = folders + [ mod_folder ]
+        # Stop conditions
+        if parser.metavars.get('ignore_at_import', False) or \
+           parser.metavars.get('module_name', None) == 'omp_lib':
+            return mods, folders
 
+        # Update lists
+        mods = mods + [mod_folder + mod_base]
+        folders = folders + [mod_folder]
+
+        # Proceed recursively
         for son in parser.sons:
-            mods, folders = get_module_dependencies(son, mods,folders)
+            mods, folders = get_module_dependencies(son, mods, folders)
 
         return mods, folders
 
