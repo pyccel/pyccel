@@ -127,6 +127,7 @@ def epyccel_seq(function_or_module,
 
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)
+    sys.modules.pop(module_name, None)
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 
