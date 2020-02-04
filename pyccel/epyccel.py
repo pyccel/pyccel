@@ -10,10 +10,6 @@ import random
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
-from pyccel.ast              import FunctionHeader
-from pyccel.ast.core         import FunctionDef
-from pyccel.ast.core         import Import
-from pyccel.ast.core         import Module
 from pyccel.codegen.pipeline import execute_pyccel
 
 __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
@@ -62,33 +58,32 @@ def epyccel_seq(function_or_module,
 
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
-        func = function_or_module
-        code = get_source_function(func)
+        pyfunc = function_or_module
+        code = get_source_function(pyfunc)
         tag = random_string(8)
         module_name = 'mod_{}'.format(tag)
-        fname       = '{}.py'.format(module_name)
+        pymod_filename = '{}.py'.format(module_name)
+        pymod_filepath = os.path.abspath(pymod_filename)
 
     elif isinstance(function_or_module, ModuleType):
-        module = function_or_module
-        lines = inspect.getsourcelines(module)[0]
+        pymod = function_or_module
+        pymod_filepath = pymod.__file__
+        pymod_filename = os.path.basename(pymod_filepath)
+        lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
         tag = random_string(8)
-        module_name = module.__name__.split('.')[-1] + '_' + tag
-        fname       = module.__file__
+        module_name = pymod.__name__.split('.')[-1] + '_' + tag
 
     else:
         raise TypeError('> Expecting a FunctionType or a ModuleType')
     # ...
-
-    pymod_filepath = os.path.abspath(fname)
-    pymod_dirpath, pymod_filename = os.path.split(pymod_filepath)
 
     # Store current directory
     base_dirpath = os.getcwd()
 
     # Define working directory 'folder'
     if folder is None:
-        folder = pymod_dirpath
+        folder = os.path.dirname(pymod_filepath)
     else:
         folder = os.path.abspath(folder)
 
@@ -104,13 +99,12 @@ def epyccel_seq(function_or_module,
     os.chdir(epyccel_dirpath)
 
     # Store python file in '__epyccel__' folder, so that execute_pyccel can run
-    fname = os.path.basename(fname)
-    with open(fname, 'w') as f:
+    with open(pymod_filename, 'w') as f:
         f.writelines(code)
 
     try:
         # Generate shared library
-        execute_pyccel(fname,
+        execute_pyccel(pymod_filename,
                        verbose     = verbose,
                        compiler    = compiler,
                        fflags      = fflags,
@@ -139,7 +133,7 @@ def epyccel_seq(function_or_module,
 
     # Function case:
     if isinstance(function_or_module, FunctionType):
-        return getattr(package, func.__name__.lower())
+        return getattr(package, pyfunc.__name__.lower())
 
     # Module case:
     return package

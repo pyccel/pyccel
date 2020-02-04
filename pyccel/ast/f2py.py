@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Tuple
-from sympy.core.basic import Basic
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Variable
 from pyccel.ast.core import Assign
-from pyccel.ast.core import Return
-from pyccel.ast.core import Module
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import Comment

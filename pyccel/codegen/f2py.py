@@ -6,8 +6,6 @@ import os
 import glob
 
 from pyccel.ast.f2py                import as_static_function_call
-from pyccel.codegen.utilities       import construct_flags
-from pyccel.codegen.utilities       import compile_fortran
 from pyccel.codegen.printing.fcode  import fcode
 
 __all__ = ['compile_f2py', 'create_shared_library']
@@ -19,23 +17,23 @@ PY_VERSION = sys.version_info[0:2]
 #==============================================================================
 # assumes relative path
 # TODO add openacc
-def compile_f2py( filename,
+# TODO [YG, 04.02.2020] sanitize arguments to protect against shell injection
+def compile_f2py( filename, *,
                   modulename=None,
                   extra_args='',
-                  libs=[],
-                  libdirs=[],
+                  libs=(),
+                  libdirs=(),
                   compiler=None,
                   mpi=False,
                   accelerator=None,
-                  includes = [],
-                  only = [],
+                  includes = '',
+                  only = (),
                   pyf = '' ):
 
     args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
 
     compilers  = ''
     f90flags   = ''
-    
 
     if compiler == 'gfortran':
         _compiler = 'gnu95'
@@ -45,7 +43,7 @@ def compile_f2py( filename,
 
     elif compiler == 'pgfortran':
        _compiler = 'pg'
-    
+
     else:
         raise NotImplementedError('Only gfortran ifort and pgi are available for the moment')
 
@@ -160,15 +158,15 @@ def create_shared_library(codegen,
 
     # Create MOD.so shared library
     extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
-    output, cmd = compile_f2py(f2py_filename,
-                               modulename  = sharedlib_modname,
-                               libs        = [],
-                               libdirs     = [],
-                               includes    = object_files,  # TODO: this is not an include...
-                               extra_args  = extra_args,
-                               compiler    = compiler,
-                               accelerator = accelerator,
-                               mpi         = mpi)
+    compile_f2py(f2py_filename,
+                 modulename  = sharedlib_modname,
+                 libs        = (),
+                 libdirs     = (),
+                 includes    = object_files,  # TODO: this is not an include...
+                 extra_args  = extra_args,
+                 compiler    = compiler,
+                 accelerator = accelerator,
+                 mpi         = mpi)
 
     # Obtain absolute path of newly created shared library
     pattern = '{}*.so'.format(sharedlib_modname)

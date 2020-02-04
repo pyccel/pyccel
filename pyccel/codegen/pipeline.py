@@ -18,6 +18,7 @@ __all__ = ['execute_pyccel']
 
 # TODO: prune options
 # TODO: change name of variable 'module_name', as it could be a program
+# TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel(fname, *,
                    syntax_only   = False,
                    semantic_only = False,
@@ -48,12 +49,11 @@ def execute_pyccel(fname, *,
     # Store current directory
     base_dirpath = os.getcwd()
 
-    # Handle any exception by printing error message, moving to original
-    # working directory, and then raising the exception to the caller:
-    def raise_error(stage):
+    # Unified way to handle errors: print formatted error message, then move
+    # to original working directory. Caller should then raise exception.
+    def handle_error(stage):
         print('\nERROR at {} stage'.format(stage))
         os.chdir(base_dirpath)
-        raise
 
     # Identify absolute path, directory, and filename
     pymod_filepath = os.path.abspath(fname)
@@ -103,8 +103,9 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'))
         ast = parser.parse()
-    except:
-        raise_error('parsing (syntax)')
+    except Exception:
+        handle_error('parsing (syntax)')
+        raise
 
     if syntax_only:
         return
@@ -113,8 +114,9 @@ def execute_pyccel(fname, *,
     try:
         settings = {}
         ast = parser.annotate(**settings)
-    except:
-        raise_error('annotation (semantic)')
+    except Exception:
+        handle_error('annotation (semantic)')
+        raise
 
     if semantic_only:
         return
@@ -124,15 +126,16 @@ def execute_pyccel(fname, *,
         codegen = Codegen(ast, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname = codegen.export(fname)
-    except:
-        raise_error('code generation')
+    except Exception:
+        handle_error('code generation')
+        raise
 
     #------------------------------------------------------
     # TODO: collect dependencies and proceed recursively
-    if recursive:
-        for dep in parser.sons:
-            # Call same function on 'dep'
-            pass
+#    if recursive:
+#        for dep in parser.sons:
+#            # Call same function on 'dep'
+#            pass
     #------------------------------------------------------
 
     if convert_only:
@@ -143,7 +146,7 @@ def execute_pyccel(fname, *,
     errors.reset()
 
     # Determine all .o files and all folders needed by executable
-    def get_module_dependencies(parser, mods=[], folders=[]):
+    def get_module_dependencies(parser, mods=(), folders=()):
         mod_folder = os.path.dirname(parser.filename) + "/__pyccel__/"
         mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
 
@@ -153,8 +156,8 @@ def execute_pyccel(fname, *,
             return mods, folders
 
         # Update lists
-        mods = mods + [mod_folder + mod_base]
-        folders = folders + [mod_folder]
+        mods = [*mods, mod_folder + mod_base]
+        folders = [*folders, mod_folder]
 
         # Proceed recursively
         for son in parser.sons:
@@ -183,15 +186,16 @@ def execute_pyccel(fname, *,
     #       This allows for properly linking program to modules
     #
     try:
-        output, cmd = compile_fortran(fname, f90exec, flags,
-                                      binary=None,
-                                      verbose=verbose,
-                                      modules=modules,
-                                      is_module=codegen.is_module,
-                                      output=pyccel_dirpath,
-                                      libs=libs)
-    except:
-        raise_error('Fortran compilation')
+        compile_fortran(fname, f90exec, flags,
+                        binary=None,
+                        verbose=verbose,
+                        modules=modules,
+                        is_module=codegen.is_module,
+                        output=pyccel_dirpath,
+                        libs=libs)
+    except Exception:
+        handle_error('Fortran compilation')
+        raise
 
     # For a program stop here
     if codegen.is_program:
@@ -211,8 +215,9 @@ def execute_pyccel(fname, *,
                                                    dep_mods,
                                                    extra_args,
                                                    output_name)
-    except:
-        raise_error('shared library generation')
+    except Exception:
+        handle_error('shared library generation')
+        raise
 
     # Move shared library to folder directory
     # (First construct absolute path of target location)
