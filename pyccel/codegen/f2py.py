@@ -122,8 +122,14 @@ def compile_f2py( filename,
     return output, cmd
 
 #==============================================================================
-def create_shared_library(parser, codegen, pyccel_dirpath,
-                          compiler, accelerator, mpi, dep_mods, extra_args=''):
+def create_shared_library(codegen,
+                          pyccel_dirpath,
+                          compiler,
+                          accelerator,
+                          mpi,
+                          dep_mods,
+                          extra_args='',
+                          sharedlib_modname=None):
 
     # Consistency checks
     if not codegen.is_module:
@@ -148,8 +154,11 @@ def create_shared_library(parser, codegen, pyccel_dirpath,
     object_files = ' '.join(['{}.o'.format(m) for m in dep_mods])
     # ...
 
+    # Name of shared library
+    if sharedlib_modname is None:
+        sharedlib_modname = module_name
+
     # Create MOD.so shared library
-    sharedlib_modname = module_name
     extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
     output, cmd = compile_f2py(f2py_filename,
                                modulename  = sharedlib_modname,

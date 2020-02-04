@@ -72,7 +72,8 @@ def epyccel_seq(function_or_module,
         module = function_or_module
         lines = inspect.getsourcelines(module)[0]
         code = ''.join(lines)
-        module_name = module.__name__.split('.')[-1]
+        tag = random_string(8)
+        module_name = module.__name__.split('.')[-1] + '_' + tag
         fname       = module.__file__
 
     else:
@@ -120,7 +121,8 @@ def epyccel_seq(function_or_module,
                        debug       = debug,
                        extra_args  = extra_args,
                        accelerator = accelerator,
-                       mpi         = mpi)
+                       mpi         = mpi,
+                       output_name = module_name)
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)

@@ -34,7 +34,8 @@ def execute_pyccel(fname, *,
                    debug       = False,
                    extra_args  = '',
                    accelerator = None,
-                   mpi         = False):
+                   mpi         = False,
+                   output_name = None):
 
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
@@ -202,14 +203,14 @@ def execute_pyccel(fname, *,
 
     # Create shared library
     try:
-        sharedlib_filepath = create_shared_library(parser,
-                                                   codegen,
+        sharedlib_filepath = create_shared_library(codegen,
                                                    pyccel_dirpath,
                                                    compiler,
                                                    accelerator,
                                                    mpi,
                                                    dep_mods,
-                                                   extra_args)
+                                                   extra_args,
+                                                   output_name)
     except:
         raise_error('shared library generation')
 
