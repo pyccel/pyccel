@@ -391,7 +391,6 @@ class FCodePrinter(CodePrinter):
             else:
                 source = self._print(expr.source)
             prefix = 'use {}, only:'.format(source)
-            prefix_as = 'use {},'.format(source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
@@ -404,7 +403,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(i, AsName):
                 target = '{name} => {target}'.format(name=self._print(i.name),
                                                      target=self._print(i.target))
-                line = '{prefix} {target}'.format(prefix=prefix_as,
+                line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
             elif isinstance(i, DottedName):
@@ -1273,7 +1272,7 @@ class FCodePrinter(CodePrinter):
         is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        is_procedure = expr.is_procedure or is_static
+        is_procedure = expr.is_procedure
 
         if expr.cls_name:
             for k, m in list(_default_methods.items()):
@@ -1311,21 +1310,17 @@ class FCodePrinter(CodePrinter):
             ret_type += '(kind={0})'.format(str(result.precision))
 
             func_type = 'function'
-            rec = ''
-            if expr.is_recursive:
-                rec = 'recursive '
-            if result.allocatable or (result.rank > 0):
-                sig = '{0}function {1}'.format(rec, name)
-                var = Variable(result.dtype, result.name, \
-                             rank=result.rank, \
-                             allocatable=True, \
-                             shape=result.shape)
+            rec = 'recursive ' if expr.is_recursive else ''
+            sig = '{0}function {1}'.format(rec, name)
+            func_end = 'result({0})'.format(result.name)
 
-                dec = Declare(result.dtype, var)
-                args_decs[str(var)] = dec
-            else:
-                sig = '{0} {1}function {2}'.format(ret_type, rec, name)
-                func_end  = ' result({0})'.format(result.name)
+            var = Variable(result.dtype, result.name, \
+                         rank=result.rank, \
+                         allocatable=result.allocatable, \
+                         shape=result.shape)
+            dec = Declare(result.dtype, var)
+            args_decs[str(var)] = dec
+
         else:
             # TODO compute intent
             # a static function is always treated as a procedure

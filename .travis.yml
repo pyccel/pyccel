@@ -36,18 +36,19 @@ before_script:
 # command to run tests
 script:
   - cd __pytest__
+  - python -m pytest ../tests/preprocess/test_preprocess.py
   - python -m pytest ../tests/parser/test_headers.py
   - python -m pytest ../tests/parser/test_openmp.py
   - python -m pytest ../tests/parser/test_openacc.py
   - python -m pytest ../tests/syntax/test_syntax.py
+  - python -m pytest ../tests/errors/test_errors.py
+  - python -m pytest ../tests/warnings/test_warnings.py
   - python -m pytest ../tests/semantic/test_semantic.py
   - python -m pytest ../tests/codegen/test_codegen.py
   - python -m pytest ../tests/complexity/test_complexity.py
-  - python -m pytest ../tests/errors/test_errors.py
-  - python -m pytest ../tests/warnings/test_warnings.py
-  - python -m pytest ../tests/preprocess/test_preprocess.py
   - python -m pytest ../tests/epyccel -v -m "not parallel"
   - python -m pytest ../tests/pyccel/test_pyccel.py -v
+  - mpirun -n 4 python -m pytest ../tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
 #  - mpirun -n 4 python -m pytest ../tests/epyccel -v -m parallel
 # this test must be executed with python, since we are calling mpif90 inside it
   - python ../tests/internal/test_internal.py

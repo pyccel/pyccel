@@ -6,7 +6,8 @@ from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
 
-# TODO to be modified as a function
+# TODO [AR, 18.11.2018] to be modified as a function
+# TODO [YG, 28.01.2020] maybe pass filename to the parse method?
 class Parser(object):
 
     def __init__(self, filename, **kwargs):
@@ -27,6 +28,12 @@ class Parser(object):
 
         self._output_folder = kwargs.pop('output_folder', '')
         self._input_folder = os.path.dirname(filename)
+
+
+    @property
+    def filename(self):
+        """ Python file to be parsed. """
+        return self._filename
 
     @property
     def d_parsers(self):

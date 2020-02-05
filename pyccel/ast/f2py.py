@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Tuple
-from sympy.core.basic import Basic
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Variable
 from pyccel.ast.core import Assign
-from pyccel.ast.core import Return
-from pyccel.ast.core import Module
+from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
+from pyccel.ast.core import Comment
 
 #=======================================================================================
 def sanitize_arguments(args):
@@ -32,53 +32,8 @@ def sanitize_arguments(args):
     return _args
 
 #=======================================================================================
-
-class F2PY_FunctionInterface(Basic):
-
-    def __new__(cls, func, f2py_module_name, parent):
-        if not(isinstance(func, FunctionDef) and func.is_static):
-            raise TypeError('Wrong arguments')
-
-        return Basic.__new__(cls, func, f2py_module_name, parent)
-
-    @property
-    def f2py_function(self):
-        return self.args[0]
-
-    @property
-    def f2py_module_name(self):
-        return self.args[1]
-
-    @property
-    def parent(self):
-        return self.args[2]
-
-#=======================================================================================
-
-class F2PY_ModuleInterface(Basic):
-
-    def __new__(cls, module, parents):
-        if not isinstance(module, Module):
-            raise TypeError('Expecting a Module')
-
-        if not isinstance(parents, dict):
-            raise TypeError('Expecting a dict')
-
-        obj = Basic.__new__(cls, module)
-        obj._parents = parents
-        return obj
-
-    @property
-    def module(self):
-        return self.args[0]
-
-    @property
-    def parents(self):
-        return self._parents
-
-#=======================================================================================
-
 def as_static_function(func, name=None):
+
     assert(isinstance(func, FunctionDef))
 
     args    = func.arguments
@@ -106,15 +61,16 @@ def as_static_function(func, name=None):
     results_names = [i.name for i in results]
     _args = []
     _arguments_inout = []
-    for i_a,a in enumerate(args):
-        if not isinstance( a, Variable ):
+
+    for i_a, a in enumerate(args):
+        if not isinstance(a, Variable):
             raise TypeError('Expecting a Variable type for {}'.format(a))
 
         rank = a.rank
         if rank > 0:
             # ...
             additional_args = []
-            for i in range(0, rank):
+            for i in range(rank):
                 n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
                 n_arg  = Variable('int', n_name)
 
@@ -154,24 +110,67 @@ def as_static_function(func, name=None):
     arguments_inout = _arguments_inout
     # ...
 
+    # ... If needed, add !f2py instructions at beginning of function body
+    f2py_template = 'f2py integer(kind={kind}) :: n{index}_{name}=shape({name},{index_t})'
+    f2py_instructions = []
+    int_kind = Variable('int', 'f2py_array_dimension').precision
+
+    for a in args:
+        if a.rank > 1 and a.order == 'C':
+
+            # Reverse shape of array
+            transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
+                                                            index   = i,
+                                                            name    = a.name,
+                                                            index_t = str(a.rank - i - 1)))
+                               for i in range(a.rank)]
+
+            # Tell f2py that array has C ordering
+            c_intent_stmt = Comment('f2py intent(c) {}'.format(a.name))
+
+            # Update f2py directives
+            f2py_instructions += [*transpose_stmts, c_intent_stmt]
+
+    if f2py_instructions:
+        body = f2py_instructions + body
+    # ...
+
     return FunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
-                        arguments_inout = arguments_inout,functions=functions )
-
+                        arguments_inout = arguments_inout,
+                        functions = functions,
+                        imports = func.imports
+                        )
 
 #=======================================================================================
-def as_static_function_call(func, name=None):
-    assert(isinstance(func, FunctionDef))
+def as_static_function_call(func, mod_name, name=None):
 
-    args = func.arguments
-    args = sanitize_arguments(args)
-    functions = func.functions
-    body = [FunctionCall(func, args)]
+    assert isinstance(func, FunctionDef)
+    assert isinstance(mod_name, str)
 
-    func = FunctionDef(func.name, list(args), [], body,
+    # create function alias by prepending 'mod_' to its name
+    func_alias = func.rename('mod_' + str(func.name))
+
+    # from module import func as func_alias
+    imports = [Import(target=AsName(func_alias.name, func.name), source=mod_name)]
+
+    # function arguments
+    args = sanitize_arguments(func.arguments)
+
+    # function body
+    call = FunctionCall(func_alias, args)
+    stmt = call if func.is_procedure else Assign(func.results[0], call)
+    body = [stmt]
+
+    # new function declaration
+    new_func = FunctionDef(func.name, list(args), func.results, body,
                        arguments_inout = func.arguments_inout,
-                       functions=functions)
-    static_func = as_static_function(func, name)
+                       functions = func.functions,
+                       imports = imports,
+                       )
+
+    # make it compatible with f2py
+    static_func = as_static_function(new_func, name)
 
     return static_func
