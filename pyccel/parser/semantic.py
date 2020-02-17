@@ -841,7 +841,7 @@ class SemanticParser(BasicParser):
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = expr.precision
 
-            elif name in ['Mod']:
+            elif name in ['Mod', 'Matmul']:
 
                 # Determine output type/rank/shape
                 # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
@@ -1900,7 +1900,6 @@ class SemanticParser(BasicParser):
                 if str(lhs.dtype) != str(var.dtype):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
-                 
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
                     severity='error', blocker=False)

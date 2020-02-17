@@ -152,6 +152,12 @@ class Sum(Function):
         return 'sum({0})'.format(rhs_code)
 
 
+#=======================================================================================
+
+# TODO: Remove hack to get order right with Fortran indexing
+#       by using "matmul(b, a)" in Fortran for "matmul(a, b)" in Python
+class Matmul(Function):
+    """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , Tuple, List, Variable
     """
 
@@ -160,7 +166,7 @@ class Sum(Function):
             raise TypeError('Uknown type of  %s.' % type(a))
         if not isinstance(b, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        return Basic.__new__(cls, a, b)
+        return Basic.__new__(cls, b, a)
 
     @property
     def a(self):
@@ -187,6 +193,7 @@ class Sum(Function):
             return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
         return 'matmul({0},{1})'.format(a_code, b_code)
 
+#=======================================================================================
 
 class Shape(Array):
 

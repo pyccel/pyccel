@@ -7,9 +7,10 @@ Created on Thu Jul 26 08:29:32 2018
 """
 from numpy import sqrt
 from pyccel import epyccel
+from pyccel.decorators import types
 
+@types('real')
 def wurzel(a):
     return sqrt(a)
 
-header = '#$ header procedure wurzel(double) results(double)'
-wurzel_fast = epyccel(wurzel,header)
+wurzel_fast = epyccel(wurzel)

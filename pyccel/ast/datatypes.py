@@ -39,26 +39,19 @@ class DataType(with_metaclass(Singleton, Basic)):
 
 class NativeBool(DataType):
     _name = 'Bool'
-    def is_Boolean(self): return True
-    def is_integer(self): return True
-    def is_real(self): return True
-    def is_complex(self): return True
     pass
 
 class NativeInteger(DataType):
     _name = 'Int'
-    def is_integer(self): return True
-    def is_real(self): return True
-    def is_complex(self): return True
+    pass
 
 class NativeReal(DataType):
     _name = 'Real'
-    def is_real(self): return True
-    def is_complex(self): return True
+    pass
 
 class NativeComplex(DataType):
     _name = 'Complex'
-    def is_complex(self): return True
+    pass
 
 class NativeString(DataType):
     _name = 'String'
