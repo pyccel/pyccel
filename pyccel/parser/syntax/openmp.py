@@ -440,3 +440,14 @@ def parse(filename=None, stmts=None, debug=False):
         return stmts[0]
     else:
         return stmts
+
+#=========================================================================================================
+#=========================================================================================================
+#=========================================================================================================
+if __name__ == '__main__':
+    print(parse(stmts='#$omp parallel'))
+    print(parse(stmts='#$omp do private ( ipart, pos, spana, lefta, righta, valuesa, spanb, leftb, rightb, valuesb, E)'))
+    print(parse(stmts='#$omp do private(ipart, pos, spana, lefta, righta, valuesa, spanb, leftb, rightb, valuesb,E, B)'))
+    print(parse(stmts='#$omp end do'))
+    print(parse(stmts='#$omp end parallel'))
+

@@ -71,6 +71,7 @@ from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
+from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.datatypes import sp_dtype, str_dtype
 
 
@@ -223,6 +224,9 @@ class SemanticParser(BasicParser):
 
         try:
             ast = self._visit(ast, **settings)
+        except AstFunctionResultError:
+            print("Array return arguments are currently not supported")
+            raise
         except Exception as e:
             errors.check()
 #            if self.show_traceback:
@@ -876,6 +880,9 @@ class SemanticParser(BasicParser):
                     'asec',
                     'atan',
                     'acot',
+                    'sinh',
+                    'cosh',
+                    'tanh',
                     'atan2',
                     ]:
                 d_var = self._infere_type(expr.args[0], **settings)
@@ -1604,7 +1611,9 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is None:
+                rhs = self._visit_Application(rhs, **settings)
+            else:
 
                 # TODO check types from FunctionDef
 
@@ -1638,14 +1647,14 @@ class SemanticParser(BasicParser):
                 else:
                     msg = 'TODO treate interface case'
                     raise NotImplementedError(msg)
-            else:
-                rhs = self._visit_Application(rhs, **settings)
-                
+
         elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
             name = _get_name(var)
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is None:
+                rhs = self._visit_DottedVariable(rhs, **settings)
+            else:
                 master = macro.master
                 if isinstance(macro, MacroVariable):
                     rhs = master
@@ -1679,8 +1688,6 @@ class SemanticParser(BasicParser):
                         return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO')
-            else:
-                rhs = self._visit_DottedVariable(rhs, **settings)
         else:
             rhs = self._visit(rhs, **settings)
 
@@ -2595,7 +2602,15 @@ class SemanticParser(BasicParser):
 
                         i_fa += 1
             # ...
-           
+
+            # Raise an error if one of the return arguments is either:
+            #   a) a pointer
+            #   b) array which is not among arguments, hence intent(out)
+            for r in results:
+                if r.is_pointer:
+                    raise AstFunctionResultError(r)
+                elif (r not in args) and r.rank > 0:
+                    raise AstFunctionResultError(r)
 
             func = FunctionDef(name,
                     args,
@@ -2844,7 +2859,6 @@ class SemanticParser(BasicParser):
                 elif __module_name__:
                     expr = Import(expr.target, __module_name__)
                     container['imports'][__module_name__] = expr
-                    return EmptyLine()
 
                 # ...
                 elif __print__ in p.metavars.keys():
@@ -2852,13 +2866,11 @@ class SemanticParser(BasicParser):
                     source = 'mod_' + source
                     expr   = Import(expr.target, source=source)
                     container['imports'][source] = expr
+                elif not __ignore_at_import__:
+                    container['imports'][source] = expr
 
-                
+        return EmptyLine()
 
-                    
-            return EmptyLine()
-        else:   
-            return EmptyLine()
 
 
     def _visit_With(self, expr, **settings):

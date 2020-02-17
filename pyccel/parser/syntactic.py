@@ -54,7 +54,7 @@ from redbaron import YieldNode
 from redbaron import YieldAtomNode
 from redbaron import BreakNode, ContinueNode
 from redbaron import GetitemNode, SliceNode
-from redbaron import ImportNode, FromImportNode
+from redbaron import FromImportNode
 from redbaron import DottedAsNameNode, DecoratorNode
 from redbaron import NameAsNameNode
 from redbaron import LambdaNode
@@ -126,7 +126,7 @@ from pyccel.ast.datatypes import sp_dtype, str_dtype
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
-from pyccel.parser.utilities import fst_move_directives
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
@@ -231,6 +231,7 @@ class SyntaxParser(BasicParser):
             errors.check()
             raise SystemExit(0)
 
+        preprocess_imports(red)
         red = fst_move_directives(red)
         self._fst = red
 
@@ -441,17 +442,10 @@ class SyntaxParser(BasicParser):
             return Symbol(val)
 
     def _visit_ImportNode(self, stmt):
-        if not isinstance(stmt.parent, (RedBaron, DefNode)):
-            errors.report(PYCCEL_RESTRICTION_IMPORT,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
+        errors.report(PYCCEL_UNEXPECTED_IMPORT,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='error')
 
-        if isinstance(stmt.parent, DefNode):
-            errors.report(PYCCEL_RESTRICTION_IMPORT_IN_DEF,
-                          bounding_box=stmt.absolute_bounding_box,
-                          severity='error')
-
-        # in an import statement, we can have seperate target by commas
         ls = self._visit(stmt.value)
         ls = get_default_path(ls)
         expr = Import(ls)
@@ -467,8 +461,22 @@ class SyntaxParser(BasicParser):
                           severity='error')
 
         source = self._visit(stmt.value)
+
+        st     = stmt.value[0]
+        dots   = ''
+        while isinstance(st.previous, DotNode):
+            dots  = dots + '.'
+            st    = st.previous
+
         if isinstance(source, DottedVariable):
             source = DottedName(*source.names)
+
+        if len(dots)>1:
+            if isinstance(source, DottedName):
+                source = DottedName(dots[:-1], *source.name)
+            else:
+                source = Symbol(dots + str(source.name))
+
         source = get_default_path(source)
         targets = []
         for i in stmt.targets:

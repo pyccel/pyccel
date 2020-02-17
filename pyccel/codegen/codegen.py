@@ -188,7 +188,7 @@ class Codegen(object):
         """Finds the source code kind."""
  
         
-        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock)
+        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock, Module)
         is_module = all(isinstance(i,cls) for i in self.ast)
         
 
@@ -203,7 +203,7 @@ class Codegen(object):
         #  ...
 
         expr = None
-        
+
         if self.is_module:
             expr = Module(
                 self.name,
@@ -263,23 +263,28 @@ class Codegen(object):
         
         self._code = code
         
-        
         return code
 
+
     def export(self, filename=None):
+
+        if self.code is None:
+            code = self.doprint()
+        else:
+            code = self.code
+
         ext = _extension_registry[self.language]
         if filename is None:
             filename = '{name}.{ext}'.format(name=self.name, ext=ext)
         else:
             filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
-        code = self.code
-        f = open(filename, 'w')
-        for line in code:
-            f.write(line)
-        f.close()
+        with open(filename, 'w') as f:
+            for line in code:
+                f.write(line)
 
         return filename
+
 
 class FCodegen(Codegen):
     pass

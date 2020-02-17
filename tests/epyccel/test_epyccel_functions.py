@@ -12,7 +12,6 @@ def clean_test():
     cmd = 'rm -rf __pycache__/*'
     os.system(cmd)
 
-
 #------------------------------------------------------------------------------
 def test_decorator_f1():
     @types('int')
@@ -90,7 +89,7 @@ def test_decorator_f5():
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f6_1():
+def test_decorator_f6():
     @types('int', 'int', 'real [:,:]')
     def f6_1(m1, m2, x):
         x[:,:] = 0.
@@ -98,8 +97,7 @@ def test_decorator_f6_1():
             for j in range(0, m2):
                 x[i,j] = (2*i+j) * 1.
 
-    # default value for assert_contiguous is False
-    f = epyccel(f6_1, assert_contiguous=False)
+    f = epyccel(f6_1)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -114,69 +112,29 @@ def test_decorator_f6_1():
     # ...
 
 #------------------------------------------------------------------------------
-# in order to call the pyccelized function here, we have either to
-#   - give the transpose view of x: x.transpose()
-#   - create x with Fortran ordering
-def test_decorator_f6_2():
-    @types('int', 'int', 'real [:,:]')
-    def f6_2(m1, m2, x):
-        x[:,:] = 0.
-        for i in range(0, m1):
-            for j in range(0, m2):
-                x[i,j] = (2*i+j) * 1.
-
-    f = epyccel(f6_2, assert_contiguous=True)
-
-    # ...
-    m1 = 2 ; m2 = 3
-
-    x_expected = np.zeros((m1,m2))
-    f6_2(m1, m2, x_expected)
-    # ...
-
-    # ... BAD CALL
-    x = np.zeros((m1,m2))
-    with pytest.raises(ValueError):
-        #  in this case we should get the following error
-        #  ValueError: failed to initialize intent(inout) array -- input not fortran contiguous
-        f(m1, m2, x)
-    # ...
-
-    # ... GOOD CALL
-    x = np.zeros((m1,m2))
-    f(m1, m2, x.transpose())
-
-    assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
-    # ...
-
-#------------------------------------------------------------------------------
-# in order to call the pyccelized function here, we have either to
-#   - give the transpose view of x: x.transpose()
-#   - create x with Fortran ordering
-def test_decorator_f6_3():
+# in order to call the pyccelized function here, we have to create x with
+# Fortran ordering
+def test_decorator_f7():
 
     @types('int', 'int', 'real [:,:](order=F)')
-    def f6_3(m1, m2, x):
+    def f7(m1, m2, x):
         x[:,:] = 0.
         for i in range(0, m1):
             for j in range(0, m2):
                 x[i,j] = (2*i+j) * 1.
 
-    f = epyccel(f6_3, assert_contiguous=True)
+    f = epyccel(f7)
 
+    # ...
     m1 = 2 ; m2 = 3
     x_expected = np.zeros((m1,m2))
-    f6_3(m1, m2, x_expected)
+    f7(m1, m2, x_expected)
 
-    # ... GOOD CALL
     x = np.zeros((m1,m2), order='F')
     f(m1, m2, x)
 
-    x = np.ascontiguousarray(x)
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
-
-
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

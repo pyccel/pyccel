@@ -1,4 +1,4 @@
-from pyccel.decorators import types
+from pyccel.decorators import types, stack_array
 
 #==============================================================================
 # 1D ARRAYS OF INT
@@ -217,3 +217,27 @@ def array_real_2d_F_mul( x, y ):
 @types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
 def array_real_2d_F_div( x, y ):
     x[:,:] /= y
+
+#==============================================================================
+# 1D STACK ARRAYS OF REAL
+#==============================================================================
+
+@types('double[:]')
+@stack_array('a')
+def array_real_1d_sum_stack_array():
+    from numpy import zeros
+    a = zeros(10)
+    s = 0.
+    for i in range(10):
+        s += a[i]
+    return s
+
+@types('double[:]')
+@stack_array('a')
+def array_real_1d_div_stack_array():
+    from numpy import ones
+    a = ones(10)
+    s = 0.
+    for i in range(10):
+        s += 1.0 / a[i]
+    return s

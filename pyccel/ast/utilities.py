@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from .core import DottedName
+from .core import AsName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
@@ -18,31 +18,33 @@ from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot)
+from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, atan2)
 
 import scipy.constants as sc_constants
 
 math_functions = {
-    'abs'   : Abs,
-    'sqrt'  : Sqrt,
-    'sin'   : sin,
-    'cos'   : cos,
-    'exp'   : exp,
-    'log'   : Log,
-    'csc'   : csc,
-    'sec'   : sec,
-    'tan'   : tan,
-    'cot'   : cot,
-    'asin'  : Asin,
-    'acsc'  : Acsc,
-    'arccos': Acos,
-    'acos'  : Acos,
-    'asec'  : Asec,
-    'atan'  : Atan,
-    'acot'  : Acot,
-    'sinh'  : Sinh,
-    'cosh'  : Cosh,
-    'tanh'  : Tanh
+    'abs'    : Abs,
+    'sqrt'   : Sqrt,
+    'sin'    : sin,
+    'cos'    : cos,
+    'exp'    : exp,
+    'log'    : Log,
+    'csc'    : csc,
+    'sec'    : sec,
+    'tan'    : tan,
+    'cot'    : cot,
+    'asin'   : Asin,
+    'acsc'   : Acsc,
+    'arccos' : Acos,
+    'acos'   : Acos,
+    'asec'   : Asec,
+    'atan'   : Atan,
+    'acot'   : Acot,
+    'sinh'   : Sinh,
+    'cosh'   : Cosh,
+    'tanh'   : Tanh,
+    'atan2'  : atan2,
+    'arctan2': atan2
     }
 
 # TODO split numpy_functions into multiple dictionaries following
@@ -139,7 +141,7 @@ def builtin_function(expr, args=None):
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'scipy', 'itertools', 'math')
+builtin_import_registery = ('numpy', 'scipy.constants', 'itertools', 'math')
 
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
@@ -150,49 +152,69 @@ def builtin_import(expr):
     if expr.source is None:
         return []
 
-    source = expr.source
-    if isinstance(source, DottedName):
-        source = source.name[0]
-    else:
-        source = str(source)
+    source = str(expr.source)
 
         # TODO imrove
     imports = []
-    for i in range(len(expr.target)):
+    for target in expr.target:
+        if isinstance(target, AsName):
+            import_name = target.target
+            code_name = target.name
+        else:
+            import_name = str(target)
+            code_name = import_name
         if source == 'numpy':
 
-            target = str(expr.target[i])
-            if target in numpy_functions.keys():
-                imports.append((target, numpy_functions[target]))
+            if import_name in numpy_functions.keys():
+                imports.append((code_name, numpy_functions[import_name]))
 
-            elif target in math_functions.keys():
-                imports.append((target, math_functions[target]))
+            elif import_name in math_functions.keys():
+                imports.append((code_name, math_functions[import_name]))
 
-            elif target in numpy_constants.keys():
-                imports.append((target, numpy_constants[target]))
+            elif import_name in numpy_constants.keys():
+                imports.append((code_name, numpy_constants[import_name]))
 
         elif source == 'math':
 
-            target = str(expr.target[i])
+            if import_name in math_functions.keys():
+                imports.append((code_name, math_functions[import_name]))
 
-            if target in math_functions.keys():
-                imports.append((target, math_functions[target]))
-
-        elif source == 'scipy':
-            # TODO improve: source must be scipy.constants
-            #      - use dynamic import?
-            target = str(expr.target[i])
-            if target in scipy_constants.keys():
-                imports.append((target, scipy_constants[target]))
+        elif source == 'scipy.constants':
+            if import_name in scipy_constants.keys():
+                imports.append((code_name, scipy_constants[import_name]))
         elif source == 'itertools':
-            target = str(expr.target[i])
 
-            if target == 'product':
-                imports.append((target, Product))
+            if import_name == 'product':
+                imports.append((code_name, Product))
 
 
 
     return imports
+
+def get_function_from_ast(ast, func_name):
+    node = None
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
+            node = stmt
+            break
+
+    if node is None:
+        print('> could not find {}'.format(func_name))
+
+    return node
+
+def get_external_function_from_ast(ast):
+    nodes   = []
+    others  = []
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef):
+            if stmt.is_external or stmt.is_external_call:
+                nodes += [stmt]
+
+            else:
+                others += [stmt]
+
+    return nodes, others
 
 # TODO: must add a Node Decorator in core
 def build_types_decorator(args, order=None):
