@@ -75,6 +75,8 @@ numpy_functions = {
     'complex64' : Complex64,
     'matmul'    : Matmul,
     'sum'       : Sum,
+    'prod'      : Product,
+    'product'   : Product,
     'rand'      : Rand,
     'random'    : Rand,
     'linspace'  : Linspace,

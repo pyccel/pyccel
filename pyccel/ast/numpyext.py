@@ -151,6 +151,39 @@ class Sum(Function):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
+#=======================================================================================
+
+class Product(Function):
+    """Represents a call to  numpy.prod for code generation.
+
+    arg : list , tuple , Tuple, List, Variable
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+        return Basic.__new__(cls, arg)
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return self._args[0].dtype
+
+    @property
+    def rank(self):
+        return 0
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+
+        rhs_code = printer(self.arg)
+        if lhs:
+            lhs_code = printer(lhs)
+            return '{0} = product({1})'.format(lhs_code, rhs_code)
+        return 'product({0})'.format(rhs_code)
 
 #=======================================================================================
 
