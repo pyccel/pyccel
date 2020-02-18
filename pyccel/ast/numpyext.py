@@ -199,7 +199,7 @@ class Matmul(Function):
             raise TypeError('Uknown type of  %s.' % type(a))
         if not isinstance(b, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        return Basic.__new__(cls, a, b)
+        return Basic.__new__(cls, b, a)
 
     @property
     def a(self):

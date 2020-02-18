@@ -2,12 +2,15 @@
 import numpy as np
 from numpy import array, zeros, matmul, sum
 
-A = array([[1., 2., 3.], [4., 5., 6.], [7., 7., 9.]])
-B = array([[1., 2.], [4., 5.], [7., 7.]])
-C = array([[1., 2., 3.], [4., 5., 6.]])
+A = np.ones([3, 3])
+B = np.ones([3, 2])
+C = np.ones([2, 3])
 
-# There is still a bug with rectangular matrix assignment,
-# see https://github.com/pyccel/pyccel/issues/236
+A[1, 1] = 2
+A[1, 2] = 2
+B[2, 1] = 2
+C[1, 2] = 2
+
 print("=== A ===")
 print(A[0, :])
 print(A[1, :])
@@ -29,10 +32,15 @@ y = matmul(C, B)
 #v[1] = sum(x)
 print("=== v ===")
 print(v)
-print("")
+print("=== w ===")
 print(w[0, :])
 print(w[1, :])
 print(w[2, :])
-print("")
+print("=== y ===")
 print(y[0, :])
 print(y[1, :])
+
+v2 = zeros(2)
+v2 = matmul(x, B)
+print("=== v2 ===")
+print(v2)

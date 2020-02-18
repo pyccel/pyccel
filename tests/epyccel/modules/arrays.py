@@ -241,3 +241,30 @@ def array_real_1d_div_stack_array():
     for i in range(10):
         s += 1.0 / a[i]
     return s
+
+#==============================================================================
+# TEST: Product and matrix multiplication
+#==============================================================================
+
+@types('real[:], real[:], real[:]')
+def array_real_1d_1d_prod(x, out):
+    from numpy import prod
+    out[:] = prod(x)
+
+@types('real[:,:], real[:], real[:]')
+def array_real_2d_1d_matmul(A, x, out):
+    from numpy import matmul
+    out[:] = matmul(A, x)
+
+# This doesn't work yet with order=F
+# @types('real[:,:](order=F), real[:], real[:]')
+# def array_real_2d_1d_matmul_order_F(A, x, out):
+#     from numpy import matmul
+#     out[:] = matmul(A, x)
+
+@types('real[:], real[:,:], real[:]')
+def array_real_1d_2d_matmul(x, A, out):
+    from numpy import matmul
+    out[:] = matmul(x, A)
+
+

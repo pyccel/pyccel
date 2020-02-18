@@ -838,15 +838,19 @@ class SemanticParser(BasicParser):
                 var0_is_vector = d_vars[0]['rank'] < 2
                 var1_is_vector = d_vars[1]['rank'] < 2
 
-                m = 1 if var0_is_vector else d_vars[0]['shape'][0]
-                n = 1 if var1_is_vector < 2 else d_vars[1]['shape'][1]
+                if(d_vars[0]['shape'] is None or d_vars[1]['shape'] is None):
+                    d_var['shape'] = None
+                else:
+
+                    m = 1 if var0_is_vector else d_vars[0]['shape'][0]
+                    n = 1 if var1_is_vector else d_vars[1]['shape'][1]
+                    d_var['shape'] = [m, n]
 
                 d_var['datatype'   ] = d_vars[0]['datatype']
                 if var0_is_vector or var1_is_vector:
                     d_var['rank'   ] = 1
                 else:
                     d_var['rank'   ] = 2
-                d_var['shape'      ] = [m, n]
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = max(d_vars[0]['precision'],

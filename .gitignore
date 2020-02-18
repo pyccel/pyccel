@@ -12,7 +12,10 @@
 *.pyo
 .ipynb_checkpoints/
 .cache
+.mypy_cache
 __pycache__
+__pyccel__
+__epyccel__
 
 build
 *egg*
