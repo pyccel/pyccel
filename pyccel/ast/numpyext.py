@@ -23,7 +23,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from .core import (Variable, IndexedElement, IndexedVariable, Len,
                    For, ForAll, Range, Assign, AugAssign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
-from .datatypes import dtype_and_precsision_registry as dtype_registry
+from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,

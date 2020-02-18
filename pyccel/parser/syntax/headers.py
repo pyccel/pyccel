@@ -16,7 +16,7 @@ from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast import ValuedArgument
 from pyccel.ast import DottedName, String
-from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
+from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry
 
 DEBUG = False
 
