@@ -825,11 +825,32 @@ class SemanticParser(BasicParser):
 
                 d_var['is_target'] = True # ISSUE 177: TODO this should be done using update_variable
                 
-            elif name in ['Len', 'Sum', 'Rand', 'Min', 'Max']:
+            elif name in ['Len', 'Sum', 'Product', 'Rand', 'Min', 'Max']:
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
+
+            elif name in ['Matmul']:
+
+                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
+
+                var0_is_vector = d_vars[0]['rank'] < 2
+                var1_is_vector = d_vars[1]['rank'] < 2
+
+                m = 1 if var0_is_vector else d_vars[0]['shape'][0]
+                n = 1 if var1_is_vector < 2 else d_vars[1]['shape'][1]
+
+                d_var['datatype'   ] = d_vars[0]['datatype']
+                if var0_is_vector or var1_is_vector:
+                    d_var['rank'   ] = 1
+                else:
+                    d_var['rank'   ] = 2
+                d_var['shape'      ] = [m, n]
+                d_var['allocatable'] = False
+                d_var['is_pointer' ] = False
+                d_var['precision'  ] = max(d_vars[0]['precision'],
+                                           d_vars[1]['precision'])
 
             elif name in ['Int','Int32','Int64','Real','Imag',
                           'Float32','Float64','Complex',
@@ -841,7 +862,7 @@ class SemanticParser(BasicParser):
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = expr.precision
 
-            elif name in ['Mod', 'Matmul']:
+            elif name in ['Mod']:
 
                 # Determine output type/rank/shape
                 # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
