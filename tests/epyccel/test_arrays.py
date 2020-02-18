@@ -585,6 +585,19 @@ def test_array_int_2d_C_idiv():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int_2d_C_initialization():
+
+    f1 = arrays.array_int_2d_C_initialization
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2, 3), dtype=int)
+    x2 = np.ones_like(x1)
+
+    f1(x1)
+    f2(x2)
+
+    assert np.array_equal(x1, x2)
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
@@ -700,6 +713,19 @@ def test_array_int_2d_F_idiv():
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
+def test_array_int_2d_F_initialization():
+
+    f1 = arrays.array_int_2d_F_initialization
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2, 3), dtype=int, order='F')
+    x2 = np.ones_like(x1)
+
+    f1(x1)
+    f2(x2)
+
+    assert np.array_equal(x1, x2)
 
 #==============================================================================
 # TEST: 1D ARRAYS OF REAL
@@ -933,6 +959,19 @@ def test_array_real_2d_C_div():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_C_initialization():
+
+    f1 = arrays.array_real_2d_C_initialization
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2, 3), dtype=float )
+    x2 = np.ones_like(x1)
+
+    f1(x1)
+    f2(x2)
+
+    assert np.array_equal(x1, x2)
+
 #==============================================================================
 # TEST: 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
@@ -1048,6 +1087,19 @@ def test_array_real_2d_F_div():
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_F_initialization():
+
+    f1 = arrays.array_real_2d_F_initialization
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2, 3), dtype=float, order='F')
+    x2 = np.ones_like(x1)
+
+    f1(x1)
+    f2(x2)
+
+    assert np.array_equal(x1, x2)
 
 #==============================================================================
 # TEST: 1D Stack ARRAYS OF REAL

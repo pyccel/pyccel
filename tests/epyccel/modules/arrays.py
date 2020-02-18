@@ -181,6 +181,12 @@ def array_int_2d_C_mul( x, y ):
 def array_int_2d_C_idiv( x, y ):
     x[:,:] = x // y
 
+@types('int[:,:]')
+def array_int_2d_C_initialization(a):
+    from numpy import array
+    tmp = array([[1, 2, 3], [4, 5, 6]])
+    a[:,:] = tmp[:,:]
+
 #==============================================================================
 # 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
@@ -217,6 +223,11 @@ def array_int_2d_F_mul( x, y ):
 def array_int_2d_F_idiv( x, y ):
     x[:,:] = x // y
 
+@types('int[:,:](order=F)')
+def array_int_2d_F_initialization(a):
+    from numpy import array
+    tmp = array([[1, 2, 3], [4, 5, 6]], dtype='int', order='F')
+    a[:,:] = tmp[:,:]
 
 
 #==============================================================================
@@ -291,6 +302,13 @@ def array_real_2d_C_mul( x, y ):
 def array_real_2d_C_div( x, y ):
     x[:,:] /= y
 
+@types('real[:,:]')
+def array_real_2d_C_initialization(a):
+    from numpy import array
+    tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float')
+    a[:,:] = tmp[:,:]
+
+
 #==============================================================================
 # 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
@@ -326,6 +344,13 @@ def array_real_2d_F_mul( x, y ):
 @types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
 def array_real_2d_F_div( x, y ):
     x[:,:] /= y
+
+@types('real[:,:](order=F)')
+def array_real_2d_F_initialization(a):
+    from numpy import array
+    tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float', order='F')
+    a[:,:] = tmp[:,:]
+
 
 #==============================================================================
 # 1D STACK ARRAYS OF REAL
