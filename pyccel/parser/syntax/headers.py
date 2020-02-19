@@ -56,7 +56,8 @@ class ListType(BasicStmt):
         d_var['allocatable'] = False
         d_var['precision'] = max(precisions)
         if not(d_var['precision']):
-            d_var['precision'] = default_precision[dtype]
+            if d_var['datatype'] in ['double','float','complex','int']:
+                d_var['precision'] = default_precision[d_var['datatype']]
         return d_var
 
 class Type(BasicStmt):
@@ -97,7 +98,8 @@ class Type(BasicStmt):
         d_var['is_pointer'] = False
         d_var['precision']  = precision
         if not(precision):
-            d_var['precision'] = default_precision[dtype]
+            if dtype in ['double' ,'float','complex', 'int']:
+                d_var['precision'] = default_precision[dtype]
 
         if d_var['rank']>1:
             d_var['order'] = order
