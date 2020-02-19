@@ -8,7 +8,7 @@ from sympy.core.compatibility import with_metaclass
 from sympy import Eq, Ne, Lt, Gt, Le, Ge
 
 
-default_precision = {'real': 8, 'int': 8, 'complex': 8, 'bool':1}
+default_precision = {'real': 8, 'int': 8, 'complex': 8, 'bool':1, 'float':8}
 dtype_and_precision_registry = { 'real':('real',8),
                                  'double':('real',8),
                                  'float':('real',8),

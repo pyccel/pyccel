@@ -45,7 +45,7 @@ from .basic import Basic
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric)
+                        NativeGeneric, default_precision)
 
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -2067,9 +2067,11 @@ class Variable(Symbol):
 
         if not precision:
             if isinstance(dtype, NativeInteger):
-                precision = 4
-            elif isinstance(dtype, (NativeReal, NativeComplex)):
-                precision = 8
+                precision = default_precision['int']
+            elif isinstance(dtype, NativeReal):
+                precision = default_precision['real']
+            elif isinstance(dtype, NativeComplex):
+                precision = default_precision['complex']
 
         # TODO improve order of arguments
 
