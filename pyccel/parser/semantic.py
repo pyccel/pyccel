@@ -803,6 +803,7 @@ class SemanticParser(BasicParser):
                 d_var['rank'       ] = expr.rank
                 d_var['is_pointer' ] = False
                 d_var['order'      ] = expr.order
+                d_var['precision'  ] = expr.precision
 
             elif name in ['Array']:
 
