@@ -890,15 +890,15 @@ class FCodePrinter(CodePrinter):
 
         if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
+            rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
 
         elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
             
-            rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                 self._print(i-1)) for i in shape)
+            rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                 self._print(i)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
             
             enable_alloc = False
