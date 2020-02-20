@@ -723,7 +723,7 @@ class Cross(Function):
 
     @property
     def precision(self):
-        return default_precision[self.dtype]
+        return self.first.precision
 
 
     @property
@@ -1478,24 +1478,24 @@ class Max(Function):
 class Complex64(Complex):
     @property
     def precision(self):
-        return dtype_and_precision_registry['complex64'][1]
+        return dtype_registry['complex64'][1]
 
 class Complex128(Complex):
     @property
     def precision(self):
-        return dtype_and_precision_registry['complex128'][1]
+        return dtype_registry['complex128'][1]
 
 #=======================================================================================
 
 class Float32(Real):
     @property
     def precision(self):
-        return dtype_and_precision_registry['float32'][1]
+        return dtype_registry['float32'][1]
 
 class Float64(Real):
     @property
     def precision(self):
-        return dtype_and_precision_registry['float64'][1]
+        return dtype_registry['float64'][1]
 
 
 #=======================================================================================
@@ -1503,12 +1503,12 @@ class Float64(Real):
 class Int32(Int):
     @property
     def precision(self):
-        return dtype_and_precision_registry['int32'][1]
+        return dtype_registry['int32'][1]
 
 class Int64(Int):
     @property
     def precision(self):
-        return dtype_and_precision_registry['int64'][1]
+        return dtype_registry['int64'][1]
 
 
 
