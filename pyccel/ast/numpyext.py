@@ -224,6 +224,10 @@ class Shape(Array):
         return 1
 
     @property
+    def precision(self):
+        return default_precision['int']
+
+    @property
     def order(self):
         return 'C'
 
@@ -318,7 +322,7 @@ class Int(Function):
 
     @property
     def precision(self):
-        return 4
+        return default_precision['int']
 
 
     def fprint(self, printer):
@@ -371,7 +375,7 @@ class Real(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -459,7 +463,7 @@ class Complex(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['complex']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -540,7 +544,7 @@ class Linspace(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     @property
     def shape(self):
@@ -637,7 +641,7 @@ class Diag(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     @property
     def shape(self):
@@ -719,7 +723,7 @@ class Cross(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision[self.dtype]
 
 
     @property
@@ -1474,31 +1478,37 @@ class Max(Function):
 class Complex64(Complex):
     @property
     def precision(self):
-        return 4
+        return dtype_and_precision_registry['complex64'][1]
 
 class Complex128(Complex):
-    pass
+    @property
+    def precision(self):
+        return dtype_and_precision_registry['complex128'][1]
 
 #=======================================================================================
 
 class Float32(Real):
     @property
     def precision(self):
-        return 4
+        return dtype_and_precision_registry['float32'][1]
 
 class Float64(Real):
-    pass
+    @property
+    def precision(self):
+        return dtype_and_precision_registry['float64'][1]
 
 
 #=======================================================================================
 
 class Int32(Int):
-    pass
+    @property
+    def precision(self):
+        return dtype_and_precision_registry['int32'][1]
 
 class Int64(Int):
     @property
     def precision(self):
-        return 8
+        return dtype_and_precision_registry['int64'][1]
 
 
 
