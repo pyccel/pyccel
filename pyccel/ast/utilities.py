@@ -10,10 +10,11 @@ from .core import FunctionDef, Return, Assign
 from .core import Constant, Variable, IndexedVariable
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
-from .numpyext import Array, Shape, Int, Rand, Sum, Product, Matmul, Real, Complex, Imag, Mod
+from .numpyext import Array, Shape, Int, Rand, Sum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
+from .numpyext import Product as Prod
 from pyccel.symbolic import lambdify
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
@@ -75,8 +76,8 @@ numpy_functions = {
     'complex64' : Complex64,
     'matmul'    : Matmul,
     'sum'       : Sum,
-    'prod'      : Product,
-    'product'   : Product,
+    'prod'      : Prod,
+    'product'   : Prod,
     'rand'      : Rand,
     'random'    : Rand,
     'linspace'  : Linspace,
