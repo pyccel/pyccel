@@ -71,8 +71,8 @@ def test_openmp():
 
 ######################
 if __name__ == '__main__':
-    test_blas()
-    test_lapack()
+#    test_blas()
+#    test_lapack()
     test_mpi()
     test_openmp()
 #    test_openacc()
