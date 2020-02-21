@@ -256,11 +256,11 @@ def array_real_2d_1d_matmul(A, x, out):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-# This doesn't work yet with order=F
-# @types('real[:,:](order=F), real[:], real[:]')
-# def array_real_2d_1d_matmul_order_F(A, x, out):
-#     from numpy import matmul
-#     out[:] = matmul(A, x)
+# Setting order=F in the type header still fails in tests
+@types('real[:,:](order=F), real[:], real[:]')
+def array_real_2d_1d_matmul_order_F(A, x, out):
+    from numpy import matmul
+    out[:] = matmul(A, x)
 
 @types('real[:], real[:,:], real[:]')
 def array_real_1d_2d_matmul(x, A, out):
