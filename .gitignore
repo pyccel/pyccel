@@ -14,8 +14,8 @@
 .cache
 .mypy_cache
 __pycache__
-__pyccel__
 __epyccel__
+__pyccel__
 
 build
 *egg*

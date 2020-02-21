@@ -71,7 +71,7 @@ from pyccel.stdlib.internal.mpi import MPI_LAND
 from pyccel.stdlib.internal.mpi import MPI_LOR          
 from pyccel.stdlib.internal.mpi import MPI_LXOR  
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
-from pyccel.stdlib.internal.mpi import MPI_DOUBLE
+from pyccel.stdlib.internal.mpi import MPI_REAL8
 
 #===================================================================================
 
@@ -82,7 +82,7 @@ class MPI_:
     def __init__(self):
         self.COMM_WORLD = -1
         self.INT        = MPI_INTEGER
-        self.DOUBLE     = MPI_DOUBLE
+        self.DOUBLE     = MPI_REAL8
         self.SUM        = MPI_SUM
         self.PROD       = MPI_PROD
         self.MAX        = MPI_MAX
