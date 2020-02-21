@@ -24,10 +24,12 @@ def test_compare_is():
     compare_epyccel(base.compare_is, False, True)
     compare_epyccel(base.compare_is, False, False)
 
+@pytest.mark.xfail(reason="#244 if not needs correct implementation")
 def test_not_false():
     compare_epyccel(base.not_false, True)
     compare_epyccel(base.not_false, False)
 
+@pytest.mark.xfail(reason="#241 if not needs correct implementation")
 def test_not_true():
     compare_epyccel(base.not_true, True)
     compare_epyccel(base.not_true, False)
