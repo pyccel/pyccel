@@ -1,13 +1,11 @@
 from pyccel.decorators import types
 from pyccel import epyccel
-import os
+import shutil
 
 
 def clean_test():
-    cmd = 'rm -rf __pycache__/*'
-    os.system(cmd)
-    cmd = 'rm -rf __epyccel__/*'
-    os.system(cmd)
+    shutil.rmtree('__pycache__')
+    shutil.rmtree('__epyccel__')
 
 def test_or_boolean():
     @types('bool', 'bool')
@@ -33,7 +31,7 @@ def test_real_greater_bool():
         return greater
     
     epyc_real_greater_bool = epyccel(real_greater_bool)
-    
+
     assert(real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0))
     assert(real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2))
 
