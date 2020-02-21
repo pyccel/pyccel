@@ -890,15 +890,15 @@ class FCodePrinter(CodePrinter):
 
         if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
+            rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
 
         elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
             
-            rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                 self._print(i-1)) for i in shape)
+            rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                 self._print(i)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
             
             enable_alloc = False
@@ -2126,10 +2126,7 @@ class FCodePrinter(CodePrinter):
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument
-                if expr.base.is_Number:
-                    return 'sqrt(%s.0d0)' % self._print(expr.base)
-                else:
-                    return 'sqrt(dble(%s))' % self._print(expr.base)
+                return 'sqrt(real(%s, kind(0d0)))' % self._print(expr.base)
             else:
                 return 'sqrt(%s)' % self._print(expr.base)
         else:
@@ -2141,6 +2138,12 @@ class FCodePrinter(CodePrinter):
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
+
+    # TODO [YG, 19.02.2020]: Use Fortran 'selected_int_kind' to get correct
+    #                        "kind type parameter value" (it is not always 8)
+    def _print_Integer(self, expr):
+        printed = CodePrinter._print_Integer(self, expr)
+        return "%s_8" % printed
 
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)

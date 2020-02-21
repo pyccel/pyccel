@@ -23,7 +23,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from .core import (Variable, IndexedElement, IndexedVariable, Len,
                    For, ForAll, Range, Assign, AugAssign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
-from .datatypes import dtype_and_precsision_registry as dtype_registry
+from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
@@ -36,15 +36,17 @@ numpy_constants = {
                   }
 
 #=======================================================================================
-
+# TODO [YG, 18.02.2020]: accept Numpy array argument
+# TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 class Array(Function):
-
-    """Represents a call to  numpy.array for code generation.
+    """
+    Represents a call to  numpy.array for code generation.
 
     arg : list ,tuple ,Tuple, List
-    """
 
+    """
     def __new__(cls, arg, dtype=None, order='C'):
+
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
@@ -61,7 +63,24 @@ class Array(Function):
         if not prec and dtype:
             prec = default_precision[dtype]
 
-        return Basic.__new__(cls, arg, dtype, order, prec)
+        # ... Determine ordering
+        if isinstance(order, ValuedArgument):
+            order = order.value
+        order = str(order).strip("\'")
+
+        if order not in ('K', 'A', 'C', 'F'):
+            raise ValueError("Cannot recognize '{:s}' order".format(order))
+
+        # TODO [YG, 18.02.2020]: set correct order based on input array
+        if order in ('K', 'A'):
+            order = 'C'
+        # ...
+
+        # Create instance, add attributes, and return it
+        obj = Basic.__new__(cls, arg, dtype, order, prec)
+        obj._shape = Tuple(*numpy.shape(arg))
+        obj._rank  = len(obj._shape)
+        return obj
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -85,23 +104,25 @@ class Array(Function):
 
     @property
     def shape(self):
-        return Tuple(*numpy.shape(self.arg))
+        return self._shape
 
     @property
     def rank(self):
-        return len(self.shape)
+        return self._rank
 
     def fprint(self, printer, lhs):
         """Fortran print."""
 
-        if isinstance(self.shape, (Tuple, tuple)):
+        # Always transpose indices because Numpy initial values are given with
+        # row-major ordering, while Fortran initial values are column-major
+        shape = self.shape[::-1]
 
+        if isinstance(shape, (Tuple, tuple)):
             # this is a correction. problem on LRZ
-
-            shape_code = ', '.join('0:' + printer(i - 1) for i in
-                                   self.shape)
+            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
         else:
-            shape_code = '0:' + printer(self.shape - 1)
+            shape_code = '0:' + printer(shape - 1)
+
         lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         arg = self.arg
@@ -109,12 +130,17 @@ class Array(Function):
             import functools
             import operator
             arg = functools.reduce(operator.concat, arg)
-            init_value = 'reshape(' + printer(arg) + ',' \
-                + printer(self.shape) + ')'
+            init_value = 'reshape(' + printer(arg) + ',' + printer(shape) + ')'
         else:
             init_value = printer(arg)
+
+        # If Numpy array is stored with column-major ordering, transpose values
+        if self.order == 'F' and self.rank > 1:
+            init_value = 'transpose({})'.format(init_value)
+
         code_init = '{0} = {1}'.format(lhs_code, init_value)
         code = '{0}\n{1}'.format(code_alloc, code_init)
+
         return code
 
 #=======================================================================================
@@ -196,6 +222,10 @@ class Shape(Array):
     @property
     def rank(self):
         return 1
+
+    @property
+    def precision(self):
+        return default_precision['int']
 
     @property
     def order(self):
@@ -292,7 +322,7 @@ class Int(Function):
 
     @property
     def precision(self):
-        return 4
+        return default_precision['int']
 
 
     def fprint(self, printer):
@@ -345,7 +375,7 @@ class Real(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -433,7 +463,7 @@ class Complex(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['complex']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -514,7 +544,7 @@ class Linspace(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     @property
     def shape(self):
@@ -611,7 +641,7 @@ class Diag(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     @property
     def shape(self):
@@ -693,7 +723,7 @@ class Cross(Function):
 
     @property
     def precision(self):
-        return 8
+        return self.first.precision
 
 
     @property
@@ -892,8 +922,6 @@ class Zeros(Function):
             shape = list(shape)
 
         if isinstance(shape, list):
-            if order == 'C':
-                shape.reverse()
 
             # this is a correction. otherwise it is not working on LRZ
             if isinstance(shape[0], list):
@@ -959,15 +987,14 @@ class Zeros(Function):
     def fprint(self, printer, lhs):
         """Fortran print."""
 
+        # Transpose indices because of Fortran column-major ordering
+        shape = self.shape if self.order == 'F' else self.shape[::-1]
+
         if isinstance(self.shape, (Tuple,tuple)):
-
             # this is a correction. problem on LRZ
-
-            shape_code = ', '.join('0:' + printer(i - 1) for i in
-                                   self.shape)
+            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
         else:
-
-            shape_code = '0:' + printer(self.shape - 1)
+            shape_code = '0:' + printer(shape - 1)
 
         init_value = printer(self.init_value)
 
@@ -976,6 +1003,7 @@ class Zeros(Function):
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         code_init = '{0} = {1}'.format(lhs_code, init_value)
         code = '{0}\n{1}'.format(code_alloc, code_init)
+
         return code
 
 #=======================================================================================
@@ -1450,31 +1478,37 @@ class Max(Function):
 class Complex64(Complex):
     @property
     def precision(self):
-        return 4
+        return dtype_registry['complex64'][1]
 
 class Complex128(Complex):
-    pass
+    @property
+    def precision(self):
+        return dtype_registry['complex128'][1]
 
 #=======================================================================================
 
 class Float32(Real):
     @property
     def precision(self):
-        return 4
+        return dtype_registry['float32'][1]
 
 class Float64(Real):
-    pass
+    @property
+    def precision(self):
+        return dtype_registry['float64'][1]
 
 
 #=======================================================================================
 
 class Int32(Int):
-    pass
+    @property
+    def precision(self):
+        return dtype_registry['int32'][1]
 
 class Int64(Int):
     @property
     def precision(self):
-        return 8
+        return dtype_registry['int64'][1]
 
 
 

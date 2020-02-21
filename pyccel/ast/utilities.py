@@ -121,21 +121,21 @@ def builtin_function(expr, args=None):
 
     if name in dic.keys() :
         return dic[name](*args)
-    elif name == 'array':
-        return Array(*args)
-    elif name in ['complex']:
+
+    if name in ['complex']:
         if len(args)==1:
             args = [args[0],Float(0)]
         return Complex(args[0],args[1])
-    elif name == 'Not':
+
+    if name == 'Not':
         return Not(*args)
 
-    elif name == 'map':
+    if name == 'map':
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
         return Map(*args)
 
-    elif name == 'lambdify':
+    if name == 'lambdify':
         return lambdify(expr, args)
 
     return None

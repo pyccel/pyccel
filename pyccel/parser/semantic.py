@@ -72,7 +72,7 @@ from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
-from pyccel.ast.datatypes import sp_dtype, str_dtype
+from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -643,7 +643,7 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ] = 'int'
             d_var['allocatable'] = False
             d_var['rank'       ] = 0
-            d_var['precision'  ] = 4
+            d_var['precision'  ] = default_precision['int']
             return d_var
             
         elif isinstance(expr, (Float, float)):
@@ -651,7 +651,7 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ] = DEFAULT_FLOAT
             d_var['allocatable'] = False
             d_var['rank'       ] = 0
-            d_var['precision'  ] = 8
+            d_var['precision'  ] = default_precision['float']
             return d_var
             
         elif isinstance(expr, String):
@@ -666,7 +666,7 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ] = 'complex'
             d_var['allocatable'] = False
             d_var['rank'       ] = 0
-            d_var['precision'  ] = 8
+            d_var['precision'  ] = default_precision['complex']
             return d_var
             
         elif isinstance(expr, Variable):
@@ -803,6 +803,7 @@ class SemanticParser(BasicParser):
                 d_var['rank'       ] = expr.rank
                 d_var['is_pointer' ] = False
                 d_var['order'      ] = expr.order
+                d_var['precision'  ] = expr.precision
 
             elif name in ['Array']:
 
@@ -898,7 +899,7 @@ class SemanticParser(BasicParser):
                 if expr.args[0].is_complex and not expr.args[0].is_integer:
                     d_var['precision'] = d_var['precision']//2
                 else:
-                    d_var['precision'] = 4
+                    d_var['precision'] = default_precision['int']
 
             else:
                 raise NotImplementedError('TODO')
@@ -959,10 +960,7 @@ class SemanticParser(BasicParser):
             if len(precisions)>0:
                 d_var['precision'] = max(precisions)
             else:
-                if d_var['datatype']=='int':
-                    d_var['precision'] = 4
-                else:
-                    d_var['precision'] = 8
+                d_var['precision'] = default_precision[d_var['datatype']]
             return d_var
         elif isinstance(expr, (tuple, list, List, Tuple)):
 

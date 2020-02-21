@@ -31,8 +31,8 @@ def test_double_loop_on_2d_array_C():
     f1 = loops.double_loop_on_2d_array_C
     f2 = epyccel( f1 )
 
-    x = np.zeros( (11,4), dtype='i' )
-    y = np.ones ( (11,4), dtype='i' )
+    x = np.zeros( (11,4), dtype=int )
+    y = np.ones ( (11,4), dtype=int )
 
     f1( x )
     f2( y )
@@ -43,8 +43,8 @@ def test_double_loop_on_2d_array_F():
     f1 = loops.double_loop_on_2d_array_F
     f2 = epyccel( f1 )
 
-    x = np.zeros( (11,4), dtype='i', order='F' )
-    y = np.ones ( (11,4), dtype='i', order='F' )
+    x = np.zeros( (11,4), dtype=int, order='F' )
+    y = np.ones ( (11,4), dtype=int, order='F' )
 
     f1( x )
     f2( y )
@@ -55,8 +55,8 @@ def test_product_loop_on_2d_array_C():
     f1 = loops.product_loop_on_2d_array_C
     f2 = epyccel( f1 )
 
-    x = np.zeros( (11,4), dtype='i' )
-    y = np.ones ( (11,4), dtype='i' )
+    x = np.zeros( (11,4), dtype=int )
+    y = np.ones ( (11,4), dtype=int )
 
     f1( x )
     f2( y )
@@ -67,8 +67,8 @@ def test_product_loop_on_2d_array_F():
     f1 = loops.product_loop_on_2d_array_F
     f2 = epyccel( f1 )
 
-    x = np.zeros( (11,4), dtype='i', order='F' )
-    y = np.ones ( (11,4), dtype='i', order='F' )
+    x = np.zeros( (11,4), dtype=int, order='F' )
+    y = np.ones ( (11,4), dtype=int, order='F' )
 
     f1( x )
     f2( y )

@@ -72,7 +72,7 @@ def as_static_function(func, name=None):
             additional_args = []
             for i in range(rank):
                 n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
-                n_arg  = Variable('int', n_name)
+                n_arg  = Variable('int', n_name, precision=4)
 
                 additional_args += [n_arg]
 
