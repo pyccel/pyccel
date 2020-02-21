@@ -13,6 +13,8 @@
 .ipynb_checkpoints/
 .cache
 __pycache__
+__epyccel__
+__pyccel__
 
 build
 *egg*
