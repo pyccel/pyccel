@@ -7,8 +7,10 @@ Created on Thu Jul 26 08:17:39 2018
 """
 import numpy as np
 
-#$ header procedure static Ts(double, double, double, double, double) results(double)
-def Ts(x, y, a, b, d):    
+# $ header procedure static Ts(double, double, double, double, double) results(double)
+
+
+def Ts(x, y, a, b, d):
     if np.abs(x) < a/2.0 and np.abs(y) < b/2.0:
         r = 0.0
     if np.abs(x) < a/2.0 and b/2.0 < np.abs(y) < b/2.0+d:
@@ -22,4 +24,3 @@ def Ts(x, y, a, b, d):
         r = np.sqrt(dcorn2)/d
 
     return r
-
