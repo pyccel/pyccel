@@ -17,7 +17,7 @@ def test_or_boolean():
             c = True
         return c
     epyc_or_bool = epyccel(or_bool)
-    
+
     assert(epyc_or_bool(True,True)==or_bool(True,True))
     assert(epyc_or_bool(True,False)==or_bool(True,False))
     assert(epyc_or_bool(False,False)==or_bool(False,False))
@@ -29,7 +29,7 @@ def test_real_greater_bool():
         if x0 > x1:
             greater = True
         return greater
-    
+
     epyc_real_greater_bool = epyccel(real_greater_bool)
 
     assert(real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0))

@@ -2,15 +2,14 @@
 
 import pytest
 import numpy as np
-import os
+import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
 
 def clean_test():
-    cmd = 'rm -rf __pycache__/*'
-    os.system(cmd)
+    shutil.rmtree('__pycache__')
 
 #------------------------------------------------------------------------------
 def test_decorator_f1():
