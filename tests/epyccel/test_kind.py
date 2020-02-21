@@ -4,8 +4,8 @@ import shutil
 
 
 def clean_test():
-    shutil.rmtree('__pycache__')
-    shutil.rmtree('__epyccel__')
+    shutil.rmtree('__pycache__', ignore_errors=True)
+    shutil.rmtree('__epyccel__', ignore_errors=True)
 
 def test_or_boolean():
     @types('bool', 'bool')
