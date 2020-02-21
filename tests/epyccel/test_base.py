@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from pyccel import epyccel
+from pyccel.epyccel import epyccel
 from modules import base
 
 def compare_epyccel(f, *args):

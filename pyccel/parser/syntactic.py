@@ -579,15 +579,13 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
         if stmt.value == 'and':
-
             return And(first, second, evaluate=False)
-        elif stmt.value == 'or':
-
+        if stmt.value == 'or':
             return Or(first, second, evaluate=False)
-        else:
-            msg = 'unknown/unavailable BooleanOperatorNode {node}'
-            msg = msg.format(node=type(stmt.value))
-            raise PyccelSyntaxError(msg)
+
+        msg = 'unknown/unavailable BooleanOperatorNode {node}'
+        msg = msg.format(node=type(stmt.value))
+        raise PyccelSyntaxError(msg)
 
     def _visit_ComparisonNode(self, stmt):
 
@@ -596,28 +594,22 @@ class SyntaxParser(BasicParser):
         op = stmt.value.first
         if op == '==':
             return Eq(first, second, evaluate=False)
-        elif op == '!=':
-
+        if op == '!=':
             return Ne(first, second, evaluate=False)
-        elif op == '<':
-
+        if op == '<':
             return Lt(first, second, evaluate=False)
-        elif op == '>':
-
+        if op == '>':
             return Gt(first, second, evaluate=False)
-        elif op == '<=':
-
+        if op == '<=':
             return Le(first, second, evaluate=False)
-        elif op == '>=':
-
+        if op == '>=':
             return Ge(first, second, evaluate=False)
-        elif op == 'is':
-
+        if op == 'is':
             return Is(first, second)
-        else:
-            msg = 'unknown/unavailable binary operator {node}'
-            msg = msg.format(node=type(op))
-            raise PyccelSyntaxError(msg)
+
+        msg = 'unknown/unavailable binary operator {node}'
+        msg = msg.format(node=type(op))
+        raise PyccelSyntaxError(msg)
 
     def _visit_PrintNode(self, stmt):
 

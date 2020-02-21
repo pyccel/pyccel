@@ -1173,12 +1173,6 @@ class FCodePrinter(CodePrinter):
     def _print_NativeComplex(self, expr):
         return 'complex'
 
-    def _print_BooleanTrue(self, expr):
-        return '.true.'
-
-    def _print_BooleanFalse(self, expr):
-        return '.false.'
-
     def _print_NativeString(self, expr):
         return 'character(len=280)'
         #TODO fix improve later
