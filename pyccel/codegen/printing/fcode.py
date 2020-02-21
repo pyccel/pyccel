@@ -1314,12 +1314,8 @@ class FCodePrinter(CodePrinter):
             sig = '{0}function {1}'.format(rec, name)
             func_end = 'result({0})'.format(result.name)
 
-            var = Variable(result.dtype, result.name, \
-                         rank=result.rank, \
-                         allocatable=result.allocatable, \
-                         shape=result.shape)
-            dec = Declare(result.dtype, var)
-            args_decs[str(var)] = dec
+            dec = Declare(result.dtype, result)
+            args_decs[str(result)] = dec
 
         else:
             # TODO compute intent

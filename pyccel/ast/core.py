@@ -2072,6 +2072,8 @@ class Variable(Symbol):
                 precision = default_precision['real']
             elif isinstance(dtype, NativeComplex):
                 precision = default_precision['complex']
+            elif isinstance(dtype, NativeBool):
+                precision = default_precision['bool']
 
         # TODO improve order of arguments
 
