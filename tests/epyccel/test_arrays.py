@@ -777,7 +777,7 @@ def test_array_real_1d_2d_matmul_order_F():
     assert np.array_equal(y1, y2)
 
 ## TODO: the following two tests using arrays.array_real_2d_1d_matmul_order_F still fail
-@pytest.mark.xfail(reason="order=F in type definition needs correct implementation")
+@pytest.mark.xfail(reason="#244 order=F in type definition needs implementation")
 def test_array_real_2d_1d_matmul_order_F_C():
     f1 = arrays.array_real_2d_1d_matmul_order_F
     f2 = epyccel( f1 )
@@ -792,7 +792,7 @@ def test_array_real_2d_1d_matmul_order_F_C():
     f2(A2, x2, y2)
     assert np.array_equal(y1, y2)
 
-@pytest.mark.xfail(reason="order=F in type definition needs correct implementation")    
+@pytest.mark.xfail(reason="#244 order=F in type definition needs implementation")
 def test_array_real_2d_1d_matmul_order_F_F():
     f1 = arrays.array_real_2d_1d_matmul_order_F
     f2 = epyccel( f1 )
