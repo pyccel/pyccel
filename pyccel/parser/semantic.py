@@ -690,6 +690,7 @@ class SemanticParser(BasicParser):
             d_var['allocatable'] = False
             d_var['is_pointer' ] = False
             d_var['rank'       ] = 0
+            d_var['precision'  ] = default_precision['bool']
             return d_var
             
         elif isinstance(expr, IndexedElement):
