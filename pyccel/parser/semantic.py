@@ -2769,22 +2769,27 @@ class SemanticParser(BasicParser):
 
     def _visit_Is(self, expr, **settings):
 
-        # TODO ERROR wrong position
-
-        if not isinstance(expr.rhs, Nil):
-           errors.report(PYCCEL_RESTRICTION_IS_RHS,
-           bounding_box=self._current_fst_node.absolute_bounding_box,
-           severity='error', blocker=self.blocking)
+        # TODO ERROR wrong position ??
 
         name = expr.lhs
-        var = self.get_variable(str(name))
-        if var is None:
-
+        var1 = self.get_variable(str(expr.lhs))
+        if var1 is None:
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=self._current_fst_node.absolute_bounding_box,
             severity='error', blocker=self.blocking)
+        
+        var2 = self.get_variable(str(expr.rhs))
+        if var2 is None:
+            return Is(var1, expr.rhs)
+        
+        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
+            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
+            return Is(var1, var2)
 
-        return Is(var, expr.rhs)
+        errors.report(PYCCEL_RESTRICTION_IS_RHS,
+        bounding_box=self._current_fst_node.absolute_bounding_box,
+        severity='error', blocker=self.blocking)
+        return Is(var1, expr.rhs)
 
     def _visit_Import(self, expr, **settings):
 

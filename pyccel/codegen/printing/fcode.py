@@ -1181,9 +1181,23 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_Equality(self, expr):
-        return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .eqv. {}'.format(lhs, rhs)
+        return '{0} == {1} '.format(lhs, rhs)
 
     def _print_Unequality(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .neqv. {}'.format(lhs, rhs)
         return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_BooleanTrue(self, expr):
@@ -1991,11 +2005,17 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Is(self, expr):
-        if not isinstance(expr.rhs, Nil):
-            raise NotImplementedError('Only None rhs is allowed in Is statement')
-
         lhs = self._print(expr.lhs)
-        return 'present({})'.format(lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .eqv. {}'.format(lhs, rhs)
+        if isinstance(expr.rhs, Nil):
+            return 'present({})'.format(lhs)
+        
+        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
 
     def _print_If(self, expr):
         # ...
