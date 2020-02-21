@@ -1,6 +1,6 @@
 
 import numpy as np
-from numpy import array, zeros, matmul, sum
+from numpy import array, zeros, matmul
 
 A = np.ones([3, 3])
 B = np.ones([3, 2])
@@ -29,7 +29,8 @@ y = zeros([2, 2])
 v = matmul(A, x)
 w = matmul(A, A)
 y = matmul(C, B)
-#v[1] = sum(x)
+
+v[1] = sum(x)
 print("=== v ===")
 print(v)
 print("=== w ===")
