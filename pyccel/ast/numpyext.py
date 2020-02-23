@@ -202,7 +202,7 @@ class Matmul(Application):
     @property
     def a(self):
         return self._args[0]
-    
+
     @property
     def b(self):
         return self._args[1]
@@ -219,8 +219,22 @@ class Matmul(Application):
         """Fortran print."""
         a_code = printer(self.a)
         b_code = printer(self.b)
+
         if lhs:
             lhs_code = printer(lhs)
+
+        if self.a.order and self.b.order:
+            if self.a.order != self.b.order:
+                raise NotImplementedError("Mixed order matmul not supported.")
+
+        # Fortran ordering
+        if self.a.order == 'F':
+            if lhs:
+                return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
+            return 'matmul({0},{1})'.format(a_code, b_code)
+
+        # C ordering
+        if lhs:
             return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
         return 'matmul({1},{0})'.format(a_code, b_code)
 

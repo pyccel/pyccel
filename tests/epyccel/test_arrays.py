@@ -776,8 +776,6 @@ def test_array_real_1d_2d_matmul_order_F():
     f2(x2, A2, y2)
     assert np.array_equal(y1, y2)
 
-## TODO: the following two tests using arrays.array_real_2d_1d_matmul_order_F still fail
-@pytest.mark.xfail(reason="#244 order=F in type definition needs implementation")
 def test_array_real_2d_1d_matmul_order_F_C():
     f1 = arrays.array_real_2d_1d_matmul_order_F
     f2 = epyccel( f1 )
@@ -792,7 +790,6 @@ def test_array_real_2d_1d_matmul_order_F_C():
     f2(A2, x2, y2)
     assert np.array_equal(y1, y2)
 
-@pytest.mark.xfail(reason="#244 order=F in type definition needs implementation")
 def test_array_real_2d_1d_matmul_order_F_F():
     f1 = arrays.array_real_2d_1d_matmul_order_F
     f2 = epyccel( f1 )
@@ -806,6 +803,77 @@ def test_array_real_2d_1d_matmul_order_F_F():
     f1(A1, x1, y1)
     f2(A2, x2, y2)
     assert np.array_equal(y1, y2)
+
+def test_array_real_2d_2d_matmul():
+    f1 = arrays.array_real_2d_2d_matmul
+    f2 = epyccel( f1 )
+    A1 = np.ones([3, 2])
+    A1[1, 0] = 2
+    A2 = np.copy(A1)
+    B1 = np.ones([2, 3])
+    B2 = np.copy(B1)
+    C1 = np.empty([3,3])
+    C2 = np.empty([3,3])
+    f1(A1, B1, C1)
+    f2(A2, B2, C2)
+    assert np.array_equal(C1, C2)
+
+def test_array_real_2d_2d_matmul_C_C_F_F():
+    f1 = arrays.array_real_2d_2d_matmul
+    f2 = epyccel( f1 )
+    A1 = np.ones([3, 2], order='F')
+    A1[1, 0] = 2
+    A2 = np.copy(A1)
+    B1 = np.ones([2, 3], order='F')
+    B2 = np.copy(B1)
+    C1 = np.empty([3,3])
+    C2 = np.empty([3,3])
+    f1(A1, B1, C1)
+    f2(A2, B2, C2)
+    assert np.array_equal(C1, C2)
+
+def test_array_real_2d_2d_matmul_C_C_C_F():
+    f1 = arrays.array_real_2d_2d_matmul
+    f2 = epyccel( f1 )
+    A1 = np.ones([3, 2])
+    A1[1, 0] = 2
+    A2 = np.copy(A1)
+    B1 = np.ones([2, 3], order='F')
+    B2 = np.copy(B1)
+    C1 = np.empty([3,3])
+    C2 = np.empty([3,3])
+    f1(A1, B1, C1)
+    f2(A2, B2, C2)
+    assert np.array_equal(C1, C2)
+
+def test_array_real_2d_2d_matmul_F_F_F_F():
+    f1 = arrays.array_real_2d_2d_matmul_F_F
+    f2 = epyccel( f1 )
+    A1 = np.ones([3, 2], order='F')
+    A1[1, 0] = 2
+    A2 = np.copy(A1)
+    B1 = np.ones([2, 3], order='F')
+    B2 = np.copy(B1)
+    C1 = np.empty([3,3], order='F')
+    C2 = np.empty([3,3], order='F')
+    f1(A1, B1, C1)
+    f2(A2, B2, C2)
+    assert np.array_equal(C1, C2)
+
+@pytest.mark.xfail(reason="Should fail as long as mixed order not supported, see #244")
+def test_array_real_2d_2d_matmul_mixorder():
+    f1 = arrays.array_real_2d_2d_matmul_mixorder
+    f2 = epyccel( f1 )
+    A1 = np.ones([3, 2])
+    A1[1, 0] = 2
+    A2 = np.copy(A1)
+    B1 = np.ones([2, 3])
+    B2 = np.copy(B1)
+    C1 = np.empty([3,3])
+    C2 = np.empty([3,3])
+    f1(A1, B1, C1)
+    f2(A2, B2, C2)
+    assert np.array_equal(C1, C2)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
