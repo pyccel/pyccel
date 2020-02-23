@@ -278,6 +278,6 @@ def array_real_2d_2d_matmul_F_F(A, B, out):
 
 # Mixed order, not supported currently, see #244
 @types('real[:,:], real[:,:](order=F), real[:,:]')
-def array_real_2d_2d_matmul(A, B, out):
+def array_real_2d_2d_matmul_mixorder(A, B, out):
     from numpy import matmul
     out[:,:] = matmul(A, B)
