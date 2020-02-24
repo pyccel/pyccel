@@ -281,3 +281,9 @@ def array_real_2d_2d_matmul_F_F(A, B, out):
 def array_real_2d_2d_matmul_mixorder(A, B, out):
     from numpy import matmul
     out[:,:] = matmul(A, B)
+
+@types('real[:], real[:], real[:]')
+def array_real_loopdiff(x, y, out):
+    dxy = x - y
+    for k in range(len(x)):
+        out[k] = dxy[k]
