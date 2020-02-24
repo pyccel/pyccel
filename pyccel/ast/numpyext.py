@@ -1033,9 +1033,9 @@ class Ones(Zeros):
 
 #=======================================================================================
 
-class ZerosLike(Application):
+class EmptyLike(Application):
 
-    """Represents variable assignment using numpy.zeros_like for code generation.
+    """Represents variable assignment using numpy.empty_like for code generation.
 
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
@@ -1049,10 +1049,10 @@ class ZerosLike(Application):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, ZerosLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = ZerosLike(y)
+    >>> from pyccel.ast.core import Zeros, EmptyLike
+    >>> n, m, x = symbols('n, m, x')
+    >>> y = Zeros(x, (n, m))
+    >>> z = EmptyLike(y)
     """
 
     # TODO improve in the spirit of assign
@@ -1089,6 +1089,19 @@ class ZerosLike(Application):
     @property
     def rhs(self):
         return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        bounds_code = printer(Bounds(self.rhs))
+        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+        return code
+
+#=======================================================================================
+
+class ZerosLike(EmptyLike):
 
     @property
     def init_value(self):
@@ -1131,43 +1144,9 @@ class ZerosLike(Application):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
-
-class EmptyLike(ZerosLike):
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-    
-        return code
-
-
 #=======================================================================================
 
-class Bounds(Basic):
-
-    """
-    Represents bounds of NdArray.
-
-    Examples
-
-    """
-
-    def __new__(cls, var):
-        # TODO check type of var
-        return Basic.__new__(cls, var)
-
-    @property
-    def var(self):
-        return self._args[0]
-
-
-#=======================================================================================
-
-class FullLike(Application):
+class FullLike(EmptyLike):
 
     """Represents variable assignment using numpy.full_like for code generation.
 
@@ -1239,6 +1218,25 @@ class FullLike(Application):
         code_init = '{0} = {1}'.format(lhs_code, rhs_code)
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
+
+#=======================================================================================
+
+class Bounds(Basic):
+
+    """
+    Represents bounds of NdArray.
+
+    Examples
+
+    """
+
+    def __new__(cls, var):
+        # TODO check type of var
+        return Basic.__new__(cls, var)
+
+    @property
+    def var(self):
+        return self._args[0]
 
 
 #=======================================================================================

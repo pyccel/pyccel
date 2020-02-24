@@ -66,7 +66,7 @@ from pyccel.ast import Macro
 from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
-from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
+from pyccel.ast import Zeros, Where, Linspace, Diag, Complex, EmptyLike
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
@@ -890,7 +890,7 @@ class SemanticParser(BasicParser):
                 d_var = self._infere_type(expr.args[0], **settings)
                 d_var['datatype'] = sp_dtype(expr)
 
-            elif name in ['ZerosLike', 'FullLike']:
+            elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
 
             elif name in ['floor']:
@@ -1889,9 +1889,20 @@ class SemanticParser(BasicParser):
 
             lhs = Variable(dtype, name, **d_lhs)
             var = self.get_variable_from_scope(name)
-            
+
+            # Variable not yet declared (hence array not yet allocated)
             if var is None:
+
+                # Add variable to scope
                 self.insert_variable(lhs, name=lhs.name)
+
+                # Not yet supported for arrays: x=y+z, x=b[:]
+                # Because we cannot infer shape of right-hand side yet
+                know_lhs_shape = lhs.shape or (lhs.rank == 0) \
+                        or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
+                if not know_lhs_shape:
+                    msg = "Cannot infer shape of right-hand side for expression {}".format(expr)
+                    raise NotImplementedError(msg)
 
             else:
             
