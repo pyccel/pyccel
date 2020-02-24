@@ -232,6 +232,9 @@ class SyntaxParser(BasicParser):
             raise SystemExit(0)
 
         preprocess_imports(red)
+        # TODO: Add preprocess step for default arguments with pyccel
+        # (epyccel cases are handled by f2py and by writing all known default arguments)
+
         red = fst_move_directives(red)
         self._fst = red
 
