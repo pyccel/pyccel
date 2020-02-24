@@ -2005,11 +2005,12 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         a = expr.args[0]
         b = expr.args[1]
+
+        if isinstance(expr.rhs, Nil):
+            return 'present({})'.format(lhs)
         if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
             (b.is_Boolean or isinstance(b.dtype, NativeBool))):
             return '{} .eqv. {}'.format(lhs, rhs)
-        if isinstance(expr.rhs, Nil):
-            return 'present({})'.format(lhs)
 
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
 
@@ -2018,11 +2019,12 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         a = expr.args[0]
         b = expr.args[1]
+
+        if isinstance(expr.rhs, Nil):
+            return '.not. present({})'.format(lhs)
         if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
             (b.is_Boolean or isinstance(b.dtype, NativeBool))):
             return '{} .neqv. {}'.format(lhs, rhs)
-        if isinstance(expr.rhs, Nil):
-            return '.not. present({})'.format(lhs)
 
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
 

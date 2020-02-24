@@ -58,12 +58,12 @@ def test_not():
     compare_epyccel(base.not_val, True)
     compare_epyccel(base.not_val, False)
 
-# TODO: implement comparison to nil / None
+# TODO: Fix comparison to nil / None
 @pytest.mark.xfail(reason = 'needs implementation')
 def test_compare_is_nil():
     compare_epyccel(base.is_nil, True, None)
 
-# TODO: implement comparison to  nil / None
+# TODO: Fix comparison to  nil / None
 @pytest.mark.xfail(reason = 'needs implementation')
 def test_compare_is_not_nil():
     compare_epyccel(base.is_not_nil, True, None)
