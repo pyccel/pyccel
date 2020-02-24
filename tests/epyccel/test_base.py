@@ -24,6 +24,12 @@ def test_compare_is():
     compare_epyccel(base.compare_is, False, True)
     compare_epyccel(base.compare_is, False, False)
 
+def test_compare_is_not():
+    compare_epyccel(base.compare_is_not, True, True)
+    compare_epyccel(base.compare_is_not, True, False)
+    compare_epyccel(base.compare_is_not, False, True)
+    compare_epyccel(base.compare_is_not, False, False)
+
 def test_not_false():
     compare_epyccel(base.not_false, True)
     compare_epyccel(base.not_false, False)
@@ -51,3 +57,13 @@ def test_neq_true():
 def test_not():
     compare_epyccel(base.not_val, True)
     compare_epyccel(base.not_val, False)
+
+# TODO: implement comparison to nil / None
+@pytest.mark.xfail(reason = 'needs implementation')
+def test_compare_is_nil():
+    compare_epyccel(base.is_nil, True, None)
+
+# TODO: implement comparison to  nil / None
+@pytest.mark.xfail(reason = 'needs implementation')
+def test_compare_is_not_nil():
+    compare_epyccel(base.is_not_nil, True, None)
