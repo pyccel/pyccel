@@ -62,3 +62,10 @@ def neq_true(a):
     if a != True:
         c = True
     return c
+
+@types('bool')
+def not_val(a):
+    c = False
+    if not a:
+        c = True
+    return c
