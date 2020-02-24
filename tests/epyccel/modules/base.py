@@ -77,6 +77,7 @@ def not_val(a):
         c = True
     return c
 
+@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
 @types('bool')
 def is_nil(a):
     c = False
@@ -84,6 +85,7 @@ def is_nil(a):
         c = True
     return c
 
+@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
 @types('bool')
 def is_not_nil(a):
     c = False

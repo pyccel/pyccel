@@ -42,9 +42,37 @@ def not_val(a):
         c = True
     return c
 
+@types('bool')
+def is_nil(a):
+    c = False
+    if a is None:
+        c = True
+    return c
+
+@types('bool')
+def is_not_nil(a):
+    c = False
+    if a is not None:
+        c = True
+    return c
+
+@types('bool')
+def is_nil_default_arg(a = None):
+    c = False
+    if a is None:
+        c = True
+    return c
+
 print(is_false(False))
 print(compare_is(True,False))
 print(not_true(True))
 print(eq_false(True))
 print(neq_true(False))
 print(not_val(False))
+print(is_nil(True))
+print(is_nil(None))
+print(is_not_nil(True))
+print(is_not_nil(None))
+print(is_nil_default_arg(True))
+print(is_nil_default_arg(None))
+print(is_nil_default_arg())

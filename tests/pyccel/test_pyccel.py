@@ -76,17 +76,26 @@ def teardown(path_dir = None):
         elif not f.endswith(".py"):
             os.remove(file_name)
 
-def compare_pyth_fort_output( p_output, f_output ):
+def compare_pyth_fort_output( p_output, f_output, dtype=float ):
     p_output = p_output.strip().split()
     f_output = f_output.strip().split()
 
     assert(len(p_output) == len(f_output))
-    for p, f in zip(p_output, f_output):
-        p = float(p)
-        f = float(f)
-        assert(np.isclose(p,f))
+    if dtype is bool:
+        for p, f in zip(p_output, f_output):
+            p = p.lower() in ['true', 't', '1']
+            f = f.lower() in ['true', 't', '1']
+            assert(np.equal(p,f))
+    elif dtype is str:
+        for p, f in zip(p_output, f_output):
+            assert(p.strip()==f.strip())
+    else:
+        for p, f in zip(p_output, f_output):
+            p = dtype(p)
+            f = dtype(f)
+            assert(np.isclose(p,f))
 
-def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = ""):
+def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
     if (cwd is None):
         cwd = os.path.dirname(test_file)
 
@@ -110,7 +119,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
 
     fort_out = get_fortran_output(test_file[:-3])
 
-    compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
 def test_rel_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
@@ -185,7 +194,7 @@ def test_funcs():
 
 @pytest.mark.xfail(reason=".False. and .True. are logical(kind=4) but pyccel uses logical(kind=1)")
 def test_bool():
-    pyccel_test("scripts/bool_comp.py")
+    pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
