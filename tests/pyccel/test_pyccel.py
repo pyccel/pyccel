@@ -183,6 +183,10 @@ def test_folder_imports():
 def test_funcs():
     pyccel_test("scripts/test_funcs.py")
 
+@pytest.mark.xfail(reason=".False. and .True. are logical(kind=4) but pyccel uses logical(kind=1)")
+def test_bool():
+    pyccel_test("scripts/bool_comp.py")
+
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
