@@ -2007,7 +2007,7 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(expr.rhs, Nil):
-            return 'present({})'.format(lhs)
+            return '.not. present({})'.format(lhs)
         if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
             (b.is_Boolean or isinstance(b.dtype, NativeBool))):
             return '{} .eqv. {}'.format(lhs, rhs)
@@ -2021,7 +2021,7 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(expr.rhs, Nil):
-            return '.not. present({})'.format(lhs)
+            return 'present({})'.format(lhs)
         if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
             (b.is_Boolean or isinstance(b.dtype, NativeBool))):
             return '{} .neqv. {}'.format(lhs, rhs)
