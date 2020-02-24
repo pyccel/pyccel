@@ -192,7 +192,6 @@ def test_folder_imports():
 def test_funcs():
     pyccel_test("scripts/test_funcs.py")
 
-@pytest.mark.xfail(reason=".False. and .True. are logical(kind=4) but pyccel uses logical(kind=1)")
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
