@@ -24,6 +24,7 @@ from .core import (Variable, IndexedElement, IndexedVariable, Len,
                    For, ForAll, Range, Assign, AugAssign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precision_registry as dtype_registry
+from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
@@ -145,16 +146,26 @@ class Array(Application):
 
 #=======================================================================================
 
-class Sum(Application):
+class NumpySum(Application):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
     """
 
     def __new__(cls, arg):
+
         if not isinstance(arg, (list, tuple, Tuple, List, Variable)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+
+        obj = Basic.__new__(cls, arg)
+
+        dtype = str_dtype(sp_dtype(arg))
+        assumptions = {dtype: True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+
+        return obj
 
     @property
     def arg(self):
@@ -176,7 +187,6 @@ class Sum(Application):
             lhs_code = printer(lhs)
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
-
 
 #=======================================================================================
 

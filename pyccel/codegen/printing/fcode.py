@@ -31,7 +31,7 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
-from pyccel.ast.numpyext import Sum, Rand, Complex
+from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import ZerosLike, FullLike
 
 
@@ -620,7 +620,7 @@ class FCodePrinter(CodePrinter):
     def _print_Len(self, expr):
         return 'size(%s,1)'%(self._print(expr.arg))
 
-    def _print_Sum(self, expr):
+    def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
 
     def _print_Cross(self, expr):
