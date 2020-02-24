@@ -2237,24 +2237,27 @@ class Variable(Symbol):
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
 
-    def clone(self, name):
+    def clone(self, name, new_class = None, **kwargs):
 
         # TODO check it is up to date
 
-        cls = eval(self.__class__.__name__)
+        if (new_class is None):
+            cls = eval(self.__class__.__name__)
+        else:
+            cls = new_class
 
         return cls(
             self.dtype,
             name,
-            rank=self.rank,
-            allocatable=self.allocatable,
-            shape=self.shape,
-            is_pointer=self.is_pointer,
-            is_target=self.is_target,
-            is_polymorphic=self.is_polymorphic,
-            is_optional=self.is_optional,
-            cls_base=self.cls_base,
-            cls_parameters=self.cls_parameters,
+            rank=kwargs.pop('rank',self.rank),
+            allocatable=kwargs.pop('allocatable',self.allocatable),
+            shape=kwargs.pop('shape',self.shape),
+            is_pointer=kwargs.pop('is_pointer',self.is_pointer),
+            is_target=kwargs.pop('is_target',self.is_target),
+            is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
+            is_optional=kwargs.pop('is_optional',self.is_optional),
+            cls_base=kwargs.pop('cls_base',self.cls_base),
+            cls_parameters=kwargs.pop('cls_parameters',self.cls_parameters),
             )
 
     def __getnewargs__(self):
