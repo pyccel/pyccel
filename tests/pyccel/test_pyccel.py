@@ -195,6 +195,9 @@ def test_funcs():
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
+def test_default_arguments():
+    pyccel_test("scripts/test_default_args.py", output_dtype = bool)
+
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
