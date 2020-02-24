@@ -69,6 +69,7 @@ from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
+from pyccel.ast.core import ValuedArgument
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
@@ -1590,12 +1591,31 @@ class SemanticParser(BasicParser):
 
                     if not len(args) == len(f_args):
                         n = len(args)
-                        for i in f_args[n:]:
+
+                        missing_f_args = dict([(f.name,f) for f in f_args])
+                        j = 0
+                        while (j < n):
+                            if isinstance(args[j], ValuedArgument) and args[j].name!=f_args[j].name:
+                                break
+                            elif isinstance(args[j], Nil):
+                                if not isinstance(f_args[j], ValuedVariable):
+                                    msg = 'Expecting a valued variable'
+                                    raise TypeError(msg)
+                                args.append(ValuedArgument(f_args[j].name, f_args[j].value))
+                            missing_f_args.pop(f_args[j].name)
+                            j=j+1
+                        for i in args[j:]:
+                            if not isinstance(i, ValuedArgument):
+                                msg = 'non-default argument follows default argument'
+                                raise SyntaxError(msg)
+                            missing_f_args.pop(i.name)
+                        for i in missing_f_args.values():
                             if not isinstance(i, ValuedVariable):
                                 msg = 'Expecting a valued variable'
                                 raise TypeError(msg)
                             if not isinstance(i.value, Nil):
                                 args.append(ValuedArgument(i.name, i.value))
+
 
                     if len(results) == 1:
 
@@ -2502,8 +2522,7 @@ class SemanticParser(BasicParser):
 
                         # optional argument only if the value is None
 
-                        if isinstance(a.value, Nil):
-                            d_var['is_optional'] = True
+                        d_var['is_optional'] = True
                         a_new = ValuedVariable(dtype, str(a.name),
                                     value=a.value, **d_var)
                     else:

@@ -2117,7 +2117,7 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         name = type(expr).__name__
 
-        code_args = ', '.join(self._print(i) for i in args)
+        code_args = ', '.join(self._print(i) for i in args if not isinstance(i,Nil))
 
         code = '{0}({1})'.format(name, code_args)
         if isinstance(expr.func, Subroutine):

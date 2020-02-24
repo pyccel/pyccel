@@ -884,7 +884,7 @@ class SyntaxParser(BasicParser):
         f_name = str(stmt.previous.value)
         f_name = strip_ansi_escape.sub('', f_name)
         if len(args) == 0:
-            args = (Nil(), )
+            args = ( )
         func = Function(f_name)(*args)
         return func
 
