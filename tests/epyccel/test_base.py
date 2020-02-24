@@ -58,12 +58,10 @@ def test_not():
     compare_epyccel(base.not_val, True)
     compare_epyccel(base.not_val, False)
 
-# TODO: Fix comparison to nil / None
-@pytest.mark.xfail(reason = 'needs implementation')
+@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
 def test_compare_is_nil():
     compare_epyccel(base.is_nil, True, None)
 
-# TODO: Fix comparison to  nil / None
-@pytest.mark.xfail(reason = 'needs implementation')
+@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
 def test_compare_is_not_nil():
     compare_epyccel(base.is_not_nil, True, None)
