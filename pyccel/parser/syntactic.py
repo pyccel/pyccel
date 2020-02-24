@@ -104,7 +104,7 @@ from pyccel.ast import MacroFunction, MacroVariable
 from pyccel.ast import Concatinate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
-from pyccel.ast import Is
+from pyccel.ast import Is, IsNot
 from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
@@ -239,7 +239,7 @@ class SyntaxParser(BasicParser):
 
     def parse(self, verbose=False):
         """converts redbaron fst to sympy ast."""
-        
+
         if self.syntax_done:
             print ('> syntax analysis already done')
             return self.ast
@@ -261,12 +261,12 @@ class SyntaxParser(BasicParser):
                 traceback.print_exc()
             raise SystemExit(0)
 
-            
+
         self._ast = ast
 
         errors.check()
         self._visit_done = True
-        
+
         return ast
 
     def _treat_iterable(self, stmt):
@@ -592,6 +592,9 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
         op = stmt.value.first
+        if(stmt.value.second):
+            op=op+' '+stmt.value.second
+
         if op == '==':
             return Eq(first, second, evaluate=False)
         if op == '!=':
@@ -606,9 +609,11 @@ class SyntaxParser(BasicParser):
             return Ge(first, second, evaluate=False)
         if op == 'is':
             return Is(first, second)
+        if op == 'is not':
+            return IsNot(first, second)
 
         msg = 'unknown/unavailable binary operator {node}'
-        msg = msg.format(node=type(op))
+        msg = msg.format(node=op)
         raise PyccelSyntaxError(msg)
 
     def _visit_PrintNode(self, stmt):
@@ -676,7 +681,7 @@ class SyntaxParser(BasicParser):
 
         if 'bypass' in decorators:
             return EmptyLine()
-            
+
         if 'stack_array' in decorators:
             args = decorators['stack_array']
             for i in range(len(args)):

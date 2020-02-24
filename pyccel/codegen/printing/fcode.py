@@ -58,7 +58,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If, Nil, Is)
+                             Print, If, Nil, Is, IsNot)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
@@ -155,10 +155,10 @@ class FCodePrinter(CodePrinter):
         self._current_function = None
 
         self.prefix_module = prefix_module
-    
-    
+
+
     def set_current_function(self, name):
-        
+
         if name:
             self._namespace = self._namespace.sons_scopes[name]
             if self._current_function:
@@ -175,7 +175,7 @@ class FCodePrinter(CodePrinter):
                 else:
                     name = name[0]
         self._current_function = name
-        
+
     def get_function(self, name):
         container = self._namespace
         while container:
@@ -183,7 +183,7 @@ class FCodePrinter(CodePrinter):
                 return container.functions[name]
             container = container.parent_scope
         raise ValueError('function {} not found'.format(name))
-        
+
 
     def _get_statement(self, codestring):
         return codestring
@@ -382,7 +382,7 @@ class FCodePrinter(CodePrinter):
         source = ''
         if str(expr.source) in pyccel_builtin_import_registery:
             return ''
-            
+
         if expr.source is None:
             prefix = 'use'
         else:
@@ -525,9 +525,9 @@ class FCodePrinter(CodePrinter):
                 txt  = txt[72:]
             if txt:
                 txts.append(txt)
-            
+
             txt = '&\n!${} &'.format(accel).join(txt for txt in txts)
-            
+
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
@@ -896,11 +896,11 @@ class FCodePrinter(CodePrinter):
         elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
-            
+
             rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
                                                  self._print(i)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
-            
+
             enable_alloc = False
 
         elif (rank > 0) and allocatable and intent:
@@ -986,10 +986,10 @@ class FCodePrinter(CodePrinter):
 
         stmt = Comment(str(expr))
         return self._print_Comment(stmt)
-        
-    
+
+
     def _print_Assign(self, expr):
-    
+
         lhs_code = self._print(expr.lhs)
         is_procedure = False
         rhs = expr.rhs
@@ -999,7 +999,7 @@ class FCodePrinter(CodePrinter):
             errors.report(FOUND_IS_IN_ASSIGN, symbol=expr.lhs,
                           severity='warning')
             return self._print_Comment(Comment(str(expr)))
-            
+
         if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}'.format(lhs_code, rhs_code)
@@ -1033,7 +1033,7 @@ class FCodePrinter(CodePrinter):
                     if lhs_name == i.name:
                         if i.is_stack_array:
                             return '{} = {}'.format(lhs_name, rhs.init_value)
-                            
+
             return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, Mod):
@@ -1274,9 +1274,9 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        
+
         self.set_current_function(name)
-        
+
         is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
@@ -1313,7 +1313,7 @@ class FCodePrinter(CodePrinter):
 
             body = expr.body
             functions = expr.functions
-          
+
             ret_type = self._print(result.dtype)
             ret_type += '(kind={0})'.format(str(result.precision))
 
@@ -1393,7 +1393,7 @@ class FCodePrinter(CodePrinter):
             body_code = body_code +'\ncontains \n' +functions_code
         body_code = prelude + '\n\n' + body_code
         imports = '\n'.join(self._print(i) for i in expr.imports)
-        
+
         self.set_current_function(None)
         func = ('{0}({1}) {2}\n'
                 '{3}\n'
@@ -2010,7 +2010,20 @@ class FCodePrinter(CodePrinter):
             return '{} .eqv. {}'.format(lhs, rhs)
         if isinstance(expr.rhs, Nil):
             return 'present({})'.format(lhs)
-        
+
+        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
+
+    def _print_IsNot(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .neqv. {}'.format(lhs, rhs)
+        if isinstance(expr.rhs, Nil):
+            return '.not. present({})'.format(lhs)
+
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
 
     def _print_If(self, expr):

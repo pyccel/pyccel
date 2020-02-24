@@ -948,7 +948,7 @@ class While(Basic):
     @property
     def body(self):
         return self._args[1]
-        
+
     @property
     def local_vars(self):
         return self._args[2]
@@ -1717,7 +1717,7 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
-        
+
     @property
     def local_vars(self):
         return self._args[3]
@@ -1849,6 +1849,30 @@ class Is(Basic):
     def rhs(self):
         return self._args[1]
 
+
+class IsNot(Basic):
+
+    """Represents a is expression in the code.
+
+    Examples
+
+    >>> from pyccel.ast import IsNot
+    >>> from pyccel.ast import Nil
+    >>> from sympy.abc import x
+    >>> IsNot(x, Nil())
+    IsNot(x, None)
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
 
 
 
@@ -2025,7 +2049,7 @@ class Variable(Symbol):
             is_target = False
         elif not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
-            
+
         if is_stack_array is None:
             is_stack_array = False
         elif not isinstance(is_stack_array, bool):
@@ -2166,7 +2190,7 @@ class Variable(Symbol):
     @property
     def precision(self):
         return self._args[12]
-        
+
     @property
     def is_stack_array(self):
         return self._args[13]
@@ -2806,7 +2830,7 @@ class FunctionDef(Basic):
 
         if not isinstance(is_private, bool):
             raise TypeError('Expecting a boolean for private')
-        
+
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for private')
 
@@ -2827,7 +2851,7 @@ class FunctionDef(Basic):
         else:
             # TODO shall we keep this?
             arguments_inout = [False for a in arguments]
-            
+
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2925,7 +2949,7 @@ class FunctionDef(Basic):
     @property
     def is_private(self):
         return self._args[16]
-        
+
     @property
     def is_header(self):
         return self._args[17]
@@ -2941,7 +2965,7 @@ class FunctionDef(Basic):
     @property
     def arguments_inout(self):
         return self._args[20]
-        
+
     @property
     def functions(self):
         return self._args[21]
@@ -4488,8 +4512,8 @@ class If(Basic):
         newargs = []
         for ce in args:
             cond = ce[0]
-            if not isinstance(cond, (bool, Relational, Boolean, Is)):
-                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, or a built-in bool.'
+            if not isinstance(cond, (bool, Relational, Boolean, Is, IsNot)):
+                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
                                  % (cond, type(cond)))
             if not isinstance(ce[1], (list, Tuple, tuple)):
                 raise TypeError('body is not iterable')
