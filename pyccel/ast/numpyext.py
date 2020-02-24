@@ -4,7 +4,7 @@
 # TODO remove sympify, Symbol
 
 import numpy
-from sympy.core.function import Function, Application
+from sympy.core.function import Application
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
@@ -38,7 +38,7 @@ numpy_constants = {
 #=======================================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
-class Array(Function):
+class Array(Application):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -145,7 +145,7 @@ class Array(Function):
 
 #=======================================================================================
 
-class Sum(Function):
+class Sum(Application):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -281,7 +281,7 @@ class Shape(Array):
 
 #=======================================================================================
 
-class Int(Function):
+class Int(Application):
 
     """Represents a call to  numpy.int for code generation.
 
@@ -336,7 +336,7 @@ class Int(Function):
 
 #=======================================================================================
 
-class Real(Function):
+class Real(Application):
 
     """Represents a call to  numpy.real for code generation.
 
@@ -419,7 +419,7 @@ class Imag(Real):
 
 #=======================================================================================
 
-class Complex(Function):
+class Complex(Application):
 
     """Represents a call to  numpy.complex for code generation.
 
@@ -485,7 +485,7 @@ class Complex(Function):
 
 #=======================================================================================
 
-class Linspace(Function):
+class Linspace(Application):
 
     """
     Represents numpy.linspace.
@@ -589,7 +589,7 @@ class Linspace(Function):
 
 #=======================================================================================
 
-class Diag(Function):
+class Diag(Application):
 
     """
     Represents numpy.diag.
@@ -680,7 +680,7 @@ class Diag(Function):
 
 #=======================================================================================
 
-class Cross(Function):
+class Cross(Application):
 
     """
     Represents numpy.cross.
@@ -801,7 +801,7 @@ class Cross(Function):
 
 #=======================================================================================
 
-class Where(Function):
+class Where(Application):
     """ Represents a call to  numpy.where """
    
     def __new__(cls, mask):
@@ -874,7 +874,7 @@ class Rand(Real):
 
 #=======================================================================================
 
-class Zeros(Function):
+class Zeros(Application):
 
     """Represents a call to numpy.zeros for code generation.
 
@@ -1033,7 +1033,7 @@ class Ones(Zeros):
 
 #=======================================================================================
 
-class ZerosLike(Function):
+class ZerosLike(Application):
 
     """Represents variable assignment using numpy.zeros_like for code generation.
 
@@ -1167,7 +1167,7 @@ class Bounds(Basic):
 
 #=======================================================================================
 
-class FullLike(Function):
+class FullLike(Application):
 
     """Represents variable assignment using numpy.full_like for code generation.
 
@@ -1270,7 +1270,7 @@ class Empty(Zeros):
 
 #=======================================================================================
 
-class Norm(Function):
+class Norm(Application):
     """ Represents call to numpy.norm"""
 
     def __new__(cls, arg, dim=None):
@@ -1326,7 +1326,7 @@ class Sqrt(Pow):
 
 #=======================================================================================
 
-class Mod(Function):
+class Mod(Application):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
         
@@ -1336,7 +1336,7 @@ class Mod(Function):
         obj._assumptions._generator = ass_copy
         return obj
 
-class Asin(Function):
+class Asin(Application):
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1347,7 +1347,7 @@ class Asin(Function):
         return obj
 
 
-class Acos(Function):
+class Acos(Application):
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1357,7 +1357,7 @@ class Acos(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Asec(Function):
+class Asec(Application):
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1369,7 +1369,7 @@ class Asec(Function):
 
 #=======================================================================================
 
-class Atan(Function):
+class Atan(Application):
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1380,7 +1380,7 @@ class Atan(Function):
         return obj
 
 
-class Acot(Function):
+class Acot(Application):
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1391,7 +1391,7 @@ class Acot(Function):
         return obj
 
 
-class Acsc(Function):
+class Acsc(Application):
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1403,7 +1403,7 @@ class Acsc(Function):
 
 #=======================================================================================
 
-class Sinh(Function):
+class Sinh(Application):
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1413,7 +1413,7 @@ class Sinh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Cosh(Function):
+class Cosh(Application):
     def __new__(cls,arg):
         obj = cosh(arg)
         if arg.is_real:
@@ -1424,7 +1424,7 @@ class Cosh(Function):
         return obj
 
 
-class Tanh(Function):
+class Tanh(Application):
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1436,7 +1436,7 @@ class Tanh(Function):
 
 #=======================================================================================
 
-class Log(Function):
+class Log(Application):
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1448,7 +1448,7 @@ class Log(Function):
 
 #=======================================================================================
 
-class Abs(Function):
+class Abs(Application):
 
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
@@ -1458,14 +1458,14 @@ class Abs(Function):
 
 #=======================================================================================
 
-class Min(Function):
+class Min(Application):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
      def _eval_is_real(self):
         return True
 
-class Max(Function):
+class Max(Application):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
