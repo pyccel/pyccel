@@ -80,7 +80,7 @@ script:
 #  - coverage run -p --source=pyccel ../tests/test_pyccel_mpi.py --compiler=mpif90
 #  - coverage combine -a
   - coverage report -m > cov_out.txt 2> cov_err.txt
-  - python checkCoverage.py 80
+  - python ../checkCoverage.py 80
   - cd -
 
 after_script:
