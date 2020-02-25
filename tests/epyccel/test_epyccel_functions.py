@@ -48,7 +48,9 @@ def test_decorator_f2():
 def test_decorator_f3():
     @types('int [:]')
     def f3(x):
-        y = x - 1
+        from numpy import empty_like
+        y = empty_like(x)
+        y[:] = x - 1
         return y
 
     from pyccel.ast import AstFunctionResultError
@@ -59,7 +61,9 @@ def test_decorator_f3():
 def test_decorator_f4():
     @types('real [:,:]')
     def f4(x):
-        y = x - 1.0
+        from numpy import empty_like
+        y = empty_like(x)
+        y[:] = x - 1.0
         return y
 
     from pyccel.ast import AstFunctionResultError

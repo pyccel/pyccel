@@ -4,7 +4,7 @@
 # TODO remove sympify, Symbol
 
 import numpy
-from sympy.core.function import Function, Application
+from sympy.core.function import Application
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
@@ -24,6 +24,7 @@ from .core import (Variable, IndexedElement, IndexedVariable, Len,
                    For, ForAll, Range, Assign, AugAssign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
 from .datatypes import dtype_and_precision_registry as dtype_registry
+from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
@@ -38,7 +39,7 @@ numpy_constants = {
 #=======================================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
-class Array(Function):
+class Array(Application):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -145,16 +146,26 @@ class Array(Function):
 
 #=======================================================================================
 
-class Sum(Function):
+class NumpySum(Application):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
     """
 
     def __new__(cls, arg):
+
         if not isinstance(arg, (list, tuple, Tuple, List, Variable)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+
+        obj = Basic.__new__(cls, arg)
+
+        dtype = str_dtype(sp_dtype(arg))
+        assumptions = {dtype: True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+
+        return obj
 
     @property
     def arg(self):
@@ -176,7 +187,6 @@ class Sum(Function):
             lhs_code = printer(lhs)
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
-
 
 #=======================================================================================
 
@@ -281,7 +291,7 @@ class Shape(Array):
 
 #=======================================================================================
 
-class Int(Function):
+class Int(Application):
 
     """Represents a call to  numpy.int for code generation.
 
@@ -336,7 +346,7 @@ class Int(Function):
 
 #=======================================================================================
 
-class Real(Function):
+class Real(Application):
 
     """Represents a call to  numpy.real for code generation.
 
@@ -419,7 +429,7 @@ class Imag(Real):
 
 #=======================================================================================
 
-class Complex(Function):
+class Complex(Application):
 
     """Represents a call to  numpy.complex for code generation.
 
@@ -485,7 +495,7 @@ class Complex(Function):
 
 #=======================================================================================
 
-class Linspace(Function):
+class Linspace(Application):
 
     """
     Represents numpy.linspace.
@@ -589,7 +599,7 @@ class Linspace(Function):
 
 #=======================================================================================
 
-class Diag(Function):
+class Diag(Application):
 
     """
     Represents numpy.diag.
@@ -680,7 +690,7 @@ class Diag(Function):
 
 #=======================================================================================
 
-class Cross(Function):
+class Cross(Application):
 
     """
     Represents numpy.cross.
@@ -801,7 +811,7 @@ class Cross(Function):
 
 #=======================================================================================
 
-class Where(Function):
+class Where(Application):
     """ Represents a call to  numpy.where """
    
     def __new__(cls, mask):
@@ -874,7 +884,7 @@ class Rand(Real):
 
 #=======================================================================================
 
-class Zeros(Function):
+class Zeros(Application):
 
     """Represents a call to numpy.zeros for code generation.
 
@@ -1033,9 +1043,9 @@ class Ones(Zeros):
 
 #=======================================================================================
 
-class ZerosLike(Function):
+class EmptyLike(Application):
 
-    """Represents variable assignment using numpy.zeros_like for code generation.
+    """Represents variable assignment using numpy.empty_like for code generation.
 
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
@@ -1049,10 +1059,10 @@ class ZerosLike(Function):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, ZerosLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = ZerosLike(y)
+    >>> from pyccel.ast.core import Zeros, EmptyLike
+    >>> n, m, x = symbols('n, m, x')
+    >>> y = Zeros(x, (n, m))
+    >>> z = EmptyLike(y)
     """
 
     # TODO improve in the spirit of assign
@@ -1089,6 +1099,19 @@ class ZerosLike(Function):
     @property
     def rhs(self):
         return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        bounds_code = printer(Bounds(self.rhs))
+        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+        return code
+
+#=======================================================================================
+
+class ZerosLike(EmptyLike):
 
     @property
     def init_value(self):
@@ -1131,43 +1154,9 @@ class ZerosLike(Function):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
-
-class EmptyLike(ZerosLike):
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-    
-        return code
-
-
 #=======================================================================================
 
-class Bounds(Basic):
-
-    """
-    Represents bounds of NdArray.
-
-    Examples
-
-    """
-
-    def __new__(cls, var):
-        # TODO check type of var
-        return Basic.__new__(cls, var)
-
-    @property
-    def var(self):
-        return self._args[0]
-
-
-#=======================================================================================
-
-class FullLike(Function):
+class FullLike(EmptyLike):
 
     """Represents variable assignment using numpy.full_like for code generation.
 
@@ -1240,6 +1229,25 @@ class FullLike(Function):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
+#=======================================================================================
+
+class Bounds(Basic):
+
+    """
+    Represents bounds of NdArray.
+
+    Examples
+
+    """
+
+    def __new__(cls, var):
+        # TODO check type of var
+        return Basic.__new__(cls, var)
+
+    @property
+    def var(self):
+        return self._args[0]
+
 
 #=======================================================================================
 
@@ -1270,7 +1278,7 @@ class Empty(Zeros):
 
 #=======================================================================================
 
-class Norm(Function):
+class Norm(Application):
     """ Represents call to numpy.norm"""
 
     def __new__(cls, arg, dim=None):
@@ -1326,7 +1334,7 @@ class Sqrt(Pow):
 
 #=======================================================================================
 
-class Mod(Function):
+class Mod(Application):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
         
@@ -1336,7 +1344,7 @@ class Mod(Function):
         obj._assumptions._generator = ass_copy
         return obj
 
-class Asin(Function):
+class Asin(Application):
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1347,7 +1355,7 @@ class Asin(Function):
         return obj
 
 
-class Acos(Function):
+class Acos(Application):
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1357,7 +1365,7 @@ class Acos(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Asec(Function):
+class Asec(Application):
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1369,7 +1377,7 @@ class Asec(Function):
 
 #=======================================================================================
 
-class Atan(Function):
+class Atan(Application):
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1380,7 +1388,7 @@ class Atan(Function):
         return obj
 
 
-class Acot(Function):
+class Acot(Application):
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1391,7 +1399,7 @@ class Acot(Function):
         return obj
 
 
-class Acsc(Function):
+class Acsc(Application):
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1403,7 +1411,7 @@ class Acsc(Function):
 
 #=======================================================================================
 
-class Sinh(Function):
+class Sinh(Application):
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1413,7 +1421,7 @@ class Sinh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Cosh(Function):
+class Cosh(Application):
     def __new__(cls,arg):
         obj = cosh(arg)
         if arg.is_real:
@@ -1424,7 +1432,7 @@ class Cosh(Function):
         return obj
 
 
-class Tanh(Function):
+class Tanh(Application):
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1436,7 +1444,7 @@ class Tanh(Function):
 
 #=======================================================================================
 
-class Log(Function):
+class Log(Application):
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1448,7 +1456,7 @@ class Log(Function):
 
 #=======================================================================================
 
-class Abs(Function):
+class Abs(Application):
 
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
@@ -1458,14 +1466,14 @@ class Abs(Function):
 
 #=======================================================================================
 
-class Min(Function):
+class Min(Application):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
      def _eval_is_real(self):
         return True
 
-class Max(Function):
+class Max(Application):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
