@@ -126,7 +126,7 @@ from pyccel.ast.datatypes import sp_dtype, str_dtype
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
@@ -232,8 +232,7 @@ class SyntaxParser(BasicParser):
             raise SystemExit(0)
 
         preprocess_imports(red)
-        # TODO: Add preprocess step for default arguments with pyccel
-        # (epyccel cases are handled by f2py and by writing all known default arguments)
+        preprocess_default_args(red)
 
         red = fst_move_directives(red)
         self._fst = red
