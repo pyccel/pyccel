@@ -4,8 +4,6 @@
 #$ header metavar import_all=True
 
 from pyccel.stdlib.internal.mpi import mpi_comm_world
-from pyccel.stdlib.internal.mpi import mpi_comm_rank
-from pyccel.stdlib.internal.mpi import mpi_comm_size
 
 from pyccel.stdlib.internal.mpi import mpi_send
 from pyccel.stdlib.internal.mpi import mpi_ssend
@@ -98,7 +96,6 @@ MPI = MPI_()
 
 #====================================================================================
 
-ierr = -1
 #$ header macro x.COMM_WORLD := mpi_comm_world
 #$ header macro x.SUM        := MPI_SUM
 #$ header macro x.PROD       := MPI_PROD
@@ -110,16 +107,26 @@ ierr = -1
 #$ header macro x.LOR        := MPI_LOR
 #$ header macro x.LXOR       := MPI_LXOR
 #$ header macro x.INT        := MPI_INTEGER
-#$ header macro x.DOUBLE     := MPI_DOUBLE
+#$ header macro x.DOUBLE     := MPI_REAL8
 
+#====================================================================================
 
-#$ header macro (x), y.Get_rank() := mpi_comm_rank(y,x,ierr)
-#$ header macro (x), y.Get_size() := mpi_comm_size(y,x,ierr)
+from pyccel.stdlib.external.mpi4py_functions import mpi4py_get_rank
+from pyccel.stdlib.external.mpi4py_functions import mpi4py_get_size
 
+#$ header macro y.Get_rank() := mpi4py_get_rank(y)
+#$ header macro y.Get_size() := mpi4py_get_size(y)
+
+#$ header macro y.rank := mpi4py_get_rank(y)
+#$ header macro y.size := mpi4py_get_size(y)
+
+#====================================================================================
 
 #......................
 #lower-case letter functions
 #......................
+
+ierr = -1
 
 #$ header macro  y.send(data, dest, tag=0)  := mpi_send(data, data.count, data.dtype, dest ,tag, y, ierr)
 #$ header macro  y.ssend(data, dest, tag=0) := mpi_ssend(data, data.count, data.dtype, dest ,tag, y, ierr)
