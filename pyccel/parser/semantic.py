@@ -1609,12 +1609,6 @@ class SemanticParser(BasicParser):
                                 msg = 'non-default argument follows default argument'
                                 raise SyntaxError(msg)
                             missing_f_args.pop(i.name)
-                        for i in missing_f_args.values():
-                            if not isinstance(i, ValuedVariable):
-                                msg = 'Expecting a valued variable'
-                                raise TypeError(msg)
-                            if not isinstance(i.value, Nil):
-                                args.append(ValuedArgument(i.name, i.value))
 
 
                     if len(results) == 1:
