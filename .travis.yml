@@ -36,48 +36,49 @@ before_script:
 # command to run tests
 script:
   - cd __pytest__
-  - coverage run -p --source=pyccel -m pytest ../tests/preprocess/test_preprocess.py
+  - INSTALL_DIR = $(python -c "import pyccel; print(pyccel.__path__[0])")
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/preprocess/test_preprocess.py
   - coverage combine
-  - coverage run -p --source=pyccel -m pytest ../tests/parser/test_headers.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/parser/test_headers.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/parser/test_openmp.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/parser/test_openmp.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/parser/test_openacc.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/parser/test_openacc.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/syntax/test_syntax.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/syntax/test_syntax.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/errors/test_errors.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/errors/test_errors.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/warnings/test_warnings.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/warnings/test_warnings.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/semantic/test_semantic.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/semantic/test_semantic.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/codegen/test_codegen.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/codegen/test_codegen.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/complexity/test_complexity.py
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/complexity/test_complexity.py
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/epyccel -v -m "not parallel"
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/epyccel -v -m "not parallel"
   - coverage combine -a
-  - coverage run -p --source=pyccel -m pytest ../tests/pyccel/test_pyccel.py -v
+  - coverage run -p --source=$(INSTALL_DIR) -m pytest ../tests/pyccel/test_pyccel.py -v
   - coverage combine -a
   - mpirun -n 4 coverage run -p -m pytest ../tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
   - coverage combine -a
 #  - mpirun -n 4 python -m pytest ../tests/epyccel -v -m parallel
 #  - coverage combine -a
 # this test must be executed with python, since we are calling mpif90 inside it
-  - coverage run -p --source=pyccel ../tests/internal/test_internal.py
+  - coverage run -p --source=$(INSTALL_DIR) ../tests/internal/test_internal.py
   - coverage combine -a
-  - coverage run -p --source=pyccel ../tests/external/test_external.py
+  - coverage run -p --source=$(INSTALL_DIR) ../tests/external/test_external.py
   - coverage combine -a
-  - coverage run -p --source=pyccel ../tests/macro/test_macro.py
+  - coverage run -p --source=$(INSTALL_DIR) ../tests/macro/test_macro.py
   - coverage combine -a
-#  - coverage run -p --source=pyccel ../tests/test_pyccel.py --execute
+#  - coverage run -p --source=$(INSTALL_DIR) ../tests/test_pyccel.py --execute
 #  - coverage combine -a
-#  - coverage run -p --source=pyccel ../tests/test_pyccel_openmp.py --openmp --execute
+#  - coverage run -p --source=$(INSTALL_DIR) ../tests/test_pyccel_openmp.py --openmp --execute
 #  - coverage combine -a
-#  - coverage run -p --source=pyccel ../tests/test_pyccel_lapack.py --libs='blas lapack' --execute
+#  - coverage run -p --source=$(INSTALL_DIR) ../tests/test_pyccel_lapack.py --libs='blas lapack' --execute
 #  - coverage combine -a
-#  - coverage run -p --source=pyccel ../tests/test_pyccel_mpi.py --compiler=mpif90
+#  - coverage run -p --source=$(INSTALL_DIR) ../tests/test_pyccel_mpi.py --compiler=mpif90
 #  - coverage combine -a
   - coverage report -m > cov_out.txt 2> cov_err.txt
   - python ../checkCoverage.py 80
