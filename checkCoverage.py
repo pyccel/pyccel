@@ -1,4 +1,5 @@
 import os
+import argparse
 
 parser = argparse.ArgumentParser(description='Coverage checker')
 parser.add_argument('MinPercent', metavar='min',nargs=1,type=int,
