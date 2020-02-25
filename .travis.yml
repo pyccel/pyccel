@@ -80,10 +80,7 @@ script:
 #  - coverage combine -a
 #  - coverage run -p --source=${INSTALL_DIR} ../tests/test_pyccel_mpi.py --compiler=mpif90
 #  - coverage combine -a
-  - echo "[run]
-parallel = True
-[report]
-include = ${INSTALL_DIR}/*" > .coveragerc
+  - printf "[run]\nparallel = True\n[report]\ninclude = ${INSTALL_DIR}/*" > .coveragerc
   - coverage report -m > cov_out.txt 2> cov_err.txt
   - python ../checkCoverage.py 80
   - cd -
