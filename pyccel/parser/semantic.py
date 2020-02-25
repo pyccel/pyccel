@@ -250,7 +250,6 @@ class SemanticParser(BasicParser):
             target = set(target)
             target_headers = target.intersection(self.namespace.headers.keys())
 
-
             for name in list(target_headers):
                 v = self.namespace.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
@@ -424,7 +423,7 @@ class SemanticParser(BasicParser):
         if func and self._current_function == name and not func.is_recursive:
             func = func.set_recursive()
             container.functions[name] = func
-            
+
         return func
         
         
@@ -1491,6 +1490,7 @@ class SemanticParser(BasicParser):
                 func = self.get_function(name)
 
             if func is None:
+                # TODO [SH, 25.02.2020] Report error
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                 bounding_box=self._current_fst_node.absolute_bounding_box,
                 severity='error', blocker=self.blocking)
@@ -2312,7 +2312,7 @@ class SemanticParser(BasicParser):
         #      move it to the ast like create_definition for FunctionHeader?
 
         name  = expr.name
-        d_var = expr.dtypes
+        d_var = expr.dtypes.copy()
         dtype = d_var.pop('datatype')
 
         var = Variable(dtype, name, **d_var)
@@ -2403,7 +2403,7 @@ class SemanticParser(BasicParser):
         if expr.arguments and not header:
 
             # TODO ERROR wrong position
-            
+
             errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
                    bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='error', blocker=self.blocking)
@@ -2852,7 +2852,6 @@ class SemanticParser(BasicParser):
                     
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)
-
 
                 # ... meta variables
 
