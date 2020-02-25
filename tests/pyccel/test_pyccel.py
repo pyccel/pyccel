@@ -81,7 +81,9 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
     f_output = f_output.strip().split()
 
     assert(len(p_output) == len(f_output))
-    if dtype is bool:
+    if isinstance(dtype,list):
+        assert(len(dtype)==len(p_output))
+    elif dtype is bool:
         for p, f in zip(p_output, f_output):
             p = p.lower() in ['true', 't', '1']
             f = f.lower() in ['true', 't', '1']
@@ -196,7 +198,11 @@ def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
 def test_default_arguments():
-    pyccel_test("scripts/test_default_args.py", output_dtype = bool)
+    pyccel_test("scripts/test_default_args.py",
+            dependencies = "scripts/default_args_mod.py",
+            output_dtype = [int,int,float,float,float,
+                float,float,float,float,bool,bool,bool,
+                float,float,float,float])
 
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
