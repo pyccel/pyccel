@@ -1,15 +1,13 @@
-import os
 import argparse
 
 parser = argparse.ArgumentParser(description='Coverage checker')
-parser.add_argument('MinPercent', metavar='min',nargs=1,type=int,
+parser.add_argument('min', metavar='MinPercent',nargs=1,type=int,
                    help='Minimum percentage of coverage required for a pass')
 args = parser.parse_args()
 
 file = open("cov_out.txt", "r")
 out = file.read()
 file.close()
-os.remove("cov_out.txt")
 out = out[2:-1]
 out = out.replace("\\n","\n")
 print(out)
@@ -17,7 +15,6 @@ print(out)
 file = open("cov_err.txt", "r")
 err = file.read()
 file.close()
-os.remove("cov_err.txt")
 err = err[2:-1]
 err = err.replace("\\n","\n")
 print(err)
