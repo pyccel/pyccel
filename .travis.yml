@@ -37,8 +37,7 @@ before_script:
 script:
   - cd __pytest__
   - INSTALL_DIR=$(python -c "import pyccel; print(pyccel.__path__[0])")
-  - SITE_DIR=$(python -m site --user-site)
-  - echo ${SITE_DIR}
+  - SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
   - printf "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth
   - printf "[run]\nparallel = True\nsource = ${INSTALL_DIR}\n[report]\ninclude = ${INSTALL_DIR}/*" > .coveragerc
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
