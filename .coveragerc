@@ -1,0 +1,7 @@
+[run]
+parallel = True
+[report]
+include = pyccel/*
+
+[xml]
+output = current_coverage.xml
