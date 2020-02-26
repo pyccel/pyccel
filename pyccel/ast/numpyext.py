@@ -126,7 +126,7 @@ class Sum(Function):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, Tuple, List, Variable)):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
@@ -151,6 +151,92 @@ class Sum(Function):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
+#=======================================================================================
+
+class Product(Function):
+    """Represents a call to  numpy.prod for code generation.
+
+    arg : list , tuple , Tuple, List, Variable
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+        return Basic.__new__(cls, arg)
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return self._args[0].dtype
+
+    @property
+    def rank(self):
+        return 0
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+
+        rhs_code = printer(self.arg)
+        if lhs:
+            lhs_code = printer(lhs)
+            return '{0} = product({1})'.format(lhs_code, rhs_code)
+        return 'product({0})'.format(rhs_code)
+
+#=======================================================================================
+
+class Matmul(Application):
+    """Represents a call to numpy.matmul for code generation.
+    arg : list , tuple , Tuple, List, Variable
+    """
+
+    def __new__(cls, a, b):
+        if not isinstance(a, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(a))
+        if not isinstance(b, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(a))
+        return Basic.__new__(cls, a, b)
+
+    @property
+    def a(self):
+        return self._args[0]
+
+    @property
+    def b(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return self._args[0].dtype
+
+    @property
+    def rank(self):
+        return 1 # TODO: make this general
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+        a_code = printer(self.a)
+        b_code = printer(self.b)
+
+        if lhs:
+            lhs_code = printer(lhs)
+
+        if self.a.order and self.b.order:
+            if self.a.order != self.b.order:
+                raise NotImplementedError("Mixed order matmul not supported.")
+
+        # Fortran ordering
+        if self.a.order == 'F':
+            if lhs:
+                return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
+            return 'matmul({0},{1})'.format(a_code, b_code)
+
+        # C ordering
+        if lhs:
+            return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
+        return 'matmul({1},{0})'.format(a_code, b_code)
 
 #=======================================================================================
 
