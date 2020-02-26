@@ -66,10 +66,10 @@ script:
 #  - python ../tests/test_pyccel_mpi.py --compiler=mpif90
   - coverage combine
   - coverage xml
-  - export CODACY_PROJECT_TOKEN=d5e147769dad48158549d7236cb5d53a
-  - bash <(curl -Ls https://coverage.codacy.com/get.sh)
   - rm ${SITE_DIR}/pyccel_cov.pth
   - cd -
 
 after_script:
   - rm -rf __pytest__
+  - export CODACY_PROJECT_TOKEN=d5e147769dad48158549d7236cb5d53a
+  - bash <(curl -Ls https://coverage.codacy.com/get.sh)
