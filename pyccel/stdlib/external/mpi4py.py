@@ -185,3 +185,4 @@ ierr = -1
 
 #$ header macro  x.Waitall(req) := mpi_waitall(req.count, req, MPI_STATUSES_IGNORE, ierr)
 
+#$ header macro  y.Barrier() := mpi_barrier(y, ierr)
