@@ -623,6 +623,12 @@ class FCodePrinter(CodePrinter):
     def _print_Sum(self, expr):
         return expr.fprint(self._print)
 
+    def _print_Product(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Matmul(self, expr):
+        return expr.fprint(self._print)
+
     def _print_Cross(self, expr):
         return expr.fprint(self._print)
 
