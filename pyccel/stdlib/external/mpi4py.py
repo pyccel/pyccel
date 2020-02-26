@@ -71,6 +71,9 @@ from pyccel.stdlib.internal.mpi import MPI_LXOR
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
 from pyccel.stdlib.internal.mpi import MPI_REAL8
 
+from pyccel.stdlib.internal.mpiext import mpiext_get_rank
+from pyccel.stdlib.internal.mpiext import mpiext_get_size
+
 #===================================================================================
 
 #$ header class MPI_(public)
@@ -111,14 +114,11 @@ MPI = MPI_()
 
 #====================================================================================
 
-from pyccel.stdlib.external.mpi4py_functions import mpi4py_get_rank
-from pyccel.stdlib.external.mpi4py_functions import mpi4py_get_size
+#$ header macro y.Get_rank() := mpiext_get_rank(y)
+#$ header macro y.Get_size() := mpiext_get_size(y)
 
-#$ header macro y.Get_rank() := mpi4py_get_rank(y)
-#$ header macro y.Get_size() := mpi4py_get_size(y)
-
-#$ header macro y.rank := mpi4py_get_rank(y)
-#$ header macro y.size := mpi4py_get_size(y)
+#$ header macro y.rank := mpiext_get_rank(y)
+#$ header macro y.size := mpiext_get_size(y)
 
 #====================================================================================
 
