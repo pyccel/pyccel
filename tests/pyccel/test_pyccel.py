@@ -67,7 +67,7 @@ def teardown(path_dir = None):
     if path_dir is None:
         path_dir = os.path.dirname(os.path.realpath(__file__))
 
-    for root, dirs, files in os.walk(path_dir):
+    for root, _, files in os.walk(path_dir):
         for name in files:
             if name.startswith(".coverage"):
                 shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
