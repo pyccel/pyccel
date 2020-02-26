@@ -13,7 +13,7 @@ class Point(object):
         pass
 
     def translate(self, a):
-        b      =  self.x + a 
+        b      =  self.x + a
         self.x = b
 
 x = [0.,0.,0.]

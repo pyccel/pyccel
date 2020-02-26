@@ -14,7 +14,7 @@ class Parser(object):
 
         self._filename = filename
         self._kwargs = kwargs
-        
+
         # we use it to store the imports
         self._parents = []
 
@@ -52,21 +52,21 @@ class Parser(object):
         """Returns the sons parser."""
 
         return self._sons
-        
+
     @property
     def metavars(self):
         if self._semantic_parser:
             return self._semantic_parser.metavars
         else:
             return self._syntax_parser.metavars
-            
+
     @property
     def namespace(self):
         if self._semantic_parser:
             return self._semantic_parser.namespace
         else:
             return self._syntax_parser.namespace
-            
+
     @property
     def imports(self):
         if self._semantic_parser:
@@ -99,7 +99,7 @@ class Parser(object):
                                 parents=self.parents,
                                 **settings)
         self._semantic_parser = parser
-        
+
         return parser
 
     def append_parent(self, parent):
@@ -153,7 +153,7 @@ class Parser(object):
     def _annotate_parents(self, **settings):
 
         verbose = settings.pop('verbose', False)
-        
+
         # we first treat sons that have no imports
 
         for p in self.sons:
