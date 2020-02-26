@@ -68,7 +68,6 @@ script:
   - coverage xml
   - export CODACY_PROJECT_TOKEN=d5e147769dad48158549d7236cb5d53a
   - bash <(curl -Ls https://coverage.codacy.com/get.sh)
-#  - python ../checkCoverage.py 80
   - rm ${SITE_DIR}/pyccel_cov.pth
   - cd -
 
