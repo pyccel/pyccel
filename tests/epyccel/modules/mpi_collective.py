@@ -21,7 +21,7 @@ def np_allreduce( sendbuf, recvbuf ):
 
 # ...
 @types( 'int[:]', int )
-def np_bcast( buf, root ): 
+def np_bcast( buf, root ):
 
     comm = MPI.COMM_WORLD
     ierr = -1

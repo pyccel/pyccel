@@ -163,7 +163,7 @@ class FunctionHeader(Header):
         imports   = []
         funcs = []
         dtypes = []
-       
+
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -457,8 +457,8 @@ class MacroFunction(Header):
             for i in self.arguments[len(sorted_args):]:
                 if not isinstance(i, ValuedArgument):
                     raise ValueError('variable not allowed after an optional argument')
-       
-             
+
+
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 if not isinstance(arg, Tuple):
@@ -482,7 +482,7 @@ class MacroFunction(Header):
             d_unsorted_args = {}
             for arg in self.arguments[len(sorted_args):]:
                 d_unsorted_args[arg.name] = arg.value
-            
+
             for arg in unsorted_args:
                 if arg.name in d_unsorted_args.keys():
                     d_unsorted_args[arg.name] = arg.value
@@ -496,8 +496,8 @@ class MacroFunction(Header):
                                       d_arguments[arg.argument.name])
                     if isinstance(arg, MacroShape):
                         d_arguments[i]._index = arg.index
-            
-                
+
+
         d_results = {}
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
@@ -511,7 +511,7 @@ class MacroFunction(Header):
         argument_keys = d_arguments.keys()
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
-            
+
             if isinstance(arg, Symbol):
                 if arg.name in argument_keys:
                     new = d_arguments[arg.name]
@@ -533,7 +533,7 @@ class MacroFunction(Header):
                     new = d_results[arg.argument.name]
                 else:
                     raise ValueError('Unkonwn variable name')
- 
+
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
                         new._index = arg.index
@@ -548,11 +548,11 @@ class MacroVariable(Header):
         if not isinstance(name, (str, Symbol, DottedName)):
             raise TypeError('name must be of type str or DottedName')
 
-    
+
         if not isinstance(master, (str, Variable, DottedVariable)):
             raise ValueError('Expecting a master name of Variable')
 
-        
+
         return Basic.__new__(cls, name, master)
 
 
