@@ -32,6 +32,7 @@ install:
   - pip install .
 
 before_script:
+  - pip install coverage
   - mkdir __pytest__
 
 # command to run tests

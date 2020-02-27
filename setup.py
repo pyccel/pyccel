@@ -49,7 +49,6 @@ install_requires = [
     'mpi4py',
     'termcolor',
     'fastcache',
-    'coverage',
 ]
 
 def setup_package():
