@@ -23,9 +23,9 @@
 #$ header variable MPI_LOGICAL     int32
 #$ header variable MPI_INTEGER     int32
 #$ header variable MPI_INTEGER8    int32
-#$ header variable MPI_REAL        int32
+#$ header variable MPI_REAL4       int32
 #$ header variable MPI_REAL8       int32
-#$ header variable MPI_COMPLEX     int32
+#$ header variable MPI_COMPLEX8    int32
 #$ header variable MPI_COMPLEX16   int32
 #$ header variable MPI_CHARACTER   int32
                                  

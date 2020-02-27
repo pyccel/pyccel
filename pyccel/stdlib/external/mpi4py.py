@@ -59,17 +59,24 @@ from pyccel.stdlib.internal.mpi import mpi_type_create_subarray
 from pyccel.stdlib.internal.mpi import ANY_TAG
 from pyccel.stdlib.internal.mpi import ANY_SOURCE
 
-from pyccel.stdlib.internal.mpi import MPI_SUM 
-from pyccel.stdlib.internal.mpi import MPI_PROD  
-from pyccel.stdlib.internal.mpi import MPI_MAX     
-from pyccel.stdlib.internal.mpi import MPI_MIN         
-from pyccel.stdlib.internal.mpi import MPI_MAXLOC       
-from pyccel.stdlib.internal.mpi import MPI_MINLOC       
-from pyccel.stdlib.internal.mpi import MPI_LAND        
-from pyccel.stdlib.internal.mpi import MPI_LOR          
-from pyccel.stdlib.internal.mpi import MPI_LXOR  
+from pyccel.stdlib.internal.mpi import MPI_SUM
+from pyccel.stdlib.internal.mpi import MPI_PROD
+from pyccel.stdlib.internal.mpi import MPI_MAX
+from pyccel.stdlib.internal.mpi import MPI_MIN
+from pyccel.stdlib.internal.mpi import MPI_MAXLOC
+from pyccel.stdlib.internal.mpi import MPI_MINLOC
+from pyccel.stdlib.internal.mpi import MPI_LAND
+from pyccel.stdlib.internal.mpi import MPI_LOR
+from pyccel.stdlib.internal.mpi import MPI_LXOR
+
+from pyccel.stdlib.internal.mpi import MPI_LOGICAL
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
+from pyccel.stdlib.internal.mpi import MPI_INTEGER8
+from pyccel.stdlib.internal.mpi import MPI_REAL4
 from pyccel.stdlib.internal.mpi import MPI_REAL8
+from pyccel.stdlib.internal.mpi import MPI_COMPLEX8
+from pyccel.stdlib.internal.mpi import MPI_COMPLEX16
+from pyccel.stdlib.internal.mpi import MPI_CHARACTER
 
 from pyccel.stdlib.internal.mpiext import mpiext_get_rank
 from pyccel.stdlib.internal.mpiext import mpiext_get_size
@@ -82,8 +89,8 @@ from pyccel.stdlib.internal.mpiext import mpiext_get_size
 class MPI_:
     def __init__(self):
         self.COMM_WORLD = -1
-        self.INT        = MPI_INTEGER
-        self.DOUBLE     = MPI_REAL8
+        self.Request    = -1
+
         self.SUM        = MPI_SUM
         self.PROD       = MPI_PROD
         self.MAX        = MPI_MAX
@@ -93,13 +100,24 @@ class MPI_:
         self.LAND       = MPI_LAND
         self.LOR        = MPI_LOR
         self.LXOR       = MPI_LXOR
-        self.Request    = -1
+
+        self.LOGICAL    = MPI_LOGICAL
+        self.INT        = MPI_INTEGER
+        self.INTEGER    = MPI_INTEGER
+        self.INTEGER8   = MPI_INTEGER8
+        self.FLOAT      = MPI_REAL4
+        self.DOUBLE     = MPI_REAL8
+        self.COMPLEX    = MPI_COMPLEX8
+        self.COMPLEX16  = MPI_COMPLEX16
+        self.CHAR       = MPI_CHARACTER
+        self.CHARACTER  = MPI_CHARACTER
 
 MPI = MPI_()
 
 #====================================================================================
 
 #$ header macro x.COMM_WORLD := mpi_comm_world
+
 #$ header macro x.SUM        := MPI_SUM
 #$ header macro x.PROD       := MPI_PROD
 #$ header macro x.MAX        := MPI_MAX
@@ -109,8 +127,16 @@ MPI = MPI_()
 #$ header macro x.LAND       := MPI_LAND
 #$ header macro x.LOR        := MPI_LOR
 #$ header macro x.LXOR       := MPI_LXOR
+
+#$ header macro x.LOGICAL    := MPI_LOGICAL
 #$ header macro x.INT        := MPI_INTEGER
+#$ header macro x.INTEGER    := MPI_INTEGER
+#$ header macro x.FLOAT      := MPI_REAL4
 #$ header macro x.DOUBLE     := MPI_REAL8
+#$ header macro x.COMPLEX    := MPI_COMPLEX8
+#$ header macro x.COMPLEX16  := MPI_COMPLEX16
+#$ header macro x.CHAR       := MPI_CHARACTER
+#$ header macro x.CHARACTER  := MPI_CHARACTER
 
 #====================================================================================
 
