@@ -58,10 +58,10 @@ class MacroType(Macro):
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'MacroType({})'.format(sstr(self.argument))
-        
 
 
-    
+
+
 
 class MacroCount(Macro):
     """."""
@@ -69,13 +69,13 @@ class MacroCount(Macro):
 
     def __new__(cls, argument):
         return Macro.__new__(cls, argument)
-   
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'MacroCount({})'.format(sstr(self.argument))
-   
-    
-    
+
+
+
 
 
 def construct_macro(name, argument, parameter=None):

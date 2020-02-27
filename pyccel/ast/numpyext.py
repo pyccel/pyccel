@@ -317,13 +317,13 @@ class Shape(Array):
         if lhs:
             alloc = 'allocate({}(0:{}))'.format(lhs_code, self.arg.rank-1)
             if self.index is None:
-      
+
                 code_init = '{0} = (/ {1} /)'.format(lhs_code, init_value)
 
             else:
                 index = printer(self.index)
                 code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-            
+
             code_init = alloc+ '\n'+ code_init
         else:
             if self.index is None:
@@ -611,7 +611,7 @@ class Linspace(Function):
         return 1
 
     def _eval_is_real(self):
-        return True 
+        return True
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -631,8 +631,8 @@ class Linspace(Function):
         index = printer(self.index)
 
         init_value = init_value.format(start, index, step, stop)
-        
-        
+
+
 
         if lhs:
             lhs    = printer(lhs)
@@ -656,11 +656,11 @@ class Diag(Function):
 
 
     def __new__(cls, array, v=0, k=0):
-       
+
 
         _valid_args = (Variable, IndexedElement, Tuple)
 
-        
+
         if not isinstance(array, _valid_args):
            raise TypeError('Expecting valid args')
 
@@ -686,7 +686,7 @@ class Diag(Function):
     def index(self):
         return self._args[3]
 
-  
+
     @property
     def dtype(self):
         return 'real'
@@ -715,7 +715,7 @@ class Diag(Function):
         array = printer(self.array)
         rank  = self.array.rank
         index = printer(self.index)
-           
+
         if rank == 2:
             lhs   = IndexedBase(lhs)[self.index]
             rhs   = IndexedBase(self.array)[self.index,self.index]
@@ -724,14 +724,14 @@ class Diag(Function):
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
         elif rank == 1:
-            
+
             lhs   = IndexedBase(lhs)[self.index, self.index]
             rhs   = IndexedBase(self.array)[self.index]
             body  = [Assign(lhs, rhs)]
             body  = For(self.index, Range(Len(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
-       
+
         return alloc + '\n' + code
 
 #=======================================================================================
@@ -746,11 +746,11 @@ class Cross(Function):
     # to be more general
 
     def __new__(cls, a, b):
-       
+
 
         _valid_args = (Variable, IndexedElement, Tuple)
 
-        
+
         if not isinstance(a, _valid_args):
            raise TypeError('Expecting valid args')
 
@@ -767,7 +767,7 @@ class Cross(Function):
     def second(self):
         return self._args[1]
 
-   
+
     @property
     def dtype(self):
         return self.first.dtype
@@ -793,12 +793,12 @@ class Cross(Function):
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
-       
+
         a     = IndexedBase(self.first)
         b     = IndexedBase(self.second)
         slc   = Slice(None, None)
         rank  = self.rank
-        
+
         if rank > 2:
             raise NotImplementedError('TODO')
 
@@ -816,11 +816,11 @@ class Cross(Function):
             a = [a[tuple(inds)] for inds in a_inds]
             b = [b[tuple(inds)] for inds in b_inds]
 
-    
+
         cross_product = [a[1]*b[2]-a[2]*b[1],
                          a[2]*b[0]-a[0]*b[2],
                          a[0]*b[1]-a[1]*b[0]]
-            
+
         cross_product = Tuple(*cross_product)
         cross_product = printer(cross_product)
         first = printer(self.first)
@@ -835,7 +835,7 @@ class Cross(Function):
             elif rank == 1:
                 alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
 
-         
+
 
         if rank == 2:
 
@@ -848,7 +848,7 @@ class Cross(Function):
 
         elif rank == 1:
             code = cross_product
-    
+
         if lhs is not None:
             code = '{} = {}'.format(lhs, code)
 
@@ -859,7 +859,7 @@ class Cross(Function):
 
 class Where(Function):
     """ Represents a call to  numpy.where """
-   
+
     def __new__(cls, mask):
         return Basic.__new__(cls, mask)
 
@@ -871,7 +871,7 @@ class Where(Function):
     @property
     def index(self):
         ind = Variable('int','ind1')
-        
+
         return ind
 
     @property
@@ -889,10 +889,10 @@ class Where(Function):
     @property
     def order(self):
         return 'F'
-     
+
 
     def fprint(self, printer, lhs):
-        
+
         ind   = printer(self.index)
         mask  = printer(self.mask)
         lhs   = printer(lhs)
@@ -902,7 +902,7 @@ class Where(Function):
         alloc = 'allocate({}(0:count({})-1,0:0))'.format(lhs, mask)
 
         return alloc +'\n' + stmt
-        
+
 
 #=======================================================================================
 
@@ -1199,7 +1199,7 @@ class EmptyLike(ZerosLike):
         rhs_code = printer(self.rhs)
         bounds_code = printer(Bounds(self.rhs))
         code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-    
+
         return code
 
 
@@ -1281,7 +1281,7 @@ class FullLike(Function):
     @property
     def rhs(self):
         return self._args[1]
-        
+
     @property
     def init_value(self):
         return self.rhs
@@ -1339,7 +1339,7 @@ class Norm(Function):
     @property
     def arg(self):
         return self._args[0]
- 
+
     @property
     def dim(self):
         return self._args[1]
@@ -1362,17 +1362,17 @@ class Norm(Function):
         if self.dim is not None:
             return self.arg.rank-1
         return 0
-        
+
 
 
     def fprint(self, printer):
         """Fortran print."""
- 
+
         if self.dim:
             rhs = 'Norm2({},{})'.format(printer(self.arg),printer(self.dim))
         else:
             rhs = 'Norm2({})'.format(printer(self.arg))
-            
+
         return rhs
 
 #=======================================================================================
@@ -1387,7 +1387,7 @@ class Sqrt(Pow):
 class Mod(Function):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
-        
+
         assumptions={'integer':True}
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)

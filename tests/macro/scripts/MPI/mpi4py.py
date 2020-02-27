@@ -60,17 +60,17 @@ from pyccel.stdlib.internal.mpi import mpi_type_create_subarray
 from pyccel.stdlib.internal.mpi import ANY_TAG
 from pyccel.stdlib.internal.mpi import ANY_SOURCE
 
-from pyccel.stdlib.internal.mpi import MPI_SUM 
-from pyccel.stdlib.internal.mpi import MPI_PROD  
-from pyccel.stdlib.internal.mpi import MPI_MAX     
-from pyccel.stdlib.internal.mpi import MPI_MIN         
-from pyccel.stdlib.internal.mpi import MPI_MAXLOC       
-from pyccel.stdlib.internal.mpi import MPI_MINLOC       
-from pyccel.stdlib.internal.mpi import MPI_LAND        
-from pyccel.stdlib.internal.mpi import MPI_LOR          
-from pyccel.stdlib.internal.mpi import MPI_LXOR  
+from pyccel.stdlib.internal.mpi import MPI_SUM
+from pyccel.stdlib.internal.mpi import MPI_PROD
+from pyccel.stdlib.internal.mpi import MPI_MAX
+from pyccel.stdlib.internal.mpi import MPI_MIN
+from pyccel.stdlib.internal.mpi import MPI_MAXLOC
+from pyccel.stdlib.internal.mpi import MPI_MINLOC
+from pyccel.stdlib.internal.mpi import MPI_LAND
+from pyccel.stdlib.internal.mpi import MPI_LOR
+from pyccel.stdlib.internal.mpi import MPI_LXOR
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
-from pyccel.stdlib.internal.mpi import MPI_DOUBLE       
+from pyccel.stdlib.internal.mpi import MPI_DOUBLE
 
 
 class MPI_:
@@ -124,7 +124,7 @@ MPI = MPI_()
 
 #$ header macro (x), y.recv(source=0, tag=0) := mpi_recv(x, x.count, x.dtype, source ,tag, y, status, ierr)
 
-#$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, status, ierr) 
+#$ header macro (x), y.sendrecv(sendobj, dest, sendtag=0, source=ANY_SOURCE, recvtag=ANY_TAG) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, x, x.count, x.dtype, source , recvtag, y, status, ierr)
 
 #$ header macro (x),y.reduce(data, op=MPI_SUM, root=0) := mpi_reduce(data, x, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro (x),y.allreduce(data, op=MPI_SUM) := mpi_allreduce(data, x, data.count, data.dtype, op , y, ierr)
@@ -134,7 +134,7 @@ MPI = MPI_()
 
 #.....................
 ##$ header macro (x),y.scatter
-##$ header macro (req), y.irecv 
+##$ header macro (req), y.irecv
 ##$ header macro y.alltoall
 #not_working for the moment
 #.....................
@@ -159,7 +159,7 @@ MPI = MPI_()
 #$ header macro  (req),y.Irecv([data, dtype=data.dtype], source=ANY_SOURCE, tag=ANY_TAG) := mpi_irecv(data, data.count, dtype, source ,tag, y, req, ierr)
 
 
-#$ header macro (x), y.Sendrecv(sendobj, dest, sendtag=0, recvbuf=x, source=ANY_SOURCE, recvtag=ANY_TAG, Stat=status) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, recvbuf, recvbuf.count, recvbuf.dtype, source , recvtag, y, status, ierr) 
+#$ header macro (x), y.Sendrecv(sendobj, dest, sendtag=0, recvbuf=x, source=ANY_SOURCE, recvtag=ANY_TAG, Stat=status) := mpi_sendrecv(sendobj, sendobj.count, sendobj.dtype,  dest, sendtag, recvbuf, recvbuf.count, recvbuf.dtype, source , recvtag, y, status, ierr)
 
 #$ header macro y.Reduce(data, recvbuf, op=MPI_SUM, root=0) := mpi_reduce(data, recvbuf, data.count, data.dtype, op ,root, y, ierr)
 #$ header macro y.Allreduce(data, recvbuf, op=MPI_SUM) := mpi_allreduce(data, recvbuf, data.count, data.dtype, op , y, ierr)
