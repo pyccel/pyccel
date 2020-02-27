@@ -738,7 +738,9 @@ class FCodePrinter(CodePrinter):
 
         if dtype == 'integer':
             if prec==4:
-                return 'MPI_INT'
+                return 'MPI_INTEGER'
+            elif prec==8:
+                return 'MPI_INTEGER8'
             else:
                 raise NotImplementedError('TODO')
 
