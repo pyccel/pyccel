@@ -12,6 +12,7 @@
 *.pyo
 .ipynb_checkpoints/
 .cache
+.mypy_cache
 __pycache__
 __epyccel__
 __pyccel__

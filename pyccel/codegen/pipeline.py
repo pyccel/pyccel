@@ -101,7 +101,7 @@ def execute_pyccel(fname, *,
 
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'))
+        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         ast = parser.parse()
     except Exception:
         handle_error('parsing (syntax)')
