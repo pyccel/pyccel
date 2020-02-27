@@ -4,8 +4,6 @@
 #$ header metavar import_all=True
 
 from pyccel.stdlib.internal.mpi import mpi_comm_world
-from pyccel.stdlib.internal.mpi import mpi_comm_rank
-from pyccel.stdlib.internal.mpi import mpi_comm_size
 
 from pyccel.stdlib.internal.mpi import mpi_send
 from pyccel.stdlib.internal.mpi import mpi_ssend
@@ -73,6 +71,9 @@ from pyccel.stdlib.internal.mpi import MPI_LXOR
 from pyccel.stdlib.internal.mpi import MPI_INTEGER
 from pyccel.stdlib.internal.mpi import MPI_REAL8
 
+from pyccel.stdlib.internal.mpiext import mpiext_get_rank
+from pyccel.stdlib.internal.mpiext import mpiext_get_size
+
 #===================================================================================
 
 #$ header class MPI_(public)
@@ -98,7 +99,6 @@ MPI = MPI_()
 
 #====================================================================================
 
-ierr = -1
 #$ header macro x.COMM_WORLD := mpi_comm_world
 #$ header macro x.SUM        := MPI_SUM
 #$ header macro x.PROD       := MPI_PROD
@@ -110,16 +110,23 @@ ierr = -1
 #$ header macro x.LOR        := MPI_LOR
 #$ header macro x.LXOR       := MPI_LXOR
 #$ header macro x.INT        := MPI_INTEGER
-#$ header macro x.DOUBLE     := MPI_DOUBLE
+#$ header macro x.DOUBLE     := MPI_REAL8
 
+#====================================================================================
 
-#$ header macro (x), y.Get_rank() := mpi_comm_rank(y,x,ierr)
-#$ header macro (x), y.Get_size() := mpi_comm_size(y,x,ierr)
+#$ header macro y.Get_rank() := mpiext_get_rank(y)
+#$ header macro y.Get_size() := mpiext_get_size(y)
 
+#$ header macro y.rank := mpiext_get_rank(y)
+#$ header macro y.size := mpiext_get_size(y)
+
+#====================================================================================
 
 #......................
 #lower-case letter functions
 #......................
+
+ierr = -1
 
 #$ header macro  y.send(data, dest, tag=0)  := mpi_send(data, data.count, data.dtype, dest ,tag, y, ierr)
 #$ header macro  y.ssend(data, dest, tag=0) := mpi_ssend(data, data.count, data.dtype, dest ,tag, y, ierr)
@@ -178,3 +185,4 @@ ierr = -1
 
 #$ header macro  x.Waitall(req) := mpi_waitall(req.count, req, MPI_STATUSES_IGNORE, ierr)
 
+#$ header macro  y.Barrier() := mpi_barrier(y, ierr)

@@ -396,7 +396,7 @@ class FCodePrinter(CodePrinter):
         if source in pyccel_builtin_import_registery:
             return ''
         if 'mpi4py' == str(expr.target[0]):
-            return 'use mpi'
+            return '\n'.join(['use mpi', 'use mpiext'])
 
         code = ''
         for i in expr.target:

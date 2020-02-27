@@ -250,7 +250,6 @@ class SemanticParser(BasicParser):
             target = set(target)
             target_headers = target.intersection(self.namespace.headers.keys())
 
-
             for name in list(target_headers):
                 v = self.namespace.headers[name]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
@@ -1258,47 +1257,26 @@ class SemanticParser(BasicParser):
             attr_name = [i.name for i in first.cls_base.attributes]
         name = None
 
-        if isinstance(expr.rhs, Symbol) and not expr.rhs.name \
-            in attr_name:
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
-            for i in methods:
-                if str(i.name) == expr.rhs.name and 'property' \
-                    in i.decorators.keys():
-                    if isinstance(i, Interface):
-                        raise NotImplementedError('TODO')
-                    d_var = self._infere_type(i.results[0], **settings)
-                    dtype = d_var['datatype']
-                    assumptions = {str_dtype(dtype): True}
-                    second = Function(expr.rhs.name, **assumptions)(Nil())
-
-                    return DottedVariable(first, second)
-            raise ValueError('attribute {} not found'.format(expr.rhs.name))
-
-        if not isinstance(expr.rhs, Application):
-            macro = self.get_macro(rhs_name)
-            if macro:
-                return macro.master
-
-            self._current_class = first.cls_base
-            second = self._visit(expr.rhs, **settings)
-            self._current_class = None
-            return DottedVariable(first, second)
-        else:
+        # look for a class method
+        if isinstance(expr.rhs, Application):
 
             macro = self.get_macro(rhs_name)
-            if not macro is None:
+            if macro is not None:
                 master = macro.master
                 name = macro.name
-                master_args = macro.master_arguments
                 args = expr.rhs.args
                 args = [expr.lhs] + list(args)
                 args = [self._visit(i, **settings) for i in args]
                 args = macro.apply(args)
                 if isinstance(master, FunctionDef):
-                    return Subroutine(str(master.name))(*args)
+                    if master.results:
+                        return Function(str(master.name))(*args)
+                    else:
+                        return Subroutine(str(master.name))(*args)
                 else:
                     msg = 'TODO case of interface'
                     raise NotImplementedError(msg)
+
             args = [self._visit(arg, **settings) for arg in
                     expr.rhs.args]
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
@@ -1323,12 +1301,47 @@ class SemanticParser(BasicParser):
                         msg = 'TODO case multiple return variables'
                         raise NotImplementedError(msg)
 
-
                     return DottedVariable(first, second)
 
-            raise ValueError('attribute {} not found'.format(rhs_name))
+        # look for a class attribute
+        else:
 
-        return DottedVariable(first, second)
+            macro = self.get_macro(rhs_name)
+
+            # Macro
+            if isinstance(macro, MacroVariable):
+                return macro.master
+            elif isinstance(macro, MacroFunction):
+                args = macro.apply([first])
+                return Function(str(macro.master.name))(*args)
+
+            # Attribute / property
+            if isinstance(expr.rhs, Symbol) and first.cls_base:
+
+                # standard class attribute
+                if expr.rhs.name in attr_name:
+                    self._current_class = first.cls_base
+                    second = self._visit(expr.rhs, **settings)
+                    self._current_class = None
+                    return DottedVariable(first, second)
+
+                # class property?
+                else:
+                    methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+                    for i in methods:
+                        if str(i.name) == expr.rhs.name and 'property' \
+                            in i.decorators.keys():
+                            if isinstance(i, Interface):
+                                raise NotImplementedError('TODO')
+                            d_var = self._infere_type(i.results[0], **settings)
+                            dtype = d_var['datatype']
+                            assumptions = {str_dtype(dtype): True}
+                            second = Function(expr.rhs.name, **assumptions)(Nil())
+                            return DottedVariable(first, second)
+
+        # did something go wrong?
+        raise ValueError('attribute {} not found'.format(rhs_name))
+
 
     def _visit_Add(self, expr, **settings):
 
@@ -1527,7 +1540,7 @@ class SemanticParser(BasicParser):
             # an appropriate FunctionCall
 
             macro = self.get_macro(name)
-            if not macro is None:
+            if macro is not None:
                 args = [self._visit(i, **settings) for i in args]
                 func = macro.master
                 name = _get_name(func.name)
@@ -1536,6 +1549,7 @@ class SemanticParser(BasicParser):
                 func = self.get_function(name)
 
             if func is None:
+                # TODO [SH, 25.02.2020] Report error
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                 bounding_box=self._current_fst_node.absolute_bounding_box,
                 severity='error', blocker=self.blocking)
@@ -1706,6 +1720,7 @@ class SemanticParser(BasicParser):
                             rhs.args]
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
+                    # TODO: fixme for Function
                     return Subroutine(name)(*args)
                 else:
                     msg = 'TODO treate interface case'
@@ -1723,8 +1738,17 @@ class SemanticParser(BasicParser):
                     rhs = master
                     annotated_rhs = True
                 else:
+
+                    # If macro is function, create left-hand side variable
+                    if isinstance(master, FunctionDef) and master.results:
+                        d_var = self._infere_type(master.results[0], **settings)
+                        dtype = d_var.pop('datatype')
+                        lhs = Variable(dtype, lhs.name, **d_var)
+                        var = self.get_variable_from_scope(lhs.name)
+                        if var is None:
+                            self.insert_variable(lhs)
+
                     name = macro.name
-                    master_args = macro.master_arguments
                     if not sympy_iterable(lhs):
                         lhs = [lhs]
                     results = []
@@ -1748,7 +1772,12 @@ class SemanticParser(BasicParser):
                     # TODO treate interface case
 
                     if isinstance(master, FunctionDef):
-                        return Subroutine(str(master.name))(*args)
+                        # Distinguish between function and subroutine
+                        if master.results:
+                            rhs = Function(str(master.name))(*args)
+                            return Assign(lhs[0], rhs)
+                        else:
+                            return Subroutine(str(master.name))(*args)
                     else:
                         raise NotImplementedError('TODO')
         else:
@@ -2370,7 +2399,7 @@ class SemanticParser(BasicParser):
         #      move it to the ast like create_definition for FunctionHeader?
 
         name  = expr.name
-        d_var = expr.dtypes
+        d_var = expr.dtypes.copy()
         dtype = d_var.pop('datatype')
 
         var = Variable(dtype, name, **d_var)
@@ -2946,7 +2975,6 @@ class SemanticParser(BasicParser):
 
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)
-
 
                 # ... meta variables
 
