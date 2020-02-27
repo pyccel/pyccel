@@ -1,8 +1,5 @@
 from mpi4py import MPI
 
-size_ = -1
-rank_in_world = -1
-
 comm = MPI.COMM_WORLD
 rank_in_world = comm.Get_rank()
 
@@ -26,8 +23,6 @@ if rank_in_world == 2:
 two   = 2
 color = rank_in_world % two
 
-newcomm = -1
-
 newcomm = comm.Split(color, key)
 
 # Broadcast of the message by the rank process master of
@@ -38,5 +33,3 @@ print("> processor ", rank_in_world, " has a = ", a)
 
 # Destruction of the communicators
 newcomm.Free()
-
-
