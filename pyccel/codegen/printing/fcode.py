@@ -933,14 +933,19 @@ class FCodePrinter(CodePrinter):
 
         allocatablestr = allocatablestr + optionalstr
 
-        if intent:
+        if intent and rank>0:
             decs.append('{0}, intent({1}) {2} :: {3} {4}'.
                         format(dtype, intent, allocatablestr, vstr, rankstr))
+        elif intent and  intent == 'in' and rank == 0:
+            decs.append('{0}, value :: {2}'.
+                        format(dtype, intent, vstr, rankstr))
+        elif intent:
+            decs.append('{0}, intent({1}) :: {2} {3}'.
+                        format(dtype, intent, vstr, rankstr))
         else:
             args = [dtype, allocatablestr, vstr, rankstr, code_value]
             decs.append('{0}{1} :: {2} {3} {4}'.
                         format(*args))
-
         return '\n'.join(decs)
 
     def _print_AliasAssign(self, expr):
@@ -1298,6 +1303,7 @@ class FCodePrinter(CodePrinter):
         # ...
         body = expr.body
         func_end  = ''
+        rec = 'recursive ' if expr.is_recursive else ''
         if not is_procedure:
             result = expr.results[0]
             # TODO uncomment and validate this
@@ -1310,7 +1316,6 @@ class FCodePrinter(CodePrinter):
             ret_type += '(kind={0})'.format(str(result.precision))
 
             func_type = 'function'
-            rec = 'recursive ' if expr.is_recursive else ''
             sig = '{0}function {1}'.format(rec, name)
             func_end = 'result({0})'.format(result.name)
 
@@ -1334,7 +1339,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='out', static=is_static)
                 args_decs[str(result)] = dec
 
-            sig = 'subroutine ' + name
+            sig = '{0}subroutine {1}'.format(rec, name)
             func_type = 'subroutine'
 
             names = [str(res.name) for res in expr.results]
@@ -2179,7 +2184,11 @@ class FCodePrinter(CodePrinter):
         args = expr.arguments
         results = func.results
         if func.is_procedure:
-            newargs = list(args) + list(results)
+            newargs = list(args)
+            for a in results:
+                if a not in args:
+                    newargs.append(a)
+
             newargs = ','.join(self._print(i) for i in newargs)
             code = 'call {name}({args})'.format( name = str(func.name),
                                                  args = newargs )

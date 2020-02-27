@@ -2473,8 +2473,7 @@ class SemanticParser(BasicParser):
                     args.append(a_new)
                     self.insert_variable(a_new, name=str(a_new.name))
 
-            if len(interfaces) == 1 and len(interfaces[0].results) == 1:
-
+            if len(interfaces) == 1:
                 # case of recursive function
                 # TODO improve
 
@@ -2542,16 +2541,11 @@ class SemanticParser(BasicParser):
             imports   = list(set(imports))
             
             func_   = self.namespace.functions.pop(name, None)
-            
             if not func_ is None and func_.is_recursive:
                 is_recursive = True
                 
             sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
-            
-            
-            
-            
-                
+
             self.exit_function_scope()
             # ... computing inout arguments
             args_inout = []
@@ -2673,7 +2667,6 @@ class SemanticParser(BasicParser):
 
            funcs = Interface(name, funcs)
            self.insert_function(funcs)
-
         return EmptyLine()
 
     def _visit_Print(self, expr, **settings):

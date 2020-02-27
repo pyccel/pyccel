@@ -36,8 +36,8 @@ def as_static_function(func, name=None):
 
     assert(isinstance(func, FunctionDef))
 
-    args    = func.arguments
-    results = func.results
+    args    = list(func.arguments)
+    results = list(func.results)
     body    = func.body
     arguments_inout = func.arguments_inout
     functions = func.functions
@@ -45,11 +45,11 @@ def as_static_function(func, name=None):
     if results:
         if len(results) == 1:
             result = results[0]
-            if result.rank > 0:
+            if result.rank > 0 and not result in args:
                 # updates args
-                args = list(args) + [result]
+                args = args + [result]
                 arguments_inout += [False]
-            else:
+            elif result.rank == 0:
                 _results = results
         else:
             raise NotImplementedError('when len(results) > 1')
@@ -58,7 +58,7 @@ def as_static_function(func, name=None):
         name = 'f2py_{}'.format(func.name).lower()
 
     # ...
-    results_names = [i.name for i in results]
+    results_names = [i.name for i in _results]
     _args = []
     _arguments_inout = []
 
@@ -104,7 +104,6 @@ def as_static_function(func, name=None):
 
         intent = arguments_inout[i_a]
         _arguments_inout += [intent]
-
     args = _args
     results = _results
     arguments_inout = _arguments_inout
@@ -157,7 +156,6 @@ def as_static_function_call(func, mod_name, name=None):
 
     # function arguments
     args = sanitize_arguments(func.arguments)
-
     # function body
     call = FunctionCall(func_alias, args)
     stmt = call if func.is_procedure else Assign(func.results[0], call)
