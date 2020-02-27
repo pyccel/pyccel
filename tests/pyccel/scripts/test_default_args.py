@@ -1,8 +1,6 @@
 # coding: utf-8
 import numpy as np
 
-from pyccel.decorators import types
-
 from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity
 
 print(f1(2))

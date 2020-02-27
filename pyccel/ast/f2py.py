@@ -134,7 +134,7 @@ def as_static_function(func, name=None):
             # Update f2py directives
             f2py_instructions += [*transpose_stmts, c_intent_stmt]
         elif isinstance(a,ValuedVariable):
-            f2py_instructions += [Comment('f2py {type} :: {name} = {default_value}'.format(type = str_dtype(a.dtype), 
+            f2py_instructions += [Comment('f2py {type} :: {name} = {default_value}'.format(type = str_dtype(a.dtype),
                 name = a.name, default_value = a.value))]
 
     if f2py_instructions:
