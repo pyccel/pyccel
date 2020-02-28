@@ -153,8 +153,7 @@ class NumpySum(Application):
     """
 
     def __new__(cls, arg):
-
-        if not isinstance(arg, (list, tuple, Tuple, List, Variable)):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         obj = Basic.__new__(cls, arg)
@@ -187,6 +186,93 @@ class NumpySum(Application):
             lhs_code = printer(lhs)
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
+
+#=======================================================================================
+
+class Product(Function):
+    """Represents a call to  numpy.prod for code generation.
+
+    arg : list , tuple , Tuple, List, Variable
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+        return Basic.__new__(cls, arg)
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return self._args[0].dtype
+
+    @property
+    def rank(self):
+        return 0
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+
+        rhs_code = printer(self.arg)
+        if lhs:
+            lhs_code = printer(lhs)
+            return '{0} = product({1})'.format(lhs_code, rhs_code)
+        return 'product({0})'.format(rhs_code)
+
+#=======================================================================================
+
+class Matmul(Application):
+    """Represents a call to numpy.matmul for code generation.
+    arg : list , tuple , Tuple, List, Variable
+    """
+
+    def __new__(cls, a, b):
+        if not isinstance(a, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(a))
+        if not isinstance(b, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+            raise TypeError('Uknown type of  %s.' % type(a))
+        return Basic.__new__(cls, a, b)
+
+    @property
+    def a(self):
+        return self._args[0]
+
+    @property
+    def b(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return self._args[0].dtype
+
+    @property
+    def rank(self):
+        return 1 # TODO: make this general
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+        a_code = printer(self.a)
+        b_code = printer(self.b)
+
+        if lhs:
+            lhs_code = printer(lhs)
+
+        if self.a.order and self.b.order:
+            if self.a.order != self.b.order:
+                raise NotImplementedError("Mixed order matmul not supported.")
+
+        # Fortran ordering
+        if self.a.order == 'F':
+            if lhs:
+                return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
+            return 'matmul({0},{1})'.format(a_code, b_code)
+
+        # C ordering
+        if lhs:
+            return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
+        return 'matmul({1},{0})'.format(a_code, b_code)
 
 #=======================================================================================
 
@@ -271,13 +357,13 @@ class Shape(Array):
         if lhs:
             alloc = 'allocate({}(0:{}))'.format(lhs_code, self.arg.rank-1)
             if self.index is None:
-      
+
                 code_init = '{0} = (/ {1} /)'.format(lhs_code, init_value)
 
             else:
                 index = printer(self.index)
                 code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-            
+
             code_init = alloc+ '\n'+ code_init
         else:
             if self.index is None:
@@ -565,7 +651,7 @@ class Linspace(Application):
         return 1
 
     def _eval_is_real(self):
-        return True 
+        return True
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -585,8 +671,8 @@ class Linspace(Application):
         index = printer(self.index)
 
         init_value = init_value.format(start, index, step, stop)
-        
-        
+
+
 
         if lhs:
             lhs    = printer(lhs)
@@ -610,11 +696,11 @@ class Diag(Application):
 
 
     def __new__(cls, array, v=0, k=0):
-       
+
 
         _valid_args = (Variable, IndexedElement, Tuple)
 
-        
+
         if not isinstance(array, _valid_args):
            raise TypeError('Expecting valid args')
 
@@ -640,7 +726,7 @@ class Diag(Application):
     def index(self):
         return self._args[3]
 
-  
+
     @property
     def dtype(self):
         return 'real'
@@ -669,7 +755,7 @@ class Diag(Application):
         array = printer(self.array)
         rank  = self.array.rank
         index = printer(self.index)
-           
+
         if rank == 2:
             lhs   = IndexedBase(lhs)[self.index]
             rhs   = IndexedBase(self.array)[self.index,self.index]
@@ -678,14 +764,14 @@ class Diag(Application):
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
         elif rank == 1:
-            
+
             lhs   = IndexedBase(lhs)[self.index, self.index]
             rhs   = IndexedBase(self.array)[self.index]
             body  = [Assign(lhs, rhs)]
             body  = For(self.index, Range(Len(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
-       
+
         return alloc + '\n' + code
 
 #=======================================================================================
@@ -700,11 +786,11 @@ class Cross(Application):
     # to be more general
 
     def __new__(cls, a, b):
-       
+
 
         _valid_args = (Variable, IndexedElement, Tuple)
 
-        
+
         if not isinstance(a, _valid_args):
            raise TypeError('Expecting valid args')
 
@@ -721,7 +807,7 @@ class Cross(Application):
     def second(self):
         return self._args[1]
 
-   
+
     @property
     def dtype(self):
         return self.first.dtype
@@ -747,12 +833,12 @@ class Cross(Application):
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
-       
+
         a     = IndexedBase(self.first)
         b     = IndexedBase(self.second)
         slc   = Slice(None, None)
         rank  = self.rank
-        
+
         if rank > 2:
             raise NotImplementedError('TODO')
 
@@ -770,11 +856,11 @@ class Cross(Application):
             a = [a[tuple(inds)] for inds in a_inds]
             b = [b[tuple(inds)] for inds in b_inds]
 
-    
+
         cross_product = [a[1]*b[2]-a[2]*b[1],
                          a[2]*b[0]-a[0]*b[2],
                          a[0]*b[1]-a[1]*b[0]]
-            
+
         cross_product = Tuple(*cross_product)
         cross_product = printer(cross_product)
         first = printer(self.first)
@@ -789,7 +875,7 @@ class Cross(Application):
             elif rank == 1:
                 alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
 
-         
+
 
         if rank == 2:
 
@@ -802,7 +888,7 @@ class Cross(Application):
 
         elif rank == 1:
             code = cross_product
-    
+
         if lhs is not None:
             code = '{} = {}'.format(lhs, code)
 
@@ -813,7 +899,7 @@ class Cross(Application):
 
 class Where(Application):
     """ Represents a call to  numpy.where """
-   
+
     def __new__(cls, mask):
         return Basic.__new__(cls, mask)
 
@@ -825,7 +911,7 @@ class Where(Application):
     @property
     def index(self):
         ind = Variable('int','ind1')
-        
+
         return ind
 
     @property
@@ -843,10 +929,10 @@ class Where(Application):
     @property
     def order(self):
         return 'F'
-     
+
 
     def fprint(self, printer, lhs):
-        
+
         ind   = printer(self.index)
         mask  = printer(self.mask)
         lhs   = printer(lhs)
@@ -856,7 +942,7 @@ class Where(Application):
         alloc = 'allocate({}(0:count({})-1,0:0))'.format(lhs, mask)
 
         return alloc +'\n' + stmt
-        
+
 
 #=======================================================================================
 
@@ -1212,7 +1298,7 @@ class FullLike(EmptyLike):
     @property
     def rhs(self):
         return self._args[1]
-        
+
     @property
     def init_value(self):
         return self.rhs
@@ -1289,7 +1375,7 @@ class Norm(Application):
     @property
     def arg(self):
         return self._args[0]
- 
+
     @property
     def dim(self):
         return self._args[1]
@@ -1312,17 +1398,17 @@ class Norm(Application):
         if self.dim is not None:
             return self.arg.rank-1
         return 0
-        
+
 
 
     def fprint(self, printer):
         """Fortran print."""
- 
+
         if self.dim:
             rhs = 'Norm2({},{})'.format(printer(self.arg),printer(self.dim))
         else:
             rhs = 'Norm2({})'.format(printer(self.arg))
-            
+
         return rhs
 
 #=======================================================================================
@@ -1337,7 +1423,7 @@ class Sqrt(Pow):
 class Mod(Application):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
-        
+
         assumptions={'integer':True}
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)

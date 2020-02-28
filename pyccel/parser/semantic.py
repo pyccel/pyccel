@@ -877,11 +877,36 @@ class SemanticParser(BasicParser):
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
 
-            elif name in ['NumpySum', 'Rand', 'Min', 'Max']:
+            elif name in ['NumpySum', 'Product', 'Rand', 'Min', 'Max']:
                 d_var['datatype'   ] = sp_dtype(expr.args[0])
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
+
+            elif name in ['Matmul']:
+
+                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
+
+                var0_is_vector = d_vars[0]['rank'] < 2
+                var1_is_vector = d_vars[1]['rank'] < 2
+
+                if(d_vars[0]['shape'] is None or d_vars[1]['shape'] is None):
+                    d_var['shape'] = None
+                else:
+
+                    m = 1 if var0_is_vector else d_vars[0]['shape'][0]
+                    n = 1 if var1_is_vector else d_vars[1]['shape'][1]
+                    d_var['shape'] = [m, n]
+
+                d_var['datatype'   ] = d_vars[0]['datatype']
+                if var0_is_vector or var1_is_vector:
+                    d_var['rank'   ] = 1
+                else:
+                    d_var['rank'   ] = 2
+                d_var['allocatable'] = False
+                d_var['is_pointer' ] = False
+                d_var['precision'  ] = max(d_vars[0]['precision'],
+                                           d_vars[1]['precision'])
 
             elif name in ['Int','Int32','Int64','Real','Imag',
                           'Float32','Float64','Complex',
@@ -2007,7 +2032,6 @@ class SemanticParser(BasicParser):
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
                     severity='error', blocker=False)
-
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.

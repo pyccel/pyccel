@@ -99,6 +99,21 @@ def test_zip_prod():
 
     assert np.array_equal( f1(10), f2(10) )
 
+def test_loop_on_real_array():
+
+    f1 = loops.product_loop_on_real_array
+    f2 = epyccel( f1 )
+
+    z1 = np.ones(11)
+    out1 = np.empty_like(z1)
+    z2 = z1.copy()
+    out2 = out1.copy()
+
+    f1(z1, out1)
+    f2(z2, out2)
+
+    assert np.array_equal( out1, out2 )
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
