@@ -5,10 +5,13 @@ from sympy import Tuple
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Variable
+from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import Comment
+
+from pyccel.ast.datatypes import str_dtype
 
 #=======================================================================================
 def sanitize_arguments(args):
@@ -72,7 +75,7 @@ def as_static_function(func, name=None):
             additional_args = []
             for i in range(rank):
                 n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
-                n_arg  = Variable('int', n_name)
+                n_arg  = Variable('int', n_name, precision=4)
 
                 additional_args += [n_arg]
 
@@ -130,6 +133,9 @@ def as_static_function(func, name=None):
 
             # Update f2py directives
             f2py_instructions += [*transpose_stmts, c_intent_stmt]
+        elif isinstance(a,ValuedVariable):
+            f2py_instructions += [Comment('f2py {type} :: {name} = {default_value}'.format(type = str_dtype(a.dtype),
+                name = a.name, default_value = a.value))]
 
     if f2py_instructions:
         body = f2py_instructions + body

@@ -45,7 +45,7 @@ from .basic import Basic
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric)
+                        NativeGeneric, default_precision)
 
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -1850,6 +1850,30 @@ class Is(Basic):
         return self._args[1]
 
 
+class IsNot(Basic):
+
+    """Represents a is expression in the code.
+
+    Examples
+
+    >>> from pyccel.ast import IsNot
+    >>> from pyccel.ast import Nil
+    >>> from sympy.abc import x
+    >>> IsNot(x, Nil())
+    IsNot(x, None)
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
 
 
 class ConstructorCall(AtomicExpr):
@@ -2067,9 +2091,13 @@ class Variable(Symbol):
 
         if not precision:
             if isinstance(dtype, NativeInteger):
-                precision = 4
-            elif isinstance(dtype, (NativeReal, NativeComplex)):
-                precision = 8
+                precision = default_precision['int']
+            elif isinstance(dtype, NativeReal):
+                precision = default_precision['real']
+            elif isinstance(dtype, NativeComplex):
+                precision = default_precision['complex']
+            elif isinstance(dtype, NativeBool):
+                precision = default_precision['bool']
 
         # TODO improve order of arguments
 
@@ -2209,24 +2237,27 @@ class Variable(Symbol):
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
 
-    def clone(self, name):
+    def clone(self, name, new_class = None, **kwargs):
 
         # TODO check it is up to date
 
-        cls = eval(self.__class__.__name__)
+        if (new_class is None):
+            cls = eval(self.__class__.__name__)
+        else:
+            cls = new_class
 
         return cls(
             self.dtype,
             name,
-            rank=self.rank,
-            allocatable=self.allocatable,
-            shape=self.shape,
-            is_pointer=self.is_pointer,
-            is_target=self.is_target,
-            is_polymorphic=self.is_polymorphic,
-            is_optional=self.is_optional,
-            cls_base=self.cls_base,
-            cls_parameters=self.cls_parameters,
+            rank=kwargs.pop('rank',self.rank),
+            allocatable=kwargs.pop('allocatable',self.allocatable),
+            shape=kwargs.pop('shape',self.shape),
+            is_pointer=kwargs.pop('is_pointer',self.is_pointer),
+            is_target=kwargs.pop('is_target',self.is_target),
+            is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
+            is_optional=kwargs.pop('is_optional',self.is_optional),
+            cls_base=kwargs.pop('cls_base',self.cls_base),
+            cls_parameters=kwargs.pop('cls_parameters',self.cls_parameters),
             )
 
     def __getnewargs__(self):
@@ -4484,8 +4515,8 @@ class If(Basic):
         newargs = []
         for ce in args:
             cond = ce[0]
-            if not isinstance(cond, (bool, Relational, Boolean, Is)):
-                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, or a built-in bool.'
+            if not isinstance(cond, (bool, Relational, Boolean, Is, IsNot)):
+                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
                                  % (cond, type(cond)))
             if not isinstance(ce[1], (list, Tuple, tuple)):
                 raise TypeError('body is not iterable')

@@ -31,7 +31,7 @@ from sympy.logic.boolalg import And, Not, Or, true, false
 
 from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
-from pyccel.ast.numpyext import Sum, Rand, Complex
+from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import ZerosLike, FullLike
 
 
@@ -58,7 +58,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Len, FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If, Nil, Is)
+                             Print, If, Nil, Is, IsNot)
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
@@ -155,10 +155,10 @@ class FCodePrinter(CodePrinter):
         self._current_function = None
 
         self.prefix_module = prefix_module
-    
-    
+
+
     def set_current_function(self, name):
-        
+
         if name:
             self._namespace = self._namespace.sons_scopes[name]
             if self._current_function:
@@ -175,7 +175,7 @@ class FCodePrinter(CodePrinter):
                 else:
                     name = name[0]
         self._current_function = name
-        
+
     def get_function(self, name):
         container = self._namespace
         while container:
@@ -183,7 +183,7 @@ class FCodePrinter(CodePrinter):
                 return container.functions[name]
             container = container.parent_scope
         raise ValueError('function {} not found'.format(name))
-        
+
 
     def _get_statement(self, codestring):
         return codestring
@@ -382,7 +382,7 @@ class FCodePrinter(CodePrinter):
         source = ''
         if str(expr.source) in pyccel_builtin_import_registery:
             return ''
-            
+
         if expr.source is None:
             prefix = 'use'
         else:
@@ -396,7 +396,7 @@ class FCodePrinter(CodePrinter):
         if source in pyccel_builtin_import_registery:
             return ''
         if 'mpi4py' == str(expr.target[0]):
-            return 'use mpi'
+            return '\n'.join(['use mpi', 'use mpiext'])
 
         code = ''
         for i in expr.target:
@@ -525,9 +525,9 @@ class FCodePrinter(CodePrinter):
                 txt  = txt[72:]
             if txt:
                 txts.append(txt)
-            
+
             txt = '&\n!${} &'.format(accel).join(txt for txt in txts)
-            
+
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
@@ -620,7 +620,7 @@ class FCodePrinter(CodePrinter):
     def _print_Len(self, expr):
         return 'size(%s,1)'%(self._print(expr.arg))
 
-    def _print_Sum(self, expr):
+    def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
 
     def _print_Product(self, expr):
@@ -651,6 +651,9 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Real(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Complex(self, expr):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
@@ -741,7 +744,9 @@ class FCodePrinter(CodePrinter):
 
         if dtype == 'integer':
             if prec==4:
-                return 'MPI_INT'
+                return 'MPI_INTEGER'
+            elif prec==8:
+                return 'MPI_INTEGER8'
             else:
                 raise NotImplementedError('TODO')
 
@@ -896,17 +901,17 @@ class FCodePrinter(CodePrinter):
 
         if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            rankstr =  '({0}:{1})'.format(self._print(s), self._print(shape-1))
+            rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
 
         elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
-            
-            rankstr =  ','.join('{0}:{1}'.format(self._print(s),
-                                                 self._print(i-1)) for i in shape)
+
+            rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                 self._print(i)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
-            
+
             enable_alloc = False
 
         elif (rank > 0) and allocatable and intent:
@@ -992,10 +997,10 @@ class FCodePrinter(CodePrinter):
 
         stmt = Comment(str(expr))
         return self._print_Comment(stmt)
-        
-    
+
+
     def _print_Assign(self, expr):
-    
+
         lhs_code = self._print(expr.lhs)
         is_procedure = False
         rhs = expr.rhs
@@ -1005,7 +1010,7 @@ class FCodePrinter(CodePrinter):
             errors.report(FOUND_IS_IN_ASSIGN, symbol=expr.lhs,
                           severity='warning')
             return self._print_Comment(Comment(str(expr)))
-            
+
         if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}'.format(lhs_code, rhs_code)
@@ -1039,7 +1044,7 @@ class FCodePrinter(CodePrinter):
                     if lhs_name == i.name:
                         if i.is_stack_array:
                             return '{} = {}'.format(lhs_name, rhs.init_value)
-                            
+
             return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, Mod):
@@ -1179,12 +1184,6 @@ class FCodePrinter(CodePrinter):
     def _print_NativeComplex(self, expr):
         return 'complex'
 
-    def _print_BooleanTrue(self, expr):
-        return '.true.'
-
-    def _print_BooleanFalse(self, expr):
-        return '.false.'
-
     def _print_NativeString(self, expr):
         return 'character(len=280)'
         #TODO fix improve later
@@ -1193,9 +1192,23 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_Equality(self, expr):
-        return '{0} == {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .eqv. {}'.format(lhs, rhs)
+        return '{0} == {1} '.format(lhs, rhs)
 
     def _print_Unequality(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .neqv. {}'.format(lhs, rhs)
         return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_BooleanTrue(self, expr):
@@ -1272,9 +1285,9 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        
+
         self.set_current_function(name)
-        
+
         is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
@@ -1311,7 +1324,7 @@ class FCodePrinter(CodePrinter):
 
             body = expr.body
             functions = expr.functions
-          
+
             ret_type = self._print(result.dtype)
             ret_type += '(kind={0})'.format(str(result.precision))
 
@@ -1320,12 +1333,8 @@ class FCodePrinter(CodePrinter):
             sig = '{0}function {1}'.format(rec, name)
             func_end = 'result({0})'.format(result.name)
 
-            var = Variable(result.dtype, result.name, \
-                         rank=result.rank, \
-                         allocatable=result.allocatable, \
-                         shape=result.shape)
-            dec = Declare(result.dtype, var)
-            args_decs[str(var)] = dec
+            dec = Declare(result.dtype, result)
+            args_decs[str(result)] = dec
 
         else:
             # TODO compute intent
@@ -1395,7 +1404,7 @@ class FCodePrinter(CodePrinter):
             body_code = body_code +'\ncontains \n' +functions_code
         body_code = prelude + '\n\n' + body_code
         imports = '\n'.join(self._print(i) for i in expr.imports)
-        
+
         self.set_current_function(None)
         func = ('{0}({1}) {2}\n'
                 '{3}\n'
@@ -2003,11 +2012,32 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_Is(self, expr):
-        if not isinstance(expr.rhs, Nil):
-            raise NotImplementedError('Only None rhs is allowed in Is statement')
-
         lhs = self._print(expr.lhs)
-        return 'present({})'.format(lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if isinstance(expr.rhs, Nil):
+            return '.not. present({})'.format(lhs)
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .eqv. {}'.format(lhs, rhs)
+
+        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
+
+    def _print_IsNot(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if isinstance(expr.rhs, Nil):
+            return 'present({})'.format(lhs)
+        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
+            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+            return '{} .neqv. {}'.format(lhs, rhs)
+
+        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
 
     def _print_If(self, expr):
         # ...
@@ -2098,7 +2128,7 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         name = type(expr).__name__
 
-        code_args = ', '.join(self._print(i) for i in args)
+        code_args = ', '.join(self._print(i) for i in args if not isinstance(i,Nil))
 
         code = '{0}({1})'.format(name, code_args)
         if isinstance(expr.func, Subroutine):
@@ -2132,10 +2162,7 @@ class FCodePrinter(CodePrinter):
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument
-                if expr.base.is_Number:
-                    return 'sqrt(%s.0d0)' % self._print(expr.base)
-                else:
-                    return 'sqrt(dble(%s))' % self._print(expr.base)
+                return 'sqrt(real(%s, kind(0d0)))' % self._print(expr.base)
             else:
                 return 'sqrt(%s)' % self._print(expr.base)
         else:
@@ -2147,6 +2174,12 @@ class FCodePrinter(CodePrinter):
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
+
+    # TODO [YG, 19.02.2020]: Use Fortran 'selected_int_kind' to get correct
+    #                        "kind type parameter value" (it is not always 8)
+    def _print_Integer(self, expr):
+        printed = CodePrinter._print_Integer(self, expr)
+        return "%s_8" % printed
 
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)
