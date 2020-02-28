@@ -1826,7 +1826,6 @@ class SemanticParser(BasicParser):
 
             else:
                 d_var = self._infere_type(rhs, **settings)
-
         elif isinstance(rhs, Map):
 
             name = str(rhs.args[0])
@@ -2405,26 +2404,26 @@ class SemanticParser(BasicParser):
             # this for the case of a function without arguments => no header
 
             interfaces = [FunctionDef(name, [], [], [])]
-
-        vec_func = None
-        if 'vectorize' in decorators:
-            #TODO move to another place
-            vec_name  = 'vec_' + name
-            arg       = decorators['vectorize'][0]
-            arg       = str(arg.name)
-            args      = [str(i.name) for i in expr.arguments]
-            index_arg = args.index(arg)
-            arg       = Symbol(arg)
-            vec_arg   = IndexedBase(arg)
-            index     = create_variable(expr.body)
-            range_    = Function('range')(Function('len')(arg))
-            args      = symbols(args)
-            args[index_arg] = vec_arg[index]
-            body_vec        = Assign(args[index_arg], Function(name)(*args))
-            body_vec.set_fst(expr.fst)
-            body_vec   = [For(index, range_, [body_vec], strict=False)]
-            header_vec = header.vectorize(index_arg)
-            vec_func   = expr.vectorize(body_vec, header_vec)
+#        TODO move this to codegen
+#        vec_func = None
+#        if 'vectorize' in decorators:
+#            #TODO move to another place
+#            vec_name  = 'vec_' + name
+#            arg       = decorators['vectorize'][0]
+#            arg       = str(arg.name)
+#            args      = [str(i.name) for i in expr.arguments]
+#            index_arg = args.index(arg)
+#            arg       = Symbol(arg)
+#            vec_arg   = IndexedBase(arg)
+#            index     = create_variable(expr.body)
+#            range_    = Function('range')(Function('len')(arg))
+#            args      = symbols(args)
+#            args[index_arg] = vec_arg[index]
+#            body_vec        = Assign(args[index_arg], Function(name)(*args))
+#            body_vec.set_fst(expr.fst)
+#            body_vec   = [For(index, range_, [body_vec], strict=False)]
+#            header_vec = header.vectorize(index_arg)
+#            vec_func   = expr.vectorize(body_vec, header_vec)
 
 
         for m in interfaces:
@@ -2476,7 +2475,6 @@ class SemanticParser(BasicParser):
             if len(interfaces) == 1:
                 # case of recursive function
                 # TODO improve
-
                 self.insert_function(interfaces[0])
 
             # we annotate the body
@@ -2654,19 +2652,18 @@ class SemanticParser(BasicParser):
 
             funcs = Interface(name, new_funcs)
             self.insert_function(funcs)
-
-        if vec_func:
-           self._visit_FunctionDef(vec_func, **settings)
-           vec_func = self.namespace.functions.pop(vec_name)
-           if isinstance(funcs, Interface):
-               funcs = list(funcs.funcs)+[vec_func]
-           else:
-               self.namespace.sons_scopes['sc_'+ name] = self.namespace.sons_scopes[name]
-               funcs = funcs.rename('sc_'+ name)
-               funcs = [funcs, vec_func]
-
-           funcs = Interface(name, funcs)
-           self.insert_function(funcs)
+#        TODO move this to codegen
+#        if vec_func:
+#           self._visit_FunctionDef(vec_func, **settings)
+#           vec_func = self.namespace.functions.pop(vec_name)
+#           if isinstance(funcs, Interface):
+#               funcs = list(funcs.funcs)+[vec_func]
+#           else:
+#               self.namespace.sons_scopes['sc_'+ name] = self.namespace.sons_scopes[name]
+#               funcs = funcs.rename('sc_'+ name)
+#               funcs = [funcs, vec_func]
+#           funcs = Interface(name, funcs)
+#           self.insert_function(funcs)
         return EmptyLine()
 
     def _visit_Print(self, expr, **settings):
