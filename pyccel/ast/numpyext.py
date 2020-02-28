@@ -189,7 +189,7 @@ class NumpySum(Application):
 
 #=======================================================================================
 
-class Product(Function):
+class Product(Application):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , Tuple, List, Variable
