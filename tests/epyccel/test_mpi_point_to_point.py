@@ -42,7 +42,7 @@ def test_np_sendrecv():
     recvbuf_py  = np.empty_like( sendbuf )
     recvbuf_f90 = np.empty_like( sendbuf )
 
-    # Python 
+    # Python
     pmod.np_sendrecv( sendbuf, dest, tag, recvbuf_py , source, tag )
 
     # Fortran

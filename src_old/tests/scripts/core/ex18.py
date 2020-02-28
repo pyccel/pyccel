@@ -8,7 +8,7 @@ side   = 0.1
 tol    = 1.0e-6
 n      = len(xStart)
 n = n+1
-k = n-1 
+k = n-1
 # Number of variables
 
 x = zeros(n, double)
@@ -35,7 +35,7 @@ for k in range(1,500):
     #
     if sqrt(dot(d,d)/n) < tol:
         n=n+1
-    
+
     xNew = x[iHi] + 2.0*d
     fNew = func(xNew)
     if fNew <= f[iLo]:

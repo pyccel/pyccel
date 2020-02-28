@@ -43,6 +43,7 @@ class NativeBool(DataType):
 
 class NativeInteger(DataType):
     _name = 'Int'
+    pass
 
 class NativeReal(DataType):
     _name = 'Real'
