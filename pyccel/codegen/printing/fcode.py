@@ -2200,6 +2200,9 @@ class FCodePrinter(CodePrinter):
         printed = CodePrinter._print_Integer(self, expr)
         return "%s_8" % printed
 
+    def _print_Zero(self, expr):
+        return "0_8"
+
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)
 
