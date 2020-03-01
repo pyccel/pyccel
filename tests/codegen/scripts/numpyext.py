@@ -50,7 +50,7 @@ print(sum(x17)==n*m*2)
 x18 = zeros((3, 3))
 x19 = diag(x18)
 x20 = diag(x18)
-x21 = cross(x19, x20)
+#x21 = cross(x19, x20)
 
 # TODO not working
 #from numpy.random import random

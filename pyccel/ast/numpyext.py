@@ -4,7 +4,7 @@
 # TODO remove sympify, Symbol
 
 import numpy
-from sympy.core.function import Function, Application
+from sympy.core.function import Application
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
@@ -23,7 +23,8 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from .core import (Variable, IndexedElement, IndexedVariable, Len,
                    For, ForAll, Range, Assign, AugAssign, List, String, Nil,
                    ValuedArgument, Constant, Pow, int2float)
-from .datatypes import dtype_and_precsision_registry as dtype_registry
+from .datatypes import dtype_and_precision_registry as dtype_registry
+from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
 from .datatypes import (NativeInteger, NativeReal, NativeComplex,
@@ -36,15 +37,17 @@ numpy_constants = {
                   }
 
 #=======================================================================================
-
-class Array(Function):
-
-    """Represents a call to  numpy.array for code generation.
+# TODO [YG, 18.02.2020]: accept Numpy array argument
+# TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
+class Array(Application):
+    """
+    Represents a call to  numpy.array for code generation.
 
     arg : list ,tuple ,Tuple, List
-    """
 
+    """
     def __new__(cls, arg, dtype=None, order='C'):
+
         if not isinstance(arg, (list, tuple, Tuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
@@ -61,7 +64,24 @@ class Array(Function):
         if not prec and dtype:
             prec = default_precision[dtype]
 
-        return Basic.__new__(cls, arg, dtype, order, prec)
+        # ... Determine ordering
+        if isinstance(order, ValuedArgument):
+            order = order.value
+        order = str(order).strip("\'")
+
+        if order not in ('K', 'A', 'C', 'F'):
+            raise ValueError("Cannot recognize '{:s}' order".format(order))
+
+        # TODO [YG, 18.02.2020]: set correct order based on input array
+        if order in ('K', 'A'):
+            order = 'C'
+        # ...
+
+        # Create instance, add attributes, and return it
+        obj = Basic.__new__(cls, arg, dtype, order, prec)
+        obj._shape = Tuple(*numpy.shape(arg))
+        obj._rank  = len(obj._shape)
+        return obj
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -85,23 +105,25 @@ class Array(Function):
 
     @property
     def shape(self):
-        return Tuple(*numpy.shape(self.arg))
+        return self._shape
 
     @property
     def rank(self):
-        return len(self.shape)
+        return self._rank
 
     def fprint(self, printer, lhs):
         """Fortran print."""
 
-        if isinstance(self.shape, (Tuple, tuple)):
+        # Always transpose indices because Numpy initial values are given with
+        # row-major ordering, while Fortran initial values are column-major
+        shape = self.shape[::-1]
 
+        if isinstance(shape, (Tuple, tuple)):
             # this is a correction. problem on LRZ
-
-            shape_code = ', '.join('0:' + printer(i - 1) for i in
-                                   self.shape)
+            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
         else:
-            shape_code = '0:' + printer(self.shape - 1)
+            shape_code = '0:' + printer(shape - 1)
+
         lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         arg = self.arg
@@ -109,17 +131,22 @@ class Array(Function):
             import functools
             import operator
             arg = functools.reduce(operator.concat, arg)
-            init_value = 'reshape(' + printer(arg) + ',' \
-                + printer(self.shape) + ')'
+            init_value = 'reshape(' + printer(arg) + ',' + printer(shape) + ')'
         else:
             init_value = printer(arg)
+
+        # If Numpy array is stored with column-major ordering, transpose values
+        if self.order == 'F' and self.rank > 1:
+            init_value = 'transpose({})'.format(init_value)
+
         code_init = '{0} = {1}'.format(lhs_code, init_value)
         code = '{0}\n{1}'.format(code_alloc, code_init)
+
         return code
 
 #=======================================================================================
 
-class Sum(Function):
+class NumpySum(Application):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -128,7 +155,16 @@ class Sum(Function):
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
+
+        obj = Basic.__new__(cls, arg)
+
+        dtype = str_dtype(sp_dtype(arg))
+        assumptions = {dtype: True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+
+        return obj
 
     @property
     def arg(self):
@@ -153,7 +189,7 @@ class Sum(Function):
 
 #=======================================================================================
 
-class Product(Function):
+class Product(Application):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -284,6 +320,10 @@ class Shape(Array):
         return 1
 
     @property
+    def precision(self):
+        return default_precision['int']
+
+    @property
     def order(self):
         return 'C'
 
@@ -337,7 +377,7 @@ class Shape(Array):
 
 #=======================================================================================
 
-class Int(Function):
+class Int(Application):
 
     """Represents a call to  numpy.int for code generation.
 
@@ -378,7 +418,7 @@ class Int(Function):
 
     @property
     def precision(self):
-        return 4
+        return default_precision['int']
 
 
     def fprint(self, printer):
@@ -392,7 +432,7 @@ class Int(Function):
 
 #=======================================================================================
 
-class Real(Function):
+class Real(Application):
 
     """Represents a call to  numpy.real for code generation.
 
@@ -431,7 +471,7 @@ class Real(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -475,7 +515,7 @@ class Imag(Real):
 
 #=======================================================================================
 
-class Complex(Function):
+class Complex(Application):
 
     """Represents a call to  numpy.complex for code generation.
 
@@ -519,7 +559,7 @@ class Complex(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['complex']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -541,7 +581,7 @@ class Complex(Function):
 
 #=======================================================================================
 
-class Linspace(Function):
+class Linspace(Application):
 
     """
     Represents numpy.linspace.
@@ -600,7 +640,7 @@ class Linspace(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     @property
     def shape(self):
@@ -645,7 +685,7 @@ class Linspace(Function):
 
 #=======================================================================================
 
-class Diag(Function):
+class Diag(Application):
 
     """
     Represents numpy.diag.
@@ -697,7 +737,7 @@ class Diag(Function):
 
     @property
     def precision(self):
-        return 8
+        return default_precision['real']
 
     @property
     def shape(self):
@@ -736,7 +776,7 @@ class Diag(Function):
 
 #=======================================================================================
 
-class Cross(Function):
+class Cross(Application):
 
     """
     Represents numpy.cross.
@@ -779,7 +819,7 @@ class Cross(Function):
 
     @property
     def precision(self):
-        return 8
+        return self.first.precision
 
 
     @property
@@ -857,7 +897,7 @@ class Cross(Function):
 
 #=======================================================================================
 
-class Where(Function):
+class Where(Application):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -930,7 +970,7 @@ class Rand(Real):
 
 #=======================================================================================
 
-class Zeros(Function):
+class Zeros(Application):
 
     """Represents a call to numpy.zeros for code generation.
 
@@ -978,8 +1018,6 @@ class Zeros(Function):
             shape = list(shape)
 
         if isinstance(shape, list):
-            if order == 'C':
-                shape.reverse()
 
             # this is a correction. otherwise it is not working on LRZ
             if isinstance(shape[0], list):
@@ -1045,15 +1083,14 @@ class Zeros(Function):
     def fprint(self, printer, lhs):
         """Fortran print."""
 
+        # Transpose indices because of Fortran column-major ordering
+        shape = self.shape if self.order == 'F' else self.shape[::-1]
+
         if isinstance(self.shape, (Tuple,tuple)):
-
             # this is a correction. problem on LRZ
-
-            shape_code = ', '.join('0:' + printer(i - 1) for i in
-                                   self.shape)
+            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
         else:
-
-            shape_code = '0:' + printer(self.shape - 1)
+            shape_code = '0:' + printer(shape - 1)
 
         init_value = printer(self.init_value)
 
@@ -1062,6 +1099,7 @@ class Zeros(Function):
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
         code_init = '{0} = {1}'.format(lhs_code, init_value)
         code = '{0}\n{1}'.format(code_alloc, code_init)
+
         return code
 
 #=======================================================================================
@@ -1091,9 +1129,9 @@ class Ones(Zeros):
 
 #=======================================================================================
 
-class ZerosLike(Function):
+class EmptyLike(Application):
 
-    """Represents variable assignment using numpy.zeros_like for code generation.
+    """Represents variable assignment using numpy.empty_like for code generation.
 
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
@@ -1107,10 +1145,10 @@ class ZerosLike(Function):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, ZerosLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = ZerosLike(y)
+    >>> from pyccel.ast.core import Zeros, EmptyLike
+    >>> n, m, x = symbols('n, m, x')
+    >>> y = Zeros(x, (n, m))
+    >>> z = EmptyLike(y)
     """
 
     # TODO improve in the spirit of assign
@@ -1147,6 +1185,19 @@ class ZerosLike(Function):
     @property
     def rhs(self):
         return self._args[1]
+
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        rhs_code = printer(self.rhs)
+        bounds_code = printer(Bounds(self.rhs))
+        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
+        return code
+
+#=======================================================================================
+
+class ZerosLike(EmptyLike):
 
     @property
     def init_value(self):
@@ -1189,43 +1240,9 @@ class ZerosLike(Function):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
-
-class EmptyLike(ZerosLike):
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-
-        return code
-
-
 #=======================================================================================
 
-class Bounds(Basic):
-
-    """
-    Represents bounds of NdArray.
-
-    Examples
-
-    """
-
-    def __new__(cls, var):
-        # TODO check type of var
-        return Basic.__new__(cls, var)
-
-    @property
-    def var(self):
-        return self._args[0]
-
-
-#=======================================================================================
-
-class FullLike(Function):
+class FullLike(EmptyLike):
 
     """Represents variable assignment using numpy.full_like for code generation.
 
@@ -1298,6 +1315,25 @@ class FullLike(Function):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
+#=======================================================================================
+
+class Bounds(Basic):
+
+    """
+    Represents bounds of NdArray.
+
+    Examples
+
+    """
+
+    def __new__(cls, var):
+        # TODO check type of var
+        return Basic.__new__(cls, var)
+
+    @property
+    def var(self):
+        return self._args[0]
+
 
 #=======================================================================================
 
@@ -1328,7 +1364,7 @@ class Empty(Zeros):
 
 #=======================================================================================
 
-class Norm(Function):
+class Norm(Application):
     """ Represents call to numpy.norm"""
 
     def __new__(cls, arg, dim=None):
@@ -1384,7 +1420,7 @@ class Sqrt(Pow):
 
 #=======================================================================================
 
-class Mod(Function):
+class Mod(Application):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
 
@@ -1394,7 +1430,7 @@ class Mod(Function):
         obj._assumptions._generator = ass_copy
         return obj
 
-class Asin(Function):
+class Asin(Application):
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1405,7 +1441,7 @@ class Asin(Function):
         return obj
 
 
-class Acos(Function):
+class Acos(Application):
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1415,7 +1451,7 @@ class Acos(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Asec(Function):
+class Asec(Application):
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1427,7 +1463,7 @@ class Asec(Function):
 
 #=======================================================================================
 
-class Atan(Function):
+class Atan(Application):
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1438,7 +1474,7 @@ class Atan(Function):
         return obj
 
 
-class Acot(Function):
+class Acot(Application):
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1449,7 +1485,7 @@ class Acot(Function):
         return obj
 
 
-class Acsc(Function):
+class Acsc(Application):
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1461,7 +1497,7 @@ class Acsc(Function):
 
 #=======================================================================================
 
-class Sinh(Function):
+class Sinh(Application):
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1471,7 +1507,7 @@ class Sinh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Cosh(Function):
+class Cosh(Application):
     def __new__(cls,arg):
         obj = cosh(arg)
         if arg.is_real:
@@ -1482,7 +1518,7 @@ class Cosh(Function):
         return obj
 
 
-class Tanh(Function):
+class Tanh(Application):
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1494,7 +1530,7 @@ class Tanh(Function):
 
 #=======================================================================================
 
-class Log(Function):
+class Log(Application):
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1506,7 +1542,7 @@ class Log(Function):
 
 #=======================================================================================
 
-class Abs(Function):
+class Abs(Application):
 
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
@@ -1516,14 +1552,14 @@ class Abs(Function):
 
 #=======================================================================================
 
-class Min(Function):
+class Min(Application):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
      def _eval_is_real(self):
         return True
 
-class Max(Function):
+class Max(Application):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
@@ -1536,31 +1572,37 @@ class Max(Function):
 class Complex64(Complex):
     @property
     def precision(self):
-        return 4
+        return dtype_registry['complex64'][1]
 
 class Complex128(Complex):
-    pass
+    @property
+    def precision(self):
+        return dtype_registry['complex128'][1]
 
 #=======================================================================================
 
 class Float32(Real):
     @property
     def precision(self):
-        return 4
+        return dtype_registry['float32'][1]
 
 class Float64(Real):
-    pass
+    @property
+    def precision(self):
+        return dtype_registry['float64'][1]
 
 
 #=======================================================================================
 
 class Int32(Int):
-    pass
+    @property
+    def precision(self):
+        return dtype_registry['int32'][1]
 
 class Int64(Int):
     @property
     def precision(self):
-        return 8
+        return dtype_registry['int64'][1]
 
 
 

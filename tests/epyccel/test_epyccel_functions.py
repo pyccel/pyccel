@@ -2,15 +2,15 @@
 
 import pytest
 import numpy as np
-import os
+import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
 
 def clean_test():
-    cmd = 'rm -rf __pycache__/*'
-    os.system(cmd)
+    shutil.rmtree('__pycache__', ignore_errors=True)
+    shutil.rmtree('__epyccel__', ignore_errors=True)
 
 #------------------------------------------------------------------------------
 def test_decorator_f1():
@@ -48,7 +48,9 @@ def test_decorator_f2():
 def test_decorator_f3():
     @types('int [:]')
     def f3(x):
-        y = x - 1
+        from numpy import empty_like
+        y = empty_like(x)
+        y[:] = x - 1
         return y
 
     from pyccel.ast import AstFunctionResultError
@@ -59,7 +61,9 @@ def test_decorator_f3():
 def test_decorator_f4():
     @types('real [:,:]')
     def f4(x):
-        y = x - 1.0
+        from numpy import empty_like
+        y = empty_like(x)
+        y[:] = x - 1.0
         return y
 
     from pyccel.ast import AstFunctionResultError

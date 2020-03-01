@@ -24,7 +24,7 @@ def compile_f2py( filename, *,
                   libs=(),
                   libdirs=(),
                   compiler=None,
-                  mpi=False,
+                  mpi_compiler=None,
                   accelerator=None,
                   includes = '',
                   only = (),
@@ -35,23 +35,25 @@ def compile_f2py( filename, *,
     compilers  = ''
     f90flags   = ''
 
+    #... Determine Fortran compiler vendor for F2PY
     if compiler == 'gfortran':
-        _compiler = 'gnu95'
+        _vendor = 'gnu95'
 
     elif compiler == 'ifort':
-        _compiler = 'intelem'
+        _vendor = 'intelem'
 
     elif compiler == 'pgfortran':
-       _compiler = 'pg'
+       _vendor = 'pg'
 
     else:
         raise NotImplementedError('Only gfortran ifort and pgi are available for the moment')
+    #...
 
-    if mpi:
-        compilers = '--f90exec=mpif90 '
+    if mpi_compiler:
+        compilers = '--f90exec={}'.format(mpi_compiler)
 
     if compiler:
-        compilers = compilers + '--fcompiler={}'.format(_compiler)
+        compilers = compilers + ' --fcompiler={}'.format(_vendor)
 
     f90flags = ''
     opt = "--opt='-O3'"
@@ -123,8 +125,8 @@ def compile_f2py( filename, *,
 def create_shared_library(codegen,
                           pyccel_dirpath,
                           compiler,
+                          mpi_compiler,
                           accelerator,
-                          mpi,
                           dep_mods,
                           extra_args='',
                           sharedlib_modname=None):
@@ -165,8 +167,8 @@ def create_shared_library(codegen,
                  includes    = object_files,  # TODO: this is not an include...
                  extra_args  = extra_args,
                  compiler    = compiler,
-                 accelerator = accelerator,
-                 mpi         = mpi)
+                 mpi_compiler= mpi_compiler,
+                 accelerator = accelerator)
 
     # Obtain absolute path of newly created shared library
     pattern = '{}*.so'.format(sharedlib_modname)

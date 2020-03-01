@@ -10,7 +10,7 @@ from .core import FunctionDef, Return, Assign
 from .core import Constant, Variable, IndexedVariable
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
-from .numpyext import Array, Shape, Int, Rand, Sum, Matmul, Real, Complex, Imag, Mod
+from .numpyext import Array, Shape, Int, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
@@ -75,7 +75,7 @@ numpy_functions = {
     'complex128': Complex128,
     'complex64' : Complex64,
     'matmul'    : Matmul,
-    'sum'       : Sum,
+    'sum'       : NumpySum,
     'prod'      : Prod,
     'product'   : Prod,
     'rand'      : Rand,
@@ -92,7 +92,7 @@ builtin_functions_dict = {
     'enumerate': Enumerate,
     'int'      : Int,
     'float'    : Real,
-    'sum'      : Sum,
+    'sum'      : NumpySum,
     'len'      : Len,
     'Mod'      : Mod,
     'abs'      : Abs,
@@ -125,21 +125,21 @@ def builtin_function(expr, args=None):
 
     if name in dic.keys() :
         return dic[name](*args)
-    elif name == 'array':
-        return Array(*args)
-    elif name in ['complex']:
+
+    if name in ['complex']:
         if len(args)==1:
             args = [args[0],Float(0)]
         return Complex(args[0],args[1])
-    elif name == 'Not':
+
+    if name == 'Not':
         return Not(*args)
 
-    elif name == 'map':
+    if name == 'map':
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
         return Map(*args)
 
-    elif name == 'lambdify':
+    if name == 'lambdify':
         return lambdify(expr, args)
 
     return None
