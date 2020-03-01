@@ -3,7 +3,7 @@
 from sympy import Tuple
 
 from pyccel.ast.core import FunctionCall
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, F2PYFunctionDef
 from pyccel.ast.core import Variable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
@@ -134,7 +134,7 @@ def as_static_function(func, name=None):
         body = f2py_instructions + body
     # ...
 
-    return FunctionDef( name, list(args), results, body,
+    return F2PYFunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout,

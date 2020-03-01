@@ -221,6 +221,7 @@ def test_in_specified():
     pyccel_test("scripts/test_degree_in.py")
 
 @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
+                                        "scripts/hope_benchmarks/quicksort.py",
                                         "scripts/hope_benchmarks/pisum.py",
                                         "scripts/hope_benchmarks/ln_python.py",
                                         "scripts/hope_benchmarks/pairwise_python.py",
@@ -229,17 +230,12 @@ def test_in_specified():
                                         "scripts/hope_benchmarks_decorators/ln_python.py",
                                         "scripts/hope_benchmarks_decorators/pairwise_python.py",
                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
-                                        "scripts/hope_benchmarks_decorators/simplify.py"
-                                        ] )
-def test_hope_benchmarks( test_file ):
-    pyccel_test(test_file)
-
-@pytest.mark.xfail
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/quicksort.py",
+                                        "scripts/hope_benchmarks_decorators/simplify.py",
                                         "scripts/hope_benchmarks_decorators/fib.py",
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
+
                                         ] )
-def test_hope_benchmarks_xfail( test_file ):
+def test_hope_benchmarks( test_file ):
     pyccel_test(test_file)
 
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
