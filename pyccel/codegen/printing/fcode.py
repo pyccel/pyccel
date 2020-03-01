@@ -942,14 +942,14 @@ class FCodePrinter(CodePrinter):
         if is_optional:
             optionalstr = ', optional'
 
-        allocatablestr = allocatablestr + optionalstr
+        allocatablestr = allocatablestr
 
         if intent and rank>0:
-            decs.append('{0}, intent({1}) {2} :: {3} {4}'.
-                        format(dtype, intent, allocatablestr, vstr, rankstr))
+            decs.append('{0}, intent({1}) {2} {3}:: {4} {5}'.
+                        format(dtype, intent, allocatablestr, optionalstr, vstr, rankstr))
         elif intent and  intent == 'in' and not is_static and rank == 0:
-            decs.append('{0}, value :: {2}'.
-                        format(dtype, intent, vstr, rankstr))
+            decs.append('{0}, value {1} :: {2}'.
+                        format(dtype, optionalstr, vstr, rankstr))
         elif intent:
             decs.append('{0}, intent({1}) :: {2} {3}'.
                         format(dtype, intent, vstr, rankstr))
@@ -1297,7 +1297,7 @@ class FCodePrinter(CodePrinter):
             if arg in results:
                 results.remove(i)
 
-            dec = Declare(arg.dtype, arg,intent=intent , static=True)
+            dec = Declare(arg.dtype, arg, intent=intent , static=True)
             args_decs[str(arg.name)] = dec
 
         for result in results:
