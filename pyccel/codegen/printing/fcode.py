@@ -942,8 +942,6 @@ class FCodePrinter(CodePrinter):
         if is_optional:
             optionalstr = ', optional'
 
-        allocatablestr = allocatablestr
-
         if intent and rank>0:
             decs.append('{0}, intent({1}) {2} {3}:: {4} {5}'.
                         format(dtype, intent, allocatablestr, optionalstr, vstr, rankstr))
@@ -951,11 +949,11 @@ class FCodePrinter(CodePrinter):
             decs.append('{0}, value {1} :: {2}'.
                         format(dtype, optionalstr, vstr, rankstr))
         elif intent:
-            decs.append('{0}, intent({1}) :: {2} {3}'.
-                        format(dtype, intent, vstr, rankstr))
+            decs.append('{0}, intent({1}) {2} :: {3} {4}'.
+                        format(dtype, intent, optionalstr, vstr, rankstr))
         else:
-            args = [dtype, allocatablestr, vstr, rankstr, code_value]
-            decs.append('{0}{1} :: {2} {3} {4}'.
+            args = [dtype, allocatablestr, optionalstr, vstr, rankstr, code_value]
+            decs.append('{0}{1} {2} :: {3} {4} {5}'.
                         format(*args))
 
         return '\n'.join(decs)
