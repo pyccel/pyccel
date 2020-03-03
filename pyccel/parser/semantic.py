@@ -164,6 +164,9 @@ class SemanticParser(BasicParser):
             raise TypeError('> Expecting a syntactic parser as input')
 
         parser = inputs
+        ast = kwargs.pop('ast', parser._ast.get_focus())
+        namespace = kwargs.pop('namespace',parser._namespace)
+        filename = kwargs.pop('filename', parser._filename)
         # ...
 
         # ...
@@ -172,11 +175,11 @@ class SemanticParser(BasicParser):
 
         # ...
         self._fst = parser._fst
-        self._ast = parser._ast
+        self._ast = ast
 
-        self._filename  = parser._filename
+        self._filename  = filename
         self._metavars  = parser._metavars
-        self._namespace = parser._namespace
+        self._namespace = namespace
         self._namespace.imports['imports'] = OrderedDict()
 
         # we use it to detect the current method or function
