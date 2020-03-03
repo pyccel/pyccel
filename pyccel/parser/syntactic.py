@@ -8,6 +8,7 @@ import pickle
 import os
 import sys
 import re
+import numpy as np
 
 #==============================================================================
 
@@ -120,6 +121,7 @@ from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast import ParserResult
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.datatypes import sp_dtype, str_dtype
@@ -304,7 +306,48 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_RedBaron(self, stmt):
-        return self._treat_iterable(stmt)
+        module_nodes = [DefNode, ClassNode, FromImportNode, CommentNode, StringNode, EndlNode]
+
+        is_module = True
+        has_raw_comments = False
+        has_module = False
+
+        mod_ls = []
+        prog_ls = []
+        to_import = []
+
+        for i in stmt:
+            if isinstance(i, DefNode) or isinstance(i, ClassNode):
+                has_module = True
+                mod_ls.append(i)
+                to_import.append(i.name)
+            elif isinstance(i, FromImportNode):
+                mod_ls.append(i)
+                prog_ls.append(i)
+            elif isinstance(i, CommentNode) or isinstance(i, StringNode):
+                has_raw_comments = True
+                prog_ls.append(i)
+            elif isinstance(i, EndlNode):
+                prog_ls.append(i)
+            else:
+                is_module = False
+                prog_ls.append(i)
+
+        if (not has_module):
+            return ParserResult(program  = self._treat_iterable(prog_ls))
+        elif (is_module):
+            if has_raw_comments:
+                errors.report(COMMENTS_IN_MODULE, severity = 'warning')
+            return ParserResult(module   = self._treat_iterable(mod_ls))
+        else:
+            prog_name,_ = os.path.splitext(os.path.basename(self._filename))
+            mod_name = 'mod_'+prog_name+'_'+str(abs(hash(stmt)
+                                  + np.random.randint(500)))[-4:]
+            import_node = RedBaron('from '+mod_name+' import '+','.join(to_import) )[0]
+            prog_ls.insert(0, import_node)
+            return ParserResult(program  = self._treat_iterable(prog_ls),
+                                module   = self._treat_iterable(mod_ls),
+                                mod_name = mod_name)
 
     def _visit_LineProxyList(self, stmt):
         return self._treat_iterable(stmt)

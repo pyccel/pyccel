@@ -94,4 +94,5 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
+COMMENTS_IN_MODULE = 'Comments between functions and classes in a module will not be translated'
 

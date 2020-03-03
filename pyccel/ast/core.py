@@ -4538,6 +4538,57 @@ class IfTernaryOperator(If):
 
     pass
 
+class ParserResult(Basic):
+    def __new__(
+        cls,
+        program=None,
+        module=None,
+        mod_name = None,
+        ):
+
+        if program is not None  and not isinstance(program, Tuple):
+            raise TypeError('Program must be a tuple')
+
+        if module is not None  and not isinstance(module, Tuple):
+            raise TypeError('Module must be a tuple')
+
+        if program is not None and module is not None:
+            if mod_name is None:
+                raise TypeError('Please provide module name')
+            elif not isinstance(mod_name, str):
+                raise TypeError('Module name must be a string')
+
+        return Basic.__new__(
+            cls,
+            program,
+            module,
+            mod_name,
+            )
+
+    @property
+    def program(self):
+        return self._args[0]
+
+    @property
+    def module(self):
+        return self._args[1]
+
+    @property
+    def mod_name(self):
+        return self._args[2]
+
+    def has_additional_module(self):
+        return self.program is not None and self.module is not None
+
+    def is_program(self):
+        return self.program is not None
+
+    def get_focus(self):
+        if self.is_program():
+            return self.program
+        else:
+            return self.module
+
 
 def is_simple_assign(expr):
     if not isinstance(expr, Assign):
