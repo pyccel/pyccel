@@ -49,7 +49,7 @@ from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast import VariableHeader, InterfaceHeader
 from pyccel.ast import MetaVariable
 from pyccel.ast import MacroFunction, MacroVariable
-from pyccel.ast import Concatinate
+from pyccel.ast import Concatenate
 from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is, IsNot
@@ -1061,7 +1061,7 @@ class SemanticParser(BasicParser):
                 else:
                     raise NotImplementedError('TODO')
             return d_var
-        elif isinstance(expr, Concatinate):
+        elif isinstance(expr, Concatenate):
             import operator
             d_vars = [self._infere_type(a, **settings) for a in expr.args]
             ls = any(d['is_pointer'] or d['is_target'] for d in d_vars)
@@ -1390,9 +1390,9 @@ class SemanticParser(BasicParser):
 
 
         if any(atoms) or atoms_ls:
-            return Concatinate(args, True)
+            return Concatenate(args, True)
         elif atoms_str:
-            return Concatinate(args, False)
+            return Concatenate(args, False)
 
 
         expr_new = Add(*args, evaluate=False)

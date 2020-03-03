@@ -573,7 +573,7 @@ class FCodePrinter(CodePrinter):
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
 
-    def _print_Concatinate(self, expr):
+    def _print_Concatenate(self, expr):
          args = expr.args
          if expr.is_list:
              code = ', '.join(self._print(a) for a in expr.args)
