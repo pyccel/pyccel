@@ -29,6 +29,20 @@ class Parser(object):
         self._output_folder = kwargs.pop('output_folder', '')
         self._input_folder = os.path.dirname(filename)
 
+        self._extracted_mod_parser = None
+
+        self._is_extracted = kwargs.pop('is_extracted',False)
+
+    def create_extracted_mod_parser(self):
+        filename = os.path.join(self._input_folder,self._syntax_parser.ast.mod_name)+'.py'
+        self._extracted_mod_parser = Parser(filename, **self._kwargs, is_extracted=True)
+        self._extracted_mod_parser._parents = self._parents
+        self._extracted_mod_parser._sons = self._sons.copy()
+        self._extracted_mod_parser._d_parsers = self._d_parsers
+        self._extracted_mod_parser._syntax_parser = self._syntax_parser
+        self._extracted_mod_parser._input_folder = self._input_folder
+        return self._extracted_mod_parser
+
     @property
     def filename(self):
         """ Python file to be parsed. """
@@ -69,7 +83,7 @@ class Parser(object):
     @property
     def imports(self):
         if self._semantic_parser:
-            raise NotImplementedError('TODO')
+            return self._semantic_parser.namespace.imports['imports']
         else:
             return self._syntax_parser.namespace.imports['imports']
 
@@ -77,12 +91,28 @@ class Parser(object):
     def fst(self):
         return self._syntax_parser.fst
 
+    @property
+    def all_semantics(self):
+        if self._extracted_mod_parser:
+            return [*self._extracted_mod_parser.all_semantics, self._semantic_parser]
+        else:
+            return [self._semantic_parser]
+
+    @property
+    def semantics(self):
+        return self._semantic_parser
+
     def parse(self, d_parsers=None, verbose=False):
+        if self._syntax_parser:
+            return self._syntax_parser
         parser = SyntaxParser(self._filename, **self._kwargs)
         self._syntax_parser = parser
 
         if d_parsers is None:
             d_parsers = OrderedDict()
+        if parser.ast.has_additional_module():
+            d_parsers[self._syntax_parser.ast.mod_name] = self.create_extracted_mod_parser()
+
         self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
 
         return parser.ast
@@ -98,10 +128,20 @@ class Parser(object):
         self._annotate_sons(verbose=verbose)
 
         # Create a new semantic parser and store it in object
-        parser = SemanticParser(self._syntax_parser,
-                                d_parsers=self.d_parsers,
-                                parents=self.parents,
-                                **settings)
+        if self._is_extracted:
+            parser = SemanticParser(self._syntax_parser,
+                                    d_parsers=self.d_parsers,
+                                    parents=self.parents,
+                                    ast=self._syntax_parser.ast.module,
+                                    namespace=self.namespace.copy(),
+                                    filename=self.filename,
+                                    **settings)
+        else:
+            parser = SemanticParser(self._syntax_parser,
+                                    d_parsers=self.d_parsers,
+                                    parents=self.parents,
+                                    **settings)
+
         self._semantic_parser = parser
 
         # Return the new semantic parser (maybe used by codegen)
