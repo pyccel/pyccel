@@ -535,10 +535,10 @@ class FCodePrinter(CodePrinter):
         shape = numpy.shape(expr)
         if len(shape)>1:
             arg = functools.reduce(operator.concat, expr)
-            elements = ','.join(self._print(i) for i in arg)
-            return 'reshape((/ '+ elements + ' /), '+ self._print(Tuple(*shape)) + ')'
+            elements = ', '.join(self._print(i) for i in arg)
+            return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
         fs = ', '.join(self._print(f) for f in expr)
-        return '(/ {0} /)'.format(fs)
+        return '[{0}]'.format(fs)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -576,7 +576,7 @@ class FCodePrinter(CodePrinter):
     def _print_Concatinate(self, expr):
          args = expr.args
          if expr.is_list:
-             code = ','.join(self._print(a) for a in expr.args)
+             code = ', '.join(self._print(a) for a in expr.args)
              return '[' + code + ']'
          else:
              code = '//'.join('trim('+self._print(a)+')' for a in expr.args)
