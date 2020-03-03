@@ -29,7 +29,7 @@ from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
 
-from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
+from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
 from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import ZerosLike, FullLike
@@ -585,34 +585,34 @@ class FCodePrinter(CodePrinter):
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
-    # TODO this is not used anymore since, we are calling printer inside
-    #      numpyext. must be improved!!
-    def _print_ZerosLike(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        if isinstance(expr.rhs, IndexedElement):
-            shape = []
-            for i in expr.rhs.indices:
-                if isinstance(i, Slice):
-                    shape.append(i)
-            rank = len(shape)
-        else:
-            rank = expr.rhs.rank
-        rs = []
-        for i in range(1, rank+1):
-            l = 'lbound({0},{1})'.format(rhs, str(i))
-            u = 'ubound({0},{1})'.format(rhs, str(i))
-            r = '{0}:{1}'.format(l, u)
-            rs.append(r)
-        shape = ', '.join(self._print(i) for i in rs)
-        init_value = self._print(expr.init_value)
-
-        code  = ('allocate({lhs}({shape}))\n'
-                 '{lhs} = {init_value}').format(lhs=lhs,
-                                                shape=shape,
-                                                init_value=init_value)
-
-        return self._get_statement(code)
+#    # TODO this is not used anymore since, we are calling printer inside
+#    #      numpyext. must be improved!!
+#    def _print_ZerosLike(self, expr):
+#        lhs = self._print(expr.lhs)
+#        rhs = self._print(expr.rhs)
+#        if isinstance(expr.rhs, IndexedElement):
+#            shape = []
+#            for i in expr.rhs.indices:
+#                if isinstance(i, Slice):
+#                    shape.append(i)
+#            rank = len(shape)
+#        else:
+#            rank = expr.rhs.rank
+#        rs = []
+#        for i in range(1, rank+1):
+#            l = 'lbound({0},{1})'.format(rhs, str(i))
+#            u = 'ubound({0},{1})'.format(rhs, str(i))
+#            r = '{0}:{1}'.format(l, u)
+#            rs.append(r)
+#        shape = ', '.join(self._print(i) for i in rs)
+#        init_value = self._print(expr.init_value)
+#
+#        code  = ('allocate({lhs}({shape}))\n'
+#                 '{lhs} = {init_value}').format(lhs=lhs,
+#                                                shape=shape,
+#                                                init_value=init_value)
+#
+#        return self._get_statement(code)
 
     def _print_SumFunction(self, expr):
         return str(expr)
@@ -636,9 +636,6 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Shape(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Zeros(self, expr):
         return expr.fprint(self._print)
 
     def _print_Linspace(self, expr):
@@ -1034,7 +1031,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Array, Shape, Linspace, Diag, Cross, Where)):
             return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(rhs, (ZerosLike, Zeros, FullLike)):
+        if isinstance(rhs, (Full, ZerosLike, FullLike)):
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
@@ -1043,7 +1040,7 @@ class FCodePrinter(CodePrinter):
                 for i in vars:
                     if lhs_name == i.name:
                         if i.is_stack_array:
-                            return '{} = {}'.format(lhs_name, rhs.init_value)
+                            return '{} = {}'.format(lhs_name, rhs.fill_value)
 
             return rhs.fprint(self._print, expr.lhs)
 

@@ -36,7 +36,7 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
                   }
 
-#=======================================================================================
+#==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 class Array(Application):
@@ -144,8 +144,7 @@ class Array(Application):
 
         return code
 
-#=======================================================================================
-
+#==============================================================================
 class NumpySum(Application):
     """Represents a call to  numpy.sum for code generation.
 
@@ -187,8 +186,7 @@ class NumpySum(Application):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
-#=======================================================================================
-
+#==============================================================================
 class Product(Application):
     """Represents a call to  numpy.prod for code generation.
 
@@ -221,8 +219,7 @@ class Product(Application):
             return '{0} = product({1})'.format(lhs_code, rhs_code)
         return 'product({0})'.format(rhs_code)
 
-#=======================================================================================
-
+#==============================================================================
 class Matmul(Application):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , Tuple, List, Variable
@@ -274,8 +271,7 @@ class Matmul(Application):
             return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
         return 'matmul({1},{0})'.format(a_code, b_code)
 
-#=======================================================================================
-
+#==============================================================================
 class Shape(Array):
 
     """Represents a call to  numpy.shape for code generation.
@@ -375,8 +371,7 @@ class Shape(Array):
 
         return code_init
 
-#=======================================================================================
-
+#==============================================================================
 class Int(Application):
 
     """Represents a call to  numpy.int for code generation.
@@ -429,9 +424,7 @@ class Int(Application):
         code  = 'Int({0}, {1})'.format(value, prec)
         return code
 
-
-#=======================================================================================
-
+#==============================================================================
 class Real(Application):
 
     """Represents a call to  numpy.real for code generation.
@@ -490,8 +483,7 @@ class Real(Application):
 
         return self.__str__()
 
-#=======================================================================================
-
+#==============================================================================
 class Imag(Real):
 
     """Represents a call to  numpy.imag for code generation.
@@ -512,9 +504,7 @@ class Imag(Real):
     def __str__(self):
         return 'imag({0})'.format(str(self.arg))
 
-
-#=======================================================================================
-
+#==============================================================================
 class Complex(Application):
 
     """Represents a call to  numpy.complex for code generation.
@@ -579,8 +569,7 @@ class Complex(Application):
 
         return self.fprint(str)
 
-#=======================================================================================
-
+#==============================================================================
 class Linspace(Application):
 
     """
@@ -683,8 +672,7 @@ class Linspace(Application):
 
         return code
 
-#=======================================================================================
-
+#==============================================================================
 class Diag(Application):
 
     """
@@ -774,8 +762,7 @@ class Diag(Application):
 
         return alloc + '\n' + code
 
-#=======================================================================================
-
+#==============================================================================
 class Cross(Application):
 
     """
@@ -895,8 +882,7 @@ class Cross(Application):
         #return alloc + '\n' + code
         return code
 
-#=======================================================================================
-
+#==============================================================================
 class Where(Application):
     """ Represents a call to  numpy.where """
 
@@ -943,9 +929,7 @@ class Where(Application):
 
         return alloc +'\n' + stmt
 
-
-#=======================================================================================
-
+#==============================================================================
 class Rand(Real):
 
     """
@@ -966,92 +950,46 @@ class Rand(Real):
 
         return 'rand()'
 
+#==============================================================================
+class Full(Application):
+    """
+    Represents a call to numpy.full for code generation.
 
+    Parameters
+    ----------
+    shape : int or sequence of ints
+        Shape of the new array, e.g., ``(2, 3)`` or ``2``.
 
-#=======================================================================================
-
-class Zeros(Application):
-
-    """Represents a call to numpy.zeros for code generation.
-
-    shape : int, list, tuple
-        int or list of integers
+    fill_value : scalar
+        Fill value.
 
     dtype: str, DataType
         datatype for the constructed array
+        The default, `None`, means `np.array(fill_value).dtype`.
 
-    Examples
+    order : {'C', 'F'}, optional
+        Whether to store multidimensional data in C- or Fortran-contiguous
+        (row- or column-wise) order in memory.
 
     """
-
     # TODO improve
+    def __new__(cls, *args):
 
-    def __new__(cls, shape, *args):
+        keys = ['shape', 'fill_value', 'dtype', 'order']
+        kwargs = cls._process_arguments(*args, keys=keys)
 
-        args = list(args)
-        args_= {'dtype':'real','order':'C'}
-        prec = 0
-        val_args = []
+        shape      = kwargs['shape']
+        dtype      = kwargs['dtype']
+        order      = kwargs['order']
+        precision  = kwargs['precision']
+        fill_value = kwargs['fill_value']
 
-        for i in range(len(args)):
-            if isinstance(args[i], ValuedArgument):
-                val_args = args[i:]
-                args[i:] = []
-                break
+        return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
-
-        if len(args)==1:
-            args_['dtype'] = str(args[0])
-        elif len(args)==2:
-            args_['dtype'] = str(args[0])
-            args_['order'] = str(args[1])
-
-        for i in val_args:
-            val = str(i.value).replace('\'', '')
-            args_[str(i.argument.name)] = val
-
-
-        dtype = args_['dtype']
-        order = args_['order']
-
-        if isinstance(shape,Tuple):
-            shape = list(shape)
-
-        if isinstance(shape, list):
-
-            # this is a correction. otherwise it is not working on LRZ
-            if isinstance(shape[0], list):
-                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape[0]))
-            else:
-                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape))
-
-        elif isinstance(shape, (int, sp_Integer, Symbol)):
-            shape = Tuple(sympify(shape, locals = local_sympify))
-        else:
-            shape = shape
-
-        if isinstance(dtype, str):
-            dtype = dtype.replace('\'', '')
-            dtype, prec = dtype_registry[dtype]
-            dtype = datatype('ndarray' + dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
-        if not prec:
-            prec = default_precision[str(dtype)]
-
-        return Basic.__new__(cls, shape, dtype, order, prec)
-
+    #--------------------------------------------------------------------------
     @property
     def shape(self):
         return self._args[0]
-
-    @property
-    def rank(self):
-        if iterable(self.shape):
-            return len(self.shape)
-        else:
-            return 1
 
     @property
     def dtype(self):
@@ -1066,7 +1004,119 @@ class Zeros(Application):
         return self._args[3]
 
     @property
-    def init_value(self):
+    def fill_value(self):
+        return self._args[4]
+
+    @property
+    def rank(self):
+        return len(self.shape)
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_arguments(*args, keys):
+
+        args = list(args)
+        args_= {'shape': None, 'fill_value': None, 'dtype': None, 'order': 'C'}
+        prec = 0
+        val_args = []
+
+        for i in range(len(args)):
+            if isinstance(args[i], ValuedArgument):
+                val_args = args[i:]
+                args[i:] = []
+                break
+
+        # Handle positional arguments
+        for i, a in enumerate(args):
+            args_[keys[i]] = str(a)
+
+        # Handle keyword arguments
+        for i in val_args:
+            val = str(i.value).replace('\'', '')
+            args_[str(i.argument.name)] = val
+
+        shape = args_['shape']
+        dtype = args_['dtype']
+        order = args_['order']
+        fill_value = args_['fill_value']
+
+        # If there is no dtype, extract it from fill_value or assume float
+        if dtype is None:
+            if fill_value is None:
+                dtype = 'float'
+            else:
+                dtype = np.array(fill_value).dtype.name
+
+        shape = sympify(shape, locals=local_sympify)
+        if hasattr(shape, '__iter__'):
+            shape = Tuple(*shape)
+        else:
+            shape = Tuple(shape)
+
+        if isinstance(dtype, str):
+            dtype = dtype.replace('\'', '')
+            dtype, prec = dtype_registry[dtype]
+            dtype = datatype('ndarray' + dtype)
+        elif not isinstance(dtype, DataType):
+            raise TypeError('datatype must be an instance of DataType.')
+
+        if not prec:
+            prec = default_precision[str(dtype)]
+
+        return {'shape': shape, 'fill_value': fill_value, 'dtype': dtype,
+                'order': order, 'precision': prec}
+
+    #--------------------------------------------------------------------------
+    def fprint(self, printer, lhs):
+        """Fortran print."""
+
+        # Transpose indices because of Fortran column-major ordering
+        shape = self.shape if self.order == 'F' else self.shape[::-1]
+
+        if isinstance(self.shape, (Tuple,tuple)):
+            # this is a correction. problem on LRZ
+            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
+        else:
+            shape_code = '0:' + printer(shape - 1)
+
+        lhs_code = printer(lhs)
+        code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+
+        # Handle Empty
+        if self.fill_value is None:
+            return code_alloc
+
+        init_value = printer(self.fill_value)
+        code_init = '{0} = {1}'.format(lhs_code, init_value)
+        code = '{0}\n{1}'.format(code_alloc, code_init)
+        return code
+
+#==============================================================================
+class Empty(Full):
+    """ Represents a call to numpy.empty for code generation.
+    """
+    def __new__(cls, *args):
+
+        keys = ['shape', 'dtype', 'order']
+        kwargs = cls._process_arguments(*args, keys=keys)
+
+        shape      = kwargs['shape']
+        dtype      = kwargs['dtype']
+        order      = kwargs['order']
+        precision  = kwargs['precision']
+
+        return Basic.__new__(cls, shape, dtype, order, precision)
+
+    @property
+    def fill_value(self):
+        return None
+
+#==============================================================================
+class Zeros(Empty):
+    """ Represents a call to numpy.zeros for code generation.
+    """
+    @property
+    def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 0
@@ -1080,40 +1130,12 @@ class Zeros(Application):
             raise TypeError('Unknown type')
         return value
 
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        # Transpose indices because of Fortran column-major ordering
-        shape = self.shape if self.order == 'F' else self.shape[::-1]
-
-        if isinstance(self.shape, (Tuple,tuple)):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
-        else:
-            shape_code = '0:' + printer(shape - 1)
-
-        init_value = printer(self.init_value)
-
-        lhs_code = printer(lhs)
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-
-        return code
-
-#=======================================================================================
-
-class Ones(Zeros):
-
-    """Represents a call to numpy.ones for code generation.
-
-    shape : int or list of integers
-
+#==============================================================================
+class Ones(Empty):
+    """ Represents a call to numpy.ones for code generation.
     """
-
     @property
-    def init_value(self):
+    def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 1
@@ -1333,34 +1355,6 @@ class Bounds(Basic):
     @property
     def var(self):
         return self._args[0]
-
-
-#=======================================================================================
-
-class Empty(Zeros):
-
-    """Represents a call to numpy.empty for code generation.
-
-    shape : int or list of integers
-
-    """
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        if isinstance(self.shape, Tuple):
-
-            # this is a correction. problem on LRZ
-
-            shape_code = ', '.join('0:' + printer(i - 1) for i in
-                                   self.shape)
-        else:
-            shape_code = '0:' + printer(self.shape - 1)
-
-
-        lhs_code = printer(lhs)
-
-        code = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        return code
 
 #=======================================================================================
 
