@@ -295,6 +295,42 @@ class Scope(object):
         self._is_loop = False
         # scoping for loops
         self._loops = []
+
+    def copy(self):
+        new_scope = Scope()
+        new_scope._imports = OrderedDict()
+
+        new_scope._imports['functions'] = self._imports['functions'].copy()
+        new_scope._imports['variables'] = self._imports['variables'].copy()
+        new_scope._imports['classes'  ] = self._imports['classes'  ].copy()
+        new_scope._imports['imports'  ] = self._imports['imports'  ].copy()
+
+        new_scope._imports['python_functions'  ] = self._imports['python_functions'  ].copy()
+        new_scope._imports['symbolic_functions'] = self._imports['symbolic_functions'].copy()
+
+        new_scope._variables = self._variables.copy()
+        new_scope._classes   = self._classes.copy()
+        new_scope._functions = self._functions.copy()
+        new_scope._macros    = self._macros.copy()
+        new_scope._headers   = self._headers.copy()
+
+        # TODO use another name for headers
+        #      => reserved keyword, or use __
+        if new_scope.parent_scope:
+            new_scope.parent_scope    = self.parent_scope.copy()
+        else:
+            new_scope.parent_scope    = None
+        new_scope._sons_scopes        = self._sons_scopes.copy()
+        new_scope._static_functions   = self._static_functions.copy()
+        new_scope._cls_constructs     = self._cls_constructs.copy()
+        new_scope._symbolic_functions = self._symbolic_functions.copy()
+        new_scope._python_functions   = self._python_functions.copy()
+
+        new_scope._is_loop = self._is_loop
+        # scoping for loops
+        new_scope._loops = self._loops.copy()
+
+        return new_scope
         
     @property
     def imports(self):
