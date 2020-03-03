@@ -4,9 +4,9 @@ import shutil
 
 from pyccel.parser.errors     import Errors
 from pyccel.codegen.codegen   import Parser
-from pyccel.codegen.codegen   import Codegen
 from pyccel.codegen.utilities import construct_flags
 from pyccel.codegen.utilities import compile_fortran
+from pyccel.codegen.utilities import generate_f90
 from pyccel.codegen.f2py      import create_shared_library
 
 __all__ = ['execute_pyccel']
@@ -123,9 +123,7 @@ def execute_pyccel(fname, *,
 
     # Generate .f90 file
     try:
-        codegen = Codegen(ast, module_name)
-        fname = os.path.join(pyccel_dirpath, module_name)
-        fname = codegen.export(fname)
+        fnames, codegens = generate_f90(parser, pyccel_dirpath)
     except Exception:
         handle_error('code generation')
         raise
@@ -168,10 +166,6 @@ def execute_pyccel(fname, *,
     dep_mods, inc_folders = get_module_dependencies(parser)
     includes += inc_folders
 
-    if codegen.is_program:
-        modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
-
-
     # Construct compiler flags
     flags = construct_flags(f90exec,
                             fflags=fflags,
@@ -180,54 +174,60 @@ def execute_pyccel(fname, *,
                             includes=includes,
                             libdirs=libdirs)
 
-    # Compile Fortran code
-    #
-    # TODO: stop at object files, do not compile executable
-    #       This allows for properly linking program to modules
-    #
-    try:
-        compile_fortran(fname, f90exec, flags,
-                        binary=None,
-                        verbose=verbose,
-                        modules=modules,
-                        is_module=codegen.is_module,
-                        output=pyccel_dirpath,
-                        libs=libs)
-    except Exception:
-        handle_error('Fortran compilation')
-        raise
+    for fname, codegen in zip(fnames, codegens):
+        if codegen.is_program:
+            my_modules = modules + [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
+        else:
+            my_modules = modules
 
-    # For a program stop here
-    if codegen.is_program:
+        # Compile Fortran code
+        #
+        # TODO: stop at object files, do not compile executable
+        #       This allows for properly linking program to modules
+        #
+        try:
+            compile_fortran(fname, f90exec, flags,
+                            binary=None,
+                            verbose=verbose,
+                            modules=my_modules,
+                            is_module=codegen.is_module,
+                            output=pyccel_dirpath,
+                            libs=libs)
+        except Exception:
+            handle_error('Fortran compilation')
+            raise
+
+        # For a program stop here
+        if codegen.is_program:
+            if verbose:
+                exec_filepath = os.path.join(folder, module_name)
+                print( '> Executable has been created: {}'.format(exec_filepath))
+
+    codegen = codegens[-1]
+    if codegen.is_module:
+        # Create shared library
+        try:
+            sharedlib_filepath = create_shared_library(codegen,
+                                                       pyccel_dirpath,
+                                                       compiler,
+                                                       mpi_compiler,
+                                                       accelerator,
+                                                       dep_mods,
+                                                       extra_args,
+                                                       output_name)
+        except Exception:
+            handle_error('shared library generation')
+            raise
+
+        # Move shared library to folder directory
+        # (First construct absolute path of target location)
+        sharedlib_filename = os.path.basename(sharedlib_filepath)
+        target = os.path.join(folder, sharedlib_filename)
+        shutil.move(sharedlib_filepath, target)
+        sharedlib_filepath = target
+
         if verbose:
-            exec_filepath = os.path.join(folder, module_name)
-            print( '> Executable has been created: {}'.format(exec_filepath))
-        os.chdir(base_dirpath)
-        return
-
-    # Create shared library
-    try:
-        sharedlib_filepath = create_shared_library(codegen,
-                                                   pyccel_dirpath,
-                                                   compiler,
-                                                   mpi_compiler,
-                                                   accelerator,
-                                                   dep_mods,
-                                                   extra_args,
-                                                   output_name)
-    except Exception:
-        handle_error('shared library generation')
-        raise
-
-    # Move shared library to folder directory
-    # (First construct absolute path of target location)
-    sharedlib_filename = os.path.basename(sharedlib_filepath)
-    target = os.path.join(folder, sharedlib_filename)
-    shutil.move(sharedlib_filepath, target)
-    sharedlib_filepath = target
+            print( '> Shared library has been created: {}'.format(sharedlib_filepath))
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
-
-    if verbose:
-        print( '> Shared library has been created: {}'.format(sharedlib_filepath))

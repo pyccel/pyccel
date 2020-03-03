@@ -6,6 +6,7 @@ This file contains some useful functions to compile the generated fortran code
 
 import os
 import subprocess
+from pyccel.codegen.codegen   import Codegen
 
 __all__ = ['construct_flags', 'compile_fortran']
 
@@ -140,3 +141,25 @@ def compile_fortran(filename, compiler, flags,
 #        f.close()
 
     return output, cmd
+
+def generate_f90(parser, dirpath):
+    # Generate .f90 file
+
+    semantics = parser.all_semantics
+    filenames = [ast.filename for ast in semantics]
+    fnames = []
+    codegens = []
+
+    # Extract module name
+    for ast, filepath in zip(semantics,filenames):
+        pymod_dirpath, filename = os.path.split(filepath)
+        mod_name = os.path.splitext(filename)[0]
+        codegen = Codegen(ast, mod_name)
+        fname = os.path.join(dirpath, mod_name)
+        fname = codegen.export(fname)
+        fnames.append(fname)
+        codegens.append(codegen)
+
+    return fnames, codegens
+
+
