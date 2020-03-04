@@ -309,7 +309,6 @@ class SyntaxParser(BasicParser):
         module_nodes = [DefNode, ClassNode, FromImportNode, CommentNode, StringNode, EndlNode]
 
         is_module = True
-        has_raw_comments = False
         has_module = False
 
         mod_ls = []
@@ -334,10 +333,8 @@ class SyntaxParser(BasicParser):
                      isinstance(test,ClassHeader)        :
                     mod_ls.append(expr)
                 else:
-                    has_raw_comments = True
                     prog_ls.append(expr)
             elif isinstance(expr, StringNode):
-                has_raw_comments = True
                 prog_ls.append(expr)
             elif isinstance(expr, EndlNode):
                 prog_ls.append(expr)
@@ -346,11 +343,9 @@ class SyntaxParser(BasicParser):
                 prog_ls.append(expr)
 
         if (is_module):
-            if has_raw_comments:
-                errors.report(COMMENTS_IN_MODULE, severity = 'warning')
-            return ParserResult(module   = self._treat_iterable(mod_ls))
+            return ParserResult(module   = self._treat_iterable(stmt))
         elif (not has_module):
-            return ParserResult(program  = self._treat_iterable(prog_ls))
+            return ParserResult(program  = self._treat_iterable(stmt))
         else:
             prog_name,_ = os.path.splitext(os.path.basename(self._filename))
             mod_name = 'mod_'+prog_name+'_'+str(abs(hash(stmt)
