@@ -73,6 +73,7 @@ from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
+from pyccel.ast.utilities import split_positional_keyword_arguments
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -1581,7 +1582,8 @@ class SemanticParser(BasicParser):
             else:
                 if not isinstance(func, (FunctionDef, Interface)):
 
-                    expr = func(*args)
+                    args, kwargs = split_positional_keyword_arguments(*args)
+                    expr = func(*args, **kwargs)
 
                     if isinstance(expr, (Where, Diag, Linspace)):
                         self.insert_variable(expr.index)

@@ -972,17 +972,23 @@ class Full(Application):
         (row- or column-wise) order in memory.
 
     """
-    # TODO improve
-    def __new__(cls, *args):
+    def __new__(cls, shape, fill_value, dtype=None, order='C'):
 
-        keys = ['shape', 'fill_value', 'dtype', 'order']
-        kwargs = cls._process_arguments(*args, keys=keys)
+        # Convert shape to Tuple
+        if not isinstance(shape, Tuple):
+            shape = Tuple(shape)
 
-        shape      = kwargs['shape']
-        dtype      = kwargs['dtype']
-        order      = kwargs['order']
-        precision  = kwargs['precision']
-        fill_value = kwargs['fill_value']
+        # If there is no dtype, extract it from fill_value
+        # TODO: must get dtype from an annotated node
+        if (dtype is None) or isinstance(dtype, Nil):
+            dtype = np.array(fill_value).dtype.name
+
+        # Verify dtype and get precision
+        dtype, precision = cls._process_dtype(dtype)
+
+        # Verify array ordering
+        if str(order) not in ('C', 'F'):
+            raise ValueError('unrecognized order = %s'.format(order))
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
@@ -1013,62 +1019,22 @@ class Full(Application):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def _process_arguments(*args, keys):
+    def _process_dtype(dtype):
 
-        args = list(args)
-        args_= {'shape': None, 'fill_value': None, 'dtype': None, 'order': 'C'}
-        prec = 0
-        val_args = []
+        dtype = str(dtype).replace('\'', '')
+        dtype, precision = dtype_registry[dtype]
+        dtype = datatype('ndarray' + dtype)
 
-        for i in range(len(args)):
-            if isinstance(args[i], ValuedArgument):
-                val_args = args[i:]
-                args[i:] = []
-                break
-
-        # Handle positional arguments
-        for i, a in enumerate(args):
-            args_[keys[i]] = str(a)
-
-        # Handle keyword arguments
-        for i in val_args:
-            val = str(i.value).replace('\'', '')
-            args_[str(i.argument.name)] = val
-
-        shape = args_['shape']
-        dtype = args_['dtype']
-        order = args_['order']
-        fill_value = args_['fill_value']
-
-        # If there is no dtype, extract it from fill_value or assume float
-        if dtype is None:
-            if fill_value is None:
-                dtype = 'float'
-            else:
-                dtype = np.array(fill_value).dtype.name
-
-        shape = sympify(shape, locals=local_sympify)
-        if hasattr(shape, '__iter__'):
-            shape = Tuple(*shape)
-        else:
-            shape = Tuple(shape)
-
-        if isinstance(dtype, str):
-            dtype = dtype.replace('\'', '')
-            dtype, prec = dtype_registry[dtype]
-            dtype = datatype('ndarray' + dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
-        if not prec:
-            prec = default_precision[str(dtype)]
-
-        return {'shape': shape, 'fill_value': fill_value, 'dtype': dtype,
-                'order': order, 'precision': prec}
+        return dtype, precision
 
     #--------------------------------------------------------------------------
     def fprint(self, printer, lhs):
         """Fortran print."""
+
+        lhs_code = printer(lhs)
+        stmts = []
+
+        # ... Create statement for allocation
 
         # Transpose indices because of Fortran column-major ordering
         shape = self.shape if self.order == 'F' else self.shape[::-1]
@@ -1079,31 +1045,34 @@ class Full(Application):
         else:
             shape_code = '0:' + printer(shape - 1)
 
-        lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+        stmts.append(code_alloc)
+        # ...
 
-        # Handle Empty
-        if self.fill_value is None:
-            return code_alloc
+        # Create statement for initialization
+        if self.fill_value is not None:
+            init_value = printer(self.fill_value)
+            code_init = '{0} = {1}'.format(lhs_code, init_value)
+            stmts.append(code_init)
 
-        init_value = printer(self.fill_value)
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-        return code
+        return '\n'.join(stmts)
 
 #==============================================================================
 class Empty(Full):
     """ Represents a call to numpy.empty for code generation.
     """
-    def __new__(cls, *args):
+    def __new__(cls, shape, dtype='float', order='C'):
 
-        keys = ['shape', 'dtype', 'order']
-        kwargs = cls._process_arguments(*args, keys=keys)
+        # Convert shape to Tuple
+        if not isinstance(shape, Tuple):
+            shape = Tuple(shape)
 
-        shape      = kwargs['shape']
-        dtype      = kwargs['dtype']
-        order      = kwargs['order']
-        precision  = kwargs['precision']
+        # Verify dtype and get precision
+        dtype, precision = cls._process_dtype(dtype)
+
+        # Verify array ordering
+        if str(order) not in ('C', 'F'):
+            raise ValueError('unrecognized order = %s'.format(order))
 
         return Basic.__new__(cls, shape, dtype, order, precision)
 

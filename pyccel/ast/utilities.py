@@ -6,6 +6,7 @@ from .core import AsName
 from .core import Import
 from .core import Range, Len , Enumerate, Zip, Product, Map
 from .core import FunctionDef, Return, Assign
+from .core import ValuedArgument
 
 from .core import Constant, Variable, IndexedVariable
 from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
@@ -249,3 +250,24 @@ def build_types_decorator(args, order=None):
         types.append(dtype)
 
     return types
+
+#==============================================================================
+def split_positional_keyword_arguments(*args):
+    """ Create a list of positional arguments and a dictionary of keyword arguments
+    """
+
+    # Distinguish between positional and keyword arguments
+    val_args = ()
+    for i, a in enumerate(args):
+        if isinstance(a, ValuedArgument):
+            args, val_args = args[:i], args[i:]
+            break
+
+    # Convert list of keyword arguments into dictionary
+    kwargs = {}
+    for v in val_args:
+        key   = str(v.argument.name)
+        value = v.value
+        kwargs[key] = value
+
+    return args, kwargs
