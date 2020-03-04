@@ -3543,6 +3543,9 @@ class Import(Basic):
     def source(self):
         return self._args[1]
 
+    def source_is_associated_module(self,mod_name):
+        self._args = (self._args[0], Symbol(mod_name))
+
     def _sympystr(self, printer):
         sstr = printer.doprint
         target = ', '.join([sstr(i) for i in self.target])

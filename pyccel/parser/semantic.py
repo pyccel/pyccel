@@ -2994,11 +2994,36 @@ class SemanticParser(BasicParser):
                 source = str(expr.source)
                 targets = [_get_name(i) for i in expr.target]
                 p       = self.d_parsers[source]
-                for entry in ['variables', 'classes', 'functions']:
-                    d_son = getattr(p.namespace, entry)
-                    for k in targets:
-                        if k in d_son:
-                            container[entry][k] = d_son[k]
+
+                alternative_source = self.namespace.imports['imports_alias'].get(source)
+                alternative_p = self.d_parsers.get(alternative_source)
+
+                def add_target(target, p):
+                    added = False
+                    for entry in ['variables', 'classes', 'functions']:
+                        d_son = getattr(p.namespace, entry)
+                        if target in d_son:
+                            container[entry][target] = d_son[target]
+                            added = True
+                    return added
+
+                alternative_targets = []
+
+                for k in targets:
+                    added = add_target(k, p)
+                    if (not added):
+                        added = add_target(k, alternative_p)
+                        if added:
+                            alternative_targets.append(targets.remove(k))
+
+                if len(alternative_targets)!=0:
+                    if len(targets)==0:
+                        expr.source_is_associated_module(alternative_source)
+                    else:
+                        #TODO: Add new import line to stmt
+                        #new_line = Import(alternative_targets, Symbol(alternative_source))
+                        raise NotImplementedError("Cannot access functions and variables from the same file")
+
 
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)
