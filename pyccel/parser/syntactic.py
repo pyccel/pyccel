@@ -339,12 +339,12 @@ class SyntaxParser(BasicParser):
                 is_module = False
                 prog_ls.append(expr)
 
-        if (not has_module):
-            return ParserResult(program  = self._treat_iterable(prog_ls))
-        elif (is_module):
+        if (is_module):
             if has_raw_comments:
                 errors.report(COMMENTS_IN_MODULE, severity = 'warning')
             return ParserResult(module   = self._treat_iterable(mod_ls))
+        elif (not has_module):
+            return ParserResult(program  = self._treat_iterable(prog_ls))
         else:
             prog_name,_ = os.path.splitext(os.path.basename(self._filename))
             mod_name = 'mod_'+prog_name+'_'+str(abs(hash(stmt)
