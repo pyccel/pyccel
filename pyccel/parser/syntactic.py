@@ -316,22 +316,28 @@ class SyntaxParser(BasicParser):
         prog_ls = []
         to_import = []
 
-        for i in stmt:
-            if isinstance(i, DefNode) or isinstance(i, ClassNode):
+        for expr in stmt:
+            if isinstance(expr, DefNode) or isinstance(expr, ClassNode):
                 has_module = True
-                mod_ls.append(i)
-                to_import.append(i.name)
-            elif isinstance(i, FromImportNode):
-                mod_ls.append(i)
-                prog_ls.append(i)
-            elif isinstance(i, CommentNode) or isinstance(i, StringNode):
+                mod_ls.append(expr)
+                to_import.append(expr.name)
+            elif isinstance(expr, FromImportNode):
+                mod_ls.append(expr)
+                prog_ls.append(expr)
+            elif isinstance(expr, CommentNode):
+                if expr.value.startswith('#$'):
+                    mod_ls.append(expr)
+                else:
+                    has_raw_comments = True
+                    prog_ls.append(expr)
+            elif isinstance(expr, StringNode):
                 has_raw_comments = True
-                prog_ls.append(i)
-            elif isinstance(i, EndlNode):
-                prog_ls.append(i)
+                prog_ls.append(expr)
+            elif isinstance(expr, EndlNode):
+                prog_ls.append(expr)
             else:
                 is_module = False
-                prog_ls.append(i)
+                prog_ls.append(expr)
 
         if (not has_module):
             return ParserResult(program  = self._treat_iterable(prog_ls))
