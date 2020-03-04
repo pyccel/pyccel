@@ -1032,17 +1032,17 @@ class FCodePrinter(CodePrinter):
             return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, (Full, ZerosLike, FullLike)):
+
+            stack_array = False
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
-                vars = func.local_vars
                 lhs_name = expr.lhs.name
-                for i in vars:
-                    if lhs_name == i.name:
-                        if i.is_stack_array:
-                            return '{} = {}'.format(lhs_name, rhs.fill_value)
+                vars_dict = {i.name: i for i in func.local_vars}
+                if lhs_name in vars_dict:
+                    stack_array = vars_dict[lhs_name].is_stack_array
 
-            return rhs.fprint(self._print, expr.lhs)
+            return rhs.fprint(self._print, expr.lhs, stack_array)
 
         if isinstance(rhs, Mod):
             lhs = self._print(expr.lhs)

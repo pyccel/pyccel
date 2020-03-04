@@ -1028,26 +1028,25 @@ class Full(Application):
         return dtype, precision
 
     #--------------------------------------------------------------------------
-    def fprint(self, printer, lhs):
+    def fprint(self, printer, lhs, stack_array=False):
         """Fortran print."""
 
         lhs_code = printer(lhs)
         stmts = []
 
-        # ... Create statement for allocation
+        # Create statement for allocation
+        if not stack_array:
+            # Transpose indices because of Fortran column-major ordering
+            shape = self.shape if self.order == 'F' else self.shape[::-1]
 
-        # Transpose indices because of Fortran column-major ordering
-        shape = self.shape if self.order == 'F' else self.shape[::-1]
+            if isinstance(self.shape, (Tuple,tuple)):
+                # this is a correction. problem on LRZ
+                shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
+            else:
+                shape_code = '0:' + printer(shape - 1)
 
-        if isinstance(self.shape, (Tuple,tuple)):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
-        else:
-            shape_code = '0:' + printer(shape - 1)
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        stmts.append(code_alloc)
-        # ...
+            code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+            stmts.append(code_alloc)
 
         # Create statement for initialization
         if self.fill_value is not None:
