@@ -9,7 +9,9 @@ from .core import FunctionDef, Return, Assign
 from .core import ValuedArgument
 
 from .core import Constant, Variable, IndexedVariable
-from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
+from .numpyext import Full, Empty, Zeros, Ones
+from .numpyext import FullLike, EmptyLike, ZerosLike#, OnesLike
+from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
 from .numpyext import Array, Shape, Int, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
@@ -53,12 +55,14 @@ math_functions = {
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 numpy_functions = {
     # ... array creation routines
-    'zeros'     : Zeros,
+    'full'      : Full,
     'empty'     : Empty,
+    'zeros'     : Zeros,
     'ones'      : Ones,
-    'zeros_like': ZerosLike,
-    'empty_like': EmptyLike,
     'full_like' : FullLike,
+    'empty_like': EmptyLike,
+    'zeros_like': ZerosLike,
+#    'ones_like' : OnesLike,
     'array'     : Array,
     # ...
     'shape'     : Shape,

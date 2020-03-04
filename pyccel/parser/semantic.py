@@ -841,8 +841,8 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
 
-            elif name in ['Zeros', 'Ones', 'Empty', 'Diag',
-                          'Shape', 'Cross', 'Linspace','Where']:
+            elif name in ['Full', 'Empty', 'Zeros', 'Ones', 'Diag',
+                          'Shape', 'Cross', 'Linspace', 'Where']:
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'      ] = expr.shape
