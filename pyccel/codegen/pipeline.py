@@ -102,7 +102,7 @@ def execute_pyccel(fname, *,
     # Parse Python file
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
-        ast = parser.parse(verbose=verbose)
+        _ = parser.parse(verbose=verbose)
     except Exception:
         handle_error('parsing (syntax)')
         raise
@@ -113,7 +113,7 @@ def execute_pyccel(fname, *,
     # Annotate abstract syntax Tree
     try:
         settings = {'verbose':verbose}
-        ast = parser.annotate(**settings)
+        _ = parser.annotate(**settings)
     except Exception:
         handle_error('annotation (semantic)')
         raise
