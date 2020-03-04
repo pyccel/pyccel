@@ -152,7 +152,7 @@ def generate_f90(parser, dirpath):
 
     # Extract module name
     for ast, filepath in zip(semantics,filenames):
-        pymod_dirpath, filename = os.path.split(filepath)
+        _, filename = os.path.split(filepath)
         mod_name = os.path.splitext(filename)[0]
         codegen = Codegen(ast, mod_name)
         fname = os.path.join(dirpath, mod_name)
