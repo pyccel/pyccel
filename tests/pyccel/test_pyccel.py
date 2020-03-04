@@ -204,8 +204,7 @@ def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
 def test_default_arguments():
-    pyccel_test("scripts/test_default_args.py",
-            dependencies = "scripts/default_args_mod.py",
+    pyccel_test("scripts/default_args.py",
             output_dtype = [int,int,float,float,float,
                 float,float,float,float,bool,bool,bool,
                 float,float,float,float])
