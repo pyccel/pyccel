@@ -325,7 +325,13 @@ class SyntaxParser(BasicParser):
                 mod_ls.append(expr)
                 prog_ls.append(expr)
             elif isinstance(expr, CommentNode):
-                if expr.value.startswith('#$'):
+                test = self._visit(expr)
+                if isinstance(test,MacroFunction):
+                    mod_ls.append(expr)
+                    prog_ls.append(expr)
+                elif isinstance(test,FunctionHeader) or \
+                     isinstance(test,MethodHeader)   or \
+                     isinstance(test,ClassHeader)        :
                     mod_ls.append(expr)
                 else:
                     has_raw_comments = True
