@@ -981,7 +981,14 @@ class Full(Application):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if (dtype is None) or isinstance(dtype, Nil):
-            dtype = np.array(fill_value).dtype.name
+            if fill_value.is_integer:
+                dtype = 'int'
+            elif fill_value.is_real:
+                dtype = 'float'
+            elif fill_value.is_complex:
+                dtype = 'complex'
+            elif fill_value.is_Boolean:
+                dtype = 'bool'
 
         # Verify dtype and get precision
         dtype, precision = cls._process_dtype(dtype)
