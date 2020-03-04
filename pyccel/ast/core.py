@@ -4329,7 +4329,7 @@ class String(Basic):
         return self.arg
 
 
-class Concatinate(Basic):
+class Concatenate(Basic):
 
     """Represents the String concatination operation.
 
@@ -4341,11 +4341,11 @@ class Concatinate(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.ast.core import Concatinate
+    >>> from pyccel.ast.core import Concatenate
     >>> x = symbols('x')
-    >>> Concatinate('some_string',x)
+    >>> Concatenate('some_string',x)
     some_string+x
-    >>> Concatinate('some_string','another_string')
+    >>> Concatenate('some_string','another_string')
     'some_string' + 'another_string'
     """
 
