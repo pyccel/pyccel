@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from collections import OrderedDict
+import warnings
 
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
@@ -36,7 +37,7 @@ class Parser(object):
     def create_extracted_mod_parser(self):
         filename = os.path.join(self._input_folder,self._syntax_parser.ast.mod_name)+'.py'
         self._extracted_mod_parser = Parser(filename, **self._kwargs, is_extracted=True)
-        self._extracted_mod_parser._parents = self._parents
+        self._extracted_mod_parser._parents = self._parents.copy()
         self._extracted_mod_parser._sons = self._sons.copy()
         self._extracted_mod_parser._d_parsers = self._d_parsers
         self._extracted_mod_parser._syntax_parser = self._syntax_parser
@@ -79,6 +80,13 @@ class Parser(object):
             return self._semantic_parser.namespace
         else:
             return self._syntax_parser.namespace
+
+    @property
+    def imports_alias(self):
+        if self._semantic_parser:
+            return self._semantic_parser.namespace.imports['imports_alias']
+        else:
+            return self._syntax_parser.namespace.imports['imports_alias']
 
     @property
     def imports(self):
@@ -181,8 +189,12 @@ class Parser(object):
             filename = get_filename_from_import(source, self._input_folder)
 
             q = Parser(filename)
-            q.parse(d_parsers=d_parsers)
+            ast = q.parse(d_parsers=d_parsers)
             d_parsers[source] = q
+            if ast.has_additional_module():
+                d_parsers[ast.mod_name] = q._extracted_mod_parser
+                self.imports_alias[source] = ast.mod_name
+                warnings.warn("Functions are imported from a program. This may produce compilation errors due to the random nature of the module name", SyntaxWarning)
 
         # link self to its sons
         for source in imports:

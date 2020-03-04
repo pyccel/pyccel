@@ -269,10 +269,11 @@ class Scope(object):
     
         self._imports = OrderedDict()
             
-        self._imports['functions'] = OrderedDict()
-        self._imports['variables'] = OrderedDict()
-        self._imports['classes'  ] = OrderedDict()
-        self._imports['imports'  ] = OrderedDict()
+        self._imports['functions'    ] = OrderedDict()
+        self._imports['variables'    ] = OrderedDict()
+        self._imports['classes'      ] = OrderedDict()
+        self._imports['imports'      ] = OrderedDict()
+        self._imports['imports_alias'] = OrderedDict()
         
         self._imports['python_functions'  ] = OrderedDict()
         self._imports['symbolic_functions'] = OrderedDict()
@@ -300,10 +301,11 @@ class Scope(object):
         new_scope = Scope()
         new_scope._imports = OrderedDict()
 
-        new_scope._imports['functions'] = self._imports['functions'].copy()
-        new_scope._imports['variables'] = self._imports['variables'].copy()
-        new_scope._imports['classes'  ] = self._imports['classes'  ].copy()
-        new_scope._imports['imports'  ] = self._imports['imports'  ].copy()
+        new_scope._imports['functions'    ] = self._imports['functions'].copy()
+        new_scope._imports['variables'    ] = self._imports['variables'].copy()
+        new_scope._imports['classes'      ] = self._imports['classes'  ].copy()
+        new_scope._imports['imports'      ] = self._imports['imports'  ].copy()
+        new_scope._imports['imports_alias'] = self._imports['imports_alias']
 
         new_scope._imports['python_functions'  ] = self._imports['python_functions'  ].copy()
         new_scope._imports['symbolic_functions'] = self._imports['symbolic_functions'].copy()
