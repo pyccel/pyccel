@@ -245,10 +245,15 @@ class SemanticParser(BasicParser):
         if self.is_header_file:
             target = []
 
+            mod_name = os.path.basename(os.path.splitext(self.filename)[0])
+
             for parent in self.parents:
                 for (key, item) in parent.imports.items():
-                    if get_filename_from_import(key) == self.filename:
-                        target += item
+                    if key.split('.')[-1] == mod_name:
+                        # mod_name must be used first to avoid looking for the filename
+                        # of a file that doesn't exist (generated additional module)
+                        if get_filename_from_import(key) == self.filename:
+                            target += item
 
             target = set(target)
             target_headers = target.intersection(self.namespace.headers.keys())
@@ -2446,7 +2451,7 @@ class SemanticParser(BasicParser):
     def _visit_InterfaceHeader(self, expr, **settings):
 
         containers = [self.namespace.functions ,
-        self.namespace.imports['functions']]
+                      self.namespace.imports['functions']]
         # TODO improve test all possible containers
         name = None
         for container in containers:
@@ -2457,7 +2462,7 @@ class SemanticParser(BasicParser):
                     funcs += [container[i]]
 
         if name is None:
-            raise ValueError('inteface functions {} not found'.format(expr.funcs))
+            raise ValueError('interface functions {} not found'.format(expr.funcs))
         expr            = Interface(name, funcs, hide=True)
         container[name] = expr
         return expr
