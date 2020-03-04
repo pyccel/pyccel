@@ -3011,7 +3011,7 @@ class SemanticParser(BasicParser):
 
                 for k in targets:
                     added = add_target(k, p)
-                    if (not added):
+                    if (not added and alternative_p is not None):
                         added = add_target(k, alternative_p)
                         if added:
                             alternative_targets.append(targets.remove(k))
