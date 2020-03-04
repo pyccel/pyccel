@@ -114,6 +114,10 @@ class NdArrayComplex(NdArray, NativeComplex):
     _name = 'complex'
     pass
 
+class NdArrayBool(NdArray, NativeBool):
+    _name = 'bool'
+    pass
+
 # TODO to be removed
 class CustomDataType(DataType):
     _name = '__UNDEFINED__'
@@ -172,6 +176,7 @@ NdArray = NdArray()
 NdArrayInt = NdArrayInt()
 NdArrayReal = NdArrayReal()
 NdArrayComplex = NdArrayComplex()
+NdArrayBool = NdArrayBool()
 Generic    = NativeGeneric()
 
 
@@ -190,6 +195,7 @@ dtype_registry = {'bool': Bool,
                   'ndarrayinteger':NdArrayInt,
                   'ndarrayreal': NdArrayReal,
                   'ndarraycomplex': NdArrayComplex,
+                  'ndarraybool': NdArrayBool,
                   '*': Generic,
                   'str': String}
 
