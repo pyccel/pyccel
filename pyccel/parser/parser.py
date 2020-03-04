@@ -110,6 +110,10 @@ class Parser(object):
     def semantics(self):
         return self._semantic_parser
 
+    @property
+    def is_extracted(self):
+        return self._is_extracted
+
     def parse(self, d_parsers=None, verbose=False):
         if self._syntax_parser:
             return self._syntax_parser
@@ -119,9 +123,16 @@ class Parser(object):
         if d_parsers is None:
             d_parsers = OrderedDict()
         if parser.ast.has_additional_module():
+            # Add parser before parsing sons to avoid trying to parse self
             d_parsers[self._syntax_parser.ast.mod_name] = self.create_extracted_mod_parser()
 
         self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
+
+        if parser.ast.has_additional_module():
+            # Use parse_sons results for extracted module
+            self._extracted_mod_parser._d_parsers = self._d_parsers
+            self._extracted_mod_parser._sons.extend(self._sons)
+            self._extracted_mod_parser._sons.remove(self._extracted_mod_parser)
 
         return parser.ast
 
