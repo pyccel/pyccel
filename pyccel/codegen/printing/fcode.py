@@ -28,13 +28,6 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-
-from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
-from pyccel.ast.numpyext import Complex
-from pyccel.ast.numpyext import ZerosLike, FullLike
-
-
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -51,14 +44,15 @@ from pyccel.ast.core import Subroutine
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Range, Product, Block , Zip, Enumerate, Map
+from pyccel.ast.core import Product, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Declare, ValuedVariable,
-                             Len, FunctionalFor,
+                             FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If, Nil, Is, IsNot)
+                             If, Nil, Is, IsNot)
+from pyccel.ast.builtins import Enumerate, Len, Map, Print, Range, Zip
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
@@ -67,14 +61,19 @@ from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.ast.parallel.mpi     import MPI
 from pyccel.ast.parallel.openmp  import OMP_For
 from pyccel.ast.parallel.openacc import ACC_For
 
+from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
+from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
+from pyccel.ast.numpyext import Complex
+from pyccel.ast.numpyext import ZerosLike, FullLike
+
 from pyccel.parser.errors import Errors, PyccelCodegenError
 from pyccel.parser.messages import *
+from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from collections import OrderedDict
 import functools

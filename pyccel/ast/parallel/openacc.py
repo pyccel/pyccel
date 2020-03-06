@@ -10,12 +10,10 @@ from pyccel.ast.core import DottedName
 from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
 from pyccel.ast.core import Assign, Declare, AugAssign
 from pyccel.ast.core import Block, ParallelBlock
-from pyccel.ast.core import Range, Tile, Tensor
+from pyccel.ast.core import Tile, Tensor
 from pyccel.ast.core import Comment
 from pyccel.ast.core import AnnotatedComment
 from pyccel.ast.core import EmptyLine
-from pyccel.ast.core import Print
-from pyccel.ast.core import Len
 from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, With, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef

@@ -2,13 +2,23 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
+from sympy import Symbol, Lambda, floor
+from sympy import Not, Float
+from sympy import Function
+from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, atan2)
+import scipy.constants as sc_constants
+
+from pyccel.symbolic import lambdify
+
 from .core import AsName
 from .core import Import
-from .core import Range, Len , Enumerate, Zip, Product, Map
+from .core import Product
 from .core import FunctionDef, Return, Assign
 from .core import ValuedArgument
-
 from .core import Constant, Variable, IndexedVariable
+
+from .builtins import Enumerate, Len, Map, Range, Zip
+
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike#, OnesLike
 from .numpyext import Diag, Cross
@@ -18,13 +28,6 @@ from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
-from pyccel.symbolic import lambdify
-from sympy import Symbol, Lambda, floor
-from sympy import Not, Float
-from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, atan2)
-
-import scipy.constants as sc_constants
 
 math_functions = {
     'abs'    : Abs,
