@@ -1153,11 +1153,13 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr]
         return List(*ls, sympify=False)
 
+    def _visit_ValuedArgument(self, expr, **settings):
+        expr_value = self._visit(expr.value, **settings)
+        return ValuedArgument(expr.name, expr_value)
+
     def _visit_CodeBlock(self, expr, **settings):
         return expr
     def _visit_Nil(self, expr, **settings):
-        return expr
-    def _visit_ValuedArgument(self, expr, **settings):
         return expr
     def _visit_EmptyLine(self, expr, **settings):
         return expr
