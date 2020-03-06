@@ -652,6 +652,9 @@ class FCodePrinter(CodePrinter):
     def _print_Complex(self, expr):
         return expr.fprint(self._print)
 
+    def _print_Bool(self, expr):
+        return expr.fprint(self._print)
+
     def _print_Rand(self, expr):
         return expr.fprint(self._print)
 

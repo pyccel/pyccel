@@ -17,6 +17,7 @@ from sympy.tensor import Indexed, IndexedBase
 from .basic import Basic
 
 __all__ = (
+    'Bool',
     'Enumerate',
     'Len',
     'List',
@@ -35,6 +36,47 @@ local_sympify = {
     'ones' : Symbol('ones'),
     'Point': Symbol('Point')
 }
+
+#==============================================================================
+class Bool(Application):
+    """ Represents a call to Python's native bool() function.
+    """
+    is_Boolean = True
+
+    def __new__(cls, arg):
+        if arg.is_Boolean:
+            return arg
+        return Basic.__new__(cls, arg)
+
+    @property
+    def arg(self):
+        return self.args[0]
+
+    @property
+    def dtype(self):
+        return 'bool'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def precision(self):
+        return default_precision['bool']
+
+    def __str__(self):
+        return 'Bool({})'.format(str(self.arg))
+
+    def _sympystr(self, printer):
+        return self.__str__()
+
+    def fprint(self, printer):
+        """ Fortran printer. """
+        return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
 class Enumerate(Basic):

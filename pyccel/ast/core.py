@@ -2015,6 +2015,8 @@ class Variable(Symbol):
             assumptions['real'] = True
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
+        elif isinstance(dtype, NativeBool):
+            obj.is_Boolean = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
             raise TypeError('Undefined datatype')
 

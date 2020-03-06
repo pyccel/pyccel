@@ -911,7 +911,7 @@ class SemanticParser(BasicParser):
 
             elif name in ['Int','Int32','Int64','Real','Imag',
                           'Float32','Float64','Complex',
-                          'Complex128','Complex64']:
+                          'Complex128','Complex64','Bool']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0

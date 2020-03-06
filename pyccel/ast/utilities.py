@@ -17,7 +17,7 @@ from .core import FunctionDef, Return, Assign
 from .core import ValuedArgument
 from .core import Constant, Variable, IndexedVariable
 
-from .builtins import Enumerate, Len, Map, Range, Zip
+from .builtins import Bool, Enumerate, Len, Map, Range, Zip
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike#, OnesLike
@@ -73,8 +73,8 @@ numpy_functions = {
     'int'       : Int,
     'real'      : Real,
     'imag'      : Imag,
-    'float'     : Real,
-    'double'    : Real,
+    'float'     : Float64,
+    'double'    : Float64,
     'Mod'       : Mod,
     'float32'   : Float32,
     'float64'   : Float64,
@@ -100,6 +100,7 @@ builtin_functions_dict = {
     'enumerate': Enumerate,
     'int'      : Int,
     'float'    : Real,
+    'bool'     : Bool,
     'sum'      : NumpySum,
     'len'      : Len,
     'Mod'      : Mod,

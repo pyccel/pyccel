@@ -989,6 +989,8 @@ class Full(Application):
                 dtype = 'complex'
             elif fill_value.is_Boolean:
                 dtype = 'bool'
+            else:
+                raise TypeError('Could not determine dtype from fill_value {}'.format(fill_value))
 
         # Verify dtype and get precision
         dtype, precision = cls._process_dtype(dtype)
@@ -1572,6 +1574,3 @@ class Int64(Int):
     @property
     def precision(self):
         return dtype_registry['int64'][1]
-
-
-
