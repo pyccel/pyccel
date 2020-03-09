@@ -999,8 +999,8 @@ class Full(Application):
         dtype, precision = cls._process_dtype(dtype)
 
         # Verify array ordering
-        if str(order) not in ('C', 'F'):
-            raise ValueError('unrecognized order = %s'.format(order))
+        if str(order).strip('\'"') not in ('C', 'F'):
+            raise ValueError('unrecognized order = {}'.format(order))
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
@@ -1082,8 +1082,8 @@ class Empty(Full):
         dtype, precision = cls._process_dtype(dtype)
 
         # Verify array ordering
-        if str(order) not in ('C', 'F'):
-            raise ValueError('unrecognized order = %s'.format(order))
+        if str(order).strip('\'"') not in ('C', 'F'):
+            raise ValueError('unrecognized order = {}'.format(order))
 
         return Basic.__new__(cls, shape, dtype, order, precision)
 
