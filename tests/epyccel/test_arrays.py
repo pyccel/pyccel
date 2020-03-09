@@ -1291,6 +1291,19 @@ def test_array_real_loopdiff():
     f2(x2, y2, z2)
     assert np.array_equal(z1, z2)
 
+#==============================================================================
+# TEST: keyword arguments
+#==============================================================================
+def test_array_kwargs_full():
+    f1 = arrays.array_kwargs_full
+    f2 = epyccel( f1 )
+    assert f1() == f2()
+
+def test_array_kwargs_ones():
+    f1 = arrays.array_kwargs_ones
+    f2 = epyccel( f1 )
+    assert f1() == f2()
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
