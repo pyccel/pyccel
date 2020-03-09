@@ -1033,7 +1033,7 @@ class Full(Application):
     @staticmethod
     def _process_dtype(dtype):
 
-        dtype = str(dtype).replace('\'', '')
+        dtype = str(dtype).replace('\'', '').lower()
         dtype, precision = dtype_registry[dtype]
         dtype = datatype('ndarray' + dtype)
 

@@ -73,6 +73,7 @@ from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
+from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 
@@ -1267,6 +1268,8 @@ class SemanticParser(BasicParser):
             var = self.get_function(name)
         if var is None:
             var = self.get_symbolic_function(name)
+        if var is None:
+            var = python_builtin_datatype(name)
 
         if var is None:
 
