@@ -1,5 +1,5 @@
 import os
-from fffi import FortranWrapper
+from fffi import FortranLibrary, FortranModule
 
 def create_shared_library(codegen,
                           pyccel_dirpath,
@@ -18,8 +18,19 @@ def create_shared_library(codegen,
 
 
     fffi_dir = os.path.join(pyccel_dirpath, '__fffi__')
-    wrapper = FortranWrapper(sharedlib_modname, "extern void _f(int);",
-                             object_files)
-    wrapper.compile(tmpdir=fffi_dir, verbose=1)
+    lib = FortranLibrary(
+        sharedlib_modname, compiler={'name': 'gfortran', 'version': 9})
+    mod = FortranModule(lib, module_name)
 
-    return os.path.join(fffi_dir, wrapper.target)
+    # TODO: do some Fortran definitions based on structure
+    mod.fdef(
+        """\
+            subroutine f(x)
+                integer(kind=4), intent(in)  :: x
+            end subroutine f
+        """
+    )
+    lib.compile(
+        tmpdir=fffi_dir, verbose=1, skiplib=True, extra_objects=object_files)
+
+    return os.path.join(fffi_dir, '_' + lib.name + '.so')
