@@ -372,6 +372,7 @@ class Shape(Array):
         return code_init
 
 #==============================================================================
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Int
 class Int(Application):
 
     """Represents a call to  numpy.int for code generation.
@@ -425,6 +426,7 @@ class Int(Application):
         return code
 
 #==============================================================================
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
 class Real(Application):
 
     """Represents a call to  numpy.real for code generation.
@@ -505,6 +507,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
 class Complex(Application):
 
     """Represents a call to  numpy.complex for code generation.

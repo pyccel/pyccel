@@ -9,6 +9,7 @@ In this module we implement some of them in alphabetical order.
 
 from sympy import Symbol, Function, Tuple
 from sympy import Integer as sp_Integer
+from sympy import Float as sp_Float
 from sympy import sympify
 from sympy.core.function import Application
 from sympy.core.assumptions import StdFactKB
@@ -18,13 +19,17 @@ from .basic import Basic
 
 __all__ = (
     'Bool',
+    'Complex',
     'Enumerate',
+    'Float',
+    'Int',
     'Len',
     'List',
     'Map',
     'Print',
     'Range',
     'Zip',
+    'python_builtin_datatype'
 )
 
 #==============================================================================
@@ -79,10 +84,60 @@ class Bool(Application):
         return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
+class Complex(Application):
+    """ Represents a call to Python's native complex() function.
+    """
+    def __new__(cls, arg0, arg1=sp_Float(0)):
+        obj = Basic.__new__(cls, arg0, arg1)
+        assumptions = {'complex': True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+
+    @property
+    def real_part(self):
+        return self._args[0]
+
+    @property
+    def imag_part(self):
+        return self._args[1]
+
+    @property
+    def dtype(self):
+        return 'complex'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def precision(self):
+        return default_precision['complex']
+
+    def __str__(self):
+        return self.fprint(str)
+
+    def _sympystr(self, printer):
+        return self.fprint(str)
+
+    def fprint(self, printer):
+        """Fortran print."""
+        real = printer(self.real_part)
+        imag = printer(self.imag_part)
+        prec = printer(self.precision)
+        code = 'cmplx({0}, {1}, {2})'.format(real, imag, prec)
+        return code
+
+#==============================================================================
 class Enumerate(Basic):
 
     """
-    Reresents the enumerate stmt
+    Represents the enumerate stmt
 
     """
 
@@ -94,6 +149,90 @@ class Enumerate(Basic):
     @property
     def element(self):
         return self._args[0]
+
+#==============================================================================
+class Float(Application):
+    """ Represents a call to Python's native float() function.
+    """
+    def __new__(cls, arg):
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'real': True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return 'float'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def precision(self):
+        return default_precision['real']
+
+    def __str__(self):
+        return 'Float({0})'.format(str(self.arg))
+
+    def _sympystr(self, printer):
+        return self.__str__()
+
+    def fprint(self, printer):
+        """Fortran print."""
+        value = printer(self.arg)
+        prec  = printer(self.precision)
+        code = 'Real({0}, {1})'.format(value, prec)
+        return code
+
+#==============================================================================
+class Int(Application):
+    """ Represents a call to Python's native int() function.
+    """
+    def __new__(cls, arg):
+        obj = Basic.__new__(cls, arg)
+        assumptions = {'integer': True}
+        ass_copy = assumptions.copy()
+        obj._assumptions = StdFactKB(assumptions)
+        obj._assumptions._generator = ass_copy
+        return obj
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return 'int'
+
+    @property
+    def shape(self):
+        return None
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def precision(self):
+        return default_precision['int']
+
+    def fprint(self, printer):
+        """Fortran print."""
+        value = printer(self.arg)
+        prec  = printer(self.precision)
+        code  = 'Int({0}, {1})'.format(value, prec)
+        return code
 
 #==============================================================================
 class Len(Function):
@@ -241,3 +380,27 @@ class Zip(Basic):
     @property
     def element(self):
         return self._args[0]
+
+#==============================================================================
+python_builtin_datatypes_dict = {
+    'bool'   : Bool,
+    'float'  : Float,
+    'int'    : Int,
+    'complex': Complex
+}
+
+def python_builtin_datatype(name):
+    """
+    Given a symbol name, return the corresponding datatype.
+
+    name: str
+        Datatype as written in Python.
+
+    """
+    if not isinstance(name, str):
+        raise TypeError('name must be a string')
+
+    if name in python_builtin_datatypes_dict:
+        return python_builtin_datatypes_dict[name]
+
+    return None
