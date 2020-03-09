@@ -43,7 +43,8 @@ def _which(program):
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
-def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfortran'):
+def pyccel(files=None, openmp=None, openacc=None, output_dir=None, 
+           compiler='gfortran', binding='fffi'):
     """
     pyccel console command.
     """
@@ -72,9 +73,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     group.add_argument('--mpi-compiler', help='MPI compiler wrapper')
 
-    group.add_argument('--fflags', type=str, \
+    group.add_argument('--fflags', type=str,
                        help='Fortran compiler flags.')
-    group.add_argument('--debug', action='store_true', \
+    group.add_argument('--debug', action='store_true',
                        help='compiles the code in a debug mode.')
 
     group.add_argument('--include',
@@ -98,29 +99,32 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                         default=(),
                         help='list of libraries to link with.')
 
-    group.add_argument('--output', type=str, default = '',\
+    group.add_argument('--output', type=str, default = '',
                        help='folder in which the output is stored.')
 
-    # ...
+    # ... code generators
+
+    group.add_argument('--binding', choices=('f2py', 'fffi'),
+                       help='binding to call Fortran code from Python.')
 
     # ... Accelerators
     group = parser.add_argument_group('Accelerators options')
-    group.add_argument('--openmp', action='store_true', \
+    group.add_argument('--openmp', action='store_true',
                        help='uses openmp')
-    group.add_argument('--openacc', action='store_true', \
+    group.add_argument('--openacc', action='store_true',
                        help='uses openacc')
     # ...
 
     # ... Other options
     group = parser.add_argument_group('Other options')
-    group.add_argument('--verbose', action='store_true', \
+    group.add_argument('--verbose', action='store_true',
                         help='enables verbose mode.')
-    group.add_argument('--developer-mode', action='store_true', \
+    group.add_argument('--developer-mode', action='store_true',
                         help='shows internal messages')
     # ...
 
     # TODO move to another cmd line
-    parser.add_argument('--analysis', action='store_true', \
+    parser.add_argument('--analysis', action='store_true',
                         help='enables code analysis mode.')
     # ...
 
@@ -140,6 +144,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
 
     if args.compiler:
         compiler = args.compiler
+
+    if args.binding:
+        binding = args.binding
 
     if not openmp:
         openmp = args.openmp
@@ -213,6 +220,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
                        convert_only  = args.convert_only,
                        verbose       = args.verbose,
                        compiler      = compiler,
+                       binding       = binding,
                        mpi_compiler  = args.mpi_compiler,
                        fflags        = args.fflags,
                        includes      = args.includes,
@@ -227,6 +235,10 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfo
         os.chdir(base_dirpath)
 
     return
+
+if __name__ == '__main__':
+    pyccel()
+
 
 #==============================================================================
 # NOTE: left here for later reference

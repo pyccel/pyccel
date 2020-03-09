@@ -7,7 +7,6 @@ from pyccel.codegen.codegen   import Parser
 from pyccel.codegen.codegen   import Codegen
 from pyccel.codegen.utilities import construct_flags
 from pyccel.codegen.utilities import compile_fortran
-from pyccel.codegen.f2py      import create_shared_library
 
 __all__ = ['execute_pyccel']
 
@@ -26,7 +25,8 @@ def execute_pyccel(fname, *,
                    recursive     = False,
                    verbose       = False,
                    folder        = None,
-                   compiler      = None,
+                   compiler      = 'gfortran',
+                   binding       = 'fffi',
                    mpi_compiler  = None,
                    fflags        = None,
                    includes      = (),
@@ -78,10 +78,6 @@ def execute_pyccel(fname, *,
 
     # Change working directory to 'folder'
     os.chdir(folder)
-
-    # Choose Fortran compiler
-    if compiler is None:
-        compiler = 'gfortran'
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
@@ -204,6 +200,15 @@ def execute_pyccel(fname, *,
             print( '> Executable has been created: {}'.format(exec_filepath))
         os.chdir(base_dirpath)
         return
+
+    if binding == 'f2py':
+        from pyccel.codegen.f2py      import create_shared_library
+    elif binding == 'fffi':
+        from pyccel.codegen.fffi_gen  import create_shared_library
+    else:
+        raise RuntimeError(("Fortran binding {} not supported."
+            +"Use fffi or f2py.").format(binding))
+
 
     # Create shared library
     try:
