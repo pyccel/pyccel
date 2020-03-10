@@ -174,9 +174,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'zeros_like('+ self._print(expr.rhs)+')'
 
     def _print_Max(self, expr):
-        args = ','.join(self._print(e) for e in expr.args)
+        args = ', '.join(self._print(e) for e in expr.args)
         return 'max({})'.format(args)
 
+    def _print_Min(self, expr):
+        args = ', '.join(self._print(e) for e in expr.args)
+        return 'min({})'.format(args)
+        
     def _print_Slice(self, expr):
         return str(expr)
 
