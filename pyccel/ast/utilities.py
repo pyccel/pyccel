@@ -75,7 +75,7 @@ numpy_functions = {
     'imag'      : Imag,
     'float'     : Float64,
     'double'    : Float64,
-    'Mod'       : Mod,
+    'mod'       : Mod,
     'float32'   : Float32,
     'float64'   : Float64,
     'int32'     : Int32,
@@ -120,8 +120,6 @@ scipy_constants = {
 
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
-    if not (isinstance(expr, Application) or isinstance(expr, str)):
-        raise TypeError('Expecting a string or a Function class')
 
     if isinstance(expr, Application):
         name = str(type(expr).__name__)
