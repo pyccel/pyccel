@@ -1140,192 +1140,48 @@ class Ones(Empty):
         return value
 
 #=======================================================================================
+class FullLike(Application):
 
+    def __new__(cls, a, fill_value, dtype=None, order='K', subok=True):
+
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
+
+        return Full(a.shape, fill_value, dtype, order)
+
+#=======================================================================================
 class EmptyLike(Application):
 
-    """Represents variable assignment using numpy.empty_like for code generation.
+    def __new__(cls, a, dtype=None, order='K', subok=True):
 
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-    rhs : Variable
-        the input variable
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, EmptyLike
-    >>> n, m, x = symbols('n, m, x')
-    >>> y = Zeros(x, (n, m))
-    >>> z = EmptyLike(y)
-    """
-
-    # TODO improve in the spirit of assign
-
-    def __new__(cls, rhs=None, lhs=None):
-        if isinstance(lhs, str):
-            lhs = Symbol(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-
-        assignable = (
-            Symbol,
-            MatrixSymbol,
-            MatrixElement,
-            Indexed,
-            Idx,
-            Variable,
-            )
-
-        if lhs and not isinstance(lhs, assignable):
-            raise TypeError('Cannot assign to lhs of type %s.'
-                            % type(lhs))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-        return code
+        return Empty(a.shape, dtype, order)
 
 #=======================================================================================
+class OnesLike(Application):
 
-class ZerosLike(EmptyLike):
+    def __new__(cls, a, dtype=None, order='K', subok=True):
 
-    @property
-    def init_value(self):
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        def _native_init_value(dtype):
-            if isinstance(dtype, NativeInteger):
-                return 0
-            elif isinstance(dtype, NativeReal):
-                return 0.0
-            elif isinstance(dtype, NativeComplex):
-                return 0.0
-            elif isinstance(dtype, NativeBool):
-                return BooleanFalse()
-            raise TypeError('Expecting a Native type, given {}'.format(dtype))
-
-        _native_types = (NativeInteger, NativeReal,
-                         NativeComplex, NativeBool)
-
-        rhs = self.rhs
-        if isinstance(rhs.dtype, _native_types):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, (Variable, IndexedVariable)):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, IndexedElement):
-            return _native_init_value(rhs.base.dtype)
-        else:
-            raise TypeError('Unknown type for {name}, given {dtype}'.format(dtype=type(rhs),
-                            name=rhs))
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        init_value = printer(self.init_value)
-        bounds_code = printer(Bounds(self.rhs))
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-        return code
+        return Ones(a.shape, dtype, order)
 
 #=======================================================================================
+class ZerosLike(Application):
 
-class FullLike(EmptyLike):
+    def __new__(cls, a, dtype=None, order='K', subok=True):
 
-    """Represents variable assignment using numpy.full_like for code generation.
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Variable
-        the input variable
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, FullLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = FullLike(y)
-    """
-
-    # TODO improve in the spirit of assign
-
-    def __new__(cls, rhs=None, lhs=None):
-        if isinstance(lhs, str):
-            lhs = Symbol(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-
-        assignable = (
-            Symbol,
-            MatrixSymbol,
-            MatrixElement,
-            Indexed,
-            Idx,
-            Variable,
-            )
-
-        if lhs and not isinstance(lhs, assignable):
-            raise TypeError('Cannot assign to lhs of type %s.'
-                            % type(lhs))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def init_value(self):
-        return self.rhs
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-        code_init = '{0} = {1}'.format(lhs_code, rhs_code)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-        return code
+        return Zeros(a.shape, dtype, order)
 
 #=======================================================================================
 

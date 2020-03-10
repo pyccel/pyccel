@@ -69,7 +69,7 @@ from pyccel.ast.parallel.openacc import ACC_For
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
 from pyccel.ast.numpyext import Complex
-from pyccel.ast.numpyext import ZerosLike, FullLike
+from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 
 from pyccel.parser.errors import Errors, PyccelCodegenError
 from pyccel.parser.messages import *
@@ -1033,7 +1033,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Array, Shape, Linspace, Diag, Cross, Where)):
             return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(rhs, (Full, ZerosLike, FullLike)):
+        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike)):
 
             stack_array = False
             if self._current_function:
