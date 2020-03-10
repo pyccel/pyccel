@@ -978,8 +978,7 @@ class Full(Application):
     def __new__(cls, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to Tuple
-        if not isinstance(shape, Tuple):
-            shape = Tuple(shape)
+        shape = cls._process_shape(shape)
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
@@ -1031,6 +1030,18 @@ class Full(Application):
 
     #--------------------------------------------------------------------------
     @staticmethod
+    def _process_shape(shape):
+
+        if isinstance(shape, Tuple):
+            return shape
+
+        if isinstance(shape, (list, tuple)):
+            return Tuple(*shape)
+
+        return Tuple(shape)
+
+    #--------------------------------------------------------------------------
+    @staticmethod
     def _process_dtype(dtype):
 
         dtype = str(dtype).replace('\'', '').lower()
@@ -1075,8 +1086,7 @@ class Empty(Full):
     def __new__(cls, shape, dtype='float', order='C'):
 
         # Convert shape to Tuple
-        if not isinstance(shape, Tuple):
-            shape = Tuple(shape)
+        shape = cls._process_shape(shape)
 
         # Verify dtype and get precision
         dtype, precision = cls._process_dtype(dtype)
