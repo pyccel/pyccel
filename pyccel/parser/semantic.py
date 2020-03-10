@@ -2561,6 +2561,7 @@ class SemanticParser(BasicParser):
             imports     = []
             arg         = None
             arguments = expr.arguments
+            header_results = m.results
 
             self.create_new_function_scope(name)
 
@@ -2730,6 +2731,16 @@ class SemanticParser(BasicParser):
                     raise AstFunctionResultError(r)
                 elif (r not in args) and r.rank > 0:
                     raise AstFunctionResultError(r)
+
+            for rh,r in zip(header_results, results):
+                # check type compatibility
+                if str(rh.dtype) != str(r.dtype):
+                    txt = '|{name}| {old} <-> {new}'
+                    txt = txt.format(name=name, old=rh.dtype, new=r.dtype)
+                    errors.report(INCOMPATIBLE_RETURN_VALUE_TYPE,
+                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=False)
+
 
             func = FunctionDef(name,
                     args,
