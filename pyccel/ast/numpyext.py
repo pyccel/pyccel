@@ -4,7 +4,7 @@
 # TODO remove sympify, Symbol
 
 import numpy
-from sympy.core.function import Application
+from sympy.core.function import Application, Function
 from sympy.core import Symbol, Tuple
 from sympy import sympify
 from sympy.core.basic import Basic
@@ -145,7 +145,7 @@ class Array(Application):
         return code
 
 #==============================================================================
-class NumpySum(Application):
+class NumpySum(Function):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -187,7 +187,7 @@ class NumpySum(Application):
         return 'sum({0})'.format(rhs_code)
 
 #==============================================================================
-class Product(Application):
+class Product(Function):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -1338,7 +1338,7 @@ class Bounds(Basic):
 
 #=======================================================================================
 
-class Norm(Application):
+class Norm(Function):
     """ Represents call to numpy.norm"""
 
     def __new__(cls, arg, dim=None):
@@ -1394,7 +1394,7 @@ class Sqrt(Pow):
 
 #=======================================================================================
 
-class Mod(Application):
+class Mod(Function):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
 
@@ -1404,7 +1404,7 @@ class Mod(Application):
         obj._assumptions._generator = ass_copy
         return obj
 
-class Asin(Application):
+class Asin(Function):
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1415,7 +1415,7 @@ class Asin(Application):
         return obj
 
 
-class Acos(Application):
+class Acos(Function):
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1425,7 +1425,7 @@ class Acos(Application):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Asec(Application):
+class Asec(Function):
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1437,7 +1437,7 @@ class Asec(Application):
 
 #=======================================================================================
 
-class Atan(Application):
+class Atan(Function):
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1448,7 +1448,7 @@ class Atan(Application):
         return obj
 
 
-class Acot(Application):
+class Acot(Function):
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1459,7 +1459,7 @@ class Acot(Application):
         return obj
 
 
-class Acsc(Application):
+class Acsc(Function):
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1471,7 +1471,7 @@ class Acsc(Application):
 
 #=======================================================================================
 
-class Sinh(Application):
+class Sinh(Function):
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1481,7 +1481,7 @@ class Sinh(Application):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Cosh(Application):
+class Cosh(Function):
     def __new__(cls,arg):
         obj = cosh(arg)
         if arg.is_real:
@@ -1492,7 +1492,7 @@ class Cosh(Application):
         return obj
 
 
-class Tanh(Application):
+class Tanh(Function):
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1504,7 +1504,7 @@ class Tanh(Application):
 
 #=======================================================================================
 
-class Log(Application):
+class Log(Function):
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1516,7 +1516,7 @@ class Log(Application):
 
 #=======================================================================================
 
-class Abs(Application):
+class Abs(Function):
 
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
@@ -1526,14 +1526,14 @@ class Abs(Application):
 
 #=======================================================================================
 
-class Min(Application):
+class Min(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
      def _eval_is_real(self):
         return True
 
-class Max(Application):
+class Max(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 

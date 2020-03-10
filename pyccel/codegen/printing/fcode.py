@@ -1052,7 +1052,7 @@ class FCodePrinter(CodePrinter):
             rhs  = 'modulo({})'.format(args)
             return '{0} = {1}'.format(lhs, rhs)
 
-        elif isinstance(rhs, Shape):
+        if isinstance(rhs, Shape):
             a = expr.rhs.rhs
 
             lhs = self._print(expr.lhs)
@@ -1080,11 +1080,13 @@ class FCodePrinter(CodePrinter):
 
             return self._get_statement(code)
 
-        elif isinstance(rhs, FunctionDef):
-            rhs_code = self._print(rhs.name)
-            is_procedure = rhs.is_procedure
+        # TODO [YG, 10.03.2020]: I have just commented out this block and
+        # everything still seems to work; is it dead code?
+#        if isinstance(rhs, FunctionDef):
+#            rhs_code = self._print(rhs.name)
+#            is_procedure = rhs.is_procedure
 
-        elif isinstance(rhs, ConstructorCall):
+        if isinstance(rhs, ConstructorCall):
             func = rhs.func
             name = str(func.name)
 
@@ -1108,31 +1110,27 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
 
-        elif isinstance(rhs, Function):
+        if isinstance(rhs, Function):
+
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            name = type(rhs).__name__
-            rhs_code = self._print(name)
-            args = rhs.args
-            code_args = ', '.join(self._print(i) for i in args)
-
             if isinstance(expr.lhs, (tuple, list, Tuple)):
+
+                name = type(rhs).__name__
+                rhs_code = self._print(name)
+                args = rhs.args
+                code_args = ', '.join(self._print(i) for i in args)
+
                 lhs_code = ', '.join(self._print(i) for i in expr.lhs)
                 code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
                 return self._get_statement(code)
 
-            rhs_code = '{0}({1})'.format(rhs_code, code_args)
-            code = '{0} = {1}'.format(lhs_code, rhs_code)
-
-            return self._get_statement(code)
-
-        elif (isinstance(expr.lhs, Variable) and
+        if (isinstance(expr.lhs, Variable) and
               expr.lhs.dtype == NativeSymbol()):
             return ''
-        else:
 
-            rhs_code = self._print(rhs)
-#            print("ASSIGN = ", rhs_code)
+        # Right-hand side code
+        rhs_code = self._print(rhs)
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):

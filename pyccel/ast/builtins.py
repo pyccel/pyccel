@@ -11,7 +11,7 @@ from sympy import Symbol, Function, Tuple
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy import sympify
-from sympy.core.function import Application
+from sympy.core.function import Function
 from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
@@ -43,7 +43,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class Bool(Application):
+class Bool(Function):
     """ Represents a call to Python's native bool() function.
     """
     is_Boolean = True
@@ -84,7 +84,7 @@ class Bool(Application):
         return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
-class Complex(Application):
+class Complex(Function):
     """ Represents a call to Python's native complex() function.
     """
     def __new__(cls, arg0, arg1=sp_Float(0)):
@@ -151,7 +151,7 @@ class Enumerate(Basic):
         return self._args[0]
 
 #==============================================================================
-class Float(Application):
+class Float(Function):
     """ Represents a call to Python's native float() function.
     """
     def __new__(cls, arg):
@@ -196,7 +196,7 @@ class Float(Application):
         return code
 
 #==============================================================================
-class Int(Application):
+class Int(Function):
     """ Represents a call to Python's native int() function.
     """
     def __new__(cls, arg):
