@@ -131,7 +131,7 @@ class Array(Application):
             import functools
             import operator
             arg = functools.reduce(operator.concat, arg)
-            init_value = 'reshape(' + printer(arg) + ',' + printer(shape) + ')'
+            init_value = 'reshape(' + printer(arg) + ', ' + printer(shape) + ')'
         else:
             init_value = printer(arg)
 
@@ -358,7 +358,7 @@ class Shape(Array):
             alloc = 'allocate({}(0:{}))'.format(lhs_code, self.arg.rank-1)
             if self.index is None:
 
-                code_init = '{0} = (/ {1} /)'.format(lhs_code, init_value)
+                code_init = '{0} = [{1}]'.format(lhs_code, init_value)
 
             else:
                 index = printer(self.index)
@@ -367,7 +367,7 @@ class Shape(Array):
             code_init = alloc+ '\n'+ code_init
         else:
             if self.index is None:
-                code_init = '(/ {0} /)'.format(init_value)
+                code_init = '[{0}]'.format(init_value)
 
             else:
                 index = printer(self.index)
@@ -663,7 +663,7 @@ class Linspace(Application):
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        init_value = '(/ ({0} + {1}*{2},{1} = 0,{3}-1) /)'
+        init_value = '[({0} + {1}*{2},{1} = 0,{3}-1)]'
 
         start = printer(self.start)
         step  = printer(self.step)
@@ -881,7 +881,7 @@ class Cross(Application):
 
             if order == 'C':
 
-                code = 'reshape({}, shape({}), order=[2,1])'.format(cross_product, first)
+                code = 'reshape({}, shape({}), order=[2, 1])'.format(cross_product, first)
             else:
 
                 code = 'reshape({}, shape({})'.format(cross_product, first)
