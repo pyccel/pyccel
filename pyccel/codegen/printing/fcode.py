@@ -942,14 +942,18 @@ class FCodePrinter(CodePrinter):
         if is_optional:
             optionalstr = ', optional'
 
-        allocatablestr = allocatablestr + optionalstr
-
-        if intent:
+        if intent and rank>0:
+            decs.append('{0}, intent({1}) {2} {3}:: {4} {5}'.
+                        format(dtype, intent, allocatablestr, optionalstr, vstr, rankstr))
+        elif intent and  intent == 'in' and not is_static and rank == 0:
+            decs.append('{0}, value {1} :: {2}'.
+                        format(dtype, optionalstr, vstr, rankstr))
+        elif intent:
             decs.append('{0}, intent({1}) {2} :: {3} {4}'.
-                        format(dtype, intent, allocatablestr, vstr, rankstr))
+                        format(dtype, intent, optionalstr, vstr, rankstr))
         else:
-            args = [dtype, allocatablestr, vstr, rankstr, code_value]
-            decs.append('{0}{1} :: {2} {3} {4}'.
+            args = [dtype, allocatablestr, optionalstr, vstr, rankstr, code_value]
+            decs.append('{0}{1} {2} :: {3} {4} {5}'.
                         format(*args))
 
         return '\n'.join(decs)
@@ -1275,20 +1279,61 @@ class FCodePrinter(CodePrinter):
                  '{body}\n'
                 'end Block {name}').format(name=expr.name, prelude=prelude, body=body_code)
 
+    def _print_F2PYFunctionDef(self, expr):
+        name = self._print(expr.name)
+        results   = list(expr.results)
+        arguments = list(expr.arguments)
+        arguments_inout = expr.arguments_inout
 
+        args_decs = OrderedDict()
+        for i,arg in enumerate(arguments):
+            if arguments_inout[i]:
+                intent='inout'
+            else:
+                intent='in'
+
+            if arg in results:
+                results.remove(i)
+
+            dec = Declare(arg.dtype, arg, intent=intent , static=True)
+            args_decs[str(arg.name)] = dec
+
+        for result in results:
+            dec = Declare(result.dtype, result, intent='out', static=True)
+            args_decs[str(result)] = dec
+
+        if expr.is_procedure:
+            func_type = 'subroutine'
+            func_end  = ''
+        else:
+            func_type = 'function'
+            result = results.pop()
+            func_end = 'result({0})'.format(result.name)
+            dec = Declare(result.dtype, result, static=True)
+            args_decs[str(result.name)] = dec
+        # ...
+        arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
+        body_code = '\n'.join(self._print(i) for i in expr.body)
+        prelude   = '\n'.join(self._print(i) for i in args_decs.values())
+        body_code = prelude + '\n\n' + body_code
+        imports = '\n'.join(self._print(i) for i in expr.imports)
+
+        func = ('{0} {1} ({2}) {3}\n'
+                '{4}\n'
+                'implicit none\n'
+                '{5}\n'
+                'end {6}').format(func_type, name, arg_code, func_end, imports, body_code, func_type)
+
+        return func
 
     def _print_FunctionDef(self, expr):
         # ... we don't print 'hidden' functions
-        name = self._print(expr.name)
-
         if expr.hide:
             return ''
-        # ...
 
-
+        name = self._print(expr.name)
         self.set_current_function(name)
 
-        is_static    = expr.is_static
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         is_procedure = expr.is_procedure
@@ -1305,83 +1350,54 @@ class FCodePrinter(CodePrinter):
                 # because we may have a class Point with init: Point___init__
                 if i in name:
                     name = name.replace(i, _default_methods[i])
+
         out_args = []
         decs = OrderedDict()
         args_decs = OrderedDict()
         # ... local variables declarations
-        for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
-            decs[str(i)] = dec
-        # ...
-
-        # ...
-        body = expr.body
         func_end  = ''
-        if not is_procedure:
-            result = expr.results[0]
-            # TODO uncomment and validate this
-#            expr = subs(expr, result, str(expr.name))
+        rec = 'recursive ' if expr.is_recursive else ''
+        if is_procedure:
+            func_type = 'subroutine'
+            out_args = [result for result in expr.results]
+            for result in out_args:
+                if result in expr.arguments:
+                    dec = Declare(result.dtype, result, intent='inout')
+                else:
+                    dec = Declare(result.dtype, result, intent='out')
+                args_decs[str(result)] = dec
 
-            body = expr.body
+            names = [str(res.name) for res in expr.results]
             functions = expr.functions
 
-            ret_type = self._print(result.dtype)
-            ret_type += '(kind={0})'.format(str(result.precision))
-
+        else:
             func_type = 'function'
-            rec = 'recursive ' if expr.is_recursive else ''
-            sig = '{0}function {1}'.format(rec, name)
+            result = expr.results[0]
+            functions = expr.functions
+
             func_end = 'result({0})'.format(result.name)
 
             dec = Declare(result.dtype, result)
             args_decs[str(result)] = dec
-
-        else:
-            # TODO compute intent
-            # a static function is always treated as a procedure
-            #TODO improve for functions without return
-
-            out_args = [result for result in expr.results]
-            for result in out_args:
-                if result in expr.arguments:
-                    dec = Declare(result.dtype, result, intent='inout', static=is_static)
-                else:
-                    dec = Declare(result.dtype, result, intent='out', static=is_static)
-                args_decs[str(result)] = dec
-
-            sig = 'subroutine ' + name
-            func_type = 'subroutine'
-
-            names = [str(res.name) for res in expr.results]
-            body = expr.body
-            functions = expr.functions
-
-
-        # ... TODO improve to treat variables that are assigned within blocks: if, etc
-        symbols = get_assigned_symbols(expr.body)
-        assigned_names = [str(i) for i in symbols]
         # ...
-
-        results_names = [str(i) for i in expr.results]
 
         for i,arg in enumerate(expr.arguments):
             if expr.arguments_inout[i]:
-                dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
+                dec = Declare(arg.dtype, arg, intent='inout')
+
+            elif str(arg) == 'self':
+                dec = Declare(arg.dtype, arg, intent='inout')
 
             else:
-                if str(arg) in results_names + assigned_names:
-                    dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
-
-                elif str(arg) == 'self':
-                    dec = Declare(arg.dtype, arg, intent='inout', static=is_static)
-
-                else:
-                    dec = Declare(arg.dtype, arg, intent='in', static=is_static)
+                dec = Declare(arg.dtype, arg, intent='in')
 
             args_decs[str(arg)] = dec
 
+        for i in expr.local_vars:
+            dec = Declare(i.dtype, i)
+            decs[str(i)] = dec
+
         args_decs.update(decs)
-        decs = [v for k,v in args_decs.items()]
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1389,6 +1405,7 @@ class FCodePrinter(CodePrinter):
                 out_args.remove(i)
 
         # treate case of pure function
+        sig = '{0} {1} {2}'.format(rec, func_type, name)
         if is_pure:
             sig = 'pure {}'.format(sig)
 
@@ -1397,8 +1414,8 @@ class FCodePrinter(CodePrinter):
             sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
-        body_code = '\n'.join(self._print(i) for i in body)
-        prelude   = '\n'.join(self._print(i) for i in decs)
+        body_code = '\n'.join(self._print(i) for i in expr.body)
+        prelude   = '\n'.join(self._print(i) for i in args_decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains \n' +functions_code
@@ -2181,6 +2198,9 @@ class FCodePrinter(CodePrinter):
         printed = CodePrinter._print_Integer(self, expr)
         return "%s_8" % printed
 
+    def _print_Zero(self, expr):
+        return "0_8"
+
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)
 
@@ -2218,7 +2238,11 @@ class FCodePrinter(CodePrinter):
         args = expr.arguments
         results = func.results
         if func.is_procedure:
-            newargs = list(args) + list(results)
+            newargs = list(args)
+            for a in results:
+                if a not in args:
+                    newargs.append(a)
+
             newargs = ','.join(self._print(i) for i in newargs)
             code = 'call {name}({args})'.format( name = str(func.name),
                                                  args = newargs )

@@ -3152,6 +3152,10 @@ class PythonFunction(FunctionDef):
                               self.body, cls_name=self.cls_name)
 
 
+class F2PYFunctionDef(FunctionDef):
+    pass
+
+
 class GetDefaultFunctionArg(Basic):
 
     """Creates a FunctionDef for handling optional arguments in the code.
