@@ -45,7 +45,7 @@ from .basic import Basic
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric)
+                        NativeGeneric, default_precision)
 
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -948,7 +948,7 @@ class While(Basic):
     @property
     def body(self):
         return self._args[1]
-        
+
     @property
     def local_vars(self):
         return self._args[2]
@@ -1717,7 +1717,7 @@ class For(Basic):
     @property
     def body(self):
         return self._args[2]
-        
+
     @property
     def local_vars(self):
         return self._args[3]
@@ -1849,6 +1849,30 @@ class Is(Basic):
     def rhs(self):
         return self._args[1]
 
+
+class IsNot(Basic):
+
+    """Represents a is expression in the code.
+
+    Examples
+
+    >>> from pyccel.ast import IsNot
+    >>> from pyccel.ast import Nil
+    >>> from sympy.abc import x
+    >>> IsNot(x, Nil())
+    IsNot(x, None)
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
 
 
 
@@ -2025,7 +2049,7 @@ class Variable(Symbol):
             is_target = False
         elif not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
-            
+
         if is_stack_array is None:
             is_stack_array = False
         elif not isinstance(is_stack_array, bool):
@@ -2067,9 +2091,13 @@ class Variable(Symbol):
 
         if not precision:
             if isinstance(dtype, NativeInteger):
-                precision = 4
-            elif isinstance(dtype, (NativeReal, NativeComplex)):
-                precision = 8
+                precision = default_precision['int']
+            elif isinstance(dtype, NativeReal):
+                precision = default_precision['real']
+            elif isinstance(dtype, NativeComplex):
+                precision = default_precision['complex']
+            elif isinstance(dtype, NativeBool):
+                precision = default_precision['bool']
 
         # TODO improve order of arguments
 
@@ -2162,7 +2190,7 @@ class Variable(Symbol):
     @property
     def precision(self):
         return self._args[12]
-        
+
     @property
     def is_stack_array(self):
         return self._args[13]
@@ -2209,24 +2237,27 @@ class Variable(Symbol):
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
 
-    def clone(self, name):
+    def clone(self, name, new_class = None, **kwargs):
 
         # TODO check it is up to date
 
-        cls = eval(self.__class__.__name__)
+        if (new_class is None):
+            cls = eval(self.__class__.__name__)
+        else:
+            cls = new_class
 
         return cls(
             self.dtype,
             name,
-            rank=self.rank,
-            allocatable=self.allocatable,
-            shape=self.shape,
-            is_pointer=self.is_pointer,
-            is_target=self.is_target,
-            is_polymorphic=self.is_polymorphic,
-            is_optional=self.is_optional,
-            cls_base=self.cls_base,
-            cls_parameters=self.cls_parameters,
+            rank=kwargs.pop('rank',self.rank),
+            allocatable=kwargs.pop('allocatable',self.allocatable),
+            shape=kwargs.pop('shape',self.shape),
+            is_pointer=kwargs.pop('is_pointer',self.is_pointer),
+            is_target=kwargs.pop('is_target',self.is_target),
+            is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
+            is_optional=kwargs.pop('is_optional',self.is_optional),
+            cls_base=kwargs.pop('cls_base',self.cls_base),
+            cls_parameters=kwargs.pop('cls_parameters',self.cls_parameters),
             )
 
     def __getnewargs__(self):
@@ -2802,7 +2833,7 @@ class FunctionDef(Basic):
 
         if not isinstance(is_private, bool):
             raise TypeError('Expecting a boolean for private')
-        
+
         if not isinstance(is_header, bool):
             raise TypeError('Expecting a boolean for private')
 
@@ -2823,7 +2854,7 @@ class FunctionDef(Basic):
         else:
             # TODO shall we keep this?
             arguments_inout = [False for a in arguments]
-            
+
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2921,7 +2952,7 @@ class FunctionDef(Basic):
     @property
     def is_private(self):
         return self._args[16]
-        
+
     @property
     def is_header(self):
         return self._args[17]
@@ -2937,7 +2968,7 @@ class FunctionDef(Basic):
     @property
     def arguments_inout(self):
         return self._args[20]
-        
+
     @property
     def functions(self):
         return self._args[21]
@@ -3031,7 +3062,7 @@ class FunctionDef(Basic):
                 and self.results[0].rank > 0
         flag = flag or len(self.results) > 1
         flag = flag or len(self.results) == 0
-        flag = flag or self.kind == 'procedure' or self.is_static
+        flag = flag or self.kind == 'procedure'
         flag = flag \
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
@@ -3085,30 +3116,6 @@ class FunctionDef(Basic):
     # TODO
     def check_elemental(self):
         raise NotImplementedError('')
-
-    # looking for arrays of rank > 1
-    # this function is only called for static FunctionDef => when using f2py
-    def has_multiarray(self):
-        if not self.is_static:
-            raise ValueError('> Expecting a static FunctionDef')
-
-        # ... chack sanity
-        arg_names = [str(a.name) for a in self.arguments]
-        allocatables = [r for r in self.results if not( str(r.name) in arg_names ) and r.allocatable ]
-        if allocatables:
-            raise AstFunctionResultError(allocatables)
-        # ...
-
-        found = False
-        for a in list(self.arguments) + list(self.results):
-            if isinstance(a, (Variable, IndexedVariable)):
-                if a.rank > 1:
-                    found = True
-
-            if found:
-                break
-
-        return found
 
 
 class SympyFunction(FunctionDef):
@@ -4322,7 +4329,7 @@ class String(Basic):
         return self.arg
 
 
-class Concatinate(Basic):
+class Concatenate(Basic):
 
     """Represents the String concatination operation.
 
@@ -4334,11 +4341,11 @@ class Concatinate(Basic):
     Examples
 
     >>> from sympy import symbols
-    >>> from pyccel.ast.core import Concatinate
+    >>> from pyccel.ast.core import Concatenate
     >>> x = symbols('x')
-    >>> Concatinate('some_string',x)
+    >>> Concatenate('some_string',x)
     some_string+x
-    >>> Concatinate('some_string','another_string')
+    >>> Concatenate('some_string','another_string')
     'some_string' + 'another_string'
     """
 
@@ -4508,8 +4515,8 @@ class If(Basic):
         newargs = []
         for ce in args:
             cond = ce[0]
-            if not isinstance(cond, (bool, Relational, Boolean, Is)):
-                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, or a built-in bool.'
+            if not isinstance(cond, (bool, Relational, Boolean, Is, IsNot)):
+                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
                                  % (cond, type(cond)))
             if not isinstance(ce[1], (list, Tuple, tuple)):
                 raise TypeError('body is not iterable')

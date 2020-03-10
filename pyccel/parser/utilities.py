@@ -9,6 +9,7 @@ from redbaron import (CommentNode, ForNode, DefNode, WithNode,
 
 from sympy import srepr
 from pyccel.ast import DottedName
+from pyccel.ast.core import create_variable
 from sympy import Symbol
 from sympy.printing.dot import dotprint
 import os
@@ -157,23 +158,23 @@ def fst_move_directives(x):
 
         while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
             cmt = stmt.value[-1]
-            
+
             stmt.value.remove(cmt)
             # insert right after the function
             x.insert(i_son + 1, cmt)
 
-            
+
 
     # ...
 
     # ... if statements are inside IfelseblockNode
     ifblocks = get_ifblocks(x)
-    
+
     for ifblock in ifblocks:
         i_son = x.index(ifblock)
         for stmt in ifblock.value:
             fst_move_directives(stmt.value)
-            
+
             while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
                 cmt = stmt.value[-1]
                 stmt.value.remove(cmt)
@@ -330,6 +331,32 @@ def find_import_usage(stmt, scope, usage = None):
     else:
         return "\n"
 
+def preprocess_default_args(red):
+    if (not isinstance(red, DefNode)):
+        funcs = red.find_all("funcdef", recursive = False)
+        for f in funcs:
+            preprocess_default_args(f)
+    else:
+        arguments = red.arguments.find_all("def_argument",
+                recursive = False, value=lambda val: val is not None)
+        for a in arguments:
+            if isinstance(a.value, NameNode) and a.value.value == 'None':
+                continue
+            target = a.target
+            name = target.value
+            new_name = create_variable(target).name
+            usage = red.find_all("name",value = name)
+            for u in usage:
+                def_node = u.parent_find("funcdef")
+                if u is target or def_node is not red:
+                    continue
+                u.value = new_name
+            red.value.insert(0,"if "+name+" is None:\n    "+new_name+" = "+a.value.value+
+                    "\nelse:\n    "+new_name+" = "+name)
+
+        funcs = red.value.find_all("funcdef", recursive = False)
+        for f in funcs:
+            preprocess_default_args(f)
 
 # ...
 def reconstruct_pragma_multilines(header):

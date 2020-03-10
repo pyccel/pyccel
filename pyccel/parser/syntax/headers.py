@@ -16,7 +16,7 @@ from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast import ValuedArgument
 from pyccel.ast import DottedName, String
-from pyccel.ast.datatypes import dtype_and_precsision_registry as dtype_registry
+from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 
 DEBUG = False
 
@@ -56,10 +56,8 @@ class ListType(BasicStmt):
         d_var['allocatable'] = False
         d_var['precision'] = max(precisions)
         if not(d_var['precision']):
-            if d_var['datatype'] in ['double','float','complex']:
-                d_var['precision'] = 8
-            elif d_var['datatype'] in ['int']:
-                d_var['precision'] = 4
+            if d_var['datatype'] in ['double','float','complex','int']:
+                d_var['precision'] = default_precision[d_var['datatype']]
         return d_var
 
 class Type(BasicStmt):
@@ -100,10 +98,8 @@ class Type(BasicStmt):
         d_var['is_pointer'] = False
         d_var['precision']  = precision
         if not(precision):
-            if dtype in ['double' ,'float','complex']:
-                d_var['precision'] = 8
-            elif dtype=='int':
-                d_var['precision'] = 4
+            if dtype in ['double' ,'float','complex', 'int']:
+                d_var['precision'] = default_precision[dtype]
 
         if d_var['rank']>1:
             d_var['order'] = order

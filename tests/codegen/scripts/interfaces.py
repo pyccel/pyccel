@@ -10,19 +10,28 @@ def decr(x):
     y = x - 1
     return y
 
+# TODO [YG, 30.01.2020] function behavior in Python not correct:
+#      must change to x += 1
+#
 #$ header function incr_array(int [:]|double[:])
 def incr_array(x):
     x = x + 1
 
 y_=[1,2,3]
 
-#$ header function decr_array([int]|[double]) 
+##$ header function decr_array([int]|[double]) 
+#def decr_array(x):
+#    y_[1] = 6
+#    z = y_
+#    t = y_+x
+#    return t
+
+# TODO [YG, 30.01.2020] function behavior in Python not correct:
+#      must change to x -= 1
+#
+#$ header function decr_array(int [:]|double[:])
 def decr_array(x):
-    y_[1] = 6
-    z = y_
-    t = y_+x
-    
-    return t
+    x = x - 1
 
 #$ header function f1(int, int, int) 
 def f1(x, n=2, m=3):

@@ -2,7 +2,7 @@ from mpi4py import MPI
 import numpy as np
 import pytest
 
-from pyccel.epyccel import epyccel_mpi
+from pyccel.epyccel import epyccel
 from modules        import mpi_point_to_point as pmod
 
 #==============================================================================
@@ -12,7 +12,7 @@ from modules        import mpi_point_to_point as pmod
 def setup_module( module=None ):
 
     comm = MPI.COMM_WORLD
-    fmod = epyccel_mpi( pmod, comm )
+    fmod = epyccel( pmod, comm=comm )
 
     if module:
         module.comm = comm
@@ -42,7 +42,7 @@ def test_np_sendrecv():
     recvbuf_py  = np.empty_like( sendbuf )
     recvbuf_f90 = np.empty_like( sendbuf )
 
-    # Python 
+    # Python
     pmod.np_sendrecv( sendbuf, dest, tag, recvbuf_py , source, tag )
 
     # Fortran

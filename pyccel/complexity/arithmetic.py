@@ -9,7 +9,7 @@ from sympy.utilities.iterables import iterable
 from pyccel.ast import (For, Assign, While,NewLine,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
-                        If, Zeros, Ones, Array, 
+                        If, Zeros, Ones, Array,
                         Len, Dot, IndexedElement)
 
 from pyccel.complexity.basic import Complexity
@@ -30,7 +30,7 @@ class OpComplexity(Complexity):
 
 
 def count_ops(expr, visual=None):
-    
+
     if isinstance(expr, Assign):
         return sympy_count_ops(expr.rhs, visual)
     elif isinstance(expr, For):

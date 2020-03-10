@@ -8,8 +8,8 @@ from sympy.core.compatibility import with_metaclass
 from sympy import Eq, Ne, Lt, Gt, Le, Ge
 
 
-default_precision = {'real': 8, 'int': 4, 'complex': 8, 'bool':1}
-dtype_and_precsision_registry = {'real':('real',8),
+default_precision = {'real': 8, 'int': 8, 'complex': 8, 'bool':4, 'float':8}
+dtype_and_precision_registry = { 'real':('real',8),
                                  'double':('real',8),
                                  'float':('real',8),
                                  'float32':('real',4),
@@ -21,9 +21,9 @@ dtype_and_precsision_registry = {'real':('real',8),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
-                                 'int'  :('int',4),
+                                 'int'  :('int',8),
                                  'integer':('int',4),
-                                 'bool' :('bool',1)}
+                                 'bool' :('bool',4)}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -43,6 +43,7 @@ class NativeBool(DataType):
 
 class NativeInteger(DataType):
     _name = 'Int'
+    pass
 
 class NativeReal(DataType):
     _name = 'Real'
