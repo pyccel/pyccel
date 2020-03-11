@@ -20,7 +20,7 @@ from .core import Constant, Variable, IndexedVariable
 from .builtins import Bool, Enumerate, Len, Map, Range, Zip
 
 from .numpyext import Full, Empty, Zeros, Ones
-from .numpyext import FullLike, EmptyLike, ZerosLike#, OnesLike
+from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
 from .numpyext import Array, Shape, Int, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
@@ -65,7 +65,7 @@ numpy_functions = {
     'full_like' : FullLike,
     'empty_like': EmptyLike,
     'zeros_like': ZerosLike,
-#    'ones_like' : OnesLike,
+    'ones_like' : OnesLike,
     'array'     : Array,
     # ...
     'shape'     : Shape,
