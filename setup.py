@@ -46,7 +46,6 @@ install_requires = [
     'redbaron>=0.7',
     'pytest',
     'tabulate',
-    'mpi4py',
     'termcolor',
     'fastcache',
 ]
