@@ -3,7 +3,6 @@
 def qsort_kernel ( a , lo , hi ) :
     i = lo
     j = hi
-    if False : return a
     while i < hi :
         pivot = a[ ( lo + hi ) // 2 ]
         while i <= j :

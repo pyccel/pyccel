@@ -629,7 +629,7 @@ class CodeBlock(Basic):
             if isinstance(i, CodeBlock):
                 ls += i.body
             elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application, Expr, IfTernaryOperator)):
+                            Application, Expr, IfTernaryOperator, EmptyLine)):
                 ls.append(i)
             else:
 
@@ -3036,6 +3036,10 @@ class PythonFunction(FunctionDef):
 
         return PythonFunction(newname, self.arguments, self.results,
                               self.body, cls_name=self.cls_name)
+
+
+class F2PYFunctionDef(FunctionDef):
+    pass
 
 
 class GetDefaultFunctionArg(Basic):

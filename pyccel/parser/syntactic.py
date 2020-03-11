@@ -229,7 +229,7 @@ class SyntaxParser(BasicParser):
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
             errors.check()
-            raise SystemExit(0)
+            raise e
 
         preprocess_imports(red)
         preprocess_default_args(red)
@@ -259,9 +259,8 @@ class SyntaxParser(BasicParser):
             ast = self._visit(self.fst)
         except Exception as e:
             errors.check()
-            if self.show_traceback:
-                traceback.print_exc()
-            raise SystemExit(0)
+            traceback.print_exc()
+            raise e
 
 
         self._ast = ast
@@ -705,7 +704,7 @@ class SyntaxParser(BasicParser):
                     container.append(arg)
                 elif isinstance(arg, String):
                     arg = str(arg)
-                    arg = arg.replace("'", '')
+                    arg = arg.strip("'").strip('"')
                     container.append(arg)
                 elif isinstance(arg, ValuedArgument):
                     arg_name = arg.name
@@ -716,7 +715,6 @@ class SyntaxParser(BasicParser):
                         raise NotImplementedError(msg)
                     ls = arg if isinstance(arg, Tuple) else [arg]
                     i = -1
-
                 else:
                     msg = '> Wrong type, given {}'.format(type(arg))
                     raise NotImplementedError(msg)
@@ -727,7 +725,6 @@ class SyntaxParser(BasicParser):
             txt += '(' + ','.join(types) + ')'
             if results:
                 txt += ' results(' + ','.join(results) + ')'
-
             header = hdr_parse(stmts=txt)
             if name in self.namespace.static_functions:
                 header = header.to_static()
