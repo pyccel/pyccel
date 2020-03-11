@@ -33,6 +33,7 @@ install:
 
 before_script:
   - pip install mpi4py
+  - pip install pytest
   - pip install coverage
   - mkdir __pytest__
 
