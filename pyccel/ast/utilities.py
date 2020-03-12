@@ -29,6 +29,15 @@ from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
 
+__all__ = (
+    'build_types_decorator',
+    'builtin_function',
+    'builtin_import',
+    'builtin_import_registery',
+    'split_positional_keyword_arguments',
+)
+
+#==============================================================================
 math_functions = {
     'abs'    : Abs,
     'sqrt'   : Sqrt,
@@ -117,7 +126,7 @@ scipy_constants = {
     'pi': Constant('real', 'pi', value=sc_constants.pi),
                   }
 
-
+#==============================================================================
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
 
@@ -154,6 +163,7 @@ def builtin_function(expr, args=None):
 # TODO add documentation
 builtin_import_registery = ('numpy', 'scipy.constants', 'itertools', 'math')
 
+#==============================================================================
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
 
@@ -198,10 +208,9 @@ def builtin_import(expr):
             if import_name == 'product':
                 imports.append((code_name, Product))
 
-
-
     return imports
 
+#==============================================================================
 def get_function_from_ast(ast, func_name):
     node = None
     for stmt in ast:
@@ -214,6 +223,7 @@ def get_function_from_ast(ast, func_name):
 
     return node
 
+#==============================================================================
 def get_external_function_from_ast(ast):
     nodes   = []
     others  = []
@@ -227,6 +237,7 @@ def get_external_function_from_ast(ast):
 
     return nodes, others
 
+#==============================================================================
 # TODO: must add a Node Decorator in core
 def build_types_decorator(args, order=None):
     """

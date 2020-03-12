@@ -28,13 +28,17 @@ from pyccel.ast.numpyext import Zeros, Ones
 from pyccel.ast.parallel.basic        import Basic
 from pyccel.ast.parallel.communicator import UniversalCommunicator
 
+__all__ = (
+    'MPI',
+    'mpify'
+)
+
 ##########################################################
 #               Base class for MPI
 ##########################################################
 class MPI(Basic):
     """Base class for MPI."""
     pass
-##########################################################
 
 ##########################################################
 #             useful functions

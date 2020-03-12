@@ -20,6 +20,55 @@ from .datatypes import default_precision
 from .datatypes import datatype
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 
+__all__ = (
+    'Abs',
+    'Acos',
+    'Acot',
+    'Acsc',
+    'Array',
+    'Asec',
+    'Asin',
+    'Atan',
+    'Bounds',
+    'Complex',
+    'Complex64',
+    'Complex128',
+    'Cosh',
+    'Cross',
+    'Diag',
+    'Empty',
+    'EmptyLike',
+    'Float32',
+    'Float64',
+    'Full',
+    'FullLike',
+    'Imag',
+    'Int',
+    'Int32',
+    'Int64',
+    'Linspace',
+    'Log',
+    'Matmul',
+    'Max',
+    'Min',
+    'Mod',
+    'Norm',
+    'NumpySum',
+    'Ones',
+    'OnesLike',
+    'Product',
+    'Rand',
+    'Real',
+    'Shape',
+    'Sinh',
+    'Sqrt',
+    'Tanh',
+    'Where',
+    'Zeros',
+    'ZerosLike'
+)
+
+#==============================================================================
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
 }

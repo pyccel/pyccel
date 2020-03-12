@@ -7,7 +7,75 @@ from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
 from sympy import Eq, Ne, Lt, Gt, Le, Ge
 
+# TODO [YG, 12.03.2020] verify why we need all these types
+# NOTE: symbols not used in pyccel are commented out
+__all__ = (
+#
+# --------- CLASSES -----------
+#
+    'CustomDataType',
+    'DataType',
+    'FunctionType',
+    'NativeBool',
+    'NativeComplex',
+    'NativeComplexList',
+    'NativeGeneric',
+    'NativeInteger',
+    'NativeIntegerList',
+    'NativeList',
+#    'NativeNil',
+#    'NativeParallelRange',
+    'NativeRange',
+    'NativeReal',
+    'NativeRealList',
+    'NativeString',
+    'NativeSymbol',
+    'NativeTensor',
+    'NativeVoid',
+#    'NdArray',
+#    'NdArrayBool',
+#    'NdArrayComplex',
+#    'NdArrayInt',
+#    'NdArrayReal',
+    'UnionType',
+    'VariableType',
+    'DataTypeFactory',
+#
+# --------- FUNCTIONS -----------
+#
+    'datatype',
+#    'get_default_value',
+    'is_iterable_datatype',
+    'is_pyccel_datatype',
+    'is_with_construct_datatype',
+    'sp_dtype',
+    'str_dtype',
+#
+# --------- VARIABLES -----------
+#
+    'Bool',
+    'Complex',
+    'ComplexList',
+    'Generic',
+    'Int',
+    'IntegerList',
+#    'NdArray',
+#    'NdArrayBool',
+#    'NdArrayComplex',
+#    'NdArrayInt',
+#    'NdArrayReal',
+    'Nil',
+    'Real',
+    'RealList',
+    'String',
+    'Void',
+#    '_Symbol',
+    'default_precision',
+    'dtype_and_precision_registry',
+    'dtype_registry'
+)
 
+#==============================================================================
 default_precision = {'real': 8, 'int': 8, 'complex': 8, 'bool':4, 'float':8}
 dtype_and_precision_registry = { 'real':('real',8),
                                  'double':('real',8),

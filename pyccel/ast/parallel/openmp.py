@@ -1,6 +1,5 @@
 # coding: utf-8
 
-
 from sympy.core import Tuple
 from sympy.utilities.iterables import iterable
 from sympy import Integer as sp_Integer
@@ -23,14 +22,33 @@ from pyccel.ast.core import ConstructorCall
 
 from pyccel.ast.parallel.basic import Basic
 
+__all__ = (
+    'OMP',
+    'OMP_Collapse',
+    'OMP_Copyin',
+    'OMP_Default',
+    'OMP_FirstPrivate',
+    'OMP_For',
+    'OMP_If',
+    'OMP_LastPrivate',
+    'OMP_Linear',
+    'OMP_NumThread',
+    'OMP_Ordered',
+    'OMP_Parallel',
+    'OMP_Private',
+    'OMP_ProcBind',
+    'OMP_Reduction',
+    'OMP_Schedule',
+    'OMP_Shared',
+    'ompfy'
+)
+
 ##########################################################
 #               Base class for OpenMP
 ##########################################################
 class OMP(Basic):
     """Base class for OpenMP."""
     pass
-
-##########################################################
 
 ##########################################################
 #                 Basic Statements
