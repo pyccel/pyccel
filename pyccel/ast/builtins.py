@@ -11,7 +11,6 @@ from sympy import Symbol, Function, Tuple
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy import sympify
-from sympy.core.function import Function
 from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
@@ -259,18 +258,12 @@ class Len(Function):
 
 #==============================================================================
 class List(Tuple):
-
-    """Represent lists in the code with dynamic memory management."""
-
-    pass
+    """ Represent lists in the code with dynamic memory management."""
 
 #==============================================================================
 class Map(Basic):
+    """ Represents the map stmt
     """
-    Reresents the map stmt
-
-    """
-
     def __new__(cls, *args):
         if len(args)<2:
             raise TypeError('wrong number of arguments')

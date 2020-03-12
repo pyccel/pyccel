@@ -1,40 +1,28 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# TODO remove sympify, Symbol
-
 import numpy
-from sympy.core.function import Application, Function
-from sympy.core import Symbol, Tuple
-from sympy import sympify
-from sympy.core.basic import Basic
+from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer, Add, Mul, Pow as sp_Pow, Float as sp_Float
-from sympy.utilities.iterables import iterable
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-from sympy.core.assumptions import StdFactKB
-from sympy import sqrt, asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
+from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
-from sympy import IndexedBase, Indexed, Idx, Matrix
+from sympy import IndexedBase
+from sympy.core.function import Application
+from sympy.core.assumptions import StdFactKB
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
-
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-
-
-from .core import (Variable, IndexedElement, IndexedVariable, Len,
-                   For, ForAll, Range, Assign, AugAssign, List, String, Nil,
-                   ValuedArgument, Constant, Pow, int2float)
+from .core import (Variable, IndexedElement, Slice, Len,
+                   For, Range, Assign, AugAssign, List, String, Nil,
+                   ValuedArgument, Constant, Pow)
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
 from .datatypes import DataType, datatype
-from .datatypes import (NativeInteger, NativeReal, NativeComplex,
-                        NativeBool)
-
-from .core import local_sympify ,float2int, Slice
+from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
-                  }
+}
 
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument

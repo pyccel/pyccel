@@ -22,7 +22,7 @@ from .builtins import Bool, Enumerate, Len, Map, Range, Zip
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
-from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
+from .numpyext import Min, Max, Abs, Norm, Where
 from .numpyext import Array, Shape, Int, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log

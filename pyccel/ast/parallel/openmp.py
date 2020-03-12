@@ -12,7 +12,7 @@ from pyccel.ast.core import DottedName
 from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
 from pyccel.ast.core import Assign, Declare, AugAssign
 from pyccel.ast.core import Block, ParallelBlock
-from pyccel.ast.core import Tile, Tensor
+from pyccel.ast.core import Tensor
 from pyccel.ast.core import Comment
 from pyccel.ast.core import AnnotatedComment
 from pyccel.ast.core import EmptyLine
