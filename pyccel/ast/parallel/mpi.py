@@ -17,11 +17,9 @@ from pyccel.ast.core import DottedName
 from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
 from pyccel.ast.core import Assign, Declare, AugAssign
 from pyccel.ast.core import Block
-from pyccel.ast.core import Range, Tile, Tensor
+from pyccel.ast.core import Tensor
 from pyccel.ast.core import Comment
 from pyccel.ast.core import EmptyLine
-from pyccel.ast.core import Print
-from pyccel.ast.core import Len
 from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
@@ -30,13 +28,17 @@ from pyccel.ast.numpyext import Zeros, Ones
 from pyccel.ast.parallel.basic        import Basic
 from pyccel.ast.parallel.communicator import UniversalCommunicator
 
+__all__ = (
+    'MPI',
+    'mpify'
+)
+
 ##########################################################
 #               Base class for MPI
 ##########################################################
 class MPI(Basic):
     """Base class for MPI."""
     pass
-##########################################################
 
 ##########################################################
 #             useful functions

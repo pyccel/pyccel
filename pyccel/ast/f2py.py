@@ -13,6 +13,12 @@ from pyccel.ast.core import Comment
 
 from pyccel.ast.datatypes import str_dtype
 
+__all__ = (
+   'as_static_function',
+   'as_static_function_call',
+   'sanitize_arguments',
+)
+
 #=======================================================================================
 def sanitize_arguments(args):
     _args = []

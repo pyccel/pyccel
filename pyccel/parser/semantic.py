@@ -57,7 +57,6 @@ from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
 from pyccel.ast import With, Block
-from pyccel.ast import Range, Zip, Enumerate, Product, Map
 from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
@@ -72,7 +71,11 @@ from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
+from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
+from pyccel.ast.builtins  import python_builtin_datatype
+from pyccel.ast.builtins  import Range, Zip, Enumerate, Map
+from pyccel.ast.utilities import split_positional_keyword_arguments
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -840,8 +843,8 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
 
-            elif name in ['Zeros', 'Ones', 'Empty', 'Diag',
-                          'Shape', 'Cross', 'Linspace','Where']:
+            elif name in ['Full', 'Empty', 'Zeros', 'Ones', 'Diag',
+                          'Shape', 'Cross', 'Linspace', 'Where']:
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'      ] = expr.shape
@@ -910,7 +913,7 @@ class SemanticParser(BasicParser):
 
             elif name in ['Int','Int32','Int64','Real','Imag',
                           'Float32','Float64','Complex',
-                          'Complex128','Complex64']:
+                          'Complex128','Complex64','Bool']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
@@ -1152,11 +1155,13 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr]
         return List(*ls, sympify=False)
 
+    def _visit_ValuedArgument(self, expr, **settings):
+        expr_value = self._visit(expr.value, **settings)
+        return ValuedArgument(expr.name, expr_value)
+
     def _visit_CodeBlock(self, expr, **settings):
         return expr
     def _visit_Nil(self, expr, **settings):
-        return expr
-    def _visit_ValuedArgument(self, expr, **settings):
         return expr
     def _visit_EmptyLine(self, expr, **settings):
         return expr
@@ -1264,6 +1269,8 @@ class SemanticParser(BasicParser):
             var = self.get_function(name)
         if var is None:
             var = self.get_symbolic_function(name)
+        if var is None:
+            var = python_builtin_datatype(name)
 
         if var is None:
 
@@ -1581,7 +1588,8 @@ class SemanticParser(BasicParser):
             else:
                 if not isinstance(func, (FunctionDef, Interface)):
 
-                    expr = func(*args)
+                    args, kwargs = split_positional_keyword_arguments(*args)
+                    expr = func(*args, **kwargs)
 
                     if isinstance(expr, (Where, Diag, Linspace)):
                         self.insert_variable(expr.index)

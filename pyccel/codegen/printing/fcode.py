@@ -28,13 +28,6 @@ from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.logic.boolalg import And, Not, Or, true, false
 
-
-from pyccel.ast.numpyext import Zeros, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
-from pyccel.ast.numpyext import Complex
-from pyccel.ast.numpyext import ZerosLike, FullLike
-
-
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
@@ -51,14 +44,15 @@ from pyccel.ast.core import Subroutine
 from pyccel.ast.core import Return
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Range, Product, Block , Zip, Enumerate, Map
+from pyccel.ast.core import Product, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              Declare, ValuedVariable,
-                             Len, FunctionalFor,
+                             FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             Print, If, Nil, Is, IsNot)
+                             If, Nil, Is, IsNot)
+from pyccel.ast.builtins import Enumerate, Len, Map, Print, Range, Zip
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
@@ -67,14 +61,19 @@ from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.ast.parallel.mpi     import MPI
 from pyccel.ast.parallel.openmp  import OMP_For
 from pyccel.ast.parallel.openacc import ACC_For
 
+from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
+from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
+from pyccel.ast.numpyext import Complex
+from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
+
 from pyccel.parser.errors import Errors, PyccelCodegenError
 from pyccel.parser.messages import *
+from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from collections import OrderedDict
 import functools
@@ -585,34 +584,34 @@ class FCodePrinter(CodePrinter):
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
-    # TODO this is not used anymore since, we are calling printer inside
-    #      numpyext. must be improved!!
-    def _print_ZerosLike(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        if isinstance(expr.rhs, IndexedElement):
-            shape = []
-            for i in expr.rhs.indices:
-                if isinstance(i, Slice):
-                    shape.append(i)
-            rank = len(shape)
-        else:
-            rank = expr.rhs.rank
-        rs = []
-        for i in range(1, rank+1):
-            l = 'lbound({0},{1})'.format(rhs, str(i))
-            u = 'ubound({0},{1})'.format(rhs, str(i))
-            r = '{0}:{1}'.format(l, u)
-            rs.append(r)
-        shape = ', '.join(self._print(i) for i in rs)
-        init_value = self._print(expr.init_value)
-
-        code  = ('allocate({lhs}({shape}))\n'
-                 '{lhs} = {init_value}').format(lhs=lhs,
-                                                shape=shape,
-                                                init_value=init_value)
-
-        return self._get_statement(code)
+#    # TODO this is not used anymore since, we are calling printer inside
+#    #      numpyext. must be improved!!
+#    def _print_ZerosLike(self, expr):
+#        lhs = self._print(expr.lhs)
+#        rhs = self._print(expr.rhs)
+#        if isinstance(expr.rhs, IndexedElement):
+#            shape = []
+#            for i in expr.rhs.indices:
+#                if isinstance(i, Slice):
+#                    shape.append(i)
+#            rank = len(shape)
+#        else:
+#            rank = expr.rhs.rank
+#        rs = []
+#        for i in range(1, rank+1):
+#            l = 'lbound({0},{1})'.format(rhs, str(i))
+#            u = 'ubound({0},{1})'.format(rhs, str(i))
+#            r = '{0}:{1}'.format(l, u)
+#            rs.append(r)
+#        shape = ', '.join(self._print(i) for i in rs)
+#        init_value = self._print(expr.init_value)
+#
+#        code  = ('allocate({lhs}({shape}))\n'
+#                 '{lhs} = {init_value}').format(lhs=lhs,
+#                                                shape=shape,
+#                                                init_value=init_value)
+#
+#        return self._get_statement(code)
 
     def _print_SumFunction(self, expr):
         return str(expr)
@@ -638,9 +637,6 @@ class FCodePrinter(CodePrinter):
     def _print_Shape(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Zeros(self, expr):
-        return expr.fprint(self._print)
-
     def _print_Linspace(self, expr):
         return expr.fprint(self._print)
 
@@ -654,6 +650,9 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Complex(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_Bool(self, expr):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
@@ -980,6 +979,7 @@ class FCodePrinter(CodePrinter):
                         rhs = i
                         break
             #TODO improve we only need to allocate the variable without setting it to zero
+            #TODO [YG, 12.03.2020] Use EmptyLike and change call signature
             stmt = ZerosLike(lhs=lhs, rhs=rhs)
             code += self._print(stmt)
             code += '\n'
@@ -1038,18 +1038,18 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Array, Shape, Linspace, Diag, Cross, Where)):
             return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(rhs, (ZerosLike, Zeros, FullLike)):
+        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike)):
+
+            stack_array = False
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
-                vars = func.local_vars
                 lhs_name = expr.lhs.name
-                for i in vars:
-                    if lhs_name == i.name:
-                        if i.is_stack_array:
-                            return '{} = {}'.format(lhs_name, rhs.init_value)
+                vars_dict = {i.name: i for i in func.local_vars}
+                if lhs_name in vars_dict:
+                    stack_array = vars_dict[lhs_name].is_stack_array
 
-            return rhs.fprint(self._print, expr.lhs)
+            return rhs.fprint(self._print, expr.lhs, stack_array)
 
         if isinstance(rhs, Mod):
             lhs = self._print(expr.lhs)
@@ -1057,7 +1057,7 @@ class FCodePrinter(CodePrinter):
             rhs  = 'modulo({})'.format(args)
             return '{0} = {1}'.format(lhs, rhs)
 
-        elif isinstance(rhs, Shape):
+        if isinstance(rhs, Shape):
             a = expr.rhs.rhs
 
             lhs = self._print(expr.lhs)
@@ -1085,11 +1085,13 @@ class FCodePrinter(CodePrinter):
 
             return self._get_statement(code)
 
-        elif isinstance(rhs, FunctionDef):
-            rhs_code = self._print(rhs.name)
-            is_procedure = rhs.is_procedure
+        # TODO [YG, 10.03.2020]: I have just commented out this block and
+        # everything still seems to work; is it dead code?
+#        if isinstance(rhs, FunctionDef):
+#            rhs_code = self._print(rhs.name)
+#            is_procedure = rhs.is_procedure
 
-        elif isinstance(rhs, ConstructorCall):
+        if isinstance(rhs, ConstructorCall):
             func = rhs.func
             name = str(func.name)
 
@@ -1113,31 +1115,27 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
 
-        elif isinstance(rhs, Function):
+        if isinstance(rhs, Function):
+
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            name = type(rhs).__name__
-            rhs_code = self._print(name)
-            args = rhs.args
-            code_args = ', '.join(self._print(i) for i in args)
-
             if isinstance(expr.lhs, (tuple, list, Tuple)):
+
+                name = type(rhs).__name__
+                rhs_code = self._print(name)
+                args = rhs.args
+                code_args = ', '.join(self._print(i) for i in args)
+
                 lhs_code = ', '.join(self._print(i) for i in expr.lhs)
                 code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
                 return self._get_statement(code)
 
-            rhs_code = '{0}({1})'.format(rhs_code, code_args)
-            code = '{0} = {1}'.format(lhs_code, rhs_code)
-
-            return self._get_statement(code)
-
-        elif (isinstance(expr.lhs, Variable) and
+        if (isinstance(expr.lhs, Variable) and
               expr.lhs.dtype == NativeSymbol()):
             return ''
-        else:
 
-            rhs_code = self._print(rhs)
-#            print("ASSIGN = ", rhs_code)
+        # Right-hand side code
+        rhs_code = self._print(rhs)
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
