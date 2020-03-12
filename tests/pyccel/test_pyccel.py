@@ -267,3 +267,7 @@ def test_hope_benchmarks( test_file ):
                                         ] )
 def test_import_syntax( test_file ):
     pyccel_test(test_file)
+
+def test_numpy_kernels_compile():
+    cwd = get_abs_path(".")
+    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "test_kernels.py")
