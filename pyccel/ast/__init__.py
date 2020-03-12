@@ -1,5 +1,10 @@
 # -*- coding: UTF-8 -*-
 
+# TODO [YG, 12.03.2020] Avoid!
+# These imports currently cause an undefined behavior because:
+#   1. Most modules here do not define the __all__ variable;
+#   2. Multiple classes have the same name.
+
 from .basic          import *
 from .builtins       import *
 from .datatypes      import *

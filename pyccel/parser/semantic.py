@@ -57,7 +57,6 @@ from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
 from pyccel.ast import With, Block
-from pyccel.ast import Range, Zip, Enumerate, Product, Map
 from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
@@ -72,8 +71,10 @@ from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
+from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
+from pyccel.ast.builtins  import Range, Zip, Enumerate, Map
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 
