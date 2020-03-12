@@ -998,8 +998,7 @@ class Full(Application):
         dtype, precision = cls._process_dtype(dtype)
 
         # Verify array ordering
-        if str(order).strip('\'"') not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
+        order = cls._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
@@ -1051,6 +1050,18 @@ class Full(Application):
         return dtype, precision
 
     #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_order(order):
+
+        if (order is None) or isinstance(order, Nil):
+            return None
+
+        order = str(order).strip('\'"')
+        if order not in ('C', 'F'):
+            raise ValueError('unrecognized order = {}'.format(order))
+        return order
+
+    #--------------------------------------------------------------------------
     def fprint(self, printer, lhs, stack_array=False):
         """Fortran print."""
 
@@ -1092,8 +1103,7 @@ class Empty(Full):
         dtype, precision = cls._process_dtype(dtype)
 
         # Verify array ordering
-        if str(order).strip('\'"') not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
+        order = cls._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision)
 
