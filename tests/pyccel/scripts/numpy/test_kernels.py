@@ -1,5 +1,5 @@
 #
-# Testing various kernels, adapted from 
+# Testing various kernels, adapted from
 # https://github.com/redmod-team/profit/blob/master/profit/sur/backend/kernels.py
 #
 
@@ -31,7 +31,7 @@ def kern_wendland4(x0, x1, h):
 
 @types('real[:]', 'real[:]', 'real[:]')
 def kern_wendland4_multiscale(x0, x1, h):
-    """Wendland kernel, positive definite for dimension <= 3, 
+    """Wendland kernel, positive definite for dimension <= 3,
        different scale in each direction"""
     r = np.real(np.sqrt(np.sum(((x1 - x0)/h)**2)))
     if r < 1.0:

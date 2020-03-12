@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from sympy.core.function import Function
-from sympy.core import Tuple
 from sympy.core.basic import Basic
 from sympy.utilities.iterables import iterable
 from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse

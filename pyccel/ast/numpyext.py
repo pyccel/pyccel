@@ -12,7 +12,7 @@ from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .core import (Variable, IndexedElement, Slice, Len,
-                   For, Range, Assign, AugAssign, List, Nil,
+                   For, Range, Assign, List, Nil,
                    ValuedArgument, Constant, Pow)
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
