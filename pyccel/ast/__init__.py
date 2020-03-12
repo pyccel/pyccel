@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
 from .basic          import *
+from .builtins       import *
 from .datatypes      import *
 from .core           import *
 from .macros         import *
