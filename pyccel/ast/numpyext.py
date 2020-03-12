@@ -12,12 +12,12 @@ from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .core import (Variable, IndexedElement, Slice, Len,
-                   For, Range, Assign, AugAssign, List, String, Nil,
+                   For, Range, Assign, AugAssign, List, Nil,
                    ValuedArgument, Constant, Pow)
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
-from .datatypes import DataType, datatype
+from .datatypes import datatype
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 
 numpy_constants = {
