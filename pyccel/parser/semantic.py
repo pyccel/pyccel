@@ -2624,8 +2624,11 @@ class SemanticParser(BasicParser):
             returns = self._collect_returns_stmt(body)
             results = []
 
+            # Remove duplicated return expressions, because we cannot have
+            # duplicated intent(out) arguments in Fortran.
+            # TODO [YG, 12.03.2020]: find workaround using temporary variables
             for stmt in returns:
-                results += [set(stmt.expr)]
+                results += [list(OrderedDict.fromkeys(stmt.expr))]
 
             if not all(i == results[0] for i in results):
                 #case of multiple return
