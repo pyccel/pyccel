@@ -135,7 +135,8 @@ builtin_functions_dict = {
 #    'Max'      : Max,
     'min'      : Min,
 #    'Min'      : Min,
-    'not'      : Not
+    'not'      : Not,
+    'floor'    : floor
 }
 
 scipy_constants = {
