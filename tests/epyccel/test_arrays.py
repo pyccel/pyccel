@@ -50,6 +50,20 @@ def test_array_int32_1d_scalar_mul():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_1d_scalar_div():
+
+    f1 = arrays.array_int32_1d_scalar_div
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = 5
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_int32_1d_scalar_idiv():
 
     f1 = arrays.array_int32_1d_scalar_idiv
@@ -787,6 +801,20 @@ def test_array_real_1d_scalar_div():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_1d_scalar_idiv():
+
+    f1 = arrays.array_real_1d_scalar_idiv
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_1d_add():
 
     f1 = arrays.array_real_1d_add
@@ -832,6 +860,20 @@ def test_array_real_1d_mul():
 def test_array_real_1d_div():
 
     f1 = arrays.array_real_1d_div
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a  = np.array( [1.,2.,3.] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_1d_idiv():
+
+    f1 = arrays.array_real_1d_idiv
     f2 = epyccel( f1 )
 
     x1 = np.array( [1.,2.,3.] )
