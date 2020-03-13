@@ -79,7 +79,8 @@ __all__ = (
 default_precision = {'real': 8, 'int': 8, 'complex': 8, 'bool':4, 'float':8}
 dtype_and_precision_registry = { 'real':('real',8),
                                  'double':('real',8),
-                                 'float':('real',8),
+                                 'float':('real',8),       # sympy.Float
+                                 'pythonfloat':('real',8), # built-in float
                                  'float32':('real',4),
                                  'float64':('real',8),
                                  'complex':('complex',8),
