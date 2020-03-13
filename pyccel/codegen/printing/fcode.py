@@ -52,7 +52,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              If, Nil, Is, IsNot)
-from pyccel.ast.builtins import Enumerate, Len, Map, Print, Range, Zip
+from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
@@ -67,7 +67,7 @@ from pyccel.ast.parallel.openmp  import OMP_For
 from pyccel.ast.parallel.openacc import ACC_For
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Int, Real, Shape, Where, Mod
+from pyccel.ast.numpyext import Real, Shape, Where, Mod
 from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 

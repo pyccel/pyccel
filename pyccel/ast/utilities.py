@@ -17,13 +17,13 @@ from .core import FunctionDef, Return, Assign
 from .core import ValuedArgument
 from .core import Constant, Variable, IndexedVariable
 
-from .builtins import Bool, Enumerate, Len, Map, Range, Zip
+from .builtins import Bool, Enumerate, Int, Len, Map, Range, Zip
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, Where
-from .numpyext import Array, Shape, Int, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
+from .numpyext import Array, Shape, NumpyInt, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
 from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
 from .numpyext import numpy_constants, Linspace
@@ -79,7 +79,7 @@ numpy_functions = {
     # ...
     'shape'     : Shape,
     'norm'      : Norm,
-    'int'       : Int,
+    'int'       : NumpyInt,
     'real'      : Real,
     'imag'      : Imag,
     'float'     : Float64,

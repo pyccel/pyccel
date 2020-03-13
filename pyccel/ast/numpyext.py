@@ -14,6 +14,7 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from .core import (Variable, IndexedElement, Slice, Len,
                    For, Range, Assign, List, Nil,
                    ValuedArgument, Constant, Pow)
+from .builtins  import Int as PythonInt
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
@@ -43,7 +44,7 @@ __all__ = (
     'Full',
     'FullLike',
     'Imag',
-    'Int',
+    'NumpyInt',
     'Int32',
     'Int64',
     'Linspace',
@@ -407,60 +408,6 @@ class Shape(Array):
                 code_init = 'size({0}, {1})'.format(init_value, index)
 
         return code_init
-
-#==============================================================================
-# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Int
-class Int(Application):
-
-    """Represents a call to  numpy.int for code generation.
-
-    arg : Variable, Real, Integer, Complex
-    """
-
-    def __new__(cls, arg):
-        if not isinstance(arg, (Variable,
-                                IndexedElement,
-                                sp_Float, sp_Integer,
-                                Mul, Add, sp_Pow,
-                                sp_Rational)):
-
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        obj = Basic.__new__(cls, arg)
-        assumptions = {'integer':True}
-        ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'int'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['int']
-
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        code  = 'Int({0}, {1})'.format(value, prec)
-        return code
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
@@ -1480,13 +1427,23 @@ class Float64(Real):
 
 
 #=======================================================================================
+# TODO [YG, 13.03.2020]: handle case where base != 10
+class NumpyInt(PythonInt):
+    """ Represents a call to numpy.int() function.
+    """
+    def __new__(cls, arg=None, base=10):
+        return super().__new__(cls, arg)
 
-class Int32(Int):
+class Int32(NumpyInt):
+    """ Represents a call to numpy.int32() function.
+    """
     @property
     def precision(self):
         return dtype_registry['int32'][1]
 
-class Int64(Int):
+class Int64(NumpyInt):
+    """ Represents a call to numpy.int64() function.
+    """
     @property
     def precision(self):
         return dtype_registry['int64'][1]

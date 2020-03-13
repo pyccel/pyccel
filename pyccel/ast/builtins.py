@@ -15,6 +15,7 @@ from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic import Basic
+from .datatypes import default_precision
 
 __all__ = (
     'Bool',
