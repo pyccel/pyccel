@@ -874,13 +874,13 @@ class SemanticParser(BasicParser):
 
                 d_var['is_target'] = True # ISSUE 177: TODO this should be done using update_variable
 
-            elif name == 'Len':
-                d_var['datatype'   ] = 'int'
+            elif name in ['Len', 'Rand']:
+                d_var['datatype'   ] = expr.dtype
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
 
-            elif name in ['NumpySum', 'Product', 'Rand', 'Min', 'Max']:
+            elif name in ['NumpySum', 'Product', 'Min', 'Max']:
                 d_var['datatype'   ] = sp_dtype(expr.args[0])
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False

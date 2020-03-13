@@ -976,6 +976,8 @@ class Rand(Real):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
+    def __new__(cls, arg = Nil()):
+        return Real.__new__(cls, arg)
 
     @property
     def arg(self):
