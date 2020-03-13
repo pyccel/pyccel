@@ -13,5 +13,18 @@ cd = ad + 1.
 dd = cd * 2. + 3. * bd + ad
 td = ad + bd * (cd + dd)
 
+conversion_1  = int(3.0)
+conversion_2  = 2.0 + int(3.0)
+conversion_3  = 2.0 - int(3.0)
+conversion_4  = 2.0 * int(3.0)
+conversion_5  = 2.0 / int(3.0)
+conversion_6  = 2.0 % int(3.0)
+conversion_7  = float(3.0)
+conversion_8  = 2.0 + float(3.0)
+conversion_9  = 2.0 - float(3.0)
+conversion_10 = 2.0 * float(3.0)
+conversion_11 = 2.0 / float(3.0)
+conversion_12 = 2.0 % float(3.0)
+
 # this statement will be ignored at the codegen
 x = ad is None
