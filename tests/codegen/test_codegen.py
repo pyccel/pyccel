@@ -20,8 +20,6 @@ def test_codegen(f):
     pyccel = Parser(f)
     ast = pyccel.parse()
 
-    print(ast)
-
     settings = {}
     ast = pyccel.annotate(**settings)
 
