@@ -39,28 +39,21 @@ __all__ = (
 
 #==============================================================================
 math_functions = {
-    'abs'    : Abs,
+    'fabs'   : Abs,
     'sqrt'   : Sqrt,
     'sin'    : sin,
     'cos'    : cos,
     'exp'    : exp,
     'log'    : Log,
-    'csc'    : csc,
-    'sec'    : sec,
     'tan'    : tan,
-    'cot'    : cot,
     'asin'   : Asin,
-    'acsc'   : Acsc,
-    'arccos' : Acos,
     'acos'   : Acos,
-    'asec'   : Asec,
     'atan'   : Atan,
-    'acot'   : Acot,
     'sinh'   : Sinh,
     'cosh'   : Cosh,
     'tanh'   : Tanh,
     'atan2'  : atan2,
-    'arctan2': atan2
+    'floor'  : floor
     }
 
 # TODO split numpy_functions into multiple dictionaries following
@@ -78,7 +71,6 @@ numpy_functions = {
     'array'     : Array,
     # ...
     'shape'     : Shape,
-    'norm'      : Norm,
     'int'       : Int,
     'real'      : Real,
     'imag'      : Imag,
@@ -95,15 +87,40 @@ numpy_functions = {
     'sum'       : NumpySum,
     'prod'      : Prod,
     'product'   : Prod,
-    'rand'      : Rand,
-    'random'    : Rand,
     'linspace'  : Linspace,
     'diag'      : Diag,
     'where'     : Where,
     'cross'     : Cross,
+    'floor'     : floor,
+    # ---
+    'sin'       : sin,
+    'cos'       : cos,
+    'tan'       : tan,
+    'arcsin'    : Asin,
+    'arccos'    : Acos,
+    'arctan'    : Atan,
+    'arctan2'   : atan2,
+    'sinh'      : Sinh,
+    'cosh'      : Cosh,
+    'tanh'      : Tanh,
+    'exp'       : exp,
+    'log'       : Log,
+    'fabs'      : Abs,
+    'absolute'  : Abs,
+    'sqrt'      : Sqrt
+}
+
+numpy_linalg_functions = {
+    'norm'      : Norm,
+}
+
+numpy_random_functions = {
+    'rand'      : Rand,
+    'random'    : Rand,
 }
 
 builtin_functions_dict = {
+    'abs'      : Abs,
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
@@ -115,10 +132,9 @@ builtin_functions_dict = {
     'Mod'      : Mod,
     'abs'      : Abs,
     'max'      : Max,
-    'Max'      : Max,
+#    'Max'      : Max,
     'min'      : Min,
-    'Min'      : Min,
-    'floor'    : floor,
+#    'Min'      : Min,
     'not'      : Not
 }
 
@@ -161,7 +177,7 @@ def builtin_function(expr, args=None):
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'scipy.constants', 'itertools', 'math')
+builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math')
 
 #==============================================================================
 def builtin_import(expr):
@@ -189,11 +205,18 @@ def builtin_import(expr):
             if import_name in numpy_functions.keys():
                 imports.append((code_name, numpy_functions[import_name]))
 
-            elif import_name in math_functions.keys():
-                imports.append((code_name, math_functions[import_name]))
-
             elif import_name in numpy_constants.keys():
                 imports.append((code_name, numpy_constants[import_name]))
+
+        elif source == 'numpy.linalg':
+
+            if import_name in numpy_linalg_functions.keys():
+                imports.append((code_name, numpy_linalg_functions[import_name]))
+
+        elif source == 'numpy.random':
+
+            if import_name in numpy_random_functions.keys():
+                imports.append((code_name, numpy_random_functions[import_name]))
 
         elif source == 'math':
 
