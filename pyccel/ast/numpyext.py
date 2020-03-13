@@ -3,7 +3,7 @@
 
 import numpy
 from sympy import Basic, Function, Tuple
-from sympy import Integer as sp_Integer, Add, Mul, Pow as sp_Pow, Float as sp_Float
+from sympy import Integer, Add, Mul, Pow as sp_Pow, Float
 from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
@@ -15,6 +15,7 @@ from .core import (Variable, IndexedElement, Slice, Len,
                    For, Range, Assign, List, Nil,
                    ValuedArgument, Constant, Pow)
 from .builtins  import Int as PythonInt
+from .builtins  import PythonFloat
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
@@ -39,6 +40,7 @@ __all__ = (
     'Diag',
     'Empty',
     'EmptyLike',
+    'NumpyFloat',
     'Float32',
     'Float64',
     'Full',
@@ -420,8 +422,8 @@ class Real(Application):
 
     def __new__(cls, arg):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       sp_Float, Mul, Add, sp_Pow, sp_Rational, Application)
+        _valid_args = (Variable, IndexedElement, Integer, Nil,
+                       Float, Mul, Add, sp_Pow, sp_Rational, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -499,10 +501,10 @@ class Complex(Application):
     arg : Variable, Float, Integer
     """
 
-    def __new__(cls, arg0, arg1=sp_Float(0)):
+    def __new__(cls, arg0, arg1=Float(0)):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer,
-                       sp_Float, Mul, Add, sp_Pow, sp_Rational)
+        _valid_args = (Variable, IndexedElement, Integer,
+                       Float, Mul, Add, sp_Pow, sp_Rational)
 
         for arg in [arg0, arg1]:
             if not isinstance(arg, _valid_args):
@@ -567,8 +569,8 @@ class Linspace(Application):
     def __new__(cls, *args):
 
 
-        _valid_args = (Variable, IndexedElement, sp_Float,
-                       sp_Integer, sp_Rational)
+        _valid_args = (Variable, IndexedElement, Float,
+                       Integer, sp_Rational)
 
         for arg in args:
             if not isinstance(arg, _valid_args):
@@ -679,7 +681,7 @@ class Diag(Application):
         if not isinstance(array, _valid_args):
            raise TypeError('Expecting valid args')
 
-        if not isinstance(k, (int, sp_Integer)):
+        if not isinstance(k, (int, Integer)):
            raise ValueError('k must be an integer')
 
         index = Variable('int', 'diag_index')
@@ -1414,17 +1416,25 @@ class Complex128(Complex):
         return dtype_registry['complex128'][1]
 
 #=======================================================================================
+class NumpyFloat(PythonFloat):
+    """ Represents a call to numpy.float() function.
+    """
+    def __new__(cls, arg):
+        return super().__new__(cls, arg)
 
-class Float32(Real):
+class Float32(NumpyFloat):
+    """ Represents a call to numpy.float32() function.
+    """
     @property
     def precision(self):
         return dtype_registry['float32'][1]
 
-class Float64(Real):
+class Float64(NumpyFloat):
+    """ Represents a call to numpy.float64() function.
+    """
     @property
     def precision(self):
         return dtype_registry['float64'][1]
-
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10

@@ -11,7 +11,7 @@ import numpy as np
 
 from sympy import Lambda
 from sympy.core import Symbol
-from sympy.core import Float as sp_Float, Integer as sp_Integer
+from sympy.core import Float, Integer
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
@@ -543,7 +543,7 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_Constant(self, expr):
-        val = sp_Float(expr.value)
+        val = Float(expr.value)
         return self._print(val)
 
     def _print_ValuedArgument(self, expr):
@@ -644,6 +644,12 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Int(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_PythonFloat(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyFloat(self, expr):
         return expr.fprint(self._print)
 
     def _print_Real(self, expr):
@@ -788,10 +794,10 @@ class FCodePrinter(CodePrinter):
                     if i.start is None and i.end is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, sp_Integer)) and i.end>0) or not(isinstance(i.end, (int, sp_Integer))):
+                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
                             shape.append(i.end)
                     elif i.end is None:
-                        if (isinstance(i.start, (int, sp_Integer)) and i.start<s-1) or not(isinstance(i.start, (int, sp_Integer))):
+                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
                             shape.append(s-i.start)
                     else:
                         shape.append(i.end-i.start+1)
@@ -898,7 +904,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO improve
 
-        if ((rank == 1) and (isinstance(shape, (int, sp_Integer, Variable, Add))) and
+        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, Add))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
@@ -2170,7 +2176,7 @@ class FCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            one = sp_Float(1.0)
+            one = Float(1.0)
             code = '{0}/{1}'.format(self._print(one), \
                                     self.parenthesize(expr.base, PREC))
             return code
