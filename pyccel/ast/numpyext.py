@@ -1420,7 +1420,7 @@ class NumpyFloat(PythonFloat):
     """ Represents a call to numpy.float() function.
     """
     def __new__(cls, arg):
-        return super().__new__(cls, arg)
+        return PythonFloat.__new__(cls, arg)
 
 class Float32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
@@ -1442,7 +1442,7 @@ class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
     def __new__(cls, arg=None, base=10):
-        return super().__new__(cls, arg)
+        return PythonInt.__new__(cls, arg)
 
 class Int32(NumpyInt):
     """ Represents a call to numpy.int32() function.
