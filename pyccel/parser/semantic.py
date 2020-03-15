@@ -101,7 +101,7 @@ from pyccel.parser.messages import *
 
 #==============================================================================
 
-from sympy.core.function       import UndefinedFunction, FunctionClass, Application
+from sympy.core.function       import Application, UndefinedFunction
 from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions    import StdFactKB
@@ -111,7 +111,6 @@ from sympy import KroneckerDelta, Heaviside
 from sympy import Symbol, sympify, symbols
 from sympy import NumberSymbol, Number
 from sympy import Indexed, IndexedBase
-from sympy import FunctionClass
 from sympy import ceiling, floor, Mod
 from sympy import Min, Max
 

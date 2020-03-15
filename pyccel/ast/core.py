@@ -24,7 +24,7 @@ from sympy.core.relational    import Relational
 from sympy.core.relational    import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Gt as sp_Gt, Le as sp_Le, Ge as sp_Ge
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
-from sympy.core.function      import Derivative, UndefinedFunction
+from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.numbers       import ImaginaryUnit
 from sympy.core.basic         import Atom
@@ -180,9 +180,9 @@ class AstFunctionResultError(AstError):
         # Call the base class constructor with the parameters it needs
         super(AstFunctionResultError, self).__init__(msg)
 
+# Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
-
-class Pow(sp_Pow, PyccelAstNode):
+class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
 
     def _eval_subs(self, old, new):
         args = self.args
@@ -194,16 +194,14 @@ class Pow(sp_Pow, PyccelAstNode):
     def _eval_evalf(self,prec):
         return sp_Pow(self.base,self.exp).evalf(prec)
 
-class Add(sp_Add, PyccelAstNode):
+class Add(sp_Add, sp_Boolean, PyccelAstNode):
     pass
-class Mul(sp_Mul, PyccelAstNode):
+class Mul(sp_Mul, sp_Boolean, PyccelAstNode):
     pass
-class And(sp_And, PyccelAstNode):
-    pass
-class Or(sp_Or, PyccelAstNode):
-    pass
-class Not(sp_Not, PyccelAstNode):
-    pass
+#TODO add Functioncall class and use it instead of UndefinedFunction of sympy
+#because  And(f(x,y), expr) won't work
+#class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
+#    pass
 class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
     pass
 class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
@@ -224,6 +222,19 @@ class Gt(sp_Gt, PyccelAstNode):
     pass
 class Ge(sp_Ge, PyccelAstNode):
     pass
+
+class And(sp_And, PyccelAstNode):
+    def __new__(cls, *args, **options):
+        args = [type(e).__mro__[1](*e.args, evaluate=False) if isinstance(e,(Eq,Ne,Lt,Le,Gt,Ge)) else e for e in args]
+        return sp_And.__new__(cls, *args, **options)
+class Or(sp_Or, PyccelAstNode):
+    def __new__(cls, *args, **options):
+        args = [type(e).__mro__[1](*e.args, evaluate=False) if isinstance(e,(Eq,Ne,Lt,Le,Gt,Ge)) else e for e in args]
+        return sp_Or.__new__(cls, *args, **options)
+class Not(sp_Not, PyccelAstNode):
+    def __new__(cls, *args, **options):
+        args = [type(e).__mro__[1](*e.args, evaluate=False) if isinstance(e,(Eq,Ne,Lt,Le,Gt,Ge)) else e for e in args]
+        return sp_Not.__new__(cls, *args, **options)
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
@@ -3783,8 +3794,7 @@ class Declare(Basic):
         return self._args[4]
 
 
-class Subroutine(UndefinedFunction):
-
+class Subroutine(sp_UndefinedFunction):
     pass
 
 
