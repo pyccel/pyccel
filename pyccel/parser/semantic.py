@@ -1493,7 +1493,7 @@ class SemanticParser(BasicParser):
         if len(expr_names.difference(var_names)) > 0:
             msg = 'Unknown variables in lambda definition'
             raise ValueError(msg)
-        funcs = expr.expr.atoms(Function)
+        funcs = expr.expr.atoms(Application)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
