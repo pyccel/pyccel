@@ -71,7 +71,7 @@ from pyccel.ast import NativeRealList
 from pyccel.ast import NativeComplexList
 from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
-from pyccel.ast import String
+from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
 from pyccel.ast import DataTypeFactory
 from pyccel.ast import Nil, Void
 from pyccel.ast import Variable
@@ -147,8 +147,6 @@ from pyccel.parser.messages import *
 #==============================================================================
 
 from sympy.core.function       import Function, FunctionClass, Application
-from sympy.core.numbers        import ImaginaryUnit
-from sympy.logic.boolalg       import Boolean, BooleanTrue, BooleanFalse
 from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions    import StdFactKB
 
@@ -164,9 +162,6 @@ from sympy import ceiling, floor, Mod
 from sympy import Min, Max
 
 from sympy import oo  as INF
-from sympy import Pow as sp_Pow
-from sympy import Integer, Float
-from sympy import true, false
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Atom
@@ -433,10 +428,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value == 'True':
-            return true
+            return BooleanTrue()
 
         elif stmt.value == 'False':
-            return false
+            return BooleanFalse()
 
         else:
             val = strip_ansi_escape.sub('', stmt.value)
@@ -985,7 +980,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_ElseNode(self, stmt):
 
-        test = true
+        test = BooleanTrue()
         body = self._visit(stmt.value)
         return Tuple(test, body, sympify=False)
 

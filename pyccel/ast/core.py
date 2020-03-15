@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 from sympy import cache
 from sympy import sympify
-from sympy import Add, Mul, Pow as sp_Pow
+from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Integral, Symbol, Tuple
 from sympy import Lambda, preorder_traversal
 from sympy import Integer as sp_Integer
@@ -20,8 +20,8 @@ from sympy.core.compatibility import is_sequence
 from sympy.core.compatibility import string_types
 from sympy.core.assumptions   import StdFactKB
 from sympy.core.operations    import LatticeOp
-from sympy.core.relational    import Equality, Relational
-from sympy.core.relational    import Eq, Ne, Lt, Gt, Le, Ge
+from sympy.core.relational    import Relational
+from sympy.core.relational    import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Gt as sp_Gt, Le as sp_Le, Ge as sp_Ge
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction
@@ -29,9 +29,8 @@ from sympy.core.function      import _coeff_isneg
 from sympy.core.numbers       import ImaginaryUnit
 from sympy.core.basic         import Atom
 from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And, Boolean, Not, Or, true, false
-from sympy.logic.boolalg      import Boolean, BooleanTrue, BooleanFalse
-from sympy.logic.boolalg      import BooleanFunction
+from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
+from sympy.logic.boolalg      import Boolean as sp_Boolean, BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 from sympy.tensor             import Idx, Indexed, IndexedBase
 
 from sympy.matrices.matrices            import MatrixBase
@@ -41,7 +40,7 @@ from sympy.utilities.iterables          import iterable
 from sympy.utilities.misc               import filldedent
 
 
-from .basic import Basic
+from .basic import Basic, PyccelAstNode
 from .builtins import Enumerate, Len, List, Map, Range, Zip
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
@@ -55,6 +54,11 @@ from .functionalexpr import FunctionalFor
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 # NOTE: commented-out symbols are never used in Pyccel
 __all__ = (
+    'Add','Mul','Pow',
+    'And','Or','Not',
+    'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
+    'BooleanFalse', 'BooleanTrue',
+    'Float', 'Integer',
     'AddOp',
     'AliasAssign',
     'AnnotatedComment',
@@ -177,6 +181,49 @@ class AstFunctionResultError(AstError):
         super(AstFunctionResultError, self).__init__(msg)
 
 
+
+class Pow(sp_Pow, PyccelAstNode):
+
+    def _eval_subs(self, old, new):
+        args = self.args
+        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
+        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
+        expr = Pow(args[0], args[1], evaluate=False)
+        return expr
+
+    def _eval_evalf(self,prec):
+        return sp_Pow(self.base,self.exp).evalf(prec)
+
+class Add(sp_Add, PyccelAstNode):
+    pass
+class Mul(sp_Mul, PyccelAstNode):
+    pass
+class And(sp_And, PyccelAstNode):
+    pass
+class Or(sp_Or, PyccelAstNode):
+    pass
+class Not(sp_Not, PyccelAstNode):
+    pass
+class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
+    pass
+class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
+    pass
+class Integer(sp_Integer, PyccelAstNode):
+    pass
+class Float(sp_Float, PyccelAstNode):
+    pass
+class Eq(sp_Eq, PyccelAstNode):
+    pass
+class Ne(sp_Ne, PyccelAstNode):
+    pass
+class Lt(sp_Lt, PyccelAstNode):
+    pass
+class Le(sp_Le, PyccelAstNode):
+    pass
+class Gt(sp_Gt, PyccelAstNode):
+    pass
+class Ge(sp_Ge, PyccelAstNode):
+    pass
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
@@ -350,13 +397,13 @@ def extract_subexpressions(expr):
     """
 
     stmts = []
-    cls   = (Add, Mul, sp_Pow, And,
-             Or, Eq, Ne, Lt, Gt,
-             Le, Ge)
+    cls   = (sp_Add, sp_Mul, sp_Pow, sp_And,
+             sp_Or, sp_Eq, sp_Ne, sp_Lt, sp_Gt,
+             sp_Le, sp_Ge)
 
     id_cls = (Symbol, Indexed, IndexedBase,
               DottedVariable, sp_Float, sp_Integer,
-              sp_Rational, ImaginaryUnit,Boolean,
+              sp_Rational, ImaginaryUnit,sp_Boolean,
               BooleanTrue, BooleanFalse, String,
               ValuedArgument, Nil, List)
 
@@ -471,20 +518,6 @@ def create_variable(expr):
 
     return Symbol(name)
 
-class Pow(sp_Pow):
-
-    def _eval_subs(self, old, new):
-        args = self.args
-        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
-        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
-        expr = Pow(args[0], args[1], evaluate=False)
-        return expr
-
-    def _eval_evalf(self,prec):
-        return sp_Pow(self.base,self.exp).evalf(prec)
-
-
-
 class DottedName(Basic):
 
     """
@@ -545,7 +578,7 @@ class AsName(Basic):
         return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
 
-class Dlist(Basic):
+class Dlist(Basic, PyccelAstNode):
 
     """ this is equivalent to the zeros function of numpy arrays for the python list.
 
@@ -1962,7 +1995,7 @@ class VoidFunction(Basic):
         return Symbol("""x9846548484665
                       494794564465165161561""")
 
-class Variable(Symbol):
+class Variable(Symbol, PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -2274,7 +2307,7 @@ class Variable(Symbol):
         return self.is_real
 
 
-class DottedVariable(AtomicExpr, Boolean):
+class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     """
     Represents a dotted variable.
@@ -2437,7 +2470,7 @@ class ValuedVariable(Variable):
         return '{0}={1}'.format(name, value)
 
 
-class Constant(ValuedVariable):
+class Constant(ValuedVariable, PyccelAstNode):
 
     """
 
@@ -2448,7 +2481,7 @@ class Constant(ValuedVariable):
     pass
 
 
-class Argument(Symbol):
+class Argument(Symbol, PyccelAstNode):
 
     """An abstract Argument data structure.
 
@@ -2506,7 +2539,7 @@ class ValuedArgument(Basic):
         return '{0}={1}'.format(argument, value)
 
 
-class FunctionCall(Basic):
+class FunctionCall(Basic, PyccelAstNode):
 
     """Represents a function call in the code.
     """
@@ -3778,7 +3811,7 @@ class Raise(Basic):
 
 # TODO: improve with __new__ from Function and add example
 
-class Random(Function):
+class Random(Function, PyccelAstNode):
 
     """
     Represents a 'random' number in the code.
@@ -3799,7 +3832,7 @@ class Random(Function):
 
 # TODO: improve with __new__ from Function and add example
 
-class SumFunction(Basic):
+class SumFunction(Basic, PyccelAstNode):
 
     """Represents a Sympy Sum Function.
 
@@ -4033,7 +4066,7 @@ class CommentBlock(Basic):
     def comments(self):
         return self._args[0]
 
-class IndexedVariable(IndexedBase):
+class IndexedVariable(IndexedBase, PyccelAstNode):
 
     """
     Represents an indexed variable, like x in x[i], in the code.
@@ -4145,7 +4178,7 @@ class IndexedVariable(IndexedBase):
         return str(self.name)
 
 
-class IndexedElement(Indexed):
+class IndexedElement(Indexed, PyccelAstNode):
 
     """
     Represents a mathematical object with indices.
@@ -4256,7 +4289,7 @@ class IndexedElement(Indexed):
 
 
 
-class String(Basic):
+class String(Basic, PyccelAstNode):
 
     """Represents the String"""
 
@@ -4273,7 +4306,7 @@ class String(Basic):
         return self.arg
 
 
-class Concatenate(Basic):
+class Concatenate(Basic, PyccelAstNode):
 
     """Represents the String concatination operation.
 
@@ -4393,7 +4426,7 @@ class Assert(Basic):
     """
 
     def __new__(cls, test):
-        if not isinstance(test, (bool, Relational, Boolean)):
+        if not isinstance(test, (bool, Relational, sp_Boolean)):
             raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
                              % (test, type(test)))
 
@@ -4459,7 +4492,7 @@ class If(Basic):
         newargs = []
         for ce in args:
             cond = ce[0]
-            if not isinstance(cond, (bool, Relational, Boolean, Is, IsNot)):
+            if not isinstance(cond, (bool, Relational, sp_Boolean, Is, IsNot)):
                 raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
                                  % (cond, type(cond)))
             if not isinstance(ce[1], (list, Tuple, tuple)):

@@ -69,7 +69,9 @@ from pyccel.ast import Zeros, Where, Linspace, Diag, Complex, EmptyLike
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
-from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
+from pyccel.ast.core      import local_sympify, int2float, Pow, Add, Mul, And, Or, _atomic
+from pyccel.ast.core      import Eq, Ne, Lt, Le, Gt, Ge
+from pyccel.ast.core      import BooleanTrue, BooleanFalse
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
@@ -99,25 +101,21 @@ from pyccel.parser.messages import *
 
 #==============================================================================
 
-from sympy.core.function       import Function, FunctionClass, Application
+from sympy.core.function       import UndefinedFunction, FunctionClass, Application
 from sympy.core.numbers        import ImaginaryUnit
-from sympy.logic.boolalg       import Boolean, BooleanTrue, BooleanFalse
 from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy.core.assumptions    import StdFactKB
 
 from sympy import Sum as Summation
 from sympy import KroneckerDelta, Heaviside
 from sympy import Symbol, sympify, symbols
-from sympy import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import NumberSymbol, Number
 from sympy import Indexed, IndexedBase
-from sympy import Add, Mul, And, Or
 from sympy import FunctionClass
 from sympy import ceiling, floor, Mod
 from sympy import Min, Max
 
 from sympy import oo  as INF
-from sympy import Pow as sp_Pow
 from sympy import Integer, Float
 from sympy import true, false
 from sympy import Tuple
@@ -1302,7 +1300,7 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
                 if isinstance(master, FunctionDef):
                     if master.results:
-                        return Function(str(master.name))(*args)
+                        return UndefinedFunction(str(master.name))(*args)
                     else:
                         return Subroutine(str(master.name))(*args)
                 else:
@@ -1325,7 +1323,7 @@ class SemanticParser(BasicParser):
                         d_var = self._infere_type(results[0], **settings)
                         dtype = d_var['datatype']
                         assumptions = {str_dtype(dtype): True}
-                        second = Function(rhs_name, **assumptions)(*args)
+                        second = UndefinedFunction(rhs_name, **assumptions)(*args)
 
                     elif len(results) == 0:
                         second = Subroutine(rhs_name)(*args)
@@ -1345,7 +1343,7 @@ class SemanticParser(BasicParser):
                 return macro.master
             elif isinstance(macro, MacroFunction):
                 args = macro.apply([first])
-                return Function(str(macro.master.name))(*args)
+                return UndefinedFunction(str(macro.master.name))(*args)
 
             # Attribute / property
             if isinstance(expr.rhs, Symbol) and first.cls_base:
@@ -1368,7 +1366,7 @@ class SemanticParser(BasicParser):
                             d_var = self._infere_type(i.results[0], **settings)
                             dtype = d_var['datatype']
                             assumptions = {str_dtype(dtype): True}
-                            second = Function(expr.rhs.name, **assumptions)(Nil())
+                            second = UndefinedFunction(expr.rhs.name, **assumptions)(Nil())
                             return DottedVariable(first, second)
 
         # did something go wrong?
@@ -1386,7 +1384,7 @@ class SemanticParser(BasicParser):
 
         cls       = (Symbol, Indexed, DottedVariable, List)
 
-        atoms = _atomic(expr, cls, ignore=(Function))
+        atoms = _atomic(expr, cls, ignore=(UndefinedFunction))
         atoms = [self._visit(a, **settings) for a in atoms]
         atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
 
@@ -1403,7 +1401,6 @@ class SemanticParser(BasicParser):
 
 
         expr_new = Add(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1415,7 +1412,6 @@ class SemanticParser(BasicParser):
             stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Mul(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1428,7 +1424,6 @@ class SemanticParser(BasicParser):
             stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Pow(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1437,7 +1432,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = And(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
 
         return expr_new
 
@@ -1445,7 +1439,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Or(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
 
         return expr_new
 
@@ -1453,7 +1446,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Eq(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         return expr_new
 
     def _visit_Unequality(self, expr, **settings):
@@ -1461,7 +1453,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Ne(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
 
         return expr_new
 
@@ -1469,7 +1460,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Lt(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
 
         return expr_new
 
@@ -1477,7 +1467,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Ge(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
 
         return expr_new
 
@@ -1485,7 +1474,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Le(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
 
         return expr_new
 
@@ -1493,7 +1481,6 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Gt(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         return expr_new
 
 
@@ -1668,7 +1655,7 @@ class SemanticParser(BasicParser):
                         d_var = self._infere_type(results[0], **settings)
                         dtype = d_var['datatype']
                         dtype = {str_dtype(dtype): True}
-                        expr = Function(name,**dtype)(*args)
+                        expr = UndefinedFunction(name,**dtype)(*args)
 
                     elif len(results) == 0:
                         expr = Subroutine(name)(*args)
@@ -1677,7 +1664,7 @@ class SemanticParser(BasicParser):
                             return CodeBlock(stmts)
                         return expr
                     elif len(results) > 1:
-                        expr = Function(name)(*args)
+                        expr = UndefinedFunction(name)(*args)
                         if len(stmts) > 0:
                             stmts.append(expr)
                             return CodeBlock(stmts)
@@ -1807,7 +1794,7 @@ class SemanticParser(BasicParser):
                     if isinstance(master, FunctionDef):
                         # Distinguish between function and subroutine
                         if master.results:
-                            rhs = Function(str(master.name))(*args)
+                            rhs = UndefinedFunction(str(master.name))(*args)
                             return Assign(lhs[0], rhs)
                         else:
                             return Subroutine(str(master.name))(*args)
@@ -2094,12 +2081,12 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, (Map, Zip)):
             func  = _get_name(rhs.args[0])
-            func  = Function(func)
+            func  = UndefinedFunction(func)
             alloc = Assign(lhs, Zeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index = create_variable(expr)
             index = Variable('int',index.name)
-            range_ = Function('range')(Function('len')(lhs))
+            range_ = UndefinedFunction('range')(UndefinedFunction('len')(lhs))
             name  = _get_name(lhs)
             var   = IndexedBase(name)[index]
             args  = rhs.args[1:]
