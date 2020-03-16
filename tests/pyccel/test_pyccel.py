@@ -107,7 +107,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
             assert(np.isclose(p,f))
     else:
         for p, f in zip(p_output, f_output):
-            p = dtype(p.strip('(),'))
+            p = dtype(p.strip('(),[]'))
             f = dtype(f)
             assert(np.isclose(p,f))
 
