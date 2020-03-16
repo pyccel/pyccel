@@ -1702,13 +1702,7 @@ class SemanticParser(BasicParser):
         args = self._visit(expr.args, **settings)
         return Max(*args)
 
-    def _visit_lhs_Assign(self, lhs, d_var, rhs, argNum, nArgs, **settings):
-        if isinstance(d_var, list):
-            if len(d_var) == nArgs:
-                d_var = d_var[argNum]
-            else:
-                msg = 'Number of output arguments does not match number of provided variables'
-                raise ValueError(msg)
+    def _visit_lhs_Assign(self, lhs, d_var, rhs, **settings):
 
         if isinstance(lhs, Symbol):
 
@@ -2092,11 +2086,25 @@ class SemanticParser(BasicParser):
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
-            self._visit_lhs_Assign(lhs, d_var, rhs, 0, 1, **settings)
+            if isinstance(d_var, list):
+                if len(d_var) == 1:
+                    d_var = d_var[0]
+                else:
+                    errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
+                    return None
+            self._visit_lhs_Assign(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, Tuple):
             n = len(lhs)
-            for i,l in enumerate(lhs):
-                self._visit_lhs_Assign(l, d_var, rhs, i, n, **settings)
+            if not isinstance(d_var, list) or len(d_var)!= n:
+                errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=self.blocking)
+                return None
+            else:
+                for i,l in enumerate(lhs):
+                    self._visit_lhs_Assign(l, d_var[i], rhs, **settings)
         else:
             lhs = self._visit(lhs, **settings)
 
