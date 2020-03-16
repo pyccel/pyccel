@@ -990,7 +990,7 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
         args = [Tuple(test1, [first], sympify=False),
-                Tuple(true, [second], sympify=False)]
+                Tuple(BooleanTrue(), [second], sympify=False)]
         expr = IfTernaryOperator(*args)
         expr.set_fst(stmt)
         return expr

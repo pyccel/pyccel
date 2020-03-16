@@ -2,6 +2,7 @@ from pyccel.decorators import types
 from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
+import pytest
 
 def test_fabs_call():
     @types('real')
@@ -25,6 +26,7 @@ def test_fabs_phrase():
     y = rand()
     assert(f2(x,y) == fabs_phrase(x,y))
 
+@pytest.mark.xfail
 def test_fabs_return_type():
     @types('int')
     def fabs_return_type(x):
@@ -59,13 +61,15 @@ def test_sqrt_phrase():
     y = rand()
     assert(f2(x,y) == sqrt_phrase(x,y))
 
+
+@pytest.mark.xfail
 def test_sqrt_return_type():
     @types('real')
     def sqrt_return_type_real(x):
         from math import sqrt
         a = sqrt(x)
         return a
-
+    #TODO we should use cmath instead of math
     @types('complex')
     def sqrt_return_type_comp(x):
         from math import sqrt
