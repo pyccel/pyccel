@@ -39,5 +39,12 @@ i,j = f3(y = 8.2)
 print(i,j)
 i,j = f3()
 print(i, j)
-#TODO: Fix Print
-#print(f3())
+
+
+
+print(f3())
+
+def print_multiple():
+    print(f3())
+
+print_multiple()

@@ -52,6 +52,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              If, Nil, Is, IsNot)
+from pyccel.ast.core import create_variable
 from pyccel.ast.builtins import Enumerate, Len, Map, Print, Range, Zip
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -299,6 +300,10 @@ class FCodePrinter(CodePrinter):
         # ...
 
         decs    = expr.declarations
+        vars_to_print = self.parser.get_variables(self._namespace)
+        for v in vars_to_print:
+            if v not in expr.variables:
+                decs.append(Declare(v.dtype,v))
         func_in_func = False
         for func in expr.funcs:
             for i in func.body:
@@ -460,18 +465,25 @@ class FCodePrinter(CodePrinter):
 
     def _print_Print(self, expr):
         args = []
+        additional_code = ''
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
             elif isinstance(f, Tuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
+            elif isinstance(f, Function):
+                print("f is func : ",f)
+                print_str, additional = self._print_Function_Or_Subroutine(f)
+                print(print_str, additional)
+                additional_code += additional
+                args.append("{}".format(print_str))
             else:
                 args.append("{}".format(self._print(f)))
 
         fs = ', '.join(i for i in args)
 
-        code = 'print *, {0}'.format(fs)
+        code = '{0}print *, {1}'.format(additional_code,fs)
         return self._get_statement(code)
 
     def _print_SymbolicPrint(self, expr):
@@ -664,14 +676,36 @@ class FCodePrinter(CodePrinter):
             arg = args[0]
             code = 'minval({0})'.format(self._print(arg))
         else:
-            code = ','.join(self._print(arg) for arg in args)
-            code = 'min('+code+')'
+            additional_code = ''
+            str_args = []
+            for arg in args:
+                if isinstance(f, Function):
+                    print_str, additional = self._print_Function_Or_Subroutine(f)
+                    additional_code += additional
+                    str_args.append("{}".format(print_str))
+                else:
+                    str_args.append("{}".format(self._print(arg)))
+            code = ','.join(str_args)
+            code = additional_code + 'min('+code+')'
         return self._get_statement(code)
 
     def _print_Max(self, expr):
         args = expr.args
-        args = ','.join(self._print(arg) for arg in args)
-        code = 'max({0})'.format(args)
+        if len(args) == 1:
+            arg = args[0]
+            code = 'maxval({0})'.format(self._print(arg))
+        else:
+            additional_code = ''
+            str_args = []
+            for arg in args:
+                if isinstance(f, Function):
+                    print_str, additional = self._print_Function_Or_Subroutine(f)
+                    additional_code += additional
+                    str_args.append("{}".format(print_str))
+                else:
+                    str_args.append("{}".format(self._print(arg)))
+            code = ','.join(str_args)
+            code = additional_code + 'max('+code+')'
         return self._get_statement(code)
 
     def _print_Dot(self, expr):
@@ -1419,6 +1453,12 @@ class FCodePrinter(CodePrinter):
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
         body_code = '\n'.join(self._print(i) for i in expr.body)
+
+        vars_to_print = self.parser.get_variables(self._namespace)
+        for v in vars_to_print:
+            if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
+                args_decs[str(v)] = Declare(v.dtype,v)
+
         prelude   = '\n'.join(self._print(i) for i in args_decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
@@ -2149,6 +2189,11 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         name = type(expr).__name__
 
+        func = self.get_function(name)
+        if len(func.results)>0:
+            errors.report(MULTIPLE_OUTPUT_CALL,
+                          symbol=expr, severity='warning')
+
         code_args = ', '.join(self._print(i) for i in args if not isinstance(i,Nil))
 
         code = '{0}({1})'.format(name, code_args)
@@ -2156,6 +2201,33 @@ class FCodePrinter(CodePrinter):
             code = 'call ' + code
 
         return self._get_statement(code)
+
+    def _print_Function_Or_Subroutine(self, expr):
+        additional_code = ''
+
+        args = expr.args
+        name = type(expr).__name__
+
+        func = self.get_function(name)
+
+        if len(func.results)>0:
+            out_vars = []
+            for r in func.results:
+                var_name = create_variable(r).name
+                var =  r.clone(name = var_name)
+                self._namespace.variables[var_name] = var
+                out_vars.append(var)
+            additional_code = additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
+            return self._print(Tuple(*out_vars)), additional_code
+        else:
+            code_args = ', '.join(self._print(i) for i in args if not isinstance(i,Nil))
+
+            code = '{0}({1})'.format(name, code_args)
+
+            if isinstance(expr.func, Subroutine):
+                code = 'call ' + code
+
+        return self._get_statement(code), self._get_statement(additional_code)
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
