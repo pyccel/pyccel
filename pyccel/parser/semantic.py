@@ -1796,6 +1796,7 @@ class SemanticParser(BasicParser):
                 self.insert_class(new_cls, parent=True)
             else:
                 lhs = self._visit_DottedVariable(lhs, **settings)
+        return lhs
 
 
     def _visit_Assign(self, expr, **settings):
@@ -2094,7 +2095,7 @@ class SemanticParser(BasicParser):
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     return None
-            self._visit_lhs_Assign(lhs, d_var, rhs, **settings)
+            lhs = self._visit_lhs_Assign(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, Tuple):
             n = len(lhs)
             if not isinstance(d_var, list) or len(d_var)!= n:
@@ -2104,7 +2105,7 @@ class SemanticParser(BasicParser):
                 return None
             else:
                 for i,l in enumerate(lhs):
-                    self._visit_lhs_Assign(l, d_var[i], rhs, **settings)
+                    lhs[i] = self._visit_lhs_Assign(l, d_var[i], rhs, **settings)
         else:
             lhs = self._visit(lhs, **settings)
 
