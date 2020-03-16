@@ -2187,8 +2187,15 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         name = type(expr).__name__
 
-        func = self.get_function(name)
-        if len(func.results)>0:
+        # Get function without raising an error for None
+        func = None
+        container = self._namespace
+        while container:
+            if name in container.functions:
+                func = container.functions[name]
+            container = container.parent_scope
+
+        if isinstance(func,Function) and len(func.results)>1:
             errors.report(MULTIPLE_OUTPUT_CALL,
                           symbol=expr, severity='warning')
 
@@ -2206,9 +2213,15 @@ class FCodePrinter(CodePrinter):
         args = expr.args
         name = type(expr).__name__
 
-        func = self.get_function(name)
+        # Get function without raising an error for None
+        func = None
+        container = self._namespace
+        while container:
+            if name in container.functions:
+                func = container.functions[name]
+            container = container.parent_scope
 
-        if len(func.results)>0:
+        if isinstance(func,Function) and len(func.results)>1:
             out_vars = []
             for r in func.results:
                 var_name = create_variable(r).name
