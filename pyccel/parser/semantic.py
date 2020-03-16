@@ -2104,8 +2104,10 @@ class SemanticParser(BasicParser):
                     severity='error', blocker=self.blocking)
                 return None
             else:
+                new_lhs = []
                 for i,l in enumerate(lhs):
-                    lhs[i] = self._visit_lhs_Assign(l, d_var[i], rhs, **settings)
+                    new_lhs.append( self._visit_lhs_Assign(l, d_var[i], rhs, **settings) )
+                lhs = Tuple(*new_lhs, sympify=False)
         else:
             lhs = self._visit(lhs, **settings)
 
