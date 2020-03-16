@@ -679,8 +679,8 @@ class FCodePrinter(CodePrinter):
             additional_code = ''
             str_args = []
             for arg in args:
-                if isinstance(f, Function):
-                    print_str, additional = self._print_Function_Or_Subroutine(f)
+                if isinstance(arg, Function):
+                    print_str, additional = self._print_Function_Or_Subroutine(arg)
                     additional_code += additional
                     str_args.append("{}".format(print_str))
                 else:
@@ -698,8 +698,8 @@ class FCodePrinter(CodePrinter):
             additional_code = ''
             str_args = []
             for arg in args:
-                if isinstance(f, Function):
-                    print_str, additional = self._print_Function_Or_Subroutine(f)
+                if isinstance(arg, Function):
+                    print_str, additional = self._print_Function_Or_Subroutine(arg)
                     additional_code += additional
                     str_args.append("{}".format(print_str))
                 else:
