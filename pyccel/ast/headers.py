@@ -16,9 +16,23 @@ from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
 from .core import local_sympify
 
+__all__ = (
+    'ClassHeader',
+    'FunctionHeader',
+    'Header',
+    'InterfaceHeader',
+    'MacroFunction',
+    'MacroVariable',
+    'MetaVariable',
+    'MethodHeader',
+    'VariableHeader',
+)
+
+#==============================================================================
 class Header(Basic):
     pass
 
+#==============================================================================
 class MetaVariable(Header):
     """Represents the MetaVariable."""
 
@@ -38,6 +52,7 @@ class MetaVariable(Header):
     def value(self):
         return self._args[1]
 
+#==============================================================================
 # TODO rename dtypes to arguments
 class VariableHeader(Header):
     """Represents a variable header in the code.
@@ -75,6 +90,7 @@ class VariableHeader(Header):
         args = (self._args[0],)
         return args
 
+#==============================================================================
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
@@ -253,7 +269,7 @@ class FunctionHeader(Header):
                 self.is_static,)
         return args
 
-
+#==============================================================================
 # TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):
     """Represents method header in the code.
@@ -338,6 +354,7 @@ class MethodHeader(FunctionHeader):
     def is_static(self):
         return self._args[4]
 
+#==============================================================================
 class ClassHeader(Header):
     """Represents class header in the code.
 
@@ -368,7 +385,7 @@ class ClassHeader(Header):
     def options(self):
         return self._args[1]
 
-
+#==============================================================================
 # TODO must extend Header rather than Basic
 class InterfaceHeader(Basic):
 
@@ -388,6 +405,7 @@ class InterfaceHeader(Basic):
     def funcs(self):
         return self._args[1]
 
+#==============================================================================
 class MacroFunction(Header):
     """."""
 
@@ -541,6 +559,7 @@ class MacroFunction(Header):
             newargs[i] = new
         return newargs
 
+#==============================================================================
 class MacroVariable(Header):
     """."""
 
@@ -563,6 +582,3 @@ class MacroVariable(Header):
     @property
     def master(self):
         return self._args[1]
-
-
-

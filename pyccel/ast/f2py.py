@@ -3,7 +3,7 @@
 from sympy import Tuple
 
 from pyccel.ast.core import FunctionCall
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, F2PYFunctionDef
 from pyccel.ast.core import Variable
 from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import Assign
@@ -12,6 +12,12 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import Comment
 
 from pyccel.ast.datatypes import str_dtype
+
+__all__ = (
+   'as_static_function',
+   'as_static_function_call',
+   'sanitize_arguments',
+)
 
 #=======================================================================================
 def sanitize_arguments(args):
@@ -39,8 +45,8 @@ def as_static_function(func, name=None):
 
     assert(isinstance(func, FunctionDef))
 
-    args    = func.arguments
-    results = func.results
+    args    = list(func.arguments)
+    results = list(func.results)
     body    = func.body
     arguments_inout = func.arguments_inout
     functions = func.functions
@@ -48,11 +54,11 @@ def as_static_function(func, name=None):
     if results:
         if len(results) == 1:
             result = results[0]
-            if result.rank > 0:
+            if result.rank > 0 and not result in args:
                 # updates args
-                args = list(args) + [result]
+                args = args + [result]
                 arguments_inout += [False]
-            else:
+            elif result.rank == 0:
                 _results = results
         else:
             raise NotImplementedError('when len(results) > 1')
@@ -61,7 +67,7 @@ def as_static_function(func, name=None):
         name = 'f2py_{}'.format(func.name).lower()
 
     # ...
-    results_names = [i.name for i in results]
+    results_names = [i.name for i in _results]
     _args = []
     _arguments_inout = []
 
@@ -107,7 +113,6 @@ def as_static_function(func, name=None):
 
         intent = arguments_inout[i_a]
         _arguments_inout += [intent]
-
     args = _args
     results = _results
     arguments_inout = _arguments_inout
@@ -141,7 +146,7 @@ def as_static_function(func, name=None):
         body = f2py_instructions + body
     # ...
 
-    return FunctionDef( name, list(args), results, body,
+    return F2PYFunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout,
@@ -163,7 +168,6 @@ def as_static_function_call(func, mod_name, name=None):
 
     # function arguments
     args = sanitize_arguments(func.arguments)
-
     # function body
     call = FunctionCall(func_alias, args)
     stmt = call if func.is_procedure else Assign(func.results[0], call)

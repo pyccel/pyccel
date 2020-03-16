@@ -421,3 +421,40 @@ def array_real_loopdiff(x, y, out):
     dxy = x - y
     for k in range(len(x)):
         out[k] = dxy[k]
+
+#==============================================================================
+# KEYWORD ARGUMENTS
+#==============================================================================
+
+def array_kwargs_full():
+    """ full(shape, fill_value, dtype=None, order='C')
+    """
+
+    from numpy import sum as np_sum
+    from numpy import full
+
+    n = 3
+
+    a = full((n, n-1), 0.5, 'float', 'C')
+    b = full((n+1, 2*n), 2.0, order='F')
+    c = full((1, n), 3)
+    d = full(2+n, order='F', fill_value=5)
+    e = full(dtype=int, fill_value=1.0, shape=2*n)
+
+    return np_sum(a) + np_sum(b) + np_sum(c) + np_sum(d) + np_sum(e)
+
+def array_kwargs_ones():
+    """ ones(shape, dtype=float, order='C')
+    """
+
+    from numpy import sum as np_sum
+    from numpy import ones
+
+    n = 4
+
+    a = ones((n, n-1), 'float', 'C')
+    b = ones((n+1, 2*n), float, order='F')
+    c = ones((1, n), complex)
+    d = ones(dtype=int, shape=2+n)
+
+    return np_sum(a) + np_sum(b) + np_sum(c) + np_sum(d)

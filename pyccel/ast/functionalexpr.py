@@ -4,6 +4,16 @@
 from .basic import Basic
 from sympy.core.expr  import Expr, AtomicExpr
 
+__all__ = (
+    'FunctionalFor',
+    'FunctionalMap',
+    'FunctionalMax',
+    'FunctionalMin',
+    'FunctionalSum',
+    'GeneratorComprehension'
+)
+
+#==============================================================================
 class FunctionalFor(Basic):
 
     """."""
@@ -38,23 +48,22 @@ class FunctionalFor(Basic):
     def index(self):
         return self._args[4]
 
-
+#==============================================================================
 class GeneratorComprehension(AtomicExpr, Basic):
     pass
 
-
+#==============================================================================
 class FunctionalSum(GeneratorComprehension, FunctionalFor):
     name = 'sum'
 
-
+#==============================================================================
 class FunctionalMax(GeneratorComprehension, FunctionalFor):
     name = 'max'
-
+#==============================================================================
 
 class FunctionalMin(GeneratorComprehension, FunctionalFor):
     name = 'min'
 
-
+#==============================================================================
 class FunctionalMap(GeneratorComprehension, FunctionalFor):
     pass
-

@@ -44,9 +44,7 @@ install_requires = [
     'pylint>=1.8',
     'parse>=1.8',
     'redbaron>=0.7',
-    'pytest',
     'tabulate',
-    'mpi4py',
     'termcolor',
     'fastcache',
 ]

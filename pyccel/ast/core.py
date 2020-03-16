@@ -42,6 +42,7 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic import Basic
+from .builtins import Enumerate, Len, List, Map, Range, Zip
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
@@ -50,6 +51,109 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
+# TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
+# TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
+# NOTE: commented-out symbols are never used in Pyccel
+__all__ = (
+    'AddOp',
+    'AliasAssign',
+    'AnnotatedComment',
+    'Argument',
+    'AsName',
+    'Assert',
+    'Assign',
+    'AstError',
+    'AstFunctionResultError',
+    'AugAssign',
+    'Block',
+    'Break',
+    'ClassDef',
+    'CodeBlock',
+    'Comment',
+    'CommentBlock',
+    'Concatenate',
+    'ConstructorCall',
+    'Continue',
+    'Declare',
+    'Del',
+    'DivOp',
+    'Dlist',
+    'DoConcurrent',
+    'DottedName',
+    'DottedVariable',
+    'EmptyLine',
+    'ErrorExit',
+    'Eval',
+    'Exit',
+    'F2PYFunctionDef',
+    'For',
+    'ForAll',
+    'ForIterator',
+    'FunctionCall',
+    'FunctionDef',
+    'GetDefaultFunctionArg',
+    'If',
+    'IfTernaryOperator',
+    'Import',
+    'IndexedElement',
+    'IndexedVariable',
+    'Interface',
+    'Is',
+    'IsNot',
+    'Load',
+    'ModOp',
+    'Module',
+    'MulOp',
+    'NativeOp',
+    'NewLine',
+    'Nil',
+    'ParallelBlock',
+    'ParallelRange',
+    'Pass',
+    'Pow',
+    'Product',
+    'Program',
+    'PythonFunction',
+    'Random',
+    'Return',
+    'SeparatorComment',
+    'Slice',
+    'String',
+    'SubOp',
+    'Subroutine',
+    'SumFunction',
+    'SymbolicAssign',
+    'SymbolicPrint',
+    'SympyFunction',
+    'Tensor',
+    'Tile',
+    'TupleImport',
+    'ValuedArgument',
+    'ValuedVariable',
+    'Variable',
+    'Void',
+    'VoidFunction',
+    'While',
+    'With',
+    '_atomic',
+#    'allocatable_like',
+    'collect_vars',
+    'create_variable',
+    'extract_subexpressions',
+#    'float2int',
+    'get_assigned_symbols',
+    'get_initial_value',
+    'get_iterable_ranges',
+    'inline',
+    'int2float',
+#    'is_simple_assign',
+    'local_sympify',
+#    'operator',
+#    'op_registry',
+    'subs'
+)
+
+#==============================================================================
 local_sympify = {
     'N'    : Symbol('N'),
     'S'    : Symbol('S'),
@@ -441,13 +545,6 @@ class AsName(Basic):
         return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
 
-class List(Tuple):
-
-    """Represent lists in the code with dynamic memory management."""
-
-    pass
-
-
 class Dlist(Basic):
 
     """ this is equivalent to the zeros function of numpy arrays for the python list.
@@ -635,7 +732,7 @@ class CodeBlock(Basic):
             if isinstance(i, CodeBlock):
                 ls += i.body
             elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application, Expr, IfTernaryOperator)):
+                            Application, Expr, IfTernaryOperator, EmptyLine)):
                 ls.append(i)
             else:
 
@@ -1034,116 +1131,6 @@ class Product(Basic):
     @property
     def elements(self):
         return self._args
-
-
-class Zip(Basic):
-
-    """
-    Represents a zip stmt.
-
-    """
-
-    def __new__(cls, *args):
-        if not isinstance(args, (tuple, list, Tuple)):
-            raise TypeError('args must be an iterable')
-        elif len(args) < 2:
-            raise ValueError('args must be of lenght > 2')
-        return Basic.__new__(cls, *args)
-
-    @property
-    def element(self):
-        return self._args[0]
-
-
-class Enumerate(Basic):
-
-    """
-    Reresents the enumerate stmt
-
-    """
-
-    def __new__(cls, arg):
-        if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
-            raise TypeError('Expecting an arg of valid type')
-        return Basic.__new__(cls, arg)
-
-    @property
-    def element(self):
-        return self._args[0]
-
-
-class Map(Basic):
-    """
-    Reresents the map stmt
-
-    """
-
-    def __new__(cls, *args):
-        if len(args)<2:
-            raise TypeError('wrong number of arguments')
-        return Basic.__new__(cls, *args)
-
-
-
-
-class Range(Basic):
-
-    """
-    Represents a range.
-
-    Examples
-
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Range
-    >>> from sympy import Symbol
-    >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
-    >>> Range(s, e, 1)
-    Range(0, n, 1)
-    """
-
-    def __new__(cls, *args):
-        start = 0
-        stop = None
-        step = 1
-
-        _valid_args = (sp_Integer, Symbol, Indexed, Variable,
-                       IndexedElement)
-
-        if isinstance(args, (tuple, list, Tuple)):
-            if len(args) == 1:
-                stop = args[0]
-            elif len(args) == 2:
-                start = args[0]
-                stop = args[1]
-            elif len(args) == 3:
-                start = args[0]
-                stop = args[1]
-                step = args[2]
-            else:
-                raise ValueError('Range has at most 3 arguments')
-        elif isinstance(args, _valid_args):
-            stop = args
-        else:
-            raise TypeError('expecting a list or valid stop')
-
-        return Basic.__new__(cls, start, stop, step)
-
-    @property
-    def start(self):
-        return self._args[0]
-
-    @property
-    def stop(self):
-        return self._args[1]
-
-    @property
-    def step(self):
-        return self._args[2]
-
-    @property
-    def size(self):
-        return (self.stop - self.start) / self.step
 
 
 class Tile(Range):
@@ -2124,16 +2111,18 @@ class Variable(Symbol):
             or dtype.__class__.__name__.startswith('Pyccel')
         alloweddtypes = (NativeBool, NativeRange, NativeString,
                          NativeSymbol, NativeGeneric)
+
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
-
         elif isinstance(dtype, NativeReal):
             assumptions['real'] = True
-
         elif isinstance(dtype, NativeComplex):
             assumptions['complex'] = True
+        elif isinstance(dtype, NativeBool):
+            obj.is_Boolean = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
             raise TypeError('Undefined datatype')
+
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
@@ -3152,6 +3141,10 @@ class PythonFunction(FunctionDef):
                               self.body, cls_name=self.cls_name)
 
 
+class F2PYFunctionDef(FunctionDef):
+    pass
+
+
 class GetDefaultFunctionArg(Basic):
 
     """Creates a FunctionDef for handling optional arguments in the code.
@@ -3840,55 +3833,6 @@ class SumFunction(Basic):
     @property
     def stmts(self):
         return self._args[2]
-
-
-class Len(Function):
-
-    """
-    Represents a 'len' expression in the code.
-    """
-
-    def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
-        assumptions = {'integer': True}
-        ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'int'
-
-
-class Print(Basic):
-
-    """Represents a print function in the code.
-
-    expr : sympy expr
-        The expression to return.
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Print
-    >>> n,m = symbols('n,m')
-    >>> Print(('results', n,m))
-    Print((results, n, m))
-    """
-
-    def __new__(cls, expr):
-        if not isinstance(expr, list):
-            expr = sympify(expr, locals=local_sympify)
-        return Basic.__new__(cls, expr)
-
-    @property
-    def expr(self):
-        return self._args[0]
 
 
 class SymbolicPrint(Basic):

@@ -57,7 +57,6 @@ from pyccel.ast import Import, TupleImport
 from pyccel.ast import AsName
 from pyccel.ast import AnnotatedComment, CommentBlock
 from pyccel.ast import With, Block
-from pyccel.ast import Range, Zip, Enumerate, Product, Map
 from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
@@ -72,7 +71,11 @@ from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
 from pyccel.ast.core      import AstFunctionResultError
+from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
+from pyccel.ast.builtins  import python_builtin_datatype
+from pyccel.ast.builtins  import Range, Zip, Enumerate, Map
+from pyccel.ast.utilities import split_positional_keyword_arguments
 
 
 from pyccel.parser.utilities import omp_statement, acc_statement
@@ -840,8 +843,8 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
 
-            elif name in ['Zeros', 'Ones', 'Empty', 'Diag',
-                          'Shape', 'Cross', 'Linspace','Where']:
+            elif name in ['Full', 'Empty', 'Zeros', 'Ones', 'Diag',
+                          'Shape', 'Cross', 'Linspace', 'Where']:
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'      ] = expr.shape
@@ -908,9 +911,10 @@ class SemanticParser(BasicParser):
                 d_var['precision'  ] = max(d_vars[0]['precision'],
                                            d_vars[1]['precision'])
 
-            elif name in ['Int','Int32','Int64','Real','Imag',
-                          'Float32','Float64','Complex',
-                          'Complex128','Complex64']:
+            elif name in ['Int','Int32','Int64',
+                          'PythonFloat','NumpyFloat','Float32','Float64',
+                          'Complex','Complex64','Complex128',
+                          'Real','Imag','Bool']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
@@ -1152,11 +1156,13 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr]
         return List(*ls, sympify=False)
 
+    def _visit_ValuedArgument(self, expr, **settings):
+        expr_value = self._visit(expr.value, **settings)
+        return ValuedArgument(expr.name, expr_value)
+
     def _visit_CodeBlock(self, expr, **settings):
         return expr
     def _visit_Nil(self, expr, **settings):
-        return expr
-    def _visit_ValuedArgument(self, expr, **settings):
         return expr
     def _visit_EmptyLine(self, expr, **settings):
         return expr
@@ -1264,6 +1270,8 @@ class SemanticParser(BasicParser):
             var = self.get_function(name)
         if var is None:
             var = self.get_symbolic_function(name)
+        if var is None:
+            var = python_builtin_datatype(name)
 
         if var is None:
 
@@ -1581,7 +1589,8 @@ class SemanticParser(BasicParser):
             else:
                 if not isinstance(func, (FunctionDef, Interface)):
 
-                    expr = func(*args)
+                    args, kwargs = split_positional_keyword_arguments(*args)
+                    expr = func(*args, **kwargs)
 
                     if isinstance(expr, (Where, Diag, Linspace)):
                         self.insert_variable(expr.index)
@@ -1943,7 +1952,6 @@ class SemanticParser(BasicParser):
 
             else:
                 d_var = self._infere_type(rhs, **settings)
-
         elif isinstance(rhs, Map):
 
             name = str(rhs.args[0])
@@ -2532,26 +2540,26 @@ class SemanticParser(BasicParser):
             # this for the case of a function without arguments => no header
 
             interfaces = [FunctionDef(name, [], [], [])]
-
-        vec_func = None
-        if 'vectorize' in decorators:
-            #TODO move to another place
-            vec_name  = 'vec_' + name
-            arg       = decorators['vectorize'][0]
-            arg       = str(arg.name)
-            args      = [str(i.name) for i in expr.arguments]
-            index_arg = args.index(arg)
-            arg       = Symbol(arg)
-            vec_arg   = IndexedBase(arg)
-            index     = create_variable(expr.body)
-            range_    = Function('range')(Function('len')(arg))
-            args      = symbols(args)
-            args[index_arg] = vec_arg[index]
-            body_vec        = Assign(args[index_arg], Function(name)(*args))
-            body_vec.set_fst(expr.fst)
-            body_vec   = [For(index, range_, [body_vec], strict=False)]
-            header_vec = header.vectorize(index_arg)
-            vec_func   = expr.vectorize(body_vec, header_vec)
+#        TODO move this to codegen
+#        vec_func = None
+#        if 'vectorize' in decorators:
+#            #TODO move to another place
+#            vec_name  = 'vec_' + name
+#            arg       = decorators['vectorize'][0]
+#            arg       = str(arg.name)
+#            args      = [str(i.name) for i in expr.arguments]
+#            index_arg = args.index(arg)
+#            arg       = Symbol(arg)
+#            vec_arg   = IndexedBase(arg)
+#            index     = create_variable(expr.body)
+#            range_    = Function('range')(Function('len')(arg))
+#            args      = symbols(args)
+#            args[index_arg] = vec_arg[index]
+#            body_vec        = Assign(args[index_arg], Function(name)(*args))
+#            body_vec.set_fst(expr.fst)
+#            body_vec   = [For(index, range_, [body_vec], strict=False)]
+#            header_vec = header.vectorize(index_arg)
+#            vec_func   = expr.vectorize(body_vec, header_vec)
 
 
         for m in interfaces:
@@ -2562,6 +2570,7 @@ class SemanticParser(BasicParser):
             imports     = []
             arg         = None
             arguments = expr.arguments
+            header_results = m.results
 
             self.create_new_function_scope(name)
 
@@ -2599,11 +2608,9 @@ class SemanticParser(BasicParser):
                     args.append(a_new)
                     self.insert_variable(a_new, name=str(a_new.name))
 
-            if len(interfaces) == 1 and len(interfaces[0].results) == 1:
-
+            if len(interfaces) == 1:
                 # case of recursive function
                 # TODO improve
-
                 self.insert_function(interfaces[0])
 
             # we annotate the body
@@ -2674,10 +2681,6 @@ class SemanticParser(BasicParser):
 
             sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
 
-
-
-
-
             self.exit_function_scope()
             # ... computing inout arguments
             args_inout = []
@@ -2738,6 +2741,16 @@ class SemanticParser(BasicParser):
                 elif (r not in args) and r.rank > 0:
                     raise AstFunctionResultError(r)
 
+            for rh,r in zip(header_results, results):
+                # check type compatibility
+                if str(rh.dtype) != str(r.dtype):
+                    txt = '|{name}| {old} <-> {new}'
+                    txt = txt.format(name=name, old=rh.dtype, new=r.dtype)
+                    errors.report(INCOMPATIBLE_RETURN_VALUE_TYPE,
+                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=False)
+
+
             func = FunctionDef(name,
                     args,
                     results,
@@ -2786,20 +2799,18 @@ class SemanticParser(BasicParser):
 
             funcs = Interface(name, new_funcs)
             self.insert_function(funcs)
-
-        if vec_func:
-           self._visit_FunctionDef(vec_func, **settings)
-           vec_func = self.namespace.functions.pop(vec_name)
-           if isinstance(funcs, Interface):
-               funcs = list(funcs.funcs)+[vec_func]
-           else:
-               self.namespace.sons_scopes['sc_'+ name] = self.namespace.sons_scopes[name]
-               funcs = funcs.rename('sc_'+ name)
-               funcs = [funcs, vec_func]
-
-           funcs = Interface(name, funcs)
-           self.insert_function(funcs)
-
+#        TODO move this to codegen
+#        if vec_func:
+#           self._visit_FunctionDef(vec_func, **settings)
+#           vec_func = self.namespace.functions.pop(vec_name)
+#           if isinstance(funcs, Interface):
+#               funcs = list(funcs.funcs)+[vec_func]
+#           else:
+#               self.namespace.sons_scopes['sc_'+ name] = self.namespace.sons_scopes[name]
+#               funcs = funcs.rename('sc_'+ name)
+#               funcs = [funcs, vec_func]
+#           funcs = Interface(name, funcs)
+#           self.insert_function(funcs)
         return EmptyLine()
 
     def _visit_Print(self, expr, **settings):

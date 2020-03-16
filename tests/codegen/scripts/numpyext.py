@@ -66,8 +66,6 @@ xa1 = zeros_like(x1)
 xa2 = zeros_like(x2)
 xa3 = zeros_like(x3)
 
-xb1 = full_like(x1)
-xb2 = full_like(x2)
-xb3 = full_like(x3)
-
-
+xb1 = full_like(x1, 1)
+xb2 = full_like(x2, 2)
+xb3 = full_like(x3, 3)

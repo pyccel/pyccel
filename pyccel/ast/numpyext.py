@@ -1,42 +1,82 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# TODO remove sympify, Symbol
-
 import numpy
-from sympy.core.function import Application
-from sympy.core import Symbol, Tuple
-from sympy import sympify
-from sympy.core.basic import Basic
-from sympy import Integer as sp_Integer, Add, Mul, Pow as sp_Pow, Float as sp_Float
-from sympy.utilities.iterables import iterable
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-from sympy.core.assumptions import StdFactKB
-from sympy import sqrt, asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
+from sympy import Basic, Function, Tuple
+from sympy import Integer, Add, Mul, Pow as sp_Pow, Float
+from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
-from sympy import IndexedBase, Indexed, Idx, Matrix
+from sympy import IndexedBase
+from sympy.core.function import Application
+from sympy.core.assumptions import StdFactKB
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
-
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-
-
-from .core import (Variable, IndexedElement, IndexedVariable, Len,
-                   For, ForAll, Range, Assign, AugAssign, List, String, Nil,
-                   ValuedArgument, Constant, Pow, int2float)
+from .core import (Variable, IndexedElement, Slice, Len,
+                   For, Range, Assign, List, Nil,
+                   ValuedArgument, Constant, Pow)
+from .builtins  import Int as PythonInt
+from .builtins  import PythonFloat
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
-from .datatypes import DataType, datatype
-from .datatypes import (NativeInteger, NativeReal, NativeComplex,
-                        NativeBool)
+from .datatypes import datatype
+from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 
-from .core import local_sympify ,float2int, Slice
+__all__ = (
+    'Abs',
+    'Acos',
+    'Acot',
+    'Acsc',
+    'Array',
+    'Asec',
+    'Asin',
+    'Atan',
+    'Bounds',
+    'Complex',
+    'Complex64',
+    'Complex128',
+    'Cosh',
+    'Cross',
+    'Diag',
+    'Empty',
+    'EmptyLike',
+    'NumpyFloat',
+    'Float32',
+    'Float64',
+    'Full',
+    'FullLike',
+    'Imag',
+    'NumpyInt',
+    'Int32',
+    'Int64',
+    'Linspace',
+    'Log',
+    'Matmul',
+    'Max',
+    'Min',
+    'Mod',
+    'Norm',
+    'NumpySum',
+    'Ones',
+    'OnesLike',
+    'Product',
+    'Rand',
+    'Real',
+    'Shape',
+    'Sinh',
+    'Sqrt',
+    'Tanh',
+    'Where',
+    'Zeros',
+    'ZerosLike'
+)
 
+#==============================================================================
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
-                  }
+}
 
-#=======================================================================================
+#==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 class Array(Application):
@@ -144,9 +184,8 @@ class Array(Application):
 
         return code
 
-#=======================================================================================
-
-class NumpySum(Application):
+#==============================================================================
+class NumpySum(Function):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -187,9 +226,8 @@ class NumpySum(Application):
             return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
-#=======================================================================================
-
-class Product(Application):
+#==============================================================================
+class Product(Function):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , Tuple, List, Variable
@@ -221,8 +259,7 @@ class Product(Application):
             return '{0} = product({1})'.format(lhs_code, rhs_code)
         return 'product({0})'.format(rhs_code)
 
-#=======================================================================================
-
+#==============================================================================
 class Matmul(Application):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , Tuple, List, Variable
@@ -274,8 +311,7 @@ class Matmul(Application):
             return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
         return 'matmul({1},{0})'.format(a_code, b_code)
 
-#=======================================================================================
-
+#==============================================================================
 class Shape(Array):
 
     """Represents a call to  numpy.shape for code generation.
@@ -375,63 +411,8 @@ class Shape(Array):
 
         return code_init
 
-#=======================================================================================
-
-class Int(Application):
-
-    """Represents a call to  numpy.int for code generation.
-
-    arg : Variable, Real, Integer, Complex
-    """
-
-    def __new__(cls, arg):
-        if not isinstance(arg, (Variable,
-                                IndexedElement,
-                                sp_Float, sp_Integer,
-                                Mul, Add, sp_Pow,
-                                sp_Rational)):
-
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        obj = Basic.__new__(cls, arg)
-        assumptions = {'integer':True}
-        ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'int'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['int']
-
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        code  = 'Int({0}, {1})'.format(value, prec)
-        return code
-
-
-#=======================================================================================
-
+#==============================================================================
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
 class Real(Application):
 
     """Represents a call to  numpy.real for code generation.
@@ -441,8 +422,8 @@ class Real(Application):
 
     def __new__(cls, arg):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       sp_Float, Mul, Add, sp_Pow, sp_Rational, Application)
+        _valid_args = (Variable, IndexedElement, Integer, Nil,
+                       Float, Mul, Add, sp_Pow, sp_Rational, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -490,8 +471,7 @@ class Real(Application):
 
         return self.__str__()
 
-#=======================================================================================
-
+#==============================================================================
 class Imag(Real):
 
     """Represents a call to  numpy.imag for code generation.
@@ -512,9 +492,8 @@ class Imag(Real):
     def __str__(self):
         return 'imag({0})'.format(str(self.arg))
 
-
-#=======================================================================================
-
+#==============================================================================
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
 class Complex(Application):
 
     """Represents a call to  numpy.complex for code generation.
@@ -522,10 +501,10 @@ class Complex(Application):
     arg : Variable, Float, Integer
     """
 
-    def __new__(cls, arg0, arg1=sp_Float(0)):
+    def __new__(cls, arg0, arg1=Float(0)):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer,
-                       sp_Float, Mul, Add, sp_Pow, sp_Rational)
+        _valid_args = (Variable, IndexedElement, Integer,
+                       Float, Mul, Add, sp_Pow, sp_Rational)
 
         for arg in [arg0, arg1]:
             if not isinstance(arg, _valid_args):
@@ -579,8 +558,7 @@ class Complex(Application):
 
         return self.fprint(str)
 
-#=======================================================================================
-
+#==============================================================================
 class Linspace(Application):
 
     """
@@ -591,8 +569,8 @@ class Linspace(Application):
     def __new__(cls, *args):
 
 
-        _valid_args = (Variable, IndexedElement, sp_Float,
-                       sp_Integer, sp_Rational)
+        _valid_args = (Variable, IndexedElement, Float,
+                       Integer, sp_Rational)
 
         for arg in args:
             if not isinstance(arg, _valid_args):
@@ -683,8 +661,7 @@ class Linspace(Application):
 
         return code
 
-#=======================================================================================
-
+#==============================================================================
 class Diag(Application):
 
     """
@@ -704,7 +681,7 @@ class Diag(Application):
         if not isinstance(array, _valid_args):
            raise TypeError('Expecting valid args')
 
-        if not isinstance(k, (int, sp_Integer)):
+        if not isinstance(k, (int, Integer)):
            raise ValueError('k must be an integer')
 
         index = Variable('int', 'diag_index')
@@ -774,8 +751,7 @@ class Diag(Application):
 
         return alloc + '\n' + code
 
-#=======================================================================================
-
+#==============================================================================
 class Cross(Application):
 
     """
@@ -895,8 +871,7 @@ class Cross(Application):
         #return alloc + '\n' + code
         return code
 
-#=======================================================================================
-
+#==============================================================================
 class Where(Application):
     """ Represents a call to  numpy.where """
 
@@ -943,9 +918,7 @@ class Where(Application):
 
         return alloc +'\n' + stmt
 
-
-#=======================================================================================
-
+#==============================================================================
 class Rand(Real):
 
     """
@@ -966,92 +939,59 @@ class Rand(Real):
 
         return 'rand()'
 
+#==============================================================================
+class Full(Application):
+    """
+    Represents a call to numpy.full for code generation.
 
+    Parameters
+    ----------
+    shape : int or sequence of ints
+        Shape of the new array, e.g., ``(2, 3)`` or ``2``.
 
-#=======================================================================================
-
-class Zeros(Application):
-
-    """Represents a call to numpy.zeros for code generation.
-
-    shape : int, list, tuple
-        int or list of integers
+    fill_value : scalar
+        Fill value.
 
     dtype: str, DataType
         datatype for the constructed array
+        The default, `None`, means `np.array(fill_value).dtype`.
 
-    Examples
+    order : {'C', 'F'}, optional
+        Whether to store multidimensional data in C- or Fortran-contiguous
+        (row- or column-wise) order in memory.
 
     """
+    def __new__(cls, shape, fill_value, dtype=None, order='C'):
 
-    # TODO improve
+        # Convert shape to Tuple
+        shape = cls._process_shape(shape)
 
-    def __new__(cls, shape, *args):
-
-        args = list(args)
-        args_= {'dtype':'real','order':'C'}
-        prec = 0
-        val_args = []
-
-        for i in range(len(args)):
-            if isinstance(args[i], ValuedArgument):
-                val_args = args[i:]
-                args[i:] = []
-                break
-
-
-        if len(args)==1:
-            args_['dtype'] = str(args[0])
-        elif len(args)==2:
-            args_['dtype'] = str(args[0])
-            args_['order'] = str(args[1])
-
-        for i in val_args:
-            val = str(i.value).replace('\'', '')
-            args_[str(i.argument.name)] = val
-
-
-        dtype = args_['dtype']
-        order = args_['order']
-
-        if isinstance(shape,Tuple):
-            shape = list(shape)
-
-        if isinstance(shape, list):
-
-            # this is a correction. otherwise it is not working on LRZ
-            if isinstance(shape[0], list):
-                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape[0]))
+        # If there is no dtype, extract it from fill_value
+        # TODO: must get dtype from an annotated node
+        if (dtype is None) or isinstance(dtype, Nil):
+            if fill_value.is_integer:
+                dtype = 'int'
+            elif fill_value.is_real:
+                dtype = 'float'
+            elif fill_value.is_complex:
+                dtype = 'complex'
+            elif fill_value.is_Boolean:
+                dtype = 'bool'
             else:
-                shape = Tuple(*(sympify(i, locals = local_sympify) for i in shape))
+                raise TypeError('Could not determine dtype from fill_value {}'.format(fill_value))
 
-        elif isinstance(shape, (int, sp_Integer, Symbol)):
-            shape = Tuple(sympify(shape, locals = local_sympify))
-        else:
-            shape = shape
+        # Verify dtype and get precision
+        dtype, precision = cls._process_dtype(dtype)
 
-        if isinstance(dtype, str):
-            dtype = dtype.replace('\'', '')
-            dtype, prec = dtype_registry[dtype]
-            dtype = datatype('ndarray' + dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
+        # Verify array ordering
+        order = cls._process_order(order)
 
-        if not prec:
-            prec = default_precision[str(dtype)]
+        return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
-        return Basic.__new__(cls, shape, dtype, order, prec)
-
+    #--------------------------------------------------------------------------
     @property
     def shape(self):
         return self._args[0]
-
-    @property
-    def rank(self):
-        if iterable(self.shape):
-            return len(self.shape)
-        else:
-            return 1
 
     @property
     def dtype(self):
@@ -1066,7 +1006,103 @@ class Zeros(Application):
         return self._args[3]
 
     @property
-    def init_value(self):
+    def fill_value(self):
+        return self._args[4]
+
+    @property
+    def rank(self):
+        return len(self.shape)
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_shape(shape):
+
+        if isinstance(shape, Tuple):
+            return shape
+
+        if isinstance(shape, (list, tuple)):
+            return Tuple(*shape)
+
+        return Tuple(shape)
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_dtype(dtype):
+
+        dtype = str(dtype).replace('\'', '').lower()
+        dtype, precision = dtype_registry[dtype]
+        dtype = datatype('ndarray' + dtype)
+
+        return dtype, precision
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_order(order):
+
+        if (order is None) or isinstance(order, Nil):
+            return None
+
+        order = str(order).strip('\'"')
+        if order not in ('C', 'F'):
+            raise ValueError('unrecognized order = {}'.format(order))
+        return order
+
+    #--------------------------------------------------------------------------
+    def fprint(self, printer, lhs, stack_array=False):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        stmts = []
+
+        # Create statement for allocation
+        if not stack_array:
+            # Transpose indices because of Fortran column-major ordering
+            shape = self.shape if self.order == 'F' else self.shape[::-1]
+
+            if isinstance(self.shape, (Tuple,tuple)):
+                # this is a correction. problem on LRZ
+                shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
+            else:
+                shape_code = '0:' + printer(shape - 1)
+
+            code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+            stmts.append(code_alloc)
+
+        # Create statement for initialization
+        if self.fill_value is not None:
+            init_value = printer(self.fill_value)
+            code_init = '{0} = {1}'.format(lhs_code, init_value)
+            stmts.append(code_init)
+
+        return '\n'.join(stmts)
+
+#==============================================================================
+class Empty(Full):
+    """ Represents a call to numpy.empty for code generation.
+    """
+    def __new__(cls, shape, dtype='float', order='C'):
+
+        # Convert shape to Tuple
+        shape = cls._process_shape(shape)
+
+        # Verify dtype and get precision
+        dtype, precision = cls._process_dtype(dtype)
+
+        # Verify array ordering
+        order = cls._process_order(order)
+
+        return Basic.__new__(cls, shape, dtype, order, precision)
+
+    @property
+    def fill_value(self):
+        return None
+
+#==============================================================================
+class Zeros(Empty):
+    """ Represents a call to numpy.zeros for code generation.
+    """
+    @property
+    def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 0
@@ -1080,40 +1116,12 @@ class Zeros(Application):
             raise TypeError('Unknown type')
         return value
 
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        # Transpose indices because of Fortran column-major ordering
-        shape = self.shape if self.order == 'F' else self.shape[::-1]
-
-        if isinstance(self.shape, (Tuple,tuple)):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
-        else:
-            shape_code = '0:' + printer(shape - 1)
-
-        init_value = printer(self.init_value)
-
-        lhs_code = printer(lhs)
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-
-        return code
-
-#=======================================================================================
-
-class Ones(Zeros):
-
-    """Represents a call to numpy.ones for code generation.
-
-    shape : int or list of integers
-
+#==============================================================================
+class Ones(Empty):
+    """ Represents a call to numpy.ones for code generation.
     """
-
     @property
-    def init_value(self):
+    def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
             value = 1
@@ -1128,192 +1136,48 @@ class Ones(Zeros):
         return value
 
 #=======================================================================================
+class FullLike(Application):
 
+    def __new__(cls, a, fill_value, dtype=None, order='K', subok=True):
+
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
+
+        return Full(a.shape, fill_value, dtype, order)
+
+#=======================================================================================
 class EmptyLike(Application):
 
-    """Represents variable assignment using numpy.empty_like for code generation.
+    def __new__(cls, a, dtype=None, order='K', subok=True):
 
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-    rhs : Variable
-        the input variable
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, EmptyLike
-    >>> n, m, x = symbols('n, m, x')
-    >>> y = Zeros(x, (n, m))
-    >>> z = EmptyLike(y)
-    """
-
-    # TODO improve in the spirit of assign
-
-    def __new__(cls, rhs=None, lhs=None):
-        if isinstance(lhs, str):
-            lhs = Symbol(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-
-        assignable = (
-            Symbol,
-            MatrixSymbol,
-            MatrixElement,
-            Indexed,
-            Idx,
-            Variable,
-            )
-
-        if lhs and not isinstance(lhs, assignable):
-            raise TypeError('Cannot assign to lhs of type %s.'
-                            % type(lhs))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-        code = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-        return code
+        return Empty(a.shape, dtype, order)
 
 #=======================================================================================
+class OnesLike(Application):
 
-class ZerosLike(EmptyLike):
+    def __new__(cls, a, dtype=None, order='K', subok=True):
 
-    @property
-    def init_value(self):
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        def _native_init_value(dtype):
-            if isinstance(dtype, NativeInteger):
-                return 0
-            elif isinstance(dtype, NativeReal):
-                return 0.0
-            elif isinstance(dtype, NativeComplex):
-                return 0.0
-            elif isinstance(dtype, NativeBool):
-                return BooleanFalse()
-            raise TypeError('Expecting a Native type, given {}'.format(dtype))
-
-        _native_types = (NativeInteger, NativeReal,
-                         NativeComplex, NativeBool)
-
-        rhs = self.rhs
-        if isinstance(rhs.dtype, _native_types):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, (Variable, IndexedVariable)):
-            return _native_init_value(rhs.dtype)
-        elif isinstance(rhs, IndexedElement):
-            return _native_init_value(rhs.base.dtype)
-        else:
-            raise TypeError('Unknown type for {name}, given {dtype}'.format(dtype=type(rhs),
-                            name=rhs))
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        init_value = printer(self.init_value)
-        bounds_code = printer(Bounds(self.rhs))
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-        return code
+        return Ones(a.shape, dtype, order)
 
 #=======================================================================================
+class ZerosLike(Application):
 
-class FullLike(EmptyLike):
+    def __new__(cls, a, dtype=None, order='K', subok=True):
 
-    """Represents variable assignment using numpy.full_like for code generation.
+        # NOTE: we ignore 'subok' argument
+        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-    lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
-
-    rhs : Variable
-        the input variable
-
-    Examples
-
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Zeros, FullLike
-    >>> n,m,x = symbols('n,m,x')
-    >>> y = Zeros(x, (n,m))
-    >>> z = FullLike(y)
-    """
-
-    # TODO improve in the spirit of assign
-
-    def __new__(cls, rhs=None, lhs=None):
-        if isinstance(lhs, str):
-            lhs = Symbol(lhs)
-
-        # Tuple of things that can be on the lhs of an assignment
-
-        assignable = (
-            Symbol,
-            MatrixSymbol,
-            MatrixElement,
-            Indexed,
-            Idx,
-            Variable,
-            )
-
-        if lhs and not isinstance(lhs, assignable):
-            raise TypeError('Cannot assign to lhs of type %s.'
-                            % type(lhs))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := 0'.format(sstr(self.lhs))
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def init_value(self):
-        return self.rhs
-
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        rhs_code = printer(self.rhs)
-        bounds_code = printer(Bounds(self.rhs))
-
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, bounds_code)
-        code_init = '{0} = {1}'.format(lhs_code, rhs_code)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-        return code
+        return Zeros(a.shape, dtype, order)
 
 #=======================================================================================
 
@@ -1334,37 +1198,9 @@ class Bounds(Basic):
     def var(self):
         return self._args[0]
 
-
 #=======================================================================================
 
-class Empty(Zeros):
-
-    """Represents a call to numpy.empty for code generation.
-
-    shape : int or list of integers
-
-    """
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        if isinstance(self.shape, Tuple):
-
-            # this is a correction. problem on LRZ
-
-            shape_code = ', '.join('0:' + printer(i - 1) for i in
-                                   self.shape)
-        else:
-            shape_code = '0:' + printer(self.shape - 1)
-
-
-        lhs_code = printer(lhs)
-
-        code = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        return code
-
-#=======================================================================================
-
-class Norm(Application):
+class Norm(Function):
     """ Represents call to numpy.norm"""
 
     def __new__(cls, arg, dim=None):
@@ -1420,7 +1256,7 @@ class Sqrt(Pow):
 
 #=======================================================================================
 
-class Mod(Application):
+class Mod(Function):
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
 
@@ -1430,7 +1266,7 @@ class Mod(Application):
         obj._assumptions._generator = ass_copy
         return obj
 
-class Asin(Application):
+class Asin(Function):
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1441,7 +1277,7 @@ class Asin(Application):
         return obj
 
 
-class Acos(Application):
+class Acos(Function):
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1451,7 +1287,7 @@ class Acos(Application):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Asec(Application):
+class Asec(Function):
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1463,7 +1299,7 @@ class Asec(Application):
 
 #=======================================================================================
 
-class Atan(Application):
+class Atan(Function):
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1474,7 +1310,7 @@ class Atan(Application):
         return obj
 
 
-class Acot(Application):
+class Acot(Function):
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1485,7 +1321,7 @@ class Acot(Application):
         return obj
 
 
-class Acsc(Application):
+class Acsc(Function):
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1497,7 +1333,7 @@ class Acsc(Application):
 
 #=======================================================================================
 
-class Sinh(Application):
+class Sinh(Function):
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1507,7 +1343,7 @@ class Sinh(Application):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Cosh(Application):
+class Cosh(Function):
     def __new__(cls,arg):
         obj = cosh(arg)
         if arg.is_real:
@@ -1518,7 +1354,7 @@ class Cosh(Application):
         return obj
 
 
-class Tanh(Application):
+class Tanh(Function):
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1530,7 +1366,7 @@ class Tanh(Application):
 
 #=======================================================================================
 
-class Log(Application):
+class Log(Function):
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1542,7 +1378,7 @@ class Log(Application):
 
 #=======================================================================================
 
-class Abs(Application):
+class Abs(Function):
 
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
@@ -1552,14 +1388,14 @@ class Abs(Application):
 
 #=======================================================================================
 
-class Min(Application):
+class Min(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
      def _eval_is_real(self):
         return True
 
-class Max(Application):
+class Max(Function):
      def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
@@ -1580,29 +1416,44 @@ class Complex128(Complex):
         return dtype_registry['complex128'][1]
 
 #=======================================================================================
+class NumpyFloat(PythonFloat):
+    """ Represents a call to numpy.float() function.
+    """
+    def __new__(cls, arg):
+        return PythonFloat.__new__(cls, arg)
 
-class Float32(Real):
+class Float32(NumpyFloat):
+    """ Represents a call to numpy.float32() function.
+    """
     @property
     def precision(self):
         return dtype_registry['float32'][1]
 
-class Float64(Real):
+class Float64(NumpyFloat):
+    """ Represents a call to numpy.float64() function.
+    """
     @property
     def precision(self):
         return dtype_registry['float64'][1]
 
-
 #=======================================================================================
+# TODO [YG, 13.03.2020]: handle case where base != 10
+class NumpyInt(PythonInt):
+    """ Represents a call to numpy.int() function.
+    """
+    def __new__(cls, arg=None, base=10):
+        return PythonInt.__new__(cls, arg)
 
-class Int32(Int):
+class Int32(NumpyInt):
+    """ Represents a call to numpy.int32() function.
+    """
     @property
     def precision(self):
         return dtype_registry['int32'][1]
 
-class Int64(Int):
+class Int64(NumpyInt):
+    """ Represents a call to numpy.int64() function.
+    """
     @property
     def precision(self):
         return dtype_registry['int64'][1]
-
-
-
