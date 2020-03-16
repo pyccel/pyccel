@@ -89,6 +89,8 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
     assert(len(p_output) == len(f_output))
     if isinstance(dtype,list):
         assert(len(dtype)==len(p_output))
+        for p,f,d in zip(p_output, f_output, dtype):
+            compare_pyth_fort_output(p,f,d)
     elif dtype is bool:
         for p, f in zip(p_output, f_output):
             p = p.lower() in ['true', 't', '1']
@@ -97,6 +99,12 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
     elif dtype is str:
         for p, f in zip(p_output, f_output):
             assert(p.strip()==f.strip())
+    elif dtype is complex:
+        for p, f in zip(p_output, f_output):
+            p = dtype(p)
+            f = f.strip('()').split(',')
+            f = float(f[0])+float(f[1])*1j
+            assert(np.isclose(p,f))
     else:
         for p, f in zip(p_output, f_output):
             p = dtype(p)
@@ -271,3 +279,9 @@ def test_import_syntax( test_file ):
 def test_numpy_kernels_compile():
     cwd = get_abs_path(".")
     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "test_kernels.py")
+
+def test_multiple_results():
+    pyccel_test("scripts/test_multiple_results.py",
+            dependencies = "scripts/default_args_mod.py",
+            output_dtype = [int,float,complex,bool,int,complex,
+                int,bool,float,float,float,float,float,float,float,float])
