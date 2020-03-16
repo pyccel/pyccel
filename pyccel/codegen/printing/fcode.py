@@ -1123,10 +1123,14 @@ class FCodePrinter(CodePrinter):
 
                 name = type(rhs).__name__
                 rhs_code = self._print(name)
+
                 args = rhs.args
                 code_args = ', '.join(self._print(i) for i in args)
 
-                lhs_code = ', '.join(self._print(i) for i in expr.lhs)
+                func = self.get_function(name)
+                output_names = func.results
+                lhs_code = ', '.join(self._print(name) + ' = ' + self._print(i) for (name,i) in zip(output_names,expr.lhs))
+
                 code = 'call {0}({1}, {2})'.format(rhs_code, code_args, lhs_code)
                 return self._get_statement(code)
 
