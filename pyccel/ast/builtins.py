@@ -8,19 +8,20 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float
+from sympy import Integer
+from sympy import Float
 from sympy import sympify
 from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic import Basic
+from .datatypes import default_precision
 
 __all__ = (
     'Bool',
     'Complex',
     'Enumerate',
-    'Float',
+    'PythonFloat',
     'Int',
     'Len',
     'List',
@@ -86,7 +87,7 @@ class Bool(Function):
 class Complex(Function):
     """ Represents a call to Python's native complex() function.
     """
-    def __new__(cls, arg0, arg1=sp_Float(0)):
+    def __new__(cls, arg0, arg1=Float(0)):
         obj = Basic.__new__(cls, arg0, arg1)
         assumptions = {'complex': True}
         ass_copy = assumptions.copy()
@@ -150,7 +151,7 @@ class Enumerate(Basic):
         return self._args[0]
 
 #==============================================================================
-class Float(Function):
+class PythonFloat(Function):
     """ Represents a call to Python's native float() function.
     """
     def __new__(cls, arg):
@@ -317,7 +318,7 @@ class Range(Basic):
         stop = None
         step = 1
 
-        _valid_args = (sp_Integer, Symbol, Indexed)
+        _valid_args = (Integer, Symbol, Indexed)
 
         if isinstance(args, (tuple, list, Tuple)):
             if len(args) == 1:
@@ -377,7 +378,7 @@ class Zip(Basic):
 #==============================================================================
 python_builtin_datatypes_dict = {
     'bool'   : Bool,
-    'float'  : Float,
+    'float'  : PythonFloat,
     'int'    : Int,
     'complex': Complex
 }
