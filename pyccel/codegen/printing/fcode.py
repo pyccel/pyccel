@@ -55,7 +55,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.datatypes import NativeBool, NativeSymbol, NativeString, NativeList
+from pyccel.ast.datatypes import NativeSymbol, NativeString, NativeList
 from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor
 from pyccel.ast.datatypes import CustomDataType
@@ -1204,8 +1204,7 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         a = expr.args[0]
         b = expr.args[1]
-        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
-            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+        if a.is_Boolean and b.is_Boolean:
             return '{} .eqv. {}'.format(lhs, rhs)
         return '{0} == {1} '.format(lhs, rhs)
 
@@ -1214,8 +1213,7 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         a = expr.args[0]
         b = expr.args[1]
-        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
-            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+        if a.is_Boolean and b.is_Boolean:
             return '{} .neqv. {}'.format(lhs, rhs)
         return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
@@ -2040,8 +2038,8 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.rhs, Nil):
             return '.not. present({})'.format(lhs)
-        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
-            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+
+        if a.is_Boolean and b.is_Boolean:
             return '{} .eqv. {}'.format(lhs, rhs)
 
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
@@ -2054,8 +2052,8 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(expr.rhs, Nil):
             return 'present({})'.format(lhs)
-        if ((a.is_Boolean or isinstance(a.dtype, NativeBool)) and
-            (b.is_Boolean or isinstance(b.dtype, NativeBool))):
+
+        if a.is_Boolean and b.is_Boolean:
             return '{} .neqv. {}'.format(lhs, rhs)
 
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
