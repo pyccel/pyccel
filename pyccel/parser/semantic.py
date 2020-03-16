@@ -1702,6 +1702,107 @@ class SemanticParser(BasicParser):
         args = self._visit(expr.args, **settings)
         return Max(*args)
 
+    def _visit_lhs_Assign(self, lhs, d_var, rhs, argNum, nArgs, **settings):
+        if isinstance(d_var, list):
+            if len(d_var) == nArgs:
+                d_var = d_var[argNum]
+            else:
+                msg = 'Number of output arguments does not match number of provided variables'
+                raise ValueError(msg)
+
+        if isinstance(lhs, Symbol):
+
+            name = lhs.name
+            dtype = d_var.pop('datatype')
+
+            d_lhs = d_var.copy()
+            # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+            if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                d_lhs['allocatable'] = False
+                d_lhs['is_pointer' ] = True
+
+                # TODO uncomment this line, to make rhs target for
+                #      lists/tuples.
+                #rhs = self.update_variable(rhs, is_target=True)
+
+
+            lhs = Variable(dtype, name, **d_lhs)
+            var = self.get_variable_from_scope(name)
+
+            # Variable not yet declared (hence array not yet allocated)
+            if var is None:
+
+                # Add variable to scope
+                self.insert_variable(lhs, name=lhs.name)
+
+                # Not yet supported for arrays: x=y+z, x=b[:]
+                # Because we cannot infer shape of right-hand side yet
+                know_lhs_shape = lhs.shape or (lhs.rank == 0) \
+                        or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
+                if not know_lhs_shape:
+                    msg = "Cannot infer shape of right-hand side for expression {}".format(expr)
+                    raise NotImplementedError(msg)
+
+            else:
+
+                # TODO improve check type compatibility
+                if str(lhs.dtype) != str(var.dtype):
+                    txt = '|{name}| {old} <-> {new}'
+                    txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
+
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=False)
+
+                # in the case of elemental, lhs is not of the same dtype as
+                # var.
+                # TODO d_lhs must be consistent with var!
+                # the following is a small fix, since lhs must be already
+                # declared
+                lhs = var
+
+
+        elif isinstance(lhs, DottedVariable):
+
+            dtype = d_var.pop('datatype')
+            name = lhs.lhs.name
+            if self._current_function == '__init__':
+
+                cls      = self.get_variable('self')
+                cls_name = str(cls.cls_base.name)
+                cls      = self.get_class(cls_name)
+
+                attributes = cls.attributes
+                parent     = cls.parent
+                attributes = list(attributes)
+                n_name     = str(lhs.rhs.name)
+
+                # update the self variable with the new attributes
+
+                dt       = self.get_class_construct(cls_name)()
+                cls_base = self.get_class(cls_name)
+                var      = Variable(dt, 'self', cls_base=cls_base)
+                d_lhs    = d_var.copy()
+                self.insert_variable(var, 'self')
+
+
+                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                    d_lhs['allocatable'] = False
+                    d_lhs['is_pointer' ] = True
+
+                    rhs = self.update_variable(rhs, is_target=True)
+
+                member = Variable(dtype, n_name, **d_lhs)
+                lhs    = DottedVariable(var, member)
+
+                # update the attributes of the class and push it to the namespace
+                attributes += [member]
+                new_cls = ClassDef(cls_name, attributes, [], parent=parent)
+                self.insert_class(new_cls, parent=True)
+            else:
+                lhs = self._visit_DottedVariable(lhs, **settings)
+
 
     def _visit_Assign(self, expr, **settings):
 
@@ -1990,105 +2091,12 @@ class SemanticParser(BasicParser):
                     d_var['is_pointer'] = True
 
         lhs = expr.lhs
-        if isinstance(lhs, Symbol):
-            if isinstance(d_var, list):
-                if len(d_var) > 1:
-                    msg = 'can not assign multiple object into one variable'
-                    raise ValueError(msg)
-                elif len(d_var) == 1:
-                    d_var = d_var[0]
-
-            name = lhs.name
-            dtype = d_var.pop('datatype')
-
-            d_lhs = d_var.copy()
-            # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-            if d_lhs['allocatable'] and isinstance(rhs, Variable):
-                d_lhs['allocatable'] = False
-                d_lhs['is_pointer' ] = True
-
-                # TODO uncomment this line, to make rhs target for
-                #      lists/tuples.
-                #rhs = self.update_variable(rhs, is_target=True)
-
-
-            lhs = Variable(dtype, name, **d_lhs)
-            var = self.get_variable_from_scope(name)
-
-            # Variable not yet declared (hence array not yet allocated)
-            if var is None:
-
-                # Add variable to scope
-                self.insert_variable(lhs, name=lhs.name)
-
-                # Not yet supported for arrays: x=y+z, x=b[:]
-                # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = lhs.shape or (lhs.rank == 0) \
-                        or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
-                if not know_lhs_shape:
-                    msg = "Cannot infer shape of right-hand side for expression {}".format(expr)
-                    raise NotImplementedError(msg)
-
-            else:
-
-                # TODO improve check type compatibility
-                if str(lhs.dtype) != str(var.dtype):
-                    txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
-
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='error', blocker=False)
-
-                # in the case of elemental, lhs is not of the same dtype as
-                # var.
-                # TODO d_lhs must be consistent with var!
-                # the following is a small fix, since lhs must be already
-                # declared
-                lhs = var
-
-
-        elif isinstance(lhs, DottedVariable):
-
-            dtype = d_var.pop('datatype')
-            name = lhs.lhs.name
-            if self._current_function == '__init__':
-
-                cls      = self.get_variable('self')
-                cls_name = str(cls.cls_base.name)
-                cls      = self.get_class(cls_name)
-
-                attributes = cls.attributes
-                parent     = cls.parent
-                attributes = list(attributes)
-                n_name     = str(lhs.rhs.name)
-
-                # update the self variable with the new attributes
-
-                dt       = self.get_class_construct(cls_name)()
-                cls_base = self.get_class(cls_name)
-                var      = Variable(dt, 'self', cls_base=cls_base)
-                d_lhs    = d_var.copy()
-                self.insert_variable(var, 'self')
-
-
-                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-                if d_lhs['allocatable'] and isinstance(rhs, Variable):
-                    d_lhs['allocatable'] = False
-                    d_lhs['is_pointer' ] = True
-
-                    rhs = self.update_variable(rhs, is_target=True)
-
-                member = Variable(dtype, n_name, **d_lhs)
-                lhs    = DottedVariable(var, member)
-
-                # update the attributes of the class and push it to the namespace
-                attributes += [member]
-                new_cls = ClassDef(cls_name, attributes, [], parent=parent)
-                self.insert_class(new_cls, parent=True)
-            else:
-                lhs = self._visit_DottedVariable(lhs, **settings)
-
+        if isinstance(lhs, (Symbol, DottedVariable)):
+            self._visit_lhs_Assign(lhs, d_var, rhs, 0, 1, **settings)
+        elif isinstance(lhs, Tuple):
+            n = len(lhs)
+            for i,l in enumerate(lhs):
+                self._visit_lhs_Assign(l, d_var, rhs, i, n, **settings)
         else:
             lhs = self._visit(lhs, **settings)
 
