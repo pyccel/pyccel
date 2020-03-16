@@ -473,9 +473,7 @@ class FCodePrinter(CodePrinter):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             elif isinstance(f, Function):
-                print("f is func : ",f)
                 print_str, additional = self._print_Function_Or_Subroutine(f)
-                print(print_str, additional)
                 additional_code += additional
                 args.append("{}".format(print_str))
             else:
