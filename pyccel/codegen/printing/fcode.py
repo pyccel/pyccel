@@ -2195,7 +2195,7 @@ class FCodePrinter(CodePrinter):
                 func = container.functions[name]
             container = container.parent_scope
 
-        if isinstance(func,Function) and len(func.results)>1:
+        if isinstance(func,FunctionDef) and len(func.results)>1:
             errors.report(MULTIPLE_OUTPUT_CALL,
                           symbol=expr, severity='warning')
 
@@ -2221,7 +2221,7 @@ class FCodePrinter(CodePrinter):
                 func = container.functions[name]
             container = container.parent_scope
 
-        if isinstance(func,Function) and len(func.results)>1:
+        if isinstance(func,FunctionDef) and len(func.results)>1:
             out_vars = []
             for r in func.results:
                 var_name = create_variable(r).name
