@@ -1004,6 +1004,15 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Assign(self, expr):
+        if isinstance(expr.lhs, Tuple) and isinstance(expr.rhs, Tuple):
+            return '\n'.join(self._print_Assign(
+                        Assign(lhs,
+                                rhs,
+                                strict=expr.strict,
+                                status=expr.status,
+                                like=expr.like,
+                                )
+                        ) for lhs,rhs in zip(expr.lhs,expr.rhs))
 
         lhs_code = self._print(expr.lhs)
         is_procedure = False

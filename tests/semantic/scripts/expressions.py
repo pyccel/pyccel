@@ -15,3 +15,5 @@ td = ad + bd * (cd + dd)
 
 # this statement will be ignored at the codegen
 x = ad is None
+
+a,b,c = 1, False, 3.4

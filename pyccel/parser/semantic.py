@@ -660,6 +660,12 @@ class SemanticParser(BasicParser):
         if verbose:
             print ('*** type inference for : ', type(expr))
 
+        if isinstance(expr, (tuple, Tuple)):
+            d_var = []
+            for e in expr:
+                d_var.append(self._infere_type(e, **settings))
+            return d_var
+
         d_var = {}
 
         d_var['datatype'      ] = NativeSymbol()
@@ -1041,7 +1047,7 @@ class SemanticParser(BasicParser):
             else:
                 d_var['precision'] = default_precision[d_var['datatype']]
             return d_var
-        elif isinstance(expr, (tuple, list, List, Tuple)):
+        elif isinstance(expr, (list, List)):
 
             import numpy
             d = self._infere_type(expr[0], **settings)
@@ -2065,25 +2071,28 @@ class SemanticParser(BasicParser):
 
 
         else:
-
             d_var = self._infere_type(rhs, **settings)
-            __name__ = d_var['datatype'].__class__.__name__
 
-            if __name__.startswith('Pyccel'):
-                __name__ = __name__[6:]
-                d_var['cls_base'] = self.get_class(__name__)
-                d_var['is_pointer'] = d_var['is_target'] or d_var['is_pointer']
+            d_list = d_var if isinstance(d_var, list) else [d_var]
 
-                # TODO if we want to use pointers then we set target to true
-                # in the ConsturcterCall
+            for d in d_list:
+                __name__ = d['datatype'].__class__.__name__
 
-                d_var['is_polymorphic'] = False
+                if __name__.startswith('Pyccel'):
+                    __name__ = __name__[6:]
+                    d['cls_base'] = self.get_class(__name__)
+                    d['is_pointer'] = d['is_target'] or d['is_pointer']
 
-            if d_var['is_target']:
-                # case of rhs is a target variable the lhs must be a pointer
-                if isinstance(rhs, Symbol):
-                    d_var['is_target' ] = False
-                    d_var['is_pointer'] = True
+                    # TODO if we want to use pointers then we set target to true
+                    # in the ConsturcterCall
+
+                    d['is_polymorphic'] = False
+
+                if d['is_target']:
+                    # case of rhs is a target variable the lhs must be a pointer
+                    if isinstance(rhs, Symbol):
+                        d['is_target' ] = False
+                        d['is_pointer'] = True
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
@@ -2098,16 +2107,21 @@ class SemanticParser(BasicParser):
             lhs = self._visit_lhs_Assign(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, Tuple):
             n = len(lhs)
-            if not isinstance(d_var, list) or len(d_var)!= n:
-                errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
-                    bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='error', blocker=self.blocking)
-                return None
-            else:
+            if isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
                 for i,l in enumerate(lhs):
                     new_lhs.append( self._visit_lhs_Assign(l, d_var[i], rhs, **settings) )
                 lhs = Tuple(*new_lhs, sympify=False)
+            elif d_var['shape'][0]==n:
+                new_lhs = []
+                for i,l in enumerate(lhs):
+                    new_lhs.append( self._visit_lhs_Assign(l, d_var, rhs, **settings) )
+                lhs = Tuple(*new_lhs, sympify=False)
+            else:
+                errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=self.blocking)
+                return None
         else:
             lhs = self._visit(lhs, **settings)
 
