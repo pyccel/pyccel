@@ -911,9 +911,10 @@ class SemanticParser(BasicParser):
                 d_var['precision'  ] = max(d_vars[0]['precision'],
                                            d_vars[1]['precision'])
 
-            elif name in ['Int','Int32','Int64','Real','Imag',
-                          'Float32','Float64','Complex',
-                          'Complex128','Complex64','Bool']:
+            elif name in ['Int','Int32','Int64',
+                          'PythonFloat','NumpyFloat','Float32','Float64',
+                          'Complex','Complex64','Complex128',
+                          'Real','Imag','Bool']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
