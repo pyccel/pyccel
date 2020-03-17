@@ -5,7 +5,7 @@ import importlib
 
 from collections.abc import Iterable
 
-from sympy import cache
+from sympy.core import cache
 from sympy import sympify
 from sympy import Add, Mul, Pow as sp_Pow
 from sympy import Integral, Symbol, Tuple
