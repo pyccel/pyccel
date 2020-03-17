@@ -288,14 +288,7 @@ class FCodePrinter(CodePrinter):
 
         imports = '\n'.join(self._print(i) for i in imports)
         funcs   = ''
-        body = []
-        for b in expr.body:
-            line = self._print(b)
-            if (self._additional_code):
-                body.append(self._additional_code)
-                self._additional_code = None
-            body.append(line)
-        body    = '\n'.join(body)
+        body    = self._print(expr.body)
 
         # ... TODO add other elements
         private_funcs = [f.name for f in expr.funcs if f.is_private]
@@ -1015,7 +1008,14 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_CodeBlock(self, expr):
-        return '\n'.join(self._print(i) for i in expr.body)
+        body = []
+        for b in expr.body:
+            line = self._print(b)
+            if (self._additional_code):
+                body.append(self._additional_code)
+                self._additional_code = None
+            body.append(line)
+        return '\n'.join(body)
 
     # TODO the ifs as they are are, is not optimal => use elif
     def _print_SymbolicAssign(self, expr):
@@ -1441,14 +1441,8 @@ class FCodePrinter(CodePrinter):
             sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
-        body = []
-        for b in expr.body:
-            line = self._print(b)
-            if (self._additional_code):
-                body.append(self._additional_code)
-                self._additional_code = None
-            body.append(line)
-        body_code = '\n'.join(body)
+        #body_code = self._print(expr.body)
+        body_code = '\n'.join(self._print(b) for b in expr.body)
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:

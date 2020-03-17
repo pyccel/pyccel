@@ -730,13 +730,10 @@ class CodeBlock(Basic):
         ls = []
         for i in body:
             if isinstance(i, CodeBlock):
-                ls += i.body
-            elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application, Expr, IfTernaryOperator, EmptyLine)):
-                ls.append(i)
+                ls += list(i.body)
             else:
+                ls.append(i)
 
-                raise TypeError('statement of type {} not supported yet'.format(type(i)))
         obj = Basic.__new__(cls, ls)
         if isinstance(ls[-1], (Assign, AugAssign)):
             obj.set_fst(ls[-1].fst)
@@ -1566,6 +1563,7 @@ class Program(Basic):
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
+        body = CodeBlock(body)
 
         if not iterable(classes):
             raise TypeError('classes must be an iterable')
