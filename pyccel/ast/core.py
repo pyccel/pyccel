@@ -730,7 +730,7 @@ class CodeBlock(Basic):
         ls = []
         for i in body:
             if isinstance(i, CodeBlock):
-                ls += list(i.body)
+                ls += i.body
             else:
                 ls.append(i)
 
