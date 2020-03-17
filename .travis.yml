@@ -29,6 +29,11 @@ before_install:
 
 # command to install Python library and dependencies
 install:
+  - cd ..
+  - git clone https://github.com/sympy/sympy.git
+  - cd sympy
+  - pip install .
+  - cd ../pyccel
   - pip install .
 
 before_script:
