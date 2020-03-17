@@ -735,7 +735,7 @@ class CodeBlock(Basic):
                 ls.append(i)
 
         obj = Basic.__new__(cls, ls)
-        if isinstance(ls[-1], (Assign, AugAssign)):
+        if len(ls)>0 and isinstance(ls[-1], (Assign, AugAssign)):
             obj.set_fst(ls[-1].fst)
         return obj
 
@@ -2774,8 +2774,10 @@ class FunctionDef(Basic):
 
         # body
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body,CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
 
 #        body = Tuple(*(i for i in body))
         # results
@@ -4600,7 +4602,7 @@ def get_assigned_symbols(expr):
         any AST valid expression
     """
 
-    if isinstance(expr, (FunctionDef, For, While)):
+    if isinstance(expr, (CodeBlock, FunctionDef, For, While)):
         return get_assigned_symbols(expr.body)
     elif isinstance(expr, FunctionalFor):
         return get_assigned_symbols(expr.loops)

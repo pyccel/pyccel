@@ -140,7 +140,7 @@ def as_static_function(func, name=None):
                 name = a.name, default_value = a.value))]
 
     if f2py_instructions:
-        body = f2py_instructions + body
+        body = f2py_instructions + body.body
     # ...
 
     return F2PYFunctionDef( name, list(args), results, body,

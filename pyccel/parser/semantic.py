@@ -2637,8 +2637,7 @@ class SemanticParser(BasicParser):
                 self.insert_function(interfaces[0])
 
             # we annotate the body
-            body = [self._visit(i, **settings) for i in
-                    expr.body]
+            body = self._visit(expr.body)
 
             # ISSUE 177: must update arguments to get is_target
             args = [self.get_variable(a.name) for a in args]
@@ -2718,7 +2717,7 @@ class SemanticParser(BasicParser):
             assigned = get_assigned_symbols(body)
             assigned = [str(i) for i in assigned]
 
-            apps = list(Tuple(*body).atoms(Application))
+            apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 

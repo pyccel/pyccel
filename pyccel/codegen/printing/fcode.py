@@ -307,7 +307,7 @@ class FCodePrinter(CodePrinter):
                 decs.append(Declare(v.dtype,v))
         func_in_func = False
         for func in expr.funcs:
-            for i in func.body:
+            for i in func.body.body:
                 if isinstance(i, FunctionDef):
                     func_in_func = True
                     break
@@ -1340,7 +1340,7 @@ class FCodePrinter(CodePrinter):
             args_decs[str(result.name)] = dec
         # ...
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
-        body_code = '\n'.join(self._print(i) for i in expr.body)
+        body_code = self._print(expr.body)
         prelude   = '\n'.join(self._print(i) for i in args_decs.values())
         body_code = prelude + '\n\n' + body_code
         imports = '\n'.join(self._print(i) for i in expr.imports)
@@ -1441,8 +1441,7 @@ class FCodePrinter(CodePrinter):
             sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
-        #body_code = self._print(expr.body)
-        body_code = '\n'.join(self._print(b) for b in expr.body)
+        body_code = self._print(expr.body)
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
