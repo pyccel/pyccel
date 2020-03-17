@@ -35,7 +35,7 @@ def count_ops(expr, visual=None):
         return sympy_count_ops(expr.rhs, visual)
     elif isinstance(expr, For):
         a = expr.iterable.size
-        ops = sum(count_ops(i, visual) for i in expr.body)
+        ops = sum(count_ops(i, visual) for i in expr.body.body)
         return a*ops
     elif isinstance(expr, Tuple):
         return sum(count_ops(i, visual) for i in expr)
