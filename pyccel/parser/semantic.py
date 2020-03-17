@@ -1097,7 +1097,7 @@ class SemanticParser(BasicParser):
             return self._infere_type(expr.value)
 
         elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1][0])
+            return self._infere_type(expr.args[0][1].body[0])
         elif isinstance(expr, Dlist):
 
             import numpy
@@ -1921,10 +1921,10 @@ class SemanticParser(BasicParser):
             args = rhs.args
             new_args = []
             for arg in args:
-                if len(arg[1]) != 1:
+                if len(arg[1].body) != 1:
                     msg = 'IfTernary body must be of length 1'
                     raise ValueError(msg)
-                result = arg[1][0]
+                result = arg[1].body[0]
                 if isinstance(expr, Assign):
                     body = Assign(lhs, result)
                 else:
