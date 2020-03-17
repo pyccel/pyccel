@@ -17,7 +17,6 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
-from sympy.core.compatibility import string_types
 from sympy.core.assumptions   import StdFactKB
 from sympy.core.operations    import LatticeOp
 from sympy.core.relational    import Equality, Relational
@@ -260,7 +259,7 @@ def allocatable_like(expr, verbose=False):
         while args:
             a = args.pop()
             # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
+            if isinstance(a, str):
                 continue
 
             if a.is_Mul:
@@ -4182,7 +4181,7 @@ class IndexedElement(Indexed):
 
         if not args:
             raise IndexException('Indexed needs at least one index.')
-        if isinstance(base, (string_types, Symbol)):
+        if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
                 IndexedBase):
