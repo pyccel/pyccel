@@ -632,10 +632,12 @@ class SemanticParser(BasicParser):
         self._namespace = self._namespace.parent_scope
 
     def _collect_returns_stmt(self, ast):
+        if isinstance(ast,CodeBlock):
+            return self._collect_returns_stmt(ast.body)
         vars_ = []
         for stmt in ast:
             if isinstance(stmt, (For, While)):
-                vars_ += self._collect_returns_stmt(stmt.body.body)
+                vars_ += self._collect_returns_stmt(stmt.body)
             elif isinstance(stmt, If):
                 vars_ += self._collect_returns_stmt(stmt.bodies)
             elif isinstance(stmt, Return):
@@ -1161,7 +1163,9 @@ class SemanticParser(BasicParser):
         return ValuedArgument(expr.name, expr_value)
 
     def _visit_CodeBlock(self, expr, **settings):
-        return expr
+        ls = [self._visit(i, **settings) for i in expr.body]
+        return CodeBlock(ls)
+
     def _visit_Nil(self, expr, **settings):
         return expr
     def _visit_EmptyLine(self, expr, **settings):

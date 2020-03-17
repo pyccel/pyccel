@@ -4462,9 +4462,13 @@ class If(Basic):
             if not isinstance(cond, (bool, Relational, Boolean, Is, IsNot)):
                 raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
                                  % (cond, type(cond)))
-            if not isinstance(ce[1], (list, Tuple, tuple)):
-                raise TypeError('body is not iterable')
-            newargs.append(ce)
+            if isinstance(ce[1], (list, Tuple, tuple)):
+                body = CodeBlock(ce[1])
+            elif isinstance(ce[1], CodeBlock):
+                body = ce[1]
+            else:
+                raise TypeError('body is not iterable or CodeBlock')
+            newargs.append((cond,body))
 
         return Basic.__new__(cls, *newargs)
 
@@ -4472,7 +4476,7 @@ class If(Basic):
     def bodies(self):
         b = []
         for i in self._args:
-            b += i[1]
+            b.append( i[1])
         return b
 
 
