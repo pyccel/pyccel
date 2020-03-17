@@ -1707,7 +1707,7 @@ class SemanticParser(BasicParser):
         args = self._visit(expr.args, **settings)
         return Max(*args)
 
-    def _visit_lhs_Assign(self, lhs, d_var, rhs, **settings):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, **settings):
 
         if isinstance(lhs, Symbol):
 
@@ -2100,7 +2100,7 @@ class SemanticParser(BasicParser):
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     return None
-            lhs = self._visit_lhs_Assign(lhs, d_var, rhs, **settings)
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, Tuple):
             n = len(lhs)
             if not isinstance(d_var, list) or len(d_var)!= n:
@@ -2111,7 +2111,7 @@ class SemanticParser(BasicParser):
             else:
                 new_lhs = []
                 for i,l in enumerate(lhs):
-                    new_lhs.append( self._visit_lhs_Assign(l, d_var[i], rhs, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d_var[i], rhs, **settings) )
                 lhs = Tuple(*new_lhs, sympify=False)
         else:
             lhs = self._visit(lhs, **settings)
