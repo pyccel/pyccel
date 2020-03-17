@@ -104,9 +104,9 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     elif dtype is float or dtype is int:
         if dtype is float:
-            rx = re.compile('[-0-9.]+')
+            rx = re.compile('[-0-9.eE]+')
         elif dtype is int:
-            rx = re.compile('[-0-9]+')
+            rx = re.compile('[-0-9eE]+')
         p_match = rx.search(p_output)
         f_match = rx.search(f_output)
         assert(p_match)

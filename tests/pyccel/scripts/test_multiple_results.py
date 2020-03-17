@@ -48,3 +48,7 @@ def print_multiple():
     print(f3())
 
 print_multiple()
+
+print(min(f3()))
+print(max(f3()))
+
