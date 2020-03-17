@@ -1276,7 +1276,7 @@ class FCodePrinter(CodePrinter):
 
    # def _print_With(self, expr):
    #     test = 'call '+self._print(expr.test) + '%__enter__()'
-   #     body = '\n'.join(self._print(i) for i in expr.body)
+   #     body = self._print(expr.body)
    #     end = 'call '+self._print(expr.test) + '%__exit__()'
    #     code = ('{test}\n'
    #            '{body}\n'
@@ -1293,7 +1293,7 @@ class FCodePrinter(CodePrinter):
             decs += [dec]
         body = expr.body
 
-        body_code = '\n'.join(self._print(i) for i in body)
+        body_code = self._print(body)
         prelude   = '\n'.join(self._print(i) for i in decs)
 
 

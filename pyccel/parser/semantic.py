@@ -3079,7 +3079,7 @@ class SemanticParser(BasicParser):
             msg = '__enter__ or __exit__ methods not found'
             raise ValueError(msg)
 
-        body = [self._visit(i, **settings) for i in expr.body]
+        body = self._visit(expr.body, **settings)
         return With(domaine, body, None).block
 
 

@@ -1076,9 +1076,11 @@ class With(Basic):
         ):
         test = sympify(test, locals=local_sympify)
 
-        if not iterable(body):
+        if iterable(body):
+            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+        elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body), sympify=False)
+
         return Basic.__new__(cls, test, body, settings)
 
     @property
@@ -1106,9 +1108,9 @@ class With(Basic):
 
         # TODO check if enter is empty or not first
 
-        body = enter.body
-        body += self.body
-        body += exit.body
+        body = enter.body.body
+        body += self.body.body
+        body += exit.body.body
         return Block('with', [], body)
 
 
@@ -1272,9 +1274,10 @@ class Block(Basic):
         for var in variables:
             if not isinstance(var, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = Tuple(*body, sympify=False)
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body, CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
         return Basic.__new__(cls, name, variables, body)
 
     @property
