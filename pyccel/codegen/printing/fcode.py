@@ -1637,15 +1637,6 @@ class FCodePrinter(CodePrinter):
             return prolog, epilog
         # ...
 
-        # ...
-        def _iprint(i):
-            if isinstance(i, Block):
-                _prelude, _body = self._print_Block(i)
-                return '{0}'.format(_body)
-            else:
-                return '{0}'.format(self._print(i))
-        # ...
-
         if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
             msg  = "Only iterable currently supported are Range or Product "
             raise NotImplementedError(msg)
@@ -1678,7 +1669,7 @@ class FCodePrinter(CodePrinter):
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
-        body = '\n'.join(_iprint(i) for i in expr.body)
+        body = self._print(expr.body)
 
         return ('{prolog}'
                 '{body}\n'
@@ -1998,15 +1989,6 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        def _iprint(i):
-            if isinstance(i, Block):
-                _prelude, _body = self._print_Block(i)
-                return '{0}'.format(_body)
-            else:
-                return '{0}'.format(self._print(i))
-        # ...
-
-        # ...
         if not isinstance(expr.iterable, (Variable, ConstructorCall)):
             raise TypeError('iterable must be Variable or ConstructorCall.')
         # ...
@@ -2024,7 +2006,7 @@ class FCodePrinter(CodePrinter):
             prolog, epilog = _do_range(i, a, \
                                        prolog, epilog)
 
-        body = '\n'.join(_iprint(i) for i in expr.body)
+        body = '\n'.join(self._print(i) for i in expr.body)
         # ...
 
         return ('{prolog}'
@@ -2092,27 +2074,20 @@ class FCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         # ...
-        def _iprint(i):
-            if isinstance(i, Block):
-                _prelude, _body = self._print_Block(i)
-                return '{0}'.format(_body)
-            else:
-                return '{0}'.format(self._print(i))
-        # ...
 
         lines = []
         for i, (c, e) in enumerate(expr.args):
             if i == 0:
-                lines.append("if (%s) then" % _iprint(c))
+                lines.append("if (%s) then" % self._print(c))
             elif i == len(expr.args) - 1 and c == True:
                 lines.append("else")
             else:
-                lines.append("else if (%s) then" % _iprint(c))
+                lines.append("else if (%s) then" % self._print(c))
             if isinstance(e, (list, tuple, Tuple)):
                 for ee in e:
-                    lines.append(_iprint(ee))
+                    lines.append(self._print(ee))
             else:
-                lines.append(_iprint(e))
+                lines.append(self._print(e))
         lines.append("end if")
         return "\n".join(lines)
 

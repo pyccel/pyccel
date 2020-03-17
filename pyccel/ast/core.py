@@ -1685,11 +1685,12 @@ class For(Basic):
             if not cond_iter:
                 raise TypeError('iter must be an iterable')
 
-            if not iterable(body):
-                raise TypeError('body must be an iterable')
+            if iterable(body):
+                body = CodeBlock((sympify(i, locals=local_sympify) for i in
+                             body))
+            elif not isinstance(body,CodeBlock):
+                raise TypeError('body must be an iterable or a Codeblock')
 
-            body = Tuple(*(sympify(i, locals=local_sympify) for i in
-                         body), sympify=False)
         return Basic.__new__(cls, target, iter, body, local_vars)
 
     @property

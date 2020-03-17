@@ -634,10 +634,8 @@ class SemanticParser(BasicParser):
     def _collect_returns_stmt(self, ast):
         vars_ = []
         for stmt in ast:
-            if isinstance(stmt, (While)):
+            if isinstance(stmt, (For, While)):
                 vars_ += self._collect_returns_stmt(stmt.body.body)
-            if isinstance(stmt, (For)):
-                vars_ += self._collect_returns_stmt(stmt.body)
             elif isinstance(stmt, If):
                 vars_ += self._collect_returns_stmt(stmt.bodies)
             elif isinstance(stmt, Return):
