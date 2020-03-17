@@ -2038,7 +2038,7 @@ class FCodePrinter(CodePrinter):
     #    return prelude, body
 
     def _print_While(self,expr):
-        body = '\n'.join(self._print(i) for i in expr.body)
+        body = self._print(expr.body)
         return ('do while ({test}) \n'
                 '{body}\n'
                 'end do').format(test=self._print(expr.test), body=body)

@@ -634,7 +634,9 @@ class SemanticParser(BasicParser):
     def _collect_returns_stmt(self, ast):
         vars_ = []
         for stmt in ast:
-            if isinstance(stmt, (For, While)):
+            if isinstance(stmt, (While)):
+                vars_ += self._collect_returns_stmt(stmt.body.body)
+            if isinstance(stmt, (For)):
                 vars_ += self._collect_returns_stmt(stmt.body)
             elif isinstance(stmt, If):
                 vars_ += self._collect_returns_stmt(stmt.bodies)
@@ -2434,7 +2436,7 @@ class SemanticParser(BasicParser):
         self.create_new_loop_scope()
 
         test = self._visit(expr.test, **settings)
-        body = [self._visit(i, **settings) for i in expr.body]
+        body = self._visit(expr.body, **settings)
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
 

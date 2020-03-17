@@ -1030,9 +1030,10 @@ class While(Basic):
     def __new__(cls, test, body, local_vars=[]):
         test = sympify(test, locals=local_sympify)
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body),sympify=False)
+        if iterable(body):
+            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+        elif not isinstance(body,CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
         return Basic.__new__(cls, test, body, local_vars)
 
     @property
