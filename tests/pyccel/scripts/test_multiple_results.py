@@ -52,3 +52,21 @@ print_multiple()
 print(min(f3()))
 print(max(f3()))
 
+
+@types('real','real')
+def f4(x, y = 2.5):
+    x = x + y
+    return x+y, x-y
+
+for k in range(2):
+    print(f4(i,j))
+
+if (j>i):
+    print(f4(i,j))
+
+k = 1
+while (k<3):
+    k=k+1
+    print(f4(i,j))
+
+print(i,j)

@@ -308,4 +308,5 @@ def test_multiple_results():
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
+                float,float,float,float,float,float,
                 float,float,float,float,float,float])
