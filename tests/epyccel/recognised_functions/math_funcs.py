@@ -2,7 +2,6 @@ from pyccel.decorators import types
 from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
-import pytest
 
 def test_fabs_call():
     @types('real')
@@ -37,7 +36,7 @@ def test_fabs_return_type():
     f1 = epyccel(fabs_return_type)
     x = randint(100)
     assert(f1(x) == fabs_return_type(x))
-    assert(type(f1(x)) == type(fabs_return_type(x)))
+    assert(type(f1(x)) == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sqrt_call():
     @types('real')
@@ -79,12 +78,12 @@ def test_sqrt_return_type():
     f1 = epyccel(sqrt_return_type_real)
     x = rand()
     assert(f1(x) == sqrt_return_type_real(x))
-    assert(type(f1(x)) == type(sqrt_return_type_real(x)))
+    assert(type(f1(x)) == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(sqrt_return_type_comp)
     x = rand() + 1j * rand()
     assert(f1(x) == sqrt_return_type_comp(x))
-    assert(type(f1(x)) == type(sqrt_return_type_comp(x)))
+    assert(type(f1(x)) == type(sqrt_return_type_comp(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call():
     @types('real')
@@ -392,9 +391,9 @@ def test_floor_return_type():
     f1 = epyccel(floor_return_type_int)
     x = randint(100)
     assert(f1(x) == floor_return_type_int(x))
-    assert(type(f1(x)) == type(floor_return_type_int(x)))
+    assert(type(f1(x)) == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(floor_return_type_real)
     x = randint(100)
     assert(f1(x) == floor_return_type_real(x))
-    assert(type(f1(x)) == type(floor_return_type_real(x)))
+    assert(type(f1(x)) == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
