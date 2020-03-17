@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.symbol import Symbol
 from sympy.core import Add, Mul, Pow, S
-from sympy.core.compatibility import default_sort_key, string_types
+from sympy.core.compatibility import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
@@ -44,7 +44,7 @@ class CodePrinter(StrPrinter):
             variable with name ``assign_to``.
         """
 
-        if isinstance(assign_to, string_types):
+        if isinstance(assign_to, str):
             assign_to = Symbol(assign_to)
         elif not isinstance(assign_to, (Basic, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
