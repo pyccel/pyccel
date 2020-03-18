@@ -141,7 +141,28 @@ class NativeList(DataType):
 
 class NativeTuple(DataType):
     _name = 'Tuple'
-    pass
+    _elements = None
+    _homogeneous = False
+
+    def set_arg_types(self, types):
+        self._elements = types
+        first_elem = types[0].name
+        if (first_elem == 'Tuple'):
+            self._homogeneous = all([t.name==first_elem and t.is_homogeneous for t in types])
+        else:
+            self._homogeneous = all([t.name==first_elem for t in types])
+
+    @property
+    def arg_dtypes(self):
+        if self._elements is None:
+            raise RuntimeError("Tuple element datatypes must be set")
+        return self._elements
+
+    @property
+    def is_homogeneous(self):
+        if self._elements is None:
+            raise RuntimeError("Tuple element datatypes must be set")
+        return self._homogeneous
 
 class NativeIntegerList(NativeInteger, NativeList):
     _name = 'IntegerList'

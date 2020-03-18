@@ -767,9 +767,12 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
 
             arg_d_vars = []
+            arg_dtypes = []
             for e in expr.args:
                 arg_d_vars.append(self._infere_type(e, **settings))
+                arg_dtypes.append(arg_d_vars[-1]['datatype'   ])
             expr.set_arg_types(arg_d_vars)
+            d_var['datatype'      ].set_arg_types(arg_dtypes)
 
             return d_var
 
@@ -1322,6 +1325,16 @@ class SemanticParser(BasicParser):
             prec  = var.precision
             order = var.order
             rank  = var.rank
+
+            while isinstance(dtype, NativeTuple):
+                print(dtype)
+                if not dtype.is_homogeneous:
+                    errors.report(LIST_OF_TUPLES, symbol=expr,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
+                else:
+                    dtype = dtype.arg_dtypes[0]
+
             return IndexedVariable(name, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
         else:
