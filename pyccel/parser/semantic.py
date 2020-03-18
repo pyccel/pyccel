@@ -632,6 +632,8 @@ class SemanticParser(BasicParser):
         self._namespace = self._namespace.parent_scope
 
     def _collect_returns_stmt(self, ast):
+        if isinstance(ast,CodeBlock):
+            return self._collect_returns_stmt(ast.body)
         vars_ = []
         for stmt in ast:
             if isinstance(stmt, (For, While)):
@@ -917,9 +919,10 @@ class SemanticParser(BasicParser):
                 d_var['precision'  ] = max(d_vars[0]['precision'],
                                            d_vars[1]['precision'])
 
-            elif name in ['Int','Int32','Int64','Real','Imag',
-                          'Float32','Float64','Complex',
-                          'Complex128','Complex64','Bool']:
+            elif name in ['Int','Int32','Int64',
+                          'PythonFloat','NumpyFloat','Float32','Float64',
+                          'Complex','Complex64','Complex128',
+                          'Real','Imag','Bool']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
                 d_var['rank'       ] = 0
@@ -1100,7 +1103,7 @@ class SemanticParser(BasicParser):
             return self._infere_type(expr.value)
 
         elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1][0])
+            return self._infere_type(expr.args[0][1].body[0])
         elif isinstance(expr, Dlist):
 
             import numpy
@@ -1166,7 +1169,9 @@ class SemanticParser(BasicParser):
         return ValuedArgument(expr.name, expr_value)
 
     def _visit_CodeBlock(self, expr, **settings):
-        return expr
+        ls = [self._visit(i, **settings) for i in expr.body]
+        return CodeBlock(ls)
+
     def _visit_Nil(self, expr, **settings):
         return expr
     def _visit_EmptyLine(self, expr, **settings):
@@ -1708,7 +1713,7 @@ class SemanticParser(BasicParser):
         args = self._visit(expr.args, **settings)
         return Max(*args)
 
-    def _visit_lhs_Assign(self, lhs, d_var, rhs, **settings):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, **settings):
 
         if isinstance(lhs, Symbol):
 
@@ -1922,10 +1927,10 @@ class SemanticParser(BasicParser):
             args = rhs.args
             new_args = []
             for arg in args:
-                if len(arg[1]) != 1:
+                if len(arg[1].body) != 1:
                     msg = 'IfTernary body must be of length 1'
                     raise ValueError(msg)
-                result = arg[1][0]
+                result = arg[1].body[0]
                 if isinstance(expr, Assign):
                     body = Assign(lhs, result)
                 else:
@@ -2104,18 +2109,18 @@ class SemanticParser(BasicParser):
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     return None
-            lhs = self._visit_lhs_Assign(lhs, d_var, rhs, **settings)
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, Tuple):
             n = len(lhs)
             if isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
                 for i,l in enumerate(lhs):
-                    new_lhs.append( self._visit_lhs_Assign(l, d_var[i], rhs, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d_var[i], rhs, **settings) )
                 lhs = Tuple(*new_lhs, sympify=False)
             elif d_var['shape'][0]==n:
                 new_lhs = []
                 for i,l in enumerate(lhs):
-                    new_lhs.append( self._visit_lhs_Assign(l, d_var, rhs, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d_var, rhs, **settings) )
                 lhs = Tuple(*new_lhs, sympify=False)
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
@@ -2447,7 +2452,7 @@ class SemanticParser(BasicParser):
         self.create_new_loop_scope()
 
         test = self._visit(expr.test, **settings)
-        body = [self._visit(i, **settings) for i in expr.body]
+        body = self._visit(expr.body, **settings)
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
 
@@ -2646,8 +2651,7 @@ class SemanticParser(BasicParser):
                 self.insert_function(interfaces[0])
 
             # we annotate the body
-            body = [self._visit(i, **settings) for i in
-                    expr.body]
+            body = self._visit(expr.body)
 
             # ISSUE 177: must update arguments to get is_target
             args = [self.get_variable(a.name) for a in args]
@@ -2727,7 +2731,7 @@ class SemanticParser(BasicParser):
             assigned = get_assigned_symbols(body)
             assigned = [str(i) for i in assigned]
 
-            apps = list(Tuple(*body).atoms(Application))
+            apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
@@ -3089,7 +3093,7 @@ class SemanticParser(BasicParser):
             msg = '__enter__ or __exit__ methods not found'
             raise ValueError(msg)
 
-        body = [self._visit(i, **settings) for i in expr.body]
+        body = self._visit(expr.body, **settings)
         return With(domaine, body, None).block
 
 

@@ -140,6 +140,20 @@ def test_decorator_f7():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
+#------------------------------------------------------------------------------
+def test_decorator_f8():
+    @types('int','bool')
+    def f8(x,b):
+        a = x if b else 2
+        return a
+
+    f = epyccel(f8)
+
+    # ...
+    assert f(3,True)  == f8(3,True)
+    assert f(3,False) == f8(3,False)
+    # ...
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

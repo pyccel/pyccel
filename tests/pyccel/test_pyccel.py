@@ -3,6 +3,7 @@ import os
 import pytest
 import shutil
 import numpy as np
+import re
 
 def get_abs_path(relative_path):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -82,34 +83,56 @@ def teardown(path_dir = None):
         elif not f.endswith(".py"):
             os.remove(file_name)
 
-def compare_pyth_fort_output( p_output, f_output, dtype=float ):
-    p_output = p_output.strip().split()
-    f_output = f_output.strip().split()
+def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
-    assert(len(p_output) == len(f_output))
-    if isinstance(dtype,list):
-        assert(len(dtype)==len(p_output))
-        for p,f,d in zip(p_output, f_output, dtype):
-            compare_pyth_fort_output(p,f,d)
-    elif dtype is bool:
-        for p, f in zip(p_output, f_output):
-            p = p.lower() in ['true', 't', '1']
-            f = f.lower() in ['true', 't', '1']
-            assert(np.equal(p,f))
-    elif dtype is str:
-        for p, f in zip(p_output, f_output):
-            assert(p.strip()==f.strip())
+    if dtype is str:
+        assert(p_output.strip()==f_output.strip())
     elif dtype is complex:
-        for p, f in zip(p_output, f_output):
-            p = dtype(p)
-            f = f.strip('()').split(',')
-            f = float(f[0])+float(f[1])*1j
-            assert(np.isclose(p,f))
+        p_output, f_output = compare_pyth_fort_output_by_type( p_output, f_output, float)
+        p_output, f_output = compare_pyth_fort_output_by_type( p_output, f_output, float)
+    elif dtype is bool:
+        rx = re.compile('TRUE|True|true|1|T|t|FALSE|False|false|F|f|0')
+        p_match = rx.search(p_output)
+        f_match = rx.search(f_output)
+        assert(p_match)
+        assert(f_match)
+        p = p_match.group().lower() in ['true', 't', '1']
+        f = f_match.group().lower() in ['true', 't', '1']
+        assert(p==f)
+        p_output=p_output[p_match.span()[1]:]
+        f_output=f_output[f_match.span()[1]:]
+
+    elif dtype is float or dtype is int:
+        if dtype is float:
+            rx = re.compile('[-0-9.eE]+')
+        elif dtype is int:
+            rx = re.compile('[-0-9eE]+')
+        p_match = rx.search(p_output)
+        f_match = rx.search(f_output)
+        assert(p_match)
+        assert(f_match)
+        p = dtype(p_match.group())
+        f = dtype(f_match.group())
+        assert(np.isclose(p,f))
+        p_output=p_output[p_match.span()[1]:]
+        f_output=f_output[f_match.span()[1]:]
     else:
+        raise NotImplementedError("Type comparison not implemented")
+    return p_output,f_output
+
+def compare_pyth_fort_output( p_output, f_output, dtype=float ):
+
+    if isinstance(dtype,list):
+        for d in dtype:
+            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,d)
+    elif dtype is complex:
+        while len(p_output)>0 and len(f_output)>0:
+            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex)
+    else:
+        p_output = p_output.strip().split()
+        f_output = f_output.strip().split()
         for p, f in zip(p_output, f_output):
-            p = dtype(p)
-            f = dtype(f)
-            assert(np.isclose(p,f))
+            compare_pyth_fort_output_by_type(p,f,dtype)
 
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
     if (cwd is None):
@@ -284,4 +307,6 @@ def test_multiple_results():
     pyccel_test("scripts/test_multiple_results.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,float,complex,bool,int,complex,
-                int,bool,float,float,float,float,float,float,float,float])
+                int,bool,float,float,float,float,float,float,
+                float,float,float,float,float,float,
+                float,float,float,float,float,float])

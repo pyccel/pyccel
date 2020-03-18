@@ -731,14 +731,11 @@ class CodeBlock(Basic):
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
-            elif isinstance(i, (Assign, For, AugAssign, FunctionalFor,
-                            Application, Expr, IfTernaryOperator, EmptyLine)):
-                ls.append(i)
             else:
+                ls.append(i)
 
-                raise TypeError('statement of type {} not supported yet'.format(type(i)))
         obj = Basic.__new__(cls, ls)
-        if isinstance(ls[-1], (Assign, AugAssign)):
+        if len(ls)>0 and isinstance(ls[-1], (Assign, AugAssign)):
             obj.set_fst(ls[-1].fst)
         return obj
 
@@ -1033,9 +1030,10 @@ class While(Basic):
     def __new__(cls, test, body, local_vars=[]):
         test = sympify(test, locals=local_sympify)
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body),sympify=False)
+        if iterable(body):
+            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+        elif not isinstance(body,CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
         return Basic.__new__(cls, test, body, local_vars)
 
     @property
@@ -1078,9 +1076,11 @@ class With(Basic):
         ):
         test = sympify(test, locals=local_sympify)
 
-        if not iterable(body):
+        if iterable(body):
+            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+        elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
-        body = Tuple(*(sympify(i, locals=local_sympify) for i in body), sympify=False)
+
         return Basic.__new__(cls, test, body, settings)
 
     @property
@@ -1108,9 +1108,9 @@ class With(Basic):
 
         # TODO check if enter is empty or not first
 
-        body = enter.body
-        body += self.body
-        body += exit.body
+        body = enter.body.body
+        body += self.body.body
+        body += exit.body.body
         return Block('with', [], body)
 
 
@@ -1274,9 +1274,10 @@ class Block(Basic):
         for var in variables:
             if not isinstance(var, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
-        body = Tuple(*body, sympify=False)
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body, CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
         return Basic.__new__(cls, name, variables, body)
 
     @property
@@ -1566,6 +1567,7 @@ class Program(Basic):
 
         if not iterable(body):
             raise TypeError('body must be an iterable')
+        body = CodeBlock(body)
 
         if not iterable(classes):
             raise TypeError('classes must be an iterable')
@@ -1686,11 +1688,12 @@ class For(Basic):
             if not cond_iter:
                 raise TypeError('iter must be an iterable')
 
-            if not iterable(body):
-                raise TypeError('body must be an iterable')
+            if iterable(body):
+                body = CodeBlock((sympify(i, locals=local_sympify) for i in
+                             body))
+            elif not isinstance(body,CodeBlock):
+                raise TypeError('body must be an iterable or a Codeblock')
 
-            body = Tuple(*(sympify(i, locals=local_sympify) for i in
-                         body), sympify=False)
         return Basic.__new__(cls, target, iter, body, local_vars)
 
     @property
@@ -2774,8 +2777,10 @@ class FunctionDef(Basic):
 
         # body
 
-        if not iterable(body):
-            raise TypeError('body must be an iterable')
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body,CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
 
 #        body = Tuple(*(i for i in body))
         # results
@@ -4462,9 +4467,13 @@ class If(Basic):
             if not isinstance(cond, (bool, Relational, Boolean, Is, IsNot)):
                 raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
                                  % (cond, type(cond)))
-            if not isinstance(ce[1], (list, Tuple, tuple)):
-                raise TypeError('body is not iterable')
-            newargs.append(ce)
+            if isinstance(ce[1], (list, Tuple, tuple)):
+                body = CodeBlock(ce[1])
+            elif isinstance(ce[1], CodeBlock):
+                body = ce[1]
+            else:
+                raise TypeError('body is not iterable or CodeBlock')
+            newargs.append((cond,body))
 
         return Basic.__new__(cls, *newargs)
 
@@ -4472,7 +4481,7 @@ class If(Basic):
     def bodies(self):
         b = []
         for i in self._args:
-            b += i[1]
+            b.append( i[1])
         return b
 
 
@@ -4596,7 +4605,7 @@ def get_assigned_symbols(expr):
         any AST valid expression
     """
 
-    if isinstance(expr, (FunctionDef, For, While)):
+    if isinstance(expr, (CodeBlock, FunctionDef, For, While)):
         return get_assigned_symbols(expr.body)
     elif isinstance(expr, FunctionalFor):
         return get_assigned_symbols(expr.loops)

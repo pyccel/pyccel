@@ -39,5 +39,34 @@ i,j = f3(y = 8.2)
 print(i,j)
 i,j = f3()
 print(i, j)
-#TODO: Fix Print
-#print(f3())
+
+
+
+print(f3())
+
+def print_multiple():
+    print(f3())
+
+print_multiple()
+
+print(min(f3()))
+print(max(f3()))
+
+
+@types('real','real')
+def f4(x, y = 2.5):
+    x = x + y
+    return x+y, x-y
+
+for k in range(2):
+    print(f4(i,j))
+
+if (j>i):
+    print(f4(i,j))
+
+k = 1
+while (k<3):
+    k=k+1
+    print(f4(i,j))
+
+print(i,j)
