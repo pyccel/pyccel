@@ -284,7 +284,7 @@ class SemanticParser(BasicParser):
             var = create_variable(obj)
             name = var.name
         self._possible_names.add(name)
-        return name
+        return var
 
     def _get_new_variable_name(self, obj, start_name = None):
         name = start_name if start_name is not None else create_variable(obj).name
@@ -1179,7 +1179,7 @@ class SemanticParser(BasicParser):
 
     def _visit_tuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        return PythonTuple(*ls, sympify=False)
+        return PythonTuple(ls)
 
     def _visit_Tuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
