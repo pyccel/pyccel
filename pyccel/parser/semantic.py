@@ -1872,7 +1872,7 @@ class SemanticParser(BasicParser):
 
                     rhs = self.update_variable(rhs, is_target=True)
 
-                member = self._create_variable(n_name, dtype, rhs, **d_lhs)
+                member = self._create_variable(n_name, dtype, rhs, d_lhs)
                 lhs    = DottedVariable(var, member)
 
                 # update the attributes of the class and push it to the namespace
