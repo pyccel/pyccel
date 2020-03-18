@@ -49,7 +49,7 @@ def count_access(expr, visual=True):
 
     elif isinstance(expr, For):
         s = expr.iterable.size
-        ops = sum(count_access(i, visual) for i in expr.body)
+        ops = sum(count_access(i, visual) for i in expr.body.body)
         return ops*s
 
     elif isinstance(expr, (Zeros, Ones)):
