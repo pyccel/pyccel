@@ -323,6 +323,7 @@ class Shape(Array):
         if not isinstance(arg, (list,
                                 tuple,
                                 Tuple,
+                                PythonTuple,
                                 List,
                                 Array,
                                 Variable,
@@ -349,7 +350,7 @@ class Shape(Array):
 
     @property
     def shape(self):
-        return Tuple(self.arg.rank)
+        return PythonTuple(self.arg.rank)
 
     @property
     def rank(self):
