@@ -468,7 +468,7 @@ class FCodePrinter(CodePrinter):
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
-            elif isinstance(f, Tuple):
+            elif isinstance(f, (Tuple, PythonTuple, TupleVariable)):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             else:
@@ -541,6 +541,10 @@ class FCodePrinter(CodePrinter):
             arg = functools.reduce(operator.concat, expr)
             elements = ', '.join(self._print(i) for i in arg)
             return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
+
+    def _print_PythonTuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
