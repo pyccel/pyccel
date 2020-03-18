@@ -4,6 +4,7 @@ d = a + 3
 e = ai
 f,g,h = ai
 i = e[2]
+ai_0 = 44
 
 print(ai)
 print(a)
@@ -15,3 +16,4 @@ print(f)
 print(g)
 print(h)
 print(i)
+print(ai_0)
