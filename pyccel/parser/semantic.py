@@ -179,6 +179,8 @@ class SemanticParser(BasicParser):
         self._fst = parser._fst
         self._ast = parser._ast
 
+        self._possible_names = set([str(a.name) for a in self._fst.find_all('name')])
+
         self._filename  = parser._filename
         self._metavars  = parser._metavars
         self._namespace = parser._namespace
@@ -275,6 +277,21 @@ class SemanticParser(BasicParser):
 
         return ast
 
+    def _get_new_variable(self, obj):
+        var = create_variable(obj)
+        name = var.name
+        while name in self._possible_names:
+            var = create_variable(obj)
+            name = var.name
+        self._possible_names.add(name)
+        return name
+
+    def _get_new_variable_name(self, obj, start_name = None):
+        name = start_name if start_name is not None else create_variable(obj).name
+        while name in self._possible_names:
+            name = create_variable(obj).name
+        self._possible_names.add(name)
+        return name
 
     def get_variable_from_scope(self, name):
         """."""
@@ -1757,13 +1774,13 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, PythonTuple):
             elem_vars = []
             for i,a in enumerate(rhs.args):
-                elem_name = name + '_' + str(i)
+                elem_name = self._get_new_variable_name(a,name + '_' + str(i))
                 elem_vars.append(Variable(rhs.arg_types[i]['datatype'], elem_name))
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
         elif isinstance(rhs,TupleVariable):
             elem_vars = []
             for i,a in enumerate(rhs):
-                elem_name = name + '_' + str(i)
+                elem_name = self._get_new_variable_name(a,name + '_' + str(i))
                 elem_vars.append(a.clone(elem_name))
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
         else:
@@ -2199,7 +2216,7 @@ class SemanticParser(BasicParser):
             func  = Function(func)
             alloc = Assign(lhs, Zeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
-            index = create_variable(expr)
+            index = self._get_new_variable(expr)
             index = Variable('int',index.name)
             range_ = Function('range')(Function('len')(lhs))
             name  = _get_name(lhs)
@@ -2304,14 +2321,14 @@ class SemanticParser(BasicParser):
         iterator = expr.target
 
         if isinstance(iterable, Variable):
-            indx   = create_variable(iterable)
+            indx   = self._get_new_variable(iterable)
             assign = Assign(iterator, IndexedBase(iterable)[indx])
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
 
         elif isinstance(iterable, Map):
-            indx   = create_variable(iterable)
+            indx   = self._get_new_variable(iterable)
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
             assing = assign = Assign(iterator, func(*args))
@@ -2321,7 +2338,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterable, Zip):
             args = iterable.args
-            indx = create_variable(args)
+            indx = self._get_new_variable(args)
             for i in range(len(args)):
                 assign = Assign(iterator[i], IndexedBase(args[i])[indx])
                 assign.set_fst(expr.fst)
@@ -2341,7 +2358,7 @@ class SemanticParser(BasicParser):
             iterator = list(iterator)
             for i in range(len(args)):
                 if not isinstance(args[i], Range):
-                    indx   = create_variable(i)
+                    indx   = self._get_new_variable(i)
                     assign = Assign(iterator[i], IndexedBase(args[i])[indx])
 
                     assign.set_fst(expr.fst)
@@ -2594,7 +2611,7 @@ class SemanticParser(BasicParser):
 
         for result in results:
             if not isinstance(result, Symbol):
-                new_vars += [create_variable(result)]
+                new_vars += [self._get_new_variable(result)]
                 stmt      = Assign(new_vars[-1], result)
                 stmt.set_fst(expr.fst)
                 assigns  += [stmt]
@@ -2667,7 +2684,7 @@ class SemanticParser(BasicParser):
 #            index_arg = args.index(arg)
 #            arg       = Symbol(arg)
 #            vec_arg   = IndexedBase(arg)
-#            index     = create_variable(expr.body)
+#            index     = self._get_new_variable(expr.body)
 #            range_    = Function('range')(Function('len')(arg))
 #            args      = symbols(args)
 #            args[index_arg] = vec_arg[index]
