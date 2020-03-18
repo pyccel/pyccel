@@ -47,18 +47,18 @@ from pyccel.ast.core import ErrorExit, Exit
 from pyccel.ast.core import Product, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
-                             Declare, ValuedVariable,
+                             TupleVariable, Declare, ValuedVariable,
                              FunctionalFor,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              If, Nil, Is, IsNot)
 from pyccel.ast.core import create_variable
-from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip
+from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, NativeList
 from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
-from pyccel.ast.datatypes import NativeRange, NativeTensor
+from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -157,7 +157,6 @@ class FCodePrinter(CodePrinter):
         self._additional_code = None
 
         self.prefix_module = prefix_module
-
 
     def set_current_function(self, name):
 
@@ -843,6 +842,9 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
+        if isinstance(expr.dtype, NativeTuple):
+            return '\n'.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
@@ -1027,7 +1029,7 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Assign(self, expr):
-        if isinstance(expr.lhs, Tuple) and isinstance(expr.rhs, Tuple):
+        if isinstance(expr.lhs, TupleVariable) and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
             return '\n'.join(self._print_Assign(
                         Assign(lhs,
                                 rhs,
