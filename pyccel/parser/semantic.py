@@ -1271,7 +1271,7 @@ class SemanticParser(BasicParser):
 
             assert(len(args)==1)
 
-            if (not isinstance(args[0],IntegerConstant) and 
+            if (not (isinstance(args[0],Integer) and args[0].is_constant()) and 
                     not isinstance(args[0], Slice)):
                 errors.report(INDEXED_TUPLE, symbol=expr,
                     bounding_box=self._current_fst_node.absolute_bounding_box,
