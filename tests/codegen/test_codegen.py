@@ -7,24 +7,17 @@ from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 from pyccel.parser.errors import Errors
 import os
+import pytest
 
-def test_codegen():
-    print('*********************************')
-    print('***                           ***')
-    print('***      TESTING CODEGEN      ***')
-    print('***                           ***')
-    print('*********************************')
+base_dir = os.path.dirname(os.path.realpath(__file__))
+path_dir = os.path.join(base_dir, 'scripts')
 
-    init_dir = os.getcwd()
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, 'scripts')
+files = sorted(os.listdir(path_dir))
+files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
-    files = sorted(os.listdir(path_dir))
-    files = [f for f in files if (f.endswith(".py"))]
+@pytest.mark.parametrize( "f", files )
+def test_codegen(f):
 
-    os.chdir(path_dir)
-    for f in files:
-        print('> testing {0}'.format(str(f)))
 
         pyccel = Parser(f)
         ast = pyccel.parse()
@@ -42,9 +35,18 @@ def test_codegen():
         errors = Errors()
         errors.reset()
 
-    os.chdir(init_dir)
-    print('\n')
 
 ######################
 if __name__ == '__main__':
-    test_codegen()
+
+    print('*********************************')
+    print('***                           ***')
+    print('***      TESTING CODEGEN      ***')
+    print('***                           ***')
+    print('*********************************')
+
+    for f in files:
+        print('> testing {0}'.format(str(f)))
+        test_codegen(f)
+
+    print('\n')
