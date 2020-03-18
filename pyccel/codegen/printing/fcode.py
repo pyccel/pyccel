@@ -544,6 +544,10 @@ class FCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
+    def _print_TupleVariable(self, expr):
+        fs = ', '.join(self._print(f) for f in expr)
+        return '[{0}]'.format(fs)
+
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
