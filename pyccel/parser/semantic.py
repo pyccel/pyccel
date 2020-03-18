@@ -662,7 +662,7 @@ class SemanticParser(BasicParser):
         if verbose:
             print ('*** type inference for : ', type(expr))
 
-        if isinstance(expr, (tuple, Tuple)):
+        if (type(expr).__name__ in ('tuple','Tuple')):
             d_var = []
             for e in expr:
                 d_var.append(self._infere_type(e, **settings))
