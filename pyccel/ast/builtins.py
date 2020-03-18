@@ -13,6 +13,7 @@ from sympy import Float
 from sympy import sympify
 from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
+from sympy.utilities.iterables          import iterable
 
 from .basic import Basic
 from .datatypes import default_precision
@@ -23,6 +24,7 @@ __all__ = (
     'Enumerate',
     'PythonFloat',
     'Int',
+    'PythonTuple',
     'Len',
     'List',
     'Map',
@@ -233,6 +235,55 @@ class Int(Function):
         prec  = printer(self.precision)
         code  = 'Int({0}, {1})'.format(value, prec)
         return code
+
+#==============================================================================
+class PythonTuple(Function):
+    """ Represents a call to Python's native tuple() function.
+    """
+    def __new__(cls, args):
+        if not iterable(args):
+            raise TypeError('args must be an iterable')
+
+        obj = Basic.__new__(cls, args)
+        return obj
+
+    @property
+    def args(self):
+        return self._args[0]
+
+    @property
+    def dtype(self):
+        return 'tuple'
+
+    @property
+    def shape(self):
+        return len(self._args[0])
+
+    @property
+    def rank(self):
+        return 0
+
+    @property
+    def __getitem__(self,i):
+        return self._args[0][i]
+
+    @property
+    def __iter__(self):
+        return self._args[0].__iter__
+
+    @property
+    def is_homogeneous(self):
+        if (self._is_homogeneous is None):
+            raise RuntimeError("This function cannot be used until the type has been infered")
+        return self._is_homogeneous
+
+    def set_arg_types(self,d_vars):
+        self._arg_dtypes = d_vars
+        self._is_homogeneous = len(set([a['datatype'] for a in d_vars]))==1
+
+    @property
+    def arg_types(self):
+        return self._arg_dtypes
 
 #==============================================================================
 class Len(Function):

@@ -46,7 +46,7 @@ from .builtins import Enumerate, Len, List, Map, Range, Zip
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, default_precision)
+                        NativeGeneric, NativeTuple, default_precision)
 
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -128,6 +128,7 @@ __all__ = (
     'Tensor',
     'Tile',
     'TupleImport',
+    'TupleVariable',
     'ValuedArgument',
     'ValuedVariable',
     'Variable',
@@ -2113,7 +2114,7 @@ class Variable(Symbol):
         class_type = cls_base \
             or dtype.__class__.__name__.startswith('Pyccel')
         alloweddtypes = (NativeBool, NativeRange, NativeString,
-                         NativeSymbol, NativeGeneric)
+                         NativeSymbol, NativeGeneric, NativeTuple)
 
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
@@ -2439,6 +2440,47 @@ class ValuedVariable(Variable):
         value = sstr(self.value)
         return '{0}={1}'.format(name, value)
 
+class TupleVariable(Variable):
+
+    """Represents a valued variable in the code.
+
+    variable: Variable
+        A single variable
+    value: Variable, or instance of Native types
+        value associated to the variable
+
+    Examples
+
+    >>> from pyccel.ast.core import ValuedVariable
+    >>> n  = ValuedVariable('int', 'n', value=4)
+    >>> n
+    n := 4
+    """
+
+    def __new__(cls, arg_vars, *args, **kwargs):
+
+        # if value is not given, we set it to Nil
+        # we also remove value from kwargs,
+        # since it is not a valid argument for Variable
+
+        obj = Variable.__new__(cls, *args, **kwargs)
+
+        obj._vars = arg_vars
+
+        return obj
+
+    def get_var(self, variable_idx):
+        return self._vars[variable_idx]
+
+    def rename_var(self, variable_idx, new_name):
+        self._vars[variable_idx] = self._vars[variable_idx].clone(new_name)
+
+    def __getitem__(self,idx):
+        return self.get_var(idx)
+
+    @property
+    def __iter__(self):
+        return self._vars.__iter__
 
 class Constant(ValuedVariable):
 

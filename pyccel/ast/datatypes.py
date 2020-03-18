@@ -23,6 +23,7 @@ __all__ = (
     'NativeInteger',
     'NativeIntegerList',
     'NativeList',
+    'NativeTuple',
 #    'NativeNil',
 #    'NativeParallelRange',
     'NativeRange',
@@ -136,6 +137,10 @@ class NativeNil(DataType):
 
 class NativeList(DataType):
     _name = 'List'
+    pass
+
+class NativeTuple(DataType):
+    _name = 'Tuple'
     pass
 
 class NativeIntegerList(NativeInteger, NativeList):
