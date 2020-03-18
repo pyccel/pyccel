@@ -245,6 +245,7 @@ class PythonTuple(Function):
             raise TypeError('args must be an iterable')
 
         obj = Basic.__new__(cls, args)
+
         return obj
 
     @property
@@ -257,19 +258,21 @@ class PythonTuple(Function):
 
     @property
     def shape(self):
-        return len(self._args[0])
+        return [len(self._args[0])]
 
     @property
     def rank(self):
         return 0
 
-    @property
     def __getitem__(self,i):
         return self._args[0][i]
 
     @property
     def __iter__(self):
         return self._args[0].__iter__
+
+    def __len__(self):
+        return len(self._args[0])
 
     @property
     def is_homogeneous(self):
@@ -283,6 +286,8 @@ class PythonTuple(Function):
 
     @property
     def arg_types(self):
+        if (self._arg_dtypes is None):
+            raise RuntimeError("This function cannot be used until the type has been infered")
         return self._arg_dtypes
 
 #==============================================================================

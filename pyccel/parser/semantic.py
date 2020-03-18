@@ -2167,18 +2167,25 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
-        elif isinstance(lhs, PythonTuple):
+        elif isinstance(lhs, Tuple):
+            if isinstance(rhs, PythonTuple):
+                d_var = rhs.arg_types
+            if isinstance(rhs, TupleVariable):
+                d_var = [self._infere_type(v) for v in rhs]
+
             n = len(lhs)
             if isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
                 for i,l in enumerate(lhs):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var[i], rhs, **settings) )
-                lhs = PythonTuple(*new_lhs, sympify=False)
+                    new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], **settings) )
+                lhs = PythonTuple(new_lhs)
+                lhs.set_arg_types(d_var)
             elif d_var['shape'][0]==n:
                 new_lhs = []
                 for i,l in enumerate(lhs):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var, rhs, **settings) )
-                lhs = PythonTuple(*new_lhs, sympify=False)
+                    new_lhs.append( self._assign_lhs_variable(l, d_var.copy(), rhs[i], **settings) )
+                lhs = PythonTuple(new_lhs)
+                lhs.set_arg_types(arg_d_vars)
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                     bounding_box=self._current_fst_node.absolute_bounding_box,
@@ -2207,8 +2214,10 @@ class SemanticParser(BasicParser):
             body  = [alloc , body]
             return CodeBlock(body)
 
+        elif isinstance(lhs, PythonTuple):
+            d_var = lhs.arg_types
 
-        if not isinstance(lhs, (list, PythonTuple, tuple)):
+        elif not isinstance(lhs, (list, tuple)):
             lhs = [lhs]
             if isinstance(d_var,dict):
                 d_var = [d_var]
@@ -2246,30 +2255,43 @@ class SemanticParser(BasicParser):
 
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
+
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        new_expr = Assign(lhs, rhs)
-        if is_pointer:
-            new_expr = AliasAssign(lhs, rhs)
+        if not isinstance(lhs, PythonTuple):
+            lhs = [lhs]
+            rhs = [rhs]
 
-        elif isinstance(expr, AugAssign):
-            new_expr = AugAssign(lhs, expr.op, rhs)
+        new_expressions = []
+        for l, r in zip(lhs,rhs):
+            new_expr = Assign(l, r)
+            if is_pointer:
+                new_expr = AliasAssign(l, r)
+
+            elif isinstance(expr, AugAssign):
+                new_expr = AugAssign(l, expr.op, r)
 
 
-        elif new_expr.is_symbolic_alias:
-            new_expr = SymbolicAssign(lhs, rhs)
+            elif new_expr.is_symbolic_alias:
+                new_expr = SymbolicAssign(l, r)
 
-            # in a symbolic assign, the rhs can be a lambda expression
-            # it is then treated as a def node
+                # in a symbolic assign, the rhs can be a lambda expression
+                # it is then treated as a def node
 
-            F = self.get_symbolic_function(lhs)
-            if F is None:
-                self.insert_symbolic_function(new_expr)
-            else:
-                raise NotImplementedError('TODO')
+                F = self.get_symbolic_function(l)
+                if F is None:
+                    self.insert_symbolic_function(new_expr)
+                else:
+                    raise NotImplementedError('TODO')
+            new_expressions.append(new_expr)
+        if (len(new_expressions)==1):
+            new_expressions = new_expressions[0]
+            new_expressions.set_fst(fst)
 
-        new_expr.set_fst(fst)
-
-        return new_expr
+            return new_expressions
+        else:
+            result = CodeBlock(new_expressions)
+            result.set_fst(fst)
+            return result
 
     def _visit_For(self, expr, **settings):
 
