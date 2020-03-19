@@ -42,7 +42,7 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic import Basic
-from .builtins import Enumerate, Len, List, Map, Range, Zip
+from .builtins import Enumerate, Len, List, Map, Range, Zip, PythonTuple
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
@@ -359,7 +359,7 @@ def extract_subexpressions(expr):
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, ImaginaryUnit,Boolean,
               BooleanTrue, BooleanFalse, String,
-              ValuedArgument, Nil, List)
+              ValuedArgument, Nil, List, PythonTuple)
 
     func_names = ('diag', 'empty', 'zip', 'enumerate')
     #TODO put only imported functions

@@ -88,7 +88,7 @@ class Array(Application):
     """
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (list, tuple, Tuple, List)):
+        if not isinstance(arg, (list, tuple, Tuple, PythonTuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         prec = 0
@@ -119,7 +119,7 @@ class Array(Application):
 
         # Create instance, add attributes, and return it
         obj = Basic.__new__(cls, arg, dtype, order, prec)
-        obj._shape = Tuple(*numpy.shape(arg))
+        obj._shape = PythonTuple(numpy.shape(arg))
         obj._rank  = len(obj._shape)
         return obj
 
@@ -158,7 +158,7 @@ class Array(Application):
         # row-major ordering, while Fortran initial values are column-major
         shape = self.shape[::-1]
 
-        if isinstance(shape, (Tuple, tuple)):
+        if isinstance(shape, (list, PythonTuple, Tuple, tuple)):
             # this is a correction. problem on LRZ
             shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
         else:
@@ -188,11 +188,11 @@ class Array(Application):
 class NumpySum(Function):
     """Represents a call to  numpy.sum for code generation.
 
-    arg : list , tuple , Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         obj = Basic.__new__(cls, arg)
@@ -230,11 +230,11 @@ class NumpySum(Function):
 class Product(Function):
     """Represents a call to  numpy.prod for code generation.
 
-    arg : list , tuple , Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
@@ -262,13 +262,13 @@ class Product(Function):
 #==============================================================================
 class Matmul(Application):
     """Represents a call to numpy.matmul for code generation.
-    arg : list , tuple , Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
 
     def __new__(cls, a, b):
-        if not isinstance(a, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(a))
         return Basic.__new__(cls, a, b)
 
@@ -316,7 +316,7 @@ class Shape(Array):
 
     """Represents a call to  numpy.shape for code generation.
 
-    arg : list ,tuple ,Tuple,List, Variable
+    arg : list ,tuple ,PythonTuple, Tuple,List, Variable
     """
 
     def __new__(cls, arg, index=None):
@@ -676,7 +676,7 @@ class Diag(Application):
     def __new__(cls, array, v=0, k=0):
 
 
-        _valid_args = (Variable, IndexedElement, Tuple)
+        _valid_args = (Variable, IndexedElement, PythonTuple, Tuple)
 
 
         if not isinstance(array, _valid_args):
@@ -765,7 +765,7 @@ class Cross(Application):
     def __new__(cls, a, b):
 
 
-        _valid_args = (Variable, IndexedElement, Tuple)
+        _valid_args = (Variable, IndexedElement, PythonTuple, Tuple)
 
 
         if not isinstance(a, _valid_args):
@@ -838,7 +838,7 @@ class Cross(Application):
                          a[2]*b[0]-a[0]*b[2],
                          a[0]*b[1]-a[1]*b[0]]
 
-        cross_product = Tuple(*cross_product)
+        cross_product = PythonTuple(cross_product)
         cross_product = printer(cross_product)
         first = printer(self.first)
         order = self.order
@@ -964,7 +964,7 @@ class Full(Application):
     """
     def __new__(cls, shape, fill_value, dtype=None, order='C'):
 
-        # Convert shape to Tuple
+        # Convert shape to PythonTuple
         shape = cls._process_shape(shape)
 
         # If there is no dtype, extract it from fill_value
@@ -1018,13 +1018,15 @@ class Full(Application):
     @staticmethod
     def _process_shape(shape):
 
-        if isinstance(shape, Tuple):
+        if isinstance(shape, PythonTuple):
             return shape
 
-        if isinstance(shape, (list, tuple)):
-            return Tuple(*shape)
+        if hasattr(shape,'__iter__'):
+            return PythonTuple(shape)
 
-        return Tuple(shape)
+        else:
+            return PythonTuple([shape])
+
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -1060,7 +1062,7 @@ class Full(Application):
             # Transpose indices because of Fortran column-major ordering
             shape = self.shape if self.order == 'F' else self.shape[::-1]
 
-            if isinstance(self.shape, (Tuple,tuple)):
+            if isinstance(self.shape, (PythonTuple,Tuple,tuple)):
                 # this is a correction. problem on LRZ
                 shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
             else:
@@ -1083,7 +1085,7 @@ class Empty(Full):
     """
     def __new__(cls, shape, dtype='float', order='C'):
 
-        # Convert shape to Tuple
+        # Convert shape to PythonTuple
         shape = cls._process_shape(shape)
 
         # Verify dtype and get precision
