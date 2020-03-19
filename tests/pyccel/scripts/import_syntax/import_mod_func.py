@@ -1,7 +1,7 @@
 
 #$ header function matmat(double [:,:], double [:,:], double [:,:])
 def matmat(a,b,c):
-    import numpy
+    import numpy #pylint: disable=W0404
     nm = numpy.shape(a)
     mp = numpy.shape(b)
 
@@ -14,7 +14,7 @@ def matmat(a,b,c):
             for k in range(0, m):
                 c[i,j] = c[i,j] + a[i,k]*b[k,j]
 
-import numpy
+import numpy #pylint: disable=W0404
 n = 3
 m = 4
 p = 3
