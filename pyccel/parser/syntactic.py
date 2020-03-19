@@ -94,6 +94,7 @@ from pyccel.ast import Print
 from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
+from pyccel.ast import PythonTuple
 from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break, Continue
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
@@ -283,6 +284,8 @@ class SyntaxParser(BasicParser):
         if isinstance(stmt, (list, ListNode)):
 
             return List(*ls, sympify=False)
+        elif isinstance(stmt, (tuple, TupleNode)):
+            return PythonTuple(ls)
         else:
             return Tuple(*ls, sympify=False)
 

@@ -1184,9 +1184,13 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr]
         return PythonTuple(ls)
 
-    def _visit_Tuple(self, expr, **settings):
+    def _visit_PythonTuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
         return PythonTuple(ls)
+
+    def _visit_Tuple(self, expr, **settings):
+        ls = [self._visit(i, **settings) for i in expr]
+        return Tuple(*ls, sympify=False)
 
     def _visit_List(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
@@ -1327,7 +1331,6 @@ class SemanticParser(BasicParser):
             rank  = var.rank
 
             while isinstance(dtype, NativeTuple):
-                print(dtype)
                 if not dtype.is_homogeneous:
                     errors.report(LIST_OF_TUPLES, symbol=expr,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
