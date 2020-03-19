@@ -56,7 +56,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_FunctionDef(self, expr):
         name = self._print(expr.name)
-        body = '\n'.join(self._print(i) for i in expr.body)
+        body = self._print(expr.body)
         body = self._indent_codestring(body)
         args = ', '.join(self._print(i) for i in expr.arguments)
 
@@ -125,7 +125,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         if not isinstance(target,(list, tuple, Tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
-        body   = '\n'.join(self._print(i) for i in expr.body)
+        body   = self._print(expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
                 '{2}\n').format(target,iter,body)
