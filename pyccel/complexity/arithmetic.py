@@ -37,7 +37,7 @@ def count_ops(expr, visual=None):
         a = expr.iterable.size
         ops = sum(count_ops(i, visual) for i in expr.body.body)
         return a*ops
-    elif isinstance(expr, Tuple):
+    elif isinstance(expr, (Tuple,PythonTuple)):
         return sum(count_ops(i, visual) for i in expr)
     elif isinstance(expr, (Zeros, Ones,NewLine)):
         return 0
