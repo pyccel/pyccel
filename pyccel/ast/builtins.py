@@ -240,9 +240,10 @@ class Int(Function):
 class PythonTuple(Function):
     """ Represents a call to Python's native tuple() function.
     """
+    _iterable = True
     def __new__(cls, args):
         if not iterable(args):
-            raise TypeError('args must be an iterable')
+            args = [args]
 
         obj = Basic.__new__(cls, args)
 
