@@ -145,6 +145,8 @@ def _get_name(var):
         return str(var.base)
     if isinstance(var, Application):
         return type(var).__name__
+    if isinstance(var, AsName):
+        return var.name
     msg = 'Uncovered type {dtype}'.format(dtype=type(var))
     raise NotImplementedError(msg)
 
@@ -3025,13 +3027,15 @@ class SemanticParser(BasicParser):
                 # using repr.
                 # TODO shall we improve it?
                 source = str(expr.source)
-                targets = [_get_name(i) for i in expr.target]
+
+                targets = [i.target if isinstance(i,AsName) else i.name for i in expr.target]
+                names = [i.name for i in expr.target]
                 p       = self.d_parsers[source]
                 for entry in ['variables', 'classes', 'functions']:
                     d_son = getattr(p.namespace, entry)
-                    for k in targets:
-                        if k in d_son:
-                            container[entry][k] = d_son[k]
+                    for t,n in zip(targets,names):
+                        if t in d_son:
+                            container[entry][n] = d_son[t]
 
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)
