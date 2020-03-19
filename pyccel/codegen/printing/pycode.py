@@ -12,6 +12,7 @@ from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
 from pyccel.ast.utilities  import build_types_decorator
+from pyccel.ast.core       import CodeBlock
 
 #==============================================================================
 def _construct_header(func_name, args):
@@ -207,10 +208,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             else:
                 lines.append("elif (%s):" % self._print(c))
 
-            if isinstance(e, (list, tuple, Tuple)):
-                for ee in e:
-                    body = self._indent_codestring(self._print(ee))
-                    lines.append(body)
+            if isinstance(e, CodeBlock):
+                body = self._indent_codestring(self._print(e))
+                lines.append(body)
             else:
                 lines.append(self._print(e))
         return "\n".join(lines)
