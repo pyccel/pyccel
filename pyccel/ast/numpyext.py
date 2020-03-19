@@ -15,7 +15,7 @@ from .core import (Variable, IndexedElement, Slice, Len,
                    For, Range, Assign, List, Nil,
                    ValuedArgument, Constant, Pow)
 from .builtins  import Int as PythonInt
-from .builtins  import PythonFloat
+from .builtins  import PythonFloat, PythonTuple
 from .datatypes import dtype_and_precision_registry as dtype_registry
 from .datatypes import sp_dtype, str_dtype
 from .datatypes import default_precision
