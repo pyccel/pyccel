@@ -10,7 +10,7 @@ from pyccel.ast import (For, Assign, While,NewLine,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
                         If, Zeros, Ones, Array,
-                        Len, Dot, IndexedElement)
+                        Len, Dot, IndexedElement, PythonTuple)
 
 from pyccel.complexity.basic import Complexity
 
