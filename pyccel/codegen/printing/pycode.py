@@ -244,6 +244,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         return 'print({0})'.format(fs)
 
+    def _print_Module(self, expr):
+        return '\n'.join(self._print(e) for e in expr.body)
 #==============================================================================
 def pycode(expr, **settings):
     """ Converts an expr to a string of Python code
@@ -261,4 +263,5 @@ def pycode(expr, **settings):
     >>> pycode(tan(Symbol('x')) + 1)
     'math.tan(x) + 1'
     """
+    settings.pop('parser', None)
     return PythonCodePrinter(settings).doprint(expr)

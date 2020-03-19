@@ -4,7 +4,7 @@
 from pyccel.parser import Parser
 import os
 
-from pyccel.codegen.printing import fcode, ccode
+from pyccel.codegen.printing import fcode, ccode, pycode
 
 from pyccel.ast import FunctionDef, ClassDef, Module, Program, Import, Interface
 from pyccel.ast import Header, EmptyLine, NewLine, Comment, CommentBlock
@@ -21,7 +21,7 @@ from pyccel.parser.errors import Errors, PyccelCodegenError
 from pyccel.parser.messages import *
 
 _extension_registry = {'fortran': 'f90', 'c':'c'}
-printer_registry    = {'fortran':fcode, 'c':ccode}
+printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
 
 
 class Codegen(object):
@@ -239,7 +239,7 @@ class Codegen(object):
 
         language = settings.pop('language', 'fortran')
 
-        if not language in ['fortran', 'c']:
+        if not language in ['fortran', 'c', 'python']:
             raise ValueError('the language {} not available'.format(lanugage))
 
         self._language = language
@@ -255,8 +255,7 @@ class Codegen(object):
         errors.set_parser_stage('codegen')
 
         # ...
-
-        code = printer(self.expr, self.parser, **settings)
+        code = printer(self.expr, parser=self.parser, **settings)
 
         # ...
         errors.check()
