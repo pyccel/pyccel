@@ -1919,7 +1919,7 @@ class SemanticParser(BasicParser):
             name = type(rhs).__name__
             macro = self.get_macro(name)
             if macro is None:
-                rhs = self._visit_Application(rhs, **settings)
+                rhs = self._visit(rhs, **settings)
             else:
 
                 # TODO check types from FunctionDef
@@ -2200,7 +2200,7 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
-        elif isinstance(lhs, Tuple):
+        elif isinstance(lhs, PythonTuple):
             if isinstance(rhs, PythonTuple):
                 d_var = rhs.arg_types
             if isinstance(rhs, TupleVariable):
@@ -2246,9 +2246,6 @@ class SemanticParser(BasicParser):
             body  = self._visit_For(body, **settings)
             body  = [alloc , body]
             return CodeBlock(body)
-
-        elif isinstance(lhs, PythonTuple):
-            d_var = lhs.arg_types
 
         elif not isinstance(lhs, (list, tuple)):
             lhs = [lhs]
