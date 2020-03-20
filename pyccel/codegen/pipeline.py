@@ -1,5 +1,6 @@
 # coding: utf-8
 import os
+import sys
 import shutil
 
 from pyccel.parser.errors     import Errors
@@ -46,8 +47,10 @@ def execute_pyccel(fname, *,
     modules  = [*modules]
     libs     = [*libs]
 
-    # Store current directory
+    # Store current directory and add it to sys.path
+    # variable to imitate Python's import behavior
     base_dirpath = os.getcwd()
+    sys.path.insert(0, base_dirpath)
 
     # Unified way to handle errors: print formatted error message, then move
     # to original working directory. Caller should then raise exception.
