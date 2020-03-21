@@ -20,7 +20,7 @@ from pyccel.parser.errors import Errors, PyccelCodegenError
 
 from pyccel.parser.messages import *
 
-_extension_registry = {'fortran': 'f90', 'c':'c'}
+_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
 
 
@@ -248,22 +248,16 @@ class Codegen(object):
 
         printer = printer_registry[language]
 
-        # ...
-
-
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        # ...
         code = printer(self.expr, parser=self.parser, **settings)
 
-        # ...
         errors.check()
 
         self._code = code
 
         return code
-
 
     def export(self, filename=None):
 
