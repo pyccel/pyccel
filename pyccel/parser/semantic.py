@@ -1387,6 +1387,7 @@ class SemanticParser(BasicParser):
     def _visit_Add(self, expr, **settings):
 
         stmts, expr = extract_subexpressions(expr)
+        stmts = []
         if stmts:
             stmts = [self._visit(i, **settings) for i in stmts]
 
