@@ -87,6 +87,8 @@ class Bool(Function):
 class Complex(Function):
     """ Represents a call to Python's native complex() function.
     """
+    is_zero = False
+
     def __new__(cls, arg0, arg1=Float(0)):
         obj = Basic.__new__(cls, arg0, arg1)
         assumptions = {'complex': True}
@@ -154,6 +156,7 @@ class Enumerate(Basic):
 class PythonFloat(Function):
     """ Represents a call to Python's native float() function.
     """
+    is_zero = False
     def __new__(cls, arg):
         obj = Basic.__new__(cls, arg)
         assumptions = {'real': True}
@@ -199,6 +202,8 @@ class PythonFloat(Function):
 class Int(Function):
     """ Represents a call to Python's native int() function.
     """
+    is_zero = False
+
     def __new__(cls, arg):
         obj = Basic.__new__(cls, arg)
         assumptions = {'integer': True}
@@ -240,6 +245,7 @@ class Len(Function):
     """
     Represents a 'len' expression in the code.
     """
+    is_zero = False
 
     def __new__(cls, arg):
         obj = Basic.__new__(cls, arg)

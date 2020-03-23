@@ -996,9 +996,11 @@ class SemanticParser(BasicParser):
 
             cls = (Application, DottedVariable, Variable,
                    IndexedVariable,IndexedElement)
-            atoms = _atomic(expr,cls)
+            atoms = _atomic(expr, cls)
+
             ds = [self._infere_type(i, **settings) for i in
                   atoms]
+
             #TODO we should also look for functions call
             #to collect info about precision and shapes later when we allow
             # vectorised operations
@@ -1010,7 +1012,6 @@ class SemanticParser(BasicParser):
             ranks = [d['rank'] for d in ds]
             shapes = [d['shape'] for d in ds]
             precisions = [d['precision'] for d in ds]
-
 
             if all(i.is_integer for i in atoms):
                 if expr.is_complex and not expr.is_integer:
@@ -1045,6 +1046,7 @@ class SemanticParser(BasicParser):
                 d_var['precision'] = max(precisions)
             else:
                 d_var['precision'] = default_precision[d_var['datatype']]
+
             return d_var
         elif isinstance(expr, (tuple, list, List, Tuple)):
 
@@ -1402,19 +1404,15 @@ class SemanticParser(BasicParser):
         atoms = [a['is_pointer'] or a['is_target'] for a in atoms if a['rank']>0]
         args  = [self._visit(a, **settings) for a in expr.args]
 
-
         if any(atoms) or atoms_ls:
             return Concatenate(args, True)
         elif atoms_str:
             return Concatenate(args, False)
 
-
         expr_new = Add(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
-
 
     def _visit_Mul(self, expr, **settings):
         stmts, expr = extract_subexpressions(expr)
@@ -1422,7 +1420,6 @@ class SemanticParser(BasicParser):
             stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Mul(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1435,7 +1432,6 @@ class SemanticParser(BasicParser):
             stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Pow(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1444,63 +1440,48 @@ class SemanticParser(BasicParser):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = And(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
-
         return expr_new
 
     def _visit_Or(self, expr, **settings):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Or(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
-
         return expr_new
 
     def _visit_Equality(self, expr, **settings):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Eq(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         return expr_new
 
     def _visit_Unequality(self, expr, **settings):
 
-
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Ne(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
-
         return expr_new
 
     def _visit_StrictLessThan(self, expr, **settings):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Lt(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
-
         return expr_new
 
     def _visit_GreaterThan(self, expr, **settings):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Ge(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
-
         return expr_new
 
     def _visit_LessThan(self, expr, **settings):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Le(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
-
         return expr_new
 
     def _visit_StrictGreaterThan(self, expr, **settings):
 
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = Gt(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
         return expr_new
 
 

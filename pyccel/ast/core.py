@@ -479,7 +479,7 @@ class Pow(sp_Pow):
         expr = Pow(args[0], args[1], evaluate=False)
         return expr
 
-    def _eval_evalf(self,prec):
+    def _eval_evalf(self, prec):
         return sp_Pow(self.base,self.exp).evalf(prec)
 
 
@@ -1999,6 +1999,7 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
+    is_zero = False
 
     def __new__(
         cls,
@@ -2124,7 +2125,6 @@ class Variable(Symbol):
             obj.is_Boolean = True
         elif not isinstance(dtype, alloweddtypes) and not class_type:
             raise TypeError('Undefined datatype')
-
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
@@ -2270,11 +2270,6 @@ class Variable(Symbol):
 
     def _eval_subs(self, old, new):
         return self
-
-    def _eval_is_positive(self):
-        #we do this inorder to infere the type of Pow expression correctly
-        return self.is_real
-
 
 class DottedVariable(AtomicExpr, Boolean):
 
@@ -4075,7 +4070,7 @@ class IndexedVariable(IndexedBase):
 
     **todo:** fix bug. the last result must be : (o,p)
     """
-
+    is_zero = False
     def __new__(
         cls,
         label,
@@ -4171,6 +4166,7 @@ class IndexedElement(Indexed):
 
     **todo:** fix bug. the last result must be : True
     """
+    is_zero = False
 
     def __new__(
         cls,
