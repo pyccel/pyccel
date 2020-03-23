@@ -5,15 +5,20 @@ import shutil
 import numpy as np
 import re
 
+#==============================================================================
+# UTILITIES
+#==============================================================================
 def get_abs_path(relative_path):
     base_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(base_dir, relative_path)
 
+#------------------------------------------------------------------------------
 def insert_pyccel_folder(abs_path):
     base_dir = os.path.dirname(abs_path)
     base_name = os.path.basename(abs_path)
     return os.path.join(base_dir, "__pyccel__", base_name)
 
+#------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd = None):
     if cwd is None:
         p = subprocess.Popen([shutil.which("python3") , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
@@ -23,6 +28,7 @@ def get_python_output(abs_path, cwd = None):
     assert(p.returncode==0)
     return out
 
+#------------------------------------------------------------------------------
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
         options = options.split(' ')
@@ -32,6 +38,7 @@ def compile_pyccel(path_dir,test_file, options = ""):
     p.wait()
     assert(p.returncode==0)
 
+#------------------------------------------------------------------------------
 def compile_fortran(path_dir,test_file,dependencies):
     root = insert_pyccel_folder(test_file)[:-3]
 
@@ -54,6 +61,7 @@ def compile_fortran(path_dir,test_file,dependencies):
     p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
     p.wait()
 
+#------------------------------------------------------------------------------
 def get_fortran_output(abs_path):
     assert(os.path.isfile(abs_path))
     p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
@@ -61,28 +69,7 @@ def get_fortran_output(abs_path):
     assert(p.returncode==0)
     return out
 
-def setup():
-    teardown()
-
-def teardown(path_dir = None):
-    if path_dir is None:
-        path_dir = os.path.dirname(os.path.realpath(__file__))
-
-    for root, _, files in os.walk(path_dir):
-        for name in files:
-            if name.startswith(".coverage"):
-                shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
-
-    files = os.listdir(path_dir)
-    for f in files:
-        file_name = os.path.join(path_dir,f)
-        if f == "__pyccel__":
-            shutil.rmtree( file_name )
-        elif not os.path.isfile(file_name):
-            teardown(file_name)
-        elif not f.endswith(".py"):
-            os.remove(file_name)
-
+#------------------------------------------------------------------------------
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     if dtype is str:
@@ -120,6 +107,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
         raise NotImplementedError("Type comparison not implemented")
     return p_output,f_output
 
+#------------------------------------------------------------------------------
 def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 
     if isinstance(dtype,list):
@@ -134,6 +122,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
         for p, f in zip(p_output, f_output):
             compare_pyth_fort_output_by_type(p,f,dtype)
 
+#------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
     if (cwd is None):
         cwd = os.path.dirname(test_file)
@@ -160,6 +149,61 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
 
     compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
+#==============================================================================
+# PYTEST MODULE SETUP AND TEARDOWN
+#==============================================================================
+def setup():
+    teardown()
+
+#------------------------------------------------------------------------------
+def teardown(path_dir = None):
+    if path_dir is None:
+        path_dir = os.path.dirname(os.path.realpath(__file__))
+
+    for root, _, files in os.walk(path_dir):
+        for name in files:
+            if name.startswith(".coverage"):
+                shutil.copyfile(os.path.join(root,name),os.path.join(os.getcwd(),name))
+
+    files = os.listdir(path_dir)
+    for f in files:
+        file_name = os.path.join(path_dir,f)
+        if f == "__pyccel__":
+            shutil.rmtree( file_name )
+        elif not os.path.isfile(file_name):
+            teardown(file_name)
+        elif not f.endswith(".py"):
+            os.remove(file_name)
+
+#==============================================================================
+# UNIT TESTS
+#==============================================================================
+def test_relative_imports_in_project():
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "project_rel_imports")
+    pyth_out = get_python_output('runtest.py', cwd=path_dir)
+
+    compile_pyccel(path_dir, 'project/folder1/mod1.py')
+    compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    fort_out = get_python_output('runtest.py', cwd=path_dir)
+
+    compare_pyth_fort_output(pyth_out, fort_out)
+
+#------------------------------------------------------------------------------
+def test_absolute_imports_in_project():
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "project_abs_imports")
+    pyth_out = get_python_output('runtest.py', cwd=path_dir)
+
+    compile_pyccel(path_dir, 'project/folder1/mod1.py')
+    compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    fort_out = get_python_output('runtest.py', cwd=path_dir)
+
+    compare_pyth_fort_output(pyth_out, fort_out)
+
+#------------------------------------------------------------------------------
 def test_rel_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_rel_imports.py from the scripts folder
     # From this folder python understands relative imports
@@ -179,16 +223,20 @@ def test_rel_imports_python_accessible_folder():
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
+#------------------------------------------------------------------------------
 def test_imports_compile():
     pyccel_test("scripts/test_imports.py","scripts/funcs.py", compile_with_pyccel = False)
 
+#------------------------------------------------------------------------------
 def test_imports_in_folder():
     # Fails as imports are wrongly defined
     pyccel_test("scripts/test_folder_imports.py","scripts/folder1/folder1_funcs.py", compile_with_pyccel = False)
 
+#------------------------------------------------------------------------------
 def test_imports():
     pyccel_test("scripts/test_imports.py","scripts/funcs.py")
 
+#------------------------------------------------------------------------------
 def test_folder_imports_python_accessible_folder():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
     # From this folder python understands relative imports
@@ -208,6 +256,7 @@ def test_folder_imports_python_accessible_folder():
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
+#------------------------------------------------------------------------------
 def test_folder_imports():
     # pyccel is called on scripts/folder2/test_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
@@ -228,12 +277,15 @@ def test_folder_imports():
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
+#------------------------------------------------------------------------------
 def test_funcs():
     pyccel_test("scripts/test_funcs.py")
 
+#------------------------------------------------------------------------------
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
+#------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/test_default_args.py",
             dependencies = "scripts/default_args_mod.py",
@@ -241,6 +293,7 @@ def test_default_arguments():
                 float,float,float,float,bool,bool,bool,
                 float,float,float,float])
 
+#------------------------------------------------------------------------------
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
@@ -257,6 +310,7 @@ def test_f2py_compat():
 
     compare_pyth_fort_output(pyth_out, fort_out)
 
+#------------------------------------------------------------------------------
 def test_pyccel_calling_directory():
     cwd = get_abs_path(".")
 
@@ -269,9 +323,11 @@ def test_pyccel_calling_directory():
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
+#------------------------------------------------------------------------------
 def test_in_specified():
     pyccel_test("scripts/test_degree_in.py")
 
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
                                         "scripts/hope_benchmarks/quicksort.py",
                                         "scripts/hope_benchmarks/pisum.py",
@@ -290,6 +346,7 @@ def test_in_specified():
 def test_hope_benchmarks( test_file ):
     pyccel_test(test_file)
 
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
                                         "scripts/import_syntax/from_mod_import_as.py",
                                         "scripts/import_syntax/import_mod.py",
@@ -303,6 +360,7 @@ def test_hope_benchmarks( test_file ):
 def test_import_syntax( test_file ):
     pyccel_test(test_file)
 
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
                                         "scripts/import_syntax/from_mod_import_as_user.py",
                                         "scripts/import_syntax/import_mod_user.py",
@@ -315,10 +373,12 @@ def test_import_syntax( test_file ):
 def test_import_syntax_user( test_file ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
 
+#------------------------------------------------------------------------------
 def test_numpy_kernels_compile():
     cwd = get_abs_path(".")
     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "test_kernels.py")
 
+#------------------------------------------------------------------------------
 def test_multiple_results():
     pyccel_test("scripts/test_multiple_results.py",
             dependencies = "scripts/default_args_mod.py",
