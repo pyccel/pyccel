@@ -2458,11 +2458,13 @@ class SemanticParser(BasicParser):
 
         result   = expr.expr
         lhs_name = _get_name(expr.lhs)
-        lhs      = self.get_variable(lhs_name)
+        lhs  = self.get_variable(lhs_name)
 
         if lhs is None:
-            lhs  = Variable('int', lhs_name)
-            self.insert_variable(lhs)
+            tmp_lhs  = Variable('int', lhs_name)
+            self.insert_variable(tmp_lhs)
+        else:
+            tmp_lhs = None
 
         loops  = [self._visit(i, **settings) for i in expr.loops]
         result = self._visit(result, **settings)
@@ -2473,8 +2475,8 @@ class SemanticParser(BasicParser):
         d_var = self._infere_type(result, **settings)
         dtype = d_var.pop('datatype')
 
-        lhs = None
-        if isinstance(expr.lhs, Symbol):
+        if tmp_lhs is not None:
+            self.remove_variable(tmp_lhs)
             lhs = Variable(dtype, lhs_name, **d_var)
             self.insert_variable(lhs)
 
