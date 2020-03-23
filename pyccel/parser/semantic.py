@@ -1955,22 +1955,6 @@ class SemanticParser(BasicParser):
         assigns = None
 
 
-        if isinstance(lhs, PythonTuple):
-            if sympy_iterable(rhs):
-                ls = []
-                for l,r in zip(lhs,rhs):
-                    a = Assign(l,r)
-                    a.set_fst(fst)
-                    ls.append(self._visit(a))
-                return CodeBlock(ls)
-            else:
-                ls = []
-                for i,l in enumerate(lhs):
-                    a = Assign(l,Indexed(rhs,i))
-                    a.set_fst(fst)
-                    ls.append(self._visit(a))
-                return CodeBlock(ls)
-
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
