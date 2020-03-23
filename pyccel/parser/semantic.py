@@ -68,6 +68,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, Complex, EmptyLike
+from pyccel.ast import StarredArguments
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
@@ -1644,8 +1645,8 @@ class SemanticParser(BasicParser):
         args  = []
         for arg in new_args:
             a = self._visit(arg, **settings)
-            if isinstance(a,Tuple):
-                args.extend(a)
+            if isinstance(a,StarredArguments):
+                args.extend(a.args)
             else:
                 args.append(a)
 
@@ -3313,7 +3314,7 @@ class SemanticParser(BasicParser):
     def _visit_StarredArguments(self, expr, **settings):
         name = expr.args
         var = self._visit(name)
-        return Tuple(*[self._visit(Indexed(name,i)) for i in range(len(var))])
+        return StarredArguments([self._visit(Indexed(name,i)) for i in range(len(var))])
 
 #==============================================================================
 

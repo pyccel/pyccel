@@ -4540,8 +4540,6 @@ class IfTernaryOperator(If):
 
 class StarredArguments(Basic):
     def __new__(cls, args):
-        if not isinstance(args,Symbol):
-            raise TypeError("Args must be a symbol")
         return Basic.__new__(cls, args)
 
     @property
