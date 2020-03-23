@@ -118,6 +118,7 @@ __all__ = (
     'Return',
     'SeparatorComment',
     'Slice',
+    'StarredArguments',
     'String',
     'SubOp',
     'Subroutine',
@@ -359,7 +360,8 @@ def extract_subexpressions(expr):
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, ImaginaryUnit,Boolean,
               BooleanTrue, BooleanFalse, String,
-              ValuedArgument, Nil, List, PythonTuple)
+              ValuedArgument, Nil, List, PythonTuple,
+              StarredArguments)
 
     func_names = ('diag', 'empty', 'zip', 'enumerate')
     #TODO put only imported functions
@@ -4535,6 +4537,16 @@ class IfTernaryOperator(If):
     """class for the Ternery operator"""
 
     pass
+
+class StarredArguments(Basic):
+    def __new__(cls, args):
+        if not isinstance(args,Symbol):
+            raise TypeError("Args must be a symbol")
+        return Basic.__new__(cls, args)
+
+    @property
+    def args(self):
+        return self._args[0]
 
 
 def is_simple_assign(expr):

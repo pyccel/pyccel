@@ -1641,7 +1641,13 @@ class SemanticParser(BasicParser):
         stmts, new_args = extract_subexpressions(expr.args)
 
         stmts = [self._visit(stmt, **settings) for stmt in stmts]
-        args  = [self._visit(arg, **settings) for arg in new_args]
+        args  = []
+        for arg in new_args:
+            a = self._visit(arg, **settings)
+            if isinstance(a,Tuple):
+                args.extend(a)
+            else:
+                args.append(a)
 
         if name == 'lambdify':
             args = self.get_symbolic_function(str(expr.args[0]))
@@ -3303,6 +3309,11 @@ class SemanticParser(BasicParser):
             raise PyccelSemanticError(msg)
         shape = self._visit(expr.length, **settings)
         return Dlist(val, shape)
+
+    def _visit_StarredArguments(self, expr, **settings):
+        name = expr.args
+        var = self._visit(name)
+        return Tuple(*[self._visit(Indexed(name,i)) for i in range(len(var))])
 
 #==============================================================================
 
