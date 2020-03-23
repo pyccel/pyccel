@@ -6,6 +6,15 @@ f,g,h = ai
 i = e[2]
 ai_0 = 44
 
+from numpy import ones
+x = ones((2,3,2))
+for z in range(2):
+    for y in range(3):
+        for w in range(2):
+            x[z,y,w] = w+y*2+z*6
+idx_0 = 1
+idx = (1,idx_0,0)
+
 print(ai)
 print(a)
 print(b)
@@ -17,3 +26,4 @@ print(g)
 print(h)
 print(i)
 print(ai_0)
+print(x[idx])
