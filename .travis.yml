@@ -4,19 +4,13 @@
 # to test different versions of python, check the numpy travis file on:
 #   https://github.com/numpy/numpy/blob/master/.travis.yml
 
-sudo: required
 language: python
-
-# Existing Python versions
+os: linux
+dist: xenial
 python:
-  - "3.5"
-  - "3.6"
-
-# Enable 3.7 without globally enabling 'dist: xenial' for other build jobs
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
+  - 3.5
+  - 3.6
+  - 3.7
 
 # command before installation
 before_install:
