@@ -146,15 +146,8 @@ class NativeTuple(DataType):
 
     def set_arg_types(self, types):
         self._elements = types
-        if isinstance(types[0],str):
-            first_elem = types[0]
-            self._homogeneous = all([t==first_elem for t in types])
-        else:
-            first_elem = types[0].name
-            if (first_elem == 'Tuple'):
-                self._homogeneous = all([t.name==first_elem and t.is_homogeneous for t in types])
-            else:
-                self._homogeneous = all([t.name==first_elem for t in types])
+        type_name = [(t if isinstance(t,str) else t.name).lower() for t in types]
+        self._homogeneous = len(set(type_name))==1
 
     @property
     def arg_dtypes(self):

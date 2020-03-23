@@ -777,6 +777,8 @@ class SemanticParser(BasicParser):
             expr.set_arg_types(arg_d_vars)
             d_var['datatype'      ].set_arg_types(arg_dtypes)
 
+            d_var['rank'          ] = expr.rank
+
             return d_var
 
         elif isinstance(expr, IndexedElement):
@@ -1855,7 +1857,7 @@ class SemanticParser(BasicParser):
 
                 # TODO uncomment this line, to make rhs target for
                 #      lists/tuples.
-                #rhs = self.update_variable(rhs, is_target=True)
+                rhs = self.update_variable(rhs, is_target=True)
 
             lhs = self._create_variable(name,dtype, rhs,d_lhs)
 
@@ -1951,6 +1953,23 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
         assigns = None
+
+
+        if isinstance(lhs, PythonTuple):
+            if sympy_iterable(rhs):
+                ls = []
+                for l,r in zip(lhs,rhs):
+                    a = Assign(l,r)
+                    a.set_fst(fst)
+                    ls.append(self._visit(a))
+                return CodeBlock(ls)
+            else:
+                ls = []
+                for i,l in enumerate(lhs):
+                    a = Assign(l,Indexed(rhs,i))
+                    a.set_fst(fst)
+                    ls.append(self._visit(a))
+                return CodeBlock(ls)
 
         if isinstance(rhs, Application):
             name = type(rhs).__name__
@@ -3316,7 +3335,8 @@ class SemanticParser(BasicParser):
     def _visit_StarredArguments(self, expr, **settings):
         name = expr.args
         var = self._visit(name)
-        return StarredArguments([self._visit(Indexed(name,i)) for i in range(len(var))])
+        assert(var.rank==1)
+        return StarredArguments([self._visit(Indexed(name,i)) for i in range(var.shape[0])])
 
 #==============================================================================
 

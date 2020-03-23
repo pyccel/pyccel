@@ -850,7 +850,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.dtype, NativeTuple):
+        if isinstance(expr.variable, TupleVariable):
             return '\n'.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -892,6 +892,10 @@ class FCodePrinter(CodePrinter):
             else:
                 name = alias
             dtype = '{0}({1})'.format(sig, name)
+        elif isinstance(expr.dtype, NativeTuple):
+            # Non-homogenous NativeTuples must be stored in TupleVariable
+            assert (expr.dtype.is_homogeneous)
+            dtype = self._print(expr.dtype.arg_dtypes[0])
         else:
             dtype = self._print(expr.dtype)
 

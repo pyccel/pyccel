@@ -264,7 +264,7 @@ class PythonTuple(Function):
 
     @property
     def rank(self):
-        return 0
+        return 1 if self.is_homogeneous else 0
 
     def __getitem__(self,i):
         return self._args[0][i]
@@ -284,7 +284,8 @@ class PythonTuple(Function):
 
     def set_arg_types(self,d_vars):
         self._arg_dtypes = d_vars
-        self._is_homogeneous = len(set([a['datatype'] for a in d_vars]))==1
+        dtypes = [(a['datatype'] if isinstance(a['datatype'],str) else a['datatype'].name).lower() for a in d_vars]
+        self._is_homogeneous = len(set(dtypes))==1
 
     @property
     def arg_types(self):

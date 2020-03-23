@@ -1100,7 +1100,7 @@ class SyntaxParser(BasicParser):
         generators = list(self._visit(stmt.generators))
         lhs = self._visit(stmt.parent.target)
         index = create_variable(lhs)
-        if isinstance(result, (Tuple, list, tuple)):
+        if isinstance(result, (PythonTuple, Tuple, list, tuple)):
             rank = len(np.shape(result))
         else:
             rank = 0
