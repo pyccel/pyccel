@@ -154,7 +154,7 @@ class NativeTuple(DataType):
 
     def __len__(self):
         return len(self.arg_dtypes)
-    
+
     def __getitem__(self, i):
         return self.arg_dtypes[i]
 

@@ -2480,9 +2480,8 @@ class TupleVariable(Variable):
     def __getitem__(self,idx):
         return self.get_var(idx)
 
-    @property
     def __iter__(self):
-        return self._vars.__iter__
+        return self._vars.__iter__()
 
     def __len__(self):
         return len(self._vars)
