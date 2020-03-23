@@ -330,4 +330,5 @@ def test_multiple_results():
 def test_tuples():
     pyccel_test("scripts/test_tuples.py",
             output_dtype = [int,int,int,int,bool,float,int,
-                int,int,int,int,int,int,int,int,float, int,int,int])
+                int,int,int,int,int,int,int,int,float, float,
+                float, float, int])

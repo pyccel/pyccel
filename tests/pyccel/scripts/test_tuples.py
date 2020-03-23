@@ -30,3 +30,13 @@ print(x[idx])
 
 idx_2 = (0,1,2)
 print(x[idx,idx_2,1])
+
+from pyccel.decorators import types, pure
+
+@pure
+@types('int','int')
+def add2(x, y):
+    return x+y
+
+args = (3,4)
+print(add2(*args))
