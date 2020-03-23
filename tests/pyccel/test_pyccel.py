@@ -143,7 +143,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
     test_file = get_abs_path(test_file)
     pyth_out = get_python_output(test_file, cwd)
     if (isinstance(dependencies, list)):
-        for d,i in enumerate(dependencies):
+        for i, d in enumerate(dependencies):
             dependencies[i] = get_abs_path(d)
             compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
     elif (isinstance(dependencies, str)):
@@ -161,7 +161,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
     compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
 def test_rel_imports_python_accessible_folder():
-    # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
+    # pyccel is called on scripts/folder2/test_rel_imports.py from the scripts folder
     # From this folder python understands relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
