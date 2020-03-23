@@ -244,6 +244,7 @@ class PythonTuple(Function):
     def __new__(cls, args):
         if not iterable(args):
             args = [args]
+        args = tuple(args)
 
         obj = Basic.__new__(cls, args)
 
