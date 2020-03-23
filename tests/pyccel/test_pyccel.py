@@ -205,18 +205,18 @@ def test_absolute_imports_in_project():
 
 #------------------------------------------------------------------------------
 def test_rel_imports_python_accessible_folder():
-    # pyccel is called on scripts/folder2/test_rel_imports.py from the scripts folder
+    # pyccel is called on scripts/folder2/runtest_rel_imports.py from the scripts folder
     # From this folder python understands relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.test_rel_imports import test_func
+    from scripts.folder2.runtest_rel_imports import test_func
 
     pyth_out = str(test_func())
 
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_rel_imports.py"))
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.test_rel_imports"],
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_rel_imports"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -225,31 +225,31 @@ def test_rel_imports_python_accessible_folder():
 
 #------------------------------------------------------------------------------
 def test_imports_compile():
-    pyccel_test("scripts/test_imports.py","scripts/funcs.py", compile_with_pyccel = False)
+    pyccel_test("scripts/runtest_imports.py","scripts/funcs.py", compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
 def test_imports_in_folder():
     # Fails as imports are wrongly defined
-    pyccel_test("scripts/test_folder_imports.py","scripts/folder1/folder1_funcs.py", compile_with_pyccel = False)
+    pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py", compile_with_pyccel = False)
 
 #------------------------------------------------------------------------------
 def test_imports():
-    pyccel_test("scripts/test_imports.py","scripts/funcs.py")
+    pyccel_test("scripts/runtest_imports.py","scripts/funcs.py")
 
 #------------------------------------------------------------------------------
 def test_folder_imports_python_accessible_folder():
-    # pyccel is called on scripts/folder2/test_imports2.py from the scripts folder
+    # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts folder
     # From this folder python understands relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.test_imports2 import test_func
+    from scripts.folder2.runtest_imports2 import test_func
 
     pyth_out = str(test_func())
 
     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
-    compile_pyccel(path_dir, get_abs_path("scripts/folder2/test_imports2.py"))
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.test_imports2"],
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -258,19 +258,19 @@ def test_folder_imports_python_accessible_folder():
 
 #------------------------------------------------------------------------------
 def test_folder_imports():
-    # pyccel is called on scripts/folder2/test_imports2.py from the scripts/folder2 folder
+    # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
     # which is where the final .so file should be
     # From this folder python doesn't understand relative imports
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.folder2.test_imports2 import test_func
+    from scripts.folder2.runtest_imports2 import test_func
 
     pyth_out = str(test_func())
 
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
-    compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/test_imports2.py"))
+    compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.test_imports2"],
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -279,7 +279,7 @@ def test_folder_imports():
 
 #------------------------------------------------------------------------------
 def test_funcs():
-    pyccel_test("scripts/test_funcs.py")
+    pyccel_test("scripts/runtest_funcs.py")
 
 #------------------------------------------------------------------------------
 def test_bool():
@@ -287,7 +287,7 @@ def test_bool():
 
 #------------------------------------------------------------------------------
 def test_default_arguments():
-    pyccel_test("scripts/test_default_args.py",
+    pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,int,float,float,float,
                 float,float,float,float,bool,bool,bool,
@@ -297,13 +297,13 @@ def test_default_arguments():
 def test_f2py_compat():
     base_dir = os.path.dirname(os.path.realpath(__file__))
     path_dir = os.path.join(base_dir, "scripts")
-    from scripts.test_f2py_compat import test_func
+    from scripts.runtest_f2py_compat import test_func
 
     pyth_out = str(test_func())
 
-    compile_pyccel(path_dir, "test_f2py_compat.py")
+    compile_pyccel(path_dir, "runtest_f2py_compat.py")
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.test_f2py_compat"],
+    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.runtest_f2py_compat"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -314,18 +314,18 @@ def test_f2py_compat():
 def test_pyccel_calling_directory():
     cwd = get_abs_path(".")
 
-    test_file = get_abs_path("scripts/test_funcs.py")
+    test_file = get_abs_path("scripts/runtest_funcs.py")
     pyth_out = get_python_output(test_file)
 
     compile_pyccel(cwd, test_file)
 
-    fort_out = get_fortran_output(get_abs_path("scripts/test_funcs"))
+    fort_out = get_fortran_output(get_abs_path("scripts/runtest_funcs"))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
 #------------------------------------------------------------------------------
 def test_in_specified():
-    pyccel_test("scripts/test_degree_in.py")
+    pyccel_test("scripts/runtest_degree_in.py")
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
@@ -376,11 +376,11 @@ def test_import_syntax_user( test_file ):
 #------------------------------------------------------------------------------
 def test_numpy_kernels_compile():
     cwd = get_abs_path(".")
-    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "test_kernels.py")
+    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
 
 #------------------------------------------------------------------------------
 def test_multiple_results():
-    pyccel_test("scripts/test_multiple_results.py",
+    pyccel_test("scripts/runtest_multiple_results.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
