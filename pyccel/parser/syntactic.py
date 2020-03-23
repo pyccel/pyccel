@@ -819,7 +819,7 @@ class SyntaxParser(BasicParser):
         args = []
         while isinstance(ch, GetitemNode):
             val = self._visit(ch.value)
-            if isinstance(val, Tuple):
+            if isinstance(val, (Tuple, PythonTuple)):
                 args += val
             else:
                 args.insert(0, val)
