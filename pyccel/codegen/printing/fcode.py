@@ -868,7 +868,7 @@ class FCodePrinter(CodePrinter):
         is_static = expr.static
         intent = expr.intent
 
-        if isinstance(shape, tuple) and len(shape) ==1:
+        if isinstance(shape, (tuple,PythonTuple)) and len(shape) ==1:
             shape = shape[0]
         # ...
 
@@ -929,7 +929,7 @@ class FCodePrinter(CodePrinter):
             rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
 
-        elif ((rank > 0) and (isinstance(shape, (Tuple, tuple))) and
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, Tuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
 
