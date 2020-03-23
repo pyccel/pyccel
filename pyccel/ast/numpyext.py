@@ -171,7 +171,7 @@ class Array(Application):
             import functools
             import operator
             arg = functools.reduce(operator.concat, arg)
-            init_value = 'reshape(' + printer(arg) + ', ' + printer(shape) + ')'
+            init_value = 'reshape(' + printer(arg) + ', ' + printer(Tuple(*shape)) + ')'
         else:
             init_value = printer(arg)
 
