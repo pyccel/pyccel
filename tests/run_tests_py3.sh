@@ -14,10 +14,6 @@
 #python3 tests/external/test_external.py  
 #python3 tests/macro/test_macro.py  
 
-python3 -m pytest tests/epyccel/test_epyccel_functions.py
-python3 -m pytest tests/epyccel/test_epyccel_modules.py
-python3 -m pytest tests/epyccel/test_arrays.py
-python3 -m pytest tests/epyccel/test_loops.py
-python3 -m pytest tests/epyccel/test_kind.py
-python3 -m pytest tests/pyccel/test_pyccel.py
-mpirun -n 4 python3 -m pytest tests/epyccel/test_epyccel_mpi_modules.py
+python3 -m pytest tests/pyccel -v
+python3 -m pytest tests/epyccel -v -m "not parallel"
+mpirun -n 4 python3 -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v
