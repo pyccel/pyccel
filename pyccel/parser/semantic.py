@@ -145,6 +145,8 @@ def _get_name(var):
         return str(var.base)
     if isinstance(var, Application):
         return type(var).__name__
+    if isinstance(var, AsName):
+        return var.name
     msg = 'Uncovered type {dtype}'.format(dtype=type(var))
     raise NotImplementedError(msg)
 
@@ -632,6 +634,8 @@ class SemanticParser(BasicParser):
         self._namespace = self._namespace.parent_scope
 
     def _collect_returns_stmt(self, ast):
+        if isinstance(ast,CodeBlock):
+            return self._collect_returns_stmt(ast.body)
         vars_ = []
         for stmt in ast:
             if isinstance(stmt, (For, While)):
@@ -1097,7 +1101,7 @@ class SemanticParser(BasicParser):
             return self._infere_type(expr.value)
 
         elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1][0])
+            return self._infere_type(expr.args[0][1].body[0])
         elif isinstance(expr, Dlist):
 
             import numpy
@@ -1163,7 +1167,9 @@ class SemanticParser(BasicParser):
         return ValuedArgument(expr.name, expr_value)
 
     def _visit_CodeBlock(self, expr, **settings):
-        return expr
+        ls = [self._visit(i, **settings) for i in expr.body]
+        return CodeBlock(ls)
+
     def _visit_Nil(self, expr, **settings):
         return expr
     def _visit_EmptyLine(self, expr, **settings):
@@ -1685,6 +1691,102 @@ class SemanticParser(BasicParser):
         args = self._visit(expr.args, **settings)
         return Max(*args)
 
+    def _assign_lhs_variable(self, lhs, d_var, rhs, **settings):
+
+        if isinstance(lhs, Symbol):
+
+            name = lhs.name
+            dtype = d_var.pop('datatype')
+
+            d_lhs = d_var.copy()
+            # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+            if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                d_lhs['allocatable'] = False
+                d_lhs['is_pointer' ] = True
+
+                # TODO uncomment this line, to make rhs target for
+                #      lists/tuples.
+                #rhs = self.update_variable(rhs, is_target=True)
+
+
+            lhs = Variable(dtype, name, **d_lhs)
+            var = self.get_variable_from_scope(name)
+
+            # Variable not yet declared (hence array not yet allocated)
+            if var is None:
+
+                # Add variable to scope
+                self.insert_variable(lhs, name=lhs.name)
+
+                # Not yet supported for arrays: x=y+z, x=b[:]
+                # Because we cannot infer shape of right-hand side yet
+                know_lhs_shape = lhs.shape or (lhs.rank == 0) \
+                        or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
+                if not know_lhs_shape:
+                    msg = "Cannot infer shape of right-hand side for expression {}".format(expr)
+                    raise NotImplementedError(msg)
+
+            else:
+
+                # TODO improve check type compatibility
+                if str(lhs.dtype) != str(var.dtype):
+                    txt = '|{name}| {old} <-> {new}'
+                    txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
+
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=False)
+
+                # in the case of elemental, lhs is not of the same dtype as
+                # var.
+                # TODO d_lhs must be consistent with var!
+                # the following is a small fix, since lhs must be already
+                # declared
+                lhs = var
+
+
+        elif isinstance(lhs, DottedVariable):
+
+            dtype = d_var.pop('datatype')
+            name = lhs.lhs.name
+            if self._current_function == '__init__':
+
+                cls      = self.get_variable('self')
+                cls_name = str(cls.cls_base.name)
+                cls      = self.get_class(cls_name)
+
+                attributes = cls.attributes
+                parent     = cls.parent
+                attributes = list(attributes)
+                n_name     = str(lhs.rhs.name)
+
+                # update the self variable with the new attributes
+
+                dt       = self.get_class_construct(cls_name)()
+                cls_base = self.get_class(cls_name)
+                var      = Variable(dt, 'self', cls_base=cls_base)
+                d_lhs    = d_var.copy()
+                self.insert_variable(var, 'self')
+
+
+                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
+                if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                    d_lhs['allocatable'] = False
+                    d_lhs['is_pointer' ] = True
+
+                    rhs = self.update_variable(rhs, is_target=True)
+
+                member = Variable(dtype, n_name, **d_lhs)
+                lhs    = DottedVariable(var, member)
+
+                # update the attributes of the class and push it to the namespace
+                attributes += [member]
+                new_cls = ClassDef(cls_name, attributes, [], parent=parent)
+                self.insert_class(new_cls, parent=True)
+            else:
+                lhs = self._visit_DottedVariable(lhs, **settings)
+        return lhs
+
 
     def _visit_Assign(self, expr, **settings):
 
@@ -1803,10 +1905,10 @@ class SemanticParser(BasicParser):
             args = rhs.args
             new_args = []
             for arg in args:
-                if len(arg[1]) != 1:
+                if len(arg[1].body) != 1:
                     msg = 'IfTernary body must be of length 1'
                     raise ValueError(msg)
-                result = arg[1][0]
+                result = arg[1].body[0]
                 if isinstance(expr, Assign):
                     body = Assign(lhs, result)
                 else:
@@ -1973,105 +2075,28 @@ class SemanticParser(BasicParser):
                     d_var['is_pointer'] = True
 
         lhs = expr.lhs
-        if isinstance(lhs, Symbol):
+        if isinstance(lhs, (Symbol, DottedVariable)):
             if isinstance(d_var, list):
-                if len(d_var) > 1:
-                    msg = 'can not assign multiple object into one variable'
-                    raise ValueError(msg)
-                elif len(d_var) == 1:
+                if len(d_var) == 1:
                     d_var = d_var[0]
-
-            name = lhs.name
-            dtype = d_var.pop('datatype')
-
-            d_lhs = d_var.copy()
-            # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-            if d_lhs['allocatable'] and isinstance(rhs, Variable):
-                d_lhs['allocatable'] = False
-                d_lhs['is_pointer' ] = True
-
-                # TODO uncomment this line, to make rhs target for
-                #      lists/tuples.
-                #rhs = self.update_variable(rhs, is_target=True)
-
-
-            lhs = Variable(dtype, name, **d_lhs)
-            var = self.get_variable_from_scope(name)
-
-            # Variable not yet declared (hence array not yet allocated)
-            if var is None:
-
-                # Add variable to scope
-                self.insert_variable(lhs, name=lhs.name)
-
-                # Not yet supported for arrays: x=y+z, x=b[:]
-                # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = lhs.shape or (lhs.rank == 0) \
-                        or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
-                if not know_lhs_shape:
-                    msg = "Cannot infer shape of right-hand side for expression {}".format(expr)
-                    raise NotImplementedError(msg)
-
+                else:
+                    errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
+                    return None
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
+        elif isinstance(lhs, Tuple):
+            n = len(lhs)
+            if not isinstance(d_var, list) or len(d_var)!= n:
+                errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=self.blocking)
+                return None
             else:
-
-                # TODO improve check type compatibility
-                if str(lhs.dtype) != str(var.dtype):
-                    txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
-
-                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
-                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='error', blocker=False)
-
-                # in the case of elemental, lhs is not of the same dtype as
-                # var.
-                # TODO d_lhs must be consistent with var!
-                # the following is a small fix, since lhs must be already
-                # declared
-                lhs = var
-
-
-        elif isinstance(lhs, DottedVariable):
-
-            dtype = d_var.pop('datatype')
-            name = lhs.lhs.name
-            if self._current_function == '__init__':
-
-                cls      = self.get_variable('self')
-                cls_name = str(cls.cls_base.name)
-                cls      = self.get_class(cls_name)
-
-                attributes = cls.attributes
-                parent     = cls.parent
-                attributes = list(attributes)
-                n_name     = str(lhs.rhs.name)
-
-                # update the self variable with the new attributes
-
-                dt       = self.get_class_construct(cls_name)()
-                cls_base = self.get_class(cls_name)
-                var      = Variable(dt, 'self', cls_base=cls_base)
-                d_lhs    = d_var.copy()
-                self.insert_variable(var, 'self')
-
-
-                # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-                if d_lhs['allocatable'] and isinstance(rhs, Variable):
-                    d_lhs['allocatable'] = False
-                    d_lhs['is_pointer' ] = True
-
-                    rhs = self.update_variable(rhs, is_target=True)
-
-                member = Variable(dtype, n_name, **d_lhs)
-                lhs    = DottedVariable(var, member)
-
-                # update the attributes of the class and push it to the namespace
-                attributes += [member]
-                new_cls = ClassDef(cls_name, attributes, [], parent=parent)
-                self.insert_class(new_cls, parent=True)
-            else:
-                lhs = self._visit_DottedVariable(lhs, **settings)
-
+                new_lhs = []
+                for i,l in enumerate(lhs):
+                    new_lhs.append( self._assign_lhs_variable(l, d_var[i], rhs, **settings) )
+                lhs = Tuple(*new_lhs, sympify=False)
         else:
             lhs = self._visit(lhs, **settings)
 
@@ -2397,7 +2422,7 @@ class SemanticParser(BasicParser):
         self.create_new_loop_scope()
 
         test = self._visit(expr.test, **settings)
-        body = [self._visit(i, **settings) for i in expr.body]
+        body = self._visit(expr.body, **settings)
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
 
@@ -2596,8 +2621,7 @@ class SemanticParser(BasicParser):
                 self.insert_function(interfaces[0])
 
             # we annotate the body
-            body = [self._visit(i, **settings) for i in
-                    expr.body]
+            body = self._visit(expr.body)
 
             # ISSUE 177: must update arguments to get is_target
             args = [self.get_variable(a.name) for a in args]
@@ -2607,8 +2631,11 @@ class SemanticParser(BasicParser):
             returns = self._collect_returns_stmt(body)
             results = []
 
+            # Remove duplicated return expressions, because we cannot have
+            # duplicated intent(out) arguments in Fortran.
+            # TODO [YG, 12.03.2020]: find workaround using temporary variables
             for stmt in returns:
-                results += [set(stmt.expr)]
+                results += [list(OrderedDict.fromkeys(stmt.expr))]
 
             if not all(i == results[0] for i in results):
                 #case of multiple return
@@ -2674,7 +2701,7 @@ class SemanticParser(BasicParser):
             assigned = get_assigned_symbols(body)
             assigned = [str(i) for i in assigned]
 
-            apps = list(Tuple(*body).atoms(Application))
+            apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
@@ -2982,13 +3009,15 @@ class SemanticParser(BasicParser):
                 # using repr.
                 # TODO shall we improve it?
                 source = str(expr.source)
-                targets = [_get_name(i) for i in expr.target]
+
+                targets = [i.target if isinstance(i,AsName) else i.name for i in expr.target]
+                names = [i.name for i in expr.target]
                 p       = self.d_parsers[source]
                 for entry in ['variables', 'classes', 'functions']:
                     d_son = getattr(p.namespace, entry)
-                    for k in targets:
-                        if k in d_son:
-                            container[entry][k] = d_son[k]
+                    for t,n in zip(targets,names):
+                        if t in d_son:
+                            container[entry][n] = d_son[t]
 
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)
@@ -3036,7 +3065,7 @@ class SemanticParser(BasicParser):
             msg = '__enter__ or __exit__ methods not found'
             raise ValueError(msg)
 
-        body = [self._visit(i, **settings) for i in expr.body]
+        body = self._visit(expr.body, **settings)
         return With(domaine, body, None).block
 
 
