@@ -269,9 +269,8 @@ class PythonTuple(Function):
     def __getitem__(self,i):
         return self._args[0][i]
 
-    @property
     def __iter__(self):
-        return self._args[0].__iter__
+        return self._args[0].__iter__()
 
     def __len__(self):
         return len(self._args[0])

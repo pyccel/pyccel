@@ -1369,7 +1369,7 @@ class SemanticParser(BasicParser):
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                 else:
-                    dtype = dtype.arg_dtypes[0]
+                    dtype = dtype[0]
 
             return IndexedVariable(name, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
