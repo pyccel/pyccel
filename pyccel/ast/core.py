@@ -2465,7 +2465,7 @@ class TupleVariable(Variable):
 
         obj = Variable.__new__(cls, *args, **kwargs)
 
-        obj._vars = arg_vars
+        obj._vars = tuple(arg_vars)
 
         return obj
 
@@ -2481,6 +2481,9 @@ class TupleVariable(Variable):
     @property
     def __iter__(self):
         return self._vars.__iter__
+
+    def __len__(self):
+        return len(self._vars)
 
 class Constant(ValuedVariable):
 

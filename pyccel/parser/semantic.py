@@ -332,7 +332,7 @@ class SemanticParser(BasicParser):
         imports   = container.imports
         while container:
             var = self._get_variable_from_scope(name, container)
-            if var:
+            if var is not None:
                 return var
             elif name in container.imports['variables']:
                 return container.imports['variables'][name]
@@ -1277,12 +1277,40 @@ class SemanticParser(BasicParser):
 
         args = list(expr.indices)
 
-        if var.rank>len(args):
+        new_args = [self._visit(arg, **settings) for arg in args]
+
+        if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
+            len_args = len(new_args[0])
+            args = [a for a in new_args[0]]
+        elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
+            n_exprs = None
+            for a in new_args:
+                if hasattr(a,'__len__'):
+                    if n_exprs:
+                        assert(n_exprs)==len(a)
+                    else:
+                        n_exprs = len(a)
+            new_expr_args = []
+            for i in range(n_exprs):
+                ls = []
+                for j,a in enumerate(new_args):
+                    if isinstance(a,TupleVariable):
+                        ls.append(Indexed(args[j],i))
+                    elif hasattr(a,'__getitem__'):
+                        ls.append(args[j][i])
+                    else:
+                        ls.append(args[j])
+                new_expr_args.append(ls)
+
+            return Tuple(*[self._visit(Indexed(name,*a)) for a in new_expr_args])
+        else:
+            args = new_args
+            len_args = len(args)
+
+        if var.rank>len_args:
             # add missing dimensions
 
-            args = args + [Slice(None, None)]*(var.rank-len(args))
-
-        args = [self._visit(arg, **settings) for arg in args]
+            args = args + [self._visit(Slice(None, None),**settings)]*(var.rank-len(args))
 
         if var.order == 'C':
             args.reverse()
