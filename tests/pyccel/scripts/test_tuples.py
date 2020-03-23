@@ -27,3 +27,6 @@ print(h)
 print(i)
 print(ai_0)
 print(x[idx])
+
+idx_2 = (0,1,2)
+print(x[idx,idx_2,1])
