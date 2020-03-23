@@ -1161,7 +1161,7 @@ class FCodePrinter(CodePrinter):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, Tuple)):
+            if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
                 name = type(rhs).__name__
                 rhs_code = self._print(name)

@@ -2239,8 +2239,12 @@ class SemanticParser(BasicParser):
             n = len(lhs)
             if isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
-                for i,l in enumerate(lhs):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], **settings) )
+                if hasattr(rhs,'__getitem__'):
+                    for i,l in enumerate(lhs):
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], **settings) )
+                else:
+                    for i,l in enumerate(lhs):
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, **settings) )
                 lhs = PythonTuple(new_lhs)
                 lhs.set_arg_types(d_var)
             elif d_var['shape'][0]==n:
@@ -2317,7 +2321,7 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not isinstance(lhs, PythonTuple):
+        if not (isinstance(lhs, PythonTuple) and isinstance(rhs, (PythonTuple, TupleVariable))):
             lhs = [lhs]
             rhs = [rhs]
 
