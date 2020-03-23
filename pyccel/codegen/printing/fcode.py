@@ -1595,7 +1595,7 @@ class FCodePrinter(CodePrinter):
         elif isinstance(op, DivOp):
             rhs = lhs / rhs
         else:
-            raise ValueError('Unrecongnized operation', op)
+            raise ValueError('Unrecognized operation', op)
 
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
         return self._print_Assign(stmt)
