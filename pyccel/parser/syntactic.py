@@ -94,6 +94,7 @@ from pyccel.ast import Print
 from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
+from pyccel.ast import PythonTuple
 from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break, Continue
 from pyccel.ast import Slice, IndexedVariable, IndexedElement
@@ -119,6 +120,7 @@ from pyccel.ast import MacroShape
 from pyccel.ast import construct_macro
 from pyccel.ast import SumFunction, Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
+from pyccel.ast import StarredArguments
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 
 from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
@@ -283,6 +285,8 @@ class SyntaxParser(BasicParser):
         if isinstance(stmt, (list, ListNode)):
 
             return List(*ls, sympify=False)
+        elif isinstance(stmt, (tuple, TupleNode)):
+            return PythonTuple(ls)
         else:
             return Tuple(*ls, sympify=False)
 
@@ -816,7 +820,7 @@ class SyntaxParser(BasicParser):
         args = []
         while isinstance(ch, GetitemNode):
             val = self._visit(ch.value)
-            if isinstance(val, Tuple):
+            if isinstance(val, (Tuple, PythonTuple)):
                 args += val
             else:
                 args.insert(0, val)
@@ -1096,7 +1100,7 @@ class SyntaxParser(BasicParser):
         generators = list(self._visit(stmt.generators))
         lhs = self._visit(stmt.parent.target)
         index = create_variable(lhs)
-        if isinstance(result, (Tuple, list, tuple)):
+        if isinstance(result, (PythonTuple, Tuple, list, tuple)):
             rank = len(np.shape(result))
         else:
             rank = 0
@@ -1141,6 +1145,9 @@ class SyntaxParser(BasicParser):
         errors.report(PYCCEL_RESTRICTION_YIELD,
                       bounding_box=stmt.absolute_bounding_box,
                       severity='error')
+
+    def _visit_ListArgumentNode(self, stmt):
+        return StarredArguments(self._visit(stmt.value))
 
 #==============================================================================
 
