@@ -241,6 +241,8 @@ class PythonTuple(Function):
     """ Represents a call to Python's native tuple() function.
     """
     _iterable = True
+    _arg_dtypes = None
+    _is_homogeneous = False
     def __new__(cls, args):
         if not iterable(args):
             args = [args]
@@ -249,10 +251,6 @@ class PythonTuple(Function):
         obj = Basic.__new__(cls, args)
 
         return obj
-
-    @property
-    def args(self):
-        return self._args[0]
 
     @property
     def dtype(self):
@@ -277,7 +275,7 @@ class PythonTuple(Function):
 
     @property
     def is_homogeneous(self):
-        if (self._is_homogeneous is None):
+        if (self._arg_dtypes is None):
             raise RuntimeError("This function cannot be used until the type has been infered")
         return self._is_homogeneous
 

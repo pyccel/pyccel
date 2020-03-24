@@ -771,7 +771,7 @@ class SemanticParser(BasicParser):
 
             arg_d_vars = []
             arg_dtypes = []
-            for e in expr.args:
+            for e in expr:
                 arg_d_vars.append(self._infere_type(e, **settings))
                 arg_dtypes.append(arg_d_vars[-1]['datatype'   ])
             expr.set_arg_types(arg_d_vars)
