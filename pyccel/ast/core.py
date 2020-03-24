@@ -4542,7 +4542,7 @@ class StarredArguments(Basic):
         return Basic.__new__(cls, args)
 
     @property
-    def args(self):
+    def args_var(self):
         return self._args[0]
 
 

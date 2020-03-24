@@ -1649,7 +1649,7 @@ class SemanticParser(BasicParser):
         for arg in new_args:
             a = self._visit(arg, **settings)
             if isinstance(a,StarredArguments):
-                args.extend(a.args)
+                args.extend(a.args_var)
             else:
                 args.append(a)
 
@@ -3318,7 +3318,7 @@ class SemanticParser(BasicParser):
         return Dlist(val, shape)
 
     def _visit_StarredArguments(self, expr, **settings):
-        name = expr.args
+        name = expr.args_var
         var = self._visit(name)
         assert(var.rank==1)
         return StarredArguments([self._visit(Indexed(name,i)) for i in range(var.shape[0])])
