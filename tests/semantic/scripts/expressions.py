@@ -26,5 +26,7 @@ conversion_10 = 2.0 * float(3.0)
 conversion_11 = 2.0 / float(3.0)
 conversion_12 = 2.0 % float(3.0)
 
-# this statement will be ignored at the codegen
+# this statement does not make sense in a program
 x = ad is None
+
+a,b,c = 1, False, 3.4

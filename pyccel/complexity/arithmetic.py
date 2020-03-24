@@ -10,7 +10,7 @@ from pyccel.ast import (For, Assign, While,NewLine,
                         FunctionDef, Import, Print,
                         Comment, AnnotatedComment,
                         If, Zeros, Ones, Array,
-                        Len, Dot, IndexedElement)
+                        Len, Dot, IndexedElement, PythonTuple)
 
 from pyccel.complexity.basic import Complexity
 
@@ -37,7 +37,7 @@ def count_ops(expr, visual=None):
         a = expr.iterable.size
         ops = sum(count_ops(i, visual) for i in expr.body.body)
         return a*ops
-    elif isinstance(expr, Tuple):
+    elif isinstance(expr, (Tuple,PythonTuple)):
         return sum(count_ops(i, visual) for i in expr)
     elif isinstance(expr, (Zeros, Ones,NewLine)):
         return 0
