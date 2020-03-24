@@ -1058,11 +1058,6 @@ class FCodePrinter(CodePrinter):
         rhs = expr.rhs
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
-        if isinstance(rhs, Is):
-            errors.report(FOUND_IS_IN_ASSIGN, symbol=expr.lhs,
-                          severity='warning')
-            return self._print_Comment(Comment(str(expr)))
-
         if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
             return '{0} = {1}'.format(lhs_code, rhs_code)
