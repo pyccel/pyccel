@@ -1368,6 +1368,7 @@ class SemanticParser(BasicParser):
                     errors.report(LIST_OF_TUPLES, symbol=expr,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
+                    dtype = 'int'
                 else:
                     dtype = dtype[0]
 
