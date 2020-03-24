@@ -193,6 +193,8 @@ def subs(expr, new_elements):
     """
     Substitutes old for new in an expression after sympifying args.
 
+    Parameters
+    ----------
     new_elements : list of tuples like [(x,2)(y,3)]
     """
 
@@ -245,6 +247,8 @@ def allocatable_like(expr, verbose=False):
     """
     finds attributs of an expression
 
+    Parameters
+    ----------
     expr: Expr
         a pyccel expression
 
@@ -347,6 +351,8 @@ def extract_subexpressions(expr):
       to be evaluated outside of the expression
 
 
+      Parameters
+      ----------
       expr : Add, Mul, Pow, Application
 
     """
@@ -494,7 +500,7 @@ class DottedName(Basic):
     Represents a dotted variable.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import DottedName
     >>> DottedName('matrix', 'n_rows')
     matrix.n_rows
@@ -523,7 +529,7 @@ class AsName(Basic):
     Represents a renaming of a variable, used with Import.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import AsName
     >>> AsName('new', 'old')
     new as old
@@ -552,6 +558,8 @@ class Dlist(Basic):
 
     """ this is equivalent to the zeros function of numpy arrays for the python list.
 
+    Parameters
+    ----------
     value : Expr
            a sympy expression which represents the initilized value of the list
 
@@ -574,6 +582,8 @@ class Assign(Basic):
 
     """Represents variable assignment for code generation.
 
+    Parameters
+    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -598,7 +608,7 @@ class Assign(Basic):
         contains the name of the variable from which the lhs will be cloned.
 
     Examples
-
+    --------
     >>> from sympy import symbols, MatrixSymbol, Matrix
     >>> from pyccel.ast.core import Assign
     >>> x, y, z = symbols('x, y, z')
@@ -756,6 +766,8 @@ class AliasAssign(Basic):
     """Represents aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
 
+    Parameters
+    ----------
     lhs : Symbol
         at this point we don't know yet all information about lhs, this is why a
         Symbol is the appropriate type.
@@ -765,7 +777,7 @@ class AliasAssign(Basic):
         shape must be known (not None)
 
     Examples
-
+    --------
     >>> from sympy import Symbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
@@ -797,12 +809,14 @@ class SymbolicAssign(Basic):
     """Represents symbolic aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
 
+    Parameters
+    ----------
     lhs : Symbol
 
     rhs : Range
 
     Examples
-
+    --------
     >>> from sympy import Symbol
     >>> from pyccel.ast.core import SymbolicAssign
     >>> from pyccel.ast.core import Range
@@ -883,9 +897,11 @@ def operator(op):
 
 class AugAssign(Assign):
 
-    r"""
+    """
     Represents augmented variable assignment for code generation.
 
+    Parameters
+    ----------
     lhs : Expr
         Sympy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
@@ -913,7 +929,7 @@ class AugAssign(Assign):
         contains the name of the variable from which the lhs will be cloned.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import AugAssign
     >>> s = Variable('int', 's')
@@ -1016,13 +1032,15 @@ class While(Basic):
         "while test:
             body..."
 
+    Parameters
+    ----------
     test : expression
         test condition given as a sympy expression
     body : sympy expr
         list of statements representing the body of the While statement.
 
     Examples
-
+    --------
     >>> from sympy import Symbol
     >>> from pyccel.ast.core import Assign, While
     >>> n = Symbol('n')
@@ -1060,12 +1078,15 @@ class With(Basic):
         "while test:
             body..."
 
+    Parameters
+    ----------
     test : expression
         test condition given as a sympy expression
     body : sympy expr
         list of statements representing the body of the With statement.
 
     Examples
+    --------
 
     """
 
@@ -1142,7 +1163,7 @@ class Tile(Range):
     Representes a tile.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Tile
     >>> from sympy import Symbol
@@ -1175,7 +1196,7 @@ class ParallelRange(Range):
     Representes a parallel range using OpenMP/OpenACC.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable
     """
 
@@ -1190,7 +1211,7 @@ class Tensor(Basic):
     Base class for tensor.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Range, Tensor
     >>> from sympy import Symbol
@@ -1247,6 +1268,8 @@ class Block(Basic):
 
     """Represents a block in the code. A block consists of the following inputs
 
+    Parameters
+    ----------
     variables: list
         list of the variables that appear in the block.
 
@@ -1257,7 +1280,7 @@ class Block(Basic):
         a list of statements
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable, Assign, Block
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x')
@@ -1306,11 +1329,13 @@ class ParallelBlock(Block):
     Represents a parallel block in the code.
     In addition to block inputs, there is
 
+    Parameters
+    ----------
     clauses: list
         a list of clauses
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import ParallelBlock
     >>> from pyccel.ast.core import Variable, Assign, Block
     >>> n = Variable('int', 'n')
@@ -1362,6 +1387,8 @@ class Module(Basic):
 
     """Represents a module in the code. A block consists of the following inputs
 
+    Parameters
+    ----------
     variables: list
         list of the variables that appear in the block.
 
@@ -1378,7 +1405,7 @@ class Module(Basic):
         list of needed imports
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> x = Variable('real', 'x')
@@ -1491,6 +1518,8 @@ class Program(Basic):
 
     """Represents a Program in the code. A block consists of the following inputs
 
+    Parameters
+    ----------
     variables: list
         list of the variables that appear in the block.
 
@@ -1513,7 +1542,7 @@ class Program(Basic):
         list of needed modules
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> x = Variable('real', 'x')
@@ -1653,6 +1682,8 @@ class For(Basic):
         "for target in iter:
             body..."
 
+    Parameters
+    ----------
     target : symbol
         symbol representing the iterator
     iter : iterable
@@ -1661,7 +1692,7 @@ class For(Basic):
         list of statements representing the body of the For statement.
 
     Examples
-
+    --------
     >>> from sympy import symbols, MatrixSymbol
     >>> from pyccel.ast.core import Assign, For
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
@@ -1823,7 +1854,7 @@ class Is(Basic):
     """Represents a is expression in the code.
 
     Examples
-
+    --------
     >>> from pyccel.ast import Is
     >>> from pyccel.ast import Nil
     >>> from sympy.abc import x
@@ -1848,7 +1879,7 @@ class IsNot(Basic):
     """Represents a is expression in the code.
 
     Examples
-
+    --------
     >>> from pyccel.ast import IsNot
     >>> from pyccel.ast import Nil
     >>> from sympy.abc import x
@@ -1874,6 +1905,8 @@ class ConstructorCall(AtomicExpr):
     """
     It  serves as a constructor for undefined function classes.
 
+    Parameters
+    ----------
     func: FunctionDef, str
         an instance of FunctionDef or function name
 
@@ -1972,6 +2005,8 @@ class Variable(Symbol):
 
     """Represents a typed variable.
 
+    Parameters
+    ----------
     dtype : str, DataType
         The type of the variable. Can be either a DataType,
         or a str (bool, int, real).
@@ -1993,7 +2028,7 @@ class Variable(Symbol):
         class base if variable is an object or an object member
 
     Examples
-
+    --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Variable
     >>> Variable('int', 'n')
@@ -2407,13 +2442,15 @@ class ValuedVariable(Variable):
 
     """Represents a valued variable in the code.
 
+    Parameters
+    ----------
     variable: Variable
         A single variable
     value: Variable, or instance of Native types
         value associated to the variable
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import ValuedVariable
     >>> n  = ValuedVariable('int', 'n', value=4)
     >>> n
@@ -2447,19 +2484,22 @@ class ValuedVariable(Variable):
 
 class TupleVariable(Variable):
 
-    """Represents a valued variable in the code.
+    """Represents a tuple variable in the code.
 
-    variable: Variable
-        A single variable
-    value: Variable, or instance of Native types
-        value associated to the variable
+    Parameters
+    ----------
+    arg_vars: Iterable
+        Multiple variables contained within the tuple
 
     Examples
-
-    >>> from pyccel.ast.core import ValuedVariable
-    >>> n  = ValuedVariable('int', 'n', value=4)
+    --------
+    >>> from pyccel.ast.core import TupleVariable, Variable
+    >>> from pyccel.ast.datatypes import NativeTuple
+    >>> v1 = Variable('int','v1')
+    >>> v2 = Variable('bool','v2')
+    >>> n  = TupleVariable([v1, v2],NativeTuple(),'n')
     >>> n
-    n := 4
+    n
     """
 
     def __new__(cls, arg_vars, *args, **kwargs):
@@ -2494,6 +2534,7 @@ class Constant(ValuedVariable):
     """
 
     Examples
+    --------
 
     """
 
@@ -2505,7 +2546,7 @@ class Argument(Symbol):
     """An abstract Argument data structure.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Argument
     >>> n = Argument('n')
     >>> n
@@ -2520,7 +2561,7 @@ class ValuedArgument(Basic):
     """Represents a valued argument in the code.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import ValuedArgument
     >>> n = ValuedArgument('n', 4)
     >>> n
@@ -2604,6 +2645,8 @@ class Return(Basic):
 
     """Represents a function return in the code.
 
+    Parameters
+    ----------
     expr : sympy expr
         The expression to return.
 
@@ -2692,6 +2735,8 @@ class FunctionDef(Basic):
 
     """Represents a function definition.
 
+    Parameters
+    ----------
     name : str
         The name of the function.
 
@@ -2744,7 +2789,7 @@ class FunctionDef(Basic):
         a list of proporties
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Assign, Variable, FunctionDef
     >>> x = Variable('real', 'x')
     >>> y = Variable('real', 'y')
@@ -3047,6 +3092,8 @@ class FunctionDef(Basic):
         Rename the FunctionDef name by creating a new FunctionDef with
         newname.
 
+        Parameters
+        ----------
         newname: str
             new name for the FunctionDef
         """
@@ -3114,6 +3161,8 @@ class FunctionDef(Basic):
         """
         Returns True if the header is compatible with the given FunctionDef.
 
+        Parameters
+        ----------
         header: Header
             a pyccel header suppose to describe the FunctionDef
         """
@@ -3170,6 +3219,8 @@ class SympyFunction(FunctionDef):
         Rename the SympyFunction name by creating a new SympyFunction with
         newname.
 
+        Parameters
+        ----------
         newname: str
             new name for the SympyFunction
         """
@@ -3187,6 +3238,8 @@ class PythonFunction(FunctionDef):
         Rename the PythonFunction name by creating a new PythonFunction with
         newname.
 
+        Parameters
+        ----------
         newname: str
             new name for the PythonFunction
         """
@@ -3203,6 +3256,8 @@ class GetDefaultFunctionArg(Basic):
 
     """Creates a FunctionDef for handling optional arguments in the code.
 
+    Parameters
+    ----------
     arg: ValuedArgument, ValuedVariable
         argument for which we want to create the function returning the default
         value
@@ -3211,7 +3266,7 @@ class GetDefaultFunctionArg(Basic):
         the function/subroutine in which the optional arg is used
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Assign
     >>> from pyccel.ast.core import FunctionDef
@@ -3283,6 +3338,8 @@ class ClassDef(Basic):
 
     """Represents a class definition.
 
+    Parameters
+    ----------
     name : str
         The name of the class.
 
@@ -3302,7 +3359,7 @@ class ClassDef(Basic):
         parent's class name
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
     >>> x = Variable('real', 'x')
@@ -3536,11 +3593,13 @@ class Import(Basic):
 
     """Represents inclusion of dependencies in the code.
 
+    Parameters
+    ----------
     target : str, list, tuple, Tuple
         targets to import
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Import
     >>> from pyccel.ast.core import DottedName
     >>> Import('foo')
@@ -3623,6 +3682,8 @@ class Load(Basic):
     """Similar to 'importlib' in python. In addition, we can also provide the
     functions we want to import.
 
+    Parameters
+    ----------
     module: str, DottedName
         name of the module to load.
 
@@ -3636,7 +3697,7 @@ class Load(Basic):
         number of arguments of the function to load. (default = 1)
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Load
     """
 
@@ -3728,6 +3789,8 @@ class Declare(Basic):
 
     """Represents a variable declaration in the code.
 
+    Parameters
+    ----------
     dtype : DataType
         The type for the declaration.
     variable(s)
@@ -3741,7 +3804,7 @@ class Declare(Basic):
         True for a static declaration of an array.
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Declare, Variable
     >>> Declare('int', Variable('int', 'n'))
     Declare(NativeInteger(), (n,), None)
@@ -3857,6 +3920,8 @@ class SumFunction(Basic):
 
     """Represents a Sympy Sum Function.
 
+       Parameters
+       ----------
        body: Expr
        Sympy Expr in which the sum will be performed.
 
@@ -3893,11 +3958,13 @@ class SymbolicPrint(Basic):
 
     """Represents a print function of symbolic expressions in the code.
 
+    Parameters
+    ----------
     expr : sympy expr
         The expression to return.
 
     Examples
-
+    --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
@@ -3925,11 +3992,13 @@ class Del(Basic):
 
     """Represents a memory deallocation in the code.
 
+    Parameters
+    ----------
     variables : list, tuple
         a list of pyccel variables
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Del, Variable
     >>> x = Variable('real', 'x', rank=2, shape=(10,2), allocatable=True)
     >>> Del([x])
@@ -3953,11 +4022,13 @@ class EmptyLine(Basic):
 
     """Represents a EmptyLine in the code.
 
+    Parameters
+    ----------
     text : str
        the comment line
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import EmptyLine
     >>> EmptyLine()
 
@@ -3974,11 +4045,13 @@ class NewLine(Basic):
 
     """Represents a NewLine in the code.
 
+    Parameters
+    ----------
     text : str
        the comment line
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import NewLine
     >>> NewLine()
 
@@ -3995,11 +4068,13 @@ class Comment(Basic):
 
     """Represents a Comment in the code.
 
+    Parameters
+    ----------
     text : str
        the comment line
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import Comment
     >>> Comment('this is a comment')
     # this is a comment
@@ -4021,11 +4096,13 @@ class SeparatorComment(Comment):
 
     """Represents a Separator Comment in the code.
 
+    Parameters
+    ----------
     mark : str
         marker
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import SeparatorComment
     >>> SeparatorComment(n=40)
     # ........................................
@@ -4040,6 +4117,8 @@ class AnnotatedComment(Basic):
 
     """Represents a Annotated Comment in the code.
 
+    Parameters
+    ----------
     accel : str
        accelerator id. One among {'omp', 'acc'}
 
@@ -4047,7 +4126,7 @@ class AnnotatedComment(Basic):
         statement to print
 
     Examples
-
+    --------
     >>> from pyccel.ast.core import AnnotatedComment
     >>> AnnotatedComment('omp', 'parallel')
     AnnotatedComment(omp, parallel)
@@ -4073,7 +4152,11 @@ class AnnotatedComment(Basic):
 class CommentBlock(Basic):
 
     """ Represents a Block of Comments
-        txt : str
+
+    Parameters
+    ----------
+    txt : str
+
     """
     def __new__(cls, txt):
         if not isinstance(txt, str):
@@ -4093,7 +4176,7 @@ class IndexedVariable(IndexedBase):
     Represents an indexed variable, like x in x[i], in the code.
 
     Examples
-
+    --------
     >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import IndexedVariable
     >>> A = IndexedVariable('A'); A
@@ -4205,7 +4288,7 @@ class IndexedElement(Indexed):
     Represents a mathematical object with indices.
 
     Examples
-
+    --------
     >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import IndexedVariable
     >>> i, j = symbols('i j', cls=Idx)
@@ -4274,7 +4357,7 @@ class IndexedElement(Indexed):
         Returns the rank of the ``IndexedElement`` object.
 
         Examples
-
+        --------
         >>> from sympy import Indexed, Idx, symbols
         >>> i, j, k, l, m = symbols('i:m', cls=Idx)
         >>> Indexed('A', i, j).rank
@@ -4331,13 +4414,15 @@ class Concatenate(Basic):
 
     """Represents the String concatination operation.
 
+    Parameters
+    ----------
     left : Symbol or string or List
 
     right : Symbol or string or List
 
 
     Examples
-
+    --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Concatenate
     >>> x = symbols('x')
@@ -4378,6 +4463,8 @@ class Slice(Basic):
 
     """Represents a slice in the code.
 
+    Parameters
+    ----------
     start : Symbol or int
         starting index
 
@@ -4385,7 +4472,7 @@ class Slice(Basic):
         ending index
 
     Examples
-
+    --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Slice
     >>> m, n = symbols('m, n', integer=True)
@@ -4439,11 +4526,13 @@ class Assert(Basic):
 
     """Represents a assert statement in the code.
 
+    Parameters
+    ----------
     test: Expr
         boolean expression to check
 
     Examples
-
+    --------
     """
 
     def __new__(cls, test):
@@ -4490,13 +4579,15 @@ class If(Basic):
 
     """Represents a if statement in the code.
 
+    Parameters
+    ----------
     args :
         every argument is a tuple and
         is defined as (cond, expr) where expr is a valid ast element
         and cond is a boolean test.
 
     Examples
-
+    --------
     >>> from sympy import Symbol
     >>> from pyccel.ast.core import Assign, If
     >>> n = Symbol('n')
@@ -4569,6 +4660,8 @@ def is_simple_assign(expr):
 def get_initial_value(expr, var):
     """Returns the first assigned value to var in the Expression expr.
 
+    Parameters
+    ----------
     expr: Expression
         any AST valid expression
 
@@ -4658,6 +4751,8 @@ def get_initial_value(expr, var):
 def get_assigned_symbols(expr):
     """Returns all assigned symbols (as sympy Symbol) in the AST.
 
+    Parameters
+    ----------
     expr: Expression
         any AST valid expression
     """
