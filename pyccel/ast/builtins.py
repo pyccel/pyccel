@@ -248,7 +248,7 @@ class PythonTuple(Function):
             args = [args]
         args = tuple(args)
 
-        obj = Basic.__new__(cls, args)
+        obj = Basic.__new__(cls, *args)
 
         return obj
 
@@ -258,20 +258,20 @@ class PythonTuple(Function):
 
     @property
     def shape(self):
-        return [len(self._args[0])]
+        return [len(self._args)]
 
     @property
     def rank(self):
         return 1 if self.is_homogeneous else 0
 
     def __getitem__(self,i):
-        return self._args[0][i]
+        return self._args[i]
 
     def __iter__(self):
-        return self._args[0].__iter__()
+        return self._args.__iter__()
 
     def __len__(self):
-        return len(self._args[0])
+        return len(self._args)
 
     @property
     def is_homogeneous(self):
