@@ -2115,7 +2115,7 @@ class Variable(Symbol):
         assumptions = {}
         class_type = cls_base \
             or dtype.__class__.__name__.startswith('Pyccel')
-        alloweddtypes = (NativeBool, NativeRange, NativeString,
+        alloweddtypes = (NativeRange, NativeString,
                          NativeSymbol, NativeGeneric, NativeTuple)
 
         if isinstance(dtype, NativeInteger):
