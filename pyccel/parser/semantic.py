@@ -1829,7 +1829,7 @@ class SemanticParser(BasicParser):
     def _create_variable(self, name, dtype, rhs, d_lhs):
         if isinstance(rhs, PythonTuple):
             elem_vars = []
-            for i,a in enumerate(rhs.args):
+            for i,a in enumerate(rhs):
                 elem_name = self._get_new_variable_name(a,name + '_' + str(i))
                 elem_vars.append(Variable(rhs.arg_types[i]['datatype'], elem_name))
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
