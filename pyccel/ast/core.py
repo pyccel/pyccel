@@ -2512,6 +2512,9 @@ class TupleVariable(Variable):
 
         obj._vars = tuple(arg_vars)
 
+        dtypes = [str(v.dtype) for v in obj._vars]
+        obj._is_homogeneous = len(set(dtypes))==1
+
         return obj
 
     def get_var(self, variable_idx):
@@ -2528,6 +2531,10 @@ class TupleVariable(Variable):
 
     def __len__(self):
         return len(self._vars)
+
+    @property
+    def is_homogeneous(self):
+        return self._is_homogeneous
 
 class Constant(ValuedVariable):
 

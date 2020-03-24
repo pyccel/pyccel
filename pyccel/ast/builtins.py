@@ -281,7 +281,7 @@ class PythonTuple(Function):
 
     def set_arg_types(self,d_vars):
         self._arg_dtypes = d_vars
-        dtypes = [(a['datatype'] if isinstance(a['datatype'],str) else a['datatype'].name).lower() for a in d_vars]
+        dtypes = [str(a['datatype']) for a in d_vars]
         self._is_homogeneous = len(set(dtypes))==1
 
     @property

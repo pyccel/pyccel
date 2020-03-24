@@ -1323,9 +1323,13 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
-        if isinstance(var, TupleVariable):
+        if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            assert(len(args)==1)
+            if (len(args)>1):
+                errors.report(LIST_OF_TUPLES, symbol=expr,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='error', blocker=self.blocking)
+                return None
 
             if (not (isinstance(args[0],Integer) and args[0].is_constant()) and 
                     not isinstance(args[0], Slice)):
@@ -1369,7 +1373,7 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
                     dtype = 'int'
                 else:
-                    dtype = dtype[0]
+                    dtype = var[0].dtype
 
             return IndexedVariable(name, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
@@ -2591,10 +2595,17 @@ class SemanticParser(BasicParser):
         shape = list(d_var['shape'])
         d_var['is_pointer'] = True
         shape.append(dim)
-        d_var['shape'] = Tuple(*shape, sympify=False)
+        d_var['shape'] = PythonTuple(shape)
 
         lhs_name = _get_name(expr.lhs)
-        lhs      = Variable(dtype, lhs_name, **d_var)
+
+        if isinstance(dtype,NativeTuple) and not target.is_homogeneous:
+            errors.report(LIST_OF_TUPLES, symbol=expr,
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='error', blocker=self.blocking)
+            lhs      = self._create_variable(lhs_name, target[0].dtype, target, d_var)
+        else:
+            lhs      = self._create_variable(lhs_name, dtype, target, d_var)
         self.insert_variable(lhs)
 
         loops = [self._visit(i, **settings) for i in expr.loops]

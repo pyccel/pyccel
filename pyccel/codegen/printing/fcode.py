@@ -850,7 +850,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, TupleVariable):
+        if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
             return '\n'.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -897,7 +897,7 @@ class FCodePrinter(CodePrinter):
             if not expr.variable.is_homogeneous:
                 errors.report(LIST_OF_TUPLES,
                               symbol=expr.variable, severity='error')
-            dtype = self._print(expr.variable[0].dtype.arg_dtypes)
+            dtype = self._print(expr.variable[0].dtype)
         else:
             dtype = self._print(expr.dtype)
 
