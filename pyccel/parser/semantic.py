@@ -775,7 +775,6 @@ class SemanticParser(BasicParser):
                 arg_d_vars.append(self._infere_type(e, **settings))
                 arg_dtypes.append(arg_d_vars[-1]['datatype'   ])
             expr.set_arg_types(arg_d_vars)
-            d_var['datatype'      ].set_arg_types(arg_dtypes)
 
             d_var['rank'          ] = expr.rank
 
@@ -1364,7 +1363,7 @@ class SemanticParser(BasicParser):
             rank  = var.rank
 
             while isinstance(dtype, NativeTuple):
-                if not dtype.is_homogeneous:
+                if not var.is_homogeneous:
                     errors.report(LIST_OF_TUPLES, symbol=expr,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)

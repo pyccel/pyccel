@@ -139,44 +139,9 @@ class NativeList(DataType):
     _name = 'List'
     pass
 
-class NativeTuple(Basic):
+class NativeTuple(DataType):
     """Base class representing native datatypes"""
     _name = 'Tuple'
-    _elements = None
-    _is_homogeneous = False
-
-    @property
-    def name(self):
-        return self._name
-
-    def __str__(self):
-        return str(self.name).lower()
-
-    def set_arg_types(self, types):
-        self._elements = types
-        type_name = [(t if isinstance(t,str) else t.name).lower() for t in types]
-        self._is_homogeneous = len(set(type_name))==1
-
-    def __iter__(self):
-        return self.arg_dtypes.__iter__()
-
-    def __len__(self):
-        return len(self.arg_dtypes)
-
-    def __getitem__(self, i):
-        return self.arg_dtypes[i]
-
-    @property
-    def arg_dtypes(self):
-        if self._elements is None:
-            raise RuntimeError("Tuple element datatypes must be set")
-        return self._elements
-
-    @property
-    def is_homogeneous(self):
-        if self._elements is None:
-            raise RuntimeError("Tuple element datatypes must be set")
-        return self._is_homogeneous
 
 class NativeIntegerList(NativeInteger, NativeList):
     _name = 'IntegerList'

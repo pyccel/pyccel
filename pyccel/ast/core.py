@@ -2025,7 +2025,7 @@ class Variable(Symbol):
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(str(dtype))
-        elif not isinstance(dtype, (DataType, NativeTuple)):
+        elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
         if allocatable is None:
@@ -3756,7 +3756,7 @@ class Declare(Basic):
         ):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
-        elif not isinstance(dtype, (DataType, NativeTuple)):
+        elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
         if not isinstance(variable, Variable):
@@ -4137,7 +4137,7 @@ class IndexedVariable(IndexedBase):
             raise TypeError('datatype must be provided')
         if isinstance(dtype, str):
             dtype = datatype(dtype)
-        elif not isinstance(dtype, (DataType, NativeTuple)):
+        elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
         obj = IndexedBase.__new__(cls, label, shape=shape)
