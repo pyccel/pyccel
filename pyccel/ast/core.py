@@ -2126,7 +2126,10 @@ class Variable(Symbol):
             assumptions['complex'] = True
         elif isinstance(dtype, NativeBool):
             obj.is_Boolean = True
-        elif not isinstance(dtype, alloweddtypes) and not class_type:
+        elif isinstance(dtype, alloweddtypes) or class_type:
+            # No assumptions can be deduced for these types
+            pass
+        else:
             raise TypeError('Undefined datatype')
 
         ass_copy = assumptions.copy()
