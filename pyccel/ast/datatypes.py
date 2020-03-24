@@ -139,10 +139,18 @@ class NativeList(DataType):
     _name = 'List'
     pass
 
-class NativeTuple(DataType):
+class NativeTuple(Basic):
+    """Base class representing native datatypes"""
     _name = 'Tuple'
     _elements = None
     _is_homogeneous = False
+
+    @property
+    def name(self):
+        return self._name
+
+    def __str__(self):
+        return str(self.name).lower()
 
     def set_arg_types(self, types):
         self._elements = types

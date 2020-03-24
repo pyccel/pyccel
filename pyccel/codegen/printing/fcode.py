@@ -894,7 +894,9 @@ class FCodePrinter(CodePrinter):
             dtype = '{0}({1})'.format(sig, name)
         elif isinstance(expr.dtype, NativeTuple):
             # Non-homogenous NativeTuples must be stored in TupleVariable
-            assert (expr.dtype.is_homogeneous)
+            if not expr.dtype.is_homogeneous:
+                errors.report(LIST_OF_TUPLES,
+                              symbol=expr.variable, severity='error')
             dtype = self._print(expr.dtype.arg_dtypes[0])
         else:
             dtype = self._print(expr.dtype)
