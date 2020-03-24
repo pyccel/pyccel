@@ -1323,7 +1323,7 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
-        if isinstance(var, TupleVariable) and not var.is_homogeneous:
+        if isinstance(var, TupleVariable) and not var.rank>1:
 
             if (len(args)>1):
                 errors.report(LIST_OF_TUPLES, symbol=expr,
