@@ -36,12 +36,6 @@ def private(f):
 def elemental(f):
     return f
 
-def external(f):
-    return f
-
-def external_call(f):
-    return f
-
 def stack_array(*args, **kw):
     def id(f):
         return f
