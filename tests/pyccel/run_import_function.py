@@ -1,5 +1,6 @@
 import sys
+import importlib
 
-for mod in sys.argv[1:]:
-    exec("from "+mod+" import test_func")
-    print(test_func())
+for modname in sys.argv[1:]:
+    mod = importlib.import_module(modname)
+    print(mod.test_func())

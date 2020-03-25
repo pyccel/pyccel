@@ -51,17 +51,14 @@ def as_static_function(func, name=None):
     arguments_inout = func.arguments_inout
     functions = func.functions
     _results = []
-    if results:
-        if len(results) == 1:
-            result = results[0]
-            if result.rank > 0 and not result in args:
-                # updates args
-                args = args + [result]
-                arguments_inout += [False]
-            elif result.rank == 0:
-                _results = results
-        else:
-            raise NotImplementedError('when len(results) > 1')
+
+    # Convert array results to inout arguments
+    for r in results:
+        if r.rank > 0 and r not in args:
+            args += [r]
+            arguments_inout += [False]
+        elif r.rank == 0:
+            _results += [r]
 
     if name is None:
         name = 'f2py_{}'.format(func.name).lower()
@@ -143,7 +140,7 @@ def as_static_function(func, name=None):
                 name = a.name, default_value = a.value))]
 
     if f2py_instructions:
-        body = f2py_instructions + body
+        body = f2py_instructions + body.body
     # ...
 
     return F2PYFunctionDef( name, list(args), results, body,
