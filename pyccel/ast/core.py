@@ -3791,7 +3791,7 @@ class Load(Basic):
                     arg = args[0]
                     m = Lambda(arg, m(arg, evaluate=False))
                 else:
-                    m = Lambda(args, m(evaluate=False, *args))
+                    m = Lambda(tuple(args), m(evaluate=False, *args))
 
             ls.append(m)
 

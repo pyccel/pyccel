@@ -1620,7 +1620,7 @@ class SemanticParser(BasicParser):
 
                 f = f(*func.args)
                 expr_new = expr.expr.subs(func, f)
-                expr = Lambda(expr.variables, expr_new)
+                expr = Lambda(tuple(expr.variables), expr_new)
         return expr
 
     def _visit_Application(self, expr, **settings):

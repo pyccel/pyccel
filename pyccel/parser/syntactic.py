@@ -1085,7 +1085,7 @@ class SyntaxParser(BasicParser):
             var = self._visit(i.name)
             args += [var]
 
-        return Lambda(args, expr)
+        return Lambda(tuple(args), expr)
 
     def _visit_WithNode(self, stmt):
         domain = self._visit(stmt.contexts[0].value)
