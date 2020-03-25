@@ -1,6 +1,5 @@
-from pyccel.decorators import pure, external
+from pyccel.decorators import pure
 
 @pure
-@external
 def test_func():
     return 1
