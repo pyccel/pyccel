@@ -14,12 +14,15 @@ python:
 
 # command before installation
 before_install:
-  - sudo apt-get install gfortran
+  - sudo apt-get install gfortran jq
   - sudo apt-get install libblas-dev liblapack-dev
 #  - sudo apt-get install libcr-dev mpich2
 #  - sudo apt-get install mpich libmpich-dev # libhdf5-mpich-dev
   - sudo apt-get install libopenmpi-dev openmpi-bin # libhdf5-openmpi-dev
   - sudo apt-get install default-jre
+  - LATEST_VERSION="$(wget -q -O - https://api.bintray.com/packages/codacy/Binaries/codacy-coverage-reporter/versions/_latest | jq -r .name)"
+  - wget -O codacy-coverage-reporter "https://dl.bintray.com/codacy/Binaries/${LATEST_VERSION}/codacy-coverage-reporter-linux"
+  - chmod +x codacy-coverage-reporter
 
 # command to install Python library and dependencies
 install:
@@ -67,6 +70,6 @@ script:
   - rm ${SITE_DIR}/pyccel_cov.pth
 
 after_script:
-  - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
+  - ./codacy-coverage-reporter report -l Python
   - cd -
   - rm -rf __pytest__
