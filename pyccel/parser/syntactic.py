@@ -675,8 +675,6 @@ class SyntaxParser(BasicParser):
         is_pure      = False
         is_elemental = False
         is_private   = False
-        is_external  = False
-        is_external_call  = False
         imports      = []
 
         # TODO improve later
@@ -767,12 +765,6 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
-        if 'external' in decorators.keys():
-            is_external = True
-
-        if 'external_call' in decorators.keys():
-            is_external_call = True
-
         func = FunctionDef(
                name,
                arguments,
@@ -786,8 +778,6 @@ class SyntaxParser(BasicParser):
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
-               is_external=is_external,
-               is_external_call=is_external_call,
                imports=imports,
                decorators=decorators,
                header=header)
