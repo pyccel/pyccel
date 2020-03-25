@@ -909,8 +909,7 @@ def operator(op):
 
 
 class AugAssign(Assign):
-
-    """
+    r"""
     Represents augmented variable assignment for code generation.
 
     Parameters
