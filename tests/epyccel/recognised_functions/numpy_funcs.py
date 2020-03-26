@@ -469,14 +469,15 @@ def test_floor_return_type():
     assert(f1(x) == floor_return_type_real(x))
     assert(type(f1(x)) == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
-@pytest.mark.parametrize("dtype,np_dtype", [('real',float),('int',int),('bool',bool)])
-def test_shape(dtype, np_dtype):
-    @types(dtype+'[:]')
+def test_shape_indexed():
+    @types('int[:]')
     def test_shape_1d(f):
+        from numpy import shape
         return shape(f)[0]
 
-    @types(dtype+'[:,:]')
+    @types('int[:,:]')
     def test_shape_2d(f):
+        from numpy import shape
         a = shape(f)
         return a[0], a[1]
 
@@ -485,8 +486,77 @@ def test_shape(dtype, np_dtype):
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    x1 = np.empty(n1,dtype = np_dtype)
-    x2 = np.empty((n2,n3), dtype = np_dtype)
+    x1 = np.empty(n1,dtype = int)
+    x2 = np.empty((n2,n3), dtype = int)
+    assert(f1(x1)==test_shape_1d(x1))
+    assert(f2(x2)==test_shape_2d(x2))
+
+def test_shape_real():
+    @types('real[:]')
+    def test_shape_1d(f):
+        from numpy import shape
+        b = shape(f)
+        return b[0]
+
+    @types('real[:,:]')
+    def test_shape_2d(f):
+        from numpy import shape
+        a = shape(f)
+        return a[0], a[1]
+
+    f1 = epyccel(test_shape_1d)
+    f2 = epyccel(test_shape_2d)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = np.empty(n1,dtype = float)
+    x2 = np.empty((n2,n3), dtype = float)
+    assert(f1(x1)==test_shape_1d(x1))
+    assert(f2(x2)==test_shape_2d(x2))
+
+def test_shape_int():
+    @types('int[:]')
+    def test_shape_1d(f):
+        from numpy import shape
+        b = shape(f)
+        return b[0]
+
+    @types('int[:,:]')
+    def test_shape_2d(f):
+        from numpy import shape
+        a = shape(f)
+        return a[0], a[1]
+
+    f1 = epyccel(test_shape_1d)
+    f2 = epyccel(test_shape_2d)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = np.empty(n1,dtype = int)
+    x2 = np.empty((n2,n3), dtype = int)
+    assert(f1(x1)==test_shape_1d(x1))
+    assert(f2(x2)==test_shape_2d(x2))
+
+def test_shape_bool():
+    @types('bool[:]')
+    def test_shape_1d(f):
+        from numpy import shape
+        b = shape(f)
+        return b[0]
+
+    @types('bool[:,:]')
+    def test_shape_2d(f):
+        from numpy import shape
+        a = shape(f)
+        return a[0], a[1]
+
+    f1 = epyccel(test_shape_1d)
+    f2 = epyccel(test_shape_2d)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = np.empty(n1,dtype = bool)
+    x2 = np.empty((n2,n3), dtype = bool)
     assert(f1(x1)==test_shape_1d(x1))
     assert(f2(x2)==test_shape_2d(x2))
 
