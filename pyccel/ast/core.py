@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-import numpy as np
 
 from collections.abc import Iterable
 
