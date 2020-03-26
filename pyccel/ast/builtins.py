@@ -257,12 +257,17 @@ class PythonTuple(Function):
         return 'tuple'
 
     @property
+    def homogeneous_dtype(self):
+        assert(self.is_homogeneous)
+        return self._homogeneous_dtype
+
+    @property
     def shape(self):
-        return [len(self._args)]
+        return (len(self._args),)
 
     @property
     def rank(self):
-        return 1 if self.is_homogeneous else 0
+        return max(a.rank if hasattr(a, 'rank') else 0 for a in self._args)+1
 
     def __getitem__(self,i):
         return self._args[i]
@@ -282,7 +287,26 @@ class PythonTuple(Function):
     def set_arg_types(self,d_vars):
         self._arg_dtypes = d_vars
         dtypes = [str(a['datatype']) for a in d_vars]
-        self._is_homogeneous = len(set(dtypes))==1
+
+        if (len(self._args)==len(d_vars)):
+            self._is_homogeneous = len(set(dtypes))==1
+
+            if self._is_homogeneous and d_vars[0]['datatype'] == 'tuple':
+                self._is_homogeneous = all(a.is_homogeneous for a in self._vars)
+                if self._is_homogeneous:
+                    dtypes = [str(v.homogeneous_dtype) for v in self._vars]
+                    self._is_homogeneous = len(set(dtypes))==1
+                    if self._is_homogeneous:
+                        self._homogeneous_dtype = d_vars[0].homogeneous_dtype
+            else:
+                self._homogeneous_dtype = d_vars[0]['datatype']
+        else:
+            self._is_homogeneous = True
+            self._homogeneous_dtype = d_vars[0]['datatype']
+            if d_vars[0]['datatype'] == 'tuple':
+                self._is_homogeneous = self._vars[0]._is_homogeneous
+                if self._is_homogeneous:
+                    self._is_homogeneous_dtype = self._vars[0]._homogeneous_dtype
 
     @property
     def arg_types(self):

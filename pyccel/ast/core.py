@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import importlib
+import numpy as np
 
 from collections.abc import Iterable
 
@@ -2512,10 +2513,37 @@ class TupleVariable(Variable):
 
         obj._vars = tuple(arg_vars)
 
-        dtypes = [str(v.dtype) for v in obj._vars]
-        obj._is_homogeneous = len(set(dtypes))==1
+        shape = obj.shape
+        if (np.prod(shape)!=len(arg_vars)):
+            assert(len(arg_vars)==1)
+            if isinstance(arg_vars[0].dtype,NativeTuple):
+                if arg_vars[0].is_homogeneous:
+                    obj._is_homogeneous = True
+                    obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+                else:
+                    obj._is_homogeneous = False
+            else:
+                obj._is_homogeneous = True
+                obj._homogeneous_dtype = arg_vars[0].dtype
+        else:
+            assert(shape[-1]==len(arg_vars))
+            dtypes = [str(v.dtype) for v in obj._vars]
+            obj._is_homogeneous = len(set(dtypes))==1
+
+            if obj._is_homogeneous and isinstance(arg_vars[0].dtype,NativeTuple):
+                obj._is_homogeneous = all(a.is_homogeneous for a in arg_vars)
+                if obj._is_homogeneous:
+                    dtypes = [str(v.homogeneous_dtype) for v in obj._vars]
+                    obj._is_homogeneous = len(set(dtypes))==1
+                    if obj._is_homogeneous:
+                        obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+            else:
+                obj._homogeneous_dtype = arg_vars[0].dtype
 
         return obj
+
+    def get_vars(self):
+        return self._vars
 
     def get_var(self, variable_idx):
         return self._vars[variable_idx]
@@ -2535,6 +2563,18 @@ class TupleVariable(Variable):
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @property
+    def homogeneous_dtype(self):
+        assert(self._is_homogeneous)
+        return self._homogeneous_dtype
+
+    @property
+    def precision(self):
+        if self._is_homogeneous:
+            return self._vars[0].precision
+        else:
+            return super.precision
 
 class Constant(ValuedVariable):
 
