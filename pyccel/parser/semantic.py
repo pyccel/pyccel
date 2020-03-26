@@ -1327,41 +1327,53 @@ class SemanticParser(BasicParser):
 
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            if (len(args)>1):
-                errors.report(LIST_OF_TUPLES, symbol=expr,
-                    bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='error', blocker=self.blocking)
-                return None
-
-            if (not (isinstance(args[0],Integer) and args[0].is_constant()) and 
-                    not isinstance(args[0], Slice)):
-                errors.report(INDEXED_TUPLE, symbol=expr,
-                    bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='error', blocker=self.blocking)
-                return None
-
-            if isinstance(args[0], Slice):
-                if ((args[0].start is not None and not isinstance(args[0].start,IntegerConstant)) or
-                        (args[0].end is not None and not isinstance(args[0].end,IntegerConstant))):
+            for i, arg in enumerate(args[::-1]):
+                if (not (isinstance(arg,Integer) and arg.is_constant()) and 
+                        not isinstance(arg, Slice)):
                     errors.report(INDEXED_TUPLE, symbol=expr,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     return None
 
-                idx = slice(args[0].start,args[0].end)
-                selected_vars = var.get_var(idx)
-                if len(selected_vars)==1:
-                    return selected_vars[0]
-                elif len(selected_vars)<1:
-                    return None
+                if isinstance(arg, Slice):
+                    if ((arg.start is not None and not isinstance(arg.start,IntegerConstant)) or
+                            (arg.end is not None and not isinstance(arg.end,IntegerConstant))):
+                        errors.report(INDEXED_TUPLE, symbol=expr,
+                            bounding_box=self._current_fst_node.absolute_bounding_box,
+                            severity='error', blocker=self.blocking)
+                        return None
+
+                    idx = slice(arg.start,arg.end)
+                    selected_vars = var.get_var(idx)
+                    if len(selected_vars)==1:
+                        if arg is args[0]:
+                            return selected_vars[0]
+                        else:
+                            var = selected_vars[0]
+                            if var.is_homogeneous:
+                                args = args[:len(args)-i-1]
+                                name = var.name
+                                break
+                    elif len(selected_vars)<1:
+                        return None
+                    elif arg is args[0]:
+                        return PythonTuple(selected_vars)
+                    else:
+                        raise NotImplementedError("slice of tuples containing tuples")
+
                 else:
-                    return TupleVariable(selected_vars, var.dtype, var.name)
 
-            else:
-                idx = args[0]
-                return var.get_var(args[0])
+                    if arg is args[0]:
+                        return var[arg]
 
-        elif hasattr(var, 'dtype'):
+                    var = var[arg]
+
+                    if var.is_homogeneous:
+                        name = var.name
+                        args = args[:len(args)-i-1]
+                        break
+
+        if hasattr(var, 'dtype'):
             dtype = var.dtype
             shape = var.shape
             prec  = var.precision
