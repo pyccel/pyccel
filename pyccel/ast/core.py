@@ -2515,7 +2515,7 @@ class TupleVariable(Variable):
 
         shape = obj.shape
         if (shape[0]!=len(arg_vars)):
-            assert(len(arg_vars)==1)
+            assert(shape[0]%len(arg_vars)==0)
             if isinstance(arg_vars[0].dtype,NativeTuple):
                 if arg_vars[0].is_homogeneous:
                     obj._is_homogeneous = True
