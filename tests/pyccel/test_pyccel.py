@@ -186,6 +186,7 @@ def test_relative_imports_in_project():
 
     compile_pyccel(path_dir, 'project/folder1/mod1.py')
     compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    compile_pyccel(path_dir, 'project/folder2/mod3.py')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -199,6 +200,7 @@ def test_absolute_imports_in_project():
 
     compile_pyccel(path_dir, 'project/folder1/mod1.py')
     compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    compile_pyccel(path_dir, 'project/folder2/mod3.py')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
