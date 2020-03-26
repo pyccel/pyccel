@@ -471,6 +471,9 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, (Tuple, PythonTuple)):
                 for i in f:
                     args.append("{}".format(self._print(i)))
+            elif isinstance(f, TupleVariable) and not f.is_homogeneous:
+                for i in f:
+                    args.append("{}".format(self._print(i)))
             else:
                 args.append("{}".format(self._print(f)))
 
