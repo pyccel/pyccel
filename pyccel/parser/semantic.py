@@ -3344,11 +3344,6 @@ class SemanticParser(BasicParser):
     def _visit_Dlist(self, expr, **settings):
 
         val = self._visit(expr.val, **settings)
-        if isinstance(val, (Tuple, tuple)):
-            #TODO list of dimesion > 1 '
-
-            msg = 'TODO not yet supported'
-            raise PyccelSemanticError(msg)
         shape = self._visit(expr.length, **settings)
         if isinstance(val, (TupleVariable, PythonTuple)):
             if isinstance(val, TupleVariable):
