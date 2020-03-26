@@ -1272,6 +1272,79 @@ class SemanticParser(BasicParser):
             args[1] = self._visit(args[1], **settings)
         return Slice(*args)
 
+    def _extract_indexed_from_var(self, var,args):
+
+        # case of Pyccel ast Variable, IndexedVariable
+        # if not possible we use symbolic objects
+
+        if isinstance(var, TupleVariable) and not var.is_homogeneous:
+
+            for i, arg in enumerate(args[::-1]):
+                if (not (isinstance(arg,Integer) and arg.is_constant()) and 
+                        not isinstance(arg, Slice)):
+                    errors.report(INDEXED_TUPLE, symbol=expr,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
+                    return None
+
+                if isinstance(arg, Slice):
+                    if ((arg.start is not None and not isinstance(arg.start,IntegerConstant)) or
+                            (arg.end is not None and not isinstance(arg.end,IntegerConstant))):
+                        errors.report(INDEXED_TUPLE, symbol=expr,
+                            bounding_box=self._current_fst_node.absolute_bounding_box,
+                            severity='error', blocker=self.blocking)
+                        return None
+
+                    idx = slice(arg.start,arg.end)
+                    selected_vars = var.get_var(idx)
+                    if len(selected_vars)==1:
+                        if arg is args[0]:
+                            return selected_vars[0]
+                        else:
+                            var = selected_vars[0]
+                            if var.is_homogeneous:
+                                args = args[:len(args)-i-1]
+                                break
+                    elif len(selected_vars)<1:
+                        return None
+                    elif arg is args[0]:
+                        return PythonTuple(selected_vars)
+                    else:
+                        return PythonTuple(self._extract_indexed_from_var(var, args[:len(args)-i-1]) for var in selected_vars)
+
+                else:
+
+                    if arg is args[0]:
+                        return var[arg]
+
+                    var = var[arg]
+
+                    if var.is_homogeneous:
+                        args = args[:len(args)-i-1]
+                        break
+
+        name = var.name
+
+        if hasattr(var, 'dtype'):
+            dtype = var.dtype
+            shape = var.shape
+            prec  = var.precision
+            order = var.order
+            rank  = var.rank
+
+            if isinstance(dtype, NativeTuple):
+                if not var.is_homogeneous:
+                    errors.report(LIST_OF_TUPLES, symbol=expr,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
+                    dtype = 'int'
+                else:
+                    dtype = var.homogeneous_dtype
+
+            return IndexedVariable(name, dtype=dtype,
+                   shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
+        else:
+            return IndexedBase(name).__getitem__(args)
 
     def _visit_Indexed(self, expr, **settings):
         name = str(expr.base)
@@ -1324,78 +1397,7 @@ class SemanticParser(BasicParser):
             args.reverse()
         args = tuple(args)
 
-        # case of Pyccel ast Variable, IndexedVariable
-        # if not possible we use symbolic objects
-
-        if isinstance(var, TupleVariable) and not var.is_homogeneous:
-
-            for i, arg in enumerate(args[::-1]):
-                if (not (isinstance(arg,Integer) and arg.is_constant()) and 
-                        not isinstance(arg, Slice)):
-                    errors.report(INDEXED_TUPLE, symbol=expr,
-                        bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='error', blocker=self.blocking)
-                    return None
-
-                if isinstance(arg, Slice):
-                    if ((arg.start is not None and not isinstance(arg.start,IntegerConstant)) or
-                            (arg.end is not None and not isinstance(arg.end,IntegerConstant))):
-                        errors.report(INDEXED_TUPLE, symbol=expr,
-                            bounding_box=self._current_fst_node.absolute_bounding_box,
-                            severity='error', blocker=self.blocking)
-                        return None
-
-                    idx = slice(arg.start,arg.end)
-                    selected_vars = var.get_var(idx)
-                    if len(selected_vars)==1:
-                        if arg is args[0]:
-                            return selected_vars[0]
-                        else:
-                            var = selected_vars[0]
-                            if var.is_homogeneous:
-                                args = args[:len(args)-i-1]
-                                name = var.name
-                                break
-                    elif len(selected_vars)<1:
-                        return None
-                    elif arg is args[0]:
-                        return PythonTuple(selected_vars)
-                    else:
-                        raise NotImplementedError("slice of tuples containing tuples")
-
-                else:
-
-                    if arg is args[0]:
-                        return var[arg]
-
-                    var = var[arg]
-
-                    if var.is_homogeneous:
-                        name = var.name
-                        args = args[:len(args)-i-1]
-                        break
-
-        if hasattr(var, 'dtype'):
-            dtype = var.dtype
-            shape = var.shape
-            prec  = var.precision
-            order = var.order
-            rank  = var.rank
-
-            if isinstance(dtype, NativeTuple):
-                if not var.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES, symbol=expr,
-                        bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='error', blocker=self.blocking)
-                    dtype = 'int'
-                else:
-                    dtype = var.homogeneous_dtype
-
-            return IndexedVariable(name, dtype=dtype,
-                   shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
-        else:
-            return IndexedBase(name).__getitem__(args)
-
+        return self._extract_indexed_from_var(var,args)
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
@@ -3350,7 +3352,7 @@ class SemanticParser(BasicParser):
                 return PythonTuple(val.get_vars()*shape)
             else:
                 return PythonTuple(val.args*shape)
-        return Dlist(val, shape)
+        return Dlist(val[0], shape)
 
     def _visit_StarredArguments(self, expr, **settings):
         name = expr.args_var
