@@ -1537,8 +1537,11 @@ class SemanticParser(BasicParser):
         if stmts:
             stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Mul(*args, evaluate=False)
-        expr_new = expr_new.doit(deep=False)
+        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
+            expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
+        else:
+            expr_new = Mul(*args, evaluate=False)
+            expr_new = expr_new.doit(deep=False)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -3347,12 +3350,17 @@ class SemanticParser(BasicParser):
     def _visit_Dlist(self, expr, **settings):
 
         val = self._visit(expr.val, **settings)
-        if isinstance(val, (Tuple, PythonTuple, list, tuple)):
+        if isinstance(val, (Tuple, tuple)):
             #TODO list of dimesion > 1 '
 
             msg = 'TODO not yet supported'
             raise PyccelSemanticError(msg)
         shape = self._visit(expr.length, **settings)
+        if isinstance(val, (TupleVariable, PythonTuple)):
+            if isinstance(val, TupleVariable):
+                return PythonTuple(val.get_vars()*shape)
+            else:
+                return PythonTuple(val.args*shape)
         return Dlist(val, shape)
 
     def _visit_StarredArguments(self, expr, **settings):
