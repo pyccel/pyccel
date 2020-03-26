@@ -16,7 +16,7 @@ from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables          import iterable
 
 from .basic import Basic
-from .datatypes import default_precision
+from .datatypes import default_precision, NativeTuple
 
 __all__ = (
     'Bool',
@@ -263,7 +263,14 @@ class PythonTuple(Function):
 
     @property
     def shape(self):
-        return (len(self._args),)
+        if (self._arg_dtypes is None):
+            raise RuntimeError("This function cannot be used until the type has been infered")
+        else:
+            shape = [len(self._args)]
+            if self.is_homogeneous and isinstance(self._arg_dtypes[0]['datatype'], NativeTuple):
+                shape = shape + list(self._args[0].shape)
+
+            return tuple(shape)
 
     @property
     def rank(self):

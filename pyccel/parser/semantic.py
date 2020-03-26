@@ -770,13 +770,13 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = NativeTuple()
             d_var['allocatable'   ] = False
-            d_var['shape'         ] = expr.shape
 
             arg_d_vars = []
             for e in expr:
                 arg_d_vars.append(self._infere_type(e, **settings))
             expr.set_arg_types(arg_d_vars)
 
+            d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
 
             return d_var
