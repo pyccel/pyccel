@@ -2574,7 +2574,7 @@ class TupleVariable(Variable):
         if self._is_homogeneous:
             return self._vars[0].precision
         else:
-            return super.precision
+            return Variable.precision
 
 class Constant(ValuedVariable):
 
