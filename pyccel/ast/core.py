@@ -2782,19 +2782,13 @@ class FunctionDef(Basic):
         True for a function without side effect
 
     is_elemental: bool
-        True for a function is elemental
+        True for a function that is elemental
 
     is_private: bool
-        True for a function is private
+        True for a function that is private
 
     is_static: bool
         True for static functions. Needed for f2py
-
-    is_external: bool
-        True for a function will be visible with f2py
-
-    is_external_call: bool
-        True for a function call will be visible with f2py
 
     imports: list, tuple
         a list of needed imports
@@ -2850,8 +2844,6 @@ class FunctionDef(Basic):
         is_elemental=False,
         is_private=False,
         is_header=False,
-        is_external=False,
-        is_external_call=False,
         arguments_inout=[],
         functions = []):
 
@@ -2914,12 +2906,10 @@ class FunctionDef(Basic):
             raise TypeError('Expecting a string for kind.')
 
         if not isinstance(is_static, bool):
-            raise TypeError('Expecting a boolean for is_static attribut'
-                            )
+            raise TypeError('Expecting a boolean for is_static attribute')
 
         if not kind in ['function', 'procedure']:
-            raise ValueError("kind must be one among {'function', 'procedure'}"
-                             )
+            raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
@@ -2937,14 +2927,7 @@ class FunctionDef(Basic):
             raise TypeError('Expecting a boolean for private')
 
         if not isinstance(is_header, bool):
-            raise TypeError('Expecting a boolean for private')
-
-
-        if not isinstance(is_external, bool):
-            raise TypeError('Expecting a boolean for external')
-
-        if not isinstance(is_external_call, bool):
-            raise TypeError('Expecting a boolean for external_call')
+            raise TypeError('Expecting a boolean for header')
 
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple, Tuple)):
@@ -2982,8 +2965,6 @@ class FunctionDef(Basic):
             is_elemental,
             is_private,
             is_header,
-            is_external,
-            is_external_call,
             arguments_inout,
             functions,)
 
@@ -3060,20 +3041,12 @@ class FunctionDef(Basic):
         return self._args[17]
 
     @property
-    def is_external(self):
+    def arguments_inout(self):
         return self._args[18]
 
     @property
-    def is_external_call(self):
-        return self._args[19]
-
-    @property
-    def arguments_inout(self):
-        return self._args[20]
-
-    @property
     def functions(self):
-        return self._args[21]
+        return self._args[19]
 
     def print_body(self):
         for s in self.body:
