@@ -535,7 +535,7 @@ class SyntaxParser(BasicParser):
         elif stmt.value == '*':
 
             if isinstance(first, (PythonTuple, Tuple, List)):
-                return Dlist(first[0], second)
+                return Dlist(first, second)
             return Mul(first, second, evaluate=False)
         elif stmt.value == '-':
 
