@@ -6,7 +6,7 @@ import numpy as np
 
 from collections.abc import Iterable
 
-from sympy import cache
+from sympy.core import cache
 from sympy import sympify
 from sympy import Add, Mul, Pow as sp_Pow
 from sympy import Integral, Symbol, Tuple
@@ -18,7 +18,6 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
-from sympy.core.compatibility import string_types
 from sympy.core.assumptions   import StdFactKB
 from sympy.core.operations    import LatticeOp
 from sympy.core.relational    import Equality, Relational
@@ -267,7 +266,7 @@ def allocatable_like(expr, verbose=False):
         while args:
             a = args.pop()
             # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
+            if isinstance(a, str):
                 continue
 
             if a.is_Mul:
@@ -490,10 +489,24 @@ class Pow(sp_Pow):
         expr = Pow(args[0], args[1], evaluate=False)
         return expr
 
-    def _eval_evalf(self,prec):
+    def _eval_evalf(self, prec):
         return sp_Pow(self.base,self.exp).evalf(prec)
 
+    def _eval_is_positive(self):
+        #we do this inorder to infere the type of Pow expression correctly
+        return self.is_real
 
+    @property
+    def is_real(self):
+        return self._args[0].is_real and self._args[1].is_real
+
+    @property
+    def is_integer(self):
+        return self._args[0].is_integer and self._args[1].is_integer
+
+    @property
+    def is_complex(self):
+        return self._args[0].is_complex and self._args[1].is_complex
 
 class DottedName(Basic):
 
@@ -897,8 +910,7 @@ def operator(op):
 
 
 class AugAssign(Assign):
-
-    """
+    r"""
     Represents augmented variable assignment for code generation.
 
     Parameters
@@ -2039,6 +2051,7 @@ class Variable(Symbol):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
+    is_zero = False
 
     def __new__(
         cls,
@@ -2167,7 +2180,6 @@ class Variable(Symbol):
             pass
         else:
             raise TypeError('Undefined datatype')
-
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
@@ -2313,11 +2325,6 @@ class Variable(Symbol):
 
     def _eval_subs(self, old, new):
         return self
-
-    def _eval_is_positive(self):
-        #we do this inorder to infere the type of Pow expression correctly
-        return self.is_real
-
 
 class DottedVariable(AtomicExpr, Boolean):
 
@@ -3796,7 +3803,7 @@ class Load(Basic):
                     arg = args[0]
                     m = Lambda(arg, m(arg, evaluate=False))
                 else:
-                    m = Lambda(args, m(evaluate=False, *args))
+                    m = Lambda(tuple(args), m(evaluate=False, *args))
 
             ls.append(m)
 
@@ -4228,7 +4235,7 @@ class IndexedVariable(IndexedBase):
 
     **todo:** fix bug. the last result must be : (o,p)
     """
-
+    is_zero = False
     def __new__(
         cls,
         label,
@@ -4324,6 +4331,7 @@ class IndexedElement(Indexed):
 
     **todo:** fix bug. the last result must be : True
     """
+    is_zero = False
 
     def __new__(
         cls,
@@ -4334,7 +4342,7 @@ class IndexedElement(Indexed):
 
         if not args:
             raise IndexException('Indexed needs at least one index.')
-        if isinstance(base, (string_types, Symbol)):
+        if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
                 IndexedBase):

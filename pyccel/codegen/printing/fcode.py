@@ -15,7 +15,6 @@ from sympy.core import Float, Integer
 from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function
-from sympy.core.compatibility import string_types
 from sympy.printing.precedence import precedence
 from sympy import Eq, Ne, true, false
 from sympy import Atom, Indexed
@@ -2390,7 +2389,7 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
