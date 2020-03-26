@@ -248,6 +248,7 @@ class PythonTuple(Function):
     _iterable = True
     _arg_dtypes = None
     _is_homogeneous = False
+    is_zero = False
     def __new__(cls, args):
         if not iterable(args):
             args = [args]
