@@ -270,7 +270,7 @@ class PythonTuple(Function):
     @property
     def shape(self):
         if (self._arg_dtypes is None):
-            raise RuntimeError("This function cannot be used until the type has been infered")
+            return [len(self._args)]
         else:
             shape = [len(self._args)]
             if self.is_homogeneous and isinstance(self._arg_dtypes[0]['datatype'], NativeTuple):
