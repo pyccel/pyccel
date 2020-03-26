@@ -86,6 +86,7 @@ class Array(Application):
     arg : list ,tuple ,Tuple, List
 
     """
+    is_zero = False
     def __new__(cls, arg, dtype=None, order='C'):
 
         if not isinstance(arg, (list, tuple, Tuple, PythonTuple, List)):
@@ -190,6 +191,7 @@ class NumpySum(Function):
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
+    is_zero = False
 
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
@@ -232,6 +234,7 @@ class Product(Function):
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
+    is_zero = False
 
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
@@ -318,7 +321,6 @@ class Shape(Array):
 
     arg : list ,tuple ,PythonTuple, Tuple,List, Variable
     """
-
     def __new__(cls, arg, index=None):
         if not isinstance(arg, (list,
                                 tuple,
@@ -414,13 +416,13 @@ class Shape(Array):
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
-class Real(Application):
+class Real(Function):
 
     """Represents a call to  numpy.real for code generation.
 
     arg : Variable, Float, Integer, Complex
     """
-
+    is_zero = False
     def __new__(cls, arg):
 
         _valid_args = (Variable, IndexedElement, Integer, Nil,
@@ -480,8 +482,6 @@ class Imag(Real):
     arg : Variable, Float, Integer, Complex
     """
 
-
-
     def fprint(self, printer):
         """Fortran print."""
 
@@ -495,12 +495,13 @@ class Imag(Real):
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
-class Complex(Application):
+class Complex(Function):
 
     """Represents a call to  numpy.complex for code generation.
 
     arg : Variable, Float, Integer
     """
+    is_zero = False
 
     def __new__(cls, arg0, arg1=Float(0)):
 
@@ -1206,6 +1207,8 @@ class Bounds(Basic):
 class Norm(Function):
     """ Represents call to numpy.norm"""
 
+    is_zero = False
+
     def __new__(cls, arg, dim=None):
         if isinstance(dim, ValuedArgument):
             dim = dim.value
@@ -1238,8 +1241,6 @@ class Norm(Function):
             return self.arg.rank-1
         return 0
 
-
-
     def fprint(self, printer):
         """Fortran print."""
 
@@ -1260,6 +1261,7 @@ class Sqrt(Pow):
 #=======================================================================================
 
 class Mod(Function):
+    is_zero = False
     def __new__(cls,*args):
         obj = Basic.__new__(cls, *args)
 
@@ -1270,6 +1272,7 @@ class Mod(Function):
         return obj
 
 class Asin(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1281,6 +1284,7 @@ class Asin(Function):
 
 
 class Acos(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1291,6 +1295,7 @@ class Acos(Function):
         return obj
 
 class Asec(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1303,6 +1308,7 @@ class Asec(Function):
 #=======================================================================================
 
 class Atan(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1314,6 +1320,7 @@ class Atan(Function):
 
 
 class Acot(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1325,6 +1332,7 @@ class Acot(Function):
 
 
 class Acsc(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1337,6 +1345,7 @@ class Acsc(Function):
 #=======================================================================================
 
 class Sinh(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1347,6 +1356,7 @@ class Sinh(Function):
         return obj
 
 class Cosh(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = cosh(arg)
         if arg.is_real:
@@ -1358,6 +1368,7 @@ class Cosh(Function):
 
 
 class Tanh(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1370,6 +1381,7 @@ class Tanh(Function):
 #=======================================================================================
 
 class Log(Function):
+    is_zero = False
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1382,28 +1394,24 @@ class Log(Function):
 #=======================================================================================
 
 class Abs(Function):
-
+    is_zero = False
+    is_real = True
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
-
-    def _eval_is_real(self):
-        return True
 
 #=======================================================================================
 
 class Min(Function):
-     def _eval_is_integer(self):
+    is_zero = False
+    is_real = True
+    def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
-
-     def _eval_is_real(self):
-        return True
 
 class Max(Function):
-     def _eval_is_integer(self):
+    is_zero = False
+    is_real = True
+    def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
-
-     def _eval_is_real(self):
-        return True
 
 
 #=======================================================================================

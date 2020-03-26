@@ -175,7 +175,7 @@ from sympy import Atom
 from sympy import Expr
 from sympy import Dict
 from sympy import Not
-from sympy import cache
+from sympy.core import cache
 
 errors = Errors()
 #==============================================================================
@@ -534,7 +534,7 @@ class SyntaxParser(BasicParser):
             return Add(first, second, evaluate=False)
         elif stmt.value == '*':
 
-            if isinstance(first, (Tuple, List)):
+            if isinstance(first, (PythonTuple, Tuple, List)):
                 return Dlist(first[0], second)
             return Mul(first, second, evaluate=False)
         elif stmt.value == '-':
@@ -715,7 +715,7 @@ class SyntaxParser(BasicParser):
                     if not arg_name == 'results':
                         msg = '> Wrong argument, given {}'.format(arg_name)
                         raise NotImplementedError(msg)
-                    ls = arg if isinstance(arg, Tuple) else [arg]
+                    ls = arg if isinstance(arg, PythonTuple) else [arg]
                     i = -1
                 else:
                     msg = '> Wrong type, given {}'.format(type(arg))
@@ -1075,7 +1075,7 @@ class SyntaxParser(BasicParser):
             var = self._visit(i.name)
             args += [var]
 
-        return Lambda(args, expr)
+        return Lambda(tuple(args), expr)
 
     def _visit_WithNode(self, stmt):
         domain = self._visit(stmt.contexts[0].value)
