@@ -589,7 +589,10 @@ class SemanticParser(BasicParser):
         for (key, value) in options.items():
             d_var[key] = value
         dtype = d_var.pop('datatype')
-        var = Variable(dtype, name, **d_var)
+        if isinstance(var, TupleVariable):
+            var = TupleVariable(var.get_vars(), dtype, name, **d_var)
+        else:
+            var = Variable(dtype, name, **d_var)
         # TODO improve to insert in the right namespace
         self.insert_variable(var, name)
         return var
@@ -770,10 +773,8 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
 
             arg_d_vars = []
-            arg_dtypes = []
             for e in expr:
                 arg_d_vars.append(self._infere_type(e, **settings))
-                arg_dtypes.append(arg_d_vars[-1]['datatype'   ])
             expr.set_arg_types(arg_d_vars)
 
             d_var['rank'          ] = expr.rank
@@ -788,7 +789,8 @@ class SemanticParser(BasicParser):
             if var is None:
                 raise ValueError('Undefined variable {name}'.format(name=name))
 
-            d_var['datatype'] = str_dtype(var.dtype)
+            dtype = var.dtype if not isinstance(var.dtype, NativeTuple) else var.homogeneous_dtype
+            d_var['datatype'] = str_dtype(dtype)
 
             if sympy_iterable(var.shape):
                 shape = []
@@ -1285,7 +1287,7 @@ class SemanticParser(BasicParser):
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
             len_args = len(new_args[0])
-            args = [a for a in new_args[0]]
+            args = [self._visit(Indexed(args[0],i)) for i in range(len_args)]
         elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
             n_exprs = None
             for a in new_args:
@@ -1323,7 +1325,7 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
-        if isinstance(var, TupleVariable) and not var.rank>1:
+        if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
             if (len(args)>1):
                 errors.report(LIST_OF_TUPLES, symbol=expr,
@@ -1366,14 +1368,14 @@ class SemanticParser(BasicParser):
             order = var.order
             rank  = var.rank
 
-            while isinstance(dtype, NativeTuple):
+            if isinstance(dtype, NativeTuple):
                 if not var.is_homogeneous:
                     errors.report(LIST_OF_TUPLES, symbol=expr,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     dtype = 'int'
                 else:
-                    dtype = var[0].dtype
+                    dtype = var.homogeneous_dtype
 
             return IndexedVariable(name, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
@@ -1834,13 +1836,19 @@ class SemanticParser(BasicParser):
             elem_vars = []
             for i,a in enumerate(rhs):
                 elem_name = self._get_new_variable_name(a,name + '_' + str(i))
-                elem_vars.append(Variable(rhs.arg_types[i]['datatype'], elem_name))
+                elem_d_lhs = self._infere_type(rhs[i])
+                elem_dtype = elem_d_lhs.pop('datatype')
+                elem_vars.append(self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs))
+            d_lhs['is_stack_array'] = True
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
         elif isinstance(rhs,TupleVariable):
             elem_vars = []
             for i,a in enumerate(rhs):
                 elem_name = self._get_new_variable_name(a,name + '_' + str(i))
-                elem_vars.append(a.clone(elem_name))
+                elem_d_lhs = self._infere_type(rhs[i])
+                elem_dtype = elem_d_lhs.pop('datatype')
+                elem_vars.append(self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs))
+            d_lhs['is_stack_array'] = True
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
         else:
             lhs = Variable(dtype, name, **d_lhs)
@@ -2245,13 +2253,37 @@ class SemanticParser(BasicParser):
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, PythonTuple):
+            n = len(lhs)
             if isinstance(rhs, PythonTuple):
                 d_var = rhs.arg_types
-            if isinstance(rhs, TupleVariable):
-                d_var = [self._infere_type(v) for v in rhs]
+                new_lhs = []
+                for i,(l,r) in enumerate(zip(lhs,rhs)):
+                    new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, **settings) )
+                lhs = PythonTuple(new_lhs)
+                lhs.set_arg_types(d_var)
+            elif isinstance(rhs, TupleVariable):
+                new_lhs = []
 
-            n = len(lhs)
-            if isinstance(d_var, list) and len(d_var)== n:
+                if rhs.is_homogeneous:
+                    d_var = self._infere_type(rhs[0])
+                    indexed_rhs = IndexedVariable(rhs.name, dtype=rhs.homogeneous_dtype,
+                            shape=rhs.shape,prec=rhs.precision,order=rhs.order,rank=rhs.rank)
+                    new_rhs = []
+                    for i,l in enumerate(lhs):
+                        new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
+                            indexed_rhs.__getitem__(i), **settings) )
+                        new_rhs.append(indexed_rhs.__getitem__(i))
+                    rhs = PythonTuple(new_rhs)
+                    d_var = [d_var]
+                else:
+                    d_var = [self._infere_type(v) for v in rhs]
+                    for i,l,r in enumerate(zip(lhs,rhs)):
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, **settings) )
+
+                lhs = PythonTuple(new_lhs)
+                lhs.set_arg_types(d_var)
+
+            elif isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
                 if hasattr(rhs,'__getitem__'):
                     for i,l in enumerate(lhs):
