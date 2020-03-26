@@ -536,7 +536,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Tuple(self, expr):
         import numpy
-        shape = numpy.shape(expr)
+        shape = list(reversed(numpy.shape(expr)))
         if len(shape)>1:
             arg = functools.reduce(operator.concat, expr)
             elements = ', '.join(self._print(i) for i in arg)
@@ -545,6 +545,10 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_PythonTuple(self, expr):
+        shape = Tuple(*reversed(expr.shape))
+        if len(shape)>1:
+            elements = ', '.join(self._print(i) for i in expr)
+            return 'reshape(['+ elements + '], '+ self._print(shape) + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
@@ -946,8 +950,12 @@ class FCodePrinter(CodePrinter):
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
 
-            rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                 self._print(i)) for i in shape)
+            if var.order=='C':
+                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                    self._print(i)) for i in shape[::-1])
+            else:
+                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                     self._print(i)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
             enable_alloc = False
