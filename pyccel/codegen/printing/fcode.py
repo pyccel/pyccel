@@ -468,7 +468,7 @@ class FCodePrinter(CodePrinter):
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
-            elif isinstance(f, (Tuple, PythonTuple, TupleVariable)):
+            elif isinstance(f, (Tuple, PythonTuple)):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             else:
@@ -549,8 +549,11 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_TupleVariable(self, expr):
-        fs = ', '.join(self._print(f) for f in expr)
-        return '[{0}]'.format(fs)
+        if expr.is_homogeneous:
+            return self._print_Variable(expr)
+        else:
+            fs = ', '.join(self._print(f) for f in expr)
+            return '[{0}]'.format(fs)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -850,7 +853,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, TupleVariable) and not expr.variable.rank>1:
+        if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
             return '\n'.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -892,17 +895,21 @@ class FCodePrinter(CodePrinter):
             else:
                 name = alias
             dtype = '{0}({1})'.format(sig, name)
-        elif isinstance(expr.dtype, NativeTuple):
-            # Non-homogenous NativeTuples must be stored in TupleVariable
-            if not expr.variable.is_homogeneous:
-                errors.report(LIST_OF_TUPLES,
-                              symbol=expr.variable, severity='error')
-            dtype = self._print(expr.variable[0].dtype)
         else:
-            dtype = self._print(expr.dtype)
+            if isinstance(expr.dtype, NativeTuple):
+                # Non-homogenous NativeTuples must be stored in TupleVariable
+                if not expr.variable.is_homogeneous:
+                    errors.report(LIST_OF_TUPLES,
+                                  symbol=expr.variable, severity='error')
+                    expr_dtype = NativeInt()
+                else:
+                    expr_dtype = expr.variable.homogeneous_dtype
+            else:
+                expr_dtype = expr.dtype
+            dtype = self._print(expr_dtype)
 
         # ...
-            if isinstance(expr.dtype, NativeString):
+            if isinstance(expr_dtype, NativeString):
 
                 if expr.intent:
                     dtype = dtype[:9] +'(len =*)'
@@ -1043,7 +1050,8 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Assign(self, expr):
-        if isinstance(expr.lhs, TupleVariable) and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
+        if isinstance(expr.lhs, TupleVariable) and not expr.lhs.is_homogeneous \
+            and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
             return '\n'.join(self._print_Assign(
                         Assign(lhs,
                                 rhs,
@@ -2100,7 +2108,7 @@ class FCodePrinter(CodePrinter):
                 lines.append("else")
             else:
                 lines.append("else if (%s) then" % self._print(c))
-            if isinstance(e, (list, tuple, Tuple)):
+            if isinstance(e, (list, tuple, Tuple, PythonTuple)):
                 for ee in e:
                     lines.append(self._print(ee))
             else:
