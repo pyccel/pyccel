@@ -298,9 +298,16 @@ class PythonTuple(Function):
         return self._is_homogeneous
 
     def set_arg_types(self,d_vars):
+        """ set the types of each argument by providing
+        the list of d_vars calculated using the function
+        _infere_type in parser/semantics.py
+        
+        This allows the homogeneity properties to be calculated
+        """
         self._arg_dtypes = d_vars
         dtypes = [str(a['datatype']) for a in d_vars]
 
+        #If all arguments are provided then the homogeneity must be checked
         if (len(self._args)==len(d_vars)):
             self._is_homogeneous = len(set(dtypes))==1
 
@@ -314,6 +321,9 @@ class PythonTuple(Function):
             else:
                 self._homogeneous_dtype = d_vars[0]['datatype']
         else:
+            # If one argument is provided then the tuple must be homogeneous
+            # unless it contains tuples as these tuples are not necessarily homogeneous
+            assert(len(d_vars)==1)
             self._is_homogeneous = True
             self._homogeneous_dtype = d_vars[0]['datatype']
             if d_vars[0]['datatype'] == 'tuple':
