@@ -2501,10 +2501,9 @@ class TupleVariable(Variable):
     Examples
     --------
     >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> from pyccel.ast.datatypes import NativeTuple
     >>> v1 = Variable('int','v1')
     >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],NativeTuple(),'n')
+    >>> n  = TupleVariable([v1, v2],'n')
     >>> n
     n
     """
