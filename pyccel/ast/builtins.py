@@ -301,7 +301,7 @@ class PythonTuple(Function):
         """ set the types of each argument by providing
         the list of d_vars calculated using the function
         _infere_type in parser/semantics.py
-        
+
         This allows the homogeneity properties to be calculated
         """
         self._arg_dtypes = d_vars
