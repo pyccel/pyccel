@@ -2501,10 +2501,9 @@ class TupleVariable(Variable):
     Examples
     --------
     >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> from pyccel.ast.datatypes import NativeTuple
     >>> v1 = Variable('int','v1')
     >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],NativeTuple(),'n')
+    >>> n  = TupleVariable([v1, v2],'n')
     >>> n
     n
     """
@@ -2515,14 +2514,41 @@ class TupleVariable(Variable):
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
 
-        obj = Variable.__new__(cls, *args, **kwargs)
+        obj = Variable.__new__(cls, NativeTuple(), *args, **kwargs)
 
         obj._vars = tuple(arg_vars)
 
-        dtypes = [str(v.dtype) for v in obj._vars]
-        obj._is_homogeneous = len(set(dtypes))==1
+        shape = obj.shape
+        if (shape[0]!=len(arg_vars)):
+            assert(shape[0]%len(arg_vars)==0)
+            if isinstance(arg_vars[0].dtype,NativeTuple):
+                if arg_vars[0].is_homogeneous:
+                    obj._is_homogeneous = True
+                    obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+                else:
+                    obj._is_homogeneous = False
+            else:
+                obj._is_homogeneous = True
+                obj._homogeneous_dtype = arg_vars[0].dtype
+        else:
+            assert(shape[0]==len(arg_vars))
+            dtypes = [str(v.dtype) for v in obj._vars]
+            obj._is_homogeneous = len(set(dtypes))==1
+
+            if obj._is_homogeneous and isinstance(arg_vars[0].dtype,NativeTuple):
+                obj._is_homogeneous = all(a.is_homogeneous for a in arg_vars)
+                if obj._is_homogeneous:
+                    dtypes = [str(v.homogeneous_dtype) for v in obj._vars]
+                    obj._is_homogeneous = len(set(dtypes))==1
+                    if obj._is_homogeneous:
+                        obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+            else:
+                obj._homogeneous_dtype = arg_vars[0].dtype
 
         return obj
+
+    def get_vars(self):
+        return self._vars
 
     def get_var(self, variable_idx):
         return self._vars[variable_idx]
@@ -2542,6 +2568,18 @@ class TupleVariable(Variable):
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @property
+    def homogeneous_dtype(self):
+        assert(self._is_homogeneous)
+        return self._homogeneous_dtype
+
+    @property
+    def precision(self):
+        if self._is_homogeneous:
+            return self._vars[0].precision
+        else:
+            return Variable.precision
 
 class Constant(ValuedVariable):
 

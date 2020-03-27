@@ -6,6 +6,15 @@ f,g,h = ai
 i = e[2]
 ai_0 = 44
 
+tup1 = (0, False, 3+1j) * 3
+tup2 = tup1 * 2
+
+tup3 = ((1,2), (4,False))
+
+tup4 = ((0,1,2), (3,4,5))
+
+tup5 = ((0,1,2), (True,False,True))
+
 from numpy import ones
 x = ones((2,3,2))
 for z in range(2):
@@ -40,3 +49,14 @@ def add2(x, y):
 
 args = (3,4)
 print(add2(*args))
+
+print(tup1)
+
+print(tup2)
+
+print(tup3[1])
+
+print(tup4[0])
+
+for i in range(3):
+    print(tup5[0][i], tup5[1][i])

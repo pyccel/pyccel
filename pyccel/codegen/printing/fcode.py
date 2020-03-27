@@ -467,7 +467,10 @@ class FCodePrinter(CodePrinter):
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
-            elif isinstance(f, (Tuple, PythonTuple, TupleVariable)):
+            elif isinstance(f, (Tuple, PythonTuple)):
+                for i in f:
+                    args.append("{}".format(self._print(i)))
+            elif isinstance(f, TupleVariable) and not f.is_homogeneous:
                 for i in f:
                     args.append("{}".format(self._print(i)))
             else:
@@ -535,7 +538,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Tuple(self, expr):
         import numpy
-        shape = numpy.shape(expr)
+        shape = list(reversed(numpy.shape(expr)))
         if len(shape)>1:
             arg = functools.reduce(operator.concat, expr)
             elements = ', '.join(self._print(i) for i in arg)
@@ -544,12 +547,19 @@ class FCodePrinter(CodePrinter):
         return '[{0}]'.format(fs)
 
     def _print_PythonTuple(self, expr):
+        shape = Tuple(*reversed(expr.shape))
+        if len(shape)>1:
+            elements = ', '.join(self._print(i) for i in expr)
+            return 'reshape(['+ elements + '], '+ self._print(shape) + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
     def _print_TupleVariable(self, expr):
-        fs = ', '.join(self._print(f) for f in expr)
-        return '[{0}]'.format(fs)
+        if expr.is_homogeneous:
+            return self._print_Variable(expr)
+        else:
+            fs = ', '.join(self._print(f) for f in expr)
+            return '[{0}]'.format(fs)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -849,7 +859,7 @@ class FCodePrinter(CodePrinter):
             return ''
         # ...
 
-        if isinstance(expr.variable, TupleVariable) and not expr.variable.rank>1:
+        if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
             return '\n'.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
@@ -891,17 +901,21 @@ class FCodePrinter(CodePrinter):
             else:
                 name = alias
             dtype = '{0}({1})'.format(sig, name)
-        elif isinstance(expr.dtype, NativeTuple):
-            # Non-homogenous NativeTuples must be stored in TupleVariable
-            if not expr.variable.is_homogeneous:
-                errors.report(LIST_OF_TUPLES,
-                              symbol=expr.variable, severity='error')
-            dtype = self._print(expr.variable[0].dtype)
         else:
-            dtype = self._print(expr.dtype)
+            if isinstance(expr.dtype, NativeTuple):
+                # Non-homogenous NativeTuples must be stored in TupleVariable
+                if not expr.variable.is_homogeneous:
+                    errors.report(LIST_OF_TUPLES,
+                                  symbol=expr.variable, severity='error')
+                    expr_dtype = NativeInt()
+                else:
+                    expr_dtype = expr.variable.homogeneous_dtype
+            else:
+                expr_dtype = expr.dtype
+            dtype = self._print(expr_dtype)
 
         # ...
-            if isinstance(expr.dtype, NativeString):
+            if isinstance(expr_dtype, NativeString):
 
                 if expr.intent:
                     dtype = dtype[:9] +'(len =*)'
@@ -938,8 +952,12 @@ class FCodePrinter(CodePrinter):
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we inclue shape of type list
 
-            rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                 self._print(i)) for i in shape)
+            if var.order=='C':
+                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                    self._print(i)) for i in shape[::-1])
+            else:
+                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                     self._print(i)) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
             enable_alloc = False
@@ -1042,7 +1060,8 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_Assign(self, expr):
-        if isinstance(expr.lhs, TupleVariable) and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
+        if isinstance(expr.lhs, TupleVariable) and not expr.lhs.is_homogeneous \
+            and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
             return '\n'.join(self._print_Assign(
                         Assign(lhs,
                                 rhs,
@@ -2099,7 +2118,7 @@ class FCodePrinter(CodePrinter):
                 lines.append("else")
             else:
                 lines.append("else if (%s) then" % self._print(c))
-            if isinstance(e, (list, tuple, Tuple)):
+            if isinstance(e, (list, tuple, Tuple, PythonTuple)):
                 for ee in e:
                     lines.append(self._print(ee))
             else:
