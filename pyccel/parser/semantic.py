@@ -590,7 +590,7 @@ class SemanticParser(BasicParser):
             d_var[key] = value
         dtype = d_var.pop('datatype')
         if isinstance(var, TupleVariable):
-            var = TupleVariable(var.get_vars(), dtype, name, **d_var)
+            var = TupleVariable(var.get_vars(), name, **d_var)
         else:
             var = Variable(dtype, name, **d_var)
         # TODO improve to insert in the right namespace
@@ -1839,7 +1839,7 @@ class SemanticParser(BasicParser):
                 elem_dtype = elem_d_lhs.pop('datatype')
                 elem_vars.append(self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs))
             d_lhs['is_stack_array'] = True
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
+            lhs = TupleVariable(elem_vars, name, **d_lhs)
         elif isinstance(rhs,TupleVariable):
             elem_vars = []
             for i,a in enumerate(rhs):
@@ -1848,7 +1848,7 @@ class SemanticParser(BasicParser):
                 elem_dtype = elem_d_lhs.pop('datatype')
                 elem_vars.append(self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs))
             d_lhs['is_stack_array'] = True
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
+            lhs = TupleVariable(elem_vars, name, **d_lhs)
         else:
             lhs = Variable(dtype, name, **d_lhs)
         return lhs

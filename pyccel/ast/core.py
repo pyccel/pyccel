@@ -2515,7 +2515,7 @@ class TupleVariable(Variable):
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
 
-        obj = Variable.__new__(cls, *args, **kwargs)
+        obj = Variable.__new__(cls, NativeTuple(), *args, **kwargs)
 
         obj._vars = tuple(arg_vars)
 
