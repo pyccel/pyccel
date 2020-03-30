@@ -5,7 +5,7 @@ import importlib
 
 from collections.abc import Iterable
 
-from sympy import cache
+from sympy.core import cache
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Integral, Symbol, Tuple
@@ -17,7 +17,6 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.compatibility import is_sequence
-from sympy.core.compatibility import string_types
 from sympy.core.assumptions   import StdFactKB
 from sympy.core.operations    import LatticeOp
 from sympy.core.relational    import Relational
@@ -324,7 +323,7 @@ def allocatable_like(expr, verbose=False):
         while args:
             a = args.pop()
             # XXX: This is a hack to support non-Basic args
-            if isinstance(a, string_types):
+            if isinstance(a, str):
                 continue
 
             if a.is_Mul:
@@ -537,6 +536,34 @@ def create_variable(expr):
         name = 'Dymmy_' + str(abs(np.random.randint(500)))[-4:]
 
     return Symbol(name)
+
+class Pow(sp_Pow):
+
+    def _eval_subs(self, old, new):
+        args = self.args
+        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
+        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
+        expr = Pow(args[0], args[1], evaluate=False)
+        return expr
+
+    def _eval_evalf(self, prec):
+        return sp_Pow(self.base,self.exp).evalf(prec)
+
+    def _eval_is_positive(self):
+        #we do this inorder to infere the type of Pow expression correctly
+        return self.is_real
+
+    @property
+    def is_real(self):
+        return self._args[0].is_real and self._args[1].is_real
+
+    @property
+    def is_integer(self):
+        return self._args[0].is_integer and self._args[1].is_integer
+
+    @property
+    def is_complex(self):
+        return self._args[0].is_complex and self._args[1].is_complex
 
 class DottedName(Basic):
 
@@ -940,8 +967,7 @@ def operator(op):
 
 
 class AugAssign(Assign):
-
-    """
+    r"""
     Represents augmented variable assignment for code generation.
 
     Parameters
@@ -2082,6 +2108,7 @@ class Variable(Symbol, PyccelAstNode):
     >>> Variable('int', ('matrix', 'n_rows'))
     matrix.n_rows
     """
+    is_zero = False
 
     def __new__(
         cls,
@@ -2210,7 +2237,6 @@ class Variable(Symbol, PyccelAstNode):
             pass
         else:
             raise TypeError('Undefined datatype')
-
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
@@ -2538,10 +2564,9 @@ class TupleVariable(Variable):
     Examples
     --------
     >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> from pyccel.ast.datatypes import NativeTuple
     >>> v1 = Variable('int','v1')
     >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],NativeTuple(),'n')
+    >>> n  = TupleVariable([v1, v2],'n')
     >>> n
     n
     """
@@ -2552,14 +2577,41 @@ class TupleVariable(Variable):
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
 
-        obj = Variable.__new__(cls, *args, **kwargs)
+        obj = Variable.__new__(cls, NativeTuple(), *args, **kwargs)
 
         obj._vars = tuple(arg_vars)
 
-        dtypes = [str(v.dtype) for v in obj._vars]
-        obj._is_homogeneous = len(set(dtypes))==1
+        shape = obj.shape
+        if (shape[0]!=len(arg_vars)):
+            assert(shape[0]%len(arg_vars)==0)
+            if isinstance(arg_vars[0].dtype,NativeTuple):
+                if arg_vars[0].is_homogeneous:
+                    obj._is_homogeneous = True
+                    obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+                else:
+                    obj._is_homogeneous = False
+            else:
+                obj._is_homogeneous = True
+                obj._homogeneous_dtype = arg_vars[0].dtype
+        else:
+            assert(shape[0]==len(arg_vars))
+            dtypes = [str(v.dtype) for v in obj._vars]
+            obj._is_homogeneous = len(set(dtypes))==1
+
+            if obj._is_homogeneous and isinstance(arg_vars[0].dtype,NativeTuple):
+                obj._is_homogeneous = all(a.is_homogeneous for a in arg_vars)
+                if obj._is_homogeneous:
+                    dtypes = [str(v.homogeneous_dtype) for v in obj._vars]
+                    obj._is_homogeneous = len(set(dtypes))==1
+                    if obj._is_homogeneous:
+                        obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+            else:
+                obj._homogeneous_dtype = arg_vars[0].dtype
 
         return obj
+
+    def get_vars(self):
+        return self._vars
 
     def get_var(self, variable_idx):
         return self._vars[variable_idx]
@@ -2579,6 +2631,18 @@ class TupleVariable(Variable):
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @property
+    def homogeneous_dtype(self):
+        assert(self._is_homogeneous)
+        return self._homogeneous_dtype
+
+    @property
+    def precision(self):
+        if self._is_homogeneous:
+            return self._vars[0].precision
+        else:
+            return Variable.precision
 
 class Constant(ValuedVariable, PyccelAstNode):
 
@@ -2819,19 +2883,13 @@ class FunctionDef(Basic):
         True for a function without side effect
 
     is_elemental: bool
-        True for a function is elemental
+        True for a function that is elemental
 
     is_private: bool
-        True for a function is private
+        True for a function that is private
 
     is_static: bool
         True for static functions. Needed for f2py
-
-    is_external: bool
-        True for a function will be visible with f2py
-
-    is_external_call: bool
-        True for a function call will be visible with f2py
 
     imports: list, tuple
         a list of needed imports
@@ -2887,8 +2945,6 @@ class FunctionDef(Basic):
         is_elemental=False,
         is_private=False,
         is_header=False,
-        is_external=False,
-        is_external_call=False,
         arguments_inout=[],
         functions = []):
 
@@ -2951,12 +3007,10 @@ class FunctionDef(Basic):
             raise TypeError('Expecting a string for kind.')
 
         if not isinstance(is_static, bool):
-            raise TypeError('Expecting a boolean for is_static attribut'
-                            )
+            raise TypeError('Expecting a boolean for is_static attribute')
 
         if not kind in ['function', 'procedure']:
-            raise ValueError("kind must be one among {'function', 'procedure'}"
-                             )
+            raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
@@ -2974,14 +3028,7 @@ class FunctionDef(Basic):
             raise TypeError('Expecting a boolean for private')
 
         if not isinstance(is_header, bool):
-            raise TypeError('Expecting a boolean for private')
-
-
-        if not isinstance(is_external, bool):
-            raise TypeError('Expecting a boolean for external')
-
-        if not isinstance(is_external_call, bool):
-            raise TypeError('Expecting a boolean for external_call')
+            raise TypeError('Expecting a boolean for header')
 
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple, Tuple)):
@@ -3019,8 +3066,6 @@ class FunctionDef(Basic):
             is_elemental,
             is_private,
             is_header,
-            is_external,
-            is_external_call,
             arguments_inout,
             functions,)
 
@@ -3097,20 +3142,12 @@ class FunctionDef(Basic):
         return self._args[17]
 
     @property
-    def is_external(self):
+    def arguments_inout(self):
         return self._args[18]
 
     @property
-    def is_external_call(self):
-        return self._args[19]
-
-    @property
-    def arguments_inout(self):
-        return self._args[20]
-
-    @property
     def functions(self):
-        return self._args[21]
+        return self._args[19]
 
     def print_body(self):
         for s in self.body:
@@ -3827,7 +3864,7 @@ class Load(Basic):
                     arg = args[0]
                     m = Lambda(arg, m(arg, evaluate=False))
                 else:
-                    m = Lambda(args, m(evaluate=False, *args))
+                    m = Lambda(tuple(args), m(evaluate=False, *args))
 
             ls.append(m)
 
@@ -4258,7 +4295,7 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
 
     **todo:** fix bug. the last result must be : (o,p)
     """
-
+    is_zero = False
     def __new__(
         cls,
         label,
@@ -4354,6 +4391,7 @@ class IndexedElement(Indexed, PyccelAstNode):
 
     **todo:** fix bug. the last result must be : True
     """
+    is_zero = False
 
     def __new__(
         cls,
@@ -4364,7 +4402,7 @@ class IndexedElement(Indexed, PyccelAstNode):
 
         if not args:
             raise IndexException('Indexed needs at least one index.')
-        if isinstance(base, (string_types, Symbol)):
+        if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
                 IndexedBase):

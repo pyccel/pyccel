@@ -186,6 +186,7 @@ def test_relative_imports_in_project():
 
     compile_pyccel(path_dir, 'project/folder1/mod1.py')
     compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    compile_pyccel(path_dir, 'project/folder2/mod3.py')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -199,6 +200,7 @@ def test_absolute_imports_in_project():
 
     compile_pyccel(path_dir, 'project/folder1/mod1.py')
     compile_pyccel(path_dir, 'project/folder2/mod2.py')
+    compile_pyccel(path_dir, 'project/folder2/mod3.py')
     fort_out = get_python_output('runtest.py', cwd=path_dir)
 
     compare_pyth_fort_output(pyth_out, fort_out)
@@ -294,23 +296,6 @@ def test_default_arguments():
                 float,float,float,float])
 
 #------------------------------------------------------------------------------
-def test_f2py_compat():
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, "scripts")
-    from scripts.runtest_f2py_compat import test_func
-
-    pyth_out = str(test_func())
-
-    compile_pyccel(path_dir, "runtest_f2py_compat.py")
-
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.runtest_f2py_compat"],
-            stdout=subprocess.PIPE, universal_newlines=True)
-    fort_out, _ = p.communicate()
-    assert(p.returncode==0)
-
-    compare_pyth_fort_output(pyth_out, fort_out)
-
-#------------------------------------------------------------------------------
 def test_pyccel_calling_directory():
     cwd = get_abs_path(".")
 
@@ -388,7 +373,7 @@ def test_multiple_results():
                 float,float,float,float,float,float])
 
 def test_tuples():
+    types = [int]*4 + [bool] + [float] + [int]*9 + [float]*4 + [int] \
+            + [int,bool,complex]*9 + [int,bool] + [int]*3 + [int,bool]*2
     pyccel_test("scripts/runtest_tuples.py",
-            output_dtype = [int,int,int,int,bool,float,int,
-                int,int,int,int,int,int,int,int,float, float,
-                float, float, int])
+            output_dtype = types)

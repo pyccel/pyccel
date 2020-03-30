@@ -2,6 +2,7 @@
 import os
 import sys
 import shutil
+from collections import OrderedDict
 
 from pyccel.parser.errors     import Errors
 from pyccel.codegen.codegen   import Parser
@@ -148,6 +149,7 @@ def execute_pyccel(fname, *,
     errors = Errors()
     errors.reset()
 
+    # ...
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, mods=(), folders=()):
         mod_folder = os.path.dirname(parser.filename) + "/__pyccel__/"
@@ -168,8 +170,14 @@ def execute_pyccel(fname, *,
 
         return mods, folders
 
-    dep_mods, inc_folders = get_module_dependencies(parser)
-    includes += inc_folders
+    dep_mods, inc_dirs = get_module_dependencies(parser)
+
+    # Remove duplicates without changing order
+    dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
+    inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
+    # ...
+
+    includes += inc_dirs
 
     if codegen.is_program:
         modules += [os.path.join(pyccel_dirpath, m) for m in dep_mods[1:]]
