@@ -152,7 +152,7 @@ def execute_pyccel(fname, *,
     # ...
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, mods=(), folders=()):
-        mod_folder = os.path.dirname(parser.filename) + "/__pyccel__/"
+        mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
         mod_base = os.path.splitext(os.path.basename(parser.filename))[0]
 
         # Stop conditions
@@ -161,7 +161,7 @@ def execute_pyccel(fname, *,
             return mods, folders
 
         # Update lists
-        mods = [*mods, mod_folder + mod_base]
+        mods = [*mods, os.path.join(mod_folder, mod_base)]
         folders = [*folders, mod_folder]
 
         # Proceed recursively
