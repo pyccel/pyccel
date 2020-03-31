@@ -125,6 +125,8 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
+    test_file = os.path.normpath(test_file)
+
     if (cwd is None):
         cwd = os.path.dirname(test_file)
 
@@ -146,7 +148,10 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
         compile_pyccel (cwd, test_file, pyccel_commands+"-t")
         compile_fortran(cwd, test_file, dependencies)
 
-    fort_out = get_fortran_output(test_file[:-3])
+    exefile = os.path.splitext(test_file)[0]
+    if sys.platform == "win32":
+        exefile = exefile + ".exe"
+    fort_out = get_fortran_output(exefile)
 
     compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
