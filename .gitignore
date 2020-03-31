@@ -33,6 +33,7 @@ doc/source
 *.log
 *.ps
 *.gv
+*.exe
 
 *.swp
 
@@ -57,3 +58,4 @@ tests/examples/openmp/*.pyccel
 tests/examples/openmp/*.f90
 tests/examples/openmp/*.mod
 tests/examples/openmp/*.o
+tests/internal/scripts/blas/ex1.exe
