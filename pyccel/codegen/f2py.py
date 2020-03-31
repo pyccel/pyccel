@@ -171,7 +171,7 @@ def create_shared_library(codegen,
                  accelerator = accelerator)
 
     # Obtain absolute path of newly created shared library
-    
+
     # Set file name extension of Python extension module
     if os.name == 'nt':  # Windows
         extext = 'pyd'
