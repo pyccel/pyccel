@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd __pytest__
 INSTALL_DIR=$(python -c "import pyccel; print(pyccel.__path__[0])")
 SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
 printf "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth

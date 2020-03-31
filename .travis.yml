@@ -1,34 +1,36 @@
 # After changing this file, check it on:
 #   http://lint.travis-ci.org/
 
-# to test different versions of python, check the numpy travis file on:
-#   https://github.com/numpy/numpy/blob/master/.travis.yml
-
 language: python
 os: linux
 dist: xenial
-python:
-  - 3.5
-  - 3.6
-  - 3.7
 
-# command before installation
-before_install: bash .travis/before_install.sh
+jobs:
+  include:
 
-# command to install Python library and dependencies
-install:
-  - pip install .
+  - os: linux
+    python: 3.5
+    before_install: bash .travis/before_install.sh
+    install       : pip install .
+    before_script : pip install mpi4py pytest coverage
+    script        : bash .travis/script.sh
+    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
-before_script:
-  - pip install mpi4py
-  - pip install pytest
-  - pip install coverage
-  - mkdir __pytest__
+  - os: linux
+    python: 3.6
+    before_install: bash .travis/before_install.sh
+    install       : pip install .
+    before_script : pip install mpi4py pytest coverage
+    script        : bash .travis/script.sh
+    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
-# command to run tests
-script: bash .travis/script.sh
+  - os: linux
+    python: 3.7
+    before_install: bash .travis/before_install.sh
+    install       : pip install .
+    before_script : pip install mpi4py pytest coverage
+    script        : bash .travis/script.sh
+    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
-after_script:
-  - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
-  - cd -
-  - rm -rf __pytest__
+  - os: windows
+    language: c  # Python not supported, "language: generic" doesn't start VM
