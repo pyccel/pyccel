@@ -101,8 +101,8 @@ def compile_f2py( filename, *,
                                 only       = only,
                                 pyf        = pyf )
 
-    cmd = """python{}.{} -m numpy.f2py {}"""
-    cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
+    cmd = """{} -m numpy.f2py {}"""
+    cmd = cmd.format(sys.executable, args)
 
     output = subprocess.check_output(cmd, shell=True)
 

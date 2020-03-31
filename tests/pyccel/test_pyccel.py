@@ -4,6 +4,7 @@ import pytest
 import shutil
 import numpy as np
 import re
+import sys
 
 #==============================================================================
 # UTILITIES
@@ -21,9 +22,9 @@ def insert_pyccel_folder(abs_path):
 #------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd = None):
     if cwd is None:
-        p = subprocess.Popen([shutil.which("python3") , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     else:
-        p = subprocess.Popen([shutil.which("python3") , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
+        p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
     out, _ = p.communicate()
     assert(p.returncode==0)
     return out
@@ -218,7 +219,7 @@ def test_rel_imports_python_accessible_folder():
     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_rel_imports"],
+    p = subprocess.Popen([sys.executable , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_rel_imports"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -251,7 +252,7 @@ def test_folder_imports_python_accessible_folder():
     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
+    p = subprocess.Popen([sys.executable , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
@@ -272,7 +273,7 @@ def test_folder_imports():
     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"))
     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"))
 
-    p = subprocess.Popen([shutil.which("python3") , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
+    p = subprocess.Popen([sys.executable , "%s" % base_dir+"/run_import_function.py", "scripts.folder2.runtest_imports2"],
             stdout=subprocess.PIPE, universal_newlines=True)
     fort_out, _ = p.communicate()
     assert(p.returncode==0)
