@@ -30,7 +30,7 @@ def compile_f2py( filename, *,
                   only = (),
                   pyf = '' ):
 
-    args_pattern = """  -c {compilers} --f90flags='{f90flags}' {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
+    args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
 
     compilers  = ''
     f90flags   = ''
@@ -56,7 +56,7 @@ def compile_f2py( filename, *,
         compilers = compilers + ' --fcompiler={}'.format(_vendor)
 
     f90flags = ''
-    opt = "--opt='-O3'"
+    opt = '--opt="-O3"'
 
     if accelerator:
         if accelerator == 'openmp':
@@ -101,8 +101,8 @@ def compile_f2py( filename, *,
                                 only       = only,
                                 pyf        = pyf )
 
-    cmd = """python{}.{} -m numpy.f2py {}"""
-    cmd = cmd.format(PY_VERSION[0], PY_VERSION[1], args)
+    cmd = """{} -m numpy.f2py {}"""
+    cmd = cmd.format(sys.executable, args)
 
     output = subprocess.check_output(cmd, shell=True)
 
@@ -171,7 +171,13 @@ def create_shared_library(codegen,
                  accelerator = accelerator)
 
     # Obtain absolute path of newly created shared library
-    pattern = '{}*.so'.format(sharedlib_modname)
+
+    # Set file name extension of Python extension module
+    if os.name == 'nt':  # Windows
+        extext = 'pyd'
+    else:
+        extext = 'so'
+    pattern = '{}*.{}'.format(sharedlib_modname, extext)
     sharedlib_filename = glob.glob(pattern)[0]
     sharedlib_filepath = os.path.abspath(sharedlib_filename)
 
