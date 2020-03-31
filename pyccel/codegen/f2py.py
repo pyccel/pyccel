@@ -151,7 +151,7 @@ def create_shared_library(codegen,
     with open(f2py_filename, 'w') as f:
         f.writelines(f2py_code)
 
-    object_files = ' '.join(['{}.o'.format(m) for m in dep_mods])
+    object_files = ' '.join(['"{}.o"'.format(m) for m in dep_mods])
     # ...
 
     # Name of shared library

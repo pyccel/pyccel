@@ -98,7 +98,7 @@ def compile_fortran(filename, compiler, flags,
             binary = '{}.o'.format(f)
 #            binary = "{folder}{binary}.o".format(folder=output,
 #                                binary=os.path.splitext(os.path.basename(filename))[0])
-            mod_file = "{folder}".format(folder=output)
+            mod_file = '"{folder}"'.format(folder=output)
 
     o_code = '-o'
     j_code = ''
@@ -110,7 +110,7 @@ def compile_fortran(filename, compiler, flags,
     m_code = ' '.join('{}.o'.format(m) for m in modules)
     libs_flags = ' '.join('-l{}'.format(i) for i in libs)
 
-    cmd = '{0} {1} {2} {3} {4} {5} {6} {7} {8}'.format( \
+    cmd = '{0} {1} {2} "{3}" {4} "{5}" {6} {7} {8}'.format( \
         compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code, mod_file)
 
     if verbose:
