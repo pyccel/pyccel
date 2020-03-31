@@ -10,8 +10,16 @@ import sys
 # UTILITIES
 #==============================================================================
 def get_abs_path(relative_path):
+    relative_path = os.path.normpath(relative_path)
     base_dir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(base_dir, relative_path)
+
+#------------------------------------------------------------------------------
+def get_exe(filename):
+    exefile = os.path.splitext(filename)[0]
+    if sys.platform == "win32":
+        exefile = exefile + ".exe"
+    return exefile
 
 #------------------------------------------------------------------------------
 def insert_pyccel_folder(abs_path):
@@ -148,10 +156,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
         compile_pyccel (cwd, test_file, pyccel_commands+"-t")
         compile_fortran(cwd, test_file, dependencies)
 
-    exefile = os.path.splitext(test_file)[0]
-    if sys.platform == "win32":
-        exefile = exefile + ".exe"
-    fort_out = get_fortran_output(exefile)
+    fort_out = get_fortran_output(get_exe(test_file))
 
     compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
 
@@ -310,7 +315,7 @@ def test_pyccel_calling_directory():
 
     compile_pyccel(cwd, test_file)
 
-    fort_out = get_fortran_output(get_abs_path("scripts/runtest_funcs"))
+    fort_out = get_fortran_output(get_exe(test_file))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
