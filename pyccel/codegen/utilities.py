@@ -69,8 +69,8 @@ def construct_flags(compiler,
             raise ValueError("Only openmp and openacc are available")
 
     # Construct flags
-    flags += ''.join(' -I{0}'.format(i) for i in includes)
-    flags += ''.join(' -L{0}'.format(i) for i in libdirs)
+    flags += ''.join(' -I"{0}"'.format(i) for i in includes)
+    flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
 
     return flags
 
