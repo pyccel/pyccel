@@ -11,26 +11,17 @@ jobs:
 #  - os: linux
 #    python: 3.5
 #    before_install: bash .travis/before_install.sh
-#    install       : pip install .
 #    before_script : pip install mpi4py pytest coverage
-#    script        : bash .travis/script.sh
-#    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 #
 #  - os: linux
 #    python: 3.6
 #    before_install: bash .travis/before_install.sh
-#    install       : pip install .
 #    before_script : pip install mpi4py pytest coverage
-#    script        : bash .travis/script.sh
-#    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 #
 #  - os: linux
 #    python: 3.7
 #    before_install: bash .travis/before_install.sh
-#    install       : pip install .
 #    before_script : pip install mpi4py pytest coverage
-#    script        : bash .travis/script.sh
-#    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
@@ -43,7 +34,9 @@ jobs:
     - conda config --show
     - which python
     - python -VV
-    install       : pip install .
     before_script : pip install pytest coverage
-    script        : bash .travis/script.sh
-    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
+
+
+install       : pip install .
+script        : bash .travis/script.sh
+after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
