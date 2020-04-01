@@ -43,3 +43,4 @@ jobs:
     - conda config --show
     - which python
     - python -VV
+    install       : pip install .
