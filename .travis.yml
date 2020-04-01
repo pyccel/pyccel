@@ -44,6 +44,13 @@ jobs:
     - sleep 5
     - msiexec //quiet //i msmpisdk.msi
     - refreshenv
+    #
+    # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
+    - cd "$MSMPI_INC"
+    - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
+    - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
+    - gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
+    - cd -
 
 install:
   - pip install .
