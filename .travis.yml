@@ -31,7 +31,17 @@ jobs:
     - conda config --show
     - which python
     - python -VV
-
+    - which gfortran
+    - gfortran --version
+    #
+    # Download MS MPI runtime and SDK
+    - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
+    - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
+    #
+    # Install MS MPI
+    - ./msmpisetup.exe -unattend
+    - sleep 5
+    - msiexec //quiet //i msmpisdk.msi
 
 install:
   - pip install .
