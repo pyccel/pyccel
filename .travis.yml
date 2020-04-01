@@ -27,6 +27,7 @@ jobs:
     - ls -l /c/tools/anaconda3/condabin
     - ls -l /c/tools/anaconda3/etc
     - source /c/tools/Anaconda3/etc/profile.d/conda.sh
+    - source .travis/RefreshEnv.sh
     - conda activate
     - conda config --show
     - which python
@@ -42,6 +43,7 @@ jobs:
     - ./msmpisetup.exe -unattend
     - sleep 5
     - msiexec //quiet //i msmpisdk.msi
+    - refreshenv
 
 install:
   - pip install .
