@@ -46,3 +46,4 @@ jobs:
     install       : pip install .
     before_script : pip install pytest coverage
     script        : bash .travis/script.sh
+    after_script  : bash <(wget -q -O - https://coverage.codacy.com/get.sh)
