@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import sys
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
@@ -357,6 +358,7 @@ def test_array_int32_2d_F_idiv():
 # TEST: 1D ARRAYS OF INT-64
 #==============================================================================
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_scalar_add():
 
     f1 = arrays.array_int_1d_scalar_add
@@ -371,6 +373,7 @@ def test_array_int_1d_scalar_add():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_scalar_sub():
 
     f1 = arrays.array_int_1d_scalar_sub
@@ -385,6 +388,7 @@ def test_array_int_1d_scalar_sub():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_scalar_mul():
 
     f1 = arrays.array_int_1d_scalar_mul
@@ -399,6 +403,7 @@ def test_array_int_1d_scalar_mul():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_scalar_idiv():
 
     f1 = arrays.array_int_1d_scalar_idiv
@@ -413,6 +418,7 @@ def test_array_int_1d_scalar_idiv():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_add():
 
     f1 = arrays.array_int_1d_add
@@ -427,6 +433,7 @@ def test_array_int_1d_add():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_sub():
 
     f1 = arrays.array_int_1d_sub
@@ -441,6 +448,7 @@ def test_array_int_1d_sub():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_mul():
 
     f1 = arrays.array_int_1d_mul
@@ -455,6 +463,7 @@ def test_array_int_1d_mul():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_1d_idiv():
 
     f1 = arrays.array_int_1d_idiv
@@ -473,6 +482,7 @@ def test_array_int_1d_idiv():
 # TEST: 2D ARRAYS OF INT-64 WITH C ORDERING
 #==============================================================================
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_scalar_add():
 
     f1 = arrays.array_int_2d_C_scalar_add
@@ -487,6 +497,7 @@ def test_array_int_2d_C_scalar_add():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_scalar_sub():
 
     f1 = arrays.array_int_2d_C_scalar_sub
@@ -501,6 +512,7 @@ def test_array_int_2d_C_scalar_sub():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_scalar_mul():
 
     f1 = arrays.array_int_2d_C_scalar_mul
@@ -515,6 +527,7 @@ def test_array_int_2d_C_scalar_mul():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_scalar_idiv():
 
     f1 = arrays.array_int_2d_C_scalar_idiv
@@ -529,6 +542,7 @@ def test_array_int_2d_C_scalar_idiv():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_add():
 
     f1 = arrays.array_int_2d_C_add
@@ -543,6 +557,7 @@ def test_array_int_2d_C_add():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_sub():
 
     f1 = arrays.array_int_2d_C_sub
@@ -557,6 +572,7 @@ def test_array_int_2d_C_sub():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_mul():
 
     f1 = arrays.array_int_2d_C_mul
@@ -571,6 +587,7 @@ def test_array_int_2d_C_mul():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_idiv():
 
     f1 = arrays.array_int_2d_C_idiv
@@ -585,6 +602,7 @@ def test_array_int_2d_C_idiv():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_C_initialization():
 
     f1 = arrays.array_int_2d_C_initialization
@@ -602,6 +620,7 @@ def test_array_int_2d_C_initialization():
 # TEST: 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_scalar_add():
 
     f1 = arrays.array_int_2d_F_scalar_add
@@ -616,6 +635,7 @@ def test_array_int_2d_F_scalar_add():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_scalar_sub():
 
     f1 = arrays.array_int_2d_F_scalar_sub
@@ -630,6 +650,7 @@ def test_array_int_2d_F_scalar_sub():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_scalar_mul():
 
     f1 = arrays.array_int_2d_F_scalar_mul
@@ -644,6 +665,7 @@ def test_array_int_2d_F_scalar_mul():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_scalar_idiv():
 
     f1 = arrays.array_int_2d_F_scalar_idiv
@@ -658,6 +680,7 @@ def test_array_int_2d_F_scalar_idiv():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_add():
 
     f1 = arrays.array_int_2d_F_add
@@ -672,6 +695,7 @@ def test_array_int_2d_F_add():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_sub():
 
     f1 = arrays.array_int_2d_F_sub
@@ -686,6 +710,7 @@ def test_array_int_2d_F_sub():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_mul():
 
     f1 = arrays.array_int_2d_F_mul
@@ -700,6 +725,7 @@ def test_array_int_2d_F_mul():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_idiv():
 
     f1 = arrays.array_int_2d_F_idiv
@@ -714,6 +740,7 @@ def test_array_int_2d_F_idiv():
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.xfail(sys.platform == "win32", sys.platform == "win32", reason="Detect default integer type, #289")
 def test_array_int_2d_F_initialization():
 
     f1 = arrays.array_int_2d_F_initialization

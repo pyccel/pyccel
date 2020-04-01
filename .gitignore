@@ -33,6 +33,7 @@ doc/source
 *.log
 *.ps
 *.gv
+*.exe
 
 *.swp
 
