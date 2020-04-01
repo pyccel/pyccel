@@ -51,6 +51,13 @@ jobs:
     - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
     - gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
     - cd -
+    #
+    # Generate static libmsmpi.a from msmpi.dll
+    - cd "$MSMPI_LIB64"
+    - cp $SYSTEMROOT/SysWOW64/msmpi.dll .
+    - gendef msmpi.dll
+    - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
+    - cd -
 
 install:
   - pip install .
