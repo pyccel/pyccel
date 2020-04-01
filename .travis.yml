@@ -34,3 +34,12 @@ jobs:
 
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
+    before_install:
+    - choco install anaconda3
+    - ls -l /c/tools/anaconda3/condabin
+    - ls -l /c/tools/anaconda3/etc
+    - source /c/tools/Anaconda3/etc/profile.d/conda.sh
+    - conda activate
+    - conda config --show
+    - which python
+    - python -VV
