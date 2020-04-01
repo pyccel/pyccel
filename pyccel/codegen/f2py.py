@@ -34,6 +34,7 @@ def compile_f2py( filename, *,
 
     compilers  = ''
     f90flags   = ''
+    opt        = '--opt="-O3"'
 
     #... Determine Fortran compiler vendor for F2PY
     if compiler == 'gfortran':
@@ -50,13 +51,14 @@ def compile_f2py( filename, *,
     #...
 
     if mpi_compiler:
-        compilers = '--f90exec={}'.format(mpi_compiler)
+        if sys.platform == 'win32' and mpi_compiler == 'mpif90':
+            compilers = '--f90exec=gfortran'
+        else:
+            compilers = '--f90exec={}'.format(mpi_compiler)
 
     if compiler:
         compilers = compilers + ' --fcompiler={}'.format(_vendor)
 
-    f90flags = ''
-    opt = '--opt="-O3"'
 
     if accelerator:
         if accelerator == 'openmp':
