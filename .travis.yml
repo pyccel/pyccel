@@ -44,3 +44,5 @@ jobs:
     - which python
     - python -VV
     install       : pip install .
+    before_script : pip install pytest coverage
+    script        : bash .travis/script.sh
