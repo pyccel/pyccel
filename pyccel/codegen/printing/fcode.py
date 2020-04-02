@@ -14,7 +14,7 @@ from sympy.core import Symbol
 from sympy.core import Float, Integer
 from sympy.core import S, Add, N
 from sympy.core import Tuple
-from sympy.core.function import Function
+from sympy.core.function import Function, Application
 from sympy.printing.precedence import precedence
 from sympy import Eq, Ne, true, false
 from sympy import Atom, Indexed
@@ -47,7 +47,7 @@ from pyccel.ast.core import Product, Block
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              TupleVariable, Declare, ValuedVariable,
-                             FunctionalFor,
+                             FunctionalFor, IndexedVariable,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
                              If, Nil, Is, IsNot)
@@ -2270,6 +2270,29 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.label)
 
     def _print_Indexed(self, expr):
+        if isinstance(expr.base, IndexedVariable):
+            base = expr.base.internal_variable
+        else:
+            base = expr.base
+        if isinstance(base, Application) and not isinstance(base, PythonTuple):
+            indexed_type = base.dtype
+            if isinstance(indexed_type, PythonTuple):
+                base = self._print_Function(expr.base.base)
+            else:
+                if (not self._additional_code):
+                    self._additional_code = ''
+                var = create_variable(base)
+                var = Variable(base.dtype, var.name, allocatable = True,
+                        shape=base.shape,precision=base.precision,
+                        order=base.order,rank=base.rank)
+                self._namespace.variables[var.name] = var
+                self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
+                return self._print(IndexedVariable(var, dtype=base.dtype,
+                   shape=base.shape,prec=base.precision,
+                   order=base.order,rank=base.rank).__getitem__(*expr.indices))
+        else:
+            base = self._print(expr.base.label)
+
         inds = [i for i in expr.indices]
         #indices of indexedElement of len==1 shouldn't be a Tuple
         for i, ind in enumerate(inds):
@@ -2278,7 +2301,7 @@ class FCodePrinter(CodePrinter):
 
         inds = [self._print(i) for i in inds]
 
-        return "%s(%s)" % (self._print(expr.base.label), ", ".join(inds))
+        return "%s(%s)" % (base, ", ".join(inds))
 
 
     def _print_Idx(self, expr):
