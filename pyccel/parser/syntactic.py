@@ -832,22 +832,26 @@ class SyntaxParser(BasicParser):
 
     def _visit_DotProxyList(self, stmt):
 
-        n = 0
+        n = len(stmt) - 1
         ls = []
-        while n < len(stmt):
-            var = self._visit(stmt[n])
-            while n < len(stmt) and not isinstance(stmt[n].next,
-                    DotNode):
-                n = n + 1
-            if n == len(stmt):
-                n = n - 1
+        while n > -1:
             if isinstance(stmt[n], GetitemNode):
                 args = self._visit(stmt[n])
+                while isinstance(stmt[n].previous, GetitemNode):
+                    n = n - 1
+                var = self._visit(stmt[:n])
                 var = IndexedBase(var)[args]
+                n = 0
             elif isinstance(stmt[n], CallNode):
                 var = self._visit(stmt[n])
-            ls.append(var)
-            n = n + 1
+                n = n - 1
+            else:
+                while n > 0 and not isinstance(stmt[n].previous,
+                        DotNode) and not isinstance(stmt[n], (CallNode)):
+                    n = n - 1
+                var = self._visit(stmt[n])
+            ls.insert(0,var)
+            n = n - 1
 
         if len(ls) == 1:
             expr = ls[0]
