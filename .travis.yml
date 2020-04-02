@@ -27,7 +27,7 @@ jobs:
     - ls -l /c/tools/anaconda3/condabin
     - ls -l /c/tools/anaconda3/etc
     - source /c/tools/Anaconda3/etc/profile.d/conda.sh
-    - source .travis/RefreshEnv.sh
+#    - source .travis/RefreshEnv.sh
     - conda activate
     - conda config --show
     - which python
@@ -43,7 +43,9 @@ jobs:
     - ./msmpisetup.exe -unattend
     - sleep 5
     - msiexec //quiet //i msmpisdk.msi
-    - refreshenv
+#    - refreshenv
+    - export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
+    - export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
     #
     # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
     - cd "$MSMPI_INC"
