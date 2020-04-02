@@ -35,6 +35,9 @@ jobs:
     - which gfortran
     - gfortran --version
     #
+    # Change default C compiler from M$ to mingw in distutils.cfg
+    - echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
+    #
     # Download MS MPI runtime and SDK
     - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
     - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi

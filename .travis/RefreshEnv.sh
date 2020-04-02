@@ -1,3 +1,4 @@
+#!bash
 # https://github.com/chocolatey/choco/issues/1851
 # https://gist.github.com/jayvdb/1daf8c60e20d64024f51ec333f5ce806
 
