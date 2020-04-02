@@ -4313,12 +4313,17 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        obj = IndexedBase.__new__(cls, label, shape=shape)
+        if isinstance(label, Application):
+            label_name = type(label)
+        else:
+            label_name = str(label)
+        obj = IndexedBase.__new__(cls, label_name, shape=shape)
         kw_args['dtype']     = dtype
         kw_args['precision'] = prec
         kw_args['order']     = order
         kw_args['rank']      = rank
         obj._kw_args         = kw_args
+        obj._label = label
 
         return obj
 
@@ -4354,6 +4359,9 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
     def name(self):
         return self._args[0]
 
+    @property
+    def internal_variable(self):
+        return self._label
 
 
     def clone(self, name):
@@ -4379,14 +4387,14 @@ class IndexedElement(Indexed, PyccelAstNode):
     >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import IndexedVariable
     >>> i, j = symbols('i j', cls=Idx)
-    >>> IndexedElement('A', i, j)
+    >>> IndexedElement(A, i, j)
     A[i, j]
 
     It is recommended that ``IndexedElement`` objects be created via ``IndexedVariable``:
 
     >>> from pyccel.ast.core import IndexedElement
     >>> A = IndexedVariable('A')
-    >>> IndexedElement('A', i, j) == A[i, j]
+    >>> IndexedElement(A, i, j) == A[i, j]
     False
 
     **todo:** fix bug. the last result must be : True
@@ -4422,6 +4430,7 @@ class IndexedElement(Indexed, PyccelAstNode):
             else:
                 return base[args]
         obj = Expr.__new__(cls, base, *args, **kw_args)
+        obj._label = base
         alloweddtypes = (NativeBool, NativeRange, NativeString)
         dtype = obj.base.dtype
         assumptions = {}
@@ -4475,6 +4484,10 @@ class IndexedElement(Indexed, PyccelAstNode):
     @property
     def order(self):
         return self.base.order
+
+    @property
+    def base(self):
+        return self._label
 
     def _eval_subs(self, old, new):
         return self

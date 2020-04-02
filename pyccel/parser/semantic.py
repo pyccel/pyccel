@@ -780,13 +780,9 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, IndexedElement):
+            var = expr.base
 
-            d_var['datatype'] = expr.dtype
-            name = str(expr.base)
-            var = self.get_variable(name)
-            if var is None:
-                raise ValueError('Undefined variable {name}'.format(name=name))
-
+            d_var_var = self._infere_type(var)
             dtype = var.dtype if not isinstance(var.dtype, NativeTuple) else var.homogeneous_dtype
             d_var['datatype'] = str_dtype(dtype)
 
@@ -800,8 +796,8 @@ class SemanticParser(BasicParser):
 
             rank = max(0, var.rank - expr.rank)
             if rank > 0:
-                d_var['allocatable'] = var.allocatable
-                d_var['is_pointer' ] = var.is_pointer
+                d_var['allocatable'] = d_var_var['allocatable']
+                d_var['is_pointer' ] = d_var_var['is_pointer' ]
 
             d_var['shape'    ] = shape
             d_var['rank'     ] = rank
@@ -810,16 +806,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, IndexedVariable):
 
-            name = str(expr)
-            var = self.get_variable(name)
-            if var is None:
-                raise ValueError('Undefined variable {name}'.format(name=name))
-            d_var['datatype'   ] = var.dtype
-            d_var['allocatable'] = var.allocatable
-            d_var['shape'      ] = var.shape
-            d_var['rank'       ] = var.rank
-            d_var['precision'  ] = var.precision
-            return d_var
+            return self._infere_type(expr.internal_variable)
 
         elif isinstance(expr, Range):
 
@@ -1270,7 +1257,7 @@ class SemanticParser(BasicParser):
             args[1] = self._visit(args[1], **settings)
         return Slice(*args)
 
-    def _extract_indexed_from_var(self, var,args):
+    def _extract_indexed_from_var(self, var, args, name):
 
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
@@ -1308,7 +1295,7 @@ class SemanticParser(BasicParser):
                     elif arg is args[0]:
                         return PythonTuple(selected_vars)
                     else:
-                        return PythonTuple(self._extract_indexed_from_var(var, args[:len(args)-i-1]) for var in selected_vars)
+                        return PythonTuple(self._extract_indexed_from_var(var, args[:len(args)-i-1], name) for var in selected_vars)
 
                 else:
 
@@ -1320,8 +1307,6 @@ class SemanticParser(BasicParser):
                     if var.is_homogeneous:
                         args = args[:len(args)-i-1]
                         break
-
-        name = var.name
 
         if hasattr(var, 'dtype'):
             dtype = var.dtype
@@ -1339,18 +1324,17 @@ class SemanticParser(BasicParser):
                 else:
                     dtype = var.homogeneous_dtype
 
-            return IndexedVariable(name, dtype=dtype,
+            return IndexedVariable(var, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
         else:
             return IndexedBase(name).__getitem__(args)
 
+    def _visit_IndexedBase(self, expr, **settings):
+        return self._visit(expr.label)
+
     def _visit_Indexed(self, expr, **settings):
         name = str(expr.base)
-        var = self.get_variable(name)
-        if var is None:
-            errors.report(UNDEFINED_INDEXED_VARIABLE, symbol=name,
-            bounding_box=self._current_fst_node.absolute_bounding_box,
-            severity='error', blocker=self.blocking)
+        var = self._visit(expr.base)
 
          # TODO check consistency of indices with shape/rank
 
@@ -1395,7 +1379,7 @@ class SemanticParser(BasicParser):
             args.reverse()
         args = tuple(args)
 
-        return self._extract_indexed_from_var(var,args)
+        return self._extract_indexed_from_var(var,args, name)
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
@@ -2269,7 +2253,7 @@ class SemanticParser(BasicParser):
 
                 if rhs.is_homogeneous:
                     d_var = self._infere_type(rhs[0])
-                    indexed_rhs = IndexedVariable(rhs.name, dtype=rhs.homogeneous_dtype,
+                    indexed_rhs = IndexedVariable(rhs, dtype=rhs.homogeneous_dtype,
                             shape=rhs.shape,prec=rhs.precision,order=rhs.order,rank=rhs.rank)
                     new_rhs = []
                     for i,l in enumerate(lhs):
