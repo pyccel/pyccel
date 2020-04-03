@@ -84,7 +84,7 @@ before_script:
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
 
 script:
-  - python -m pytest tests -m "not parallel" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
+  - python -m pytest -m "not parallel" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
   - mpiexec -n 4 python -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
 #  - mpiexec -n 4 python -m pytest tests/epyccel -v -m parallel
 
