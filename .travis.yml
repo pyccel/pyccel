@@ -74,7 +74,7 @@ install:
   - pip install .
 
 before_script:
-  - pip install pytest
+  - pip install "pytest>=4.5"
   - pip install coverage
   - pip install mpi4py
   - INSTALL_DIR=$(python -c "import pyccel; print(pyccel.__path__[0])")
