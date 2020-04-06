@@ -55,6 +55,7 @@ jobs:
 #    - refreshenv
     - export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
     - export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
+    - export PATH=$PATH:"C:\\Program Files\\Microsoft MPI\\Bin"
     #
     # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
     - cd "$MSMPI_INC"
