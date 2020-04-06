@@ -1,85 +1,27 @@
 # After changing this file, check it on:
 #   http://lint.travis-ci.org/
 
-language: python
+#==============================================================================
+# Defaults for Linux
+#==============================================================================
+
 os: linux
 dist: xenial
+language: python
 
-jobs:
-  include:
-
-#  - os: linux
-#    python: 3.5
-#    before_install: bash .travis/before_install.sh
-#
-#  - os: linux
-#    python: 3.6
-#    before_install: bash .travis/before_install.sh
-
-  - os: linux
-    python: 3.7
-    before_install: bash .travis/before_install.sh
-
-  - os: windows
-    language: c  # Python not supported, "language: generic" doesn't start VM
-    before_install:
-    - echo $SHELL
-    - echo $0
-    - choco install anaconda3
-    - ls -l /c/tools/anaconda3/condabin
-    - ls -l /c/tools/anaconda3/etc
-    - source /c/tools/Anaconda3/etc/profile.d/conda.sh
-#    - source .travis/RefreshEnv.sh
-    - conda activate
-    - conda config --show
-    - which python
-    - python -VV
-    - which gfortran
-    - gfortran --version
-    #
-    # Change default C compiler from M$ to mingw in distutils.cfg
-    - echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
-    #
-    # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
-    - WEB_ADDRESS=https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64
-    - LIBRARY_DIR=/c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
-    - curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
-    - curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
-    #
-    # Download MS MPI runtime and SDK
-    - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
-    - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
-    #
-    # Install MS MPI
-    - ./msmpisetup.exe -unattend
-    - sleep 5
-    - msiexec //quiet //i msmpisdk.msi
-#    - refreshenv
-    - export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
-    - export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
-    - export PATH=$PATH:"C:\\Program Files\\Microsoft MPI\\Bin"
-    #
-    # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
-    - cd "$MSMPI_INC"
-    - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
-    - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
-    - gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
-    - cd -
-    #
-    # Generate static libmsmpi.a from msmpi.dll
-    - cd "$MSMPI_LIB64"
-    - cp $SYSTEMROOT/SysWOW64/msmpi.dll .
-    - gendef msmpi.dll
-    - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
-    - cd -
+before_install:
+  - sudo apt-get install gfortran
+  - sudo apt-get install libblas-dev liblapack-dev
+  - sudo apt-get install libopenmpi-dev openmpi-bin
 
 install:
   - pip install .
-
-before_script:
-  - pip install "pytest>=4.5"
-  - pip install coverage
   - pip install mpi4py
+  - pip install "pytest>=4.5"
+
+before_script:  # Coverage instructions - setup
+  - pip install coverage
+  - sudo apt-get install default-jre
   - INSTALL_DIR=$(python -c "import pyccel; print(pyccel.__path__[0])")
   - SITE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
   - echo -e "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth
@@ -91,8 +33,71 @@ script:
   - mpiexec -n 4 python -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
 #  - mpiexec -n 4 python -m pytest tests/epyccel -v -m parallel
 
-after_script:
+after_script:  # Coverage instructions - collections
   - coverage combine
   - coverage xml
   - rm ${SITE_DIR}/pyccel_cov.pth
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
+
+#==============================================================================
+# Job matrix (including Windows build)
+#==============================================================================
+
+jobs:
+  include:
+
+#  - os: linux
+#    python: 3.5
+#
+#  - os: linux
+#    python: 3.6
+
+  - os: linux
+    python: 3.7
+
+  - os: windows
+    language: c  # Python not supported, "language: generic" doesn't start VM
+    before_install:
+      - choco install anaconda3
+      - source /c/tools/Anaconda3/etc/profile.d/conda.sh
+#      - source .travis/RefreshEnv.sh
+      - conda activate
+      #
+      # Change default C compiler from M$ to mingw in distutils.cfg
+      - echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
+      #
+      # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
+      - WEB_ADDRESS=https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64
+      - LIBRARY_DIR=/c/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib
+      - curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
+      - curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
+      #
+      # Download MS MPI runtime and SDK
+      - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
+      - curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
+      #
+      # Install MS MPI
+      - ./msmpisetup.exe -unattend
+      - sleep 5
+      - msiexec //quiet //i msmpisdk.msi
+#      - refreshenv
+      - export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
+      - export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
+      - export PATH=$PATH:"C:\\Program Files\\Microsoft MPI\\Bin"
+      #
+      # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
+      - cd "$MSMPI_INC"
+      - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
+      - sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
+      - gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
+      - cd -
+      #
+      # Generate static libmsmpi.a from msmpi.dll
+      - cd "$MSMPI_LIB64"
+      - cp $SYSTEMROOT/SysWOW64/msmpi.dll .
+      - gendef msmpi.dll
+      - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
+      - cd -
+
+    before_script: null
+    after_script : null
