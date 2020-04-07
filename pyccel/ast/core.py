@@ -204,12 +204,20 @@ class Mul(sp_Mul, sp_Boolean, PyccelAstNode):
 #class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
 #    pass
 class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
+    _rank      = 0
+    _precision = default_precision['bool']
     pass
 class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
+    _rank      = 0
+    _precision = default_precision['bool']
     pass
 class Integer(sp_Integer, PyccelAstNode):
+    _rank      = 0
+    _precision = default_precision['int']
     pass
 class Float(sp_Float, PyccelAstNode):
+    _rank      = 0
+    _precision = default_precision['real']
     pass
 class Eq(sp_Eq, PyccelAstNode):
     pass
