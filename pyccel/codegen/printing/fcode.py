@@ -5,79 +5,62 @@ www.fortran90.org as much as possible."""
 
 
 import string
-from itertools import groupby, chain
+from itertools import chain
+from collections import OrderedDict
+
+import functools
+import operator
 
 from numpy import shape as numpy_shape
 
-from sympy import Lambda
 from sympy.core import Symbol
 from sympy.core import Float, Integer
-from sympy.core import S, Add, N
+from sympy.core import S, Add
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
 from sympy.printing.precedence import precedence
-from sympy import Eq, Ne
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
+from sympy.logic.boolalg import Not
 
-from sympy.utilities.iterables import iterable
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
-from sympy.logic.boolalg import And, Not, Or, true, false
-
-from pyccel.ast.core import FunctionCall
-from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import String
-from pyccel.ast.core import ClassDef
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
-from pyccel.ast.core import Import
-from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
+from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Subroutine
-from pyccel.ast.core import Return
-from pyccel.ast.core import ValuedArgument
-from pyccel.ast.core import ErrorExit, Exit
-from pyccel.ast.core import Product, Block
-from pyccel.ast.core import get_assigned_symbols
+from pyccel.ast.core import ErrorExit
+from pyccel.ast.core import Product
 from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              TupleVariable, Declare, ValuedVariable,
-                             FunctionalFor, IndexedVariable,
-                             IndexedElement, Slice, List, Dlist,
+                             IndexedVariable,
+                             IndexedElement, Slice, Dlist,
                              DottedName, AsName, DottedVariable,
-                             If, Is, IsNot)
+                             If)
 from pyccel.ast.core import create_variable
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
-from pyccel.ast.datatypes import DataType, is_pyccel_datatype
+from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.datatypes import NativeSymbol, NativeString, NativeList
-from pyccel.ast.datatypes import NativeComplex, NativeReal, NativeInteger
+from pyccel.ast.datatypes import NativeSymbol, NativeString
+from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-
-from pyccel.ast.parallel.mpi     import MPI
-from pyccel.ast.parallel.openmp  import OMP_For
-from pyccel.ast.parallel.openacc import ACC_For
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Shape, Where, Mod
 from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 
-from pyccel.parser.errors import Errors, PyccelCodegenError
+from pyccel.parser.errors import Errors
 from pyccel.parser.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
-
-from collections import OrderedDict
-import functools
-import operator
 
 
 # TODO: add examples
