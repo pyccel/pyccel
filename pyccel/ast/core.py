@@ -195,10 +195,23 @@ class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
     def _eval_evalf(self,prec):
         return sp_Pow(self.base,self.exp).evalf(prec)
 
+    @property
+    def rank(self):
+        # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
+        return max(getattr(a,'rank',0) for a in self._args)
+
 class Add(sp_Add, sp_Boolean, PyccelAstNode):
-    pass
+    @property
+    def rank(self):
+        # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
+        return max(getattr(a,'rank',0) for a in self._args)
+
 class Mul(sp_Mul, sp_Boolean, PyccelAstNode):
-    pass
+    @property
+    def rank(self):
+        # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
+        return max(getattr(a,'rank',0) for a in self._args)
+
 #TODO add Functioncall class and use it instead of UndefinedFunction of sympy
 #because  And(f(x,y), expr) won't work
 #class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
