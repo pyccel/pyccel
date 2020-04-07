@@ -7,7 +7,7 @@ www.fortran90.org as much as possible."""
 import string
 from itertools import groupby, chain
 
-import numpy as np
+from numpy import shape as numpy_shape
 
 from sympy import Lambda
 from sympy.core import Symbol
@@ -16,7 +16,7 @@ from sympy.core import S, Add, N
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
 from sympy.printing.precedence import precedence
-from sympy import Eq, Ne, true, false
+from sympy import Eq, Ne
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
@@ -50,7 +50,7 @@ from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
                              FunctionalFor, IndexedVariable,
                              IndexedElement, Slice, List, Dlist,
                              DottedName, AsName, DottedVariable,
-                             If, Nil, Is, IsNot)
+                             If, Is, IsNot)
 from pyccel.ast.core import create_variable
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import DataType, is_pyccel_datatype
@@ -170,7 +170,7 @@ class FCodePrinter(CodePrinter):
                 # case of a function inside a function
 
                 name = self._current_function.name[:-1]
-                if len(name)>1:
+                if len(name) > 1:
                     name = DottedName(*name)
                 else:
                     name = name[0]
@@ -244,7 +244,6 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        classes = ''
         for i in expr.classes:
             # update decs with declarations from ClassDef
             c_decs, c_funcs = self._print(i)
@@ -319,9 +318,9 @@ class FCodePrinter(CodePrinter):
             for i in expr.funcs:
                 variables += i.global_vars
             variables =list(set(variables))
-            for i in range(len(decs)):
+            for i,d in enumerate(decs):
                 #remove variables that are declared in the modules
-                if decs[i].variable in variables:
+                if d.variable in variables:
                     decs[i] = None
             decs = [i for i in decs if i]
 
@@ -381,7 +380,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Import(self, expr):
 
-        prefix_as = ''
         source = ''
         if str(expr.source) in pyccel_builtin_import_registery:
             return ''
@@ -483,7 +481,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
-        _iprint = lambda e: "print *, 'sympy> {}'".format(e)
+        def _iprint(e):
+            return "print *, 'sympy> {}'".format(e)
         code = ''
         for a in expr.expr:
             code = '{code}{p}'.format(code=code, p=_iprint(a))
@@ -505,8 +504,8 @@ class FCodePrinter(CodePrinter):
         ln = len(top)
         bottom = '!' + '_'*(ln-2) + '!'
 
-        for i in range(len(txts)):
-            txts[i] = '!' + txts[i] + ' '*(ln -2 - len(txts[i])) + '!'
+        for i,txt in enumerate(txts):
+            txts[i] = '!' + txt + ' '*(ln -2 - len(txt)) + '!'
 
 
         body = '\n'.join(i for i in txts)
@@ -537,8 +536,7 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
-        import numpy
-        shape = list(reversed(numpy.shape(expr)))
+        shape = list(reversed(numpy_shape(expr)))
         if len(shape)>1:
             arg = functools.reduce(operator.concat, expr)
             elements = ', '.join(self._print(i) for i in arg)
@@ -595,7 +593,6 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatenate(self, expr):
-         args = expr.args
          if expr.is_list:
              code = ', '.join(self._print(a) for a in expr.args)
              return '[' + code + ']'
@@ -865,7 +862,6 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
-        arg_types        = type(var)
         rank        = var.rank
         allocatable = var.allocatable
         shape       = var.shape
@@ -889,7 +885,7 @@ class FCodePrinter(CodePrinter):
             prefix = dtype.prefix
             alias  = dtype.alias
 
-            if not var.is_polymorphic:
+            if not is_polymorphic:
                 sig = 'type'
             elif dtype.is_polymorphic:
                 sig = 'class'
@@ -907,7 +903,7 @@ class FCodePrinter(CodePrinter):
                 if not expr.variable.is_homogeneous:
                     errors.report(LIST_OF_TUPLES,
                                   symbol=expr.variable, severity='error')
-                    expr_dtype = NativeInt()
+                    expr_dtype = NativeInteger()
                 else:
                     expr_dtype = expr.variable.homogeneous_dtype
             else:
@@ -933,7 +929,6 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        e = ''
         enable_alloc = True
         if not(is_static) and (allocatable or (var.shape is None)):
             s = ''
@@ -995,7 +990,7 @@ class FCodePrinter(CodePrinter):
                         format(dtype, intent, allocatablestr, optionalstr, vstr, rankstr))
         elif intent and  intent == 'in' and not is_static and rank == 0:
             decs.append('{0}, value {1} :: {2}'.
-                        format(dtype, optionalstr, vstr, rankstr))
+                        format(dtype, optionalstr, vstr))
         elif intent:
             decs.append('{0}, intent({1}) {2} :: {3} {4}'.
                         format(dtype, intent, optionalstr, vstr, rankstr))
@@ -1302,7 +1297,6 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
         interface = 'interface ' + name +'\n'
-        functions = []
         for f in expr.functions:
             interface += 'module procedure ' + str(f.name)+'\n'
         interface += 'end interface\n'
@@ -1422,7 +1416,7 @@ class FCodePrinter(CodePrinter):
         rec = 'recursive ' if expr.is_recursive else ''
         if is_procedure:
             func_type = 'subroutine'
-            out_args = [result for result in expr.results]
+            out_args = list(expr.results)
             for result in out_args:
                 if result in expr.arguments:
                     dec = Declare(result.dtype, result, intent='inout')
@@ -1544,9 +1538,7 @@ class FCodePrinter(CodePrinter):
         names   = []
         ls = [self._print(i.name) for i in expr.methods]
         for i in ls:
-            j = i
-            if i in _default_methods:
-                j = _default_methods[i]
+            j = _default_methods.get(i,i)
             aliases.append(j)
             names.append('{0}_{1}'.format(name, self._print(j)))
         methods = '\n'.join('procedure :: {0} => {1}'.format(i, j) for i, j in zip(aliases, names))
@@ -1658,13 +1650,13 @@ class FCodePrinter(CodePrinter):
 
         # ...
 
-        def _do_range(target, iter, prolog, epilog):
-            if not isinstance(iter, Range):
+        def _do_range(target, iterable, prolog, epilog):
+            if not isinstance(iterable, Range):
                 msg = "Only iterable currently supported is Range"
                 raise NotImplementedError(msg)
 
             tar        = self._print(target)
-            range_code = self._print(iter)
+            range_code = self._print(iterable)
 
             prolog += 'do {0} = {1}\n'.format(tar, range_code)
             epilog = 'end do\n' + epilog
@@ -2010,12 +2002,11 @@ class FCodePrinter(CodePrinter):
 
         prolog = ''
         epilog = ''
-        code   = ''
 
         # ...
-        def _do_range(target, iter, prolog, epilog):
+        def _do_range(target, iterable, prolog, epilog):
             tar        = self._print(target)
-            range_code = self._print(iter)
+            range_code = self._print(iterable)
 
             prolog += 'do {0} = {1}\n'.format(tar, range_code)
             epilog = 'end do\n' + epilog
@@ -2293,7 +2284,7 @@ class FCodePrinter(CodePrinter):
         else:
             base = self._print(expr.base.label)
 
-        inds = [i for i in expr.indices]
+        inds = list(expr.indices)
         #indices of indexedElement of len==1 shouldn't be a Tuple
         for i, ind in enumerate(inds):
             if isinstance(ind, Tuple) and len(ind) == 1:
@@ -2338,7 +2329,6 @@ class FCodePrinter(CodePrinter):
         else:
             assert(len(results) == 1)
             args = ','.join(self._print(i) for i in args)
-            rhs = results[0]
             code = '{name}({args})'.format( name = str(func.name),
                                             args = args)
 
@@ -2437,7 +2427,7 @@ class FCodePrinter(CodePrinter):
         tabwidth = self._default_settings['tabwidth']
         new_code = []
         for i, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in('','\n'):
                 new_code.append(line)
                 continue
             level -= decrease[i]
