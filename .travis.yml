@@ -70,6 +70,6 @@ script:
   - rm ${SITE_DIR}/pyccel_cov.pth
 
 after_script:
-  - ./codacy-coverage-reporter report -l Python
   - cd -
+  - ./codacy-coverage-reporter report -l Python --prefix __pytest__
   - rm -rf __pytest__
