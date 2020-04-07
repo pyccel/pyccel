@@ -129,6 +129,7 @@ def test_cos_phrase():
     y = rand()
     assert(f2(x,y) == cos_phrase(x,y))
 
+@pytest.mark.xfail
 def test_tan_call():
     @types('real')
     def tan_call(x):
@@ -139,6 +140,7 @@ def test_tan_call():
     x = rand()
     assert(f1(x) == tan_call(x))
 
+@pytest.mark.xfail
 def test_tan_phrase():
     @types('real','real')
     def tan_phrase(x,y):
