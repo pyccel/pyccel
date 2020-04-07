@@ -481,13 +481,14 @@ def test_shape_indexed():
         a = shape(f)
         return a[0], a[1]
 
+    from numpy import empty
     f1 = epyccel(test_shape_1d)
     f2 = epyccel(test_shape_2d)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    x1 = np.empty(n1,dtype = int)
-    x2 = np.empty((n2,n3), dtype = int)
+    x1 = empty(n1,dtype = int)
+    x2 = empty((n2,n3), dtype = int)
     assert(f1(x1)==test_shape_1d(x1))
     assert(f2(x2)==test_shape_2d(x2))
 
@@ -504,13 +505,14 @@ def test_shape_real():
         a = shape(f)
         return a[0], a[1]
 
+    from numpy import empty
     f1 = epyccel(test_shape_1d)
     f2 = epyccel(test_shape_2d)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    x1 = np.empty(n1,dtype = float)
-    x2 = np.empty((n2,n3), dtype = float)
+    x1 = empty(n1,dtype = float)
+    x2 = empty((n2,n3), dtype = float)
     assert(f1(x1)==test_shape_1d(x1))
     assert(f2(x2)==test_shape_2d(x2))
 
@@ -529,11 +531,13 @@ def test_shape_int():
 
     f1 = epyccel(test_shape_1d)
     f2 = epyccel(test_shape_2d)
+
+    from numpy import empty
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    x1 = np.empty(n1,dtype = int)
-    x2 = np.empty((n2,n3), dtype = int)
+    x1 = empty(n1,dtype = int)
+    x2 = empty((n2,n3), dtype = int)
     assert(f1(x1)==test_shape_1d(x1))
     assert(f2(x2)==test_shape_2d(x2))
 
@@ -550,13 +554,14 @@ def test_shape_bool():
         a = shape(f)
         return a[0], a[1]
 
+    from numpy import empty
     f1 = epyccel(test_shape_1d)
     f2 = epyccel(test_shape_2d)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    x1 = np.empty(n1,dtype = bool)
-    x2 = np.empty((n2,n3), dtype = bool)
+    x1 = empty(n1,dtype = bool)
+    x2 = empty((n2,n3), dtype = bool)
     assert(f1(x1)==test_shape_1d(x1))
     assert(f2(x2)==test_shape_2d(x2))
 
