@@ -112,10 +112,14 @@ From sources
 
 * **Standard mode**::
 
+    git clone git@github.com:pyccel/pyccel.git
+    cd pyccel
     pip3 install --user .
 
 * **Development mode**::
 
+    git clone git@github.com:pyccel/pyccel.git
+    cd pyccel
     pip3 install --user -e .
 
 this will install a *python* library **pyccel** and a *binary* called **pyccel**.
