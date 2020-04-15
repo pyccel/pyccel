@@ -31,8 +31,8 @@ before_script:  # Coverage instructions - setup
 
 script:
   - ${PYTHON} -m pytest -m "not parallel" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
-  - mpiexec -n 4 ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
-#  - mpiexec -n 4 python3 -m pytest tests/epyccel -v -m parallel
+  - mpiexec -n 4 --oversubscribe ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
+#  - mpiexec -n 4 --oversubscribe ${PYTHON} -m pytest tests/epyccel -v -m parallel
 
 after_script:  # Coverage instructions - collections
   - coverage combine
