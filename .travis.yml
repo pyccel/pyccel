@@ -61,7 +61,7 @@ jobs:
   - os: osx
     language: c  #'language: python' is an error on Travis CI macOS
     before_install:
-      - brew install gcc
+#      - brew install gcc
       - brew install openblas lapack
       - brew install open-mpi
     before_script: null
