@@ -58,6 +58,15 @@ jobs:
   - os: linux
     python: 3.8
 
+  - os: osx
+    language: c  #'language: python' is an error on Travis CI macOS
+    before_install:
+      - brew install gcc
+      - brew install openblas lapack
+      - brew install open-mpi
+    before_script: null
+    after_script : null
+
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
     before_install:
