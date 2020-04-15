@@ -15,12 +15,12 @@ before_install:
   - sudo apt-get install libopenmpi-dev openmpi-bin
 
 install:
-  - pip3 install .
-  - pip3 install mpi4py
-  - pip3 install "pytest>=4.5"
+  - python3 -m pip install .
+  - python3 -m pip install mpi4py
+  - python3 -m pip install "pytest>=4.5"
 
 before_script:  # Coverage instructions - setup
-  - pip3 install coverage
+  - python3 -m pip install coverage
   - sudo apt-get install default-jre
   - INSTALL_DIR=$(python3 -c "import pyccel; print(pyccel.__path__[0])")
   - SITE_DIR=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
