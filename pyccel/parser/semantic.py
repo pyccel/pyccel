@@ -1709,7 +1709,12 @@ class SemanticParser(BasicParser):
                 if not isinstance(func, (FunctionDef, Interface)):
 
                     args, kwargs = split_positional_keyword_arguments(*args)
-                    arg_dvar = [self._infere_type(i, **settings) for i in args] + [self._infere_type(i, **settings) for i in kwargs.values()]
+                    for a in args:
+                        if isinstance(getattr(a,'dtype',None), NativeTuple):
+                            self._infere_type(a, **settings)
+                    for a in kwargs.values():
+                        if isinstance(getattr(a,'dtype',None), NativeTuple):
+                            self._infere_type(a, **settings)
 
                     expr = func(*args, **kwargs)
 
