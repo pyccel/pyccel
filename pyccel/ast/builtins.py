@@ -269,12 +269,14 @@ class PythonTuple(Function):
 
     @property
     def shape(self):
-        assert(self._arg_dtypes is not None)
-        shape = [len(self._args)]
-        if self.is_homogeneous and self._arg_dtypes[0]['rank'] > 0:
-            shape = shape + list(self._arg_dtypes[0]['shape'])
+        if(self._arg_dtypes is None):
+            return [len(self._args)]
+        else:
+            shape = [len(self._args)]
+            if self.is_homogeneous and self._arg_dtypes[0]['rank'] > 0:
+                shape = shape + list(self._arg_dtypes[0]['shape'])
 
-        return tuple(shape)
+            return tuple(shape)
 
     @property
     def rank(self):
