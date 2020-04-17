@@ -1710,10 +1710,10 @@ class SemanticParser(BasicParser):
 
                     args, kwargs = split_positional_keyword_arguments(*args)
                     for a in args:
-                        if isinstance(getattr(a,'dtype',None), NativeTuple):
+                        if getattr(a,'dtype',None) == 'tuple':
                             self._infere_type(a, **settings)
                     for a in kwargs.values():
-                        if isinstance(getattr(a,'dtype',None), NativeTuple):
+                        if getattr(a,'dtype',None) == 'tuple':
                             self._infere_type(a, **settings)
 
                     expr = func(*args, **kwargs)
