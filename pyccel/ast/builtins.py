@@ -285,6 +285,9 @@ class PythonTuple(Function):
     def __getitem__(self,i):
         return self._args[i]
 
+    def __add__(self,other):
+        return PythonTuple(self._args+other._args)
+
     def __iter__(self):
         return self._args.__iter__()
 
