@@ -84,7 +84,7 @@ from pyccel.stdlib.internal.mpiext import mpiext_get_size
 #===================================================================================
 
 #$ header class MPI_(public)
-#$ header method __init__(MPI_)   
+#$ header method __init__(MPI_)
 
 class MPI_:
     def __init__(self):
@@ -174,7 +174,7 @@ ierr = -1
 
 #.....................
 ##$ header macro (x),y.scatter
-##$ header macro (req), y.irecv 
+##$ header macro (req), y.irecv
 ##$ header macro y.alltoall
 #not_working for the moment
 #.....................

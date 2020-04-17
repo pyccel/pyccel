@@ -22,7 +22,7 @@ from pyccel.stdlib.internal.dfftpack import dsint
 
 from pyccel.stdlib.internal.dfftpack import zffti
 from pyccel.stdlib.internal.dfftpack import zfftf
-from pyccel.stdlib.internal.dfftpack import zfftb	
+from pyccel.stdlib.internal.dfftpack import zfftb
 
 
 
