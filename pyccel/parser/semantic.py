@@ -72,7 +72,7 @@ from pyccel.ast import StarredArguments
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
-from pyccel.ast.core      import local_sympify, int2float, Pow, Add, Mul, And, Or, _atomic
+from pyccel.ast.core      import local_sympify, Pow, Add, Mul, And, Or, _atomic
 from pyccel.ast.core      import Eq, Ne, Lt, Le, Gt, Ge
 from pyccel.ast.core      import BooleanTrue, BooleanFalse
 from pyccel.ast.core      import AstFunctionResultError
@@ -104,7 +104,7 @@ from pyccel.parser.messages import *
 
 #==============================================================================
 
-from sympy.core.function       import Function, FunctionClass, Application, UndefinedFunction
+from sympy.core.function       import Function, Application, UndefinedFunction
 from sympy.core.numbers        import ImaginaryUnit, IntegerConstant
 from sympy.logic.boolalg       import Boolean, BooleanTrue, BooleanFalse
 from sympy.utilities.iterables import iterable as sympy_iterable
