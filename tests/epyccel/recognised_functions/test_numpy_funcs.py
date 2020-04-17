@@ -2,6 +2,7 @@ from pyccel.decorators import types
 from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
+from numpy import isclose
 
 """
     'full_like' : FullLike,
@@ -41,7 +42,7 @@ def test_fabs_call():
 
     f1 = epyccel(fabs_call)
     x = rand()
-    assert(f1(x) == fabs_call(x))
+    assert(isclose(f1(x), fabs_call(x)))
 
 def test_fabs_phrase():
     @types('real','real')
@@ -53,7 +54,7 @@ def test_fabs_phrase():
     f2 = epyccel(fabs_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == fabs_phrase(x,y))
+    assert(isclose(f2(x,y), fabs_phrase(x,y)))
 
 @pytest.mark.xfail
 def test_fabs_return_type():
@@ -65,7 +66,7 @@ def test_fabs_return_type():
 
     f1 = epyccel(fabs_return_type)
     x = randint(100)
-    assert(f1(x) == fabs_return_type(x))
+    assert(isclose(f1(x), fabs_return_type(x)))
     assert(type(f1(x)) == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_absolute_call():
@@ -76,7 +77,7 @@ def test_absolute_call():
 
     f1 = epyccel(absolute_call)
     x = rand()
-    assert(f1(x) == absolute_call(x))
+    assert(isclose(f1(x), absolute_call(x)))
 
 def test_absolute_phrase():
     @types('real','real')
@@ -88,7 +89,7 @@ def test_absolute_phrase():
     f2 = epyccel(absolute_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == absolute_phrase(x,y))
+    assert(isclose(f2(x,y), absolute_phrase(x,y)))
 
 @pytest.mark.xfail
 def test_absolute_return_type():
@@ -100,7 +101,7 @@ def test_absolute_return_type():
 
     f1 = epyccel(absolute_return_type)
     x = randint(100)
-    assert(f1(x) == absolute_return_type(x))
+    assert(isclose(f1(x), absolute_return_type(x)))
     assert(type(f1(x)) == type(absolute_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call():
@@ -111,7 +112,7 @@ def test_sin_call():
 
     f1 = epyccel(sin_call)
     x = rand()
-    assert(f1(x) == sin_call(x))
+    assert(isclose(f1(x), sin_call(x)))
 
 def test_sin_phrase():
     @types('real','real')
@@ -123,7 +124,7 @@ def test_sin_phrase():
     f2 = epyccel(sin_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == sin_phrase(x,y))
+    assert(isclose(f2(x,y), sin_phrase(x,y)))
 
 def test_cos_call():
     @types('real')
@@ -133,7 +134,7 @@ def test_cos_call():
 
     f1 = epyccel(cos_call)
     x = rand()
-    assert(f1(x) == cos_call(x))
+    assert(isclose(f1(x), cos_call(x)))
 
 def test_cos_phrase():
     @types('real','real')
@@ -145,7 +146,7 @@ def test_cos_phrase():
     f2 = epyccel(cos_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == cos_phrase(x,y))
+    assert(isclose(f2(x,y), cos_phrase(x,y)))
 
 @pytest.mark.xfail(reason = "To be fixed before merging branch")
 def test_tan_call():
@@ -156,7 +157,7 @@ def test_tan_call():
 
     f1 = epyccel(tan_call)
     x = rand()
-    assert(f1(x) == tan_call(x))
+    assert(isclose(f1(x), tan_call(x)))
 
 @pytest.mark.xfail(reason = "To be fixed before merging branch")
 def test_tan_phrase():
@@ -169,7 +170,7 @@ def test_tan_phrase():
     f2 = epyccel(tan_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == tan_phrase(x,y))
+    assert(isclose(f2(x,y), tan_phrase(x,y)))
 
 def test_exp_call():
     @types('real')
@@ -179,7 +180,7 @@ def test_exp_call():
 
     f1 = epyccel(exp_call)
     x = rand()
-    assert(f1(x) == exp_call(x))
+    assert(isclose(f1(x), exp_call(x)))
 
 def test_exp_phrase():
     @types('real','real')
@@ -191,7 +192,7 @@ def test_exp_phrase():
     f2 = epyccel(exp_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == exp_phrase(x,y))
+    assert(isclose(f2(x,y), exp_phrase(x,y)))
 
 def test_log_call():
     @types('real')
@@ -201,7 +202,7 @@ def test_log_call():
 
     f1 = epyccel(log_call)
     x = rand()
-    assert(f1(x) == log_call(x))
+    assert(isclose(f1(x), log_call(x)))
 
 def test_log_phrase():
     @types('real','real')
@@ -213,7 +214,7 @@ def test_log_phrase():
     f2 = epyccel(log_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == log_phrase(x,y))
+    assert(isclose(f2(x,y), log_phrase(x,y)))
 
 def test_arcsin_call():
     @types('real')
@@ -223,7 +224,7 @@ def test_arcsin_call():
 
     f1 = epyccel(arcsin_call)
     x = rand()
-    assert(f1(x) == arcsin_call(x))
+    assert(isclose(f1(x), arcsin_call(x)))
 
 def test_arcsin_phrase():
     @types('real','real')
@@ -235,7 +236,7 @@ def test_arcsin_phrase():
     f2 = epyccel(arcsin_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == arcsin_phrase(x,y))
+    assert(isclose(f2(x,y), arcsin_phrase(x,y)))
 
 def test_arccos_call():
     @types('real')
@@ -245,7 +246,7 @@ def test_arccos_call():
 
     f1 = epyccel(arccos_call)
     x = rand()
-    assert(f1(x) == arccos_call(x))
+    assert(isclose(f1(x), arccos_call(x)))
 
 def test_arccos_phrase():
     @types('real','real')
@@ -257,7 +258,7 @@ def test_arccos_phrase():
     f2 = epyccel(arccos_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == arccos_phrase(x,y))
+    assert(isclose(f2(x,y), arccos_phrase(x,y)))
 
 def test_arctan_call():
     @types('real')
@@ -267,7 +268,7 @@ def test_arctan_call():
 
     f1 = epyccel(arctan_call)
     x = rand()
-    assert(f1(x) == arctan_call(x))
+    assert(isclose(f1(x), arctan_call(x)))
 
 def test_arctan_phrase():
     @types('real','real')
@@ -279,7 +280,7 @@ def test_arctan_phrase():
     f2 = epyccel(arctan_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == arctan_phrase(x,y))
+    assert(isclose(f2(x,y), arctan_phrase(x,y)))
 
 def test_sinh_call():
     @types('real')
@@ -289,7 +290,7 @@ def test_sinh_call():
 
     f1 = epyccel(sinh_call)
     x = rand()
-    assert(f1(x) == sinh_call(x))
+    assert(isclose(f1(x), sinh_call(x)))
 
 def test_sinh_phrase():
     @types('real','real')
@@ -301,7 +302,7 @@ def test_sinh_phrase():
     f2 = epyccel(sinh_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == sinh_phrase(x,y))
+    assert(isclose(f2(x,y), sinh_phrase(x,y)))
 
 def test_cosh_call():
     @types('real')
@@ -311,7 +312,7 @@ def test_cosh_call():
 
     f1 = epyccel(cosh_call)
     x = rand()
-    assert(f1(x) == cosh_call(x))
+    assert(isclose(f1(x), cosh_call(x)))
 
 def test_cosh_phrase():
     @types('real','real')
@@ -323,7 +324,7 @@ def test_cosh_phrase():
     f2 = epyccel(cosh_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == cosh_phrase(x,y))
+    assert(isclose(f2(x,y), cosh_phrase(x,y)))
 
 def test_tanh_call():
     @types('real')
@@ -333,7 +334,7 @@ def test_tanh_call():
 
     f1 = epyccel(tanh_call)
     x = rand()
-    assert(f1(x) == tanh_call(x))
+    assert(isclose(f1(x), tanh_call(x)))
 
 def test_tanh_phrase():
     @types('real','real')
@@ -345,7 +346,7 @@ def test_tanh_phrase():
     f2 = epyccel(tanh_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == tanh_phrase(x,y))
+    assert(isclose(f2(x,y), tanh_phrase(x,y)))
 
 @pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_arctan2_call():
@@ -357,7 +358,7 @@ def test_arctan2_call():
     f1 = epyccel(arctan2_call)
     x = rand()
     y = rand()
-    assert(f1(x,y) == arctan2_call(x,y))
+    assert(isclose(f1(x,y), arctan2_call(x,y)))
 
 @pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_arctan2_phrase():
@@ -371,7 +372,7 @@ def test_arctan2_phrase():
     x = rand()
     y = rand()
     z = rand()
-    assert(f2(x,y,z) == arctan2_phrase(x,y,z))
+    assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z)))
 
 def test_sqrt_call():
     @types('real')
@@ -381,7 +382,7 @@ def test_sqrt_call():
 
     f1 = epyccel(sqrt_call)
     x = rand()
-    assert(f1(x) == sqrt_call(x))
+    assert(isclose(f1(x), sqrt_call(x)))
 
 def test_sqrt_phrase():
     @types('real','real')
@@ -393,7 +394,7 @@ def test_sqrt_phrase():
     f2 = epyccel(sqrt_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == sqrt_phrase(x,y))
+    assert(isclose(f2(x,y), sqrt_phrase(x,y)))
 
 
 @pytest.mark.xfail
@@ -412,12 +413,12 @@ def test_sqrt_return_type():
 
     f1 = epyccel(sqrt_return_type_real)
     x = rand()
-    assert(f1(x) == sqrt_return_type_real(x))
+    assert(isclose(f1(x), sqrt_return_type_real(x)))
     assert(type(f1(x)) == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(sqrt_return_type_comp)
     x = rand() + 1j * rand()
-    assert(f1(x) == sqrt_return_type_comp(x))
+    assert(isclose(f1(x), sqrt_return_type_comp(x)))
     assert(type(f1(x)) == type(sqrt_return_type_comp(x))) # pylint: disable=unidiomatic-typecheck
 
 
@@ -429,7 +430,7 @@ def test_floor_call():
 
     f1 = epyccel(floor_call)
     x = rand()
-    assert(f1(x) == floor_call(x))
+    assert(isclose(f1(x), floor_call(x)))
 
 def test_floor_phrase():
     @types('real','real')
@@ -441,7 +442,7 @@ def test_floor_phrase():
     f2 = epyccel(floor_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == floor_phrase(x,y))
+    assert(isclose(f2(x,y), floor_phrase(x,y)))
 
 @pytest.mark.xfail
 def test_floor_return_type():
@@ -459,12 +460,12 @@ def test_floor_return_type():
 
     f1 = epyccel(floor_return_type_int)
     x = randint(100)
-    assert(f1(x) == floor_return_type_int(x))
+    assert(isclose(f1(x), floor_return_type_int(x)))
     assert(type(f1(x)) == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(floor_return_type_real)
     x = randint(100)
-    assert(f1(x) == floor_return_type_real(x))
+    assert(isclose(f1(x), floor_return_type_real(x)))
     assert(type(f1(x)) == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_shape_indexed():
@@ -487,8 +488,8 @@ def test_shape_indexed():
     n3 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
-    assert(f1(x1)==test_shape_1d(x1))
-    assert(f2(x2)==test_shape_2d(x2))
+    assert(isclose(f1(x1), test_shape_1d(x1)))
+    assert(isclose(f2(x2), test_shape_2d(x2)))
 
 def test_shape_real():
     @types('real[:]')
@@ -511,8 +512,8 @@ def test_shape_real():
     n3 = randint(20)
     x1 = empty(n1,dtype = float)
     x2 = empty((n2,n3), dtype = float)
-    assert(f1(x1)==test_shape_1d(x1))
-    assert(f2(x2)==test_shape_2d(x2))
+    assert(isclose(f1(x1), test_shape_1d(x1)))
+    assert(isclose(f2(x2), test_shape_2d(x2)))
 
 def test_shape_int():
     @types('int[:]')
@@ -536,8 +537,8 @@ def test_shape_int():
     n3 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
-    assert(f1(x1)==test_shape_1d(x1))
-    assert(f2(x2)==test_shape_2d(x2))
+    assert(isclose(f1(x1), test_shape_1d(x1)))
+    assert(isclose(f2(x2), test_shape_2d(x2)))
 
 def test_shape_bool():
     @types('bool[:]')
@@ -560,8 +561,8 @@ def test_shape_bool():
     n3 = randint(20)
     x1 = empty(n1,dtype = bool)
     x2 = empty((n2,n3), dtype = bool)
-    assert(f1(x1)==test_shape_1d(x1))
-    assert(f2(x2)==test_shape_2d(x2))
+    assert(isclose(f1(x1), test_shape_1d(x1)))
+    assert(isclose(f2(x2), test_shape_2d(x2)))
 
 def test_full_basic_int():
     @types('int')
@@ -590,17 +591,17 @@ def test_full_basic_int():
     size = randint(10)
 
     f_shape_1d  = epyccel(create_full_shape_1d)
-    assert(     f_shape_1d(size)      ==      create_full_shape_1d(size))
+    assert(isclose(     f_shape_1d(size)     ,      create_full_shape_1d(size)))
 
     f_shape_2d  = epyccel(create_full_shape_2d)
-    assert(     f_shape_2d(size)      ==      create_full_shape_2d(size))
+    assert(isclose(     f_shape_2d(size)     ,      create_full_shape_2d(size)))
 
     f_val       = epyccel(create_full_val)
-    assert(     f_val(size)           ==      create_full_val(size))
+    assert(isclose(     f_val(size)          ,      create_full_val(size)))
     assert(type(f_val(size)[0])       == type(create_full_val(size)[0].item())) # pylint: disable=unidiomatic-typecheck
 
     f_arg_names = epyccel(create_full_arg_names)
-    assert(     f_arg_names(size)     ==      create_full_arg_names(size))
+    assert(isclose(     f_arg_names(size)    ,      create_full_arg_names(size)))
     assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item())) # pylint: disable=unidiomatic-typecheck
 
 def test_full_basic_real():
@@ -631,17 +632,17 @@ def test_full_basic_real():
     val  = rand()*5
 
     f_shape_1d  = epyccel(create_full_shape_1d)
-    assert(     f_shape_1d(size)     ==      create_full_shape_1d(size))
+    assert(isclose(     f_shape_1d(size)    ,      create_full_shape_1d(size)))
 
     f_shape_2d  = epyccel(create_full_shape_2d)
-    assert(     f_shape_2d(size)     ==      create_full_shape_2d(size))
+    assert(isclose(     f_shape_2d(size)    ,      create_full_shape_2d(size)))
 
     f_val       = epyccel(create_full_val)
-    assert(     f_val(val)           ==      create_full_val(val))
+    assert(isclose(     f_val(val)          ,      create_full_val(val)))
     assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item())) # pylint: disable=unidiomatic-typecheck
 
     f_arg_names = epyccel(create_full_arg_names)
-    assert(     f_arg_names(val)     ==      create_full_arg_names(val))
+    assert(isclose(     f_arg_names(val)    ,      create_full_arg_names(val)))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.xfail(reason = "f2py converts bools to int")
@@ -673,17 +674,17 @@ def test_full_basic_bool():
     val  = bool(randint(2))
 
     f_shape_1d  = epyccel(create_full_shape_1d)
-    assert(     f_shape_1d(size)     ==      create_full_shape_1d(size))
+    assert(isclose(     f_shape_1d(size)    ,      create_full_shape_1d(size)))
 
     f_shape_2d  = epyccel(create_full_shape_2d)
-    assert(     f_shape_2d(size)     ==      create_full_shape_2d(size))
+    assert(isclose(     f_shape_2d(size)    ,      create_full_shape_2d(size)))
 
     f_val       = epyccel(create_full_val)
-    assert(     f_val(val)           ==      create_full_val(val))
+    assert(isclose(     f_val(val)          ,      create_full_val(val)))
     assert(type(f_val(val)[0])       == type(create_full_val(val)[0])) # pylint: disable=unidiomatic-typecheck
 
     f_arg_names = epyccel(create_full_arg_names)
-    assert(     f_arg_names(val)     ==      create_full_arg_names(val))
+    assert(isclose(     f_arg_names(val)    ,      create_full_arg_names(val)))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0])) # pylint: disable=unidiomatic-typecheck
 
 def test_full_order():
@@ -704,10 +705,10 @@ def test_full_order():
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_full_shape_C)
-    assert(     f_shape_C(size_1,size_2) == create_full_shape_C(size_1,size_2))
+    assert(isclose(     f_shape_C(size_1,size_2), create_full_shape_C(size_1,size_2)))
 
     f_shape_F  = epyccel(create_full_shape_F)
-    assert(     f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
+    assert(isclose(     f_shape_F(size_1,size_2), create_full_shape_F(size_1,size_2)))
 
 def test_full_dtype():
     @types('int')
@@ -755,35 +756,35 @@ def test_full_dtype():
     val_float = rand()*100
 
     f_int_int   = epyccel(create_full_val_int_int)
-    assert(     f_int_int(val_int)        ==      create_full_val_int_int(val_int))
+    assert(isclose(     f_int_int(val_int)       ,      create_full_val_int_int(val_int)))
     assert(type(f_int_int(val_int))       == type(create_full_val_int_int(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_float = epyccel(create_full_val_int_float)
-    assert(     f_int_float(val_int)      ==      create_full_val_int_float(val_int))
+    assert(isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int)))
     assert(type(f_int_float(val_int))     == type(create_full_val_int_float(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_complex = epyccel(create_full_val_int_complex)
-    assert(     f_int_complex(val_int)      ==      create_full_val_int_complex(val_int))
+    assert(isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int)))
     assert(type(f_int_complex(val_int))     == type(create_full_val_int_complex(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_int32   = epyccel(create_full_val_real_int32)
-    assert(     f_real_int32(val_float)        ==      create_full_val_real_int32(val_float))
+    assert(isclose(     f_real_int32(val_float)       ,      create_full_val_real_int32(val_float)))
     assert(type(f_real_int32(val_float))       == type(create_full_val_real_int32(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float32   = epyccel(create_full_val_real_float32)
-    assert(     f_real_float32(val_float)        ==      create_full_val_real_float32(val_float))
+    assert(isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float)))
     assert(type(f_real_float32(val_float))       == type(create_full_val_real_float32(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float64   = epyccel(create_full_val_real_float64)
-    assert(     f_real_float64(val_float)        ==      create_full_val_real_float64(val_float))
+    assert(isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float)))
     assert(type(f_real_float64(val_float))       == type(create_full_val_real_float64(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex64   = epyccel(create_full_val_real_complex64)
-    assert(     f_real_complex64(val_float)        ==      create_full_val_real_complex64(val_float))
+    assert(isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float)))
     assert(type(f_real_complex64(val_float))       == type(create_full_val_real_complex64(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex128   = epyccel(create_full_val_real_complex128)
-    assert(     f_real_complex128(val_float)        ==      create_full_val_real_complex128(val_float))
+    assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float)))
     assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
 def test_full_combined_args():
@@ -817,20 +818,20 @@ def test_full_combined_args():
 
     f1_shape = epyccel(create_full_1_shape)
     f1_val   = epyccel(create_full_1_val)
-    assert(     f1_shape() ==      create_full_1_shape()      )
-    assert(     f1_val()   ==      create_full_1_val()        )
+    assert(isclose(     f1_shape(),      create_full_1_shape()      ))
+    assert(isclose(     f1_val()  ,      create_full_1_val()        ))
     assert(type(f1_val())  == type(create_full_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f2_shape = epyccel(create_full_2_shape)
     f2_val   = epyccel(create_full_2_val)
-    assert(     f2_shape() ==      create_full_2_shape()      )
-    assert(     f2_val()   ==      create_full_2_val()        )
+    assert(isclose(     f2_shape(),      create_full_2_shape()      ))
+    assert(isclose(     f2_val()  ,      create_full_2_val()        ))
     assert(type(f2_val())  == type(create_full_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_full_3_shape)
     f3_val   = epyccel(create_full_3_val)
-    assert(     f3_shape() ==      create_full_3_shape()      )
-    assert(     f3_val()   ==      create_full_3_val()        )
+    assert(isclose(     f3_shape(),      create_full_3_shape()      ))
+    assert(isclose(     f3_val()  ,      create_full_3_val()        ))
     assert(type(f3_val())  == type(create_full_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 def test_empty_basic():
@@ -850,10 +851,10 @@ def test_empty_basic():
     size = randint(10)
 
     f_shape_1d  = epyccel(create_empty_shape_1d)
-    assert(     f_shape_1d(size)      ==      create_empty_shape_1d(size))
+    assert(isclose(     f_shape_1d(size)     ,      create_empty_shape_1d(size)))
 
     f_shape_2d  = epyccel(create_empty_shape_2d)
-    assert(     f_shape_2d(size)      ==      create_empty_shape_2d(size))
+    assert(isclose(     f_shape_2d(size)     ,      create_empty_shape_2d(size)))
 
 def test_empty_order():
     @types('int','int')
@@ -873,10 +874,10 @@ def test_empty_order():
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_empty_shape_C)
-    assert(     f_shape_C(size_1,size_2) == create_empty_shape_C(size_1,size_2))
+    assert(isclose(     f_shape_C(size_1,size_2), create_empty_shape_C(size_1,size_2)))
 
     f_shape_F  = epyccel(create_empty_shape_F)
-    assert(     f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2))
+    assert(isclose(     f_shape_F(size_1,size_2), create_empty_shape_F(size_1,size_2)))
 
 def test_empty_dtype():
     def create_empty_val_int():
@@ -967,17 +968,17 @@ def test_empty_combined_args():
 
     f1_shape = epyccel(create_empty_1_shape)
     f1_val   = epyccel(create_empty_1_val)
-    assert(     f1_shape() ==      create_empty_1_shape()      )
+    assert(isclose(     f1_shape(),      create_empty_1_shape()      ))
     assert(type(f1_val())  == type(create_empty_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f2_shape = epyccel(create_empty_2_shape)
     f2_val   = epyccel(create_empty_2_val)
-    assert(     f2_shape() ==      create_empty_2_shape()      )
+    assert(isclose(     f2_shape(),      create_empty_2_shape()      ))
     assert(type(f2_val())  == type(create_empty_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_empty_3_shape)
     f3_val   = epyccel(create_empty_3_val)
-    assert(     f3_shape() ==      create_empty_3_shape()      )
+    assert(isclose(     f3_shape(),      create_empty_3_shape()      ))
     assert(type(f3_val())  == type(create_empty_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 def test_ones_basic():
@@ -997,10 +998,10 @@ def test_ones_basic():
     size = randint(10)
 
     f_shape_1d  = epyccel(create_ones_shape_1d)
-    assert(     f_shape_1d(size)      ==      create_ones_shape_1d(size))
+    assert(isclose(     f_shape_1d(size)     ,      create_ones_shape_1d(size)))
 
     f_shape_2d  = epyccel(create_ones_shape_2d)
-    assert(     f_shape_2d(size)      ==      create_ones_shape_2d(size))
+    assert(isclose(     f_shape_2d(size)     ,      create_ones_shape_2d(size)))
 
 def test_ones_order():
     @types('int','int')
@@ -1020,10 +1021,10 @@ def test_ones_order():
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_ones_shape_C)
-    assert(     f_shape_C(size_1,size_2) == create_ones_shape_C(size_1,size_2))
+    assert(isclose(     f_shape_C(size_1,size_2), create_ones_shape_C(size_1,size_2)))
 
     f_shape_F  = epyccel(create_ones_shape_F)
-    assert(     f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2))
+    assert(isclose(     f_shape_F(size_1,size_2), create_ones_shape_F(size_1,size_2)))
 
 def test_ones_dtype():
     def create_ones_val_int():
@@ -1060,35 +1061,35 @@ def test_ones_dtype():
         return a[0]
 
     f_int_int   = epyccel(create_ones_val_int)
-    assert(     f_int_int()          ==      create_ones_val_int())
+    assert(isclose(     f_int_int()         ,      create_ones_val_int()))
     assert(type(f_int_int())         == type(create_ones_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_float = epyccel(create_ones_val_float)
-    assert(     f_int_float()        ==      create_ones_val_float())
+    assert(isclose(     f_int_float()       ,      create_ones_val_float()))
     assert(type(f_int_float())       == type(create_ones_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_complex = epyccel(create_ones_val_complex)
-    assert(     f_int_complex()      ==      create_ones_val_complex())
+    assert(isclose(     f_int_complex()     ,      create_ones_val_complex()))
     assert(type(f_int_complex())     == type(create_ones_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_int32   = epyccel(create_ones_val_int32)
-    assert(     f_real_int32()       ==      create_ones_val_int32())
+    assert(isclose(     f_real_int32()      ,      create_ones_val_int32()))
     assert(type(f_real_int32())      == type(create_ones_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float32   = epyccel(create_ones_val_float32)
-    assert(     f_real_float32()     ==      create_ones_val_float32())
+    assert(isclose(     f_real_float32()    ,      create_ones_val_float32()))
     assert(type(f_real_float32())    == type(create_ones_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float64   = epyccel(create_ones_val_float64)
-    assert(     f_real_float64()     ==      create_ones_val_float64())
+    assert(isclose(     f_real_float64()    ,      create_ones_val_float64()))
     assert(type(f_real_float64())    == type(create_ones_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex64   = epyccel(create_ones_val_complex64)
-    assert(     f_real_complex64()   ==      create_ones_val_complex64())
+    assert(isclose(     f_real_complex64()  ,      create_ones_val_complex64()))
     assert(type(f_real_complex64())  == type(create_ones_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex128   = epyccel(create_ones_val_complex128)
-    assert(     f_real_complex128()  ==      create_ones_val_complex128())
+    assert(isclose(     f_real_complex128() ,      create_ones_val_complex128()))
     assert(type(f_real_complex128()) == type(create_ones_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 def test_ones_combined_args():
@@ -1122,20 +1123,20 @@ def test_ones_combined_args():
 
     f1_shape = epyccel(create_ones_1_shape)
     f1_val   = epyccel(create_ones_1_val)
-    assert(     f1_shape() ==      create_ones_1_shape()      )
-    assert(     f1_val()   ==      create_ones_1_val()        )
+    assert(isclose(     f1_shape(),      create_ones_1_shape()      ))
+    assert(isclose(     f1_val()  ,      create_ones_1_val()        ))
     assert(type(f1_val())  == type(create_ones_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f2_shape = epyccel(create_ones_2_shape)
     f2_val   = epyccel(create_ones_2_val)
-    assert(     f2_shape() ==      create_ones_2_shape()      )
-    assert(     f2_val()   ==      create_ones_2_val()        )
+    assert(isclose(     f2_shape(),      create_ones_2_shape()      ))
+    assert(isclose(     f2_val()  ,      create_ones_2_val()        ))
     assert(type(f2_val())  == type(create_ones_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_ones_3_shape)
     f3_val   = epyccel(create_ones_3_val)
-    assert(     f3_shape() ==      create_ones_3_shape()      )
-    assert(     f3_val()   ==      create_ones_3_val()        )
+    assert(isclose(     f3_shape(),      create_ones_3_shape()      ))
+    assert(isclose(     f3_val()  ,      create_ones_3_val()        ))
     assert(type(f3_val())  == type(create_ones_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 def test_zeros_basic():
@@ -1155,10 +1156,10 @@ def test_zeros_basic():
     size = randint(10)
 
     f_shape_1d  = epyccel(create_zeros_shape_1d)
-    assert(     f_shape_1d(size)      ==      create_zeros_shape_1d(size))
+    assert(isclose(     f_shape_1d(size)     ,      create_zeros_shape_1d(size)))
 
     f_shape_2d  = epyccel(create_zeros_shape_2d)
-    assert(     f_shape_2d(size)      ==      create_zeros_shape_2d(size))
+    assert(isclose(     f_shape_2d(size)     ,      create_zeros_shape_2d(size)))
 
 def test_zeros_order():
     @types('int','int')
@@ -1178,10 +1179,10 @@ def test_zeros_order():
     size_2 = randint(10)
 
     f_shape_C  = epyccel(create_zeros_shape_C)
-    assert(     f_shape_C(size_1,size_2) == create_zeros_shape_C(size_1,size_2))
+    assert(isclose(     f_shape_C(size_1,size_2), create_zeros_shape_C(size_1,size_2)))
 
     f_shape_F  = epyccel(create_zeros_shape_F)
-    assert(     f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2))
+    assert(isclose(     f_shape_F(size_1,size_2), create_zeros_shape_F(size_1,size_2)))
 
 def test_zeros_dtype():
     def create_zeros_val_int():
@@ -1218,35 +1219,35 @@ def test_zeros_dtype():
         return a[0]
 
     f_int_int   = epyccel(create_zeros_val_int)
-    assert(     f_int_int()          ==      create_zeros_val_int())
+    assert(isclose(     f_int_int()         ,      create_zeros_val_int()))
     assert(type(f_int_int())         == type(create_zeros_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_float = epyccel(create_zeros_val_float)
-    assert(     f_int_float()        ==      create_zeros_val_float())
+    assert(isclose(     f_int_float()       ,      create_zeros_val_float()))
     assert(type(f_int_float())       == type(create_zeros_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_complex = epyccel(create_zeros_val_complex)
-    assert(     f_int_complex()      ==      create_zeros_val_complex())
+    assert(isclose(     f_int_complex()     ,      create_zeros_val_complex()))
     assert(type(f_int_complex())     == type(create_zeros_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_int32   = epyccel(create_zeros_val_int32)
-    assert(     f_real_int32()       ==      create_zeros_val_int32())
+    assert(isclose(     f_real_int32()      ,      create_zeros_val_int32()))
     assert(type(f_real_int32())      == type(create_zeros_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float32   = epyccel(create_zeros_val_float32)
-    assert(     f_real_float32()     ==      create_zeros_val_float32())
+    assert(isclose(     f_real_float32()    ,      create_zeros_val_float32()))
     assert(type(f_real_float32())    == type(create_zeros_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float64   = epyccel(create_zeros_val_float64)
-    assert(     f_real_float64()     ==      create_zeros_val_float64())
+    assert(isclose(     f_real_float64()    ,      create_zeros_val_float64()))
     assert(type(f_real_float64())    == type(create_zeros_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex64   = epyccel(create_zeros_val_complex64)
-    assert(     f_real_complex64()   ==      create_zeros_val_complex64())
+    assert(isclose(     f_real_complex64()  ,      create_zeros_val_complex64()))
     assert(type(f_real_complex64())  == type(create_zeros_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex128   = epyccel(create_zeros_val_complex128)
-    assert(     f_real_complex128()  ==      create_zeros_val_complex128())
+    assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128()))
     assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 def test_zeros_combined_args():
@@ -1280,20 +1281,20 @@ def test_zeros_combined_args():
 
     f1_shape = epyccel(create_zeros_1_shape)
     f1_val   = epyccel(create_zeros_1_val)
-    assert(     f1_shape() ==      create_zeros_1_shape()      )
-    assert(     f1_val()   ==      create_zeros_1_val()        )
+    assert(isclose(     f1_shape(),      create_zeros_1_shape()      ))
+    assert(isclose(     f1_val()  ,      create_zeros_1_val()        ))
     assert(type(f1_val())  == type(create_zeros_1_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f2_shape = epyccel(create_zeros_2_shape)
     f2_val   = epyccel(create_zeros_2_val)
-    assert(     f2_shape() ==      create_zeros_2_shape()      )
-    assert(     f2_val()   ==      create_zeros_2_val()        )
+    assert(isclose(     f2_shape(),      create_zeros_2_shape()      ))
+    assert(isclose(     f2_val()  ,      create_zeros_2_val()        ))
     assert(type(f2_val())  == type(create_zeros_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_zeros_3_shape)
     f3_val   = epyccel(create_zeros_3_val)
-    assert(     f3_shape() ==      create_zeros_3_shape()      )
-    assert(     f3_val()   ==      create_zeros_3_val()        )
+    assert(isclose(     f3_shape(),      create_zeros_3_shape()      ))
+    assert(isclose(     f3_val()  ,      create_zeros_3_val()        ))
     assert(type(f3_val())  == type(create_zeros_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 def test_array():
@@ -1317,11 +1318,11 @@ def test_array():
         return len(s), s[0], s[1]
     f1_shape = epyccel(create_array_list_shape)
     f1_val   = epyccel(create_array_list_val)
-    assert(f1_shape()==create_array_list_shape())
-    assert(f1_val()  ==create_array_list_val())
+    assert(isclose(f1_shape(), create_array_list_shape()))
+    assert(isclose(f1_val()  , create_array_list_val()))
     assert(type(f1_val()) == type(create_array_list_val().item())) # pylint: disable=unidiomatic-typecheck
     f2_shape = epyccel(create_array_tuple_shape)
     f2_val   = epyccel(create_array_tuple_val)
-    assert(f2_shape()==create_array_tuple_shape())
-    assert(f2_val()  ==create_array_tuple_val())
+    assert(isclose(f2_shape(), create_array_tuple_shape()))
+    assert(isclose(f2_val()  , create_array_tuple_val()))
     assert(type(f2_val()) == type(create_array_tuple_val().item())) # pylint: disable=unidiomatic-typecheck
