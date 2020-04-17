@@ -11,6 +11,6 @@ python -m pytest ../tests/codegen/pycode/test_pycode_codegen.py
 python -m pytest ../tests/complexity/test_complexity.py
 python -m pytest ../tests/epyccel -v -m "not parallel"
 python -m pytest ../tests/pyccel -v 
-REM TODO mpirun -n 4 python -m pytest ../tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
-REM python ../tests/internal/test_internal.py -v
-python ../tests/macro/test_macro.py -v
+mpiexec -n 4 python -m pytest ../tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
+python ../tests/internal/test_internal.py
+python ../tests/macro/test_macro.py
