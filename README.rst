@@ -89,16 +89,16 @@ Windows
 *******
 
 Support for Windows is still experimental, and the installation of all requirements is more cumbersome.
-We recommend using Chocolatey <https://chocolatey.org/> to speed up the process, and we provide commands that work in a git-bash shell, as well as in a Powershell.
-Install git-bash (if needed), a Python3 Anaconda distribution, and a GCC compiler::
+We recommend using Chocolatey <https://chocolatey.org/> to speed up the process, and we provide commands that work in a git-bash shell.
+In an Administrator prompt install git-bash (if needed), a Python3 Anaconda distribution, and a GCC compiler::
 
   choco install git
   choco install anaconda3
   choco install mingw
 
-Change default C compiler from M$ to mingw in Anaconda::
+Open git-bash as Administrator. Change default C compiler from M$ to mingw in Anaconda::
 
-  echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
+  echo -e "[build]\ncompiler = mingw32" > /c/tools/Anaconda3/Lib/distutils/distutils.cfg
 
 Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/::
 
@@ -112,13 +112,12 @@ Download MS MPI runtime and SDK, then install MPI::
   WEB_ADDRESS=https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1
   curl -L $WEB_ADDRESS/msmpisetup.exe -o msmpisetup.exe
   curl -L $WEB_ADDRESS/msmpisdk.msi -o msmpisdk.msi
-  ./msmpisetup.exe -unattend
-  sleep 5
-  msiexec //quiet //i msmpisdk.msi
+  ./msmpisetup.exe
+  msiexec //i msmpisdk.msi
 
 **At this point, close and reopen your terminal to refresh all environment variables!**
 
-Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html::
+In Administrator git-bash, generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html::
 
   cd "$MSMPI_INC"
   sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
@@ -139,6 +138,7 @@ Before installing Pyccel and using it, the Anaconda environment should be activa
   source /c/tools/Anaconda3/etc/profile.d/conda.sh
   conda activate
 
+On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of pyccel below.
 
 Installation
 ============
