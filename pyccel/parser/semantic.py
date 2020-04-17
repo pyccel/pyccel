@@ -774,6 +774,10 @@ class SemanticParser(BasicParser):
                 arg_d_vars.append(self._infere_type(e, **settings))
             expr.set_arg_types(arg_d_vars)
 
+            if expr.is_homogeneous:
+                d_var['datatype' ] = arg_d_vars[0]['datatype' ]
+                d_var['precision'] = arg_d_vars[0]['precision']
+
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
 
@@ -1705,6 +1709,8 @@ class SemanticParser(BasicParser):
                 if not isinstance(func, (FunctionDef, Interface)):
 
                     args, kwargs = split_positional_keyword_arguments(*args)
+                    arg_dvar = [self._infere_type(i, **settings) for i in args] + [self._infere_type(i, **settings) for i in kwargs.values()]
+
                     expr = func(*args, **kwargs)
 
                     if isinstance(expr, (Where, Diag, Linspace)):
