@@ -511,14 +511,16 @@ def test_shape_tuple_output():
         return a, b
 
     from numpy import empty
-    f1 = epyccel(test_shape_1d)
-    f2 = epyccel(test_shape_2d)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
+    f1 = epyccel(test_shape_1d)
     assert(isclose(f1(x1), test_shape_1d(x1)))
+    f1_t = epyccel(test_shape_1d_tuple)
+    assert(isclose(f1_t(x1), test_shape_1d_tuple(x1)))
+    f2 = epyccel(test_shape_2d)
     assert(all(isclose(f2(x2), test_shape_2d(x2))))
 
 def test_shape_real():
