@@ -2,6 +2,7 @@ from pyccel.decorators import types
 from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
+from numpy import isclose
 
 def test_fabs_call():
     @types('real')
@@ -11,7 +12,7 @@ def test_fabs_call():
 
     f1 = epyccel(fabs_call)
     x = rand()
-    assert(f1(x) == fabs_call(x))
+    assert(isclose(f1(x) ,  fabs_call(x)))
 
 def test_fabs_phrase():
     @types('real','real')
@@ -23,7 +24,7 @@ def test_fabs_phrase():
     f2 = epyccel(fabs_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == fabs_phrase(x,y))
+    assert(isclose(f2(x,y) ,  fabs_phrase(x,y)))
 
 @pytest.mark.xfail
 def test_fabs_return_type():
@@ -35,8 +36,8 @@ def test_fabs_return_type():
 
     f1 = epyccel(fabs_return_type)
     x = randint(100)
-    assert(f1(x) == fabs_return_type(x))
-    assert(type(f1(x)) == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
+    assert(isclose(f1(x) ,  fabs_return_type(x)))
+    assert(type(f1(x))  == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sqrt_call():
     @types('real')
@@ -46,7 +47,7 @@ def test_sqrt_call():
 
     f1 = epyccel(sqrt_call)
     x = rand()
-    assert(f1(x) == sqrt_call(x))
+    assert(isclose(f1(x) ,  sqrt_call(x)))
 
 def test_sqrt_phrase():
     @types('real','real')
@@ -58,7 +59,7 @@ def test_sqrt_phrase():
     f2 = epyccel(sqrt_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == sqrt_phrase(x,y))
+    assert(isclose(f2(x,y) ,  sqrt_phrase(x,y)))
 
 
 @pytest.mark.xfail
@@ -77,13 +78,13 @@ def test_sqrt_return_type():
 
     f1 = epyccel(sqrt_return_type_real)
     x = rand()
-    assert(f1(x) == sqrt_return_type_real(x))
-    assert(type(f1(x)) == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
+    assert(isclose(f1(x) ,  sqrt_return_type_real(x)))
+    assert(type(f1(x))  == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(sqrt_return_type_comp)
     x = rand() + 1j * rand()
-    assert(f1(x) == sqrt_return_type_comp(x))
-    assert(type(f1(x)) == type(sqrt_return_type_comp(x))) # pylint: disable=unidiomatic-typecheck
+    assert(isclose(f1(x) ,  sqrt_return_type_comp(x)))
+    assert(type(f1(x))  == type(sqrt_return_type_comp(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call():
     @types('real')
@@ -93,7 +94,7 @@ def test_sin_call():
 
     f1 = epyccel(sin_call)
     x = rand()
-    assert(f1(x) == sin_call(x))
+    assert(isclose(f1(x) ,  sin_call(x)))
 
 def test_sin_phrase():
     @types('real','real')
@@ -105,7 +106,7 @@ def test_sin_phrase():
     f2 = epyccel(sin_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == sin_phrase(x,y))
+    assert(isclose(f2(x,y) ,  sin_phrase(x,y)))
 
 def test_cos_call():
     @types('real')
@@ -115,7 +116,7 @@ def test_cos_call():
 
     f1 = epyccel(cos_call)
     x = rand()
-    assert(f1(x) == cos_call(x))
+    assert(isclose(f1(x) ,  cos_call(x)))
 
 def test_cos_phrase():
     @types('real','real')
@@ -127,7 +128,7 @@ def test_cos_phrase():
     f2 = epyccel(cos_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == cos_phrase(x,y))
+    assert(isclose(f2(x,y) ,  cos_phrase(x,y)))
 
 @pytest.mark.xfail
 def test_tan_call():
@@ -138,7 +139,7 @@ def test_tan_call():
 
     f1 = epyccel(tan_call)
     x = rand()
-    assert(f1(x) == tan_call(x))
+    assert(isclose(f1(x) ,  tan_call(x)))
 
 @pytest.mark.xfail
 def test_tan_phrase():
@@ -151,7 +152,7 @@ def test_tan_phrase():
     f2 = epyccel(tan_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == tan_phrase(x,y))
+    assert(isclose(f2(x,y) ,  tan_phrase(x,y)))
 
 def test_exp_call():
     @types('real')
@@ -161,7 +162,7 @@ def test_exp_call():
 
     f1 = epyccel(exp_call)
     x = rand()
-    assert(f1(x) == exp_call(x))
+    assert(isclose(f1(x) ,  exp_call(x)))
 
 def test_exp_phrase():
     @types('real','real')
@@ -173,7 +174,7 @@ def test_exp_phrase():
     f2 = epyccel(exp_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == exp_phrase(x,y))
+    assert(isclose(f2(x,y) ,  exp_phrase(x,y)))
 
 def test_log_call():
     @types('real')
@@ -183,7 +184,7 @@ def test_log_call():
 
     f1 = epyccel(log_call)
     x = rand()
-    assert(f1(x) == log_call(x))
+    assert(isclose(f1(x) ,  log_call(x)))
 
 def test_log_phrase():
     @types('real','real')
@@ -195,7 +196,7 @@ def test_log_phrase():
     f2 = epyccel(log_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == log_phrase(x,y))
+    assert(isclose(f2(x,y) ,  log_phrase(x,y)))
 
 def test_asin_call():
     @types('real')
@@ -205,7 +206,7 @@ def test_asin_call():
 
     f1 = epyccel(asin_call)
     x = rand()
-    assert(f1(x) == asin_call(x))
+    assert(isclose(f1(x) ,  asin_call(x)))
 
 def test_asin_phrase():
     @types('real','real')
@@ -217,7 +218,7 @@ def test_asin_phrase():
     f2 = epyccel(asin_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == asin_phrase(x,y))
+    assert(isclose(f2(x,y) ,  asin_phrase(x,y)))
 
 def test_acos_call():
     @types('real')
@@ -227,7 +228,7 @@ def test_acos_call():
 
     f1 = epyccel(acos_call)
     x = rand()
-    assert(f1(x) == acos_call(x))
+    assert(isclose(f1(x) ,  acos_call(x)))
 
 def test_acos_phrase():
     @types('real','real')
@@ -239,7 +240,7 @@ def test_acos_phrase():
     f2 = epyccel(acos_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == acos_phrase(x,y))
+    assert(isclose(f2(x,y) ,  acos_phrase(x,y)))
 
 def test_atan_call():
     @types('real')
@@ -249,7 +250,7 @@ def test_atan_call():
 
     f1 = epyccel(atan_call)
     x = rand()
-    assert(f1(x) == atan_call(x))
+    assert(isclose(f1(x) ,  atan_call(x)))
 
 def test_atan_phrase():
     @types('real','real')
@@ -261,7 +262,7 @@ def test_atan_phrase():
     f2 = epyccel(atan_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == atan_phrase(x,y))
+    assert(isclose(f2(x,y) ,  atan_phrase(x,y)))
 
 def test_sinh_call():
     @types('real')
@@ -271,7 +272,7 @@ def test_sinh_call():
 
     f1 = epyccel(sinh_call)
     x = rand()
-    assert(f1(x) == sinh_call(x))
+    assert(isclose(f1(x) ,  sinh_call(x)))
 
 def test_sinh_phrase():
     @types('real','real')
@@ -283,7 +284,7 @@ def test_sinh_phrase():
     f2 = epyccel(sinh_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == sinh_phrase(x,y))
+    assert(isclose(f2(x,y) ,  sinh_phrase(x,y)))
 
 def test_cosh_call():
     @types('real')
@@ -293,7 +294,7 @@ def test_cosh_call():
 
     f1 = epyccel(cosh_call)
     x = rand()
-    assert(f1(x) == cosh_call(x))
+    assert(isclose(f1(x) ,  cosh_call(x)))
 
 def test_cosh_phrase():
     @types('real','real')
@@ -305,7 +306,7 @@ def test_cosh_phrase():
     f2 = epyccel(cosh_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == cosh_phrase(x,y))
+    assert(isclose(f2(x,y) ,  cosh_phrase(x,y)))
 
 def test_tanh_call():
     @types('real')
@@ -315,7 +316,7 @@ def test_tanh_call():
 
     f1 = epyccel(tanh_call)
     x = rand()
-    assert(f1(x) == tanh_call(x))
+    assert(isclose(f1(x) ,  tanh_call(x)))
 
 def test_tanh_phrase():
     @types('real','real')
@@ -327,7 +328,7 @@ def test_tanh_phrase():
     f2 = epyccel(tanh_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == tanh_phrase(x,y))
+    assert(isclose(f2(x,y) ,  tanh_phrase(x,y)))
 
 @pytest.mark.xfail
 def test_atan2_call():
@@ -339,7 +340,7 @@ def test_atan2_call():
     f1 = epyccel(atan2_call)
     x = rand()
     y = rand()
-    assert(f1(x,y) == atan2_call(x,y))
+    assert(isclose(f1(x,y) ,  atan2_call(x,y)))
 
 @pytest.mark.xfail
 def test_atan2_phrase():
@@ -353,7 +354,7 @@ def test_atan2_phrase():
     x = rand()
     y = rand()
     z = rand()
-    assert(f2(x,y,z) == atan2_phrase(x,y,z))
+    assert(isclose(f2(x,y,z) ,  atan2_phrase(x,y,z)))
 
 def test_floor_call():
     @types('real')
@@ -363,7 +364,7 @@ def test_floor_call():
 
     f1 = epyccel(floor_call)
     x = rand()
-    assert(f1(x) == floor_call(x))
+    assert(isclose(f1(x) ,  floor_call(x)))
 
 def test_floor_phrase():
     @types('real','real')
@@ -375,7 +376,7 @@ def test_floor_phrase():
     f2 = epyccel(floor_phrase)
     x = rand()
     y = rand()
-    assert(f2(x,y) == floor_phrase(x,y))
+    assert(isclose(f2(x,y) ,  floor_phrase(x,y)))
 
 def test_floor_return_type():
     @types('int')
@@ -392,10 +393,10 @@ def test_floor_return_type():
 
     f1 = epyccel(floor_return_type_int)
     x = randint(100)
-    assert(f1(x) == floor_return_type_int(x))
-    assert(type(f1(x)) == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
+    assert(isclose(f1(x) ,  floor_return_type_int(x)))
+    assert(type(f1(x))  == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(floor_return_type_real)
     x = randint(100)
-    assert(f1(x) == floor_return_type_real(x))
-    assert(type(f1(x)) == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
+    assert(isclose(f1(x) ,  floor_return_type_real(x)))
+    assert(type(f1(x))  == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
