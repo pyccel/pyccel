@@ -498,6 +498,12 @@ def test_shape_tuple_output():
         s = shape(f)
         return s[0]
 
+    @types('int[:]')
+    def test_shape_1d_tuple(f):
+        from numpy import shape
+        s, = shape(f)
+        return s
+
     @types('int[:,:]')
     def test_shape_2d(f):
         from numpy import shape
