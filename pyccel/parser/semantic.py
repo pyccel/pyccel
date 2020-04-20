@@ -62,6 +62,7 @@ from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
+from pyccel.ast.numpyext  import Shape
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 from pyccel.parser.errors import Errors
@@ -743,6 +744,7 @@ class SemanticParser(BasicParser):
                 d_var['datatype' ] = arg_d_vars[0]['datatype' ]
                 d_var['precision'] = arg_d_vars[0]['precision']
 
+            d_var['is_stack_array'] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
 
@@ -839,8 +841,18 @@ class SemanticParser(BasicParser):
             if isinstance(func, FunctionDef):
                 d_var = self._infere_type(func.results[0], **settings)
 
+            elif name is 'Shape':
+                d_var['datatype'   ] = expr.dtype
+                d_var['allocatable'] = False
+                d_var['shape'      ] = expr.shape
+                d_var['rank'       ] = expr.rank
+                d_var['is_pointer' ] = False
+                d_var['order'      ] = expr.order
+                d_var['precision'  ] = expr.precision
+                d_var['is_stack_array'] = True
+
             elif name in ['Full', 'Empty', 'Zeros', 'Ones', 'Diag',
-                          'Shape', 'Cross', 'Linspace', 'Where']:
+                          'Cross', 'Linspace', 'Where']:
                 d_var['datatype'   ] = expr.dtype
                 d_var['allocatable'] = True
                 d_var['shape'      ] = expr.shape

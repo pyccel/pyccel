@@ -400,7 +400,6 @@ class Shape(Array):
         init_value = ', '.join(i for i in init_value)
 
         if lhs:
-            alloc = 'allocate({}(0:{}))'.format(lhs_code, self.arg.rank-1)
             if self.index is None:
 
                 code_init = '{0} = [{1}]'.format(lhs_code, init_value)
@@ -409,7 +408,6 @@ class Shape(Array):
                 index = printer(self.index)
                 code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
 
-            code_init = alloc+ '\n'+ code_init
         else:
             if self.index is None:
                 code_init = '[{0}]'.format(init_value)
