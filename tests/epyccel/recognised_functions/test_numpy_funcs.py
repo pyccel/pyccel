@@ -491,6 +491,30 @@ def test_shape_indexed():
     assert(isclose(f1(x1), test_shape_1d(x1)))
     assert(all(isclose(f2(x2), test_shape_2d(x2))))
 
+def test_shape_tuple_output():
+    @types('int[:]')
+    def test_shape_1d(f):
+        from numpy import shape
+        s = shape(f)
+        return s
+
+    @types('int[:,:]')
+    def test_shape_2d(f):
+        from numpy import shape
+        a, b = shape(f)
+        return a, b
+
+    from numpy import empty
+    f1 = epyccel(test_shape_1d)
+    f2 = epyccel(test_shape_2d)
+    n1 = randint(20)
+    n2 = randint(20)
+    n3 = randint(20)
+    x1 = empty(n1,dtype = int)
+    x2 = empty((n2,n3), dtype = int)
+    assert(isclose(f1(x1), test_shape_1d(x1)))
+    assert(all(isclose(f2(x2), test_shape_2d(x2))))
+
 def test_shape_real():
     @types('real[:]')
     def test_shape_1d(f):
