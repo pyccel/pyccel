@@ -338,6 +338,12 @@ class Shape(Array):
 
         return Basic.__new__(cls, arg, index)
 
+    def __getitem__(self,i):
+        return self._args[0].shape[i]
+
+    def __iter__(self):
+        return self._args[0].shape.__iter__()
+
     @property
     def arg(self):
         return self._args[0]

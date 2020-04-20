@@ -2240,7 +2240,7 @@ class SemanticParser(BasicParser):
                     d_var = [d_var]
                 else:
                     d_var = [self._infere_type(v) for v in rhs]
-                    for i,l,r in enumerate(zip(lhs,rhs)):
+                    for i,(l,r) in enumerate(zip(lhs,rhs)):
                         new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, **settings) )
 
                 lhs = PythonTuple(new_lhs)
@@ -2258,10 +2258,14 @@ class SemanticParser(BasicParser):
                 lhs.set_arg_types(d_var)
             elif d_var['shape'][0]==n:
                 new_lhs = []
+                new_rhs = []
                 for i,l in enumerate(lhs):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var.copy(), rhs[i], **settings) )
+                    rhs_i = self._visit(Indexed(rhs,i))
+                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, **settings) )
+                    new_rhs.append(rhs_i)
                 lhs = PythonTuple(new_lhs)
-                lhs.set_arg_types(arg_d_vars)
+                lhs.set_arg_types([d_var])
+                rhs = new_rhs
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                     bounding_box=self._current_fst_node.absolute_bounding_box,
@@ -2330,7 +2334,7 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not (isinstance(lhs, PythonTuple) and isinstance(rhs, (PythonTuple, TupleVariable))):
+        if not isinstance(lhs, PythonTuple):
             lhs = [lhs]
             rhs = [rhs]
 
