@@ -496,7 +496,7 @@ def test_shape_tuple_output():
     def test_shape_1d(f):
         from numpy import shape
         s = shape(f)
-        return s
+        return s[0]
 
     @types('int[:,:]')
     def test_shape_2d(f):
