@@ -62,6 +62,7 @@ from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
+from pyccel.ast.numpyext  import Shape
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 from pyccel.parser.errors import Errors
@@ -2270,13 +2271,27 @@ class SemanticParser(BasicParser):
             elif d_var['shape'][0]==n:
                 new_lhs = []
                 new_rhs = []
+
+                if isinstance(rhs,Shape) and rhs.arg.shape is None:
+                    # If the shape of the object is unknown then a temporary variable is created
+                    # This avoids the shape being calculated multiple times
+                    new_rhs.append(rhs)
+                    rhs = self._assign_lhs_variable(create_variable(lhs), d_var.copy(), rhs, **settings)
+
                 for i,l in enumerate(lhs):
                     rhs_i = self._visit(Indexed(rhs,i))
                     new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, **settings) )
                     new_rhs.append(rhs_i)
-                lhs = PythonTuple(new_lhs)
-                lhs.set_arg_types([d_var])
-                rhs = new_rhs
+
+                if len(new_lhs)==len(new_rhs):
+                    lhs = PythonTuple(new_lhs)
+                    lhs.set_arg_types([d_var])
+                    rhs = new_rhs
+                else:
+                    # If a dummy variable was created then it must also be assigned in the return
+                    lhs = PythonTuple([rhs] + new_lhs)
+                    lhs.set_arg_types([d_var]*len(new_rhs))
+                    rhs = new_rhs
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
                     bounding_box=self._current_fst_node.absolute_bounding_box,
