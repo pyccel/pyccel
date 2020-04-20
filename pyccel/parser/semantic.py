@@ -62,7 +62,6 @@ from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
-from pyccel.ast.numpyext  import Shape
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 from pyccel.parser.errors import Errors
