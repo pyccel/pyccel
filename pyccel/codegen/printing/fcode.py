@@ -2256,7 +2256,7 @@ class FCodePrinter(CodePrinter):
                 if (not self._additional_code):
                     self._additional_code = ''
                 var = create_variable(base)
-                var = Variable(base.dtype, var.name, allocatable = True,
+                var = Variable(base.dtype, var.name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
                 self._namespace.variables[var.name] = var
