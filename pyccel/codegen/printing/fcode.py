@@ -1074,7 +1074,7 @@ class FCodePrinter(CodePrinter):
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
-        if isinstance(rhs, (Array, Linspace, Diag, Cross, Where)):
+        if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike)):
@@ -1095,13 +1095,6 @@ class FCodePrinter(CodePrinter):
             args = ','.join(self._print(i) for i in rhs.args)
             rhs  = 'modulo({})'.format(args)
             return '{0} = {1}'.format(lhs, rhs)
-
-        if isinstance(rhs, PyccelArraySize):
-            a = expr.rhs.arg
-
-            lhs = self._print(expr.lhs)
-            rhs = self._print(rhs)
-            return '{0} = {1}'.format(lhs,rhs)
 
         # TODO [YG, 10.03.2020]: I have just commented out this block and
         # everything still seems to work; is it dead code?
