@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
 import redbaron
 import traceback
-import importlib
-import pickle
 import os
 import sys
 import re
@@ -12,125 +9,55 @@ import re
 #==============================================================================
 
 from redbaron import RedBaron
-from redbaron import StringNode, IntNode, FloatNode, ComplexNode
-from redbaron import FloatExponantNode, StarNode
-from redbaron import NameNode
 from redbaron import AssignmentNode
-from redbaron import CommentNode, EndlNode
-from redbaron import ComparisonNode
-from redbaron import ComparisonOperatorNode
-from redbaron import UnitaryOperatorNode
-from redbaron import BinaryOperatorNode, BooleanOperatorNode
-from redbaron import AssociativeParenthesisNode
+from redbaron import BinaryOperatorNode
 from redbaron import DefNode
 from redbaron import ClassNode
 from redbaron import TupleNode, ListNode
-from redbaron import CommaProxyList
-from redbaron import LineProxyList
-from redbaron import ListComprehensionNode
-from redbaron import ComprehensionLoopNode
 from redbaron import ArgumentGeneratorComprehensionNode
-from redbaron import NodeList
-from redbaron import DotProxyList
-from redbaron import ReturnNode
-from redbaron import PassNode
-from redbaron import DefArgumentNode
-from redbaron import ForNode
-from redbaron import PrintNode
-from redbaron import DelNode
-from redbaron import DictNode, DictitemNode
-from redbaron import WhileNode
-from redbaron import IfelseblockNode, IfNode, ElseNode, ElifNode
-from redbaron import TernaryOperatorNode
+from redbaron import DictitemNode
 from redbaron import DotNode
 from redbaron import CallNode
-from redbaron import CallArgumentNode
-from redbaron import AssertNode
-from redbaron import ExceptNode
-from redbaron import FinallyNode
-from redbaron import RaiseNode
-from redbaron import TryNode
-from redbaron import YieldNode
-from redbaron import YieldAtomNode
-from redbaron import BreakNode, ContinueNode
-from redbaron import GetitemNode, SliceNode
-from redbaron import FromImportNode
-from redbaron import DottedAsNameNode, DecoratorNode
-from redbaron import NameAsNameNode
-from redbaron import LambdaNode
-from redbaron import WithNode
-from redbaron import AtomtrailersNode
+from redbaron import GetitemNode
 
 #==============================================================================
 
-from pyccel.ast import NativeInteger, NativeReal
-from pyccel.ast import NativeBool, NativeComplex
-from pyccel.ast import NativeRange
-from pyccel.ast import NativeIntegerList
-from pyccel.ast import NativeRealList
-from pyccel.ast import NativeComplexList
-from pyccel.ast import NativeList
-from pyccel.ast import NativeSymbol
 from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
-from pyccel.ast import DataTypeFactory
-from pyccel.ast import Nil, Void
-from pyccel.ast import Variable
+from pyccel.ast import Nil
 from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign
-from pyccel.ast import AugAssign, CodeBlock
+from pyccel.ast import Assign
+from pyccel.ast import AugAssign
 from pyccel.ast import Return
 from pyccel.ast import Pass
-from pyccel.ast import ConstructorCall
-from pyccel.ast import FunctionDef, Interface
+from pyccel.ast import FunctionDef
 from pyccel.ast import PythonFunction, SympyFunction
 from pyccel.ast import ClassDef
-from pyccel.ast import GetDefaultFunctionArg
-from pyccel.ast import For, FunctionalFor, ForIterator
-from pyccel.ast import GeneratorComprehension as GC
+from pyccel.ast import For, FunctionalFor
 from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast import If, IfTernaryOperator
 from pyccel.ast import While
 from pyccel.ast import Print
-from pyccel.ast import SymbolicPrint
 from pyccel.ast import Del
 from pyccel.ast import Assert
 from pyccel.ast import PythonTuple
 from pyccel.ast import Comment, EmptyLine, NewLine
 from pyccel.ast import Break, Continue
-from pyccel.ast import Slice, IndexedVariable, IndexedElement
-from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast import VariableHeader, InterfaceHeader
+from pyccel.ast import Slice
 from pyccel.ast import MetaVariable
-from pyccel.ast import MacroFunction, MacroVariable
-from pyccel.ast import Concatenate
-from pyccel.ast import ValuedVariable
 from pyccel.ast import Argument, ValuedArgument
 from pyccel.ast import Is, IsNot
-from pyccel.ast import Import, TupleImport
+from pyccel.ast import Import
 from pyccel.ast import AsName
-from pyccel.ast import AnnotatedComment, CommentBlock
-from pyccel.ast import With, Block
-from pyccel.ast import Range, Zip, Enumerate, Product, Map
-from pyccel.ast import List, Dlist, Len
-from pyccel.ast import builtin_function as pyccel_builtin_function
-from pyccel.ast import builtin_import as pyccel_builtin_import
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast import Macro
-from pyccel.ast import MacroShape
-from pyccel.ast import construct_macro
-from pyccel.ast import SumFunction, Subroutine
-from pyccel.ast import Zeros, Where, Linspace, Diag, Complex
+from pyccel.ast import CommentBlock
+from pyccel.ast import With
+from pyccel.ast import List, Dlist
 from pyccel.ast import StarredArguments
-from pyccel.ast import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast import create_variable
 
-from pyccel.ast.core      import local_sympify, int2float, Pow, _atomic
-from pyccel.ast.datatypes import sp_dtype, str_dtype
+from pyccel.ast.core      import local_sympify, Pow
 
-
-from pyccel.parser.utilities import omp_statement, acc_statement
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
-from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
 
@@ -139,7 +66,6 @@ from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.parser.errors import Errors, PyccelSyntaxError
-from pyccel.parser.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
@@ -148,29 +74,19 @@ from pyccel.parser.messages import *
 
 #==============================================================================
 
-from sympy.core.function       import Function, FunctionClass, Application
-from sympy.utilities.iterables import iterable as sympy_iterable
-from sympy.core.assumptions    import StdFactKB
+from sympy.core.function       import Function
 
-from sympy import Sum as Summation
-from sympy import KroneckerDelta, Heaviside
-from sympy import Symbol, sympify, symbols
+from sympy import Symbol, sympify
 from sympy import Eq, Ne, Lt, Le, Gt, Ge
-from sympy import NumberSymbol, Number
-from sympy import Indexed, IndexedBase
+from sympy import IndexedBase
 from sympy import Add, Mul, And, Or
 from sympy import FunctionClass
-from sympy import ceiling, floor, Mod
-from sympy import Min, Max
+from sympy import floor, Mod
 
-from sympy import oo  as INF
 from sympy import Tuple
 from sympy import Lambda
-from sympy import Atom
-from sympy import Expr
 from sympy import Dict
 from sympy import Not
-from sympy.core import cache
 
 errors = Errors()
 #==============================================================================
