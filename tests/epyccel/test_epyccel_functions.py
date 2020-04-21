@@ -156,13 +156,13 @@ def test_decorator_f8():
 
 
 def test_arguments_f9():
-    @types('int[:]')
+    @types('int64[:]')
     def f9(x):
         x += 1
 
     f = epyccel(f9)
 
-    x = np.zeros(10, dtype='int')
+    x = np.zeros(10, dtype='int64')
     x_expected = x.copy()
 
     f9(x)
@@ -170,13 +170,13 @@ def test_arguments_f9():
     assert np.allclose(x, x_expected, rtol=1e-15, atol=1e-15)
 
 def test_arguments_f10():
-    @types('int[:]')
+    @types('int64[:]')
     def f10(x):
         x[:] += 1
 
     f = epyccel(f10)
 
-    x = np.zeros(10, dtype='int')
+    x = np.zeros(10, dtype='int64')
     x_expected = x.copy()
 
     f10(x)
