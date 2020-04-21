@@ -54,7 +54,7 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Shape, Where, Mod
+from pyccel.ast.numpyext import Real, Where, Mod, PyccelArraySize
 from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 
@@ -636,7 +636,7 @@ class FCodePrinter(CodePrinter):
     def _print_Norm(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Shape(self, expr):
+    def _print_PyccelArraySize(self, expr):
         return expr.fprint(self._print)
 
     def _print_Linspace(self, expr):
@@ -1074,7 +1074,7 @@ class FCodePrinter(CodePrinter):
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)
 
-        if isinstance(rhs, (Array, Shape, Linspace, Diag, Cross, Where)):
+        if isinstance(rhs, (Array, Linspace, Diag, Cross, Where)):
             return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike)):
@@ -1096,33 +1096,12 @@ class FCodePrinter(CodePrinter):
             rhs  = 'modulo({})'.format(args)
             return '{0} = {1}'.format(lhs, rhs)
 
-        if isinstance(rhs, Shape):
-            a = expr.rhs.rhs
+        if isinstance(rhs, PyccelArraySize):
+            a = expr.rhs.arg
 
             lhs = self._print(expr.lhs)
-            rhs = self._print(a)
-            if isinstance(a, IndexedElement):
-                shape = []
-                for i in a.indices:
-                    if isinstance(i, Slice):
-                        shape.append(i)
-                rank = len(shape)
-            else:
-                rank = a.rank
-
-            code  = 'allocate({0}(0:{1}-1)) ; {0} = 0'.format(lhs, rank)
-
-            rs = []
-            for i in range(0, rank):
-                l = 'lbound({0},{1})'.format(rhs, str(i+1))
-                u = 'ubound({0},{1})'.format(rhs, str(i+1))
-                r = '{3}({2}) = {1}-{0}'.format(l, u, str(i), lhs)
-                rs.append(r)
-            sizes = '\n'.join(self._print(i) for i in rs)
-
-            code  = '{0}\n{1}'.format(code, sizes)
-
-            return self._get_statement(code)
+            rhs = self._print(rhs)
+            return '{0} = {1}'.format(lhs,rhs)
 
         # TODO [YG, 10.03.2020]: I have just commented out this block and
         # everything still seems to work; is it dead code?

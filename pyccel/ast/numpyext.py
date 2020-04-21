@@ -3,7 +3,8 @@
 
 import numpy
 from sympy import Basic, Function, Tuple
-from sympy import Integer, Add, Mul, Pow as sp_Pow, Float
+from sympy import Integer as sp_Integer
+from sympy import Add, Mul, Pow as sp_Pow, Float
 from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
@@ -13,7 +14,8 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .core import (Variable, IndexedElement, Slice, Len,
                    For, Range, Assign, List, Nil,
-                   ValuedArgument, Constant, Pow)
+                   ValuedArgument, Constant, Pow,
+                   Integer)
 from .builtins  import Int as PythonInt
 from .builtins  import PythonFloat, PythonTuple
 from .datatypes import dtype_and_precision_registry as dtype_registry
@@ -60,6 +62,7 @@ __all__ = (
     'Ones',
     'OnesLike',
     'Product',
+    'PyccelArraySize',
     'Rand',
     'Real',
     'Shape',
@@ -315,13 +318,9 @@ class Matmul(Application):
         return 'matmul({1},{0})'.format(a_code, b_code)
 
 #==============================================================================
-class Shape(Array):
 
-    """Represents a call to  numpy.shape for code generation.
-
-    arg : list ,tuple ,PythonTuple, Tuple,List, Variable
-    """
-    def __new__(cls, arg, index=None):
+class PyccelArraySize(Application):
+    def __new__(cls, arg, index):
         if not isinstance(arg, (list,
                                 tuple,
                                 Tuple,
@@ -333,16 +332,10 @@ class Shape(Array):
                                 IndexedBase)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        # TODO add check on index: must be Integer or Variable with dtype=int
+        # TODO add check on index: must be sp_Integer or Variable with dtype=int
         # TODO [YG, 09.10.2018]: Verify why index should be passed at all (not in Numpy!)
 
         return Basic.__new__(cls, arg, index)
-
-    def __getitem__(self,i):
-        return self._args[0].shape[i]
-
-    def __iter__(self):
-        return self._args[0].shape.__iter__()
 
     @property
     def arg(self):
@@ -352,35 +345,12 @@ class Shape(Array):
     def index(self):
         return self._args[1]
 
-    @property
-    def dtype(self):
-        return 'ndarrayint'
-
-    @property
-    def shape(self):
-        return PythonTuple(self.arg.rank)
-
-    @property
-    def rank(self):
-        return 1
-
-    @property
-    def precision(self):
-        return default_precision['int']
-
-    @property
-    def order(self):
-        return 'C'
-
     def __str__(self):
         return self._sympystr(str)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        if self.index:
-            return 'Shape({},{})'.format(sstr(self.arg),sstr(self.index))
-        else:
-            return 'Shape({})'.format(sstr(self.arg))
+        return 'Shape({},{})'.format(sstr(self.arg),sstr(self.index))
 
     def fprint(self, printer, lhs = None):
         """Fortran print."""
@@ -391,32 +361,25 @@ class Shape(Array):
         else:
             init_value = printer(self.arg)
 
-
-        init_value = ['size({0},{1})'.format(init_value, ind)
-                      for ind in range(1, self.arg.rank+1, 1)]
         if self.arg.order == 'C':
-            init_value.reverse()
-
-        init_value = ', '.join(i for i in init_value)
+            index = printer(self.arg.rank - self.index)
+        else:
+            index = printer(self.index + 1)
 
         if lhs:
-            if self.index is None:
-
-                code_init = '{0} = [{1}]'.format(lhs_code, init_value)
-
-            else:
-                index = printer(self.index)
-                code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-
+            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
         else:
-            if self.index is None:
-                code_init = '[{0}]'.format(init_value)
-
-            else:
-                index = printer(self.index)
-                code_init = 'size({0}, {1})'.format(init_value, index)
+            code_init = 'size({0}, {1})'.format(init_value, index)
 
         return code_init
+
+def Shape(arg):
+    if arg.shape is None:
+        return PythonTuple([PyccelArraySize(arg,i) for i in range(arg.rank)])
+    elif isinstance(arg.shape, PythonTuple):
+        return arg.shape
+    else:
+        return PythonTuple(arg.shape)
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
@@ -424,12 +387,12 @@ class Real(Function):
 
     """Represents a call to  numpy.real for code generation.
 
-    arg : Variable, Float, Integer, Complex
+    arg : Variable, Float, sp_Integer, Complex
     """
     is_zero = False
     def __new__(cls, arg):
 
-        _valid_args = (Variable, IndexedElement, Integer, Nil,
+        _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
                        Float, Mul, Add, sp_Pow, sp_Rational, Application)
 
         if not isinstance(arg, _valid_args):
@@ -483,7 +446,7 @@ class Imag(Real):
 
     """Represents a call to  numpy.imag for code generation.
 
-    arg : Variable, Float, Integer, Complex
+    arg : Variable, Float, sp_Integer, Complex
     """
 
     def fprint(self, printer):
@@ -503,13 +466,13 @@ class Complex(Function):
 
     """Represents a call to  numpy.complex for code generation.
 
-    arg : Variable, Float, Integer
+    arg : Variable, Float, sp_Integer
     """
     is_zero = False
 
     def __new__(cls, arg0, arg1=Float(0)):
 
-        _valid_args = (Variable, IndexedElement, Integer,
+        _valid_args = (Variable, IndexedElement, sp_Integer,
                        Float, Mul, Add, sp_Pow, sp_Rational)
 
         for arg in [arg0, arg1]:
@@ -576,7 +539,7 @@ class Linspace(Application):
 
 
         _valid_args = (Variable, IndexedElement, Float,
-                       Integer, sp_Rational)
+                       sp_Integer, sp_Rational)
 
         for arg in args:
             if not isinstance(arg, _valid_args):
@@ -687,7 +650,7 @@ class Diag(Application):
         if not isinstance(array, _valid_args):
            raise TypeError('Expecting valid args')
 
-        if not isinstance(k, (int, Integer)):
+        if not isinstance(k, (int, sp_Integer)):
            raise ValueError('k must be an integer')
 
         index = Variable('int', 'diag_index')
