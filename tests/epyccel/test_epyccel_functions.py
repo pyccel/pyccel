@@ -154,6 +154,35 @@ def test_decorator_f8():
     assert f(3,False) == f8(3,False)
     # ...
 
+
+def test_arguments_f9():
+    @types('int[:]')
+    def f9(x):
+        x += 1
+
+    f = epyccel(f9)
+
+    x = np.zeros(10, dtype='int')
+    x_expected = x.copy()
+
+    f9(x)
+    f(x_expected)
+    assert np.allclose(x, x_expected, rtol=1e-15, atol=1e-15)
+
+def test_arguments_f10():
+    @types('int[:]')
+    def f10(x):
+        x[:] += 1
+
+    f = epyccel(f10)
+
+    x = np.zeros(10, dtype='int')
+    x_expected = x.copy()
+
+    f10(x)
+    f(x_expected)
+    assert np.allclose(x, x_expected, rtol=1e-15, atol=1e-15)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

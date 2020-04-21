@@ -4816,6 +4816,9 @@ def get_assigned_symbols(expr):
             elif isinstance(var, IndexedElement):
                 var = var.base
                 symbols.append(var)
+            elif isinstance(var, Variable):
+                if var.rank:
+                    symbols.append(var)
             return symbols
         except:
             #TODO should we keep the try/except clause ?
