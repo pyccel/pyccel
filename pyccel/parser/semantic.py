@@ -2360,7 +2360,7 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not isinstance(lhs, PythonTuple):
+        if not (isinstance(lhs, PythonTuple) and isinstance(rhs,(PythonTuple,TupleVariable,list))):
             lhs = [lhs]
             rhs = [rhs]
 
