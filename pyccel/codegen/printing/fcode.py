@@ -457,9 +457,7 @@ class FCodePrinter(CodePrinter):
             else:
                 args.append("{}".format(self._print(f)))
 
-        fs = ', '.join(i for i in args)
-
-        code = 'print *, {0}'.format(fs)
+        code = ', '.join(['print *', *args])
         return self._get_statement(code)
 
     def _print_SymbolicPrint(self, expr):
