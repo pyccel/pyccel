@@ -57,6 +57,7 @@ from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core      import Pow, Add, Mul, And, Or, _atomic
 from pyccel.ast.core      import Eq, Ne, Lt, Le, Gt, Ge
 from pyccel.ast.core      import BooleanTrue, BooleanFalse
+from pyccel.ast.core      import Integer, Float
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
@@ -78,7 +79,6 @@ from pyccel.parser.messages import *
 #from sympy.core.function       import Function
 from sympy.core.function       import Application, UndefinedFunction
 from sympy.core.numbers        import ImaginaryUnit, IntegerConstant
-from sympy.logic.boolalg       import BooleanTrue, BooleanFalse
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -89,7 +89,6 @@ from sympy import ceiling
 from sympy import Min, Max
 
 from sympy import oo  as INF
-from sympy import Integer, Float
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Expr
@@ -1238,7 +1237,7 @@ class SemanticParser(BasicParser):
             for i, arg in enumerate(args[::-1]):
                 if (not (isinstance(arg,Integer) and arg.is_constant()) and 
                         not isinstance(arg, Slice)):
-                    errors.report(INDEXED_TUPLE, symbol=expr,
+                    errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     return None
@@ -1246,7 +1245,7 @@ class SemanticParser(BasicParser):
                 if isinstance(arg, Slice):
                     if ((arg.start is not None and not isinstance(arg.start,IntegerConstant)) or
                             (arg.end is not None and not isinstance(arg.end,IntegerConstant))):
-                        errors.report(INDEXED_TUPLE, symbol=expr,
+                        errors.report(INDEXED_TUPLE, symbol=var,
                             bounding_box=self._current_fst_node.absolute_bounding_box,
                             severity='error', blocker=self.blocking)
                         return None
@@ -1288,7 +1287,7 @@ class SemanticParser(BasicParser):
 
             if isinstance(dtype, NativeTuple):
                 if not var.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES, symbol=expr,
+                    errors.report(LIST_OF_TUPLES, symbol=var,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     dtype = 'int'
