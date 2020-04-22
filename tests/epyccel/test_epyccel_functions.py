@@ -167,7 +167,7 @@ def test_arguments_f9():
 
     f9(x)
     f(x_expected)
-    assert np.allclose(x, x_expected, rtol=1e-15, atol=1e-15)
+    assert (x == x_expected).all()
 
 def test_arguments_f10():
     @types('int64[:]')
@@ -181,7 +181,7 @@ def test_arguments_f10():
 
     f10(x)
     f(x_expected)
-    assert np.allclose(x, x_expected, rtol=1e-15, atol=1e-15)
+    assert (x == x_expected).all()
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
