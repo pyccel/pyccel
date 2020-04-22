@@ -1235,7 +1235,7 @@ class SemanticParser(BasicParser):
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
             for i, arg in enumerate(args[::-1]):
-                if (not (isinstance(arg,Integer) and arg.is_constant()) and 
+                if (not isinstance(arg,IntegerConstant) and
                         not isinstance(arg, Slice)):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
