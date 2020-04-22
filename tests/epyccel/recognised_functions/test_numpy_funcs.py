@@ -4,36 +4,36 @@ import pytest
 from numpy.random import rand, randint
 from numpy import isclose
 
-"""
-    'full_like' : FullLike,
-    'empty_like': EmptyLike,
-    'zeros_like': ZerosLike,
-    'ones_like' : OnesLike,
-    'array'     : Array,
-    # ...
-    'norm'      : Norm,
-    'int'       : NumpyInt,
-    'real'      : Real,
-    'imag'      : Imag,
-    'float'     : NumpyFloat,
-    'double'    : Float64,
-    'mod'       : Mod,
-    'float32'   : Float32,
-    'float64'   : Float64,
-    'int32'     : Int32,
-    'int64'     : Int64,
-    'complex128': Complex128,
-    'complex64' : Complex64,
-    'matmul'    : Matmul,
-    'sum'       : NumpySum,
-    'prod'      : Prod,
-    'product'   : Prod,
-    'linspace'  : Linspace,
-    'diag'      : Diag,
-    'where'     : Where,
-    'cross'     : Cross,
-    # ---
-"""
+# Functions still to be tested:
+#    full_like
+#    empty_like
+#    zeros_like
+#    ones_like
+#    array
+#    # ...
+#    norm
+#    int
+#    real
+#    imag
+#    float
+#    double
+#    mod
+#    float32
+#    float64
+#    int32
+#    int64
+#    complex128
+#    complex64
+#    matmul
+#    sum
+#    prod
+#    product
+#    linspace
+#    diag
+#    where
+#    cross
+#    # ---
+
 def test_fabs_call():
     @types('real')
     def fabs_call(x):
