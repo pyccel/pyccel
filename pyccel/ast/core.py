@@ -2212,8 +2212,7 @@ class Variable(Symbol, PyccelAstNode):
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
 
-        if shape is not None:
-            shape = process_shape(shape)
+        shape = process_shape(shape)
 
         # TODO improve order of arguments
 
@@ -5167,6 +5166,8 @@ def get_iterable_ranges(it, var_name=None):
 
 #==============================================================================
 def process_shape(shape):
+    if shape is None:
+        return None
     if not hasattr(shape,'__iter__'):
         shape = [shape]
 
