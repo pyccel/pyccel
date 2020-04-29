@@ -1187,14 +1187,14 @@ class SemanticParser(BasicParser):
         if isinstance(expr, Integer):
             return expr
         elif isinstance(expr, sp_Integer):
-            return Integer(expr.p)
+            return Integer(expr)
         else:
             raise TypeError("Integer type is not sympy Integer or pyccel Integer")
     def _visit_Float(self, expr, **settings):
         if isinstance(expr, Float):
             return expr
         elif isinstance(expr, sp_Float):
-            return Float(expr.p)
+            return Float(expr)
         else:
             raise TypeError("Float type is not sympy Float or pyccel Float")
     def _visit_String(self, expr, **settings):
