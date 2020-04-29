@@ -26,7 +26,7 @@ from sympy.core.numbers import Infinity as INF
 from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import Add
+from pyccel.ast.core import Add, Mul, Pow
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
@@ -1551,14 +1551,14 @@ class FCodePrinter(CodePrinter):
         like   = expr.like
 
         if isinstance(op, AddOp):
-            rhs = lhs + rhs
+            rhs = Add(lhs, rhs)
         elif isinstance(op, MulOp):
-            rhs = lhs * rhs
+            rhs = Mul(lhs, rhs)
         elif isinstance(op, SubOp):
-            rhs = lhs - rhs
+            rhs = Add(lhs, Mul(Integer(-1), rhs))
         # TODO fix bug with division of integers
         elif isinstance(op, DivOp):
-            rhs = lhs / rhs
+            rhs = Mul(lhs, Pow(rhs, Integer(-1)))
         else:
             raise ValueError('Unrecognized operation', op)
 
