@@ -549,36 +549,6 @@ def create_variable(expr):
 
     return Symbol(name)
 
-class Pow(sp_Pow):
-    def __new__(cls, *args, evaluate = False, **kwargs):
-        return sp_Pow.__new__(cls, *args, evaluate = evaluate, **kwargs)
-
-    def _eval_subs(self, old, new):
-        args = self.args
-        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
-        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
-        expr = Pow(args[0], args[1], evaluate=False)
-        return expr
-
-    def _eval_evalf(self, prec):
-        return sp_Pow(self.base,self.exp).evalf(prec)
-
-    def _eval_is_positive(self):
-        #we do this inorder to infere the type of Pow expression correctly
-        return self.is_real
-
-    @property
-    def is_real(self):
-        return self._args[0].is_real and self._args[1].is_real
-
-    @property
-    def is_integer(self):
-        return self._args[0].is_integer and self._args[1].is_integer
-
-    @property
-    def is_complex(self):
-        return self._args[0].is_complex and self._args[1].is_complex
-
 class DottedName(Basic):
 
     """
