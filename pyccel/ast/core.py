@@ -13,7 +13,6 @@ from sympy import Lambda, preorder_traversal
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
-from sympy.core.numbers import One as sp_One, Zero as sp_Zero
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
