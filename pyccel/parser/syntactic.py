@@ -52,6 +52,7 @@ from pyccel.ast import CommentBlock
 from pyccel.ast import With
 from pyccel.ast import List, Dlist
 from pyccel.ast import StarredArguments
+from pyccel.ast import Add, Mul
 from pyccel.ast import create_variable
 
 from pyccel.ast.core      import local_sympify, Pow
@@ -79,7 +80,7 @@ from sympy.core.function       import Function
 from sympy import Symbol, sympify
 from sympy import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import IndexedBase
-from sympy import Add, Mul, And, Or
+from sympy import And, Or
 from sympy import FunctionClass
 from sympy import floor, Mod
 
@@ -442,12 +443,12 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
         if stmt.value == '+':
-            return Add(first, second, evaluate=False)
+            return Add(first, second)
         elif stmt.value == '*':
 
             if isinstance(first, (PythonTuple, Tuple, List)):
                 return Dlist(first, second)
-            return Mul(first, second, evaluate=False)
+            return Mul(first, second)
         elif stmt.value == '-':
 
             if isinstance(stmt.second, BinaryOperatorNode) \
@@ -456,31 +457,31 @@ class SyntaxParser(BasicParser):
                 second = second._new_rawargs(-args[0], args[1])
             else:
                 second = Mul(-1, second)
-            return Add(first, second, evaluate=False)
+            return Add(first, second)
         elif stmt.value == '/':
             if isinstance(second, Mul) and isinstance(stmt.second,
                                            BinaryOperatorNode):
                 args = list(second.args)
-                second = Pow(args[0], -1, evaluate=False)
-                second = Mul(second, args[1], evaluate=False)
+                second = Pow(args[0], -1)
+                second = Mul(second, args[1])
             else:
-                second = Pow(second, -1, evaluate=False)
-            return Mul(first, second, evaluate=False)
+                second = Pow(second, -1)
+            return Mul(first, second)
 
         elif stmt.value == '**':
 
-            return Pow(first, second, evaluate=False)
+            return Pow(first, second)
         elif stmt.value == '//':
 
             if isinstance(second, Mul) and isinstance(stmt.second,
                                            BinaryOperatorNode):
                 args = second.args
-                second = Pow(args[0], -1, evaluate=False)
-                first =  floor(Mul(first, second, evaluate=False))
-                return Mul(first, args[1], evaluate=False)
+                second = Pow(args[0], -1)
+                first =  floor(Mul(first, second))
+                return Mul(first, args[1])
             else:
-                second = Pow(second, -1, evaluate=False)
-                return floor(Mul(first, second, evaluate=False))
+                second = Pow(second, -1)
+                return floor(Mul(first, second))
 
         elif stmt.value == '%':
             return Mod(first, second)
@@ -1013,11 +1014,11 @@ class SyntaxParser(BasicParser):
         args.append(index)
         target = IndexedBase(lhs)[args]
         target = Assign(target, result)
-        assign1 = Assign(index, Integer(0))
+        assign1 = Assign(index, 0)
         assign1.set_fst(stmt)
         target.set_fst(stmt)
         generators[-1].insert2body(target)
-        assign2 = Assign(index, Add(index, Integer(1), evaluate = False))
+        assign2 = Assign(index, Add(index, 1))
         assign2.set_fst(stmt)
         generators[-1].insert2body(assign2)
 

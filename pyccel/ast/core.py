@@ -200,12 +200,18 @@ class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
         return max(getattr(a,'rank',0) for a in self._args)
 
 class Add(sp_Add, sp_Boolean, PyccelAstNode):
+    def __new__(cls, *args, evaluate = False, **kwargs):
+        return sp_Add.__new__(cls, *args, evaluate = evaluate, **kwargs)
+
     @property
     def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
         return max(getattr(a,'rank',0) for a in self._args)
 
 class Mul(sp_Mul, sp_Boolean, PyccelAstNode):
+    def __new__(cls, *args, evaluate = False, **kwargs):
+        return sp_Mul.__new__(cls, *args, evaluate = evaluate, **kwargs)
+
     @property
     def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
@@ -543,6 +549,8 @@ def create_variable(expr):
     return Symbol(name)
 
 class Pow(sp_Pow):
+    def __new__(cls, *args, evaluate = False, **kwargs):
+        return sp_Pow.__new__(cls, *args, evaluate = evaluate, **kwargs)
 
     def _eval_subs(self, old, new):
         args = self.args
