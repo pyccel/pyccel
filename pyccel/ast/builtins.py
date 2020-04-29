@@ -8,7 +8,6 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Integer
 from sympy import Float
 from sympy import sympify
 from sympy.core.assumptions import StdFactKB
@@ -17,6 +16,7 @@ from sympy.utilities.iterables          import iterable
 
 from .basic import Basic
 from .datatypes import default_precision, NativeTuple
+from .numbers import Integer
 
 __all__ = (
     'Bool',
@@ -270,9 +270,9 @@ class PythonTuple(Function):
     @property
     def shape(self):
         if(self._arg_dtypes is None):
-            return [len(self._args)]
+            return [Integer(len(self._args))]
         else:
-            shape = [len(self._args)]
+            shape = [Integer(len(self._args))]
             if self.is_homogeneous and self._arg_dtypes[0]['rank'] > 0:
                 shape = shape + list(self._arg_dtypes[0]['shape'])
 

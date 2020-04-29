@@ -29,7 +29,7 @@ from sympy.core.numbers       import ImaginaryUnit
 from sympy.core.basic         import Atom
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
-from sympy.logic.boolalg      import Boolean as sp_Boolean, BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
+from sympy.logic.boolalg      import Boolean as sp_Boolean
 from sympy.tensor             import Idx, Indexed, IndexedBase
 
 from sympy.matrices.matrices            import MatrixBase
@@ -45,6 +45,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
+from .numbers import BooleanTrue, BooleanFalse, Integer
 
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -56,8 +57,6 @@ __all__ = (
     'Add','Mul','Pow',
     'And','Or','Not',
     'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
-    'BooleanFalse', 'BooleanTrue',
-    'Float', 'Integer',
     'AddOp',
     'AliasAssign',
     'AnnotatedComment',
@@ -216,62 +215,6 @@ class Mul(sp_Mul, sp_Boolean, PyccelAstNode):
 #because  And(f(x,y), expr) won't work
 #class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
 #    pass
-class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
-    _dtype     = 'bool'
-    _rank      = 0
-    _precision = default_precision['bool']
-    pass
-
-class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
-    _dtype     = 'bool'
-    _rank      = 0
-    _precision = default_precision['bool']
-    pass
-
-class Integer(sp_Integer, PyccelAstNode):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    def __new__(cls, val):
-        val = int(val)
-        if val == 0:
-            return Zero()
-        elif val == 1:
-            return One()
-        elif val == -1:
-            return NegativeOne()
-        else:
-            return sp_Integer.__new__(cls, val)
-
-class One(Integer):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = 1
-    def __new__(cls):
-        return Expr.__new__(cls)
-
-class NegativeOne(Integer):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = -1
-    def __new__(cls):
-        return Expr.__new__(cls)
-
-class Zero(Integer):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = 0
-    def __new__(cls):
-        return Expr.__new__(cls)
-
-class Float(sp_Float, PyccelAstNode):
-    _dtype     = 'real'
-    _rank      = 0
-    _precision = default_precision['real']
-    pass
 
 class Eq(sp_Eq, PyccelAstNode):
     pass
@@ -2260,6 +2203,17 @@ class Variable(Symbol, PyccelAstNode):
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
 
+        new_shape = []
+        for s in shape:
+            if isinstance(s,(Integer,Variable,Slice)):
+                new_shape.append(s)
+            elif isinstance(s, sp_Integer):
+                new_shape.append(Integer(s.p))
+            elif isinstance(s, int):
+                new_shape.append(Integer(s))
+            else:
+                raise TypeError('shape elements must be one of the following types: Integer(pyccel), Variable, Slice, Integer(sympy), int')
+
         # TODO improve order of arguments
 
         obj = Basic.__new__(
@@ -2268,7 +2222,7 @@ class Variable(Symbol, PyccelAstNode):
             name,
             rank,
             allocatable,
-            shape,
+            new_shape,
             cls_base,
             cls_parameters,
             is_pointer,

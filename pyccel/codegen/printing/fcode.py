@@ -26,7 +26,6 @@ from sympy.core.numbers import Infinity as INF
 from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import Integer, Float
 from pyccel.ast.core import Add
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
@@ -51,6 +50,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString
 from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.numbers import Integer, Float
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 

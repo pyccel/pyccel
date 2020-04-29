@@ -56,13 +56,13 @@ from pyccel.ast.core import get_assigned_symbols
 
 from pyccel.ast.core      import Pow, Add, Mul, And, Or, _atomic
 from pyccel.ast.core      import Eq, Ne, Lt, Le, Gt, Ge
-from pyccel.ast.core      import BooleanTrue, BooleanFalse
-from pyccel.ast.core      import Integer, Float
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
+from pyccel.ast.numbers   import BooleanTrue, BooleanFalse
+from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numpyext  import PyccelArraySize
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
