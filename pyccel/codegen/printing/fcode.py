@@ -2078,43 +2078,46 @@ class FCodePrinter(CodePrinter):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
-        # purpose: print complex numbers nicely in Fortran.
-        # collect the purely real and purely imaginary parts:
-        pure_real = []
-        pure_imaginary = []
-        mixed = []
-        for arg in expr.args:
-            if arg.is_number and arg.is_real:
-                pure_real.append(arg)
-            elif arg.is_number and arg.is_imaginary:
-                pure_imaginary.append(arg)
-            else:
-                mixed.append(arg)
-        if len(pure_imaginary) > 0:
-            if len(mixed) > 0:
-                PREC = precedence(expr)
-                term = Add(*mixed)
-                t = self._print(term)
-                if t.startswith('-'):
-                    sign = "-"
-                    t = t[1:]
-                else:
-                    sign = "+"
-                if precedence(term) < PREC:
-                    t = "(%s)" % t
+        return CodePrinter._print_Add(self, expr)
 
-                return "cmplx(%s,%s) %s %s" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
-                    sign, t,
-                )
-            else:
-                return "cmplx(%s,%s)" % (
-                    self._print(Add(*pure_real)),
-                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
-                )
-        else:
-            return CodePrinter._print_Add(self, expr)
+#    def _print_Add(self, expr):
+#        # purpose: print complex numbers nicely in Fortran.
+#        # collect the purely real and purely imaginary parts:
+#        pure_real = []
+#        pure_imaginary = []
+#        mixed = []
+#        for arg in expr.args:
+#            if arg.is_number and arg.is_real:
+#                pure_real.append(arg)
+#            elif arg.is_number and arg.is_imaginary:
+#                pure_imaginary.append(arg)
+#            else:
+#                mixed.append(arg)
+#        if len(pure_imaginary) > 0:
+#            if len(mixed) > 0:
+#                PREC = precedence(expr)
+#                term = Add(*mixed)
+#                t = self._print(term)
+#                if t.startswith('-'):
+#                    sign = "-"
+#                    t = t[1:]
+#                else:
+#                    sign = "+"
+#                if precedence(term) < PREC:
+#                    t = "(%s)" % t
+#
+#                return "cmplx(%s,%s) %s %s" % (
+#                    self._print(Add(*pure_real)),
+#                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
+#                    sign, t,
+#                )
+#            else:
+#                return "cmplx(%s,%s)" % (
+#                    self._print(Add(*pure_real)),
+#                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
+#                )
+#        else:
+#            return CodePrinter._print_Add(self, expr)
 
     def _print_Header(self, expr):
         return ''
