@@ -154,6 +154,7 @@ __all__ = (
     'local_sympify',
 #    'operator',
 #    'op_registry',
+    'process_shape',
     'subs'
 )
 
@@ -2211,16 +2212,8 @@ class Variable(Symbol, PyccelAstNode):
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
 
-        new_shape = []
-        for s in shape:
-            if isinstance(s,(Integer,Variable,Slice)):
-                new_shape.append(s)
-            elif isinstance(s, sp_Integer):
-                new_shape.append(Integer(s.p))
-            elif isinstance(s, int):
-                new_shape.append(Integer(s))
-            else:
-                raise TypeError('shape elements must be one of the following types: Integer(pyccel), Variable, Slice, Integer(sympy), int')
+        if shape is not None:
+            shape = process_shape(shape)
 
         # TODO improve order of arguments
 
@@ -2230,7 +2223,7 @@ class Variable(Symbol, PyccelAstNode):
             name,
             rank,
             allocatable,
-            new_shape,
+            shape,
             cls_base,
             cls_parameters,
             is_pointer,
@@ -5171,6 +5164,24 @@ def get_iterable_ranges(it, var_name=None):
 
     return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
 
+
+#==============================================================================
+def process_shape(shape):
+    if not hasattr(shape,'__iter__'):
+        shape = [shape]
+
+    new_shape = []
+    for s in shape:
+        if isinstance(s,(Integer,Variable,Slice)):
+            new_shape.append(s)
+        elif isinstance(s, sp_Integer):
+            new_shape.append(Integer(s.p))
+        elif isinstance(s, int):
+            new_shape.append(Integer(s))
+        else:
+            raise TypeError('shape elements must be one of the following types: Integer(pyccel), Variable, Slice, Integer(sympy), int')
+
+    return PythonTuple(new_shape)
 
 # ...
 from .numpyext import Linspace, Diag, Where

@@ -4,7 +4,7 @@
 import numpy
 from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
-from sympy import Add, Mul, Pow as sp_Pow, Float
+from sympy import Float
 from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log, tan
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
@@ -13,8 +13,8 @@ from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .core import (Variable, IndexedElement, Slice, Len,
-                   For, Range, Assign, List, Nil,
-                   ValuedArgument, Constant, Pow)
+                   For, Range, Assign, List, Nil, Add, Mul,
+                   ValuedArgument, Constant, Pow, process_shape)
 from .builtins  import Int as PythonInt
 from .builtins  import PythonFloat, PythonTuple
 from .datatypes import dtype_and_precision_registry as dtype_registry
@@ -124,7 +124,7 @@ class Array(Application):
 
         # Create instance, add attributes, and return it
         obj = Basic.__new__(cls, arg, dtype, order, prec)
-        obj._shape = PythonTuple(numpy.shape(arg))
+        obj._shape = process_shape(numpy.shape(arg))
         obj._rank  = len(obj._shape)
         return obj
 
@@ -165,9 +165,9 @@ class Array(Application):
 
         if isinstance(shape, (list, PythonTuple, Tuple, tuple)):
             # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
+            shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
         else:
-            shape_code = '0:' + printer(shape - 1)
+            shape_code = '0:' + printer(Add(shape, Integer(-1)))
 
         lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
@@ -390,7 +390,7 @@ class Real(Function):
     def __new__(cls, arg):
 
         _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       Float, Mul, Add, sp_Pow, sp_Rational, Application)
+                       Float, Mul, Add, Pow, sp_Rational, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -469,7 +469,7 @@ class Complex(Function):
     def __new__(cls, arg0, arg1=Float(0)):
 
         _valid_args = (Variable, IndexedElement, sp_Integer,
-                       Float, Mul, Add, sp_Pow, sp_Rational)
+                       Float, Mul, Add, Pow, sp_Rational)
 
         for arg in [arg0, arg1]:
             if not isinstance(arg, _valid_args):
@@ -929,7 +929,7 @@ class Full(Application):
     def __new__(cls, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
-        shape = cls._process_shape(shape)
+        shape = process_shape(shape)
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
@@ -980,20 +980,6 @@ class Full(Application):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def _process_shape(shape):
-
-        if isinstance(shape, PythonTuple):
-            return shape
-
-        if hasattr(shape,'__iter__'):
-            return PythonTuple(shape)
-
-        else:
-            return PythonTuple([shape])
-
-
-    #--------------------------------------------------------------------------
-    @staticmethod
     def _process_dtype(dtype):
 
         dtype = str(dtype).replace('\'', '').lower()
@@ -1028,9 +1014,9 @@ class Full(Application):
 
             if isinstance(self.shape, (PythonTuple,Tuple,tuple)):
                 # this is a correction. problem on LRZ
-                shape_code = ', '.join('0:' + printer(i - 1) for i in shape)
+                shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
             else:
-                shape_code = '0:' + printer(shape - 1)
+                shape_code = '0:' + printer(Add(shape, Integer(-1)))
 
             code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
             stmts.append(code_alloc)
@@ -1050,7 +1036,7 @@ class Empty(Full):
     def __new__(cls, shape, dtype='float', order='C'):
 
         # Convert shape to PythonTuple
-        shape = cls._process_shape(shape)
+        shape = process_shape(shape)
 
         # Verify dtype and get precision
         dtype, precision = cls._process_dtype(dtype)
