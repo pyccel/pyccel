@@ -1017,7 +1017,7 @@ class SyntaxParser(BasicParser):
         assign1.set_fst(stmt)
         target.set_fst(stmt)
         generators[-1].insert2body(target)
-        assign2 = Assign(index, index + 1)
+        assign2 = Assign(index, Add(index, Integer(1), evaluate = False))
         assign2.set_fst(stmt)
         generators[-1].insert2body(assign2)
 
