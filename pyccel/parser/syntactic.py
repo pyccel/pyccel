@@ -22,7 +22,7 @@ from redbaron import GetitemNode
 
 #==============================================================================
 
-from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
+from pyccel.ast import String, Integer, Float, Complex, BooleanFalse, BooleanTrue
 from pyccel.ast import Nil
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign
@@ -327,8 +327,8 @@ class SyntaxParser(BasicParser):
 
     def _visit_ComplexNode(self, stmt):
 
-        val = strip_ansi_escape.sub('', stmt.value)
-        return sympify(val, locals=local_sympify)
+        val = complex(strip_ansi_escape.sub('', stmt.value))
+        return Complex(Float(val.real), Float(val.imag))
 
     def _visit_AssignmentNode(self, stmt):
 

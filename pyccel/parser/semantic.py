@@ -1199,7 +1199,7 @@ class SemanticParser(BasicParser):
             raise TypeError("Float type is not sympy Float or pyccel Float")
     def _visit_String(self, expr, **settings):
         return expr
-    def _visit_ImaginaryUnit(self, expr, **settings):
+    def _visit_Complex(self, expr, **settings):
         return expr
     def _visit_BooleanTrue(self, expr, **settings):
         return expr
