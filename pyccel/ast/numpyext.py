@@ -320,7 +320,7 @@ class Matmul(Application):
 
 #==============================================================================
 
-class PyccelArraySize(Application):
+class PyccelArraySize(Function):
     def __new__(cls, arg, index):
         if not isinstance(arg, (list,
                                 tuple,
@@ -1097,7 +1097,7 @@ class FullLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Full(a.shape, fill_value, dtype, order)
+        return Full(Shape(a), fill_value, dtype, order)
 
 #=======================================================================================
 class EmptyLike(Application):
@@ -1108,7 +1108,7 @@ class EmptyLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Empty(a.shape, dtype, order)
+        return Empty(Shape(a), dtype, order)
 
 #=======================================================================================
 class OnesLike(Application):
@@ -1119,7 +1119,7 @@ class OnesLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Ones(a.shape, dtype, order)
+        return Ones(Shape(a), dtype, order)
 
 #=======================================================================================
 class ZerosLike(Application):
@@ -1130,7 +1130,7 @@ class ZerosLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Zeros(a.shape, dtype, order)
+        return Zeros(Shape(a), dtype, order)
 
 #=======================================================================================
 
