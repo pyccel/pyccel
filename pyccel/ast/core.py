@@ -5172,14 +5172,14 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(Integer,Variable,Slice)):
+        if isinstance(s,(Integer,Variable,Slice,PyccelAstNode)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
             new_shape.append(Integer(s.p))
         elif isinstance(s, int):
             new_shape.append(Integer(s))
         else:
-            raise TypeError('shape elements must be one of the following types: Integer(pyccel), Variable, Slice, Integer(sympy), int')
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, Integer(sympy), int')
 
     return PythonTuple(new_shape)
 
