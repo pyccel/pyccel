@@ -1183,8 +1183,6 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
-    def _visit_int(self, expr, **settings):
-        return Integer(expr)
     def _visit_Integer(self, expr, **settings):
         if isinstance(expr, Integer):
             return expr

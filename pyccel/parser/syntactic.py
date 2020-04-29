@@ -462,10 +462,10 @@ class SyntaxParser(BasicParser):
             if isinstance(second, Mul) and isinstance(stmt.second,
                                            BinaryOperatorNode):
                 args = list(second.args)
-                second = Pow(args[0], -1)
+                second = Pow(args[0], Integer(-1))
                 second = Mul(second, args[1])
             else:
-                second = Pow(second, -1)
+                second = Pow(second, Integer(-1))
             return Mul(first, second)
 
         elif stmt.value == '**':
@@ -476,11 +476,11 @@ class SyntaxParser(BasicParser):
             if isinstance(second, Mul) and isinstance(stmt.second,
                                            BinaryOperatorNode):
                 args = second.args
-                second = Pow(args[0], -1)
+                second = Pow(args[0], Integer(-1))
                 first =  floor(Mul(first, second))
                 return Mul(first, args[1])
             else:
-                second = Pow(second, -1)
+                second = Pow(second, Integer(-1))
                 return floor(Mul(first, second))
 
         elif stmt.value == '%':
@@ -1014,11 +1014,11 @@ class SyntaxParser(BasicParser):
         args.append(index)
         target = IndexedBase(lhs)[args]
         target = Assign(target, result)
-        assign1 = Assign(index, 0)
+        assign1 = Assign(index, Integer(0))
         assign1.set_fst(stmt)
         target.set_fst(stmt)
         generators[-1].insert2body(target)
-        assign2 = Assign(index, Add(index, 1))
+        assign2 = Assign(index, Add(index, Integer(1)))
         assign2.set_fst(stmt)
         generators[-1].insert2body(assign2)
 
