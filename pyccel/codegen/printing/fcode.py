@@ -14,8 +14,7 @@ import operator
 from numpy import shape as numpy_shape
 
 from sympy.core import Symbol
-from sympy.core import Float, Integer
-from sympy.core import S, Add
+from sympy.core import S
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
 from sympy.printing.precedence import precedence
@@ -27,6 +26,8 @@ from sympy.core.numbers import Infinity as INF
 from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
+from pyccel.ast.core import Integer, Float
+from pyccel.ast.core import Add
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
@@ -1566,7 +1567,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_Range(self, expr):
         start = self._print(expr.start)
-        stop  = self._print(expr.stop-1)
+        if isinstance(expr.stop,Integer):
+            stop  = self._print(Integer(expr.stop-1))
+        else:
+            stop  = self._print(Add(expr.stop,Integer(-1),evaluate=False))
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
@@ -2206,6 +2210,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_Zero(self, expr):
         return "0_{0}".format(expr.precision)
+
+    def _print_One(self, expr):
+        return "1_{0}".format(expr.precision)
+
+    def _print_NegativeOne(self, expr):
+        return "-1_{0}".format(expr.precision)
 
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)

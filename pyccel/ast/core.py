@@ -238,6 +238,8 @@ class Integer(sp_Integer, PyccelAstNode):
             return Zero()
         elif val == 1:
             return One()
+        elif val == -1:
+            return NegativeOne()
         else:
             return sp_Integer.__new__(cls, val)
 
@@ -246,6 +248,14 @@ class One(Integer):
     _rank      = 0
     _precision = default_precision['int']
     p          = 1
+    def __new__(cls):
+        return Expr.__new__(cls)
+
+class NegativeOne(Integer):
+    _dtype     = 'int'
+    _rank      = 0
+    _precision = default_precision['int']
+    p          = -1
     def __new__(cls):
         return Expr.__new__(cls)
 
