@@ -477,11 +477,11 @@ class SyntaxParser(BasicParser):
                                            BinaryOperatorNode):
                 args = second.args
                 second = Pow(args[0], Integer(-1))
-                first =  floor(Mul(first, second))
+                first =  floor(Mul(first, second), evaluate=False)
                 return Mul(first, args[1])
             else:
                 second = Pow(second, Integer(-1))
-                return floor(Mul(first, second))
+                return floor(Mul(first, second), evaluate=False)
 
         elif stmt.value == '%':
             return Mod(first, second)
