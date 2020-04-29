@@ -184,6 +184,8 @@ class AstFunctionResultError(AstError):
 # Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
 class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
+    def __new__(cls, *args, evaluate = False, **kwargs):
+        return sp_Pow.__new__(cls, *args, evaluate = evaluate, **kwargs)
 
     def _eval_subs(self, old, new):
         args = self.args
