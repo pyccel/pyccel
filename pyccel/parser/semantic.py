@@ -82,6 +82,8 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
 from sympy import Symbol
+from sympy import Integer as sp_Integer
+from sympy import Float as sp_Float
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
 
@@ -1180,10 +1182,22 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+    def _visit_int(self, expr, **settings):
+        return Integer(expr)
     def _visit_Integer(self, expr, **settings):
-        return expr
+        if isinstance(expr, Integer):
+            return expr
+        elif isinstance(expr, sp_Integer):
+            return Integer(expr.p)
+        else:
+            raise TypeError("Integer type is not sympy Integer or pyccel Integer")
     def _visit_Float(self, expr, **settings):
-        return expr
+        if isinstance(expr, Float):
+            return expr
+        elif isinstance(expr, sp_Float):
+            return Float(expr.p)
+        else:
+            raise TypeError("Float type is not sympy Float or pyccel Float")
     def _visit_String(self, expr, **settings):
         return expr
     def _visit_ImaginaryUnit(self, expr, **settings):
