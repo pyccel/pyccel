@@ -1,7 +1,7 @@
 from .basic import PyccelAstNode
 from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float, Rational as sp_Rational
-from sympy.logic.boolalg      import Boolean as sp_Boolean, BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
+from sympy import Float as sp_Float
+from sympy.logic.boolalg      import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 from sympy.core.expr          import Expr
 from .datatypes import default_precision
 
@@ -17,13 +17,11 @@ class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
     _dtype     = 'bool'
     _rank      = 0
     _precision = default_precision['bool']
-    pass
 
 class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
     _dtype     = 'bool'
     _rank      = 0
     _precision = default_precision['bool']
-    pass
 
 class Integer(sp_Integer, PyccelAstNode):
     _dtype     = 'int'
@@ -68,5 +66,4 @@ class Float(sp_Float, PyccelAstNode):
     _dtype     = 'real'
     _rank      = 0
     _precision = default_precision['real']
-    pass
 
