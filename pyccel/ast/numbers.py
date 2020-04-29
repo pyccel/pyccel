@@ -3,6 +3,7 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy.logic.boolalg      import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 from sympy.core.expr          import Expr
+from sympy.core.numbers       import NegativeOne as sp_NegativeOne
 from .datatypes import default_precision
 
 __all__ = ('BooleanTrue',
@@ -46,7 +47,7 @@ class One(Integer):
     def __new__(cls):
         return Expr.__new__(cls)
 
-class NegativeOne(Integer):
+class NegativeOne(Integer, sp_NegativeOne):
     _dtype     = 'int'
     _rank      = 0
     _precision = default_precision['int']
