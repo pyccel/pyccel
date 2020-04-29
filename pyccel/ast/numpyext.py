@@ -468,8 +468,8 @@ class Complex(Function):
 
     def __new__(cls, arg0, arg1=Float(0)):
 
-        _valid_args = (Variable, IndexedElement, sp_Integer,
-                       Float, Mul, Add, Pow, sp_Rational)
+        _valid_args = (Variable, IndexedElement, Integer,
+                       Float, Mul, Add, Pow)
 
         for arg in [arg0, arg1]:
             if not isinstance(arg, _valid_args):
