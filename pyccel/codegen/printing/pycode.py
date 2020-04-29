@@ -87,6 +87,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Return(self, expr):
         return 'return {}'.format(self._print(expr.expr))
 
+    def _print_PythonTuple(self, expr):
+        args = ', '.join(self._print(i) for i in expr.args)
+        return '('+args+')'
+
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
         return '# {0} '.format(txt)

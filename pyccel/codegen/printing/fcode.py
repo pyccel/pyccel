@@ -2204,7 +2204,7 @@ class FCodePrinter(CodePrinter):
     # TODO [YG, 19.02.2020]: Use Fortran 'selected_int_kind' to get correct
     #                        "kind type parameter value" (it is not always 8)
     def _print_Integer(self, expr):
-        printed = CodePrinter._print_Integer(self, expr)
+        printed = str(expr.p)
         return "%s_8" % printed
 
     def _print_Zero(self, expr):

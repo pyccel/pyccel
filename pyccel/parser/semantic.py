@@ -76,17 +76,14 @@ from pyccel.parser.messages import *
 
 #==============================================================================
 
-#from sympy.core.function       import Function
 from sympy.core.function       import Application, UndefinedFunction
 from sympy.core.numbers        import ImaginaryUnit, IntegerConstant
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
 from sympy import Symbol
-#from sympy import symbols
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
-from sympy import Min, Max
 
 from sympy import oo  as INF
 from sympy import Tuple
@@ -1297,7 +1294,7 @@ class SemanticParser(BasicParser):
             return IndexedVariable(var, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
         else:
-            return IndexedBase(name).__getitem__(args)
+            return IndexedVariable(name, dtype=dtype).__getitem__(args)
 
     def _visit_IndexedBase(self, expr, **settings):
         return self._visit(expr.label)
@@ -1793,15 +1790,6 @@ class SemanticParser(BasicParser):
         msg = msg.format(expr=type(expr))
         raise NotImplementedError(msg)
 
-    def _visit_Min(self, expr, **settings):
-        raise
-        args = self._visit(expr.args, **settings)
-        return Min(*args)
-
-    def _visit_Max(self, expr, **settings):
-        args = self._visit(expr.args, **settings)
-        return Max(*args)
-
     def _create_variable(self, name, dtype, rhs, d_lhs):
         if isinstance(rhs, PythonTuple):
             elem_vars = []
@@ -2078,27 +2066,6 @@ class SemanticParser(BasicParser):
             body = subs(body,sub)
             expr = Block(rhs.name, rhs.variables, body)
             return expr
-
-        elif isinstance(rhs, GC):
-            if str(rhs.lhs) != str(lhs):
-
-                if isinstance(lhs, Symbol):
-                    name = lhs.name
-                    if self.get_variable(name) is None:
-                        d_var = self._infere_type(rhs.lhs, **settings)
-                        dtype = d_var.pop('datatype')
-                        lhs = Variable(dtype, name , **d_var)
-                        self.insert_variable(lhs)
-
-                if isinstance(rhs, FunctionalSum):
-                    stmt = AugAssign(lhs,'+',rhs.lhs)
-                elif isinstance(rhs, FunctionalMin):
-                    stmt = Assign(lhs, Min(lhs,rhs.lhs))
-                elif isinstance(rhs, FunctionalMax):
-                    stmt = Assign(lhs, Max(lhs, rhs.lhs))
-
-                return CodeBlock([rhs, stmt])
-            return rhs
 
         elif isinstance(rhs, FunctionalFor):
             return rhs

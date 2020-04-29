@@ -13,6 +13,7 @@ from sympy import Lambda, preorder_traversal
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
+from sympy.core.numbers import One as sp_One, Zero as sp_Zero
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
@@ -226,11 +227,30 @@ class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
     _rank      = 0
     _precision = default_precision['bool']
     pass
+
+class One(sp_One, PyccelAstNode):
+    _dtype     = 'int'
+    _rank      = 0
+    _precision = default_precision['int']
+
+class Zero(sp_Zero, PyccelAstNode):
+    _dtype     = 'int'
+    _rank      = 0
+    _precision = default_precision['int']
+
 class Integer(sp_Integer, PyccelAstNode):
     _dtype     = 'int'
     _rank      = 0
     _precision = default_precision['int']
-    pass
+    def __new__(cls, val):
+        val = int(val)
+        if val == 0:
+            return Zero()
+        elif val == 1:
+            return One()
+        else:
+            return sp_Integer.__new__(cls, val)
+
 class Float(sp_Float, PyccelAstNode):
     _dtype     = 'real'
     _rank      = 0
