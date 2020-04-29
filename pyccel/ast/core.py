@@ -229,22 +229,6 @@ class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
     _precision = default_precision['bool']
     pass
 
-class One(sp_Integer, PyccelAstNode):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = 1
-    def __new__(cls):
-        return Expr.__new__(cls)
-
-class Zero(sp_Integer, PyccelAstNode):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = 0
-    def __new__(cls):
-        return Expr.__new__(cls)
-
 class Integer(sp_Integer, PyccelAstNode):
     _dtype     = 'int'
     _rank      = 0
@@ -257,6 +241,22 @@ class Integer(sp_Integer, PyccelAstNode):
             return One()
         else:
             return sp_Integer.__new__(cls, val)
+
+class One(Integer):
+    _dtype     = 'int'
+    _rank      = 0
+    _precision = default_precision['int']
+    p          = 1
+    def __new__(cls):
+        return Expr.__new__(cls)
+
+class Zero(Integer):
+    _dtype     = 'int'
+    _rank      = 0
+    _precision = default_precision['int']
+    p          = 0
+    def __new__(cls):
+        return Expr.__new__(cls)
 
 class Float(sp_Float, PyccelAstNode):
     _dtype     = 'real'

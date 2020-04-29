@@ -77,7 +77,7 @@ from pyccel.parser.messages import *
 #==============================================================================
 
 from sympy.core.function       import Application, UndefinedFunction
-from sympy.core.numbers        import ImaginaryUnit, IntegerConstant
+from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -1232,7 +1232,7 @@ class SemanticParser(BasicParser):
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
             for i, arg in enumerate(args[::-1]):
-                if (not isinstance(arg,IntegerConstant) and
+                if (not isinstance(arg, Integer) and
                         not isinstance(arg, Slice)):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
@@ -1240,8 +1240,8 @@ class SemanticParser(BasicParser):
                     return None
 
                 if isinstance(arg, Slice):
-                    if ((arg.start is not None and not isinstance(arg.start,IntegerConstant)) or
-                            (arg.end is not None and not isinstance(arg.end,IntegerConstant))):
+                    if ((arg.start is not None and not isinstance(arg.start, Integer)) or
+                            (arg.end is not None and not isinstance(arg.end, Integer))):
                         errors.report(INDEXED_TUPLE, symbol=var,
                             bounding_box=self._current_fst_node.absolute_bounding_box,
                             severity='error', blocker=self.blocking)

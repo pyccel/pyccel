@@ -345,12 +345,8 @@ class PyccelArraySize(Application):
     def index(self):
         return self._args[1]
 
-    def __str__(self):
-        return self._sympystr(str)
-
     def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'Shape({},{})'.format(sstr(self.arg),sstr(self.index))
+        return 'Shape({},{})'.format(str(self.arg), str(self.index))
 
     def fprint(self, printer, lhs = None):
         """Fortran print."""
@@ -438,7 +434,6 @@ class Real(Function):
 
 
     def _sympystr(self, printer):
-
         return self.__str__()
 
 #==============================================================================
@@ -522,9 +517,7 @@ class Complex(Function):
     def __str__(self):
         return self.fprint(str)
 
-
     def _sympystr(self, printer):
-
         return self.fprint(str)
 
 #==============================================================================
