@@ -148,7 +148,7 @@ def test_cos_phrase():
     y = rand()
     assert(isclose(f2(x,y), cos_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "To be fixed before merging branch")
+
 def test_tan_call():
     @types('real')
     def tan_call(x):
@@ -159,7 +159,6 @@ def test_tan_call():
     x = rand()
     assert(isclose(f1(x), tan_call(x), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "To be fixed before merging branch")
 def test_tan_phrase():
     @types('real','real')
     def tan_phrase(x,y):

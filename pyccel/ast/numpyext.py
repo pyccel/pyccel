@@ -5,7 +5,7 @@ import numpy
 from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
 from sympy import Add, Mul, Pow as sp_Pow, Float
-from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log
+from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log, tan
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
 from sympy.core.function import Application
@@ -69,6 +69,7 @@ __all__ = (
     'Sinh',
     'Sqrt',
     'Tanh',
+    'Tan',
     'Where',
     'Zeros',
     'ZerosLike'
@@ -1340,6 +1341,16 @@ class Tanh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
+class Tan(Function):
+    is_zero = False
+    def __new__(cls,arg):
+        obj = tan(arg)
+        if arg.is_real:
+            assumptions={'real':True}
+            ass_copy = assumptions.copy()
+            obj._assumptions = StdFactKB(assumptions)
+            obj._assumptions._generator = ass_copy
+        return obj
 #=======================================================================================
 
 class Log(Function):

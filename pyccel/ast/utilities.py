@@ -5,7 +5,7 @@ from sympy.core.function import Application
 from sympy import Symbol, Lambda, floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, atan2)
+from sympy import (sin, cos, exp, csc, cos, sec, cot, atan2)
 import scipy.constants as sc_constants
 
 from pyccel.symbolic import lambdify
@@ -25,7 +25,7 @@ from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
+from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log, Tan
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
 
@@ -45,7 +45,7 @@ math_functions = {
     'cos'    : cos,
     'exp'    : exp,
     'log'    : Log,
-    'tan'    : tan,
+    'tan'    : Tan,
     'asin'   : Asin,
     'acos'   : Acos,
     'atan'   : Atan,
@@ -96,7 +96,7 @@ numpy_functions = {
     # ---
     'sin'       : sin,
     'cos'       : cos,
-    'tan'       : tan,
+    'tan'       : Tan,
     'arcsin'    : Asin,
     'arccos'    : Acos,
     'arctan'    : Atan,
