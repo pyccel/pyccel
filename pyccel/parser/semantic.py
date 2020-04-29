@@ -369,6 +369,7 @@ class SemanticParser(BasicParser):
             for i in container.functions:
                 if not i in funcs:
                     funcs[i] = container.functions[i]
+            container = container.parent_scope
         return funcs
 
 
