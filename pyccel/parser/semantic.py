@@ -3271,14 +3271,19 @@ class SemanticParser(BasicParser):
             func = interfaces[0]
 
         name = expr.name
-        args = expr.arguments
-        master_args = expr.master_arguments
+        args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
+                else a for a in expr.arguments]
+        master_args = [self._visit(a, **settings) if isinstance(a, ValuedArgument)
+                else a for a in expr.master_arguments]
         results = expr.results
         macro   = MacroFunction(name, args, func, master_args,
                                   results=results)
         self.insert_macro(macro)
 
         return macro
+
+    def _visit_MacroShape(self, expr, **settings):
+        return expr
 
     def _visit_MacroVariable(self, expr, **settings):
 
