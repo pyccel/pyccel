@@ -1,6 +1,5 @@
 # coding: utf-8
-
-
+# pylint: disable=R0201
 
 from sympy.core import S
 from sympy.printing.precedence import precedence

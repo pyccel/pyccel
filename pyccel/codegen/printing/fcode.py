@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=R0201
 
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""

@@ -1,4 +1,5 @@
 # coding: utf-8
+# pylint: disable=R0201
 
 """
 Lua code printer
