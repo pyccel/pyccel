@@ -77,7 +77,7 @@ from pyccel.parser.messages import *
 
 from sympy.core.function       import Function
 
-from sympy import Symbol, sympify
+from sympy import Symbol
 from sympy import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import IndexedBase
 from sympy import And, Or
