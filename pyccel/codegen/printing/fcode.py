@@ -50,6 +50,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString
 from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers import Integer, Float
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -2208,17 +2209,18 @@ class FCodePrinter(CodePrinter):
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%sd0" % printed
 
+    # TODO: Use expr.precision once the precision is correctly defined
     def _print_Integer(self, expr):
-        return "{0}_{1}".format(str(expr.p), expr.precision)
+        return "{0}_{1}".format(str(expr.p), default_precision['int'])
 
     def _print_Zero(self, expr):
-        return "0_{0}".format(expr.precision)
+        return "0_{0}".format(default_precision['int'])
 
     def _print_One(self, expr):
-        return "1_{0}".format(expr.precision)
+        return "1_{0}".format(default_precision['int'])
 
     def _print_NegativeOne(self, expr):
-        return "-1_{0}".format(expr.precision)
+        return "-1_{0}".format(default_precision['int'])
 
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)
