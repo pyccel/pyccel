@@ -3,6 +3,40 @@
 #$ header metavar ignore_at_import=True
 #$ header metavar import_all=True
 
+from pyccel.stdlib.internal.mpi import mpi_comm_world
+
+from pyccel.stdlib.internal.mpi import mpi_send
+from pyccel.stdlib.internal.mpi import mpi_ssend
+from pyccel.stdlib.internal.mpi import mpi_bsend
+
+from pyccel.stdlib.internal.mpi import mpi_isend
+from pyccel.stdlib.internal.mpi import mpi_issend
+from pyccel.stdlib.internal.mpi import mpi_ibsend
+
+from pyccel.stdlib.internal.mpi import mpi_recv
+from pyccel.stdlib.internal.mpi import mpi_irecv
+
+from pyccel.stdlib.internal.mpi import mpi_sendrecv
+
+from pyccel.stdlib.internal.mpi import mpi_bcast
+
+from pyccel.stdlib.internal.mpi import mpi_barrier
+from pyccel.stdlib.internal.mpi import mpi_gather
+from pyccel.stdlib.internal.mpi import mpi_allgatherv
+
+from pyccel.stdlib.internal.mpi import mpi_reduce
+from pyccel.stdlib.internal.mpi import mpi_allreduce
+
+from pyccel.stdlib.internal.mpi import mpi_waitall
+
+from pyccel.stdlib.internal.mpi import mpi_comm_split
+from pyccel.stdlib.internal.mpi import mpi_comm_free
+
+from pyccel.stdlib.internal.mpi import mpi_type_vector
+from pyccel.stdlib.internal.mpi import mpi_type_commit
+from pyccel.stdlib.internal.mpi import ANY_TAG
+from pyccel.stdlib.internal.mpi import ANY_SOURCE
+
 from pyccel.stdlib.internal.mpi import MPI_SUM
 from pyccel.stdlib.internal.mpi import MPI_PROD
 from pyccel.stdlib.internal.mpi import MPI_MAX
@@ -22,10 +56,13 @@ from pyccel.stdlib.internal.mpi import MPI_COMPLEX8
 from pyccel.stdlib.internal.mpi import MPI_COMPLEX16
 from pyccel.stdlib.internal.mpi import MPI_CHARACTER
 
+from pyccel.stdlib.internal.mpiext import mpiext_get_rank
+from pyccel.stdlib.internal.mpiext import mpiext_get_size
+
 #===================================================================================
 
 #$ header class MPI_(public)
-#$ header method __init__(MPI_)
+#$ header method __init__(MPI_)   
 
 class MPI_:
     def __init__(self):
@@ -115,7 +152,7 @@ ierr = -1
 
 #.....................
 ##$ header macro (x),y.scatter
-##$ header macro (req), y.irecv
+##$ header macro (req), y.irecv 
 ##$ header macro y.alltoall
 #not_working for the moment
 #.....................
