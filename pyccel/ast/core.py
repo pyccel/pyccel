@@ -4405,12 +4405,6 @@ class IndexedElement(Indexed, PyccelAstNode):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol, or IndexedBase as base."""))
 
-        args_ = []
-
-        for arg in args:
-            args_.append(sympify(arg, locals=local_sympify))
-        args = args_
-
         if isinstance(base, (NDimArray, Iterable, Tuple,
                       MatrixBase)) and all([i.is_number for i in args]):
             if len(args) == 1:
