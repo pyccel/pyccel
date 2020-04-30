@@ -3,7 +3,6 @@
 import redbaron
 import traceback
 import os
-import sys
 import re
 
 #==============================================================================
@@ -55,7 +54,7 @@ from pyccel.ast import StarredArguments
 from pyccel.ast import Add, Mul
 from pyccel.ast import create_variable
 
-from pyccel.ast.core      import local_sympify, Pow
+from pyccel.ast.core      import Pow
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
@@ -81,7 +80,6 @@ from sympy import Symbol
 from sympy import Eq, Ne, Lt, Le, Gt, Ge
 from sympy import IndexedBase
 from sympy import And, Or
-from sympy import FunctionClass
 from sympy import floor, Mod
 
 from sympy import Tuple

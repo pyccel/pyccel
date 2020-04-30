@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from sympy.core.expr import AtomicExpr
-from sympy.core import Symbol
 from sympy import sympify
 
 from .core import Basic

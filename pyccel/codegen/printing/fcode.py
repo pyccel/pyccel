@@ -36,8 +36,8 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
-from pyccel.ast.core import (Assign, AugAssign, Variable, CodeBlock,
-                             TupleVariable, Declare, ValuedVariable,
+from pyccel.ast.core import (Assign, Variable,
+                             TupleVariable, Declare,
                              IndexedVariable,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName, DottedVariable,

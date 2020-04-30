@@ -23,14 +23,11 @@ complete source code files.
 
 
 
-from sympy.core import S, numbers, Rational, Float, Lambda
-from sympy.core.function import Function
+from sympy.core import S
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
-from sympy.tensor import Idx
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
-from pyccel.ast.core import (Assign, Variable)
 
 
 __all__ = ["LuaCodePrinter", "lua_code"]

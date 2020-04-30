@@ -6,8 +6,8 @@ from sympy.core import S
 from sympy.printing.precedence import precedence
 from sympy.sets.fancysets import Range
 
-from pyccel.ast.core import Assign, datatype, Variable, Import
-from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
+from pyccel.ast.core import Assign, datatype, Import
+from pyccel.ast.core import SeparatorComment
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 # TODO: add examples

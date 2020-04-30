@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from pyccel.parser import Parser
-import os
 
 
 __all__ = ["Complexity"]

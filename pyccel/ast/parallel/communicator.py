@@ -1,7 +1,5 @@
 # coding: utf-8
 
-from sympy.sets.sets import Set
-
 from pyccel.ast.parallel.basic import Basic
 from pyccel.ast.parallel.group import UniversalGroup
 from pyccel.ast.parallel.group import Split

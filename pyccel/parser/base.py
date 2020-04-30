@@ -4,7 +4,6 @@ from collections import OrderedDict
 import redbaron
 import importlib
 import os
-import sys
 import re
 
 #==============================================================================

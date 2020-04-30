@@ -5,20 +5,17 @@ import importlib
 
 from collections.abc import Iterable
 
-from sympy.core import cache
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Integral, Symbol, Tuple
-from sympy import Lambda, preorder_traversal
+from sympy import Lambda
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
-from sympy.core.compatibility import is_sequence
 from sympy.core.assumptions   import StdFactKB
-from sympy.core.operations    import LatticeOp
 from sympy.core.relational    import Relational
 from sympy.core.relational    import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Gt as sp_Gt, Le as sp_Le, Ge as sp_Ge
 from sympy.core.singleton     import Singleton, S
@@ -26,7 +23,6 @@ from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.numbers       import ImaginaryUnit
-from sympy.core.basic         import Atom
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean

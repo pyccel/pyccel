@@ -1,32 +1,16 @@
 # coding: utf-8
 
-from itertools import groupby
-import numpy as np
-
-from sympy.core.symbol  import Symbol
-from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton import Singleton
-from sympy.logic.boolalg import Boolean, BooleanTrue, BooleanFalse
 from sympy.core import Tuple
-from sympy.utilities.iterables import iterable
-from sympy.core.function import Function
-from sympy.core.function import UndefinedFunction
 
 from pyccel.ast.core import Module, Program
-from pyccel.ast.core import DottedName
-from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
-from pyccel.ast.core import Assign, Declare, AugAssign
-from pyccel.ast.core import Block
+from pyccel.ast.core import Assign
 from pyccel.ast.core import Tensor
-from pyccel.ast.core import Comment
-from pyccel.ast.core import EmptyLine
 from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, If, Del
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.numpyext import Zeros, Ones
 
 from pyccel.ast.parallel.basic        import Basic
-from pyccel.ast.parallel.communicator import UniversalCommunicator
 
 __all__ = (
     'MPI',

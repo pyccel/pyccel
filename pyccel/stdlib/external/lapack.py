@@ -1,10 +1,5 @@
 #$ header metavar ignore_at_import=True
 
-from pyccel.stdlib.internal.lapack import dgetrf
-from pyccel.stdlib.internal.lapack import dgetrs
-from pyccel.stdlib.internal.lapack import dgbtrf
-from pyccel.stdlib.internal.lapack import dgbtrs
-
 
 
 #$ header macro (ab, IPIV, info), dgetrf(ab) := dgetrf(ab.shape[0], ab.shape[1], ab, ab.shape[0], IPIV, info)

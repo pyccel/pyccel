@@ -15,7 +15,7 @@ from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables          import iterable
 
 from .basic import Basic
-from .datatypes import default_precision, NativeTuple
+from .datatypes import default_precision
 from .numbers import Integer
 
 __all__ = (

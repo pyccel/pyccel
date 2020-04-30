@@ -10,7 +10,6 @@ from .core import Basic
 from .core import Variable
 from .core import ValuedArgument
 from .core import FunctionDef, Interface
-from .core import ClassDef
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro

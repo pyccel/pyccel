@@ -2,21 +2,17 @@
 from sympy import cse as sympy_cse
 from sympy import Sum
 from sympy import IndexedBase, Indexed
-from sympy import KroneckerDelta, Heaviside
-from sympy import Symbol, sympify, symbols
-from sympy import Integer, Float
-from sympy import true, false
+from sympy import Symbol
 from sympy import Tuple, Lambda
 
 from sympy.core.function  import Function
-from pyccel.ast import Import, TupleImport
+from pyccel.ast import Import
 from pyccel.ast import Return, FunctionDef
 from pyccel.ast import Assign, create_variable
-from pyccel.ast import AugAssign, CodeBlock
-from pyccel.ast import For, FunctionalFor, ForIterator
+from pyccel.ast import AugAssign
+from pyccel.ast import For
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
-from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast import If, IfTernaryOperator
+from pyccel.ast.functionalexpr import FunctionalSum
 
 
 def cse(expr):

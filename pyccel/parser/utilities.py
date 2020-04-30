@@ -11,7 +11,6 @@ from sympy import srepr
 from pyccel.ast import DottedName
 from pyccel.ast.core import create_variable
 from sympy import Symbol
-from sympy.printing.dot import dotprint
 import os
 
 import string

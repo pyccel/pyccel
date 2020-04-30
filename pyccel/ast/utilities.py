@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from sympy import Symbol, Lambda, floor
+from sympy import floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, cot, atan2)
+from sympy import (sin, cos, exp, atan2)
 import scipy.constants as sc_constants
 
 from pyccel.symbolic import lambdify
@@ -13,7 +13,7 @@ from pyccel.symbolic import lambdify
 from .core import AsName
 from .core import Import
 from .core import Product
-from .core import FunctionDef, Return, Assign
+from .core import FunctionDef
 from .core import ValuedArgument
 from .core import Constant, Variable, IndexedVariable
 
@@ -25,7 +25,7 @@ from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log, Tan
+from .numpyext import Sqrt, Asin, Acos, Atan, Sinh, Cosh, Tanh, Log, Tan
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
 

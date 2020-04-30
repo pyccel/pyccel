@@ -2,9 +2,7 @@
 
 from itertools import chain
 
-from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.compatibility import iterable
 
 from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
