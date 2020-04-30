@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0201
 
 from collections import OrderedDict
 import traceback
