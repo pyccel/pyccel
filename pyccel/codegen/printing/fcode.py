@@ -465,11 +465,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
-        def _iprint(e):
-            return "print *, 'sympy> {}'".format(e)
-        code = ''
-        for a in expr.expr:
-            code = '{code}{p}'.format(code=code, p=_iprint(a))
+        code = ''.join(["print *, 'sympy> {}'".format(a)])
         return self._get_statement(code)
 
 
