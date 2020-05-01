@@ -26,7 +26,7 @@ def test_fabs_phrase():
     y = rand()
     assert(isclose(f2(x,y) ,  fabs_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason = "fabs returns a float")
 def test_fabs_return_type():
     @types('int')
     def fabs_return_type(x):
@@ -61,17 +61,9 @@ def test_sqrt_phrase():
     y = rand()
     assert(isclose(f2(x,y) ,  sqrt_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-
-@pytest.mark.xfail
 def test_sqrt_return_type():
     @types('real')
     def sqrt_return_type_real(x):
-        from math import sqrt
-        a = sqrt(x)
-        return a
-    #TODO we should use cmath instead of math
-    @types('complex')
-    def sqrt_return_type_comp(x):
         from math import sqrt
         a = sqrt(x)
         return a
@@ -330,7 +322,7 @@ def test_tanh_phrase():
     y = rand()
     assert(isclose(f2(x,y) ,  tanh_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_atan2_call():
     @types('real')
     def atan2_call(x,y):
@@ -342,7 +334,7 @@ def test_atan2_call():
     y = rand()
     assert(isclose(f1(x,y) ,  atan2_call(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_atan2_phrase():
     @types('real','real')
     def atan2_phrase(x,y,z):

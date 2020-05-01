@@ -401,7 +401,6 @@ def test_sqrt_return_type():
         from numpy import sqrt
         a = sqrt(x)
         return a
-    #TODO we should use cmath instead of numpy
     @types('complex')
     def sqrt_return_type_comp(x):
         from numpy import sqrt
