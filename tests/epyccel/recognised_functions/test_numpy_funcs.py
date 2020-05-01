@@ -56,7 +56,7 @@ def test_fabs_phrase():
     y = rand()
     assert(isclose(f2(x,y), fabs_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason = "fabs should always return a float")
 def test_fabs_return_type():
     @types('int')
     def fabs_return_type(x):
@@ -91,7 +91,6 @@ def test_absolute_phrase():
     y = rand()
     assert(isclose(f2(x,y), absolute_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail
 def test_absolute_return_type():
     @types('int')
     def absolute_return_type(x):
@@ -102,7 +101,7 @@ def test_absolute_return_type():
     f1 = epyccel(absolute_return_type)
     x = randint(100)
     assert(isclose(f1(x), absolute_return_type(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(absolute_return_type(x))) # pylint: disable=unidiomatic-typecheck
+    assert(type(f1(x)) == type(absolute_return_type(x).item())) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call():
     @types('real')
@@ -396,7 +395,6 @@ def test_sqrt_phrase():
     assert(isclose(f2(x,y), sqrt_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 
-@pytest.mark.xfail
 def test_sqrt_return_type():
     @types('real')
     def sqrt_return_type_real(x):
@@ -413,12 +411,12 @@ def test_sqrt_return_type():
     f1 = epyccel(sqrt_return_type_real)
     x = rand()
     assert(isclose(f1(x), sqrt_return_type_real(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
+    assert(type(f1(x)) == type(sqrt_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(sqrt_return_type_comp)
     x = rand() + 1j * rand()
     assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(sqrt_return_type_comp(x))) # pylint: disable=unidiomatic-typecheck
+    assert(type(f1(x)) == type(sqrt_return_type_comp(x).item())) # pylint: disable=unidiomatic-typecheck
 
 
 def test_floor_call():
@@ -443,7 +441,7 @@ def test_floor_phrase():
     y = rand()
     assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason = "numpy floor returns the same type as the input")
 def test_floor_return_type():
     @types('int')
     def floor_return_type_int(x):
@@ -460,12 +458,12 @@ def test_floor_return_type():
     f1 = epyccel(floor_return_type_int)
     x = randint(100)
     assert(isclose(f1(x), floor_return_type_int(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
+    assert(type(f1(x)) == type(floor_return_type_int(x).item())) # pylint: disable=unidiomatic-typecheck
 
     f1 = epyccel(floor_return_type_real)
     x = randint(100)
     assert(isclose(f1(x), floor_return_type_real(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
+    assert(type(f1(x)) == type(floor_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
 def test_shape_indexed():
     @types('int[:]')
