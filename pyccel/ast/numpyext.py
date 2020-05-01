@@ -333,9 +333,6 @@ class PyccelArraySize(Function):
                                 IndexedBase)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        # TODO add check on index: must be sp_Integer or Variable with dtype=int
-        # TODO [YG, 09.10.2018]: Verify why index should be passed at all (not in Numpy!)
-
         return Basic.__new__(cls, arg, index)
 
     @property
