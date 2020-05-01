@@ -73,11 +73,6 @@ def test_sqrt_return_type():
     assert(isclose(f1(x) ,  sqrt_return_type_real(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x))  == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
-    f1 = epyccel(sqrt_return_type_comp)
-    x = rand() + 1j * rand()
-    assert(isclose(f1(x) ,  sqrt_return_type_comp(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x))  == type(sqrt_return_type_comp(x))) # pylint: disable=unidiomatic-typecheck
-
 def test_sin_call():
     @types('real')
     def sin_call(x):
