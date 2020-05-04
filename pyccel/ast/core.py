@@ -2431,21 +2431,21 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
         return Basic.__new__(cls, args[0], args[1])
 
-        def __init__(self, *args):
-            assumptions = {}
+    def __init__(self, *args):
+        assumptions = {}
 
-            if args[1].is_integer:
-                assumptions['integer'] = True
-            elif args[1].is_real:
-                assumptions['real'] = True
-            elif args[1].is_complex:
-                assumptions['complex'] = True
-            elif args[1].is_Boolean:
-                self.is_Boolean = True
+        if args[1].is_integer:
+            assumptions['integer'] = True
+        elif args[1].is_real:
+            assumptions['real'] = True
+        elif args[1].is_complex:
+            assumptions['complex'] = True
+        elif args[1].is_Boolean:
+            self.is_Boolean = True
 
-            ass_copy = assumptions.copy()
-            self._assumptions = StdFactKB(assumptions)
-            self._assumptions._generator = ass_copy
+        ass_copy = assumptions.copy()
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def lhs(self):

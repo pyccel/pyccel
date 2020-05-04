@@ -123,10 +123,11 @@ class Array(Application):
         # ...
 
         # Create instance, add attributes, and return it
-        obj = Basic.__new__(cls, arg, dtype, order, prec)
-        obj._shape = process_shape(numpy.shape(arg))
-        obj._rank  = len(obj._shape)
-        return obj
+        return Basic.__new__(cls, arg, dtype, order, prec)
+
+    def __init__(self, arg, dtype=None, order='C'):
+        self._shape = process_shape(numpy.shape(arg))
+        self._rank  = len(self._shape)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -201,15 +202,14 @@ class NumpySum(Function):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
 
+    def __init__(self, arg):
         dtype = str_dtype(sp_dtype(arg))
         assumptions = {dtype: True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
@@ -391,12 +391,13 @@ class Real(Function):
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'real':True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
@@ -471,12 +472,13 @@ class Complex(Function):
         for arg in [arg0, arg1]:
             if not isinstance(arg, _valid_args):
                 raise TypeError('Uknown type of  %s.' % type(arg))
-        obj = Basic.__new__(cls, arg0, arg1)
+        return Basic.__new__(cls, arg0, arg1)
+
+    def __init__(self, arg0, arg1=Float(0)):
         assumptions = {'complex':True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def real_part(self):
@@ -1209,13 +1211,13 @@ class Sqrt(Pow):
 class Mod(Function):
     is_zero = False
     def __new__(cls,*args):
-        obj = Basic.__new__(cls, *args)
+        return Basic.__new__(cls, *args)
 
+    def __init__(self,*args):
         assumptions={'integer':True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
 class Asin(Function):
     is_zero = False
