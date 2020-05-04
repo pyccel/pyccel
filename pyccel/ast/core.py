@@ -183,7 +183,7 @@ class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
     def __new__(cls, *args, evaluate = False, **kwargs):
         return sp_Pow.__new__(cls, *args, evaluate = evaluate, **kwargs)
 
-    def __init__(self):
+    def __init__(self, *args, evaluate = False, **kwargs):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
         self._rank = max(getattr(a,'rank',0) for a in self._args)
 
