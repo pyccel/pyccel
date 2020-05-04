@@ -2717,9 +2717,7 @@ class FunctionCall(Basic, PyccelAstNode):
         if not isinstance(func, (str, FunctionDef, Function)):
             raise TypeError('> expecting a str, FunctionDef, Function')
 
-        funcdef = None
         if isinstance(func, FunctionDef):
-            funcdef = func
             func = func.name
         # ...
 
@@ -2730,11 +2728,11 @@ class FunctionCall(Basic, PyccelAstNode):
         args = Tuple(*args, sympify=False)
         # ...
 
-        obj = Basic.__new__(cls, func, args)
+        return Basic.__new__(cls, func, args)
 
-        obj._funcdef = funcdef
+    def __init__(self, func, args):
 
-        return obj
+        self._funcdef = func if isinstance(func, FunctionDef) else None
 
     @property
     def func(self):
@@ -4298,6 +4296,25 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         rank = 0,
         **kw_args
         ):
+
+        if isinstance(label, Application):
+            label_name = type(label)
+        else:
+            label_name = str(label)
+
+        return IndexedBase.__new__(cls, label_name, shape=shape)
+
+    def __init__(
+        self,
+        label,
+        shape=None,
+        dtype=None,
+        prec=0,
+        order=None,
+        rank = 0,
+        **kw_args
+        ):
+
         if dtype is None:
             raise TypeError('datatype must be provided')
         if isinstance(dtype, str):
@@ -4305,19 +4322,12 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        if isinstance(label, Application):
-            label_name = type(label)
-        else:
-            label_name = str(label)
-        obj = IndexedBase.__new__(cls, label_name, shape=shape)
         kw_args['dtype']     = dtype
         kw_args['precision'] = prec
         kw_args['order']     = order
         kw_args['rank']      = rank
-        obj._kw_args         = kw_args
-        obj._label = label
-
-        return obj
+        self._kw_args         = kw_args
+        self._label = label
 
     def __getitem__(self, *args):
 
@@ -4415,10 +4425,18 @@ class IndexedElement(Indexed, PyccelAstNode):
                 return base[args[0]]
             else:
                 return base[args]
-        obj = Expr.__new__(cls, base, *args, **kw_args)
-        obj._label = base
+        return Expr.__new__(cls, base, *args, **kw_args)
+
+    def __init__(
+        self,
+        base,
+        *args,
+        **kw_args
+        ):
+
+        self._label = self._args[0]
         alloweddtypes = (NativeBool, NativeRange, NativeString)
-        dtype = obj.base.dtype
+        dtype = self.base.dtype
         assumptions = {}
         if isinstance(dtype, NativeInteger):
             assumptions['integer'] = True
@@ -4429,10 +4447,8 @@ class IndexedElement(Indexed, PyccelAstNode):
         elif not isinstance(dtype, alloweddtypes):
             raise TypeError('Undefined datatype')
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def rank(self):
