@@ -799,10 +799,11 @@ class CodeBlock(Basic):
             else:
                 ls.append(i)
 
-        obj = Basic.__new__(cls, ls)
-        if len(ls)>0 and isinstance(ls[-1], (Assign, AugAssign)):
-            obj.set_fst(ls[-1].fst)
-        return obj
+        return Basic.__new__(cls, ls)
+
+    def __init__(self, body):
+        if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
+            self.set_fst(ls[-1].fst)
 
     @property
     def body(self):
@@ -1982,19 +1983,26 @@ class ConstructorCall(AtomicExpr):
         if not isinstance(func, (FunctionDef, Interface, str)):
             raise TypeError('Expecting func to be a FunctionDef or str')
 
+        f_name = func.name
+
+        return Basic.__new__(cls, f_name)
+
+    def __init__(
+        self,
+        func,
+        arguments,
+        cls_variable=None,
+        kind='function',
+        ):
+
         if isinstance(func, FunctionDef):
             kind = func.kind
 
-        f_name = func.name
+        self._cls_variable = cls_variable
 
-        obj = Basic.__new__(cls, f_name)
-        obj._cls_variable = cls_variable
-
-        obj._kind = kind
-        obj._func = func
-        obj._arguments = arguments
-
-        return obj
+        self._kind = kind
+        self._func = func
+        self._arguments = arguments
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -2223,6 +2231,7 @@ class Variable(Symbol, PyccelAstNode):
         ass_copy = assumptions.copy()
         obj._assumptions = StdFactKB(assumptions)
         obj._assumptions._generator = ass_copy
+
         return obj
 
     @property

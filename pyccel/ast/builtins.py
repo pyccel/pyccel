@@ -92,12 +92,13 @@ class Complex(Function):
     is_zero = False
 
     def __new__(cls, arg0, arg1=Float(0)):
-        obj = Basic.__new__(cls, arg0, arg1)
+        return Basic.__new__(cls, arg0, arg1)
+
+    def __init__(self, arg0, arg1=Float(0)):
         assumptions = {'complex': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def real_part(self):
@@ -160,12 +161,13 @@ class PythonFloat(Function):
     """
     is_zero = False
     def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'real': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
@@ -207,12 +209,13 @@ class Int(Function):
     is_zero = False
 
     def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'integer': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
@@ -254,9 +257,7 @@ class PythonTuple(Function):
             args = [args]
         args = tuple(args)
 
-        obj = Basic.__new__(cls, *args)
-
-        return obj
+        return Basic.__new__(cls, *args)
 
     @property
     def dtype(self):
@@ -349,12 +350,13 @@ class Len(Function):
     is_zero = False
 
     def __new__(cls, arg):
-        obj = Basic.__new__(cls, arg)
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
         assumptions = {'integer': True}
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def arg(self):
