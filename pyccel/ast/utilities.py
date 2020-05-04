@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from sympy import Symbol, Lambda, floor
+from sympy import floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot, atan2)
+from sympy import (sin, cos, exp, atan2)
 import scipy.constants as sc_constants
 
 from pyccel.symbolic import lambdify
@@ -13,7 +13,7 @@ from pyccel.symbolic import lambdify
 from .core import AsName
 from .core import Import
 from .core import Product
-from .core import FunctionDef, Return, Assign
+from .core import FunctionDef
 from .core import ValuedArgument
 from .core import Constant, Variable, IndexedVariable
 
@@ -25,7 +25,7 @@ from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
+from .numpyext import Sqrt, Asin, Acos, Atan, Sinh, Cosh, Tanh, Log, Tan
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
 
@@ -39,28 +39,21 @@ __all__ = (
 
 #==============================================================================
 math_functions = {
-    'abs'    : Abs,
+    'fabs'   : Abs,
     'sqrt'   : Sqrt,
     'sin'    : sin,
     'cos'    : cos,
     'exp'    : exp,
     'log'    : Log,
-    'csc'    : csc,
-    'sec'    : sec,
-    'tan'    : tan,
-    'cot'    : cot,
+    'tan'    : Tan,
     'asin'   : Asin,
-    'acsc'   : Acsc,
-    'arccos' : Acos,
     'acos'   : Acos,
-    'asec'   : Asec,
     'atan'   : Atan,
-    'acot'   : Acot,
     'sinh'   : Sinh,
     'cosh'   : Cosh,
     'tanh'   : Tanh,
     'atan2'  : atan2,
-    'arctan2': atan2
+    'floor'  : floor
     }
 
 # TODO split numpy_functions into multiple dictionaries following
@@ -95,15 +88,40 @@ numpy_functions = {
     'sum'       : NumpySum,
     'prod'      : Prod,
     'product'   : Prod,
-    'rand'      : Rand,
-    'random'    : Rand,
     'linspace'  : Linspace,
     'diag'      : Diag,
     'where'     : Where,
     'cross'     : Cross,
+    'floor'     : floor,
+    # ---
+    'sin'       : sin,
+    'cos'       : cos,
+    'tan'       : Tan,
+    'arcsin'    : Asin,
+    'arccos'    : Acos,
+    'arctan'    : Atan,
+    'arctan2'   : atan2,
+    'sinh'      : Sinh,
+    'cosh'      : Cosh,
+    'tanh'      : Tanh,
+    'exp'       : exp,
+    'log'       : Log,
+    'fabs'      : Abs,
+    'absolute'  : Abs,
+    'sqrt'      : Sqrt
+}
+
+numpy_linalg_functions = {
+    'norm'      : Norm,
+}
+
+numpy_random_functions = {
+    'rand'      : Rand,
+    'random'    : Rand,
 }
 
 builtin_functions_dict = {
+    'abs'      : Abs,
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
@@ -115,11 +133,11 @@ builtin_functions_dict = {
     'Mod'      : Mod,
     'abs'      : Abs,
     'max'      : Max,
-    'Max'      : Max,
+#    'Max'      : Max,
     'min'      : Min,
-    'Min'      : Min,
-    'floor'    : floor,
-    'not'      : Not
+#    'Min'      : Min,
+    'not'      : Not,
+    'floor'    : floor
 }
 
 scipy_constants = {
@@ -161,7 +179,7 @@ def builtin_function(expr, args=None):
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'scipy.constants', 'itertools', 'math')
+builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math')
 
 #==============================================================================
 def builtin_import(expr):
@@ -189,11 +207,18 @@ def builtin_import(expr):
             if import_name in numpy_functions.keys():
                 imports.append((code_name, numpy_functions[import_name]))
 
-            elif import_name in math_functions.keys():
-                imports.append((code_name, math_functions[import_name]))
-
             elif import_name in numpy_constants.keys():
                 imports.append((code_name, numpy_constants[import_name]))
+
+        elif source == 'numpy.linalg':
+
+            if import_name in numpy_linalg_functions.keys():
+                imports.append((code_name, numpy_linalg_functions[import_name]))
+
+        elif source == 'numpy.random':
+
+            if import_name in numpy_random_functions.keys():
+                imports.append((code_name, numpy_random_functions[import_name]))
 
         elif source == 'math':
 

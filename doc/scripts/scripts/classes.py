@@ -8,11 +8,11 @@ class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        
+
     @types('Point')
     def __del__(self):
         pass
-        
+
     @types('Point', 'float', 'float')
     def translate(self, a, b):
         self.x = self.x + a

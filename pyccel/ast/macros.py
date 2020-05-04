@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from sympy.core.expr import AtomicExpr
-from sympy.core import Symbol
 from sympy import sympify
 
 from .core import Basic
@@ -40,9 +39,10 @@ class MacroShape(Macro):
     _name = 'shape'
 
     def __new__(cls, argument, index=None):
-        obj = Macro.__new__(cls, argument)
-        obj._index = index
-        return obj
+        return Macro.__new__(cls, argument)
+
+    def __init__(self, argument, index=None):
+        self._index = index
 
     @property
     def index(self):

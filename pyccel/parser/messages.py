@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 # Constants that represent simple type checker error message, i.e. messages
 # that do not have any parameters.
 

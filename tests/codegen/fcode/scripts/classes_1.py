@@ -22,4 +22,4 @@ a = np.array([1.,1.,1.])
 
 p.translate(a)
 print(p.x)
-	
+

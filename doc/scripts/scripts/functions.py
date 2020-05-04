@@ -28,7 +28,7 @@ def decr_array(x):
     y_[1] = 6
     z = y_
     t = y_+x
-    
+
     return t
 
 #$ header function f1(int, int, int) results(int)

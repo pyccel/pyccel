@@ -10,6 +10,7 @@ from .datatypes      import *
 from .core           import *
 from .macros         import *
 from .headers        import *
+from .numbers        import *
 from .numpyext       import *
 from .f2py           import *
 from .fortran        import *

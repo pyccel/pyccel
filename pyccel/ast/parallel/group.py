@@ -1,16 +1,12 @@
 # coding: utf-8
 
 from sympy import Symbol
-from sympy.core.basic import Basic
-from sympy.sets.sets import Set
 from sympy.sets.sets import FiniteSet
 from sympy.sets.sets import Union as sm_Union
 from sympy.sets.sets import Intersection as sm_Intersection
 from sympy.sets.sets import Complement
 from sympy.sets.fancysets import Range as sm_Range
 from sympy.sets.fancysets import Naturals
-from sympy import Symbol
-from sympy.sets.sets import UniversalSet
 
 __all__ = (
     'Difference',

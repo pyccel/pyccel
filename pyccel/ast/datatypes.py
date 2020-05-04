@@ -6,6 +6,7 @@ from .basic import Basic
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
 from sympy import Eq, Ne, Lt, Gt, Le, Ge
+import numpy
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
@@ -77,23 +78,24 @@ __all__ = (
 )
 
 #==============================================================================
-default_precision = {'real': 8, 'int': 8, 'complex': 8, 'bool':4, 'float':8}
-dtype_and_precision_registry = { 'real':('real',8),
-                                 'double':('real',8),
-                                 'float':('real',8),       # sympy.Float
-                                 'pythonfloat':('real',8), # built-in float
+
+default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
+dtype_and_precision_registry = { 'real':('real',default_precision['float']),
+                                 'double':('real',default_precision['float']),
+                                 'float':('real',default_precision['float']),       # sympy.Float
+                                 'pythonfloat':('real',default_precision['float']), # built-in float
                                  'float32':('real',4),
                                  'float64':('real',8),
-                                 'complex':('complex',8),
+                                 'complex':('complex',default_precision['complex']),
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
-                                 'int'  :('int',8),
-                                 'integer':('int',4),
-                                 'bool' :('bool',4)}
+                                 'int'  :('int', default_precision['int']),
+                                 'integer':('int',default_precision['int']),
+                                 'bool' :('bool',default_precision['bool'])}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
