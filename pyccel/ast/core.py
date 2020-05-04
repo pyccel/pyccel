@@ -2191,7 +2191,7 @@ class Variable(Symbol, PyccelAstNode):
 
         # TODO improve order of arguments
 
-        obj = Basic.__new__(
+        return Basic.__new__(
             cls,
             dtype,
             name,
@@ -2209,30 +2209,46 @@ class Variable(Symbol, PyccelAstNode):
             is_stack_array,
             )
 
+    def __init__(
+        self,
+        dtype,
+        name,
+        rank=0,
+        allocatable=False,
+        is_stack_array = False,
+        is_pointer=False,
+        is_target=False,
+        is_polymorphic=None,
+        is_optional=None,
+        shape=None,
+        cls_base=None,
+        cls_parameters=None,
+        order='C',
+        precision=0
+        ):
+
         assumptions = {}
         class_type = cls_base \
             or dtype.__class__.__name__.startswith('Pyccel')
         alloweddtypes = (NativeRange, NativeString,
                          NativeSymbol, NativeGeneric, NativeTuple)
 
-        if isinstance(dtype, NativeInteger):
+        if isinstance(self.dtype, NativeInteger):
             assumptions['integer'] = True
-        elif isinstance(dtype, NativeReal):
+        elif isinstance(self.dtype, NativeReal):
             assumptions['real'] = True
-        elif isinstance(dtype, NativeComplex):
+        elif isinstance(self.dtype, NativeComplex):
             assumptions['complex'] = True
-        elif isinstance(dtype, NativeBool):
-            obj.is_Boolean = True
-        elif isinstance(dtype, alloweddtypes) or class_type:
+        elif isinstance(self.dtype, NativeBool):
+            self.is_Boolean = True
+        elif isinstance(self.dtype, alloweddtypes) or class_type:
             # No assumptions can be deduced for these types
             pass
         else:
             raise TypeError('Undefined datatype')
         ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-
-        return obj
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
     def dtype(self):
@@ -2413,20 +2429,23 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(args[1]),
                             type(args[1])))
 
-        obj = Basic.__new__(cls, args[0], args[1])
-        assumptions = {}
+        return Basic.__new__(cls, args[0], args[1])
 
-        if args[1].is_integer:
-            assumptions['integer'] = True
-        elif args[1].is_real:
-            assumptions['real'] = True
-        elif args[1].is_complex:
-            assumptions['complex'] = True
+        def __init__(self, *args):
+            assumptions = {}
 
-        ass_copy = assumptions.copy()
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = ass_copy
-        return obj
+            if args[1].is_integer:
+                assumptions['integer'] = True
+            elif args[1].is_real:
+                assumptions['real'] = True
+            elif args[1].is_complex:
+                assumptions['complex'] = True
+            elif args[1].is_Boolean:
+                self.is_Boolean = True
+
+            ass_copy = assumptions.copy()
+            self._assumptions = StdFactKB(assumptions)
+            self._assumptions._generator = ass_copy
 
     @property
     def lhs(self):
@@ -2521,17 +2540,19 @@ class ValuedVariable(Variable):
 
     def __new__(cls, *args, **kwargs):
 
-        # if value is not given, we set it to Nil
-        # we also remove value from kwargs,
+        # we remove value from kwargs,
         # since it is not a valid argument for Variable
 
-        value = kwargs.pop('value', Nil())
+        kwargs.pop('value', Nil())
 
-        obj = Variable.__new__(cls, *args, **kwargs)
+        return Variable.__new__(cls, *args, **kwargs)
 
-        obj._value = value
+    def __init__(self, *args, **kwargs):
 
-        return obj
+        # if value is not given, we set it to Nil
+        self._value = kwargs.pop('value', Nil())
+
+        Variable.__init__(self, *args, **kwargs)
 
     @property
     def value(self):
@@ -2569,38 +2590,39 @@ class TupleVariable(Variable):
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
 
-        obj = Variable.__new__(cls, NativeTuple(), *args, **kwargs)
+        return Variable.__new__(cls, NativeTuple(), *args, **kwargs)
 
-        obj._vars = tuple(arg_vars)
+    def __init__(self, arg_vars, *args, **kwargs):
+        Variable.__init__(self, NativeTuple(), *args, **kwargs)
 
-        shape = obj.shape
+        self._vars = tuple(arg_vars)
+
+        shape = self.shape
         if (shape[0]!=len(arg_vars)):
             assert(shape[0]%len(arg_vars)==0)
             if isinstance(arg_vars[0].dtype,NativeTuple):
                 if arg_vars[0].is_homogeneous:
-                    obj._is_homogeneous = True
-                    obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+                    self._is_homogeneous = True
+                    self._homogeneous_dtype = arg_vars[0].homogeneous_dtype
                 else:
-                    obj._is_homogeneous = False
+                    self._is_homogeneous = False
             else:
-                obj._is_homogeneous = True
-                obj._homogeneous_dtype = arg_vars[0].dtype
+                self._is_homogeneous = True
+                self._homogeneous_dtype = arg_vars[0].dtype
         else:
             assert(shape[0]==len(arg_vars))
-            dtypes = [str(v.dtype) for v in obj._vars]
-            obj._is_homogeneous = len(set(dtypes))==1
+            dtypes = [str(v.dtype) for v in self._vars]
+            self._is_homogeneous = len(set(dtypes))==1
 
-            if obj._is_homogeneous and isinstance(arg_vars[0].dtype,NativeTuple):
-                obj._is_homogeneous = all(a.is_homogeneous for a in arg_vars)
-                if obj._is_homogeneous:
-                    dtypes = [str(v.homogeneous_dtype) for v in obj._vars]
-                    obj._is_homogeneous = len(set(dtypes))==1
-                    if obj._is_homogeneous:
-                        obj._homogeneous_dtype = arg_vars[0].homogeneous_dtype
+            if self._is_homogeneous and isinstance(arg_vars[0].dtype,NativeTuple):
+                self._is_homogeneous = all(a.is_homogeneous for a in arg_vars)
+                if self._is_homogeneous:
+                    dtypes = [str(v.homogeneous_dtype) for v in self._vars]
+                    self._is_homogeneous = len(set(dtypes))==1
+                    if self._is_homogeneous:
+                        self._homogeneous_dtype = arg_vars[0].homogeneous_dtype
             else:
-                obj._homogeneous_dtype = arg_vars[0].dtype
-
-        return obj
+                self._homogeneous_dtype = arg_vars[0].dtype
 
     def get_vars(self):
         return self._vars
