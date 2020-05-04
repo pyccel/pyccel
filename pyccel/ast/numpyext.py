@@ -890,6 +890,9 @@ class Rand(Real):
     def __new__(cls, arg = Nil()):
         return Real.__new__(cls, arg)
 
+    def __init__(self):
+        Real.__init__(self, None)
+
     @property
     def arg(self):
         return self._args[0]
