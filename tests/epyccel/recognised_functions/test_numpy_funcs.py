@@ -1367,7 +1367,6 @@ def test_rand_basic():
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
-@pytest.mark.xfail(reason="issue 223")
 def test_rand_args():
 
     @types('int')
@@ -1426,5 +1425,25 @@ def test_rand_args():
     y = g_2d()
     assert(all([yi <  1 for yi in y]))
     assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+@pytest.mark.xfail(reason="issue 223")
+def test_rand_expr():
+    def create_val():
+        from numpy.random import rand
+        x = 2*rand()
+        return x
+
+    def create_array_vals_2d():
+        from numpy.random import rand
+        from numpy import shape
+        a = rand(2,2)*0.5 + 3
+        return a[0,0], a[0,1], a[1,0], a[1,1]
+
+    f1 = epyccel(create_val)
+    y = [f1() for i in range(10)]
+    assert(all([yi <  3.5 for yi in y]))
+    assert(all([yi >= 3   for yi in y]))
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
