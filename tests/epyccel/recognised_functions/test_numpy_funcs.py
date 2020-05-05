@@ -1354,3 +1354,72 @@ def test_array():
     assert(f2_shape() == create_array_tuple_shape())
     assert(f2_val()   == create_array_tuple_val())
     assert(type(f2_val()) == type(create_array_tuple_val().item())) # pylint: disable=unidiomatic-typecheck
+
+def test_rand_basic():
+    def create_val():
+        from numpy.random import rand
+        return rand()
+
+    f1 = epyccel(create_val)
+    y = [f1() for i in range(10)]
+    assert(all([yi <  1 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+@pytest.mark.xfail(reason="issue 223")
+def test_rand_args():
+
+    @types('int')
+    def create_array_size_1d(n):
+        from numpy.random import rand
+        a = rand(n)
+        return shape(a)[0]
+
+    @types('int','int')
+    def create_array_size_2d(n,m):
+        from numpy.random import rand
+        a = rand(n,m)
+        return shape(a)[0], shape(a)[1]
+
+    @types('int','int','int')
+    def create_array_size_3d(n,m,p):
+        from numpy.random import rand
+        a = rand(n,m,p)
+        return shape(a)[0], shape(a)[1], shape(a)[2]
+
+    def create_array_vals_1d():
+        from numpy.random import rand
+        a = rand(4)
+        return a[0], a[1], a[2], a[3]
+
+    def create_array_vals_2d():
+        from numpy.random import rand
+        a = rand(2,2)
+        return a[0,0], a[0,1], a[1,0], a[1,1]
+
+    n = randint(10)
+    m = randint(10)
+    p = randint(5)
+    f_1d = epyccel(create_array_size_1d)
+    assert( f_1d(n)       == create_array_size_1d(n)      )
+
+    f_2d = epyccel(create_array_size_2d)
+    assert( f_2d(n, m)    == create_array_size_2d(n, m)   )
+
+    f_3d = epyccel(create_array_size_3d)
+    assert( f_3d(n, m, p) == create_array_size_3d(n, m, p))
+
+    g_1d = epyccel(create_array_vals_1d)
+    y = g_1d()
+    assert(all(y<1))
+    assert(all(y>=0))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+    g_2d = epyccel(create_array_vals_2d)
+    y = g_2d()
+    assert(all(y<1))
+    assert(all(y>=0))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
