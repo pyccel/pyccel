@@ -882,7 +882,7 @@ class Where(Application):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Application, PyccelAstNode):
+class Rand(Function, PyccelAstNode):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -893,10 +893,11 @@ class Rand(Application, PyccelAstNode):
 
     def __init__(self, *args):
         if len(args) == 0:
-            self._rank = 0
+            self._shape = ()
         else:
             self._shape = args
-            self._rank  = len(args)
+
+        self._rank  = len(self.shape)
 
         assumptions = {'real':True}
         ass_copy = assumptions.copy()
