@@ -12,6 +12,7 @@ from sympy.core.function import Application
 from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
+from .basic import PyccelAstNode
 from .core import (Variable, IndexedElement, Slice, Len,
                    For, Range, Assign, List, Nil, Add, Mul,
                    ValuedArgument, Constant, Pow, process_shape)
@@ -881,30 +882,63 @@ class Where(Application):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Real):
+class Rand(Application, PyccelAstNode):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    def __new__(cls, arg = Nil()):
-        return Real.__new__(cls, arg)
+    _dtype = 'real'
+    _precision = default_precision['real']
 
-    def __init__(self):
-        Real.__init__(self, None)
+    def __init__(self, *args):
+        if len(args) == 0:
+            self._rank = 0
+        else:
+            self._shape = args
+            self._rank  = len(args)
+
+        assumptions = {'real':True}
+        ass_copy = assumptions.copy()
+        self._assumptions = StdFactKB(assumptions)
+        self._assumptions._generator = ass_copy
 
     @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def rank(self):
-        return 0
+    def order(self):
+        return 'C'
 
     def fprint(self, printer):
         """Fortran print."""
 
-        return 'rand()'
+        return 'random_number()'
+
+    def fprint(self, printer, lhs, stack_array=False):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        stmts = []
+
+        if self.rank>0:
+            # Create statement for allocation
+            if not stack_array:
+                # Transpose indices because of Fortran column-major ordering
+                shape = self.shape[::-1]
+
+                if isinstance(self.shape, (PythonTuple,Tuple,tuple)):
+                    # this is a correction. problem on LRZ
+                    shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
+                else:
+                    shape_code = '0:' + printer(Add(shape, Integer(-1)))
+
+                code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
+                stmts.append(code_alloc)
+
+        # Create statement for initialization
+        code_init = 'call random_number({0})'.format(lhs_code)
+        stmts.append(code_init)
+
+        return '\n'.join(stmts)
+
 
 #==============================================================================
 class Full(Application):
