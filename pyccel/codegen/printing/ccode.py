@@ -3,10 +3,14 @@
 
 from sympy.core import S
 from sympy.printing.precedence import precedence
-from sympy.sets.fancysets import Range
 
+from pyccel.ast.core import Assign, datatype, Variable, Import
+from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
+
+from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Assign, datatype, Import
 from pyccel.ast.core import SeparatorComment
+
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 # TODO: add examples
@@ -61,10 +65,9 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, settings={}):
+    def __init__(self, parser, settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
-
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -126,12 +129,12 @@ class CCodePrinter(CodePrinter):
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
-        arg_code = ', '.join(self._print(i) for i in expr.arguments)
-        body = '\n'.join(self._print(i) for i in expr.body)
+        arg_code = ', '.join(self._print(i.dtype) + ' ' + self._print(i) for i in expr.arguments)
+        body = '\n'.join(self._print(i) for i in expr.body.body)
         return '{0} {1}({2}) {{\n{3}\n}}'.format(ret_type, name, arg_code, body)
 
     def _print_Return(self, expr):
-        return 'return {0};'.format(self._print(expr.expr))
+        return 'return {0};'.format(self._print(expr.expr[0]))
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -150,7 +153,7 @@ class CCodePrinter(CodePrinter):
             start, stop, step = expr.iterable.args
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        body = '\n'.join(self._print(i) for i in expr.body)
+        body = '\n'.join(self._print(i) for i in expr.body.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
