@@ -60,6 +60,7 @@ from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where, Mod, PyccelArraySize
 from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
+from pyccel.ast.numpyext import Rand
 
 from pyccel.parser.errors import Errors
 from pyccel.parser.messages import *
@@ -661,6 +662,7 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
+        assert(expr.rank == 0)
         return expr.fprint(self._print)
 
     def _print_Min(self, expr):
@@ -1074,7 +1076,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike)):
+        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike, Rand)):
 
             stack_array = False
             if self._current_function:
