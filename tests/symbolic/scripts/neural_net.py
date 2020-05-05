@@ -6,7 +6,7 @@ def g(v,w,i):
     i, n, j, dim, k =symbols('i, n, j, dim, k')
     v=IndexedBase('v')
     w=IndexedBase('w')
-    net = Lambda((i, n, dim, k), Max(0.0, Sum(x(k)*w[n, k, i], (k, 0, dim-1)))) 
+    net = Lambda((i, n, dim, k), Max(0.0, Sum(x(k)*w[n, k, i], (k, 0, dim-1))))
     dim = [10**4]*10
     index =[symbols('i%s'%m) for m in range(len(dim)+1)]
     y = [0]*len(dim)

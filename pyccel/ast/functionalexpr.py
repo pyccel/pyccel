@@ -2,8 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from .basic import Basic
-from sympy.core.expr  import Expr, AtomicExpr
+from sympy.core.expr  import AtomicExpr
 
+__all__ = (
+    'FunctionalFor',
+    'FunctionalMap',
+    'FunctionalMax',
+    'FunctionalMin',
+    'FunctionalSum',
+    'GeneratorComprehension'
+)
+
+#==============================================================================
 class FunctionalFor(Basic):
 
     """."""
@@ -38,23 +48,22 @@ class FunctionalFor(Basic):
     def index(self):
         return self._args[4]
 
-
+#==============================================================================
 class GeneratorComprehension(AtomicExpr, Basic):
     pass
 
-
-class FunctionalSum(FunctionalFor, GeneratorComprehension):
+#==============================================================================
+class FunctionalSum(GeneratorComprehension, FunctionalFor):
     name = 'sum'
 
-
-class FunctionalMax(FunctionalFor, GeneratorComprehension):
+#==============================================================================
+class FunctionalMax(GeneratorComprehension, FunctionalFor):
     name = 'max'
+#==============================================================================
 
-
-class FunctionalMin(FunctionalFor, GeneratorComprehension):
+class FunctionalMin(GeneratorComprehension, FunctionalFor):
     name = 'min'
 
-
-class FunctionalMap(FunctionalFor, GeneratorComprehension):
+#==============================================================================
+class FunctionalMap(GeneratorComprehension, FunctionalFor):
     pass
-

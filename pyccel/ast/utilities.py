@@ -2,111 +2,151 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from .core import DottedName
-from .core import Import
-from .core import Range, Len , Enumerate, Zip, Product, Map
-from .core import FunctionDef, Return, Assign
-
-from .core import Constant
-from .numpyext import Zeros, Ones, Empty, ZerosLike, FullLike, Diag, Cross
-from .numpyext import Min, Max, Abs, Norm, EmptyLike, Where
-from .numpyext import Array, Shape, Int, Rand, Sum, Real, Complex, Imag, Mod
-from .numpyext import Int64, Int32, Float32, Float64, Complex64, Complex128
-from .numpyext import Sqrt, Asin, Acsc, Acos, Asec, Atan, Acot, Sinh, Cosh, Tanh, Log
-from .numpyext import numpy_constants, Linspace
-from pyccel.symbolic import lambdify
-from sympy import Symbol, Lambda, floor
+from sympy import floor
 from sympy import Not, Float
 from sympy import Function
-from sympy import (sin, cos, exp, csc, cos, sec, tan, cot)
-
+from sympy import (sin, cos, exp, atan2)
 import scipy.constants as sc_constants
 
+from pyccel.symbolic import lambdify
+
+from .core import AsName
+from .core import Import
+from .core import Product
+from .core import FunctionDef
+from .core import ValuedArgument
+from .core import Constant, Variable, IndexedVariable
+
+from .builtins import Bool, Enumerate, Int, PythonFloat, Len, Map, Range, Zip
+
+from .numpyext import Full, Empty, Zeros, Ones
+from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
+from .numpyext import Diag, Cross
+from .numpyext import Min, Max, Abs, Norm, Where
+from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
+from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
+from .numpyext import Sqrt, Asin, Acos, Atan, Sinh, Cosh, Tanh, Log, Tan
+from .numpyext import numpy_constants, Linspace
+from .numpyext import Product as Prod
+
+__all__ = (
+    'build_types_decorator',
+    'builtin_function',
+    'builtin_import',
+    'builtin_import_registery',
+    'split_positional_keyword_arguments',
+)
+
+#==============================================================================
 math_functions = {
-    'abs'   : Abs,
-    'sqrt'  : Sqrt,
-    'sin'   : sin,
-    'cos'   : cos,
-    'exp'   : exp,
-    'log'   : Log,
-    'csc'   : csc,
-    'sec'   : sec,
-    'tan'   : tan,
-    'cot'   : cot,
-    'asin'  : Asin,
-    'acsc'  : Acsc,
-    'arccos': Acos,
-    'acos'  : Acos,
-    'asec'  : Asec,
-    'atan'  : Atan,
-    'acot'  : Acot,
-    'sinh'  : Sinh,
-    'cosh'  : Cosh,
-    'tanh'  : Tanh
+    'fabs'   : Abs,
+    'sqrt'   : Sqrt,
+    'sin'    : sin,
+    'cos'    : cos,
+    'exp'    : exp,
+    'log'    : Log,
+    'tan'    : Tan,
+    'asin'   : Asin,
+    'acos'   : Acos,
+    'atan'   : Atan,
+    'sinh'   : Sinh,
+    'cosh'   : Cosh,
+    'tanh'   : Tanh,
+    'atan2'  : atan2,
+    'floor'  : floor
     }
 
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 numpy_functions = {
     # ... array creation routines
-    'zeros'     : Zeros,
+    'full'      : Full,
     'empty'     : Empty,
+    'zeros'     : Zeros,
     'ones'      : Ones,
-    'zeros_like': ZerosLike,
-    'empty_like': EmptyLike,
     'full_like' : FullLike,
+    'empty_like': EmptyLike,
+    'zeros_like': ZerosLike,
+    'ones_like' : OnesLike,
     'array'     : Array,
     # ...
     'shape'     : Shape,
     'norm'      : Norm,
-    'int'       : Int,
+    'int'       : NumpyInt,
     'real'      : Real,
     'imag'      : Imag,
-    'float'     : Real,
-    'double'    : Real,
-    'Mod'       : Mod,
+    'float'     : NumpyFloat,
+    'double'    : Float64,
+    'mod'       : Mod,
     'float32'   : Float32,
     'float64'   : Float64,
     'int32'     : Int32,
     'int64'     : Int64,
     'complex128': Complex128,
     'complex64' : Complex64,
-    'sum'       : Sum,
-    'rand'      : Rand,
-    'random'    : Rand,
+    'matmul'    : Matmul,
+    'sum'       : NumpySum,
+    'prod'      : Prod,
+    'product'   : Prod,
     'linspace'  : Linspace,
     'diag'      : Diag,
     'where'     : Where,
     'cross'     : Cross,
+    'floor'     : floor,
+    # ---
+    'sin'       : sin,
+    'cos'       : cos,
+    'tan'       : Tan,
+    'arcsin'    : Asin,
+    'arccos'    : Acos,
+    'arctan'    : Atan,
+    'arctan2'   : atan2,
+    'sinh'      : Sinh,
+    'cosh'      : Cosh,
+    'tanh'      : Tanh,
+    'exp'       : exp,
+    'log'       : Log,
+    'fabs'      : Abs,
+    'absolute'  : Abs,
+    'sqrt'      : Sqrt
+}
+
+numpy_linalg_functions = {
+    'norm'      : Norm,
+}
+
+numpy_random_functions = {
+    'rand'      : Rand,
+    'random'    : Rand,
 }
 
 builtin_functions_dict = {
+    'abs'      : Abs,
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
     'int'      : Int,
-    'float'    : Real,
-    'sum'      : Sum,
+    'float'    : PythonFloat,
+    'bool'     : Bool,
+    'sum'      : NumpySum,
     'len'      : Len,
     'Mod'      : Mod,
     'abs'      : Abs,
     'max'      : Max,
-    'Max'      : Max,
+#    'Max'      : Max,
     'min'      : Min,
-    'Min'      : Min,
-    'floor'    : floor,
-    'not'      : Not
+#    'Min'      : Min,
+    'not'      : Not,
+    'floor'    : floor
 }
 
 scipy_constants = {
     'pi': Constant('real', 'pi', value=sc_constants.pi),
                   }
 
-
+#==============================================================================
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
-    if not (isinstance(expr, Application) or isinstance(expr, str)):
-        raise TypeError('Expecting a string or a Function class')
 
     if isinstance(expr, Application):
         name = str(type(expr).__name__)
@@ -119,28 +159,29 @@ def builtin_function(expr, args=None):
 
     if name in dic.keys() :
         return dic[name](*args)
-    elif name == 'array':
-        return Array(*args)
-    elif name in ['complex']:
+
+    if name in ['complex']:
         if len(args)==1:
-            args = [args[0],Float(0)]
+            args = [args[0], Float(0)]
         return Complex(args[0],args[1])
-    elif name == 'Not':
+
+    if name == 'Not':
         return Not(*args)
 
-    elif name == 'map':
+    if name == 'map':
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
         return Map(*args)
 
-    elif name == 'lambdify':
+    if name == 'lambdify':
         return lambdify(expr, args)
 
     return None
 
 # TODO add documentation
-builtin_import_registery = ('numpy', 'scipy', 'itertools', 'math')
+builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math')
 
+#==============================================================================
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
 
@@ -150,46 +191,111 @@ def builtin_import(expr):
     if expr.source is None:
         return []
 
-    source = expr.source
-    if isinstance(source, DottedName):
-        source = source.name[0]
-    else:
-        source = str(source)
+    source = str(expr.source)
 
         # TODO imrove
     imports = []
-    for i in range(len(expr.target)):
+    for target in expr.target:
+        if isinstance(target, AsName):
+            import_name = target.target
+            code_name = target.name
+        else:
+            import_name = str(target)
+            code_name = import_name
         if source == 'numpy':
 
-            target = str(expr.target[i])
-            if target in numpy_functions.keys():
-                imports.append((target, numpy_functions[target]))
+            if import_name in numpy_functions.keys():
+                imports.append((code_name, numpy_functions[import_name]))
 
-            elif target in math_functions.keys():
-                imports.append((target, math_functions[target]))
+            elif import_name in numpy_constants.keys():
+                imports.append((code_name, numpy_constants[import_name]))
 
-            elif target in numpy_constants.keys():
-                imports.append((target, numpy_constants[target]))
+        elif source == 'numpy.linalg':
+
+            if import_name in numpy_linalg_functions.keys():
+                imports.append((code_name, numpy_linalg_functions[import_name]))
+
+        elif source == 'numpy.random':
+
+            if import_name in numpy_random_functions.keys():
+                imports.append((code_name, numpy_random_functions[import_name]))
 
         elif source == 'math':
 
-            target = str(expr.target[i])
+            if import_name in math_functions.keys():
+                imports.append((code_name, math_functions[import_name]))
 
-            if target in math_functions.keys():
-                imports.append((target, math_functions[target]))
-
-        elif source == 'scipy':
-            # TODO improve: source must be scipy.constants
-            #      - use dynamic import?
-            target = str(expr.target[i])
-            if target in scipy_constants.keys():
-                imports.append((target, scipy_constants[target]))
+        elif source == 'scipy.constants':
+            if import_name in scipy_constants.keys():
+                imports.append((code_name, scipy_constants[import_name]))
         elif source == 'itertools':
-            target = str(expr.target[i])
 
-            if target == 'product':
-                imports.append((target, Product))
-
-
+            if import_name == 'product':
+                imports.append((code_name, Product))
 
     return imports
+
+#==============================================================================
+def get_function_from_ast(ast, func_name):
+    node = None
+    for stmt in ast:
+        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
+            node = stmt
+            break
+
+    if node is None:
+        print('> could not find {}'.format(func_name))
+
+    return node
+
+#==============================================================================
+# TODO: must add a Node Decorator in core
+def build_types_decorator(args, order=None):
+    """
+    builds a types decorator from a list of arguments (of FunctionDef)
+    """
+    types = []
+    for a in args:
+        if isinstance(a, Variable):
+            dtype = a.dtype.name.lower()
+
+        elif isinstance(a, IndexedVariable):
+            dtype = a.dtype.name.lower()
+
+        else:
+            raise TypeError('unepected type for {}'.format(a))
+
+        if a.rank > 0:
+            shape = [':' for i in range(0, a.rank)]
+            shape = ','.join(i for i in shape)
+            dtype = '{dtype}[{shape}]'.format(dtype=dtype, shape=shape)
+            if order and a.rank > 1:
+                dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
+
+        if not ( dtype.startswith("'") and dtype.endswith("'") ):
+            dtype = "'{}'".format(dtype)
+
+        types.append(dtype)
+
+    return types
+
+#==============================================================================
+def split_positional_keyword_arguments(*args):
+    """ Create a list of positional arguments and a dictionary of keyword arguments
+    """
+
+    # Distinguish between positional and keyword arguments
+    val_args = ()
+    for i, a in enumerate(args):
+        if isinstance(a, ValuedArgument):
+            args, val_args = args[:i], args[i:]
+            break
+
+    # Convert list of keyword arguments into dictionary
+    kwargs = {}
+    for v in val_args:
+        key   = str(v.argument.name)
+        value = v.value
+        kwargs[key] = value
+
+    return args, kwargs

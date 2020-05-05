@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 # Constants that represent simple type checker error message, i.e. messages
 # that do not have any parameters.
 
@@ -53,6 +51,9 @@ BARE_GENERIC = 'Missing type parameters for generic type'
 IMPLICIT_GENERIC_ANY_BUILTIN = 'Implicit generic "Any". Use \'{}\' and specify generic parameters'
 INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
 UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
+WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of provided variables'
+INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
+LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
@@ -62,7 +63,7 @@ PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyc
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
-PYCCEL_RESTRICTION_IS_RHS = 'Only None is allowed as rhs for is statement'
+PYCCEL_RESTRICTION_IS_RHS = 'Only booleans and None are allowed as rhs for is statement'
 PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
 PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
@@ -73,6 +74,7 @@ PYCCEL_MISSING_HEADER = 'Cannot find associated header'
 MACRO_MISSING_HEADER_OR_FUNC = 'Cannot find associated header/FunctionDef to macro'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 FOUND_DUPLICATED_IMPORT = 'Duplicated import '
+PYCCEL_UNEXPECTED_IMPORT = 'Pyccel has not correctly handled "import module" statement. Try again with "from module import function" syntax'
 
 IMPORTING_EXISTING_IDENTIFIED = \
         'Trying to import an identifier that already exists in the namespace. Hint: use import as'

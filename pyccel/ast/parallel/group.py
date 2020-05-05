@@ -1,18 +1,24 @@
 # coding: utf-8
 
 from sympy import Symbol
-from sympy.core.basic import Basic
-from sympy.sets.sets import Set
 from sympy.sets.sets import FiniteSet
 from sympy.sets.sets import Union as sm_Union
 from sympy.sets.sets import Intersection as sm_Intersection
 from sympy.sets.sets import Complement
 from sympy.sets.fancysets import Range as sm_Range
 from sympy.sets.fancysets import Naturals
-from sympy import Symbol
-from sympy.sets.sets import UniversalSet
 
+__all__ = (
+    'Difference',
+    'Group',
+    'Intersection',
+    'Range',
+    'Split',
+    'Union',
+    'UniversalGroup'
+)
 
+#==============================================================================
 class Group(FiniteSet):
     """Represents a group of processes.
 
@@ -135,6 +141,7 @@ class Group(FiniteSet):
         """
         return Difference(self, other)
 
+#==============================================================================
 class Union(sm_Union):
     """
     Represents the union of groups.
@@ -153,6 +160,7 @@ class Union(sm_Union):
 
         return Group(*u.args)
 
+#==============================================================================
 class Intersection(sm_Intersection):
     """
     Represents the intersection of groups.
@@ -171,6 +179,7 @@ class Intersection(sm_Intersection):
 
         return Group(*i.args)
 
+#==============================================================================
 class Difference(Complement):
     """
     Represents the difference between two groups.
@@ -189,6 +198,7 @@ class Difference(Complement):
 
         return Group(*c.args)
 
+#==============================================================================
 class Range(sm_Range):
     """
     Representes a range of processes.
@@ -214,6 +224,7 @@ class Range(sm_Range):
 
         return r
 
+#==============================================================================
 class UniversalGroup(Naturals):
     """
     Represents the group of all processes.
@@ -242,7 +253,7 @@ class UniversalGroup(Naturals):
         """the total number of processes."""
         return self.np
 
-
+#==============================================================================
 # TODO check size between colors and group
 class Split(Group):
     """

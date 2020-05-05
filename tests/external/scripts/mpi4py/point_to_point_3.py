@@ -1,10 +1,5 @@
 from mpi4py import MPI
 
-# we need to declare these variables somehow,
-# since we are calling mpi subroutines
-
-size_ = -1
-rank = -1
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size_ = comm.Get_size()
@@ -20,7 +15,6 @@ if rank == 0:
 
 source = 0
 dest   = 1
-
 
 # ...
 tag1 = 1234

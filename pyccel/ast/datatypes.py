@@ -6,24 +6,96 @@ from .basic import Basic
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
 from sympy import Eq, Ne, Lt, Gt, Le, Ge
+import numpy
 
+# TODO [YG, 12.03.2020] verify why we need all these types
+# NOTE: symbols not used in pyccel are commented out
+__all__ = (
+#
+# --------- CLASSES -----------
+#
+    'CustomDataType',
+    'DataType',
+    'FunctionType',
+    'NativeBool',
+    'NativeComplex',
+    'NativeComplexList',
+    'NativeGeneric',
+    'NativeInteger',
+    'NativeIntegerList',
+    'NativeList',
+    'NativeTuple',
+#    'NativeNil',
+#    'NativeParallelRange',
+    'NativeRange',
+    'NativeReal',
+    'NativeRealList',
+    'NativeString',
+    'NativeSymbol',
+    'NativeTensor',
+    'NativeVoid',
+#    'NdArray',
+#    'NdArrayBool',
+#    'NdArrayComplex',
+#    'NdArrayInt',
+#    'NdArrayReal',
+    'UnionType',
+    'VariableType',
+    'DataTypeFactory',
+#
+# --------- FUNCTIONS -----------
+#
+    'datatype',
+#    'get_default_value',
+    'is_iterable_datatype',
+    'is_pyccel_datatype',
+    'is_with_construct_datatype',
+    'sp_dtype',
+    'str_dtype',
+#
+# --------- VARIABLES -----------
+#
+    'Bool',
+    'Complex',
+    'ComplexList',
+    'Generic',
+    'Int',
+    'IntegerList',
+#    'NdArray',
+#    'NdArrayBool',
+#    'NdArrayComplex',
+#    'NdArrayInt',
+#    'NdArrayReal',
+    'Nil',
+    'Real',
+    'RealList',
+    'String',
+    'Void',
+#    '_Symbol',
+    'default_precision',
+    'dtype_and_precision_registry',
+    'dtype_registry'
+)
 
-default_precision = {'real': 8, 'int': 4, 'complex': 8, 'bool':1}
-dtype_and_precsision_registry = {'real':('real',8),
-                                 'double':('real',8),
-                                 'float':('real',8),
+#==============================================================================
+
+default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
+dtype_and_precision_registry = { 'real':('real',default_precision['float']),
+                                 'double':('real',default_precision['float']),
+                                 'float':('real',default_precision['float']),       # sympy.Float
+                                 'pythonfloat':('real',default_precision['float']), # built-in float
                                  'float32':('real',4),
                                  'float64':('real',8),
-                                 'complex':('complex',8),
+                                 'complex':('complex',default_precision['complex']),
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
-                                 'int'  :('int',4),
-                                 'integer':('int',4),
-                                 'bool' :('bool',1)}
+                                 'int'  :('int', default_precision['int']),
+                                 'integer':('int',default_precision['int']),
+                                 'bool' :('bool',default_precision['bool'])}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -43,6 +115,7 @@ class NativeBool(DataType):
 
 class NativeInteger(DataType):
     _name = 'Int'
+    pass
 
 class NativeReal(DataType):
     _name = 'Real'
@@ -67,6 +140,10 @@ class NativeNil(DataType):
 class NativeList(DataType):
     _name = 'List'
     pass
+
+class NativeTuple(DataType):
+    """Base class representing native datatypes"""
+    _name = 'Tuple'
 
 class NativeIntegerList(NativeInteger, NativeList):
     _name = 'IntegerList'
@@ -101,16 +178,20 @@ class NdArray(DataType):
     pass
 
 class NdArrayInt(NdArray, NativeInteger):
-    _name = 'NdArrayInt'
+    _name = 'int'
     pass
 
 class NdArrayReal(NdArray, NativeReal):
-    _name = 'NdArrayReal'
+    _name = 'real'
     pass
 
 
 class NdArrayComplex(NdArray, NativeComplex):
-    _name = 'NdArrayComplex'
+    _name = 'complex'
+    pass
+
+class NdArrayBool(NdArray, NativeBool):
+    _name = 'bool'
     pass
 
 # TODO to be removed
@@ -171,6 +252,7 @@ NdArray = NdArray()
 NdArrayInt = NdArrayInt()
 NdArrayReal = NdArrayReal()
 NdArrayComplex = NdArrayComplex()
+NdArrayBool = NdArrayBool()
 Generic    = NativeGeneric()
 
 
@@ -189,6 +271,7 @@ dtype_registry = {'bool': Bool,
                   'ndarrayinteger':NdArrayInt,
                   'ndarrayreal': NdArrayReal,
                   'ndarraycomplex': NdArrayComplex,
+                  'ndarraybool': NdArrayBool,
                   '*': Generic,
                   'str': String}
 
@@ -296,7 +379,7 @@ def datatype(arg):
         DataType
 
     """
-    
+
 
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
@@ -309,8 +392,8 @@ def datatype(arg):
 
 
 def sp_dtype(expr):
-    """ 
-    return the datatype of a sympy types expression 
+    """
+    return the datatype of a sympy types expression
 
     """
     if expr.is_integer:

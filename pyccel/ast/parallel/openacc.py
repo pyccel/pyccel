@@ -7,21 +7,60 @@ from pyccel.ast.core import Module, Program
 from pyccel.ast.core import Nil
 from pyccel.ast.core import get_initial_value
 from pyccel.ast.core import DottedName
-from pyccel.ast.core import Variable, IndexedVariable, IndexedElement
-from pyccel.ast.core import Assign, Declare, AugAssign
-from pyccel.ast.core import Block, ParallelBlock
-from pyccel.ast.core import Range, Tile, Tensor
-from pyccel.ast.core import Comment
-from pyccel.ast.core import AnnotatedComment
-from pyccel.ast.core import EmptyLine
-from pyccel.ast.core import Print
-from pyccel.ast.core import Len
+from pyccel.ast.core import Variable
+from pyccel.ast.core import ParallelBlock
+from pyccel.ast.core import Tensor
 from pyccel.ast.core import Import
-from pyccel.ast.core import For, ForIterator, While, With, If, Del
+from pyccel.ast.core import For, ForIterator, While, With, If
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import ConstructorCall
 
 from pyccel.ast.parallel.basic import Basic
+
+__all__ = (
+    'ACC',
+    'ACC_Async',
+    'ACC_Auto',
+    'ACC_Bind',
+    'ACC_Collapse',
+    'ACC_Copy',
+    'ACC_Copyin',
+    'ACC_Copyout',
+    'ACC_Create',
+    'ACC_Default',
+    'ACC_DefaultAsync',
+    'ACC_Delete',
+    'ACC_Device',
+    'ACC_DeviceNum',
+    'ACC_DevicePtr',
+    'ACC_DeviceResident',
+    'ACC_DeviceType',
+    'ACC_Finalize',
+    'ACC_FirstPrivate',
+    'ACC_For',
+    'ACC_Gang',
+    'ACC_Host',
+    'ACC_If',
+    'ACC_IfPresent',
+    'ACC_Independent',
+    'ACC_Link',
+    'ACC_NoHost',
+    'ACC_NumGangs',
+    'ACC_NumWorkers',
+    'ACC_Parallel',
+    'ACC_Present',
+    'ACC_Private',
+    'ACC_Reduction',
+    'ACC_Self',
+    'ACC_Seq',
+    'ACC_Tile',
+    'ACC_UseDevice',
+    'ACC_Vector',
+    'ACC_VectorLength',
+    'ACC_Wait',
+    'ACC_Worker',
+    'accfy'
+)
 
 ##########################################################
 #               Base class for OpenACC
@@ -29,8 +68,6 @@ from pyccel.ast.parallel.basic import Basic
 class ACC(Basic):
     """Base class for OpenACC."""
     pass
-
-##########################################################
 
 ##########################################################
 #                 Basic Statements
@@ -974,7 +1011,6 @@ class ACC_Worker(ACC):
         sstr = printer.doprint
         args = ', '.join('{0}'.format(sstr(i)) for i in self.variables)
         return 'worker({})'.format(args)
-##########################################################
 
 ##########################################################
 #             useful functions

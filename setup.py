@@ -1,12 +1,17 @@
 # -*- coding: UTF-8 -*-
 #! /usr/bin/python
 
-import sys
+from pathlib import Path
 from setuptools import setup, find_packages
-import pyccel
+
+# ...
+# Read library version into '__version__' variable
+path = Path(__file__).parent / 'pyccel' / 'version.py'
+exec(path.read_text())
+# ...
 
 NAME    = 'pyccel'
-VERSION = pyccel.__version__
+VERSION = __version__
 AUTHOR  = 'Ahmed Ratnani'
 EMAIL   = 'ahmed.ratnani@ipp.mpg.de'
 URL     = 'https://github.com/ratnania/pyccel'
@@ -30,15 +35,19 @@ setup_args = dict(
 packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # ...
 
-# ...
-install_requires = ['numpy', 'scipy', 'sympy', 'pylint', 'parse', 'redbaron',
-                    'termcolor', 'textx']
-
-try:
-    import textx
-except:
-    install_requires += ['textx']
-# ...
+# Dependencies
+install_requires = [
+    'numpy',
+    'scipy',
+    'sympy>=1.2',
+    'textx>=1.6',
+    'pylint>=1.8',
+    'parse>=1.8',
+    'redbaron>=0.7',
+    'tabulate',
+    'termcolor',
+    'fastcache',
+]
 
 def setup_package():
     setup(packages=packages, \

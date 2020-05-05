@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from pyccel.parser import Parser
-import os
 
 
 __all__ = ["Complexity"]
@@ -20,7 +19,7 @@ class Complexity(object):
         pyccel = Parser(filename_or_text)
         self._ast = pyccel.parse()
         settings = {}
-        self._ast = pyccel.annotate(**settings)
+        self._ast = pyccel.annotate(**settings).ast
 
     @property
     def ast(self):
@@ -31,7 +30,7 @@ class Complexity(object):
         """Computes the complexity of the given code."""
         return 0
 
-        
-  
-        
-   
+
+
+
+

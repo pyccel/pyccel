@@ -11,16 +11,17 @@ A function is simply defined using:
       t = u - v
       return t
 
-As we are targeting a *strongly typed* language, unfortunately, the first thing to do is to add a *header* as the following:
+As we are targeting a *strongly typed* language, the first thing to do is to add type annotations as follows:
 
 .. code-block:: python
 
-  #$ header f(double, double) results(double)
+  from pyccel.decorators import types
+  @types('float', 'float')
   def f(u,v):
       t = u - v
       return t
 
-this tells *Pyccel* that the input/output arguments are of *double precision* type.
+this tells *Pyccel* that the input arguments are of *double precision* type.
 
 You can then call **f** even in a given expression:
 
@@ -35,7 +36,7 @@ You can also define functions with multiple *lhs* and call them as in the follow
 
 .. code-block:: python
 
-  #$ header g(double, double)
+  @types('float', 'float')
   def g(x,v):
       m = x - v
       t =  2.0 * m

@@ -19,17 +19,17 @@ class Matrix(object):
         del self.a
     def add(self,mat):
         self.a=self.a+mat.a
-        
+
     def dot(self,mat):
         if self.n_cols==mat.n_rows:
-            C=zeros((self.n_rows, mat.n_cols), double)  
+            C=zeros((self.n_rows, mat.n_cols), double)
             for i in range(0,self.n_rows):
                 for j in range(0,mat.n_cols):
                     s=0
                     for k in range(0,self.n_cols):
                         s=s+self.a[i,k]*mat.a[k,j]
                     C[i,j]=s
-                  
+
 
 
 p = Matrix(2,3)
