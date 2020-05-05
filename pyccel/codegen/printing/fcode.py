@@ -662,6 +662,8 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
+        assert(expr.rank==0)
+
         if (not self._additional_code):
             self._additional_code = ''
         var = create_variable(expr)
