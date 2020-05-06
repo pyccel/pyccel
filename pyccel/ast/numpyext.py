@@ -908,11 +908,6 @@ class Rand(Function, PyccelAstNode):
     def order(self):
         return 'C'
 
-    def fprint(self, printer):
-        """Fortran print."""
-
-        return 'random_number()'
-
     def fprint(self, printer, lhs, stack_array=False):
         """Fortran print."""
 

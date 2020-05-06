@@ -1392,13 +1392,11 @@ def test_rand_args():
 
     def create_array_vals_1d():
         from numpy.random import rand
-        from numpy import shape
         a = rand(4)
         return a[0], a[1], a[2], a[3]
 
     def create_array_vals_2d():
         from numpy.random import rand
-        from numpy import shape
         a = rand(2,2)
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
@@ -1445,7 +1443,6 @@ def test_rand_expr():
 def test_rand_expr_array():
     def create_array_vals_2d():
         from numpy.random import rand
-        from numpy import shape
         a = rand(2,2)*0.5 + 3
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
