@@ -892,11 +892,7 @@ class Rand(Function, PyccelAstNode):
     _precision = default_precision['real']
 
     def __init__(self, *args):
-        if len(args) == 0:
-            self._shape = ()
-        else:
-            self._shape = args
-
+        self._shape = args
         self._rank  = len(self.shape)
 
         assumptions = {'real':True}
