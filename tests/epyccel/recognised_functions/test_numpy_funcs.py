@@ -1357,7 +1357,7 @@ def test_array():
 
 def test_rand_basic():
     def create_val():
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         return rand()
 
     f1 = epyccel(create_val)
@@ -1371,32 +1371,32 @@ def test_rand_args():
 
     @types('int')
     def create_array_size_1d(n):
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         from numpy import shape
         a = rand(n)
         return shape(a)[0]
 
     @types('int','int')
     def create_array_size_2d(n,m):
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         from numpy import shape
         a = rand(n,m)
         return shape(a)[0], shape(a)[1]
 
     @types('int','int','int')
     def create_array_size_3d(n,m,p):
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         from numpy import shape
         a = rand(n,m,p)
         return shape(a)[0], shape(a)[1], shape(a)[2]
 
     def create_array_vals_1d():
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         a = rand(4)
         return a[0], a[1], a[2], a[3]
 
     def create_array_vals_2d():
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         a = rand(2,2)
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
@@ -1428,7 +1428,7 @@ def test_rand_args():
 
 def test_rand_expr():
     def create_val():
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         x = 2*rand()
         return x
 
@@ -1442,7 +1442,7 @@ def test_rand_expr():
 @pytest.mark.xfail(reason="a is not allocated")
 def test_rand_expr_array():
     def create_array_vals_2d():
-        from numpy.random import rand
+        from numpy.random import rand # pylint: disable=reimported
         a = rand(2,2)*0.5 + 3
         return a[0,0], a[0,1], a[1,0], a[1,1]
 
