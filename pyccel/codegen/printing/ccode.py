@@ -8,7 +8,7 @@ from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
 
 from pyccel.ast.builtins  import Range
-from pyccel.ast.core import Assign, datatype, Import
+from pyccel.ast.core import Assign, datatype, Import, Declare
 from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -123,15 +123,27 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         if len(expr.results) == 1:
-            ret_type = self._print(expr.results[0].dtype)
+            result = expr.results[0]
+            dtype = self._print(result.dtype)
+            prec  = result.precision
+            rank  = result.rank
+            ret_type = dtype_registry[(dtype, prec)]
         elif len(expr.results) > 1:
             raise ValueError("C doesn't support multiple return values.")
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
-        arg_code = ', '.join(self._print(i.dtype) + ' ' + self._print(i) for i in expr.arguments)
-        body = '\n'.join(self._print(i) for i in expr.body.body)
-        return '{0} {1}({2}) {{\n{3}\n}}'.format(ret_type, name, arg_code, body)
+
+        decs  = [Declare(i.dtype, i) for i in expr.local_vars]
+        decs += [Declare(i.dtype, i) for i in expr.results]
+        arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
+        arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+        arguments  = [self._print(i) for i in expr.arguments]
+        arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+        decs       = '\n'.join(self._print(i) for i in decs)
+        body       = '\n'.join(self._print(i) for i in expr.body.body)
+
+        return '{0} {1}({2}) {{\n{3}\n{4}\n}}'.format(ret_type, name, arg_code, decs, body)
 
     def _print_Return(self, expr):
         return 'return {0};'.format(self._print(expr.expr[0]))
