@@ -9,13 +9,10 @@
 from pyccel.stdlib.internal.lapack import dgbtrf
 from pyccel.stdlib.internal.lapack import dgbtrs
 
-from pyccel.stdlib.internal.lapack import dgetrf
 from pyccel.stdlib.internal.lapack import dgecon
 
-from pyccel.stdlib.internal.lapack import dgetrf
 from pyccel.stdlib.internal.lapack import dgetrs
 
-from pyccel.stdlib.internal.lapack import dgetrf
 from pyccel.stdlib.internal.lapack import dgetri
 
 from numpy import zeros
@@ -105,7 +102,6 @@ def test_3():
     dgetrf(n, n, a, lda, ipiv, info)
 #    assert(info == 0)
 
-    iwork = zeros(n, 'int')
     lwork = 4 * n
     work  = zeros(lwork)
 

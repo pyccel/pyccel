@@ -55,7 +55,7 @@ def test_decorator_f3():
 
     from pyccel.ast import AstFunctionResultError
     with pytest.raises(AstFunctionResultError):
-        f = epyccel(f3)
+        epyccel(f3)
 
 #------------------------------------------------------------------------------
 def test_decorator_f4():
@@ -68,7 +68,7 @@ def test_decorator_f4():
 
     from pyccel.ast import AstFunctionResultError
     with pytest.raises(AstFunctionResultError):
-        f = epyccel(f4)
+        epyccel(f4)
 
 #------------------------------------------------------------------------------
 def test_decorator_f5():

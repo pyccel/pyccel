@@ -16,10 +16,10 @@ def test_semantic(f):
     print('> testing {0}'.format(str(f)))
 
     pyccel = Parser(f)
-    ast = pyccel.parse()
+    pyccel.parse()
 
     settings = {}
-    ast = pyccel.annotate(**settings)
+    pyccel.annotate(**settings)
 
     # reset Errors singleton
     errors = Errors()

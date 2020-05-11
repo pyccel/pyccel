@@ -1,3 +1,5 @@
+# pylint: disable=unused-variable
+
 #$ header function incr_(int*8)
 def incr_(x):
     #$ header function decr_(int*8)

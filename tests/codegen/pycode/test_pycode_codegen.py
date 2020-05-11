@@ -30,7 +30,7 @@ def test_codegen(f):
     name = os.path.splitext(name)[0]
 
     codegen = Codegen(ast, name)
-    code = codegen.doprint(language='python')
+    codegen.doprint(language='python')
 
     # reset Errors singleton
     errors = Errors()

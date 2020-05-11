@@ -22,7 +22,7 @@ def factorial( n ):
 def fibonacci( n ):
     x = 0
     y = 1
-    for i in range( n ):
+    for i in range( n ): # pylint: disable=unused-variable
         z = x+y
         x = y
         y = z
@@ -32,10 +32,10 @@ def fibonacci( n ):
 @types( int )
 def double_loop( n ):
     x = 0
-    for i in range( 3, 10 ):
+    for i in range( 3, 10 ): # pylint: disable=unused-variable
         x += 1
         y  = n*x
-        for j in range( 4, 15 ):
+        for j in range( 4, 15 ): # pylint: disable=unused-variable
             z = x-y
     return z
 
