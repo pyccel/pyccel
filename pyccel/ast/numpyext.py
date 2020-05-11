@@ -165,11 +165,7 @@ class Array(Application):
         # row-major ordering, while Fortran initial values are column-major
         shape = self.shape[::-1]
 
-        if isinstance(shape, (list, PythonTuple, Tuple, tuple)):
-            # this is a correction. problem on LRZ
-            shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
-        else:
-            shape_code = '0:' + printer(Add(shape, Integer(-1)))
+        shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
 
         lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
@@ -916,11 +912,7 @@ class Rand(Function, PyccelAstNode):
                 # Transpose indices because of Fortran column-major ordering
                 shape = self.shape[::-1]
 
-                if isinstance(self.shape, (PythonTuple,Tuple,tuple)):
-                    # this is a correction. problem on LRZ
-                    shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
-                else:
-                    shape_code = '0:' + printer(Add(shape, Integer(-1)))
+                shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
 
                 code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
                 stmts.append(code_alloc)
@@ -1040,11 +1032,7 @@ class Full(Application):
             # Transpose indices because of Fortran column-major ordering
             shape = self.shape if self.order == 'F' else self.shape[::-1]
 
-            if isinstance(self.shape, (PythonTuple,Tuple,tuple)):
-                # this is a correction. problem on LRZ
-                shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
-            else:
-                shape_code = '0:' + printer(Add(shape, Integer(-1)))
+            shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
 
             code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
             stmts.append(code_alloc)
