@@ -60,6 +60,7 @@ from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where, Mod, PyccelArraySize
 from pyccel.ast.numpyext import Complex
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
+from pyccel.ast.numpyext import Rand
 
 from pyccel.parser.errors import Errors
 from pyccel.parser.messages import *
@@ -661,7 +662,24 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
-        return expr.fprint(self._print)
+        assert(expr.rank==0)
+
+        if (not self._additional_code):
+            self._additional_code = ''
+        var = create_variable(expr)
+        var = Variable(expr.dtype, var.name, is_stack_array = all([s.is_constant for s in expr.shape]),
+                shape = expr.shape, precision = expr.precision,
+                order = expr.order, rank = expr.rank)
+
+        if self._current_function:
+            name = self._current_function
+            func = self.get_function(name)
+            func.local_vars.append(var)
+        else:
+            self._namespace.variables[var.name] = var
+
+        self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
+        return self._print(var)
 
     def _print_Min(self, expr):
         args = expr.args
@@ -1074,7 +1092,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs)
 
-        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike)):
+        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike, Rand)):
 
             stack_array = False
             if self._current_function:
@@ -1402,12 +1420,6 @@ class FCodePrinter(CodePrinter):
 
             args_decs[str(arg)] = dec
 
-        for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
-            decs[str(i)] = dec
-
-        args_decs.update(decs)
-
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
             if i in out_args:
@@ -1424,6 +1436,12 @@ class FCodePrinter(CodePrinter):
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
         body_code = self._print(expr.body)
+
+        for i in expr.local_vars:
+            dec = Declare(i.dtype, i)
+            decs[str(i)] = dec
+
+        args_decs.update(decs)
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
@@ -2153,7 +2171,14 @@ class FCodePrinter(CodePrinter):
             for r in func.results:
                 var_name = create_variable(r).name
                 var =  r.clone(name = var_name)
-                self._namespace.variables[var_name] = var
+
+                if self._current_function:
+                    name = self._current_function
+                    func = self.get_function(name)
+                    func.local_vars.append(var)
+                else:
+                    self._namespace.variables[var.name] = var
+
                 out_vars.append(var)
             self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
             return self._print(Tuple(*out_vars))
@@ -2238,7 +2263,14 @@ class FCodePrinter(CodePrinter):
                 var = Variable(base.dtype, var.name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
-                self._namespace.variables[var.name] = var
+
+                if self._current_function:
+                    name = self._current_function
+                    func = self.get_function(name)
+                    func.local_vars.append(var)
+                else:
+                    self._namespace.variables[var.name] = var
+
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(IndexedVariable(var, dtype=base.dtype,
                    shape=base.shape,prec=base.precision,
