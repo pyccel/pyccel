@@ -5,26 +5,39 @@ import sys
 from pyccel.epyccel import epyccel
 from modules        import loops
 
+@pytest.fixture( params=[
+    pytest.param("fortran", marks = pytest.mark.fortran),
+    pytest.param("c", marks = [
+        pytest.mark.xfail(reason="f2py_module file not created for c"),
+        pytest.mark.c]
+    )
+])
+def language(request):
+    def _language():
+        return request.param
+
+    return _language
+
 #==============================================================================
 
-def test_sum_natural_numbers():
+def test_sum_natural_numbers(language):
     f1 = loops.sum_natural_numbers
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language() )
     assert f1( 42 ) == f2( 42 )
 
-def test_factorial():
+def test_factorial(language):
     f1 = loops.factorial
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language() )
     assert f1( 11 ) == f2( 11 )
 
-def test_fibonacci():
+def test_fibonacci(language):
     f1 = loops.fibonacci
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language() )
     assert f1( 42 ) == f2( 42 )
 
-def test_double_loop():
+def test_double_loop(language):
     f1 = loops.double_loop
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language() )
     assert f1( 2 ) == f2( 2 )
 
 def test_double_loop_on_2d_array_C():
@@ -93,10 +106,10 @@ def test_enumerate_on_1d_array():
 
     assert np.array_equal( f1(z), f2(z) )
 
-def test_zip_prod():
+def test_zip_prod(language):
 
     f1 = loops.zip_prod
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language() )
 
     assert np.array_equal( f1(10), f2(10) )
 
