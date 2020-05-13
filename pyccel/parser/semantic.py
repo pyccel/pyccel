@@ -1149,6 +1149,7 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
                 return getattr(self, annotation_method)(expr, **settings)
+
         # Unknown object, we raise an error.
 
         raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
@@ -2049,6 +2050,7 @@ class SemanticParser(BasicParser):
                     else:
                         raise NotImplementedError('TODO')
         else:
+
             rhs = self._visit(rhs, **settings)
 
         if isinstance(rhs, IfTernaryOperator):
@@ -2096,7 +2098,6 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, FunctionalFor):
             return rhs
-
 
         elif isinstance(rhs, CodeBlock):
             # case of complex stmt
@@ -2165,6 +2166,7 @@ class SemanticParser(BasicParser):
 
             else:
                 d_var = self._infere_type(rhs, **settings)
+
         elif isinstance(rhs, Map):
 
             name = str(rhs.args[0])
@@ -2181,10 +2183,8 @@ class SemanticParser(BasicParser):
                 d_var[i]['shape'] = dvar['shape']
                 d_var[i]['rank' ]  = dvar['rank']
 
-
         else:
-            d_var = self._infere_type(rhs, **settings)
-
+            d_var  = self._infere_type(rhs, **settings)
             d_list = d_var if isinstance(d_var, list) else [d_var]
 
             for d in d_list:
