@@ -308,7 +308,7 @@ def test_folder_imports():
 
 #------------------------------------------------------------------------------
 def test_funcs(language):
-    pyccel_test("scripts/runtest_funcs.py", test_language = language)
+    pyccel_test("scripts/runtest_funcs.py", language = language)
 
 #------------------------------------------------------------------------------
 def test_bool():
