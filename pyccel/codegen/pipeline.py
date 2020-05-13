@@ -107,8 +107,7 @@ def execute_pyccel(fname, *,
                                  libdirs=())
 
     # Build position-independent code, suited for use in shared library
-    if language == 'fortran':
-        fflags = ' {} -fPIC '.format(fflags)
+    fflags = ' {} -fPIC '.format(fflags)
     # ...
 
     # Parse Python file
@@ -227,6 +226,7 @@ def execute_pyccel(fname, *,
     # Create shared library
     try:
         sharedlib_filepath = create_shared_library(codegen,
+                                                   language,
                                                    pyccel_dirpath,
                                                    compiler,
                                                    mpi_compiler,

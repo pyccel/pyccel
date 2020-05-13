@@ -7,6 +7,7 @@ import glob
 
 from pyccel.ast.f2py                import as_static_function_call
 from pyccel.codegen.printing.fcode  import fcode
+from .utilities import language_extension
 
 __all__ = ['compile_f2py', 'create_shared_library']
 
@@ -19,6 +20,7 @@ PY_VERSION = sys.version_info[0:2]
 # TODO add openacc
 # TODO [YG, 04.02.2020] sanitize arguments to protect against shell injection
 def compile_f2py( filename, *,
+                  language='fortran',
                   modulename=None,
                   extra_args='',
                   libs=(),
@@ -40,6 +42,9 @@ def compile_f2py( filename, *,
     if compiler == 'gfortran' or compiler == 'gcc':
         _vendor = 'gnu95'
 
+    if compiler == 'gcc':
+        _vendor = 'unix'
+
     elif compiler == 'ifort' or compiler == 'icc':
         _vendor = 'intelem'
 
@@ -51,13 +56,17 @@ def compile_f2py( filename, *,
     #...
 
     if mpi_compiler:
+        compilers = '--f90exec' if language == 'fortran' else '--compiler'
         if sys.platform == 'win32' and mpi_compiler == 'mpif90':
-            compilers = '--f90exec=gfortran'
+            compilers = compilers + '=gfortran'
         else:
-            compilers = '--f90exec={}'.format(mpi_compiler)
+            compilers = compilers + '={}'.format(mpi_compiler)
 
     if compiler:
-        compilers = compilers + ' --fcompiler={}'.format(_vendor)
+        if language == 'fortran':
+            compilers = compilers + ' --fcompiler={}'.format(_vendor)
+        else:
+            compilers = compilers + ' --compiler={}'.format(_vendor)
 
 
     if accelerator:
@@ -125,6 +134,7 @@ def compile_f2py( filename, *,
 
 #==============================================================================
 def create_shared_library(codegen,
+                          language,
                           pyccel_dirpath,
                           compiler,
                           mpi_compiler,
@@ -144,16 +154,24 @@ def create_shared_library(codegen,
     base_dirpath = os.getcwd()
     os.chdir(pyccel_dirpath)
 
-    # Construct f2py interface for assembly and write it to file f2py_MOD.f90
-    # be careful: because of f2py we must use lower case
-    funcs = codegen.routines + codegen.interfaces
-    f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
-    f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
-    f2py_filename = 'f2py_{}.f90'.format(module_name)
-    with open(f2py_filename, 'w') as f:
-        f.writelines(f2py_code)
+    if language == 'fortran':
+        # Construct f2py interface for assembly and write it to file f2py_MOD.f90
+        # be careful: because of f2py we must use lower case
+        funcs = codegen.routines + codegen.interfaces
+        f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
+        f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
+        f2py_filename = 'f2py_{}.f90'.format(module_name)
+        with open(f2py_filename, 'w') as f:
+            f.writelines(f2py_code)
+
+    else:
+        f2py_filename = os.path.join(pyccel_dirpath, module_name)
+        dep_mods = tuple(m for m in dep_mods if m != f2py_filename)
+        f2py_filename = f2py_filename + '.' + language_extension[language]
 
     object_files = ' '.join(['"{}.o"'.format(m) for m in dep_mods])
+
+
     # ...
 
     # Name of shared library
@@ -163,6 +181,7 @@ def create_shared_library(codegen,
     # Create MOD.so shared library
     extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
     compile_f2py(f2py_filename,
+                 language    = language,
                  modulename  = sharedlib_modname,
                  libs        = (),
                  libdirs     = (),
