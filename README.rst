@@ -223,10 +223,10 @@ Contributing
 
 TODO
 
-.. |build-status| image:: https://travis-ci.org/pyccel/pyccel.svg?branch=master
+.. |build-status| image:: https://travis-ci.com/pyccel/pyccel.svg?branch=master
     :alt: build status
     :scale: 100%
-    :target: https://travis-ci.org/pyccel/pyccel
+    :target: https://travis-ci.com/pyccel/pyccel
 
 .. |docs| image:: https://readthedocs.org/projects/pyccel/badge/?version=latest
     :alt: Documentation Status
