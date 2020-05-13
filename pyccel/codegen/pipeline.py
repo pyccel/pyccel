@@ -28,6 +28,7 @@ def execute_pyccel(fname, *,
                    recursive     = False,
                    verbose       = False,
                    folder        = None,
+                   language      = None,
                    compiler      = None,
                    mpi_compiler  = None,
                    fflags        = None,
@@ -83,9 +84,15 @@ def execute_pyccel(fname, *,
     # Change working directory to 'folder'
     os.chdir(folder)
 
+    if language is None:
+        language = 'fortran'
+
     # Choose Fortran compiler
     if compiler is None:
-        compiler = 'gfortran'
+        if language == 'fortran':
+            compiler = 'gfortran'
+        elif language == 'c':
+            compiler = 'gcc'
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
@@ -100,7 +107,8 @@ def execute_pyccel(fname, *,
                                  libdirs=())
 
     # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
+    if language == 'fortran':
+        fflags = ' {} -fPIC '.format(fflags)
     # ...
 
     # Parse Python file
@@ -129,7 +137,7 @@ def execute_pyccel(fname, *,
     try:
         codegen = Codegen(ast, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
-        fname = codegen.export(fname)
+        fname = codegen.export(fname, language=language)
     except Exception:
         handle_error('code generation')
         raise

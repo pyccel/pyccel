@@ -250,10 +250,10 @@ class Codegen(object):
 
         return code
 
-    def export(self, filename=None):
+    def export(self, filename=None, **settings):
 
         if self.code is None:
-            code = self.doprint()
+            code = self.doprint(**settings)
         else:
             code = self.code
 
