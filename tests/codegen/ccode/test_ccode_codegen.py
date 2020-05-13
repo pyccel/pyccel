@@ -19,8 +19,7 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 failing_files = [os.path.join(path_dir,'arrays.py')]
 passing_files = list(set(files).difference(set(failing_files)))
     
-@pytest.mark.parametrize( "f", passing_files )
-def test_codegen(f):
+def codegen_test(f):
 
     print('> testing {0}'.format(str(f)))
 
@@ -39,6 +38,16 @@ def test_codegen(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+
+@pytest.mark.parametrize( "f", passing_files )
+def test_passing_codegen(f):
+    codegen_test(f)
+
+@pytest.mark.xfail
+@pytest.mark.parametrize( "f", failing_files )
+def test_failing_codegen(f):
+    codegen_test(f)
+
 ######################
 if __name__ == '__main__':
     print('*********************************')
@@ -48,6 +57,6 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
-        test_codegen(f)
+        codegen_test(f)
 
     print('\n')
