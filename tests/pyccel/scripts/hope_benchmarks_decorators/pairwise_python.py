@@ -4,9 +4,7 @@ from pyccel.decorators import types
 def pairwise_python (X, D) :
     from numpy import sqrt, shape
 
-    S = shape( X )
-    M = S[0]
-    N = S[1]
+    M, N = shape( X )
     for i in range (M) :
         for j in range (M) :
             r = 0.0
