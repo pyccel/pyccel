@@ -305,9 +305,6 @@ class CCodePrinter(CodePrinter):
                      '{f}\n'
                      '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
 
-        if funcs:
-            funcs = 'contains\n{0}'.format(funcs)
-
         return ('{imports}\n'
                 '{funcs}\n'
                 'int main(){{\n'
