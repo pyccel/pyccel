@@ -42,7 +42,7 @@ def compile_f2py( filename, *,
     if compiler == 'gfortran' or compiler == 'gcc':
         _vendor = 'gnu95'
 
-    if compiler == 'gcc':
+    elif compiler == 'gcc':
         _vendor = 'unix'
 
     elif compiler == 'ifort' or compiler == 'icc':
