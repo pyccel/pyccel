@@ -146,7 +146,11 @@ class CCodePrinter(CodePrinter):
         return '{0} {1}({2}) {{\n{3}\n{4}\n}}'.format(ret_type, name, arg_code, decs, body)
 
     def _print_Return(self, expr):
-        return 'return {0};'.format(self._print(expr.expr[0]))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        code +='return {0};'.format(self._print(expr.expr[0]))
+        return code
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -169,6 +173,9 @@ class CCodePrinter(CodePrinter):
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
+
+    def _print_CodeBlock(self, expr):
+        return '\n'.join(self._print(b) for b in expr.body)
 
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
