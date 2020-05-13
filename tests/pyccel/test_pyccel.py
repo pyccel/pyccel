@@ -9,6 +9,21 @@ import sys
 #==============================================================================
 # UTILITIES
 #==============================================================================
+
+@pytest.fixture( params=[
+    pytest.param("fortran", marks = pytest.mark.fortran),
+    pytest.param("c", marks = [
+        pytest.mark.xfail(reason="Lack of print support"),
+        pytest.mark.c]
+    )
+])
+def language(request):
+    def _language():
+        return request.param
+
+    return _language
+#------------------------------------------------------------------------------
+
 def get_abs_path(relative_path):
     relative_path = os.path.normpath(relative_path)
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -40,7 +55,7 @@ def get_python_output(abs_path, cwd = None):
 #------------------------------------------------------------------------------
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
-        options = options.split(' ')
+        options = options.strip().split(' ')
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
     else:
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
@@ -132,7 +147,9 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
             compare_pyth_fort_output_by_type(p,f,dtype)
 
 #------------------------------------------------------------------------------
-def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd = None, pyccel_commands = "", output_dtype = float):
+def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
+        cwd = None, pyccel_commands = "", output_dtype = float,
+        test_language = None):
     test_file = os.path.normpath(test_file)
 
     if (cwd is None):
@@ -150,6 +167,8 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True, cwd 
         dependencies = get_abs_path(dependencies)
         compile_pyccel(os.path.dirname(dependencies), dependencies, pyccel_commands)
 
+    if test_language:
+        pyccel_commands += " --language="+test_language()
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
     else:
@@ -291,8 +310,8 @@ def test_folder_imports():
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-def test_funcs():
-    pyccel_test("scripts/runtest_funcs.py")
+def test_funcs(language):
+    pyccel_test("scripts/runtest_funcs.py", test_language = language)
 
 #------------------------------------------------------------------------------
 def test_bool():
