@@ -39,7 +39,7 @@ def compile_f2py( filename, *,
     opt        = '--opt="-O3"'
 
     #... Determine Fortran compiler vendor for F2PY
-    if compiler == 'gfortran' or compiler == 'gcc':
+    if compiler == 'gfortran':
         _vendor = 'gnu95'
 
     elif compiler == 'gcc':
