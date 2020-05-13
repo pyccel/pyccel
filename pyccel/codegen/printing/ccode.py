@@ -5,10 +5,10 @@ from sympy.core import S
 from sympy.printing.precedence import precedence
 
 from pyccel.ast.core import Assign, datatype, Variable, Import
-from pyccel.ast.core import SeparatorComment, CommentBlock, Comment
+from pyccel.ast.core import CommentBlock, Comment
 
 from pyccel.ast.builtins  import Range
-from pyccel.ast.core import Assign, datatype, Import, Declare
+from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -126,7 +126,7 @@ class CCodePrinter(CodePrinter):
             result = expr.results[0]
             dtype = self._print(result.dtype)
             prec  = result.precision
-            rank  = result.rank
+            #rank  = result.rank
             ret_type = dtype_registry[(dtype, prec)]
         elif len(expr.results) > 1:
             raise ValueError("C doesn't support multiple return values.")
