@@ -45,7 +45,7 @@ def _which(program):
 # TODO - remove output_dir froms args
 #      - remove files from args
 #      but quickstart and build are still calling it for the moment
-def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler='gfortran'):
+def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
     pyccel console command.
     """
