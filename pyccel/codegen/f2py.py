@@ -37,17 +37,17 @@ def compile_f2py( filename, *,
     opt        = '--opt="-O3"'
 
     #... Determine Fortran compiler vendor for F2PY
-    if compiler == 'gfortran':
+    if compiler == 'gfortran' or compiler == 'gcc':
         _vendor = 'gnu95'
 
-    elif compiler == 'ifort':
+    elif compiler == 'ifort' or compiler == 'icc':
         _vendor = 'intelem'
 
     elif compiler == 'pgfortran':
        _vendor = 'pg'
 
     else:
-        raise NotImplementedError('Only gfortran ifort and pgi are available for the moment')
+        raise NotImplementedError('Only gfortran, gcc, ifort, icc and pgi are available for the moment')
     #...
 
     if mpi_compiler:
