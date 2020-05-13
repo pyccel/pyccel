@@ -11,12 +11,14 @@ import sys
 #==============================================================================
 
 @pytest.fixture( params=[
-    pytest.param("fortran", marks = pytest.mark.fortran),
-    pytest.param("c", marks = [
-        pytest.mark.xfail(reason="Lack of print support"),
-        pytest.mark.c]
-    )
-])
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Lack of print support"),
+            pytest.mark.c]
+        )
+    ],
+    scope='module'
+)
 def language(request):
     return request.param
 #------------------------------------------------------------------------------

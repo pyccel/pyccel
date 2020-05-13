@@ -6,12 +6,14 @@ from pyccel.epyccel import epyccel
 from modules        import loops
 
 @pytest.fixture( params=[
-    pytest.param("fortran", marks = pytest.mark.fortran),
-    pytest.param("c", marks = [
-        pytest.mark.xfail(reason="f2py_module file not created for c"),
-        pytest.mark.c]
-    )
-])
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="f2py_module file not created for c"),
+            pytest.mark.c]
+        )
+    ],
+    scope='module'
+)
 def language(request):
     return request.param
 
