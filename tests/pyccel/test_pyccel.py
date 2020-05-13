@@ -18,10 +18,7 @@ import sys
     )
 ])
 def language(request):
-    def _language():
-        return request.param
-
-    return _language
+    return request.param
 #------------------------------------------------------------------------------
 
 def get_abs_path(relative_path):
@@ -149,7 +146,7 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
-        test_language = None):
+        language = None):
     test_file = os.path.normpath(test_file)
 
     if (cwd is None):
@@ -167,8 +164,8 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         dependencies = get_abs_path(dependencies)
         compile_pyccel(os.path.dirname(dependencies), dependencies, pyccel_commands)
 
-    if test_language:
-        pyccel_commands += " --language="+test_language()
+    if language:
+        pyccel_commands += " --language="+language
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
     else:
