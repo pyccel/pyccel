@@ -2,12 +2,8 @@
 #$ header function matmat(double [:,:], double [:,:], double [:,:])
 def matmat(a,b,c):
     import numpy #pylint: disable=W0404
-    nm = numpy.shape(a)
-    mp = numpy.shape(b)
-
-    n = nm[0]
-    m = nm[1]
-    p = mp[1]
+    n, m = numpy.shape(a)
+    m, p = numpy.shape(b)
 
     for i in range(0, n):
         for j in range(0, p):
