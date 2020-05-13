@@ -8,6 +8,7 @@ import glob
 from pyccel.ast.f2py                import as_static_function_call
 from pyccel.codegen.printing.fcode  import fcode
 from .utilities import language_extension
+from .cwrapper import create_c_wrapper, create_c_setup
 
 __all__ = ['compile_f2py', 'create_shared_library']
 
@@ -154,42 +155,59 @@ def create_shared_library(codegen,
     base_dirpath = os.getcwd()
     os.chdir(pyccel_dirpath)
 
-    if language == 'fortran':
+    # Name of shared library
+    if sharedlib_modname is None:
+        sharedlib_modname = module_name
+
+    if language == 'c':
+        wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
+        wrapper_filename_root = '{}_wrapper'.format(module_name)
+        wrapper_filename = '{}.c'.format(wrapper_filename_root)
+
+        with open(wrapper_filename, 'w') as f:
+            f.writelines(wrapper_code)
+
+        dep_mods = (wrapper_filename_root, *dep_mods)
+        setup_code = create_c_setup(sharedlib_modname, dep_mods)
+        setup_filename = "setup.py"
+
+        with open(setup_filename, 'w') as f:
+            f.writelines(setup_code)
+
+        setup_filename = os.path.join(pyccel_dirpath, setup_filename)
+        cmd = [sys.executable, setup_filename, "install", "--prefix="+pyccel_dirpath, "--install-lib="+pyccel_dirpath]
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+        out, err = p.communicate()
+
+    elif language == 'fortran':
         # Construct f2py interface for assembly and write it to file f2py_MOD.f90
         # be careful: because of f2py we must use lower case
         funcs = codegen.routines + codegen.interfaces
         f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
         f2py_code = '\n\n'.join([fcode(f, codegen.parser) for f in f2py_funcs])
         f2py_filename = 'f2py_{}.f90'.format(module_name)
+
         with open(f2py_filename, 'w') as f:
             f.writelines(f2py_code)
 
-    else:
-        f2py_filename = os.path.join(pyccel_dirpath, module_name)
-        dep_mods = tuple(m for m in dep_mods if m != f2py_filename)
-        f2py_filename = f2py_filename + '.' + language_extension[language]
-
-    object_files = ' '.join(['"{}.o"'.format(m) for m in dep_mods])
+        object_files = ' '.join(['"{}.o"'.format(m) for m in dep_mods])
 
 
-    # ...
+        # ...
 
-    # Name of shared library
-    if sharedlib_modname is None:
-        sharedlib_modname = module_name
-
-    # Create MOD.so shared library
-    extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
-    compile_f2py(f2py_filename,
-                 language    = language,
-                 modulename  = sharedlib_modname,
-                 libs        = (),
-                 libdirs     = (),
-                 includes    = object_files,  # TODO: this is not an include...
-                 extra_args  = extra_args,
-                 compiler    = compiler,
-                 mpi_compiler= mpi_compiler,
-                 accelerator = accelerator)
+        # Create MOD.so shared library
+        if language == 'fortran':
+            extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
+            compile_f2py(f2py_filename,
+                         language    = language,
+                         modulename  = sharedlib_modname,
+                         libs        = (),
+                         libdirs     = (),
+                         includes    = object_files,  # TODO: this is not an include...
+                         extra_args  = extra_args,
+                         compiler    = compiler,
+                         mpi_compiler= mpi_compiler,
+                         accelerator = accelerator)
 
     # Obtain absolute path of newly created shared library
 
