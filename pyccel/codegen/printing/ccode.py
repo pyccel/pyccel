@@ -293,7 +293,7 @@ class CCodePrinter(CodePrinter):
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
         imports  = '\n'.join(self._print(i) for i in imports)
-        body     = '\n'.join(self._print(i) for i in expr.body)
+        body     = '\n'.join(self._print(i) for i in expr.body.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
         sep = self._print(SeparatorComment(40))
