@@ -141,6 +141,7 @@ def create_shared_library(codegen,
                           mpi_compiler,
                           accelerator,
                           dep_mods,
+                          flags = '',
                           extra_args='',
                           sharedlib_modname=None,
                           verbose = False):
@@ -169,13 +170,22 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         dep_mods = (wrapper_filename_root, *dep_mods)
-        setup_code = create_c_setup(sharedlib_modname, dep_mods, compiler)
+        setup_code = create_c_setup(sharedlib_modname, dep_mods, compiler, flags)
         setup_filename = "setup_{}.py".format(module_name)
 
         with open(setup_filename, 'w') as f:
             f.writelines(setup_code)
 
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
+        cmd = [sys.executable, setup_filename, "build"]
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        out, err = p.communicate()
+        if verbose:
+            print(out)
+        if len(err)>0:
+            print(err)
+            raise RuntimeError("Failed to build module")
+
         cmd = [sys.executable, setup_filename, "install", "--prefix="+pyccel_dirpath, "--install-lib="+pyccel_dirpath]
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         out, err = p.communicate()
@@ -183,7 +193,7 @@ def create_shared_library(codegen,
             print(out)
         if len(err)>0:
             print(err)
-            raise RuntimeError("Failed to generate module")
+            raise RuntimeError("Failed to install module")
 
     elif language == 'fortran':
         # Construct f2py interface for assembly and write it to file f2py_MOD.f90

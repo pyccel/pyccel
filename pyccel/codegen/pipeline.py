@@ -232,6 +232,7 @@ def execute_pyccel(fname, *,
                                                    mpi_compiler,
                                                    accelerator,
                                                    dep_mods,
+                                                   flags,
                                                    extra_args,
                                                    output_name,
                                                    verbose)
