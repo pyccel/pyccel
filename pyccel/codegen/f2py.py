@@ -176,6 +176,9 @@ def create_shared_library(codegen,
         python_config = which("python3-config")
         if python_config == None:
             python_config = which("python-config")
+        if python_config == None:
+            from sys import version_info
+            python_config = which("python3"+str(version_info[1])+"-config")
         assert(python_config is not None)
         p = subprocess.Popen([python_config, "--cflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         py_flags, _ = p.communicate()
