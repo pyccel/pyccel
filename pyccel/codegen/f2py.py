@@ -142,7 +142,8 @@ def create_shared_library(codegen,
                           accelerator,
                           dep_mods,
                           extra_args='',
-                          sharedlib_modname=None):
+                          sharedlib_modname=None,
+                          verbose = False):
 
     # Consistency checks
     if not codegen.is_module:
@@ -176,8 +177,13 @@ def create_shared_library(codegen,
 
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
         cmd = [sys.executable, setup_filename, "install", "--prefix="+pyccel_dirpath, "--install-lib="+pyccel_dirpath]
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         out, err = p.communicate()
+        if verbose:
+            print(out)
+        if len(err)>0:
+            print(err)
+            raise RuntimeError("Failed to generate module")
 
     elif language == 'fortran':
         # Construct f2py interface for assembly and write it to file f2py_MOD.f90

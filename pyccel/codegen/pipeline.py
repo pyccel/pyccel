@@ -233,7 +233,8 @@ def execute_pyccel(fname, *,
                                                    accelerator,
                                                    dep_mods,
                                                    extra_args,
-                                                   output_name)
+                                                   output_name,
+                                                   verbose)
     except Exception:
         handle_error('shared library generation')
         raise
