@@ -39,7 +39,7 @@ def write_python_wrapper(expr, printer):
 
     results_dtypes = ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.results)
     result_names = ', '.join(res.name for res in expr.results)
-    code += "return Py_BuildValue(\"{0}\", {1});\n".format(results_dtypes,result_names)
+    code += "    return Py_BuildValue(\"{0}\", {1});\n".format(results_dtypes,result_names)
     code += "}\n"
     return code
 
@@ -76,13 +76,11 @@ def create_c_wrapper(mod_name, codegen):
     code += "    return m;\n"
     code += "}"
 
-    print(code)
-
     return code
 
 def create_c_setup(mod_name, dependencies):
     code  = "from distutils.core import setup, Extension\n\n"
-    deps  = ", ".join("\"{0}.c\"".format(d) for d in dependencies)
+    deps  = ", ".join("r\"{0}.c\"".format(d) for d in dependencies)
     code += "extension_mod = Extension(\"{0}\", [{1}])\n\n".format(mod_name, deps)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
     return code
