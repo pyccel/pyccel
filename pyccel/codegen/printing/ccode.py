@@ -146,7 +146,11 @@ class CCodePrinter(CodePrinter):
         return '{0} {1}({2}) {{\n{3}\n{4}\n}}'.format(ret_type, name, arg_code, decs, body)
 
     def _print_Return(self, expr):
-        return 'return {0};'.format(self._print(expr.expr[0]))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        code +='return {0};'.format(self._print(expr.expr[0]))
+        return code
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -169,6 +173,9 @@ class CCodePrinter(CodePrinter):
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step}) {{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
+
+    def _print_CodeBlock(self, expr):
+        return '\n'.join(self._print(b) for b in expr.body)
 
     def _print_Pow(self, expr):
         if "Pow" in self.known_functions:
@@ -293,7 +300,7 @@ class CCodePrinter(CodePrinter):
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
         imports  = '\n'.join(self._print(i) for i in imports)
-        body     = '\n'.join(self._print(i) for i in expr.body)
+        body     = '\n'.join(self._print(i) for i in expr.body.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
         sep = self._print(SeparatorComment(40))
@@ -304,9 +311,6 @@ class CCodePrinter(CodePrinter):
                      '{sep}\n'
                      '{f}\n'
                      '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
-
-        if funcs:
-            funcs = 'contains\n{0}'.format(funcs)
 
         return ('{imports}\n'
                 '{funcs}\n'

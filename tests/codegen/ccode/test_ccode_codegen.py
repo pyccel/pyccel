@@ -39,10 +39,12 @@ def codegen_test(f):
     errors = Errors()
     errors.reset()
 
+@pytest.mark.c
 @pytest.mark.parametrize( "f", passing_files )
 def test_passing_codegen(f):
     codegen_test(f)
 
+@pytest.mark.c
 @pytest.mark.xfail
 @pytest.mark.parametrize( "f", failing_files )
 def test_failing_codegen(f):
