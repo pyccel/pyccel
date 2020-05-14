@@ -163,6 +163,7 @@ def create_shared_library(codegen,
 
     if language == 'c':
         from sysconfig import get_paths
+        from shutil import which
 
         wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
         wrapper_filename_root = '{}_wrapper'.format(module_name)
@@ -172,9 +173,13 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         dep_mods = (wrapper_filename_root, *dep_mods)
-        p = subprocess.Popen(["python3-config", "--cflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        python_config = which("python3-config")
+        if python_config == None:
+            python_config = which("python-config")
+        assert(python_config is not None)
+        p = subprocess.Popen([python_config, "--cflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         py_flags, _ = p.communicate()
-        p = subprocess.Popen(["python3-config", "--ldflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen([python_config, "--ldflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         py_libs, _ = p.communicate()
 
         for f in dep_mods:
