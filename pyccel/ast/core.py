@@ -197,6 +197,18 @@ class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
     def _eval_evalf(self,prec):
         return sp_Pow(self.base,self.exp).evalf(prec)
 
+    @property
+    def is_real(self):
+        return self._args[0].is_real and self._args[1].is_real
+
+    @property
+    def is_integer(self):
+        return self._args[0].is_integer and self._args[1].is_integer
+
+    @property
+    def is_complex(self):
+        return self._args[0].is_complex and self._args[1].is_complex
+
 class Add(sp_Add, sp_Boolean, PyccelAstNode):
     def __new__(cls, *args, evaluate = False, **kwargs):
         return sp_Add.__new__(cls, *args, evaluate = evaluate, **kwargs)
