@@ -78,8 +78,11 @@ def create_c_wrapper(mod_name, codegen):
 
     return code
 
-def create_c_setup(mod_name, dependencies):
+def create_c_setup(mod_name, dependencies, compiler):
     code  = "from distutils.core import setup, Extension\n\n"
+    code += "import os\n"
+    code += "os.environ['CC'] = \"{0}\"\n\n".format(compiler)
+
     deps  = ", ".join("r\"{0}.c\"".format(d) for d in dependencies)
     code += "extension_mod = Extension(\"{0}\", [{1}])\n\n".format(mod_name, deps)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
