@@ -33,3 +33,4 @@ def product_loop_on_real_array( z, out ):
 
     for i in range(n):
         out[i] = z[i]**2
+

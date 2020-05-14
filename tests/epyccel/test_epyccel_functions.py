@@ -12,6 +12,15 @@ def clean_test():
     shutil.rmtree('__pycache__', ignore_errors=True)
     shutil.rmtree('__epyccel__', ignore_errors=True)
 
+
+def test_func_no_args_f1():
+    def f1():
+        from numpy import pi
+        value = (2*pi)**(3/2)
+        return value
+
+    f = epyccel(f1)
+    assert abs(f()-f1()) < 1e-13
 #------------------------------------------------------------------------------
 def test_decorator_f1():
     @types('int')
