@@ -172,15 +172,18 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         dep_mods = (wrapper_filename_root, *dep_mods)
+        p = subprocess.Popen(["python3-config", "--cflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        py_flags, _ = p.communicate()
+        p = subprocess.Popen(["python3-config", "--ldflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        py_libs, _ = p.communicate()
 
         for f in dep_mods:
             in_file = f+'.c'
             out_file = f+'.o'
 
-            py_h_location = get_paths()["include"]
             cmd = [compiler,
                     *flags.strip().split(),
-                    "-I"+py_h_location,
+                    *py_flags.strip().split(),
                     "-c",
                     in_file,
                     "-o",
@@ -195,6 +198,7 @@ def create_shared_library(codegen,
 
         cmd = [compiler,
                 *flags.strip().split(),
+                *py_libs.strip().split(),
                 "-shared",
                 *(f+'.o' for f in dep_mods),
                 "-o",

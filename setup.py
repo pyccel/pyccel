@@ -47,6 +47,7 @@ install_requires = [
     'tabulate',
     'termcolor',
     'fastcache',
+    'python-config'
 ]
 
 def setup_package():
