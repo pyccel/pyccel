@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import sys
+import platform
 
 from pyccel.epyccel import epyccel
 from modules        import loops
@@ -8,6 +8,7 @@ from modules        import loops
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
+            pytest.mark.xfail(platform.system() == 'Windows', reason = "Wrong libraries. cannot find -lmsvcr140"),
             pytest.mark.c]
         )
     ],
