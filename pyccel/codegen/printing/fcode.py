@@ -2135,22 +2135,20 @@ class FCodePrinter(CodePrinter):
         for b,c in zip(expr.args[1:],args[1:]):
             bdtype    = sp_dtype(b)
             if adtype == 'integer' and bdtype == 'integer':
-                b = 'real({})'.format(self._print(b))
-            else:
-                b = self._print(b)
+                c = 'real({})'.format(c)
 
-            code = 'FLOOR({}/{},{})'.format(code, b, default_precision['real'])
+            code = 'FLOOR({}/{},{})'.format(code, c, default_precision['real'])
         return code
 
     def _print_PyccelAnd(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, PyccelOr) else a 
+        args = ['('+a+')' if isinstance(b, PyccelOr) else a
                 for a,b in zip(args, expr.args)]
         return ' .and. '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelOr(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, PyccelAnd) else a 
+        args = ['('+a+')' if isinstance(b, PyccelAnd) else a
                 for a,b in zip(args, expr.args)]
         return ' .or. '.join(self._print(a) for a in expr.args)
 

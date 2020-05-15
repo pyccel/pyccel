@@ -500,7 +500,6 @@ class SyntaxParser(BasicParser):
         second = self._visit(stmt.second)
 
         assoc  = isinstance(stmt.second, AssociativeParenthesisNode)
-        cond   = isinstance(second, (PyccelOr, PyccelAnd))
 
         if stmt.value == 'and':
             if not assoc and isinstance(second, PyccelOr):

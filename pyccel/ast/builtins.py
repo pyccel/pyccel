@@ -366,6 +366,10 @@ class Len(Function):
     def dtype(self):
         return 'int'
 
+    @property
+    def rank(self):
+        return 0
+
 #==============================================================================
 class List(Tuple):
     """ Represent lists in the code with dynamic memory management."""

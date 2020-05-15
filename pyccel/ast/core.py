@@ -1875,8 +1875,6 @@ class ForAll(Basic):
     def body(self):
         return self._args[3]
 
-
-
 class ForIterator(For):
 
     """Class that describes iterable classes defined by the user."""
@@ -1937,7 +1935,7 @@ class ForIterator(For):
     @property
     def ranges(self):
         return get_iterable_ranges(self.iterable)
-S
+
 class ConstructorCall(AtomicExpr):
 
     """
