@@ -10,6 +10,7 @@ from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -304,8 +305,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 for a,b in zip(args, expr.args)]
 
         code   = args[0]
-        for b,c in zip(expr.args[1:],args[1:]):
-            code = '{} // {}'.format(code, c, default_precision['real'])
+        for c in args[1:]:
+            code = '{} // {}'.format(code, c)
         return code
 
     def _print_PyccelAnd(self, expr):

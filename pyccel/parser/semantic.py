@@ -2216,6 +2216,7 @@ class SemanticParser(BasicParser):
 
         else:
             d_var  = self._infere_type(rhs, **settings)
+
             d_list = d_var if isinstance(d_var, list) else [d_var]
 
             for d in d_list:
