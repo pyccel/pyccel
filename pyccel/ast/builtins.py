@@ -281,7 +281,7 @@ class PythonTuple(Function):
 
     @property
     def rank(self):
-        return max(getattr(a,'rank',0) for a in self._args)+1
+        return max(a.rank if a.rank else 0 for a in self._args)+1
 
     def __getitem__(self,i):
         return self._args[i]

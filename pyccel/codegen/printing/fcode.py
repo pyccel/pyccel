@@ -27,7 +27,6 @@ from sympy.core.numbers import Infinity as INF
 from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
-from pyccel.ast.core import Add, Mul, Pow
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Module
@@ -43,6 +42,12 @@ from pyccel.ast.core import (Assign, Variable,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName, DottedVariable,
                              If)
+
+
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+
 from pyccel.ast.core import create_variable
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
@@ -52,6 +57,7 @@ from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
+from pyccel.ast.type_inference import sp_dtype
 from pyccel.ast.numbers import Integer, Float
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -936,7 +942,7 @@ class FCodePrinter(CodePrinter):
 
         # TODO improve
 
-        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, Add))) and
+        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, PyccelAdd))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
             enable_alloc = False
@@ -1224,24 +1230,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_DataType(self, expr):
         return self._print(expr.name)
-
-    def _print_Equality(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        a = expr.args[0]
-        b = expr.args[1]
-        if a.is_Boolean and b.is_Boolean:
-            return '{} .eqv. {}'.format(lhs, rhs)
-        return '{0} == {1} '.format(lhs, rhs)
-
-    def _print_Unequality(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        a = expr.args[0]
-        b = expr.args[1]
-        if a.is_Boolean and b.is_Boolean:
-            return '{} .neqv. {}'.format(lhs, rhs)
-        return '{0} /= {1} '.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_BooleanTrue(self, expr):
         return '.True.'
@@ -1567,14 +1555,14 @@ class FCodePrinter(CodePrinter):
         like   = expr.like
 
         if isinstance(op, AddOp):
-            rhs = Add(lhs, rhs)
+            rhs = PyccelAdd(lhs, rhs)
         elif isinstance(op, MulOp):
-            rhs = Mul(lhs, rhs)
+            rhs = PyccelMul(lhs, rhs)
         elif isinstance(op, SubOp):
-            rhs = Add(lhs, Mul(Integer(-1), rhs))
+            rhs = PyccelMinus(lhs, rhs)
         # TODO fix bug with division of integers
         elif isinstance(op, DivOp):
-            rhs = Mul(lhs, Pow(rhs, Integer(-1)))
+            rhs = PyccelDiv(lhs, rhs)
         else:
             raise ValueError('Unrecognized operation', op)
 
@@ -1583,10 +1571,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Range(self, expr):
         start = self._print(expr.start)
-        if isinstance(expr.stop,Integer):
-            stop  = self._print(Integer(expr.stop-1))
-        else:
-            stop  = self._print(Add(expr.stop,Integer(-1),evaluate=False))
+        stop  = self._print(expr.stop) + '-' + self._print(Integer(1))
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
@@ -2093,47 +2078,125 @@ class FCodePrinter(CodePrinter):
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
 
-    def _print_Add(self, expr):
-        return CodePrinter._print_Add(self, expr)
+    def _print_PyccelPow(self, expr):
+        base = expr.args[0]
+        e    = expr.args[1]
 
-#    def _print_Add(self, expr):
-#        # purpose: print complex numbers nicely in Fortran.
-#        # collect the purely real and purely imaginary parts:
-#        pure_real = []
-#        pure_imaginary = []
-#        mixed = []
-#        for arg in expr.args:
-#            if arg.is_number and arg.is_real:
-#                pure_real.append(arg)
-#            elif arg.is_number and arg.is_imaginary:
-#                pure_imaginary.append(arg)
-#            else:
-#                mixed.append(arg)
-#        if len(pure_imaginary) > 0:
-#            if len(mixed) > 0:
-#                PREC = precedence(expr)
-#                term = Add(*mixed)
-#                t = self._print(term)
-#                if t.startswith('-'):
-#                    sign = "-"
-#                    t = t[1:]
-#                else:
-#                    sign = "+"
-#                if precedence(term) < PREC:
-#                    t = "(%s)" % t
-#
-#                return "cmplx(%s,%s) %s %s" % (
-#                    self._print(Add(*pure_real)),
-#                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
-#                    sign, t,
-#                )
-#            else:
-#                return "cmplx(%s,%s)" % (
-#                    self._print(Add(*pure_real)),
-#                    self._print(-S.ImaginaryUnit*Add(*pure_imaginary)),
-#                )
-#        else:
-#            return CodePrinter._print_Add(self, expr)
+        if isinstance(base, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
+            base = '(' + self._print(base) + ')'
+        else:
+            base = self._print(base)
+
+        if isinstance(e, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
+            e = '(' + self._print(e) + ')'
+        else:
+            e = self._print(e)
+
+        return '{} ** {}'.format(base, e)
+
+    def _print_PyccelAdd(self, expr):
+        return ' + '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMinus(self, expr):
+        return ' - '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMul(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+        return ' * '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+
+        dtypes = [sp_dtype(a) for a in expr.args]
+        if all(a == 'integer' for a in dtypes):
+            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+        return ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelMod(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+        code = args[0]
+        for b in args[1:]:
+            code = 'MODULO({},{})'.format(code, b)
+        return code
+
+    def _print_PyccelFloorDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv))) else a
+                for a,b in zip(args, expr.args)]
+
+        code   = args[0]
+        adtype = sp_dtype(expr.args[0])
+        for b,c in zip(expr.args[1:],args[1:]):
+            bdtype    = sp_dtype(b)
+            if adtype == 'integer' and bdtype == 'integer':
+                b = 'real({})'.format(self._print(b))
+            else:
+                b = self._print(b)
+
+            code = 'FLOOR({}/{},{})'.format(code, b, default_precision['real'])
+        return code
+
+    def _print_PyccelAnd(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, PyccelOr) else a 
+                for a,b in zip(args, expr.args)]
+        return ' .and. '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelOr(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, PyccelAnd) else a 
+                for a,b in zip(args, expr.args)]
+        return ' .or. '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelEq(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        a = sp_dtype(expr.args[0])
+        b = sp_dtype(expr.args[1])
+
+        if a == 'bool' and b == 'bool':
+            return '{} .eqv. {}'.format(lhs, rhs)
+        return '{0} == {1} '.format(lhs, rhs)
+
+    def _print_PyccelNe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        a = sp_dtype(expr.args[0])
+        b = sp_dtype(expr.args[1])
+
+        if a == 'bool' and b == 'bool':
+            return '{} .neqv. {}'.format(lhs, rhs)
+        return '{0} /= {1} '.format(lhs, rhs)
+
+    def _print_PyccelLt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} < {1}'.format(lhs, rhs)
+
+    def _print_PyccelLe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} <= {1}'.format(lhs, rhs)
+
+    def _print_PyccelGt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} > {1}'.format(lhs, rhs)
+
+    def _print_PyccelGe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} >= {1}'.format(lhs, rhs)
+
+    def _print_PyccelNot(self, expr):
+        a = self._print(expr.args[0])
+        return '.not. {}'.format(a)
 
     def _print_Header(self, expr):
         return ''
@@ -2198,31 +2261,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_int(self, expr):
         return str(expr)
-
-    def _print_Mul(self, expr):
-        # purpose: print complex numbers nicely in Fortran.
-        if expr.is_number and expr.is_imaginary:
-            return "cmplx(0,%s)" % (
-                self._print(-S.ImaginaryUnit*expr)
-            )
-        else:
-            return CodePrinter._print_Mul(self, expr)
-
-    def _print_Pow(self, expr):
-        PREC = precedence(expr)
-        if expr.exp == -1:
-            one = Float(1.0)
-            code = '{0}/{1}'.format(self._print(one), \
-                                    self.parenthesize(expr.base, PREC))
-            return code
-        elif expr.exp == 0.5:
-            if expr.base.is_integer:
-                # Fortan intrinsic sqrt() does not accept integer argument
-                return 'sqrt(real(%s, kind(0d0)))' % self._print(expr.base)
-            else:
-                return 'sqrt(%s)' % self._print(expr.base)
-        else:
-            return CodePrinter._print_Pow(self, expr)
 
     def _print_Float(self, expr):
         printed = CodePrinter._print_Float(self, expr)
@@ -2300,7 +2338,7 @@ class FCodePrinter(CodePrinter):
         if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
-            end = Add(expr.end, Integer(-1))
+            end = PyccelAdd(expr.end, Integer(-1))
             end = self._print(end)
         return '{0}:{1}'.format(start, end)
 

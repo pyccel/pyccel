@@ -16,8 +16,6 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.assumptions   import StdFactKB
-from sympy.core.relational    import Relational
-from sympy.core.relational    import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Gt as sp_Gt, Le as sp_Le, Ge as sp_Ge
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
@@ -35,14 +33,14 @@ from sympy.utilities.iterables          import iterable
 from sympy.utilities.misc               import filldedent
 
 
-from .basic import Basic, PyccelAstNode
-from .builtins import Enumerate, Len, List, Map, Range, Zip, PythonTuple
+from .basic     import Basic, PyccelAstNode
+from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
-from .numbers import BooleanTrue, BooleanFalse, Integer
 
+from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
@@ -50,9 +48,22 @@ from .functionalexpr import FunctionalFor
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 # NOTE: commented-out symbols are never used in Pyccel
 __all__ = (
-    'Add','Mul','Pow',
-    'And','Or','Not',
-    'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
+    'PyccelPow',
+    'PyccelAdd',
+    'PyccelMinus',
+    'PyccelMul',
+    'PyccelDiv',
+    'PyccelMod',
+    'PyccelFloorDiv',
+    'PyccelEq',
+    'PyccelNe',
+    'PyccelLt',
+    'PyccelLe',
+    'PyccelGt',
+    'PyccelGe',
+    'PyccelAnd',
+    'PyccelOr',
+    'PyccelNot',
     'AddOp',
     'AliasAssign',
     'AnnotatedComment',
@@ -108,7 +119,6 @@ __all__ = (
     'ParallelBlock',
     'ParallelRange',
     'Pass',
-    'Pow',
     'Product',
     'Program',
     'PythonFunction',
@@ -179,85 +189,108 @@ class AstFunctionResultError(AstError):
 
 # Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
-class Pow(sp_Pow, sp_Boolean, PyccelAstNode):
-    def __new__(cls, *args, evaluate = False, **kwargs):
-        return sp_Pow.__new__(cls, *args, evaluate = evaluate, **kwargs)
-
-    def __init__(self, *args, evaluate = False, **kwargs):
+class PyccelPow(Expr, PyccelAstNode):
+    pass
+class PyccelAdd(Expr, PyccelAstNode):
+    @property
+    def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
-        self._rank = max(getattr(a,'rank',0) for a in self._args)
-
-    def _eval_subs(self, old, new):
-        args = self.args
-        args_ = [self.base._subs(old, new),self.exp._subs(old, new)]
-        args  = [args_[i] if args_[i] else args[i] for i in range(len(args))]
-        expr = Pow(args[0], args[1], evaluate=False)
-        return expr
-
-    def _eval_evalf(self,prec):
-        return sp_Pow(self.base,self.exp).evalf(prec)
-
-    @property
-    def is_real(self):
-        return self._args[0].is_real and self._args[1].is_real
-
-    @property
-    def is_integer(self):
-        return self._args[0].is_integer and self._args[1].is_integer
-
-    @property
-    def is_complex(self):
-        return self._args[0].is_complex and self._args[1].is_complex
-
-class Add(sp_Add, sp_Boolean, PyccelAstNode):
-    def __new__(cls, *args, evaluate = False, **kwargs):
-        return sp_Add.__new__(cls, *args, evaluate = evaluate, **kwargs)
-
+        return max(getattr(a,'rank',0) for a in self._args)
+class PyccelMul(Expr, PyccelAstNode):
     @property
     def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
         return max(getattr(a,'rank',0) for a in self._args)
 
-class Mul(sp_Mul, sp_Boolean, PyccelAstNode):
-    def __new__(cls, *args, evaluate = False, **kwargs):
-        return sp_Mul.__new__(cls, *args, evaluate = evaluate, **kwargs)
+class PyccelMinus(PyccelAdd):
+    pass
 
-    @property
-    def rank(self):
-        # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
-        return max(getattr(a,'rank',0) for a in self._args)
+class PyccelDiv(Expr, PyccelAstNode):
+    pass
+class PyccelMod(Expr, PyccelAstNode):
+    pass
+class PyccelFloorDiv(Expr, PyccelAstNode):
+    pass
 
 #TODO add Functioncall class and use it instead of UndefinedFunction of sympy
 #because  And(f(x,y), expr) won't work
 #class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
 #    pass
 
-class Eq(sp_Eq, PyccelAstNode):
+class PyccelEq(Expr, PyccelAstNode):
     pass
-class Ne(sp_Ne, PyccelAstNode):
+class PyccelNe(Expr, PyccelAstNode):
     pass
-class Lt(sp_Lt, PyccelAstNode):
+class PyccelLt(Expr, PyccelAstNode):
     pass
-class Le(sp_Le, PyccelAstNode):
+class PyccelLe(Expr, PyccelAstNode):
     pass
-class Gt(sp_Gt, PyccelAstNode):
+class PyccelGt(Expr, PyccelAstNode):
     pass
-class Ge(sp_Ge, PyccelAstNode):
+class PyccelGe(Expr, PyccelAstNode):
+    pass
+class PyccelAnd(Expr, PyccelAstNode):
+    pass
+class PyccelOr(Expr, PyccelAstNode):
+    pass
+class PyccelNot(Expr, PyccelAstNode):
     pass
 
-class And(sp_And, PyccelAstNode):
-    def __new__(cls, *args, **options):
-        args = [type(e).__mro__[1](*e.args, evaluate=False) if isinstance(e,(Eq,Ne,Lt,Le,Gt,Ge)) else e for e in args]
-        return sp_And.__new__(cls, *args, **options)
-class Or(sp_Or, PyccelAstNode):
-    def __new__(cls, *args, **options):
-        args = [type(e).__mro__[1](*e.args, evaluate=False) if isinstance(e,(Eq,Ne,Lt,Le,Gt,Ge)) else e for e in args]
-        return sp_Or.__new__(cls, *args, **options)
-class Not(sp_Not, PyccelAstNode):
-    def __new__(cls, *args, **options):
-        args = [type(e).__mro__[1](*e.args, evaluate=False) if isinstance(e,(Eq,Ne,Lt,Le,Gt,Ge)) else e for e in args]
-        return sp_Not.__new__(cls, *args, **options)
+# The following are defined to be sympy approved nodes. If there is something
+# smaller that could be used, that would be preferable. We only use them as
+# tokens.
 
+class Is(Basic):
+
+    """Represents a is expression in the code.
+
+    Examples
+    --------
+    >>> from pyccel.ast import Is
+    >>> from pyccel.ast import Nil
+    >>> from sympy.abc import x
+    >>> Is(x, Nil())
+    Is(x, None)
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+
+class IsNot(Basic):
+
+    """Represents a is expression in the code.
+
+    Examples
+    --------
+    >>> from pyccel.ast import IsNot
+    >>> from pyccel.ast import Nil
+    >>> from sympy.abc import x
+    >>> IsNot(x, Nil())
+    IsNot(x, None)
+    """
+
+    def __new__(cls, lhs, rhs):
+        return Basic.__new__(cls, lhs, rhs)
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+
+Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
 #      - add examples
@@ -1907,63 +1940,7 @@ class ForIterator(For):
     @property
     def ranges(self):
         return get_iterable_ranges(self.iterable)
-
-
-# The following are defined to be sympy approved nodes. If there is something
-# smaller that could be used, that would be preferable. We only use them as
-# tokens.
-
-class Is(Basic):
-
-    """Represents a is expression in the code.
-
-    Examples
-    --------
-    >>> from pyccel.ast import Is
-    >>> from pyccel.ast import Nil
-    >>> from sympy.abc import x
-    >>> Is(x, Nil())
-    Is(x, None)
-    """
-
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-
-class IsNot(Basic):
-
-    """Represents a is expression in the code.
-
-    Examples
-    --------
-    >>> from pyccel.ast import IsNot
-    >>> from pyccel.ast import Nil
-    >>> from sympy.abc import x
-    >>> IsNot(x, Nil())
-    IsNot(x, None)
-    """
-
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-
-
+S
 class ConstructorCall(AtomicExpr):
 
     """
@@ -4658,7 +4635,6 @@ class Slice(Basic):
             end = str(self.end)
         return '{0} : {1}'.format(start, end)
 
-
 class Assert(Basic):
 
     """Represents a assert statement in the code.
@@ -5193,12 +5169,12 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(Integer,Variable,Slice,PyccelAstNode, Function)):
+        if isinstance(s,(Py_Integer,Variable,Slice,PyccelAstNode, Function)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
-            new_shape.append(Integer(s.p))
+            new_shape.append(Py_Integer(s.p))
         elif isinstance(s, int):
-            new_shape.append(Integer(s))
+            new_shape.append(Py_Integer(s))
         else:
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
 
