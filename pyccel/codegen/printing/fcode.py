@@ -2127,7 +2127,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelFloorDiv(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv))) else a
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
                 for a,b in zip(args, expr.args)]
 
         code   = args[0]

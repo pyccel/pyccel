@@ -206,18 +206,12 @@ class PyccelMul(Expr, PyccelAstNode):
 
 class PyccelMinus(PyccelAdd):
     pass
-
 class PyccelDiv(Expr, PyccelAstNode):
     pass
 class PyccelMod(Expr, PyccelAstNode):
     pass
 class PyccelFloorDiv(Expr, PyccelAstNode):
     pass
-
-#TODO add Functioncall class and use it instead of UndefinedFunction of sympy
-#because  And(f(x,y), expr) won't work
-#class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
-#    pass
 
 class PyccelEq(Expr, PyccelAstNode):
     pass
@@ -238,9 +232,10 @@ class PyccelOr(Expr, PyccelAstNode):
 class PyccelNot(Expr, PyccelAstNode):
     pass
 
-# The following are defined to be sympy approved nodes. If there is something
-# smaller that could be used, that would be preferable. We only use them as
-# tokens.
+#TODO add Functioncall class and use it instead of UndefinedFunction of sympy
+#because  And(f(x,y), expr) won't work
+#class UndefinedFunction(sp_UndefinedFunction, PyccelAstNode):
+#    pass
 
 class Is(Basic):
 
