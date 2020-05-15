@@ -30,10 +30,10 @@ def write_python_wrapper(expr, printer):
     code += "))\n        return NULL;\n    "
 
     if len(expr.results)==0:
-        func_call = UndefinedFunction(expr.name)(*expr.arguments)
+        func_call = UndefinedFunction(str(expr.name))(*expr.arguments)
     else:
         results = expr.results if len(expr.results)>1 else expr.results[0]
-        func_call = Assign(results,UndefinedFunction(expr.name)(*expr.arguments))
+        func_call = Assign(results,UndefinedFunction(str(expr.name))(*expr.arguments))
     code += printer._print(func_call)
     code += '\n'
 
