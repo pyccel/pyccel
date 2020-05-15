@@ -4,12 +4,12 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors     import Errors
-from pyccel.parser            import Parser
-from pyccel.codegen.codegen   import Codegen
-from pyccel.codegen.utilities import construct_flags
-from pyccel.codegen.utilities import compile_files
-from pyccel.codegen.f2py      import create_shared_library
+from pyccel.parser.errors               import Errors
+from pyccel.parser                      import Parser
+from pyccel.codegen.codegen             import Codegen
+from pyccel.codegen.utilities           import construct_flags
+from pyccel.codegen.utilities           import compile_files
+from pyccel.codegen.python_wrapper      import create_shared_library
 
 __all__ = ['execute_pyccel']
 
