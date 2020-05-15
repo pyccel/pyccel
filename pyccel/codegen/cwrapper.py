@@ -80,8 +80,6 @@ def create_c_wrapper(mod_name, codegen):
 
 def create_c_setup(mod_name, dependencies, compiler, flags):
     code  = "from setuptools import Extension, setup\n\n"
-    code += "import os\n"
-    code += "os.environ['CC'] = \"{0}\"\n\n".format(compiler)
 
     flags = flags.replace('"','\\"')
     deps  = ", ".join("r\"{0}.c\"".format(d) for d in dependencies)
