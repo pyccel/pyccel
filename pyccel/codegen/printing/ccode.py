@@ -7,6 +7,12 @@ from sympy.printing.precedence import precedence
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import CommentBlock, Comment
 
+
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+
+
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
@@ -151,6 +157,28 @@ class CCodePrinter(CodePrinter):
             code += self._print(expr.stmt)+'\n'
         code +='return {0};'.format(self._print(expr.expr[0]))
         return code
+
+    def _print_PyccelAdd(self, expr):
+        return ' + '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMinus(self, expr):
+        return ' - '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMul(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+        return ' * '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+
+        dtypes = [sp_dtype(a) for a in expr.args]
+        if all(a == 'integer' for a in dtypes):
+            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+        return  ' / '.join(self._print(a) for a in args)
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)

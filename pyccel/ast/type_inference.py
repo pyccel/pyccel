@@ -19,8 +19,8 @@ def sp_dtype(expr):
 
     """
 
-    if isinstance(expr,(PyccelEq,PyccelNe, PyccelLt, PyccelLe,  
-                          PyccelGt, PyccelGe, PyccelAnd, PyccelOr, 
+    if isinstance(expr,(PyccelEq,PyccelNe, PyccelLt, PyccelLe,
+                          PyccelGt, PyccelGe, PyccelAnd, PyccelOr,
                           PyccelNot, Is, IsNot)):
         return 'bool'
     elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, PyccelFloorDiv)):

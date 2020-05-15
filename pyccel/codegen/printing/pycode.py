@@ -10,6 +10,10 @@ from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock
 
@@ -249,6 +253,107 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_Module(self, expr):
         return '\n'.join(self._print(e) for e in expr.body)
+
+    def _print_PyccelPow(self, expr):
+        base = expr.args[0]
+        e    = expr.args[1]
+
+        if isinstance(base, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
+            base = '(' + self._print(base) + ')'
+        else:
+            base = self._print(base)
+
+        if isinstance(e, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
+            e = '(' + self._print(e) + ')'
+        else:
+            e = self._print(e)
+
+        return '{} ** {}'.format(base, e)
+
+    def _print_PyccelAdd(self, expr):
+        return ' + '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMinus(self, expr):
+        return ' - '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMul(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+        return ' * '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+
+        return ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelMod(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+        code = args[0]
+        for b in args[1:]:
+            code = '{} % {}'.format(code, b)
+        return code
+
+    def _print_PyccelFloorDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
+                for a,b in zip(args, expr.args)]
+
+        code   = args[0]
+        for b,c in zip(expr.args[1:],args[1:]):
+            code = '{} // {}'.format(code, c, default_precision['real'])
+        return code
+
+    def _print_PyccelAnd(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, PyccelOr) else a
+                for a,b in zip(args, expr.args)]
+        return ' and '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelOr(self, expr):
+        args = [self._print(a) for a in expr.args]
+        args = ['('+a+')' if isinstance(b, PyccelAnd) else a
+                for a,b in zip(args, expr.args)]
+        return ' or '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelEq(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} == {1} '.format(lhs, rhs)
+
+    def _print_PyccelNe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} != {1} '.format(lhs, rhs)
+
+    def _print_PyccelLt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} < {1}'.format(lhs, rhs)
+
+    def _print_PyccelLe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} <= {1}'.format(lhs, rhs)
+
+    def _print_PyccelGt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} > {1}'.format(lhs, rhs)
+
+    def _print_PyccelGe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} >= {1}'.format(lhs, rhs)
+
+    def _print_PyccelNot(self, expr):
+        a = self._print(expr.args[0])
+        return 'not {}'.format(a)
+
 #==============================================================================
 def pycode(expr, **settings):
     """ Converts an expr to a string of Python code
