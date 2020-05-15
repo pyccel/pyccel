@@ -8,7 +8,7 @@ from pyccel.parser.errors     import Errors
 from pyccel.parser            import Parser
 from pyccel.codegen.codegen   import Codegen
 from pyccel.codegen.utilities import construct_flags
-from pyccel.codegen.utilities import compile_fortran
+from pyccel.codegen.utilities import compile_files
 from pyccel.codegen.f2py      import create_shared_library
 
 __all__ = ['execute_pyccel']
@@ -203,17 +203,18 @@ def execute_pyccel(fname, *,
     # TODO: stop at object files, do not compile executable
     #       This allows for properly linking program to modules
     #
-    try:
-        compile_fortran(fname, f90exec, flags,
-                        binary=None,
-                        verbose=verbose,
-                        modules=modules,
-                        is_module=codegen.is_module,
-                        output=pyccel_dirpath,
-                        libs=libs)
-    except Exception:
-        handle_error('Fortran compilation')
-        raise
+    if not (language == "c" and codegen.is_module):
+        try:
+            compile_files(fname, f90exec, flags,
+                            binary=None,
+                            verbose=verbose,
+                            modules=modules,
+                            is_module=codegen.is_module,
+                            output=pyccel_dirpath,
+                            libs=libs)
+        except Exception:
+            handle_error('Fortran compilation')
+            raise
 
     # For a program stop here
     if codegen.is_program:
