@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import sys
+import platform
 
 from pyccel.epyccel import epyccel
 from modules        import loops
@@ -8,7 +8,7 @@ from modules        import loops
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="f2py_module file not created for c"),
+            pytest.mark.xfail(platform.system() == 'Windows', reason = "Wrong libraries. cannot find -lmsvcr140"),
             pytest.mark.c]
         )
     ],
@@ -105,10 +105,18 @@ def test_enumerate_on_1d_array():
 
     assert np.array_equal( f1(z), f2(z) )
 
-def test_zip_prod(language):
+@pytest.mark.parametrize( 'lang', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="zip and functional for not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zip_prod(lang):
 
     f1 = loops.zip_prod
-    f2 = epyccel( f1, language = language )
+    f2 = epyccel( f1, language = lang )
 
     assert np.array_equal( f1(10), f2(10) )
 
