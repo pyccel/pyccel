@@ -190,12 +190,14 @@ class AstFunctionResultError(AstError):
 # Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
 class PyccelPow(Expr, PyccelAstNode):
-    pa
+    pass
+
 class PyccelAdd(Expr, PyccelAstNode):
     @property
     def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
         return max(getattr(a,'rank',0) for a in self._args)
+
 class PyccelMul(Expr, PyccelAstNode):
     @property
     def rank(self):
