@@ -125,6 +125,10 @@ def epyccel_seq(function_or_module,
 
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)
+    if verbose:
+        print("Looking for : ",module_name, " in ",epyccel_dirpath)
+        onlyfiles = [f for f in os.listdir(epyccel_dirpath) if os.path.isfile(os.path.join(epyccel_dirpath, f))]
+        print("folder contains : ",onlyfiles)
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 
