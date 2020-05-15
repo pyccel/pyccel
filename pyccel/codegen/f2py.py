@@ -179,7 +179,7 @@ def create_shared_library(codegen,
             f.writelines(setup_code)
 
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
-        cmd = [sys.executable, setup_filename, "buildext"]
+        cmd = [sys.executable, setup_filename, "build"]
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         out, err = p.communicate()
         if verbose:
