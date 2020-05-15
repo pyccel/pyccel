@@ -246,6 +246,11 @@ def execute_pyccel(fname, *,
     sharedlib_filename = os.path.basename(sharedlib_filepath)
     target = os.path.join(folder, sharedlib_filename)
     shutil.move(sharedlib_filepath, target)
+    if not os.name =='nt':
+        import subprocess
+        p = subprocess.Popen(["ls", "-l", sharedlib_filepath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        out, err = p.communicate()
+        print(out)
     sharedlib_filepath = target
 
     # Change working directory back to starting point
