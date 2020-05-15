@@ -38,10 +38,12 @@ def call_test_codegen(f):
     errors = Errors()
     errors.reset()
 
+@pytest.mark.fortran
 @pytest.mark.parametrize( "f", passing_files )
 def test_passing_codegen(f):
     call_test_codegen(f)
 
+@pytest.mark.fortran
 @pytest.mark.parametrize( "f", failing_files )
 @pytest.mark.xfail
 def test_failing_codegen(f):

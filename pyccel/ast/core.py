@@ -190,7 +190,7 @@ class AstFunctionResultError(AstError):
 # Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
 class PyccelPow(Expr, PyccelAstNode):
-    pass
+    pa
 class PyccelAdd(Expr, PyccelAstNode):
     @property
     def rank(self):
