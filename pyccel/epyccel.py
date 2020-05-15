@@ -125,15 +125,6 @@ def epyccel_seq(function_or_module,
 
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)
-    if verbose:
-        print("Looking for : ",module_name, " in ",epyccel_dirpath)
-        onlyfiles = [f for f in os.listdir(epyccel_dirpath) if os.path.isfile(os.path.join(epyccel_dirpath, f))]
-        print("folder contains : ",onlyfiles)
-        import subprocess
-        p = subprocess.Popen(["ls", "-l", epyccel_dirpath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        out, err = p.communicate()
-        print(out)
-        print(err)
 
     # http://ballingt.com/import-invalidate-caches
     # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches

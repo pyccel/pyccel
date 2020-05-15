@@ -21,22 +21,22 @@ def language(request):
 
 def test_sum_natural_numbers(language):
     f1 = loops.sum_natural_numbers
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 42 ) == f2( 42 )
 
 def test_factorial(language):
     f1 = loops.factorial
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 11 ) == f2( 11 )
 
 def test_fibonacci(language):
     f1 = loops.fibonacci
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 42 ) == f2( 42 )
 
 def test_double_loop(language):
     f1 = loops.double_loop
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 2 ) == f2( 2 )
 
 def test_double_loop_on_2d_array_C():
