@@ -8,7 +8,7 @@ import glob
 from pyccel.ast.f2py                import as_static_function_call
 from pyccel.codegen.printing.fcode  import fcode
 from .utilities import language_extension
-from .cwrapper import create_c_wrapper
+from .cwrapper import create_c_wrapper, create_c_setup
 
 __all__ = ['compile_f2py', 'create_shared_library']
 
@@ -162,9 +162,6 @@ def create_shared_library(codegen,
         sharedlib_modname = module_name
 
     if language == 'c':
-        from sysconfig import get_paths
-        from shutil import which
-
         wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
         wrapper_filename_root = '{}_wrapper'.format(module_name)
         wrapper_filename = '{}.c'.format(wrapper_filename_root)
@@ -173,51 +170,30 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         dep_mods = (wrapper_filename_root, *dep_mods)
-        python_config = which("python3-config")
-        if python_config == None:
-            python_config = which("python-config")
-        if python_config == None:
-            from sys import version_info
-            python_config = which("python3"+str(version_info[1])+"-config")
-        assert(python_config is not None)
-        p = subprocess.Popen([python_config, "--cflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        py_flags, _ = p.communicate()
-        p = subprocess.Popen([python_config, "--ldflags"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        py_libs, _ = p.communicate()
+        setup_code = create_c_setup(sharedlib_modname, dep_mods, compiler, flags)
+        setup_filename = "setup_{}.py".format(module_name)
 
-        for f in dep_mods:
-            in_file = f+'.c'
-            out_file = f+'.o'
+        with open(setup_filename, 'w') as f:
+            f.writelines(setup_code)
 
-            cmd = [compiler,
-                    *flags.strip().split(),
-                    *py_flags.strip().split(),
-                    "-c",
-                    in_file,
-                    "-o",
-                    out_file]
-            if verbose:
-                print(' '.join(cmd))
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-            _, err = p.communicate()
-            if len(err)>0:
-                print(err)
-                raise RuntimeError("Failed to build module")
-
-        cmd = [compiler,
-                *flags.strip().split(),
-                *py_libs.strip().split(),
-                "-shared",
-                *(f+'.o' for f in dep_mods),
-                "-o",
-                sharedlib_modname+'.so']
-        if verbose:
-            print(' '.join(cmd))
+        setup_filename = os.path.join(pyccel_dirpath, setup_filename)
+        cmd = [sys.executable, setup_filename, "build"]
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        _, err = p.communicate()
+        out, err = p.communicate()
+        if verbose:
+            print(out)
         if len(err)>0:
             print(err)
             raise RuntimeError("Failed to build module")
+
+        cmd = [sys.executable, setup_filename, "install", "--prefix="+pyccel_dirpath, "--install-lib="+pyccel_dirpath]
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        out, err = p.communicate()
+        if verbose:
+            print(out)
+        if len(err)>0:
+            print(err)
+            raise RuntimeError("Failed to install module")
 
     elif language == 'fortran':
         # Construct f2py interface for assembly and write it to file f2py_MOD.f90
@@ -236,17 +212,18 @@ def create_shared_library(codegen,
         # ...
 
         # Create MOD.so shared library
-        extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
-        compile_f2py(f2py_filename,
-                     language    = language,
-                     modulename  = sharedlib_modname,
-                     libs        = (),
-                     libdirs     = (),
-                     includes    = object_files,  # TODO: this is not an include...
-                     extra_args  = extra_args,
-                     compiler    = compiler,
-                     mpi_compiler= mpi_compiler,
-                     accelerator = accelerator)
+        if language == 'fortran':
+            extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
+            compile_f2py(f2py_filename,
+                         language    = language,
+                         modulename  = sharedlib_modname,
+                         libs        = (),
+                         libdirs     = (),
+                         includes    = object_files,  # TODO: this is not an include...
+                         extra_args  = extra_args,
+                         compiler    = compiler,
+                         mpi_compiler= mpi_compiler,
+                         accelerator = accelerator)
 
     # Obtain absolute path of newly created shared library
 
