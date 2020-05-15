@@ -161,6 +161,8 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
+    sharedlib_folder = ''
+
     if language == 'c':
         wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
         wrapper_filename_root = '{}_wrapper'.format(module_name)
@@ -186,14 +188,7 @@ def create_shared_library(codegen,
             print(err)
             raise RuntimeError("Failed to build module")
 
-        cmd = [sys.executable, setup_filename, "install", "--prefix="+pyccel_dirpath, "--install-lib="+pyccel_dirpath]
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        out, err = p.communicate()
-        if verbose:
-            print(out)
-        if len(err)>0:
-            print(err)
-            raise RuntimeError("Failed to install module")
+        sharedlib_folder += 'build/lib*/'
 
     elif language == 'fortran':
         # Construct f2py interface for assembly and write it to file f2py_MOD.f90
@@ -232,7 +227,7 @@ def create_shared_library(codegen,
         extext = 'pyd'
     else:
         extext = 'so'
-    pattern = '{}*.{}'.format(sharedlib_modname, extext)
+    pattern = '{}{}*.{}'.format(sharedlib_folder, sharedlib_modname, extext)
     sharedlib_filename = glob.glob(pattern)[0]
     sharedlib_filepath = os.path.abspath(sharedlib_filename)
 
