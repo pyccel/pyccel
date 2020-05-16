@@ -199,7 +199,7 @@ class CCodePrinter(CodePrinter):
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
+            start, stop, step = [self._print(e) for e in expr.iterable.args]
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = '\n'.join(self._print(i) for i in expr.body.body)
