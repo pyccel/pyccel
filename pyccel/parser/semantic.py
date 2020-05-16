@@ -1551,10 +1551,7 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
-            expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
-        else:
-            expr_new = PyccelDiv(*args)
+        expr_new = PyccelDiv(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1564,10 +1561,7 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
-            expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
-        else:
-            expr_new = PyccelMod(*args)
+        expr_new = PyccelMod(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
@@ -1577,10 +1571,7 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
-            expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
-        else:
-            expr_new = PyccelFloorDiv(*args)
+        expr_new = PyccelFloorDiv(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
