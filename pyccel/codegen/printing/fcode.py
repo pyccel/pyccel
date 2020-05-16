@@ -46,7 +46,7 @@ from pyccel.ast.core import (Assign, Variable,
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
 from pyccel.ast.core import create_variable
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
@@ -1208,7 +1208,7 @@ class FCodePrinter(CodePrinter):
 #                    code_args = ', '.join(self._print(i) for i in func.arguments)
 #                    code_args = '{0}, {1}'.format(code_args, lhs_code)
 #                else:
-#            print('code_args > {0}'.format(code_args))
+#           F print('code_args > {0}'.format(code_args))
 #            code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
@@ -2082,75 +2082,74 @@ class FCodePrinter(CodePrinter):
         base = expr.args[0]
         e    = expr.args[1]
 
-        if isinstance(base, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
-            base = '(' + self._print(base) + ')'
-        else:
-            base = self._print(base)
+        base_c = self._print(base)
+        e_c = self._print(e)
 
-        if isinstance(e, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
-            e = '(' + self._print(e) + ')'
-        else:
-            e = self._print(e)
-
-        return '{} ** {}'.format(base, e)
+        return '{} ** {}'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
-        return ' - '.join(self._print(a) for a in expr.args)
+        args = [self._print(a) for a in expr.args]
+
+        if len(args) == 1:
+            return '-{}'.format(args[0])
+        return ' - '.join(a for a in args)
 
     def _print_PyccelMul(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
-        return ' * '.join(self._print(a) for a in expr.args)
+        return ' * '.join(a for a in args)
 
     def _print_PyccelDiv(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
 
         dtypes = [sp_dtype(a) for a in expr.args]
         if all(a == 'integer' for a in dtypes):
-            return ' / '.join('real({})'.format(self._print(a)) for a in args)
-        return ' / '.join(self._print(a) for a in args)
+            return ' / '.join('real({})'.format(a) for a in args)
+        return ' / '.join(a for a in args)
 
     def _print_PyccelMod(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
-        code = args[0]
-        for b in args[1:]:
-            code = 'MODULO({},{})'.format(code, b)
+
+        code   = args[0]
+        dtype  = sp_dtype(expr)
+        bdtype = sp_dtype(expr.args[0])
+        if dtype == 'real' and bdtype == 'integer':
+            code = 'real({})'.format(code)
+        for b,c in zip(expr.args[1:], args[1:]):
+            bdtype    = sp_dtype(b)
+            if dtype == 'real' and bdtype == 'integer':
+                c = 'real({})'.format(c)
+            code = 'MODULO({},{})'.format(code, c)
         return code
 
     def _print_PyccelFloorDiv(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
 
         code   = args[0]
         adtype = sp_dtype(expr.args[0])
+        dtype  = sp_dtype(expr)
         for b,c in zip(expr.args[1:],args[1:]):
             bdtype    = sp_dtype(b)
             if adtype == 'integer' and bdtype == 'integer':
                 c = 'real({})'.format(c)
-
+            adtype = bdtype
             code = 'FLOOR({}/{},{})'.format(code, c, default_precision['real'])
+            if dtype == 'real':
+                code = 'real({})'.format(code)
         return code
+
+    def _print_PyccelAssociativeParenthesis(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, PyccelOr) else a
-                for a,b in zip(args, expr.args)]
-        return ' .and. '.join(self._print(a) for a in expr.args)
+        return ' .and. '.join(a for a in args)
 
     def _print_PyccelOr(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, PyccelAnd) else a
-                for a,b in zip(args, expr.args)]
-        return ' .or. '.join(self._print(a) for a in expr.args)
+        return ' .or. '.join(a for a in args)
 
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])

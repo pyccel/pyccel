@@ -316,6 +316,9 @@ def test_funcs(language):
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
+def test_expressions():
+    pyccel_test("scripts/expressions.py",
+                output_dtype = bool)
 #------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",

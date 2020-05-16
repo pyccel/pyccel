@@ -189,42 +189,43 @@ class AstFunctionResultError(AstError):
 
 # Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
-class PyccelPow(Expr, PyccelAstNode):
-    pass
-
-class PyccelAdd(Expr, PyccelAstNode):
+class PyccelOperator(Expr, PyccelAstNode):
     @property
     def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
         return max(getattr(a,'rank',0) for a in self._args)
 
-class PyccelMul(Expr, PyccelAstNode):
-    @property
-    def rank(self):
-        # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
-        return max(getattr(a,'rank',0) for a in self._args)
-
+class PyccelPow(PyccelOperator):
+    p = 4
+class PyccelAdd(PyccelOperator):
+    p = 1
+class PyccelMul(PyccelOperator):
+    p = 2
 class PyccelMinus(PyccelAdd):
     pass
-class PyccelDiv(Expr, PyccelAstNode):
+class PyccelDiv(PyccelOperator):
+    p = 2
+class PyccelMod(PyccelOperator):
+    p = 2
+class PyccelFloorDiv(PyccelOperator):
+    p = 2
+
+class PyccelEq(PyccelOperator):
     pass
-class PyccelMod(Expr, PyccelAstNode):
+class PyccelNe(PyccelOperator):
     pass
-class PyccelFloorDiv(Expr, PyccelAstNode):
+class PyccelLt(PyccelOperator):
+    pass
+class PyccelLe(PyccelOperator):
+    pass
+class PyccelGt(PyccelOperator):
+    pass
+class PyccelGe(PyccelOperator):
     pass
 
-class PyccelEq(Expr, PyccelAstNode):
+class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
     pass
-class PyccelNe(Expr, PyccelAstNode):
-    pass
-class PyccelLt(Expr, PyccelAstNode):
-    pass
-class PyccelLe(Expr, PyccelAstNode):
-    pass
-class PyccelGt(Expr, PyccelAstNode):
-    pass
-class PyccelGe(Expr, PyccelAstNode):
-    pass
+
 class PyccelAnd(Expr, PyccelAstNode):
     pass
 class PyccelOr(Expr, PyccelAstNode):

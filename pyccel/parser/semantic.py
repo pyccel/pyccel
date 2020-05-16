@@ -59,7 +59,7 @@ from pyccel.ast.core      import _atomic
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
@@ -1595,6 +1595,9 @@ class SemanticParser(BasicParser):
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
+    def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
+        return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
+
     def _visit_PyccelAnd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         expr_new = PyccelAnd(*args)
@@ -2216,7 +2219,6 @@ class SemanticParser(BasicParser):
 
         else:
             d_var  = self._infere_type(rhs, **settings)
-
             d_list = d_var if isinstance(d_var, list) else [d_var]
 
             for d in d_list:

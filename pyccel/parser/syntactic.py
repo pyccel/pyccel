@@ -57,7 +57,8 @@ from pyccel.ast import create_variable
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
+from pyccel.ast.core  import PyccelOperator
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
@@ -99,6 +100,23 @@ redbaron.ipython_behavior = False
 
 from pyccel.parser.base import BasicParser
 from pyccel.parser.base import is_ignored_module
+
+def change_priority( expr ):
+    first  = expr.args[0]
+    second = expr.args[1]
+    if isinstance(second, PyccelOperator):
+        if second.p<=expr.p:
+            a    = first
+            b    = second.args[0]
+            c    = second.args[1]
+            a    = expr.func(a,b)
+            a    = change_priority(a)
+            expr = second.func(a,c)
+        else:
+            second = change_priority(second)
+            expr   = expr.func(first, second)
+
+    return expr
 
 class SyntaxParser(BasicParser):
 
@@ -421,7 +439,7 @@ class SyntaxParser(BasicParser):
         elif stmt.value == '+':
             return target
         elif stmt.value == '-':
-            return PyccelMul(Integer(-1),target)
+            return PyccelMinus(target)
         elif stmt.value == '~':
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
@@ -436,81 +454,59 @@ class SyntaxParser(BasicParser):
 
         first  = self._visit(stmt.first)
         second = self._visit(stmt.second)
-        assoc  = isinstance(stmt.second, AssociativeParenthesisNode)
-        cond   = isinstance(second, (PyccelMul, PyccelDiv, PyccelFloorDiv, PyccelMod))
-        cond   = cond and not assoc
 
         if stmt.value == '+':
-            return PyccelAdd(first, second)
+            expr = PyccelAdd(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '*':
-            if isinstance(first, (PythonTuple, Tuple, List)):
-                return Dlist(first, second)
-            if cond:
-                args  = second.args
-                first = PyccelMul(first, args[0])
-                return second.func(first, *args[1:])
-            else:
-                return PyccelMul(first, second)
+            expr = PyccelMul(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '-':
-
-            if isinstance(second, PyccelAdd) and not assoc:
-                args   = second.args
-                x      = PyccelMinus(first, args[0])
-                return second.func(x, *args[1:])
-            else:
-                return PyccelMinus(first, second)
+            expr = PyccelMinus(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '/':
-            if cond:
-                args   = second.args
-                first  = PyccelDiv(first,  args[0])
-                return second.func(first, *args[1:])
-            else:
-                return PyccelDiv(first, second)
+            expr = PyccelDiv(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '**':
-            return PyccelPow(first, second)
+            expr = PyccelPow(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '//':
-            if cond:
-                args   = second.args
-                first = PyccelFloorDiv(first, args[0])
-                return second.func(first, args[1:])
-            else:
-                return PyccelFloorDiv(first, second)
+            expr = PyccelFloorDiv(first, second)
+            return change_priority(expr)
 
         elif stmt.value == '%':
-            if cond:
-                args   = second.args
-                first = PyccelMod(first,  args[0] )
-                return second.func(first, args[1:])
-            else:
-                return PyccelMod(first, second)
+            expr = PyccelMod(first, second)
+            return change_priority(expr)
         else:
             msg = 'unknown/unavailable BinaryOperatorNode {node}'
             msg = msg.format(node=type(stmt.value))
             raise PyccelSyntaxError(msg)
-
 
     def _visit_BooleanOperatorNode(self, stmt):
 
         first = self._visit(stmt.first)
         second = self._visit(stmt.second)
 
-        assoc  = isinstance(stmt.second, AssociativeParenthesisNode)
-
         if stmt.value == 'and':
-            if not assoc and isinstance(second, PyccelOr):
+            if isinstance(second, PyccelOr):
                 args  = second.args
+                if isinstance(second, PyccelAnd):
+                    return PyccelAnd(first, *args)
                 first = PyccelAnd(first, args[0]  )
                 return  PyccelOr (first, *args[1:])
             else:
                 return PyccelAnd(first, second)
+
         if stmt.value == 'or':
-            if not assoc and isinstance(second, PyccelAnd):
+            if isinstance(second, PyccelAnd):
                 args  = second.args
+                if isinstance(second, PyccelOr):
+                    return PyccelOr(first, *args)
                 first = PyccelOr(first, args[0])
                 return  PyccelAnd(first, *args[1:])
             else:
@@ -554,7 +550,7 @@ class SyntaxParser(BasicParser):
         return Print(expr)
 
     def _visit_AssociativeParenthesisNode(self, stmt):
-        return self._visit(stmt.value)
+        return PyccelAssociativeParenthesis(self._visit(stmt.value))
 
     def _visit_DefArgumentNode(self, stmt):
         name = str(self._visit(stmt.target))

@@ -3,7 +3,7 @@
 
 from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from .core import PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot
+from .core import PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot, PyccelAssociativeParenthesis
 from .core import Variable, IndexedElement, DottedVariable
 
 from .numbers   import Integer, Float, BooleanFalse, BooleanTrue
@@ -23,7 +23,8 @@ def sp_dtype(expr):
                           PyccelGt, PyccelGe, PyccelAnd, PyccelOr,
                           PyccelNot, Is, IsNot)):
         return 'bool'
-    elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, PyccelFloorDiv)):
+    elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, 
+                           PyccelFloorDiv, PyccelAssociativeParenthesis)):
         args       = [sp_dtype(a) for a in expr.args]
         is_integer = all(a=='integer' for a in args)
         is_real    = all(a=='integer' or a=='real' for a in args)
