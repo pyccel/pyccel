@@ -127,7 +127,7 @@ class CCodePrinter(CodePrinter):
     def _print_NativeVoid(self, expr):
         return 'void'
 
-    def _print_FunctionDef(self, expr):
+    def function_signature(self, expr):
         if len(expr.results) == 1:
             result = expr.results[0]
             dtype = self._print(result.dtype)
@@ -140,16 +140,21 @@ class CCodePrinter(CodePrinter):
             ret_type = self._print(datatype('void'))
         name = expr.name
 
-        decs  = [Declare(i.dtype, i) for i in expr.local_vars]
-        decs += [Declare(i.dtype, i) for i in expr.results]
         arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
         arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
         arguments  = [self._print(i) for i in expr.arguments]
         arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+
+        return '{0} {1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_FunctionDef(self, expr):
+
+        decs  = [Declare(i.dtype, i) for i in expr.local_vars]
+        decs += [Declare(i.dtype, i) for i in expr.results]
         decs       = '\n'.join(self._print(i) for i in decs)
         body       = '\n'.join(self._print(i) for i in expr.body.body)
 
-        return '{0} {1}({2}) {{\n{3}\n{4}\n}}'.format(ret_type, name, arg_code, decs, body)
+        return '{0} {{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
 
     def _print_Return(self, expr):
         code = ''

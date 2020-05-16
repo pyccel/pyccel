@@ -3148,6 +3148,10 @@ class FunctionDef(Basic):
     def functions(self):
         return self._args[19]
 
+    @property
+    def doc_string(self):
+        return ""
+
     def print_body(self):
         for s in self.body:
             print(s)

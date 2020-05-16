@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 
-__all__ = ['construct_flags', 'compile_fortran']
+__all__ = ['construct_flags', 'compile_files']
 
 #==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
@@ -82,12 +82,13 @@ def construct_flags(compiler,
     return flags
 
 #==============================================================================
-def compile_fortran(filename, compiler, flags,
+def compile_files(filename, compiler, flags,
                     binary=None,
                     verbose=False,
                     modules=[],
                     is_module=False,
                     libs=(),
+                    language="fortran",
                     output=''):
     """
     Compiles the generated file.
@@ -111,7 +112,7 @@ def compile_fortran(filename, compiler, flags,
     j_code = ''
     if is_module:
         flags += ' -c '
-        if (len(output)>0):
+        if (len(output)>0) and language == "fortran":
             j_code = '-J'
 
     m_code = ' '.join('{}.o'.format(m) for m in modules)
