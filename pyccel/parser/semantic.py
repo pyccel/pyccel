@@ -3054,7 +3054,7 @@ class SemanticParser(BasicParser):
     def _visit_Print(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
         if len(args) == 0:
-            raise ValueError('no arguments given to print function')
+            return Print(args)
 
         is_symbolic = lambda var: isinstance(var, Variable) \
             and isinstance(var.dtype, NativeSymbol)
