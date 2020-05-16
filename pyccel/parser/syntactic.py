@@ -546,7 +546,8 @@ class SyntaxParser(BasicParser):
         raise PyccelSyntaxError(msg)
 
     def _visit_PrintNode(self, stmt):
-        expr = self._visit(stmt.value)
+        expr = self._visit(stmt.value[0])
+        expr = PythonTuple(expr.args)
         return Print(expr)
 
     def _visit_AssociativeParenthesisNode(self, stmt):

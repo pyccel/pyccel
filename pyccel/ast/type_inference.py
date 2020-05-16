@@ -24,7 +24,7 @@ def sp_dtype(expr):
                           PyccelNot, Is, IsNot)):
         return 'bool'
     elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, 
-                           PyccelFloorDiv, PyccelAssociativeParenthesis)):
+                           PyccelFloorDiv)):
         args       = [sp_dtype(a) for a in expr.args]
         is_integer = all(a=='integer' for a in args)
         is_real    = all(a=='integer' or a=='real' for a in args)
@@ -47,9 +47,11 @@ def sp_dtype(expr):
             return 'real'
         elif is_complex:
             return 'complex'
-
+    elif isinstance(expr, PyccelAssociativeParenthesis):
+        return sp_dtype(expr.args[0])
     elif isinstance(expr, (Variable, IndexedElement, DottedVariable)):
         return str_dtype(expr.dtype)
+
     elif isinstance(expr, Integer):
         return 'integer'
     elif isinstance(expr, Float):
@@ -65,6 +67,7 @@ def sp_dtype(expr):
             return 'complex'
         elif expr.is_Boolean:
             return 'bool'
+
     raise TypeError('Unknown datatype {0}'.format(type(expr)))
 
 

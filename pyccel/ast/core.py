@@ -48,6 +48,7 @@ from .functionalexpr import FunctionalFor
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 # NOTE: commented-out symbols are never used in Pyccel
 __all__ = (
+    'PyccelOperator',
     'PyccelPow',
     'PyccelAdd',
     'PyccelMinus',
@@ -64,6 +65,7 @@ __all__ = (
     'PyccelAnd',
     'PyccelOr',
     'PyccelNot',
+    'PyccelAssociativeParenthesis',
     'AddOp',
     'AliasAssign',
     'AnnotatedComment',
@@ -4704,18 +4706,16 @@ class If(Basic):
     If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
     """
 
-    # TODO add step
+    # TODO add type check in the semantic stage
 
     def __new__(cls, *args):
 
-        # (Try to) sympify args first
-
         newargs = []
         for ce in args:
+            #if not sp_dtype(cond) == 'bool':
+            #    raise TypeError('Cond %s is of type %s, but must be a bool.'
+            #                     % (cond, type(cond)))
             cond = ce[0]
-            if not isinstance(cond, (bool, Relational, sp_Boolean, Is, IsNot)):
-                raise TypeError('Cond %s is of type %s, but must be a Relational, Boolean, Is, IsNot, or a built-in bool.'
-                                 % (cond, type(cond)))
             if isinstance(ce[1], (list, Tuple, tuple)):
                 body = CodeBlock(ce[1])
             elif isinstance(ce[1], CodeBlock):
@@ -5178,3 +5178,4 @@ def process_shape(shape):
 
 # ...
 from .numpyext import Linspace, Diag, Where
+

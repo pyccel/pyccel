@@ -19,7 +19,7 @@ from .core import (Variable, IndexedElement, Slice, Len,
 
 from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
 from .builtins  import Int as PythonInt
 from .builtins  import PythonFloat, PythonTuple
@@ -1229,7 +1229,7 @@ class Norm(Function):
 #=====================================================
 class Sqrt(PyccelPow):
     def __new__(cls, base):
-        return PyccelPow(base, Float(0.5))
+        return PyccelPow(PyccelAssociativeParenthesis(base), Float(0.5))
 
 #====================================================
 
