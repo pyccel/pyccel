@@ -925,7 +925,6 @@ class SyntaxParser(BasicParser):
         return While(test, body)
 
     def _visit_AssertNode(self, stmt):
-
         expr = self._visit(stmt.value)
         return Assert(expr)
 

@@ -4645,11 +4645,11 @@ class Assert(Basic):
     Examples
     --------
     """
-
+    #TODO add type check in the semantic stage
     def __new__(cls, test):
-        if not isinstance(test, (bool, Relational, sp_Boolean)):
-            raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
-                             % (test, type(test)))
+        #if not isinstance(test, (bool, Relational, sp_Boolean)):
+        #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
+        #                     % (test, type(test)))
 
         return Basic.__new__(cls, test)
 
