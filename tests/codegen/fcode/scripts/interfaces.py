@@ -49,12 +49,12 @@ def f2(x, m=None):
 y = decr(2)
 z = f1(1)
 t = 1.
-print z
+print(z)
 incr(z)
-print z
-print t
+print(z)
+print(t)
 incr(t)
-print t
+print(t)
 
 z1 = f2(1)
 z2 = f2(1, m=0)
