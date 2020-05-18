@@ -1208,7 +1208,7 @@ class FCodePrinter(CodePrinter):
 #                    code_args = ', '.join(self._print(i) for i in func.arguments)
 #                    code_args = '{0}, {1}'.format(code_args, lhs_code)
 #                else:
-#           F print('code_args > {0}'.format(code_args))
+#            print('code_args > {0}'.format(code_args))
 #            code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code)
 
@@ -2083,9 +2083,9 @@ class FCodePrinter(CodePrinter):
         e    = expr.args[1]
 
         base_c = self._print(base)
-        e_c = self._print(e)
-
-        return '{} ** {}'.format(base_c, e_c)
+        e_c    = self._print(e)
+        # we add parenthesis for the unary operators in the exponent
+        return '{} ** ({})'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)

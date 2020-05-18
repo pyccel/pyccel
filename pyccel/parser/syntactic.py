@@ -104,7 +104,8 @@ from pyccel.parser.base import is_ignored_module
 def change_priority( expr ):
     first  = expr.args[0]
     second = expr.args[1]
-    if isinstance(second, PyccelOperator):
+    # check len second.args is greater than one to avoid unary operators
+    if isinstance(second, PyccelOperator) and len(second.args)>1:
         if second.p<=expr.p:
             a    = first
             b    = second.args[0]
@@ -495,8 +496,6 @@ class SyntaxParser(BasicParser):
         if stmt.value == 'and':
             if isinstance(second, PyccelOr):
                 args  = second.args
-                if isinstance(second, PyccelAnd):
-                    return PyccelAnd(first, *args)
                 first = PyccelAnd(first, args[0]  )
                 return  PyccelOr (first, *args[1:])
             else:
@@ -505,8 +504,6 @@ class SyntaxParser(BasicParser):
         if stmt.value == 'or':
             if isinstance(second, PyccelAnd):
                 args  = second.args
-                if isinstance(second, PyccelOr):
-                    return PyccelOr(first, *args)
                 first = PyccelOr(first, args[0])
                 return  PyccelAnd(first, *args[1:])
             else:

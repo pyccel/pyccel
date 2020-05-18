@@ -170,20 +170,17 @@ class CCodePrinter(CodePrinter):
         return ' - '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMul(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
         return ' * '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelDiv(self, expr):
         args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
-
         dtypes = [sp_dtype(a) for a in expr.args]
         if all(a == 'integer' for a in dtypes):
             return ' / '.join('real({})'.format(self._print(a)) for a in args)
         return  ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelAssociativeParenthesis(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)

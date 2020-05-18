@@ -256,19 +256,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return '\n'.join(self._print(e) for e in expr.body)
 
     def _print_PyccelPow(self, expr):
-        base = expr.args[0]
-        e    = expr.args[1]
-
-        if isinstance(base, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
-            base = '(' + self._print(base) + ')'
-        else:
-            base = self._print(base)
-
-        if isinstance(e, (PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv)):
-            e = '(' + self._print(e) + ')'
-        else:
-            e = self._print(e)
-
+        base = self._print(expr.args[0])
+        e    = self._print(expr.args[1])
         return '{} ** {}'.format(base, e)
 
     def _print_PyccelAdd(self, expr):
@@ -278,47 +267,24 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return ' - '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMul(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
         return ' * '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
-
-        return ' / '.join(self._print(a) for a in args)
+        return ' / '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMod(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
-        code = args[0]
-        for b in args[1:]:
-            code = '{} % {}'.format(code, b)
-        return code
+        return '%'.join(self._print(a) for a in expr.args)
 
     def _print_PyccelFloorDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, (PyccelAdd,PyccelMul,PyccelMod,PyccelFloorDiv)) else a
-                for a,b in zip(args, expr.args)]
+        return '//'.join(self._print(a) for a in expr.args)
 
-        code   = args[0]
-        for c in args[1:]:
-            code = '{} // {}'.format(code, c)
-        return code
+    def _print_PyccelAssociativeParenthesis(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, PyccelOr) else a
-                for a,b in zip(args, expr.args)]
         return ' and '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelOr(self, expr):
-        args = [self._print(a) for a in expr.args]
-        args = ['('+a+')' if isinstance(b, PyccelAnd) else a
-                for a,b in zip(args, expr.args)]
         return ' or '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelEq(self, expr):
