@@ -21,13 +21,14 @@ from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelF
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
-from .builtins  import Int as PythonInt
-from .builtins  import PythonFloat, PythonTuple
-from .datatypes import dtype_and_precision_registry as dtype_registry
-from .datatypes import default_precision
-from .datatypes import datatype
-from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
-from .numbers   import Integer, Float
+from .builtins       import Int as PythonInt
+from .builtins       import PythonFloat, PythonTuple
+from .datatypes      import dtype_and_precision_registry as dtype_registry
+from .datatypes      import default_precision
+from .datatypes      import datatype
+from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .numbers        import Integer, Float
+from .type_inference import sp_dtype, str_dtype
 
 
 __all__ = (
@@ -207,7 +208,6 @@ class NumpySum(Function):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        from pyccel.ast.type_inference import sp_dtype, str_dtype
         dtype = str_dtype(sp_dtype(arg))
         assumptions = {dtype: True}
         ass_copy = assumptions.copy()

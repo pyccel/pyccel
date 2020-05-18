@@ -102,6 +102,23 @@ from pyccel.parser.base import BasicParser
 from pyccel.parser.base import is_ignored_module
 
 def change_priority( expr ):
+    """
+       RedBaron parses an expression from right to left
+       this function makes sure that we evaluate our expression
+       from left to right based in the priority of the operator.
+
+       Examples
+       --------
+       >>> change_priority(PyccelMinus(1,PyccelMinus(1,1)))
+       PyccelMinus(PyccelMinus(1,1),1)
+
+       >>> change_priority(PyccelMinus(1,PyccelMul(1,1)))
+       PyccelMinus(1,PyccelMul(1,1))
+
+       >>> change_priority(PyccelDiv(1,PyccelMul(1,1)))
+       PyccelMul(PyccelDiv(1, 1), 1)
+
+    """
     first  = expr.args[0]
     second = expr.args[1]
     if isinstance(second, PyccelOperator):
@@ -112,10 +129,6 @@ def change_priority( expr ):
             a    = expr.func(a,b)
             a    = change_priority(a)
             expr = second.func(a,c)
-        else:
-            second = change_priority(second)
-            expr   = expr.func(first, second)
-
     return expr
 
 class SyntaxParser(BasicParser):

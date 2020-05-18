@@ -1,6 +1,5 @@
 # coding: utf-8
 
-
 from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from .core import PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot, PyccelAssociativeParenthesis
@@ -16,8 +15,15 @@ __all__ = ('sp_dtype', 'str_dtype')
 
 def sp_dtype(expr):
     """
-    return the datatype of a sympy types expression
+    This function computes the basic datatype of an expression
 
+    Example
+    -------
+    >>> sp_dtype(2):
+    'integer'
+    >>> x = Variable('int','x')
+    >>> sp_dtype(PyccelAdd(x,1))
+    'integer'
     """
 
     if isinstance(expr,(PyccelEq,PyccelNe, PyccelLt, PyccelLe,
@@ -75,8 +81,14 @@ def sp_dtype(expr):
 def str_dtype(dtype):
 
     """
-    return a sympy datatype as string
-    dtype: str, Native Type
+    This function takes a datatype and returns a sympy datatype as a string
+
+    Example
+    -------
+    >>> str_dtype('int')
+    'integer'
+    >>> str_dtype(NativeInteger())
+    'integer'
 
     """
     if isinstance(dtype, str):
