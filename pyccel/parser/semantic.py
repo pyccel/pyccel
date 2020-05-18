@@ -77,7 +77,8 @@ from pyccel.parser.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
-
+# TODO move or delet extract_subexpressions when we introduce 
+#   Functional programming
 from pyccel.parser.messages import *
 
 #==============================================================================
