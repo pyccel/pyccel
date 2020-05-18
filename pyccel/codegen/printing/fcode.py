@@ -2084,8 +2084,7 @@ class FCodePrinter(CodePrinter):
 
         base_c = self._print(base)
         e_c    = self._print(e)
-        # we add parenthesis for the unary operators in the exponent
-        return '{} ** ({})'.format(base_c, e_c)
+        return '{} ** {}'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)
@@ -2141,6 +2140,9 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelAssociativeParenthesis(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnary(self, expr):
         return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):

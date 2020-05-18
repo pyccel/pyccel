@@ -281,6 +281,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
 
+    def _print_PyccelUnary(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
+
     def _print_PyccelAnd(self, expr):
         return ' and '.join(self._print(a) for a in expr.args)
 

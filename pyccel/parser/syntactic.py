@@ -58,7 +58,7 @@ from pyccel.ast import create_variable
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
-from pyccel.ast.core  import PyccelOperator
+from pyccel.ast.core  import PyccelOperator, PyccelUnary
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
@@ -104,8 +104,7 @@ from pyccel.parser.base import is_ignored_module
 def change_priority( expr ):
     first  = expr.args[0]
     second = expr.args[1]
-    # check len second.args is greater than one to avoid unary operators
-    if isinstance(second, PyccelOperator) and len(second.args)>1:
+    if isinstance(second, PyccelOperator):
         if second.p<=expr.p:
             a    = first
             b    = second.args[0]
@@ -436,11 +435,11 @@ class SyntaxParser(BasicParser):
 
         target = self._visit(stmt.target)
         if stmt.value == 'not':
-            return PyccelNot(target)
+            return PyccelUnary(PyccelNot(target))
         elif stmt.value == '+':
-            return target
+            return PyccelUnary(target)
         elif stmt.value == '-':
-            return PyccelMinus(target)
+            return PyccelUnary(PyccelMinus(target))
         elif stmt.value == '~':
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,

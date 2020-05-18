@@ -4,6 +4,7 @@
 from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from .core import PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot, PyccelAssociativeParenthesis
+from .core import PyccelUnary
 from .core import Variable, IndexedElement, DottedVariable
 
 from .numbers   import Integer, Float, BooleanFalse, BooleanTrue
@@ -47,7 +48,7 @@ def sp_dtype(expr):
             return 'real'
         elif is_complex:
             return 'complex'
-    elif isinstance(expr, PyccelAssociativeParenthesis):
+    elif isinstance(expr, (PyccelUnary, PyccelAssociativeParenthesis)):
         return sp_dtype(expr.args[0])
     elif isinstance(expr, (Variable, IndexedElement, DottedVariable)):
         return str_dtype(expr.dtype)

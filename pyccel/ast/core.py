@@ -66,6 +66,7 @@ __all__ = (
     'PyccelOr',
     'PyccelNot',
     'PyccelAssociativeParenthesis',
+    'PyccelUnary',
     'AddOp',
     'AliasAssign',
     'AnnotatedComment',
@@ -226,6 +227,9 @@ class PyccelGe(PyccelOperator):
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
+    pass
+
+class PyccelUnary(Expr, PyccelAstNode):
     pass
 
 class PyccelAnd(Expr, PyccelAstNode):
