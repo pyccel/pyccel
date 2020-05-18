@@ -121,15 +121,15 @@ def change_priority( expr ):
     """
     first  = expr.args[0]
     second = expr.args[1]
-    if isinstance(second, PyccelOperator):
-        if second.p<=expr.p:
+    if isinstance(second, PyccelOperator) and second.p<=expr.p:
             a    = first
             b    = second.args[0]
             c    = second.args[1]
             a    = expr.func(a,b)
             a    = change_priority(a)
-            expr = second.func(a,c)
-    return expr
+            return second.func(a,c)
+    else:
+        return expr
 
 class SyntaxParser(BasicParser):
 
