@@ -45,7 +45,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class Bool(Function):
+class Bool(Function, PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     is_Boolean = True
@@ -86,7 +86,7 @@ class Bool(Function):
         return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
-class Complex(Function):
+class Complex(Function, PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
     is_zero = False
@@ -156,7 +156,7 @@ class Enumerate(Basic):
         return self._args[0]
 
 #==============================================================================
-class PythonFloat(Function):
+class PythonFloat(Function, PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
     is_zero = False
@@ -203,7 +203,7 @@ class PythonFloat(Function):
         return code
 
 #==============================================================================
-class Int(Function):
+class Int(Function, PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
     is_zero = False
@@ -342,7 +342,7 @@ class PythonTuple(Function):
         return self._arg_dtypes
 
 #==============================================================================
-class Len(Function):
+class Len(Function, PyccelAstNode):
 
     """
     Represents a 'len' expression in the code.
@@ -371,7 +371,7 @@ class Len(Function):
         return 0
 
 #==============================================================================
-class List(Tuple):
+class List(Tuple, PyccelAstNode):
     """ Represent lists in the code with dynamic memory management."""
 
 #==============================================================================

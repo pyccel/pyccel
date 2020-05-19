@@ -90,14 +90,14 @@ numpy_constants = {
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
-class Array(Application):
+class Array(Application, PyccelAstNode):
     """
     Represents a call to  numpy.array for code generation.
 
     arg : list ,tuple ,Tuple, List
 
     """
-    is_zero = False
+
     def __new__(cls, arg, dtype=None, order='C'):
 
         if not isinstance(arg, (list, tuple, Tuple, PythonTuple, List)):
@@ -194,12 +194,11 @@ class Array(Application):
         return code
 
 #==============================================================================
-class NumpySum(Function):
+class NumpySum(Function, PyccelAstNode):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
-    is_zero = False
 
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
@@ -236,12 +235,11 @@ class NumpySum(Function):
         return 'sum({0})'.format(rhs_code)
 
 #==============================================================================
-class Product(Function):
+class Product(Function, PyccelAstNode):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
-    is_zero = False
 
     def __new__(cls, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
@@ -270,7 +268,7 @@ class Product(Function):
         return 'product({0})'.format(rhs_code)
 
 #==============================================================================
-class Matmul(Application):
+class Matmul(Application, PyccelAstNode):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
@@ -323,7 +321,7 @@ class Matmul(Application):
 
 #==============================================================================
 
-class PyccelArraySize(Function):
+class PyccelArraySize(Function, PyccelAstNode):
     def __new__(cls, arg, index):
         if not isinstance(arg, (list,
                                 tuple,
@@ -384,13 +382,13 @@ def Shape(arg):
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
-class Real(Function):
+class Real(Function, PyccelAstNode):
 
     """Represents a call to  numpy.real for code generation.
 
     arg : Variable, Float, sp_Integer, Complex
     """
-    is_zero = False
+
     def __new__(cls, arg):
 
         _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
@@ -463,13 +461,12 @@ class Imag(Real):
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
-class Complex(Function):
+class Complex(Function, PyccelAstNode):
 
     """Represents a call to  numpy.complex for code generation.
 
     arg : Variable, Float, sp_Integer
     """
-    is_zero = False
 
     def __new__(cls, arg0, arg1=Float(0)):
 
@@ -528,7 +525,7 @@ class Complex(Function):
         return self.fprint(str)
 
 #==============================================================================
-class Linspace(Application):
+class Linspace(Application, PyccelAstNode):
 
     """
     Represents numpy.linspace.
@@ -631,7 +628,7 @@ class Linspace(Application):
         return code
 
 #==============================================================================
-class Diag(Application):
+class Diag(Application, PyccelAstNode):
 
     """
     Represents numpy.diag.
@@ -721,7 +718,7 @@ class Diag(Application):
         return alloc + '\n' + code
 
 #==============================================================================
-class Cross(Application):
+class Cross(Application, PyccelAstNode):
 
     """
     Represents numpy.cross.
@@ -841,7 +838,7 @@ class Cross(Application):
         return code
 
 #==============================================================================
-class Where(Application):
+class Where(Application, PyccelAstNode):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -935,7 +932,7 @@ class Rand(Function, PyccelAstNode):
 
 
 #==============================================================================
-class Full(Application):
+class Full(Application, PyccelAstNode):
     """
     Represents a call to numpy.full for code generation.
 
@@ -1160,7 +1157,7 @@ class ZerosLike(Application):
 
 #=======================================================================================
 
-class Bounds(Basic):
+class Bounds(Basic, PyccelAstNode):
 
     """
     Represents bounds of NdArray.
@@ -1179,7 +1176,7 @@ class Bounds(Basic):
 
 #=======================================================================================
 
-class Norm(Function):
+class Norm(Function, PyccelAstNode):
     """ Represents call to numpy.norm"""
 
     is_zero = False
@@ -1233,8 +1230,7 @@ class Sqrt(PyccelPow):
 
 #====================================================
 
-class Mod(Function):
-    is_zero = False
+class Mod(Function, PyccelAstNode):
     def __new__(cls,*args):
         return Basic.__new__(cls, *args)
 
@@ -1244,8 +1240,7 @@ class Mod(Function):
         self._assumptions = StdFactKB(assumptions)
         self._assumptions._generator = ass_copy
 
-class Asin(Function):
-    is_zero = False
+class Asin(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = asin(arg)
         if arg.is_real:
@@ -1256,8 +1251,7 @@ class Asin(Function):
         return obj
 
 
-class Acos(Function):
-    is_zero = False
+class Acos(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = acos(arg)
         if arg.is_real:
@@ -1267,8 +1261,7 @@ class Acos(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Asec(Function):
-    is_zero = False
+class Asec(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = asec(arg)
         if arg.is_real:
@@ -1280,8 +1273,7 @@ class Asec(Function):
 
 #=======================================================================================
 
-class Atan(Function):
-    is_zero = False
+class Atan(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = atan(arg)
         if arg.is_real:
@@ -1292,8 +1284,7 @@ class Atan(Function):
         return obj
 
 
-class Acot(Function):
-    is_zero = False
+class Acot(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = acot(arg)
         if arg.is_real:
@@ -1304,8 +1295,7 @@ class Acot(Function):
         return obj
 
 
-class Acsc(Function):
-    is_zero = False
+class Acsc(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = acsc(arg)
         if arg.is_real:
@@ -1317,8 +1307,7 @@ class Acsc(Function):
 
 #=======================================================================================
 
-class Sinh(Function):
-    is_zero = False
+class Sinh(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = sinh(arg)
         if arg.is_real:
@@ -1328,7 +1317,7 @@ class Sinh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Cosh(Function):
+class Cosh(Function, PyccelAstNode):
     is_zero = False
     def __new__(cls,arg):
         obj = cosh(arg)
@@ -1340,8 +1329,7 @@ class Cosh(Function):
         return obj
 
 
-class Tanh(Function):
-    is_zero = False
+class Tanh(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = tanh(arg)
         if arg.is_real:
@@ -1351,8 +1339,7 @@ class Tanh(Function):
             obj._assumptions._generator = ass_copy
         return obj
 
-class Tan(Function):
-    is_zero = False
+class Tan(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = tan(arg)
         if arg.is_real:
@@ -1363,8 +1350,7 @@ class Tan(Function):
         return obj
 #=======================================================================================
 
-class Log(Function):
-    is_zero = False
+class Log(Function, PyccelAstNode):
     def __new__(cls,arg):
         obj = log(arg)
         if arg.is_real:
@@ -1376,23 +1362,17 @@ class Log(Function):
 
 #=======================================================================================
 
-class Abs(Function):
-    is_zero = False
-    is_real = True
+class Abs(Function, PyccelAstNode):
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
 #=======================================================================================
 
-class Min(Function):
-    is_zero = False
-    is_real = True
+class Min(Function, PyccelAstNode):
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
-class Max(Function):
-    is_zero = False
-    is_real = True
+class Max(Function, PyccelAstNode):
     def _eval_is_integer(self):
         return all(i.is_integer for i in self.args)
 
