@@ -107,6 +107,14 @@ Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows
   curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR/libblas.dll
   curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
 
+Generate static MS C runtime library from corresponding dynamic link library::
+
+  cd "$LIBRARY_DIR"
+  cp $SYSTEMROOT/SysWOW64/vcruntime140.dll .
+  gendef vcruntime140.dll
+  dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
+  cd -
+
 Download MS MPI runtime and SDK, then install MPI::
 
   WEB_ADDRESS=https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1
