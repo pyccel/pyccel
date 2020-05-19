@@ -9,9 +9,6 @@ from .datatypes import default_precision
 __all__ = ('BooleanTrue',
         'BooleanFalse',
         'Integer',
-        'One',
-        'NegativeOne',
-        'Zero',
         'Float')
 
 class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
@@ -34,43 +31,7 @@ class Integer(sp_Integer, PyccelAstNode):
         obj.p = ival
         return obj
 
-#    def __new__(cls, val):
-#        val = int(val)
-#        if val == 0:
-#            return Zero()
-#        elif val == 1:
-#            return One()
-#        elif val == -1:
-#            return NegativeOne()
-#        else:
-#            return sp_Integer.__new__(cls, val)
-
-class One(Integer):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = 1
-    def __new__(cls):
-        return Expr.__new__(cls)
-
-class NegativeOne(Integer, sp_NegativeOne):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = -1
-    def __new__(cls):
-        return Expr.__new__(cls)
-
-class Zero(Integer):
-    _dtype     = 'int'
-    _rank      = 0
-    _precision = default_precision['int']
-    p          = 0
-    def __new__(cls):
-        return Expr.__new__(cls)
-
 class Float(sp_Float, PyccelAstNode):
     _dtype     = 'real'
     _rank      = 0
     _precision = default_precision['real']
-
