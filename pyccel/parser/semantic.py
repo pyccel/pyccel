@@ -55,24 +55,30 @@ from pyccel.ast import StarredArguments
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 
-from pyccel.ast.core      import Pow, Add, Mul, And, Or, _atomic
-from pyccel.ast.core      import Eq, Ne, Lt, Le, Gt, Ge
+from pyccel.ast.core      import _atomic
+
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
+from pyccel.ast.core import PyccelUnary
+
 from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
-from pyccel.ast.datatypes import sp_dtype, str_dtype, default_precision
+from pyccel.ast.datatypes import default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
 from pyccel.ast.numbers   import BooleanTrue, BooleanFalse
 from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numpyext  import PyccelArraySize
 from pyccel.ast.utilities import split_positional_keyword_arguments
-
+from pyccel.ast.type_inference  import sp_dtype, str_dtype
 from pyccel.parser.errors import Errors
 from pyccel.parser.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
-
+# TODO move or delet extract_subexpressions when we introduce 
+#   Functional programming
 from pyccel.parser.messages import *
 
 #==============================================================================
@@ -1498,9 +1504,9 @@ class SemanticParser(BasicParser):
         raise ValueError('attribute {} not found'.format(rhs_name))
 
 
-    def _visit_Add(self, expr, **settings):
+    def _visit_PyccelAdd(self, expr, **settings):
 
-        stmts, expr = extract_subexpressions(expr)
+        #stmts, expr = extract_subexpressions(expr)
         stmts = []
         if stmts:
             stmts = [self._visit(i, **settings) for i in stmts]
@@ -1524,91 +1530,115 @@ class SemanticParser(BasicParser):
         elif atoms_str:
             return Concatenate(args, False)
 
-        expr_new = Add(*args, evaluate=False)
+        expr_new = expr.func(*args)
         if stmts:
             expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _visit_Mul(self, expr, **settings):
-        stmts, expr = extract_subexpressions(expr)
-        if stmts:
-            stmts = [self._visit(i, **settings) for i in stmts]
+    def _visit_PyccelMul(self, expr, **settings):
+        #stmts, expr = extract_subexpressions(expr)
+        #if stmts:
+        #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
             expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
         else:
-            expr_new = Mul(*args, evaluate=False)
-        if stmts:
-            expr_new = CodeBlock(stmts + [expr_new])
+            expr_new = PyccelMul(*args)
+        #if stmts:
+        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-
-    def _visit_Pow(self, expr, **settings):
-
-        stmts, expr = extract_subexpressions(expr)
-        if stmts:
-            stmts = [self._visit(i, **settings) for i in stmts]
+    def _visit_PyccelDiv(self, expr, **settings):
+        #stmts, expr = extract_subexpressions(expr)
+        #if stmts:
+        #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Pow(*args, evaluate=False)
-        if stmts:
-            expr_new = CodeBlock(stmts + [expr_new])
+        expr_new = PyccelDiv(*args)
+        #if stmts:
+        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _visit_And(self, expr, **settings):
-
+    def _visit_PyccelMod(self, expr, **settings):
+        #stmts, expr = extract_subexpressions(expr)
+        #if stmts:
+        #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = And(*args, evaluate=False)
-
+        expr_new = PyccelMod(*args)
+        #if stmts:
+        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _visit_Or(self, expr, **settings):
-
+    def _visit_PyccelFloorDiv(self, expr, **settings):
+        #stmts, expr = extract_subexpressions(expr)
+        #if stmts:
+        #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Or(*args, evaluate=False)
-
+        expr_new = PyccelFloorDiv(*args)
+        #if stmts:
+        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
-    def _visit_Equality(self, expr, **settings):
+    def _visit_PyccelPow(self, expr, **settings):
+        #stmts, expr = extract_subexpressions(expr)
+        #if stmts:
+        #    stmts = [self._visit(i, **settings) for i in stmts]
+        args     = [self._visit(a, **settings) for a in expr.args]
+        expr_new = PyccelPow(*args)
+        #if stmts:
+        #    expr_new = CodeBlock(stmts + [expr_new])
+        return expr_new
 
+    def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
+        return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
+
+    def _visit_PyccelUnary(self, expr, **settings):
+        return PyccelUnary(self._visit(expr.args[0]))
+
+    def _visit_PyccelAnd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Eq(*args, evaluate=False)
+        expr_new = PyccelAnd(*args)
+
         return expr_new
 
-    def _visit_Unequality(self, expr, **settings):
-
+    def _visit_PyccelOr(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Ne(*args, evaluate=False)
+        expr_new = PyccelOr(*args)
 
         return expr_new
 
-    def _visit_StrictLessThan(self, expr, **settings):
-
+    def _visit_PyccelEq(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Lt(*args, evaluate=False)
-
+        expr_new = PyccelEq(*args)
         return expr_new
 
-    def _visit_GreaterThan(self, expr, **settings):
-
+    def _visit_PyccelNe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Ge(*args, evaluate=False)
-
+        expr_new = PyccelNe(*args)
         return expr_new
 
-    def _visit_LessThan(self, expr, **settings):
-
+    def _visit_PyccelLt(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Le(*args, evaluate=False)
-
+        expr_new = PyccelLt(*args)
         return expr_new
 
-    def _visit_StrictGreaterThan(self, expr, **settings):
-
+    def _visit_PyccelGe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = Gt(*args, evaluate=False)
+        expr_new = PyccelGe(*args)
         return expr_new
 
+    def _visit_PyccelLe(self, expr, **settings):
+        args = [self._visit(a, **settings) for a in expr.args]
+        expr_new = PyccelLe(*args)
+        return expr_new
 
+    def _visit_PyccelGt(self, expr, **settings):
+        args = [self._visit(a, **settings) for a in expr.args]
+        expr_new = PyccelGt(*args)
+        return expr_new
+
+    def _visit_PyccelNot(self, expr, **settings):
+        a = self._visit(expr.args[0], **settings)
+        return PyccelNot(a)
 
     def _visit_Lambda(self, expr, **settings):
 
@@ -1636,13 +1666,13 @@ class SemanticParser(BasicParser):
         name     = type(expr).__name__
         func     = self.get_function(name)
 
-        stmts, new_args = extract_subexpressions(expr.args)
+        #stmts, new_args = extract_subexpressions(expr.args)
+        #stmts = [self._visit(stmt, **settings) for stmt in stmts]
 
-        stmts = [self._visit(stmt, **settings) for stmt in stmts]
         args  = []
-        for arg in new_args:
+        for arg in expr.args:
             a = self._visit(arg, **settings)
-            if isinstance(a,StarredArguments):
+            if isinstance(a, StarredArguments):
                 args.extend(a.args_var)
             else:
                 args.append(a)
@@ -1652,9 +1682,9 @@ class SemanticParser(BasicParser):
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:
-            if len(stmts) > 0:
-                stmts.append(F)
-                return CodeBlock(stmts)
+            #if len(stmts) > 0:
+            #    stmts.append(F)
+            #    return CodeBlock(stmts)
             return F
 
         elif name in self._namespace.cls_constructs.keys():
@@ -1680,9 +1710,9 @@ class SemanticParser(BasicParser):
             # TODO treat parametrized arguments.
 
             expr = ConstructorCall(method, args, cls_variable=None)
-            if len(stmts) > 0:
-                stmts.append(expr)
-                return CodeBlock(stmts)
+            #if len(stmts) > 0:
+            #    stmts.append(expr)
+            #    return CodeBlock(stmts)
             return expr
         else:
 
@@ -1719,9 +1749,9 @@ class SemanticParser(BasicParser):
                     if isinstance(expr, (Where, Diag, Linspace)):
                         self.insert_variable(expr.index)
 
-                    if len(stmts) > 0:
-                        stmts.append(expr)
-                        return CodeBlock(stmts)
+                    #if len(stmts) > 0:
+                    #    stmts.append(expr)
+                    #    return CodeBlock(stmts)
                     return expr
                 else:
 
@@ -1797,20 +1827,20 @@ class SemanticParser(BasicParser):
 
                     elif len(results) == 0:
                         expr = Subroutine(name)(*args)
-                        if len(stmts) > 0:
-                            stmts.append(expr)
-                            return CodeBlock(stmts)
+                        #if len(stmts) > 0:
+                        #    stmts.append(expr)
+                        #    return CodeBlock(stmts)
                         return expr
                     elif len(results) > 1:
                         expr = UndefinedFunction(name)(*args)
-                        if len(stmts) > 0:
-                            stmts.append(expr)
-                            return CodeBlock(stmts)
+                        #if len(stmts) > 0:
+                        #    stmts.append(expr)
+                        #    return CodeBlock(stmts)
                         return expr
 
-                    if len(stmts) > 0:
-                        stmts.append(expr)
-                        return CodeBlock(stmts)
+                    #if len(stmts) > 0:
+                    #    stmts.append(expr)
+                    #    return CodeBlock(stmts)
                     return expr
 
     def _visit_Expr(self, expr, **settings):
@@ -3020,7 +3050,7 @@ class SemanticParser(BasicParser):
     def _visit_Print(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
         if len(args) == 0:
-            raise ValueError('no arguments given to print function')
+            return Print(args)
 
         is_symbolic = lambda var: isinstance(var, Variable) \
             and isinstance(var.dtype, NativeSymbol)

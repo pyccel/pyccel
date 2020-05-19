@@ -5,7 +5,7 @@ from .basic import Basic
 
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass
-from sympy import Eq, Ne, Lt, Gt, Le, Ge
+
 import numpy
 
 # TODO [YG, 12.03.2020] verify why we need all these types
@@ -50,8 +50,6 @@ __all__ = (
     'is_iterable_datatype',
     'is_pyccel_datatype',
     'is_with_construct_datatype',
-    'sp_dtype',
-    'str_dtype',
 #
 # --------- VARIABLES -----------
 #
@@ -79,7 +77,7 @@ __all__ = (
 
 #==============================================================================
 
-default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
+default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'integer': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
 dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'double':('real',default_precision['float']),
                                  'float':('real',default_precision['float']),       # sympy.Float
@@ -389,50 +387,5 @@ def datatype(arg):
         return dtype_registry[arg.dtype.name.lower()]
     else:
         raise TypeError('Expecting a DataType')
-
-
-def sp_dtype(expr):
-    """
-    return the datatype of a sympy types expression
-
-    """
-    if expr.is_integer:
-        return 'int'
-    elif expr.is_real:
-        return 'real'
-    elif expr.is_complex:
-        return 'complex'
-    elif expr.is_Boolean:
-        return 'bool'
-    elif isinstance(expr,(Eq, Ne, Lt, Gt, Le, Ge)):
-        return 'bool'
-    else:
-        raise TypeError('Unknown datatype {0}'.format(str(expr)))
-
-
-def str_dtype(dtype):
-
-    """
-    return a sympy datatype as string
-    dtype: str, Native Type
-
-    """
-    if isinstance(dtype, str):
-        if dtype == 'int':
-            return 'integer'
-        elif dtype== 'real':
-            return 'real'
-        else:
-            return dtype
-    if isinstance(dtype, NativeInteger):
-        return 'integer'
-    elif isinstance(dtype, NativeReal):
-        return 'real'
-    elif isinstance(dtype, NativeComplex):
-        return 'complex'
-    elif isinstance(dtype, NativeBool):
-        return 'bool'
-    else:
-        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
 
 

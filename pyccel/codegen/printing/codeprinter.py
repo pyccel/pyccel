@@ -10,7 +10,6 @@ from sympy.core.compatibility import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
-from sympy.printing.precedence import precedence
 
 from pyccel.ast.core import Assign
 from pyccel.ast import Real
@@ -85,95 +84,12 @@ class CodePrinter(StrPrinter):
                                   "subclass of CodePrinter.")
 
 
-
-
     def _print_NumberSymbol(self, expr):
         return str(expr)
 
     def _print_Dummy(self, expr):
         # dummies must be printed as unique symbols
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
-
-
-    def _print_And(self, expr):
-        PREC = precedence(expr)
-        return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Or(self, expr):
-        PREC = precedence(expr)
-        return (" %s " % self._operators['or']).join(self.parenthesize(a, PREC)
-                for a in sorted(expr.args, key=default_sort_key))
-
-    def _print_Xor(self, expr):
-        if self._operators.get('xor') is None:
-            return self._print_not_supported(expr)
-        PREC = precedence(expr)
-        return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
-                for a in expr.args)
-
-    def _print_Equivalent(self, expr):
-        if self._operators.get('equivalent') is None:
-            return self._print_not_supported(expr)
-        PREC = precedence(expr)
-        return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
-                for a in expr.args)
-
-    def _print_Not(self, expr):
-        PREC = precedence(expr)
-        return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
-
-    def _print_Mul(self, expr):
-        prec = precedence(expr)
-
-        c, e = expr.as_coeff_Mul()
-        if c < 0:
-            expr = _keep_coeff(-c, e)
-            sign = "-"
-        else:
-            sign = ""
-
-        a = []  # items in the numerator
-        b = []  # items that are in the denominator (if any)
-
-        if self.order not in ('old', 'none'):
-            args = expr.as_ordered_factors()
-        else:
-            # use make_args in case expr was something like -x -> x
-            args = Mul.make_args(expr)
-
-        # Gather args for numerator/denominator
-        flag = True
-        for item in args:
-            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                base = item.base
-                if base.is_integer and flag:
-                    flag = False
-                    base = Real(item.base)
-                    #we only need to do it once
-                    #to one of the denominator args
-                if item.exp != -1:
-                    b.append(Pow(base, -item.exp, evaluate=False))
-                else:
-                    b.append(Pow(base, -item.exp))
-            else:
-                a.append(item)
-
-        a = a or [S.One]
-
-        a_str = [self.parenthesize(x, prec) for x in a]
-        b_str = [self.parenthesize(x, prec) for x in b]
-
-        if len(b) == 0:
-            return sign + '*'.join(a_str)
-        elif len(b) == 1:
-            if len(a) == 1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/" % a_str[0] + '*'.join(b_str)
-            else:
-                return sign + '*'.join(a_str) + "/%s" % b_str[0]
-        else:
-            return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
-
 
     def _print_not_supported(self, expr):
         raise TypeError("{0} not supported in {1}".format(type(expr), self.language))

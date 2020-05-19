@@ -4,7 +4,7 @@
 import numpy
 from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
-from sympy import Float
+from sympy import Expr
 from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log, tan
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
@@ -14,16 +14,22 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .basic import PyccelAstNode
 from .core import (Variable, IndexedElement, Slice, Len,
-                   For, Range, Assign, List, Nil, Add, Mul,
-                   ValuedArgument, Constant, Pow, process_shape)
-from .builtins  import Int as PythonInt
-from .builtins  import PythonFloat, PythonTuple
-from .datatypes import dtype_and_precision_registry as dtype_registry
-from .datatypes import sp_dtype, str_dtype
-from .datatypes import default_precision
-from .datatypes import datatype
-from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
-from .numbers   import Integer
+                   For, Range, Assign, List, Nil,
+                   ValuedArgument, Constant, process_shape)
+
+from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
+
+from .builtins       import Int as PythonInt
+from .builtins       import PythonFloat, PythonTuple
+from .datatypes      import dtype_and_precision_registry as dtype_registry
+from .datatypes      import default_precision
+from .datatypes      import datatype
+from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .numbers        import Integer, Float
+from .type_inference import sp_dtype, str_dtype
+
 
 __all__ = (
     'Abs',
@@ -165,7 +171,7 @@ class Array(Application):
         # row-major ordering, while Fortran initial values are column-major
         shape = self.shape[::-1]
 
-        shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
+        shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
 
         lhs_code = printer(lhs)
         code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
@@ -196,7 +202,7 @@ class NumpySum(Function):
     is_zero = False
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         return Basic.__new__(cls, arg)
@@ -238,7 +244,7 @@ class Product(Function):
     is_zero = False
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
@@ -270,9 +276,9 @@ class Matmul(Application):
     """
 
     def __new__(cls, a, b):
-        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Mul, Add, Pow, sp_Rational)):
+        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
         return Basic.__new__(cls, a, b)
 
@@ -340,6 +346,10 @@ class PyccelArraySize(Function):
     def index(self):
         return self._args[1]
 
+    @property
+    def rank(self):
+        return 0
+
     def _sympystr(self, printer):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
 
@@ -384,7 +394,7 @@ class Real(Function):
     def __new__(cls, arg):
 
         _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       Float, Mul, Add, Pow, sp_Rational, Application)
+                       Float, Expr, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -464,7 +474,7 @@ class Complex(Function):
     def __new__(cls, arg0, arg1=Float(0)):
 
         _valid_args = (Variable, IndexedElement, Integer,
-                       Float, Mul, Add, Pow)
+                       Float, Expr)
 
         for arg in [arg0, arg1]:
             if not isinstance(arg, _valid_args):
@@ -912,7 +922,7 @@ class Rand(Function, PyccelAstNode):
                 # Transpose indices because of Fortran column-major ordering
                 shape = self.shape[::-1]
 
-                shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
+                shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
 
                 code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
                 stmts.append(code_alloc)
@@ -1032,7 +1042,7 @@ class Full(Application):
             # Transpose indices because of Fortran column-major ordering
             shape = self.shape if self.order == 'F' else self.shape[::-1]
 
-            shape_code = ', '.join('0:' + printer(Add(i, Integer(-1))) for i in shape)
+            shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
 
             code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
             stmts.append(code_alloc)
@@ -1216,14 +1226,12 @@ class Norm(Function):
 
         return rhs
 
-#=======================================================================================
-
-class Sqrt(Pow):
-
+#=====================================================
+class Sqrt(PyccelPow):
     def __new__(cls, base):
-        return Pow(base, 0.5, evaluate=False)
+        return PyccelPow(PyccelAssociativeParenthesis(base), Float(0.5))
 
-#=======================================================================================
+#====================================================
 
 class Mod(Function):
     is_zero = False
@@ -1443,3 +1451,4 @@ class Int64(NumpyInt):
     @property
     def precision(self):
         return dtype_registry['int64'][1]
+
