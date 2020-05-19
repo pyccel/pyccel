@@ -64,6 +64,7 @@ def sp_dtype(expr):
         return 'real'
     elif isinstance(expr, (BooleanFalse, BooleanTrue)):
         return 'bool'
+
     raise TypeError('Unknown datatype {0}'.format(type(expr)))
 
 
