@@ -14,9 +14,9 @@ from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables          import iterable
 
-from .basic import Basic
+from .basic     import Basic, PyccelAstNode
 from .datatypes import default_precision
-from .numbers import Integer
+from .numbers   import Integer
 
 __all__ = (
     'Bool',
