@@ -4,12 +4,12 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors     import Errors
-from pyccel.parser            import Parser
-from pyccel.codegen.codegen   import Codegen
-from pyccel.codegen.utilities import construct_flags
-from pyccel.codegen.utilities import compile_fortran
-from pyccel.codegen.f2py      import create_shared_library
+from pyccel.parser.errors               import Errors
+from pyccel.parser                      import Parser
+from pyccel.codegen.codegen             import Codegen
+from pyccel.codegen.utilities           import construct_flags
+from pyccel.codegen.utilities           import compile_files
+from pyccel.codegen.python_wrapper      import create_shared_library
 
 __all__ = ['execute_pyccel']
 
@@ -28,6 +28,7 @@ def execute_pyccel(fname, *,
                    recursive     = False,
                    verbose       = False,
                    folder        = None,
+                   language      = None,
                    compiler      = None,
                    mpi_compiler  = None,
                    fflags        = None,
@@ -83,9 +84,15 @@ def execute_pyccel(fname, *,
     # Change working directory to 'folder'
     os.chdir(folder)
 
+    if language is None:
+        language = 'fortran'
+
     # Choose Fortran compiler
     if compiler is None:
-        compiler = 'gfortran'
+        if language == 'fortran':
+            compiler = 'gfortran'
+        elif language == 'c':
+            compiler = 'gcc'
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
@@ -129,7 +136,7 @@ def execute_pyccel(fname, *,
     try:
         codegen = Codegen(ast, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
-        fname = codegen.export(fname)
+        fname = codegen.export(fname, language=language)
     except Exception:
         handle_error('code generation')
         raise
@@ -196,17 +203,18 @@ def execute_pyccel(fname, *,
     # TODO: stop at object files, do not compile executable
     #       This allows for properly linking program to modules
     #
-    try:
-        compile_fortran(fname, f90exec, flags,
-                        binary=None,
-                        verbose=verbose,
-                        modules=modules,
-                        is_module=codegen.is_module,
-                        output=pyccel_dirpath,
-                        libs=libs)
-    except Exception:
-        handle_error('Fortran compilation')
-        raise
+    if not (language == "c" and codegen.is_module):
+        try:
+            compile_files(fname, f90exec, flags,
+                            binary=None,
+                            verbose=verbose,
+                            modules=modules,
+                            is_module=codegen.is_module,
+                            output=pyccel_dirpath,
+                            libs=libs)
+        except Exception:
+            handle_error('Fortran compilation')
+            raise
 
     # For a program stop here
     if codegen.is_program:
@@ -219,13 +227,16 @@ def execute_pyccel(fname, *,
     # Create shared library
     try:
         sharedlib_filepath = create_shared_library(codegen,
+                                                   language,
                                                    pyccel_dirpath,
                                                    compiler,
                                                    mpi_compiler,
                                                    accelerator,
                                                    dep_mods,
+                                                   flags,
                                                    extra_args,
-                                                   output_name)
+                                                   output_name,
+                                                   verbose)
     except Exception:
         handle_error('shared library generation')
         raise
