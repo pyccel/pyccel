@@ -13,8 +13,6 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize("f", files)
 def test_preprocess(f):
-    print('> testing {0}'.format(str(os.path.basename(f))))
-
     pyccel = Parser(f)
     pyccel.parse()
     print(pyccel.fst)
@@ -32,6 +30,7 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
+        print('> testing {0}'.format(str(os.path.basename(f))))
         test_preprocess(f)
 
     print('\n')

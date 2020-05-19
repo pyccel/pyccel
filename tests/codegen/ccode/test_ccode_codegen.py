@@ -21,8 +21,6 @@ passing_files = list(set(files).difference(set(failing_files)))
     
 def codegen_test(f):
 
-    print('> testing {0}'.format(str(f)))
-
     pyccel = Parser(f)
     ast = pyccel.parse()
 
@@ -59,6 +57,7 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
+        print('> testing {0}'.format(str(os.path.basename(f))))
         codegen_test(f)
 
     print('\n')

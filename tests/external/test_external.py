@@ -19,7 +19,6 @@ def get_files_from_folder(foldername):
 @pytest.mark.xfail(reason="Broken mpi4py support, see issue #251")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi4py'))
 def test_mpi4py(f):
-    print('> testing {0}'.format(str(os.path.basename(f))))
 
     execute_pyccel(f, compiler='mpif90')
 
@@ -34,4 +33,5 @@ if __name__ == '__main__':
     print('***                           ***')
     print('*********************************')
     for f in get_files_from_folder('mpi4py'):
+        print('> testing {0}'.format(str(os.path.basename(f))))
         test_mpi4py(f)

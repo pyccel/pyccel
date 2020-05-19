@@ -17,27 +17,22 @@ def get_files_from_folder(foldername):
 
 @pytest.mark.parametrize("f", get_files_from_folder('blas'))
 def test_blas(f):
-    print('> testing {0}'.format(str(os.path.basename(f))))
     execute_pyccel(f, libs=['blas'])
 
 @pytest.mark.parametrize("f", get_files_from_folder('lapack'))
 def test_lapack(f):
-    print('> testing {0}'.format(str(os.path.basename(f))))
     execute_pyccel(f, libs=['blas', 'lapack'])
 
 #@pytest.mark.parametrize("f", get_files_from_folder('MPI'))
 #def test_mpi(f):
-#    print('> testing {0}'.format(str(os.path.basename(f))))
 #    execute_pyccel(f, compiler='mpif90')
 #
 #@pytest.mark.parametrize("f", get_files_from_folder('openmp'))
 #def test_openmp(f):
-#    print('> testing {0}'.format(str(os.path.basename(f))))
 #    execute_pyccel(f, accelerator='openmp')
 #
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #def test_openacc():
-#    print('> testing {0}'.format(str(os.path.basename(f))))
 #    execute_pyccel(f, compiler='pgfortran', accelerator='openacc')
 
 
@@ -49,6 +44,7 @@ if __name__ == '__main__':
     print('***                           ***')
     print('*********************************')
     for f in get_files_from_folder('blas'):
+        print('> testing {0}'.format(str(os.path.basename(f))))
         test_blas(f)
     print('\n')
 
@@ -58,6 +54,7 @@ if __name__ == '__main__':
     print('***                           ***')
     print('*********************************')
     for f in get_files_from_folder('lapack'):
+        print('> testing {0}'.format(str(os.path.basename(f))))
         test_lapack(f)
     print('\n')
 
@@ -67,6 +64,7 @@ if __name__ == '__main__':
 #    print('***                           ***')
 #    print('*********************************')
 #    for f in get_files_from_folder('MPI'):
+#        print('> testing {0}'.format(str(os.path.basename(f))))
 #        test_mpi(f)
 #    print('\n')
 #
@@ -76,6 +74,7 @@ if __name__ == '__main__':
 #    print('***                           ***')
 #    print('*********************************')
 #    for f in get_files_from_folder('openmp'):
+#        print('> testing {0}'.format(str(os.path.basename(f))))
 #        test_openmp(f)
 #    print('\n')
 #
@@ -85,5 +84,6 @@ if __name__ == '__main__':
 #    print('***                           ***')
 #    print('*********************************')
 #    for f in get_files_from_folder('openacc'):
+#        print('> testing {0}'.format(str(os.path.basename(f))))
 #        test_openacc(f)
 #    print('\n')
