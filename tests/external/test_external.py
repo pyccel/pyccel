@@ -7,7 +7,6 @@ import pytest
 
 from pyccel.codegen.pipeline import execute_pyccel
 import os
-import pytest
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
