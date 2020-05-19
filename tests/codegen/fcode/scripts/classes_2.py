@@ -32,6 +32,6 @@ P2 = Points(P1)
 P3 = P2.x
 P4 = P2
 P5 = P2.x.x
-print x,P5
+print(x,P5)
 
 

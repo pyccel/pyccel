@@ -32,19 +32,19 @@ print(sum(t))
 x1 = [1, 2, 3]
 
 for i in x1:
-    print i
+    print(i)
 
 y1 = [4, 5, 6]
 
 for i1,j1 in zip(x1, y1):
-    print i1,j1
+    print(i1,j1)
 
 for i1,j1 in enumerate(x1):
-    print i1,j1
+    print(i1,j1)
 
 from itertools import product
 for i2,j2 in product(x1, y1):
-    print i2,j2
+    print(i2,j2)
 
 #$ header function f(int)
 def f(z):

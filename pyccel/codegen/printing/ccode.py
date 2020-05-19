@@ -7,6 +7,12 @@ from sympy.printing.precedence import precedence
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import CommentBlock, Comment
 
+
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+
+
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
@@ -157,6 +163,28 @@ class CCodePrinter(CodePrinter):
         code +='return {0};'.format(self._print(expr.expr[0]))
         return code
 
+    def _print_PyccelAdd(self, expr):
+        return ' + '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMinus(self, expr):
+        return ' - '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelMul(self, expr):
+        return ' * '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelDiv(self, expr):
+        args = [self._print(a) for a in expr.args]
+        dtypes = [sp_dtype(a) for a in expr.args]
+        if all(a == 'integer' for a in dtypes):
+            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+        return  ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelAssociativeParenthesis(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnary(self, expr):
+        return '({})'.format(self._print(expr.args[0]))
+
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
         op = expr.op._symbol
@@ -171,7 +199,7 @@ class CCodePrinter(CodePrinter):
     def _print_For(self, expr):
         target = self._print(expr.target)
         if isinstance(expr.iterable, Range):
-            start, stop, step = expr.iterable.args
+            start, stop, step = [self._print(e) for e in expr.iterable.args]
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
         body = '\n'.join(self._print(i) for i in expr.body.body)
