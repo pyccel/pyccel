@@ -15,9 +15,11 @@ path_dir = os.path.join(base_dir, 'scripts')
 files = sorted(os.listdir(path_dir))
 files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
-@pytest.mark.python
-@pytest.mark.parametrize( "f", files )
-def test_codegen(f):
+
+failing_files = [os.path.join(path_dir,'arrays.py')]
+passing_files = list(set(files).difference(set(failing_files)))
+    
+def codegen_test(f):
 
     print('> testing {0}'.format(str(f)))
 
@@ -31,20 +33,33 @@ def test_codegen(f):
     name = os.path.splitext(name)[0]
 
     codegen = Codegen(ast, name)
-    code = codegen.doprint(language='python')
+    code = codegen.doprint(language='c')
 
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+
+@pytest.mark.c
+@pytest.mark.parametrize( "f", passing_files )
+def test_passing_codegen(f):
+    codegen_test(f)
+
+@pytest.mark.c
+@pytest.mark.xfail
+@pytest.mark.parametrize( "f", failing_files )
+def test_failing_codegen(f):
+    codegen_test(f)
+
 ######################
 if __name__ == '__main__':
     print('*********************************')
     print('***                           ***')
-    print('***  TESTING CODEGEN PYCODE   ***')
+    print('***  TESTING CODEGEN CCODE   ***')
     print('***                           ***')
     print('*********************************')
 
     for f in files:
-        test_codegen(f)
+        codegen_test(f)
 
     print('\n')
+

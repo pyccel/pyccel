@@ -43,6 +43,7 @@ def get_source_function(func):
 
 #==============================================================================
 def epyccel_seq(function_or_module,
+                language     = None,
                 compiler     = None,
                 mpi_compiler = None,
                 fflags       = None,
@@ -106,6 +107,7 @@ def epyccel_seq(function_or_module,
         # Generate shared library
         execute_pyccel(pymod_filename,
                        verbose     = verbose,
+                       language    = language,
                        compiler    = compiler,
                        mpi_compiler= mpi_compiler,
                        fflags      = fflags,
@@ -123,6 +125,11 @@ def epyccel_seq(function_or_module,
 
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)
+
+    # http://ballingt.com/import-invalidate-caches
+    # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
+    importlib.invalidate_caches()
+
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 

@@ -40,37 +40,40 @@ def double_loop( n ):
     return z
 
 # ...
-@types( 'int[:,:](order=C)' )
-def double_loop_on_2d_array_C( z ):
-
-    from numpy import shape
-
-    m, n = shape( z )
-
-    for i in range( m ):
-        for j in range( n ):
-            z[i,j] = i-j
-
+@types( int )
+def sum_natural_numbers_2( n ):
+    x = 0.
+    for i in range( 1, n+1 ):
+        x= x+i
+    return x
 
 # ...
-@types( 'int[:,:](order=F)' )
-def double_loop_on_2d_array_F( z ):
-
-    from numpy import shape
-
-    m, n = shape( z )
-
-    for i in range( m ):
-        for j in range( n ):
-            z[i,j] = i-j
+@types( int )
+def factorial_2( n ):
+    x = 1.
+    for i in range( 2, n+1 ):
+        x = x*i
+    return x
 
 # ...
-@types( 'real[:], real[:]' )
-def product_loop_on_real_array( z, out ):
+@types( int )
+def fibonacci_2( n ):
+    x = 0.
+    y = 1.
+    for i in range( n ):
+        z = x+y
+        x = y
+        y = z
+    return x
 
-    from numpy     import shape
+# ...
+@types( int )
+def double_loop_2( n ):
+    x = 0.
+    for i in range( 3, 10 ):
+        x = x+1
+        y  = n*x
+        for j in range( 4, 15 ):
+            z = x-y
+    return z
 
-    n, = shape( z )
-
-    for i in range(n):
-        out[i] = z[i]**2
