@@ -56,7 +56,7 @@ def sp_dtype(expr):
             return 'complex'
     elif isinstance(expr, (PyccelUnary, PyccelAssociativeParenthesis)):
         return sp_dtype(expr.args[0])
-    elif isinstance(expr, (Variable, IndexedElement, DottedVariable)):
+    elif isinstance(expr, (Variable, IndexedElement, Application, DottedVariable)):
         return str_dtype(expr.dtype)
 
     elif isinstance(expr, Integer):
@@ -65,15 +65,6 @@ def sp_dtype(expr):
         return 'real'
     elif isinstance(expr, (BooleanFalse, BooleanTrue)):
         return 'bool'
-    elif isinstance(expr, Application):
-        if expr.is_integer:
-            return 'integer'
-        elif expr.is_real:
-            return 'real'
-        elif expr.is_complex:
-            return 'complex'
-        elif expr.is_Boolean:
-            return 'bool'
 
     raise TypeError('Unknown datatype {0}'.format(type(expr)))
 
