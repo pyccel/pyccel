@@ -1401,8 +1401,8 @@ class Max(Function):
 class NumpyComplex(PythonComplex):
     """ Represents a call to numpy.complex() function.
     """
-    def __new__(cls, arg):
-        return PythonComplex.__new__(cls, arg)
+    def __new__(cls, arg0, arg1=Float(0)):
+        return PythonComplex.__new__(cls, arg0, arg1)
 
 class Complex64(Complex):
     @property
