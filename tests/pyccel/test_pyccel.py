@@ -133,7 +133,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
         rx = re.compile('[-0-9eE]+')
         p, p_output = get_value(p_output, rx, int)
         f, f_output = get_value(f_output, rx, int)
-        p==f
+        assert(p==f)
     else:
         raise NotImplementedError("Type comparison not implemented")
     return p_output,f_output
