@@ -29,15 +29,21 @@ class Integer(sp_Integer, PyccelAstNode):
     _rank      = 0
     _precision = default_precision['int']
     def __new__(cls, val):
-        val = int(val)
-        if val == 0:
-            return Zero()
-        elif val == 1:
-            return One()
-        elif val == -1:
-            return NegativeOne()
-        else:
-            return sp_Integer.__new__(cls, val)
+        ival = int(val)
+        obj = Expr.__new__(cls, ival)
+        obj.p = ival
+        return obj
+
+#    def __new__(cls, val):
+#        val = int(val)
+#        if val == 0:
+#            return Zero()
+#        elif val == 1:
+#            return One()
+#        elif val == -1:
+#            return NegativeOne()
+#        else:
+#            return sp_Integer.__new__(cls, val)
 
 class One(Integer):
     _dtype     = 'int'
