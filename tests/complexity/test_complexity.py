@@ -1,6 +1,7 @@
 from pyccel.complexity.memory import MemComplexity
 from pyccel.complexity.arithmetic import OpComplexity
 import os
+import pytest
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')

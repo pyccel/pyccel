@@ -3,6 +3,7 @@
 from pyccel.parser import Parser
 from pyccel.parser.errors import Errors
 import os
+import pytest
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
@@ -10,6 +11,7 @@ path_dir = os.path.join(base_dir, 'scripts')
 files = sorted(os.listdir(path_dir))
 files = [f for f in files if (f.endswith(".py"))]
 
+@pytest.mark.parametrize( "f", files)
 def test_syntax(f):
 
     print('> testing {0}'.format(str(f)))
