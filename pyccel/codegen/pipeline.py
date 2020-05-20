@@ -41,6 +41,10 @@ def execute_pyccel(fname, *,
                    accelerator   = None,
                    output_name   = None):
 
+    # Reset Errors singleton before parsing a new file
+    errors = Errors()
+    errors.reset()
+
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
     # Copy list arguments to local lists to avoid unexpected behavior
@@ -154,10 +158,6 @@ def execute_pyccel(fname, *,
 
     if convert_only:
         return True
-
-    # Reset Errors singleton
-    errors = Errors()
-    errors.reset()
 
     # ...
     # Determine all .o files and all folders needed by executable
