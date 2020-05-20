@@ -31,7 +31,7 @@ def test_syntax_errors(f):
     with pytest.raises(Exception):
         ast = pyccel.parse()
 
-        assert(errors.num_messages()==0)
+        assert(not errors.is_errors())
 
 semantic_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
 semantic_errors_args = [f if os.path.basename(f) not in semantic_xfails \
@@ -51,7 +51,7 @@ def test_semantic_errors(f):
     settings = {}
     ast = pyccel.annotate(**settings)
 
-    assert(errors.num_messages()!=0)
+    assert(errors.is_errors())
 
 
 ######################

@@ -122,7 +122,7 @@ def execute_pyccel(fname, *,
         handle_error('parsing (syntax)')
         raise
 
-    if (Errors().num_messages()>0):
+    if errors.is_errors():
         return False
 
     if syntax_only:
@@ -136,7 +136,7 @@ def execute_pyccel(fname, *,
         handle_error('annotation (semantic)')
         raise
 
-    if (Errors().num_messages()>0):
+    if errors.is_errors():
         return False
 
     if semantic_only:
@@ -150,6 +150,9 @@ def execute_pyccel(fname, *,
     except Exception:
         handle_error('code generation')
         raise
+
+    if errors.is_errors():
+        return False
 
     #------------------------------------------------------
     # TODO: collect dependencies and proceed recursively
