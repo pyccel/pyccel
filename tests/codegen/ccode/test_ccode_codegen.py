@@ -12,14 +12,14 @@ import os
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')
 
+failing_files = {'arrays.py':''}
 files = sorted(os.listdir(path_dir))
-files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
-
-
-failing_files = [os.path.join(path_dir,'arrays.py')]
-passing_files = list(set(files).difference(set(failing_files)))
-    
-def codegen_test(f):
+files = [os.path.join(path_dir,f) if f not in failing_files \
+         else pytest.param(os.path.join(path_dir,f), marks = pytest.mark.xfail(reason=failing_files[f])) \
+         for f in files]
+@pytest.mark.c
+@pytest.mark.parametrize("f", files)
+def test_codegen(f):
 
     pyccel = Parser(f)
     ast = pyccel.parse()
@@ -36,17 +36,6 @@ def codegen_test(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
-
-@pytest.mark.c
-@pytest.mark.parametrize( "f", passing_files )
-def test_passing_codegen(f):
-    codegen_test(f)
-
-@pytest.mark.c
-@pytest.mark.xfail
-@pytest.mark.parametrize( "f", failing_files )
-def test_failing_codegen(f):
-    codegen_test(f)
 
 ######################
 if __name__ == '__main__':
