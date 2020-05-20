@@ -153,7 +153,7 @@ def fst_move_directives(x):
         fst_move_directives(stmt.value)
         i_son = x.index(stmt)
 
-        while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+        while len(stmt.value)>0 and isinstance(stmt.value[-1], (CommentNode, EndlNode)):
             cmt = stmt.value[-1]
 
             stmt.value.remove(cmt)
@@ -172,7 +172,7 @@ def fst_move_directives(x):
         for stmt in ifblock.value:
             fst_move_directives(stmt.value)
 
-            while isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+            while len(stmt.value)>0 and isinstance(stmt.value[-1], (CommentNode, EndlNode)):
                 cmt = stmt.value[-1]
                 stmt.value.remove(cmt)
                 # insert right after the function

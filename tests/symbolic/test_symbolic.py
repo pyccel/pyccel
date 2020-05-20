@@ -4,6 +4,7 @@ from pyccel.parser import Parser
 from pyccel.codegen import Codegen
 from pyccel.parser.errors import Errors
 import os
+import pytest
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')

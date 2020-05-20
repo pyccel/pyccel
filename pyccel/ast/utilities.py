@@ -109,6 +109,7 @@ numpy_functions = {
     'log'       : Log,
     'fabs'      : Abs,
     'absolute'  : Abs,
+    'abs'       : Abs,
     'sqrt'      : Sqrt
 }
 

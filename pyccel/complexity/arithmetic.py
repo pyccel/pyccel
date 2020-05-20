@@ -5,7 +5,7 @@ from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
 
 from pyccel.ast import (For, Assign, NewLine,
-                        Zeros, Ones, PythonTuple)
+                        Zeros, Ones, PythonTuple, CodeBlock)
 
 from pyccel.complexity.basic import Complexity
 
@@ -34,6 +34,8 @@ def count_ops(expr, visual=None):
         return a*ops
     elif isinstance(expr, (Tuple,PythonTuple)):
         return sum(count_ops(i, visual) for i in expr)
+    elif isinstance(expr, CodeBlock):
+        return sum(count_ops(i, visual) for i in expr.body)
     elif isinstance(expr, (Zeros, Ones,NewLine)):
         return 0
     else:

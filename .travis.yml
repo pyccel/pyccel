@@ -30,10 +30,10 @@ before_script:  # Coverage instructions - setup
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
 
 script:
-  - ${PYTHON} -m pytest -m "not parallel and c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
-  - ${PYTHON} -m pytest -m "not parallel and not c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
-  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel
-#  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel
+  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
+  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
+  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel -rx
+#  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel -rx
 
 after_script:  # Coverage instructions - collections
   - coverage combine

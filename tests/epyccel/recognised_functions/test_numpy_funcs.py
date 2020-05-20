@@ -351,7 +351,7 @@ def test_arctan2_call():
     @types('real')
     def arctan2_call(x,y):
         from numpy import arctan2
-        return arctan2(x)
+        return arctan2(x,y)
 
     f1 = epyccel(arctan2_call)
     x = rand()
@@ -360,10 +360,10 @@ def test_arctan2_call():
 
 @pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_arctan2_phrase():
-    @types('real','real')
+    @types('real','real','real')
     def arctan2_phrase(x,y,z):
         from numpy import arctan2
-        a = arctan2(x,y)+arctan2(x,y,z)
+        a = arctan2(x,y)+arctan2(x,z)
         return a
 
     f2 = epyccel(arctan2_phrase)

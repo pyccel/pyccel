@@ -8,7 +8,7 @@
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors
+from pyccel.parser.errors import Errors, PyccelSemanticError, PyccelSyntaxError
 import os
 import pytest
 
@@ -20,35 +20,52 @@ def get_files_from_folder(foldername):
     files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
     return files
 
-@pytest.mark.parametrize("f",get_files_from_folder("syntax"))
-def test_syntax_errors(f):
-    pyccel = Parser(f)
-
-    try:
-        ast = pyccel.parse()
-    except:
-        pass
-
+@pytest.mark.parametrize("f",get_files_from_folder("syntax_blockers"))
+def test_syntax_blockers(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
 
-@pytest.mark.parametrize("f",get_files_from_folder("semantic"))
+    pyccel = Parser(f)
+
+    with pytest.raises(PyccelSyntaxError):
+        ast = pyccel.parse()
+
+    assert(errors.is_blockers())
+
+@pytest.mark.parametrize("f",get_files_from_folder("syntax_errors"))
+def test_syntax_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+
+    ast = pyccel.parse()
+
+    assert(errors.is_errors())
+
+semantic_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
+semantic_errors_args = [f if os.path.basename(f) not in semantic_xfails \
+                          else pytest.param(f, marks = pytest.mark.xfail(reason=semantic_xfails[os.path.basename(f)])) \
+                          for f in get_files_from_folder("semantic")]
+@pytest.mark.parametrize("f", semantic_errors_args)
 def test_semantic_errors(f):
     print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
 
     pyccel = Parser(f, show_traceback=False)
     ast = pyccel.parse()
 
-    try:
-        settings = {}
+    settings = {}
+    with pytest.raises(PyccelSemanticError):
         ast = pyccel.annotate(**settings)
-    except:
-        pass
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+    assert(errors.is_errors())
+
 
 ######################
 if __name__ == '__main__':
