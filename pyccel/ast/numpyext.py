@@ -22,7 +22,7 @@ from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelG
 from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
 from .builtins       import Int as PythonInt
-from .builtins       import PythonFloat, PythonTuple
+from .builtins       import PythonFloat, PythonTuple, Complex as PythonComplex
 from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
 from .datatypes      import datatype
@@ -1398,6 +1398,11 @@ class Max(Function):
 
 
 #=======================================================================================
+class NumpyComplex(PythonComplex):
+    """ Represents a call to numpy.complex() function.
+    """
+    def __new__(cls, arg0, arg1=Float(0)):
+        return PythonComplex.__new__(cls, arg0, arg1)
 
 class Complex64(Complex):
     @property

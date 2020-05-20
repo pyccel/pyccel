@@ -1,78 +1,89 @@
 # coding: utf-8
 
-# TODO test if compiler exists before running mpi, openacc
+# TODO test if compiler exists before execute_pyccelning mpi, openacc
 #      execute the binary file
 
 from pyccel.codegen.pipeline import execute_pyccel
 import os
+import pytest
 
-def run(test_dir, **settings):
-    init_dir = os.getcwd()
+def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
-    path_dir = os.path.join(base_dir, os.path.join('scripts', test_dir))
+    path_dir = os.path.join(base_dir, os.path.join('scripts',foldername))
 
     files = sorted(os.listdir(path_dir))
-    files = [f for f in files if (f.endswith(".py"))]
+    files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
+    return files
 
-    os.chdir(path_dir)
-    for f in files:
-        print('> testing {0}'.format(str(f)))
+@pytest.mark.parametrize("f", get_files_from_folder('blas'))
+def test_blas(f):
+    execute_pyccel(f, libs=['blas'])
 
-        execute_pyccel(f, **settings)
+@pytest.mark.parametrize("f", get_files_from_folder('lapack'))
+def test_lapack(f):
+    execute_pyccel(f, libs=['blas', 'lapack'])
 
-    os.chdir(init_dir)
-    print('\n')
-
-def test_blas():
-    print('*********************************')
-    print('***                           ***')
-    print('***    TESTING MACRO/BLAS     ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('blas', libs=['blas'])
-
-def test_lapack():
-    print('*********************************')
-    print('***                           ***')
-    print('***    TESTING MACRO/LAPACK   ***')
-    print('***                           ***')
-    print('*********************************')
-
-    run('lapack', libs=['blas', 'lapack'])
-
-#def test_mpi():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***    TESTING MACRO/MPI      ***')
-#    print('***                           ***')
-#    print('*********************************')
+#@pytest.mark.parametrize("f", get_files_from_folder('MPI'))
+#def test_mpi(f):
+#    execute_pyccel(f, compiler='mpif90')
 #
-#    run('mpi', compiler='mpif90')
-
-#def test_openmp():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***    TESTING MACRO/OPENMP   ***')
-#    print('***                           ***')
-#    print('*********************************')
+#@pytest.mark.parametrize("f", get_files_from_folder('openmp'))
+#def test_openmp(f):
+#    execute_pyccel(f, accelerator='openmp')
 #
-#    run('openmp', accelerator='openmp')
-
+#@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #def test_openacc():
-#    print('*********************************')
-#    print('***                           ***')
-#    print('***    TESTING MACRO/OPENACC  ***')
-#    print('***                           ***')
-#    print('*********************************')
-#
-#    run('openacc', compiler='pgfortran', accelerator='openacc')
+#    execute_pyccel(f, compiler='pgfortran', accelerator='openacc')
 
 
 ######################
 if __name__ == '__main__':
-    test_blas()
-    test_lapack()
-#    test_mpi()
-#    test_openmp()
-#    test_openacc()
+    print('*********************************')
+    print('***                           ***')
+    print('***  TESTING MACRO/BLAS    ***')
+    print('***                           ***')
+    print('*********************************')
+    for f in get_files_from_folder('blas'):
+        print('> testing {0}'.format(str(os.path.basename(f))))
+        test_blas(f)
+    print('\n')
+
+    print('*********************************')
+    print('***                           ***')
+    print('***  TESTING MACRO/LAPACK  ***')
+    print('***                           ***')
+    print('*********************************')
+    for f in get_files_from_folder('lapack'):
+        print('> testing {0}'.format(str(os.path.basename(f))))
+        test_lapack(f)
+    print('\n')
+
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***  TESTING MACRO/MPI     ***')
+#    print('***                           ***')
+#    print('*********************************')
+#    for f in get_files_from_folder('MPI'):
+#        print('> testing {0}'.format(str(os.path.basename(f))))
+#        test_mpi(f)
+#    print('\n')
+#
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***  TESTING MACRO/OPENMP  ***')
+#    print('***                           ***')
+#    print('*********************************')
+#    for f in get_files_from_folder('openmp'):
+#        print('> testing {0}'.format(str(os.path.basename(f))))
+#        test_openmp(f)
+#    print('\n')
+#
+#    print('*********************************')
+#    print('***                           ***')
+#    print('***  TESTING MACRO/OPENACC ***')
+#    print('***                           ***')
+#    print('*********************************')
+#    for f in get_files_from_folder('openacc'):
+#        print('> testing {0}'.format(str(os.path.basename(f))))
+#        test_openacc(f)
+#    print('\n')

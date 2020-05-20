@@ -930,6 +930,7 @@ class SemanticParser(BasicParser):
 
             elif name in ['Int','Int32','Int64',
                           'PythonFloat','NumpyFloat','Float32','Float64',
+                          'NumpyInt','NumpyComplex',
                           'Complex','Complex64','Complex128',
                           'Real','Imag','Bool']:
 

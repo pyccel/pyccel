@@ -1,12 +1,11 @@
 from numpy import zeros
 from numpy import ones
-from numpy import sum
+from numpy import sum as np_sum
 from numpy import array
 from numpy import shape
-from numpy import diag, cross
+from numpy import diag
 from numpy import zeros_like
 from numpy import full_like
-from numpy import int
 
 x1 = array((1,2,3,5,8,5), 'float')
 x2 = array((5,8,6,9,8,2), 'int')
@@ -45,7 +44,7 @@ nn = shape(x14)
 mm = shape(array([1.,2.,3.]))
 
 x17 = ones((n,m,2), 'double')
-print(sum(x17)==n*m*2)
+print(np_sum(x17)==n*m*2)
 
 x18 = zeros((3, 3))
 x19 = diag(x18)

@@ -1,3 +1,5 @@
+# pylint: disable=pointless-statement
+
 a[0]
 a[:]
 c[:,:]

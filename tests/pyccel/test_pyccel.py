@@ -93,39 +93,47 @@ def get_fortran_output(abs_path):
     return out
 
 #------------------------------------------------------------------------------
+def get_value(string, regex, conversion):
+    match = regex.search(string)
+    assert(match)
+    value = conversion(match.group())
+    string = string[match.span()[1]:]
+    return value, string
+
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     if dtype is str:
         assert(p_output.strip()==f_output.strip())
     elif dtype is complex:
-        p_output, f_output = compare_pyth_fort_output_by_type( p_output, f_output, float)
-        p_output, f_output = compare_pyth_fort_output_by_type( p_output, f_output, float)
+        rx = re.compile('[-0-9.eEj]+')
+        p, p_output = get_value(p_output, rx, complex)
+        if p.imag == 0:
+            p2, p_output = get_value(p_output, rx, complex)
+            p = p+p2
+
+        rx = re.compile('[-0-9.eE]+')
+        f, f_output  = get_value(f_output, rx, float)
+        f2, f_output = get_value(f_output, rx, float)
+        f = f+f2*1j
+        assert(np.isclose(p,f))
     elif dtype is bool:
         rx = re.compile('TRUE|True|true|1|T|t|FALSE|False|false|F|f|0')
-        p_match = rx.search(p_output)
-        f_match = rx.search(f_output)
-        assert(p_match)
-        assert(f_match)
-        p = p_match.group().lower() in ['true', 't', '1']
-        f = f_match.group().lower() in ['true', 't', '1']
+        bool_conversion = lambda m: m.lower() in ['true', 't', '1']
+        p, p_output = get_value(p_output, rx, bool_conversion)
+        f, f_output = get_value(f_output, rx, bool_conversion)
         assert(p==f)
-        p_output=p_output[p_match.span()[1]:]
-        f_output=f_output[f_match.span()[1]:]
 
-    elif dtype is float or dtype is int:
-        if dtype is float:
-            rx = re.compile('[-0-9.eE]+')
-        elif dtype is int:
-            rx = re.compile('[-0-9eE]+')
-        p_match = rx.search(p_output)
-        f_match = rx.search(f_output)
-        assert(p_match)
-        assert(f_match)
-        p = dtype(p_match.group())
-        f = dtype(f_match.group())
+    elif dtype is float:
+        rx = re.compile('[-0-9.eE]+')
+        p, p_output = get_value(p_output, rx, float)
+        f, f_output = get_value(f_output, rx, float)
         assert(np.isclose(p,f))
-        p_output=p_output[p_match.span()[1]:]
-        f_output=f_output[f_match.span()[1]:]
+
+    elif dtype is int:
+        rx = re.compile('[-0-9eE]+')
+        p, p_output = get_value(p_output, rx, int)
+        f, f_output = get_value(f_output, rx, int)
+        assert(p==f)
     else:
         raise NotImplementedError("Type comparison not implemented")
     return p_output,f_output
@@ -316,9 +324,15 @@ def test_funcs(language):
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
+#------------------------------------------------------------------------------
 def test_expressions():
+    types = [float, complex, int, float, float, int] + [float]*3 + \
+            [complex, int, complex, complex, int, float] + [complex]*3 + \
+            [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
+            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex]
     pyccel_test("scripts/expressions.py",
-                output_dtype = bool)
+                output_dtype = types)
+
 #------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
@@ -404,6 +418,7 @@ def test_multiple_results():
                 float,float,float,float,float,float,
                 float,float,float,float,float,float])
 
+#------------------------------------------------------------------------------
 def test_tuples():
     types = [int]*4 + [bool] + [float] + [int]*9 + [float]*4 + [int] \
             + [int,bool,complex]*9 + [int,bool] + [int]*3 + [int,bool]*2

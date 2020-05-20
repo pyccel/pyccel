@@ -14,7 +14,7 @@ n = 2
 m = 3
 
 from numpy import zeros
-from numpy import sum
+from numpy import sum as np_sum
 z = zeros((n,m,2), 'double')
 
 for i in range(0, n):
@@ -22,11 +22,11 @@ for i in range(0, n):
         z[i,j,0] = i-j
         z[i,j,1] = i+j
 
-print(sum(z))
+print(np_sum(z))
 t = zeros(n, 'double')
 t[:2] = z[:2,0,0] + 1
 
-print(sum(t))
+print(np_sum(t))
 
 
 x1 = [1, 2, 3]

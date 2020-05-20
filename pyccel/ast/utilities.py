@@ -24,7 +24,7 @@ from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
 from .numpyext import Min, Max, Abs, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, Complex, Imag, Mod
-from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
+from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128, NumpyComplex
 from .numpyext import Sqrt, Asin, Acos, Atan, Sinh, Cosh, Tanh, Log, Tan
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
@@ -82,6 +82,7 @@ numpy_functions = {
     'float64'   : Float64,
     'int32'     : Int32,
     'int64'     : Int64,
+    'complex'   : NumpyComplex,
     'complex128': Complex128,
     'complex64' : Complex64,
     'matmul'    : Matmul,

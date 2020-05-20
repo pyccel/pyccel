@@ -13,13 +13,12 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize( "f", files )
 def test_semantic(f):
-    print('> testing {0}'.format(str(f)))
 
     pyccel = Parser(f)
-    ast = pyccel.parse()
+    pyccel.parse()
 
     settings = {}
-    ast = pyccel.annotate(**settings)
+    pyccel.annotate(**settings)
 
     # reset Errors singleton
     errors = Errors()
@@ -36,6 +35,7 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
+        print('> testing {0}'.format(str(f)))
         test_semantic(f)
 
     print('\n')
