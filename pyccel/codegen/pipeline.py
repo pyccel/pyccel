@@ -256,3 +256,4 @@ def execute_pyccel(fname, *,
 
     if verbose:
         print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+    return True
