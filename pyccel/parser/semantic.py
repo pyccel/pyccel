@@ -2464,7 +2464,10 @@ class SemanticParser(BasicParser):
         body     = list(expr.body)
         iterator = expr.target
 
-        if isinstance(iterable, Variable):
+        if iterable is None:
+            return None
+
+        elif isinstance(iterable, Variable):
             indx   = self._get_new_variable(iterable)
             assign = Assign(iterator, IndexedBase(iterable)[indx])
             assign.set_fst(expr.fst)
