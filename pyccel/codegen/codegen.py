@@ -180,7 +180,7 @@ class Codegen(object):
 
 
         cls = (Header, EmptyLine, NewLine, Comment, CommentBlock, Module)
-        is_module = all(isinstance(i,cls) for i in self.ast)
+        is_module = all(isinstance(i,cls) for i in self.ast.body)
 
 
 
