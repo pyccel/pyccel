@@ -1150,12 +1150,18 @@ class SemanticParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
+        current_fst = self._current_fst_node
+
+        if hasattr(expr,'fst'):
+            self._current_fst_node = expr.fst
 
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(expr, **settings)
+                obj = getattr(self, annotation_method)(expr, **settings)
+                self._current_fst_node = current_fst
+                return obj
 
         # Unknown object, we raise an error.
 
