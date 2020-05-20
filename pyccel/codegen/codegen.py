@@ -211,7 +211,7 @@ class Codegen(object):
                 self.routines,
                 self.interfaces,
                 self.classes,
-                self.body,
+                self.body.body,
                 imports=self.imports,
                 modules=self.modules)
 
