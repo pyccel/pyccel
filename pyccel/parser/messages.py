@@ -10,6 +10,7 @@ NO_RETURN_EXPECTED = 'Return statement in function which does not return'
 INCOMPATIBLE_TYPES = 'Incompatible types'
 INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
+UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
 MUST_HAVE_NONE_RETURN_TYPE = 'The return type of "{}" must be None'

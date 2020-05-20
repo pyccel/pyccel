@@ -62,7 +62,6 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 
-from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
@@ -201,17 +200,7 @@ class SemanticParser(BasicParser):
 
         # we add the try/except to allow the parser to find all possible errors
 
-        try:
-            ast = self._visit(ast, **settings)
-        except AstFunctionResultError:
-            print("Array return arguments are currently not supported")
-            raise
-        except Exception as e:
-            errors.check()
-#            if self.show_traceback:
-            if True:
-                traceback.print_exc()
-            raise SystemExit(0)
+        ast = self._visit(ast, **settings)
 
         self._ast = ast
 
@@ -2968,9 +2957,13 @@ class SemanticParser(BasicParser):
             #   b) array which is not among arguments, hence intent(out)
             for r in results:
                 if r.is_pointer:
-                    raise AstFunctionResultError(r)
+                    errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
+                    symbol=r,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal')
                 elif (r not in args) and r.rank > 0:
-                    raise AstFunctionResultError(r)
+                    errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
+                    symbol=r,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal')
 
             for rh,r in zip(header_results, results):
                 # check type compatibility
