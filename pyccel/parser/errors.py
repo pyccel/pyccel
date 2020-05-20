@@ -214,6 +214,9 @@ class Errors:
         if (self.mode == 'user') and (severity == 'internal'):
             return
 
+        if (severity == 'fatal'):
+            blocker = True
+
         if filename is None:
             filename = self.target['file']
 
