@@ -1,7 +1,7 @@
 Welcome to Pyccel
 =================
 
-|build-status| |docs|
+|build-status| |docs| [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pyccel/pyccel&amp;utm_campaign=Badge_Grade)
 
 **Pyccel** stands for Python extension language using accelerators.
 
