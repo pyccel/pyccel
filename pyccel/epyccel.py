@@ -11,6 +11,7 @@ from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
 from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.parser.errors import PyccelError
 
 __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 
@@ -119,9 +120,13 @@ def epyccel_seq(function_or_module,
                        extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
+    except PyccelError:
+        # Raise a new error to avoid a large traceback
+        raise RuntimeError("Pyccel translation failed")
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
+
 
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)

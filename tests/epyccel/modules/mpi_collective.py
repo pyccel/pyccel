@@ -14,7 +14,6 @@ from pyccel.decorators import types
 def np_allreduce( sendbuf, recvbuf ):
 
     comm = MPI.COMM_WORLD
-    ierr = -1
     recvbuf[:] = 0
 
     comm.Allreduce( sendbuf, recvbuf, MPI.SUM )
@@ -24,7 +23,6 @@ def np_allreduce( sendbuf, recvbuf ):
 def np_bcast( buf, root ):
 
     comm = MPI.COMM_WORLD
-    ierr = -1
     rank = -1
     rank = comm.Get_rank()
 
@@ -38,7 +36,6 @@ def np_bcast( buf, root ):
 def np_gather( sendbuf, recvbuf, root ):
 
     comm = MPI.COMM_WORLD
-    ierr = -1
     rank = -1
     rank = comm.Get_rank()
 

@@ -89,6 +89,7 @@ numpy_functions = {
     'float64'   : Float64,
     'int32'     : Int32,
     'int64'     : Int64,
+    'complex'   : NumpyComplex,
     'complex128': Complex128,
     'complex64' : Complex64,
     'matmul'    : Matmul,
@@ -101,6 +102,7 @@ numpy_functions = {
     'cross'     : Cross,
     'floor'     : floor,
     # ---
+    'abs'       : Abs,
     'absolute'  : Abs,
     'fabs'      : Abs,
     'exp'       : NumpyExp,

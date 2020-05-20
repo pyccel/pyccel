@@ -4,7 +4,7 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors               import Errors
+from pyccel.parser.errors               import Errors, PyccelError
 from pyccel.parser                      import Parser
 from pyccel.codegen.codegen             import Codegen
 from pyccel.codegen.utilities           import construct_flags
@@ -41,6 +41,10 @@ def execute_pyccel(fname, *,
                    accelerator   = None,
                    output_name   = None):
 
+    # Reset Errors singleton before parsing a new file
+    errors = Errors()
+    errors.reset()
+
     # TODO [YG, 03.02.2020]: test validity of function arguments
 
     # Copy list arguments to local lists to avoid unexpected behavior
@@ -58,6 +62,7 @@ def execute_pyccel(fname, *,
     # to original working directory. Caller should then raise exception.
     def handle_error(stage):
         print('\nERROR at {} stage'.format(stage))
+        errors.check()
         os.chdir(base_dirpath)
 
     # Identify absolute path, directory, and filename
@@ -114,7 +119,7 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         ast = parser.parse()
-    except Exception:
+    except PyccelError:
         handle_error('parsing (syntax)')
         raise
 
@@ -125,7 +130,7 @@ def execute_pyccel(fname, *,
     try:
         settings = {}
         ast = parser.annotate(**settings)
-    except Exception:
+    except PyccelError:
         handle_error('annotation (semantic)')
         raise
 
@@ -137,7 +142,7 @@ def execute_pyccel(fname, *,
         codegen = Codegen(ast, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname = codegen.export(fname, language=language)
-    except Exception:
+    except PyccelError:
         handle_error('code generation')
         raise
 
@@ -151,10 +156,6 @@ def execute_pyccel(fname, *,
 
     if convert_only:
         return
-
-    # Reset Errors singleton
-    errors = Errors()
-    errors.reset()
 
     # ...
     # Determine all .o files and all folders needed by executable

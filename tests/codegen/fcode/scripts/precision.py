@@ -1,3 +1,5 @@
+# pylint: disable=unused-variable
+
 #$ header function incr_(int*8)
 def incr_(x):
     #$ header function decr_(int*8)
@@ -19,14 +21,14 @@ def f2(x, m=None):
     return y
 
 
-from numpy import float32, float64 , int32, int64, int, float, complex, complex64, complex128
+from numpy import float32, float64 , int32, int64, int as np_int, float as np_float, complex as np_complex, complex64, complex128
 
-x1 = int(6)
+x1 = np_int(6)
 x2 = int32(6)
 x3 = int64(6)
-y1 = float(6)
+y1 = np_float(6)
 y2 = float32(6)
 y3 = float64(6)
-z1 = complex(6)
+z1 = np_complex(6)
 z2 = complex64(6)
 z3 = complex128(6)

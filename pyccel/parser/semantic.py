@@ -62,7 +62,6 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 
-from pyccel.ast.core      import AstFunctionResultError
 from pyccel.ast.core      import Product
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
@@ -202,17 +201,7 @@ class SemanticParser(BasicParser):
 
         # we add the try/except to allow the parser to find all possible errors
 
-        try:
-            ast = self._visit(ast, **settings)
-        except AstFunctionResultError:
-            print("Array return arguments are currently not supported")
-            raise
-        except Exception as e:
-            errors.check()
-#            if self.show_traceback:
-            if True:
-                traceback.print_exc()
-            raise SystemExit(0)
+        ast = self._visit(ast, **settings)
 
         self._ast = ast
 
@@ -288,7 +277,7 @@ class SemanticParser(BasicParser):
 
         return None
 
-    def get_variable(self, name):
+    def check_for_variable(self, name):
         """."""
 
         if self.current_class:
@@ -311,8 +300,17 @@ class SemanticParser(BasicParser):
                 return container.imports['variables'][name]
             container = container.parent_scope
 
-
         return None
+
+    def get_variable(self, name):
+        """."""
+        var = self.check_for_variable(name)
+        if var is None:
+            errors.report(UNDEFINED_VARIABLE, symbol=name,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=True)
+        else:
+            return var
 
     def replace_variable_from_scope(self, name, new_var):
         """."""
@@ -931,6 +929,7 @@ class SemanticParser(BasicParser):
 
             elif name in ['Int','Int32','Int64',
                           'PythonFloat','NumpyFloat','Float32','Float64',
+                          'NumpyInt','NumpyComplex',
                           'Complex','Complex64','Complex128',
                           'Real','Imag','Bool']:
 
@@ -1156,12 +1155,18 @@ class SemanticParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
+        current_fst = self._current_fst_node
+
+        if hasattr(expr,'fst') and expr.fst is not None:
+            self._current_fst_node = expr.fst
 
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
-                return getattr(self, annotation_method)(expr, **settings)
+                obj = getattr(self, annotation_method)(expr, **settings)
+                self._current_fst_node = current_fst
+                return obj
 
         # Unknown object, we raise an error.
 
@@ -1244,13 +1249,7 @@ class SemanticParser(BasicParser):
 
     def _visit_Variable(self, expr, **settings):
         name = expr.name
-        var = self.get_variable(name)
-        if var is None:
-            #TODO error not yet tested
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=self._current_fst_node.absolute_bounding_box,
-            severity='error', blocker=self.blocking)
-        return var
+        return self.get_variable(name)
 
 
     def _visit_str(self, expr, **settings):
@@ -1399,7 +1398,7 @@ class SemanticParser(BasicParser):
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
 
-        var = self.get_variable(name)
+        var = self.check_for_variable(name)
 
         if var is None:
             var = self.get_function(name)
@@ -1412,7 +1411,7 @@ class SemanticParser(BasicParser):
 
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=self._current_fst_node.absolute_bounding_box,
-            severity='error', blocker=self.blocking)
+            severity='fatal', blocker=True)
         return var
 
 
@@ -2014,10 +2013,6 @@ class SemanticParser(BasicParser):
                 for a in lhs:
                     _name = _get_name(a)
                     var = self.get_variable(_name)
-                    if var is None:
-                        errors.report(UNDEFINED_VARIABLE,
-                        symbol=_name,severity='error', blocker=self.blocking,
-                        bounding_box=self._current_fst_node.absolute_bounding_box)
                     results.append(var)
 
                 # ...
@@ -2061,10 +2056,6 @@ class SemanticParser(BasicParser):
                     for a in lhs:
                         _name = _get_name(a)
                         var = self.get_variable(_name)
-                        if var is None:
-                            errors.report(UNDEFINED_VARIABLE,
-                            symbol=_name,severity='error', blocker=self.blocking,
-                            bounding_box=self._current_fst_node.absolute_bounding_box)
                         results.append(var)
 
                     # ...
@@ -2145,7 +2136,7 @@ class SemanticParser(BasicParser):
             lhs   = expr.lhs
             if isinstance(lhs, Symbol):
                 name = lhs.name
-                if self.get_variable(name) is None:
+                if self.check_for_variable(name) is None:
                     d_var = self._infere_type(stmt, **settings)
                     dtype = d_var.pop('datatype')
                     lhs = Variable(dtype, name , **d_var)
@@ -2187,11 +2178,6 @@ class SemanticParser(BasicParser):
                     if not all(same_ranks):
                         _name = _get_name(lhs)
                         var = self.get_variable(_name)
-                        if var is None:
-                            # TODO have a specific error message
-                            errors.report(UNDEFINED_VARIABLE,
-                            symbol=_name,severity='error', blocker=self.blocking,
-                            bounding_box=self._current_fst_node.absolute_bounding_box)
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -2468,7 +2454,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(iterator, Symbol):
             name   = iterator.name
-            var    = self.get_variable(name)
+            var    = self.check_for_variable(name)
             target = var
             if var is None:
                 target = Variable('int', name, rank=0)
@@ -2505,7 +2491,7 @@ class SemanticParser(BasicParser):
 
         result   = expr.expr
         lhs_name = _get_name(expr.lhs)
-        lhs  = self.get_variable(lhs_name)
+        lhs  = self.check_for_variable(lhs_name)
 
         if lhs is None:
             tmp_lhs  = Variable('int', lhs_name)
@@ -2604,8 +2590,6 @@ class SemanticParser(BasicParser):
 
         for i in range(len(indices)):
             var = self.get_variable(indices[i].name)
-            if var is None:
-                raise ValueError('variable not found')
             indices[i] = var
 
         dim = dims[-1][0]
@@ -2980,9 +2964,13 @@ class SemanticParser(BasicParser):
             #   b) array which is not among arguments, hence intent(out)
             for r in results:
                 if r.is_pointer:
-                    raise AstFunctionResultError(r)
+                    errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
+                    symbol=r,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal')
                 elif (r not in args) and r.rank > 0:
-                    raise AstFunctionResultError(r)
+                    errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
+                    symbol=r,bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal')
 
             for rh,r in zip(header_results, results):
                 # check type compatibility
@@ -3153,12 +3141,8 @@ class SemanticParser(BasicParser):
 
         name = expr.lhs
         var1 = self.get_variable(str(expr.lhs))
-        if var1 is None:
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=self._current_fst_node.absolute_bounding_box,
-            severity='error', blocker=self.blocking)
 
-        var2 = self.get_variable(str(expr.rhs))
+        var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
             if (not var1.is_optional):
                 new_var = var1.clone(str(name),new_class=ValuedVariable,is_optional = True)
@@ -3181,12 +3165,8 @@ class SemanticParser(BasicParser):
 
         name = expr.lhs
         var1 = self.get_variable(str(expr.lhs))
-        if var1 is None:
-            errors.report(UNDEFINED_VARIABLE, symbol=name,
-            bounding_box=self._current_fst_node.absolute_bounding_box,
-            severity='error', blocker=self.blocking)
 
-        var2 = self.get_variable(str(expr.rhs))
+        var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
             if (not var1.is_optional):
                 new_var = var1.clone(str(name),new_class=ValuedVariable,is_optional = True)
@@ -3217,7 +3197,7 @@ class SemanticParser(BasicParser):
                 imports = pyccel_builtin_import(expr)
                 for (name, atom) in imports:
                     if not name is None:
-                        F = self.get_variable(name)
+                        F = self.check_for_variable(name)
 
                         if F is None:
                             container['functions'][name] = atom
@@ -3344,10 +3324,6 @@ class SemanticParser(BasicParser):
         header = self.get_header(master)
         if header is None:
             var = self.get_variable(master)
-            if var is None:
-                errors.report(MACRO_MISSING_HEADER_OR_FUNC,
-                symbol=master,severity='error', blocker=self.blocking,
-                bounding_box=self._current_fst_node.absolute_bounding_box)
         else:
             var = Variable(header.dtype, header.name)
 
