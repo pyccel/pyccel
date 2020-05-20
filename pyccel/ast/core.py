@@ -74,8 +74,6 @@ __all__ = (
     'AsName',
     'Assert',
     'Assign',
-    'AstError',
-    'AstFunctionResultError',
     'AugAssign',
     'Block',
     'Break',
@@ -176,19 +174,6 @@ local_sympify = {
 }
 
 #==============================================================================
-class AstError(Exception):
-    pass
-
-class AstFunctionResultError(AstError):
-    def __init__(self, var):
-        if isinstance(var, (list, tuple, Tuple)):
-            var = ', '.join(str(i) for i in var)
-
-        msg = 'Found allocatable result(s) that is/are not inout [{}]'.format(var)
-
-        # Call the base class constructor with the parameters it needs
-        super(AstFunctionResultError, self).__init__(msg)
-
 # Pow, Add, Mul need to inherite sympy.Boolean to be able to use them in a logical expression
 
 class PyccelOperator(Expr, PyccelAstNode):
