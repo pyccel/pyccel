@@ -24,13 +24,11 @@ def get_files_from_folder(foldername):
 #
 #    pyccel = Parser(f)
 #
-#    try:
-#        ast = pyccel.parse()
-#    except:
-#        pass
+#    ast = pyccel.parse()
 #
 #    # reset Errors singleton
 #    errors = Errors()
+#    assert(errors.num_messages()!=0)
 #    errors.reset()
 #
 #@pytest.mark.parametrize("f",get_files_from_folder('semantic'))
@@ -39,17 +37,19 @@ def get_files_from_folder(foldername):
 #    pyccel = Parser(f, show_traceback=False)
 #    ast = pyccel.parse()
 #
-#    try:
-#        settings = {}
-#        ast = pyccel.annotate(**settings)
-#    except:
-#        pass
+#    settings = {}
+#    ast = pyccel.annotate(**settings)
 #
 #    # reset Errors singleton
 #    errors = Errors()
+#    assert(errors.num_messages()!=0)
 #    errors.reset()
 
-@pytest.mark.parametrize("f",get_files_from_folder('codegen'))
+codegen_xfails = {'is.py':"warning only valid in program is not yet implemented"}
+codegen_errors_args = [f if os.path.basename(f) not in codegen_xfails \
+                          else pytest.param(f, marks = pytest.mark.xfail(reason=codegen_xfails[os.path.basename(f)])) \
+                          for f in get_files_from_folder("codegen")]
+@pytest.mark.parametrize("f", codegen_errors_args)
 def test_codegen_warnings(f):
 
     pyccel = Parser(f, show_traceback=False)
@@ -58,17 +58,15 @@ def test_codegen_warnings(f):
     settings = {}
     ast = pyccel.annotate(**settings)
 
-    try:
-        name = os.path.basename(f)
-        name = os.path.splitext(name)[0]
+    name = os.path.basename(f)
+    name = os.path.splitext(name)[0]
 
-        codegen = Codegen(ast, name)
-        code = codegen.doprint()
-    except:
-        pass
+    codegen = Codegen(ast, name)
+    code = codegen.doprint()
 
     # reset Errors singleton
     errors = Errors()
+    assert(errors.num_messages()!=0)
     errors.reset()
 
 ######################
