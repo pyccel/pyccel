@@ -49,10 +49,9 @@ def test_semantic_errors(f):
     ast = pyccel.parse()
 
     settings = {}
-    with pytest.raises(BaseException):
-        ast = pyccel.annotate(**settings)
+    ast = pyccel.annotate(**settings)
 
-        assert(errors.num_messages()==0)
+    assert(errors.num_messages()!=0)
 
 
 ######################
