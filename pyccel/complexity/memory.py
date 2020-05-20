@@ -6,7 +6,7 @@ from sympy.core.expr import Expr
 
 
 from pyccel.ast import (For, Assign, NewLine,
-                        Zeros, Ones)
+                        Zeros, Ones, CodeBlock)
 
 from pyccel.complexity.basic import Complexity
 
@@ -43,6 +43,9 @@ def count_access(expr, visual=True):
 
     elif isinstance(expr, Tuple):
         return sum(count_access(i, visual) for i in expr)
+
+    elif isinstance(expr, CodeBlock):
+        return sum(count_access(i, visual) for i in expr.body)
 
     elif isinstance(expr, For):
         s = expr.iterable.size
