@@ -22,33 +22,34 @@ def get_files_from_folder(foldername):
 
 @pytest.mark.parametrize("f",get_files_from_folder("syntax"))
 def test_syntax_errors(f):
-    pyccel = Parser(f)
-
-    try:
-        ast = pyccel.parse()
-    except:
-        pass
-
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+
+    pyccel = Parser(f)
+
+    with pytest.raises(Exception):
+        ast = pyccel.parse()
+
+        assert(errors.num_messages()==0)
 
 @pytest.mark.parametrize("f",get_files_from_folder("semantic"))
 def test_semantic_errors(f):
     print('> testing {0}'.format(str(f)))
 
-    pyccel = Parser(f, show_traceback=False)
-    ast = pyccel.parse()
-
-    try:
-        settings = {}
-        ast = pyccel.annotate(**settings)
-    except:
-        pass
-
     # reset Errors singleton
     errors = Errors()
     errors.reset()
+
+    pyccel = Parser(f, show_traceback=False)
+    ast = pyccel.parse()
+
+    settings = {}
+    with pytest.raises(BaseException):
+        ast = pyccel.annotate(**settings)
+
+        assert(errors.num_messages()==0)
+
 
 ######################
 if __name__ == '__main__':
