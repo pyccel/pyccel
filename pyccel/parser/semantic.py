@@ -1343,6 +1343,8 @@ class SemanticParser(BasicParser):
         args = list(expr.indices)
 
         new_args = [self._visit(arg, **settings) for arg in args]
+        if var is None or None in new_args:
+            return None
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
             len_args = len(new_args[0])
@@ -1525,6 +1527,9 @@ class SemanticParser(BasicParser):
 
         atoms = [a['is_pointer'] or a['is_target'] for a in atoms if a['rank']>0]
         args  = [self._visit(a, **settings) for a in expr.args]
+
+        if None in args:
+            args = [a if a is not None else Integer(0) for a in args]
 
         if any(atoms) or atoms_ls:
             return Concatenate(args, True)
