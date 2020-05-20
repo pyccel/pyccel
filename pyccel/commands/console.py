@@ -134,7 +134,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     # ...
 
     # Imports
-    from pyccel.parser.errors     import Errors
+    from pyccel.parser.errors     import Errors, PyccelError
     from pyccel.parser.errors     import ErrorsMode
     from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
     from pyccel.codegen.pipeline  import execute_pyccel
@@ -212,7 +212,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     try:
         # TODO: prune options
-        success = execute_pyccel(filename,
+        execute_pyccel(filename,
                        syntax_only   = args.syntax_only,
                        semantic_only = args.semantic_only,
                        convert_only  = args.convert_only,
@@ -229,11 +229,10 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        extra_args    = '',
                        accelerator   = accelerator,
                        folder        = args.output)
+    except PyccelError:
+        sys.exit(1)
     finally:
         os.chdir(base_dirpath)
-
-    if not success:
-        sys.exit(1)
 
     return
 
