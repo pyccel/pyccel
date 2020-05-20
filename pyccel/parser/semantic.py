@@ -70,6 +70,7 @@ from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
 from pyccel.ast.numbers   import BooleanTrue, BooleanFalse
 from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numpyext  import PyccelArraySize
+from pyccel.ast.numpyext  import NumpyUfuncBase
 from pyccel.ast.utilities import split_positional_keyword_arguments
 from pyccel.ast.type_inference  import sp_dtype, str_dtype
 from pyccel.parser.errors import Errors
@@ -960,6 +961,12 @@ class SemanticParser(BasicParser):
                 d_var['rank' ] = len(d_var['shape'])
                 d_var['allocatable'] = d_var['rank']>0
                 d_var['is_pointer' ] = False
+
+            elif isinstance(expr, NumpyUfuncBase):
+                d_var = self._infere_type(expr.args[0], **settings)
+                d_var['datatype'   ] = expr.dtype
+                d_var['is_pointer' ] = False
+                d_var['precision'  ] = expr.precision
 
             elif name in [
                     'Abs',

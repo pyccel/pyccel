@@ -5,7 +5,6 @@ import numpy
 from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
 from sympy import Expr
-from sympy import asin, acsc, acos, asec, atan, acot, sinh, cosh, tanh, log, tan
 from sympy import Rational as sp_Rational
 from sympy import IndexedBase
 from sympy.core.function import Application
@@ -33,18 +32,23 @@ from .type_inference import sp_dtype, str_dtype
 
 __all__ = (
     'Abs',
-    'Acos',
-    'Acot',
-    'Acsc',
-    'Array',
-    'Asec',
-    'Asin',
-    'Atan',
-    'Bounds',
-    'Complex',
-    'Complex64',
-    'Complex128',
-    'Cosh',
+    'NumpySqrt',
+    'NumpySin',
+    'NumpyCos',
+    'NumpyExp',
+    'NumpyLog',
+    'NumpyTan',
+    'NumpyArcsin',
+    'NumpyArccos',
+    'NumpyArctan',
+    'NumpyArctan2',
+    'NumpySinh',
+    'NumpyCosh',
+    'NumpyTanh',
+    'NumpyArcsinh',
+    'NumpyArccosh',
+    'NumpyArctanh',
+    # ---
     'Cross',
     'Diag',
     'Empty',
@@ -59,7 +63,6 @@ __all__ = (
     'Int32',
     'Int64',
     'Linspace',
-    'Log',
     'Matmul',
     'Max',
     'Min',
@@ -73,10 +76,6 @@ __all__ = (
     'Rand',
     'Real',
     'Shape',
-    'Sinh',
-    'Sqrt',
-    'Tanh',
-    'Tan',
     'Where',
     'Zeros',
     'ZerosLike'
@@ -1240,125 +1239,65 @@ class Mod(Function, PyccelAstNode):
         self._assumptions = StdFactKB(assumptions)
         self._assumptions._generator = ass_copy
 
-class Asin(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = asin(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#==============================================================================
+# Numpy universal functions
+# https://numpy.org/doc/stable/reference/ufuncs.html#available-ufuncs
+#
+# NOTE: since we are subclassing sympy.Function, we need to use a name ending
+#       with "Base", otherwise the Sympy's printer is going to skip this class.
+#==============================================================================
+class NumpyUfuncBase(Function, PyccelAstNode):
+    """Base class for Numpy's universal functions."""
 
+#------------------------------------------------------------------------------
+class NumpyUfuncUnary(NumpyUfuncBase):
+    """Numpy's universal function with one argument.
+    """
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = 'complex' if x.dtype == 'complex' else 'real'
+        self._precision = default_precision[self._dtype]
 
-class Acos(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = acos(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#------------------------------------------------------------------------------
+class NumpyUfuncBinary(NumpyUfuncBase):
+    """Numpy's universal function with two arguments.
+    """
+    # TODO: apply Numpy's broadcasting rules to get shape/rank of output
+    def __init__(self, x1, x2):
+        self._shape     = x1.shape  # TODO ^^
+        self._rank      = x1.rank   # TODO ^^
+        self._dtype     = 'real'
+        self._precision = default_precision[self._dtype]
 
-class Asec(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = asec(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#------------------------------------------------------------------------------
+# Math operations
+#------------------------------------------------------------------------------
+#class NumpyAbsolute(NumpyUfuncUnary): pass
+#class NumpyFabs    (NumpyUfuncUnary): pass
+class NumpyExp     (NumpyUfuncUnary): pass
+class NumpyLog     (NumpyUfuncUnary): pass
+class NumpySqrt    (NumpyUfuncUnary): pass
 
-#=======================================================================================
-
-class Atan(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = atan(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-
-class Acot(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = acot(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-
-class Acsc(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = acsc(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-#=======================================================================================
-
-class Sinh(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = sinh(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-class Cosh(Function, PyccelAstNode):
-    is_zero = False
-    def __new__(cls,arg):
-        obj = cosh(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-
-class Tanh(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = tanh(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-
-class Tan(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = tan(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
-#=======================================================================================
-
-class Log(Function, PyccelAstNode):
-    def __new__(cls,arg):
-        obj = log(arg)
-        if arg.is_real:
-            assumptions={'real':True}
-            ass_copy = assumptions.copy()
-            obj._assumptions = StdFactKB(assumptions)
-            obj._assumptions._generator = ass_copy
-        return obj
+#------------------------------------------------------------------------------
+# Trigonometric functions
+#------------------------------------------------------------------------------
+class NumpySin    (NumpyUfuncUnary) : pass
+class NumpyCos    (NumpyUfuncUnary) : pass
+class NumpyTan    (NumpyUfuncUnary) : pass
+class NumpyArcsin (NumpyUfuncUnary) : pass
+class NumpyArccos (NumpyUfuncUnary) : pass
+class NumpyArctan (NumpyUfuncUnary) : pass
+class NumpyArctan2(NumpyUfuncBinary): pass
+class NumpyHypot  (NumpyUfuncBinary): pass
+class NumpySinh   (NumpyUfuncUnary) : pass
+class NumpyCosh   (NumpyUfuncUnary) : pass
+class NumpyTanh   (NumpyUfuncUnary) : pass
+class NumpyArcsinh(NumpyUfuncUnary) : pass
+class NumpyArccosh(NumpyUfuncUnary) : pass
+class NumpyArctanh(NumpyUfuncUnary) : pass
+#class NumpyDeg2rad(NumpyUfuncUnary) : pass
+#class NumpyRad2deg(NumpyUfuncUnary) : pass
 
 #=======================================================================================
 

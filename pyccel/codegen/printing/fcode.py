@@ -97,6 +97,26 @@ known_functions = {
     "conjugate": "conjg"
 }
 
+numpy_ufunc_to_fortran = {
+    'NumpyExp' : 'exp',
+    'NumpyLog' : 'Log',
+    'NumpySqrt': 'Sqrt',
+    # ---
+    'NumpySin'    : 'sin',
+    'NumpyCos'    : 'cos',
+    'NumpyTan'    : 'tan',
+    'NumpyArcsin' : 'asin',
+    'NumpyArccos' : 'acos',
+    'NumpyArctan' : 'atan',
+    'NumpyArctan2': 'atan2',
+    'NumpySinh'   : 'sinh',
+    'NumpyCosh'   : 'cosh',
+    'NumpyTanh'   : 'tanh',
+    'NumpyArcsinh': 'asinh',
+    'NumpyArccosh': 'acosh',
+    'NumpyArctanh': 'atanh',
+}
+
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
@@ -2211,6 +2231,14 @@ class FCodePrinter(CodePrinter):
         if not(expr.arguments) is None:
             code_args = ', '.join(self._print(i) for i in expr.arguments)
         code = '{0}({1})'.format(name, code_args)
+        return self._get_statement(code)
+
+    def _print_NumpyUfuncBase(self, expr):
+        print("WOW")
+        type_name = type(expr).__name__
+        func_name = numpy_ufunc_to_fortran[type_name]
+        code_args = ', '.join(self._print(i) for i in expr.args)
+        code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
 
     def _print_Function(self, expr):
