@@ -8,7 +8,7 @@
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors, PyccelSemanticError
+from pyccel.parser.errors import Errors, PyccelSemanticError, PyccelSyntaxError
 import os
 import pytest
 
@@ -28,10 +28,10 @@ def test_syntax_errors(f):
 
     pyccel = Parser(f)
 
-    with pytest.raises(Exception):
+    with pytest.raises(PyccelSyntaxError):
         ast = pyccel.parse()
 
-        assert(not errors.is_errors())
+    assert(errors.is_errors())
 
 semantic_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
 semantic_errors_args = [f if os.path.basename(f) not in semantic_xfails \
