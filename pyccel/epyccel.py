@@ -105,7 +105,7 @@ def epyccel_seq(function_or_module,
 
     try:
         # Generate shared library
-        execute_pyccel(pymod_filename,
+        success = execute_pyccel(pymod_filename,
                        verbose     = verbose,
                        language    = language,
                        compiler    = compiler,
@@ -122,6 +122,9 @@ def epyccel_seq(function_or_module,
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
+
+    if not success:
+        raise RuntimeError("Pyccel translation failed")
 
     # Import shared library
     sys.path.insert(0, epyccel_dirpath)

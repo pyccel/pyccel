@@ -212,7 +212,7 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     try:
         # TODO: prune options
-        execute_pyccel(filename,
+        success = execute_pyccel(filename,
                        syntax_only   = args.syntax_only,
                        semantic_only = args.semantic_only,
                        convert_only  = args.convert_only,
@@ -231,6 +231,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        folder        = args.output)
     finally:
         os.chdir(base_dirpath)
+
+    if not success:
+        sys.exit(1)
 
     return
 

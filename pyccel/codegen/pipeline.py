@@ -118,6 +118,9 @@ def execute_pyccel(fname, *,
         handle_error('parsing (syntax)')
         raise
 
+    if (Errors().num_messages()>0):
+        return False
+
     if syntax_only:
         return
 
