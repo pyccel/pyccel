@@ -20,8 +20,8 @@ def get_files_from_folder(foldername):
     files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
     return files
 
-@pytest.mark.parametrize("f",get_files_from_folder("syntax"))
-def test_syntax_errors(f):
+@pytest.mark.parametrize("f",get_files_from_folder("syntax_blockers"))
+def test_syntax_blockers(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
@@ -30,6 +30,18 @@ def test_syntax_errors(f):
 
     with pytest.raises(PyccelSyntaxError):
         ast = pyccel.parse()
+
+    assert(errors.is_blockers())
+
+@pytest.mark.parametrize("f",get_files_from_folder("syntax_errors"))
+def test_syntax_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+
+    ast = pyccel.parse()
 
     assert(errors.is_errors())
 
